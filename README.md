@@ -8,7 +8,7 @@ It is currently able to do the following things:
  * Turn off the lights when everybody leaves home
  * Turn on the lights when the sun sets and one of the tracked devices is home (in progress)
 
-It currently works with any wireless router with Tomato firmware and Philips Hue lightning system. The system is built modular so support for other wireless routers or other actions can be implemented easily.
+It currently works with any wireless router with Tomato firmware in combination with the Philips Hue lightning system. The system is built modular so support for other wireless routers or other actions can be implemented easily.
 
 Installation instructions
 -------------------------
