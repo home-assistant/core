@@ -1,5 +1,5 @@
 import logging
-import time
+
 from collections import defaultdict
 from itertools import chain
 from threading import Thread, RLock
@@ -19,7 +19,7 @@ class EventBus:
 		def run():
 			self.lock.acquire()
 
-			self.logger.info("[{}] {} event received: {}".format(time.strftime("%H:%M:%S"), event.eventType, event.data))
+			self.logger.info("{} event received: {}".format(event.eventType, event.data))
 
 			for callback in chain(self.listeners[ALL_EVENTS], self.listeners[event.eventType]):
 				callback(event)

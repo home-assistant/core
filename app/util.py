@@ -1,5 +1,3 @@
-from EventBus import ALL_EVENTS
-
 def ensure_list(parameter):
 	return parameter if isinstance(parameter, list) else [parameter]
 

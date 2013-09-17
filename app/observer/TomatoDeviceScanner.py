@@ -31,7 +31,8 @@ class TomatoDeviceScanner:
 		for mac in [mac for mac in known_devices if known_devices[mac]['track'] == '1']:
 			self.devices_to_track[mac] = known_devices[mac]['name']
 		
-		# Doesn't go together with exec: unqualified exec is not allowed in function '__init__' it contains a nested function with free variables
+		# Quicker way of the previous statement but it doesn't go together with exec:
+		# unqualified exec is not allowed in function '__init__' it contains a nested function with free variables
 		# self.devices_to_track = {mac: known_devices[mac]['name'] for mac in known_devices if known_devices[mac]['track'] == '1'}
 
 
@@ -42,10 +43,15 @@ class TomatoDeviceScanner:
 		self.logger.info("Scanning for new devices")
 		
 		# Query for new devices
-		exec(self.tomato_request("devlist"))
+		try:
+			exec(self.tomato_request("devlist"))
 
-		return [mac for iface, mac, rssi, tx, rx, quality, unknown_num in wldev]
+			return [mac for iface, mac, rssi, tx, rx, quality, unknown_num in wldev]
 
+		except:
+			self.logger.error("Scanning failed")
+
+			return []
 
 	def tomato_request(self, action):
 		# Get router info
