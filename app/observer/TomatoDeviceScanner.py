@@ -39,7 +39,7 @@ class TomatoDeviceScanner:
 	def get_devices_to_track(self):
 		return self.devices_to_track
 
-	def scan_devices(self, triggered_time):
+	def scan_devices(self):
 		self.logger.info("Scanning for new devices")
 		
 		# Query for new devices
