@@ -3,7 +3,6 @@ import time
 
 from app.StateMachine import StateMachine
 from app.EventBus import EventBus
-from app.Logging import EventLogger
 from app.DeviceTracker import DeviceTracker
 
 from app.observer.WeatherWatcher import WeatherWatcher
@@ -72,7 +71,7 @@ class HomeAssistant:
 		if self.huetrigger is None:
 			assert self.devicetracker is not None, "Cannot setup Hue Trigger without a device tracker being setup"
 
-			self.huetrigger = HueTrigger(self.get_config(), self.get_event_bus(), self.get_state_machine(), self.devicetracker)
+			self.huetrigger = HueTrigger(self.get_config(), self.get_event_bus(), self.get_state_machine(), self.devicetracker, self.setup_weather_watcher())
 
 		return self.huetrigger
 

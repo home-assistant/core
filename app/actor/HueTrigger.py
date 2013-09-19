@@ -1,15 +1,19 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from phue import Bridge
 
-from app.observer.WeatherWatcher import EVENT_PRE_SUN_SET_WARNING, STATE_CATEGORY_SUN, SOLAR_STATE_BELOW_HORIZON
+from app.observer.WeatherWatcher import STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON
 from app.StateMachine import track_state_change
 from app.DeviceTracker import STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME, STATE_DEVICE_NOT_HOME
 
+LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD = timedelta(minutes=20)
+
 class HueTrigger:
-	def __init__(self, config, eventbus, statemachine, device_tracker):
+	def __init__(self, config, eventbus, statemachine, device_tracker, weather):
+		self.eventbus = eventbus
 		self.statemachine = statemachine
+		self.weather = weather
 
 		self.bridge = Bridge(config.get("hue","host"))
 		self.lights = self.bridge.get_light_objects()
@@ -22,14 +26,17 @@ class HueTrigger:
 		# Track when all devices are gone to shut down lights
 		track_state_change(eventbus, STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME, STATE_DEVICE_NOT_HOME, self.handle_device_state_change)
 
-		# Listen for when sun is about to set
-		eventbus.listen(EVENT_PRE_SUN_SET_WARNING, self.handle_sun_setting)
+		# Track every time sun rises so we can schedule a time-based pre-sun set event
+		track_state_change(eventbus, STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON, self.handle_sun_rising)
 
+		# If the sun is already above horizon schedule the time-based pre-sun set event
+		if statemachine.get_state(STATE_CATEGORY_SUN, SUN_STATE_ABOVE_HORIZON):
+			self.handle_sun_rising()
 
 	def get_lights_status(self):
 		lights_are_on = sum([1 for light in self.lights if light.on]) > 0
 
-		light_needed = not lights_are_on and self.statemachine.get_state(STATE_CATEGORY_SUN).state == SOLAR_STATE_BELOW_HORIZON
+		light_needed = not lights_are_on and self.statemachine.get_state(STATE_CATEGORY_SUN).state == SUN_STATE_BELOW_HORIZON
 
 		return lights_are_on, light_needed
 
@@ -52,16 +59,21 @@ class HueTrigger:
 		self.bridge.set_light([1,2,3], command)
 
 
+	def handle_sun_rising(self, event=None):
+		# Schedule an event X minutes prior to sun setting
+		track_time_change(self.eventBus, self.handle_sun_setting, datetime=self.weather.next_sun_setting()-LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD)
+
+
 	# Gets called when darkness starts falling in, slowly turn on the lights
-	def handle_sun_setting(self, event):
+	def handle_sun_setting(self, now):
 		lights_are_on, light_needed = self.get_lights_status()
 
-		if light_needed and self.statemachine.get_state(STATE_CATEGORY_ALL_DEVICES).state == STATE_DEVICE_HOME:
+		if not lights_are_on and self.statemachine.get_state(STATE_CATEGORY_ALL_DEVICES).state == STATE_DEVICE_HOME:
 			self.logger.info("Sun setting and devices home. Turning on lights.")
 
 			# We will start the lights now and by the time the sun sets
 			# the lights will be at full brightness
-			transitiontime = (event.data['sun_setting'] - datetime.now()).seconds * 10
+			transitiontime = (self.weather.next_sun_setting() - datetime.now()).seconds * 10
 
 			self.turn_lights_on(transitiontime)
 
