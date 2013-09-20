@@ -71,7 +71,7 @@ class DeviceTracker:
 		# Because we do not want to have stuff happening when the device does
 		# not show up for 1 scan beacuse of reboot etc
 		for device in temp_tracking_devices:
-			if self.devices_to_track[device]['state'] == STATE_DEVICE_HOME and \
+			if self.statemachine.get_state(self.devices_to_track[device]['category']).state == STATE_DEVICE_HOME and \
 				datetime.now() - self.devices_to_track[device]['last_seen'] > TIME_SPAN_FOR_ERROR_IN_SCANNING:
 
 				self.set_state(device, STATE_DEVICE_NOT_HOME)
