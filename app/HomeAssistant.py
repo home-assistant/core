@@ -4,103 +4,97 @@ import time
 from app.StateMachine import StateMachine
 from app.EventBus import EventBus
 from app.DeviceTracker import DeviceTracker
-from HttpInterface import HttpInterface
+from app.HttpInterface import HttpInterface
 
 from app.observer.WeatherWatcher import WeatherWatcher
-from app.observer.TomatoDeviceScanner import TomatoDeviceScanner
 from app.observer.Timer import Timer
 
 from app.actor.HueTrigger import HueTrigger
 
-class HomeAssistant:
+class HomeAssistant(object):
 
-	def __init__(self):
-		self.config = None
-		self.eventbus = None
-		self.statemachine = None
+    def __init__(self):
+        self.config = None
+        self.eventbus = None
+        self.statemachine = None
 
-		self.timer = None
-		self.weatherwatcher = None
-		self.devicetracker = None
+        self.timer = None
+        self.weatherwatcher = None
+        self.devicetracker = None
 
-		self.huetrigger = None
-		self.httpinterface = None
+        self.huetrigger = None
+        self.httpinterface = None
 
-	def get_config(self):
-		if self.config is None:
-			self.config = SafeConfigParser()
-			self.config.read("home-assistant.conf")
+    def get_config(self):
+        if self.config is None:
+            self.config = SafeConfigParser()
+            self.config.read("home-assistant.conf")
 
-		return self.config
-
-
-	def get_event_bus(self):
-		if self.eventbus is None:
-			self.eventbus = EventBus()
-
-		return self.eventbus
+        return self.config
 
 
-	def get_state_machine(self):
-		if self.statemachine is None:
-			self.statemachine = StateMachine(self.get_event_bus())
+    def get_event_bus(self):
+        if self.eventbus is None:
+            self.eventbus = EventBus()
 
-		return self.statemachine
-
-
-	def setup_timer(self):
-		if self.timer is None:
-			self.timer = Timer(self.get_event_bus())
-
-		return self.timer
-
-	def setup_weather_watcher(self):
-		if self.weatherwatcher is None:
-			self.weatherwatcher = WeatherWatcher(self.get_config(), self.get_event_bus(), self.get_state_machine())
-
-		return self.weatherwatcher
+        return self.eventbus
 
 
-	def setup_device_tracker(self, device_scanner):
-		if self.devicetracker is None:
-			self.devicetracker = DeviceTracker(self.get_event_bus(), self.get_state_machine(), device_scanner)
+    def get_state_machine(self):
+        if self.statemachine is None:
+            self.statemachine = StateMachine(self.get_event_bus())
 
-		return self.devicetracker
-
-
-	def setup_hue_trigger(self):
-		if self.huetrigger is None:
-			assert self.devicetracker is not None, "Cannot setup Hue Trigger without a device tracker being setup"
-
-			self.huetrigger = HueTrigger(self.get_config(), self.get_event_bus(), self.get_state_machine(), self.devicetracker, self.setup_weather_watcher())
-
-		return self.huetrigger
+        return self.statemachine
 
 
-	def setup_http_interface(self):
-		self.httpinterface = HttpInterface(self.get_event_bus(), self.get_state_machine())
-		self.httpinterface.start()
+    def setup_timer(self):
+        if self.timer is None:
+            self.timer = Timer(self.get_event_bus())
 
-		return self.httpinterface
+        return self.timer
 
-	def start(self):
-		self.setup_timer().start()
+    def setup_weather_watcher(self):
+        if self.weatherwatcher is None:
+            self.weatherwatcher = WeatherWatcher(self.get_config(), self.get_event_bus(), self.get_state_machine())
 
-		while True:
-			try:
-				time.sleep(1)
-
-			except:
-				print ""
-				print "Interrupt received. Wrapping up and quiting.."
-				self.timer.stop()
-
-				if self.httpinterface is not None:
-					self.httpinterface.stop()
-
-				break
+        return self.weatherwatcher
 
 
+    def setup_device_tracker(self, device_scanner):
+        if self.devicetracker is None:
+            self.devicetracker = DeviceTracker(self.get_event_bus(), self.get_state_machine(), device_scanner)
+
+        return self.devicetracker
 
 
+    def setup_hue_trigger(self):
+        if self.huetrigger is None:
+            assert self.devicetracker is not None, "Cannot setup Hue Trigger without a device tracker being setup"
 
+            self.huetrigger = HueTrigger(self.get_config(), self.get_event_bus(), self.get_state_machine(), self.devicetracker, self.setup_weather_watcher())
+
+        return self.huetrigger
+
+
+    def setup_http_interface(self):
+        self.httpinterface = HttpInterface(self.get_event_bus(), self.get_state_machine())
+        self.httpinterface.start()
+
+        return self.httpinterface
+
+    def start(self):
+        self.setup_timer().start()
+
+        while True:
+            try:
+                time.sleep(1)
+
+            except KeyboardInterrupt:
+                print ""
+                print "Interrupt received. Wrapping up and quiting.."
+                self.timer.stop()
+
+                if self.httpinterface is not None:
+                    self.httpinterface.stop()
+
+                break
