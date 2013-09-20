@@ -15,7 +15,7 @@ class TomatoDeviceScanner:
 
 	def __init__(self, config):
 		self.config = config
-		self.logger = logging.getLogger("TomatoDeviceScanner")
+		self.logger = logging.getLogger(__name__)
 		self.lock = Lock()
 		self.date_updated = None
 		self.last_results = None
@@ -64,7 +64,7 @@ class TomatoDeviceScanner:
 				self.last_results = [mac for iface, mac, rssi, tx, rx, quality, unknown_num in wldev]
 
 			except:
-				self.logger.error("Scanning failed")
+				self.logger.exception("Scanning failed")
 
 		
 		self.lock.release()

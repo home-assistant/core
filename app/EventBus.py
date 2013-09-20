@@ -10,12 +10,14 @@ class EventBus:
 	def __init__(self):
 		self.listeners = defaultdict(list)
 		self.lock = RLock()
-		self.logger =logging.getLogger("EventBus")
+		self.logger =logging.getLogger(__name__)
 		
 	def fire(self, event):
 		assert isinstance(event, Event), "event needs to be an instance of Event"
 
-		# We dont want the eventbus to be blocking, run in a thread
+		# We dont want the eventbus to be blocking, 
+		# We dont want the eventbus to crash when one of its listeners throws an Exception
+		# So run in a thread
 		def run():
 			self.lock.acquire()
 
