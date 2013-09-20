@@ -6,5 +6,6 @@ ha = HomeAssistant()
 
 ha.setup_device_tracker(TomatoDeviceScanner(ha.get_config()))
 ha.setup_hue_trigger()
+ha.setup_http_interface()
 
 ha.start()

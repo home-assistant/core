@@ -8,7 +8,7 @@ from app.StateMachine import track_state_change
 from app.DeviceTracker import STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME, STATE_DEVICE_NOT_HOME
 from app.observer.Timer import track_time_change
 
-LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD = timedelta(minutes=20)
+LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD = timedelta(minutes=30)
 
 class HueTrigger:
 	def __init__(self, config, eventbus, statemachine, device_tracker, weather):
@@ -31,8 +31,9 @@ class HueTrigger:
 		track_state_change(eventbus, STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON, self.handle_sun_rising)
 
 		# If the sun is already above horizon schedule the time-based pre-sun set event
-		if True or statemachine.get_state(STATE_CATEGORY_SUN) == SUN_STATE_ABOVE_HORIZON:
-			self.handle_sun_rising()
+		if statemachine.get_state(STATE_CATEGORY_SUN) == SUN_STATE_ABOVE_HORIZON:
+			self.handle_sun_rising(None, None, None)
+
 
 	def get_lights_status(self):
 		lights_are_on = sum([1 for light in self.lights if light.on]) > 0
@@ -60,7 +61,7 @@ class HueTrigger:
 		self.bridge.set_light([1,2,3], command)
 
 
-	def handle_sun_rising(self, event=None):
+	def handle_sun_rising(self, category, oldState, newState):
 		# Schedule an event X minutes prior to sun setting
 		track_time_change(self.eventbus, self.handle_sun_setting, datetime=self.weather.next_sun_setting()-LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD)
 

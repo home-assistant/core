@@ -4,6 +4,7 @@ import time
 from app.StateMachine import StateMachine
 from app.EventBus import EventBus
 from app.DeviceTracker import DeviceTracker
+from HttpInterface import HttpInterface
 
 from app.observer.WeatherWatcher import WeatherWatcher
 from app.observer.TomatoDeviceScanner import TomatoDeviceScanner
@@ -23,7 +24,7 @@ class HomeAssistant:
 		self.devicetracker = None
 
 		self.huetrigger = None
-
+		self.httpinterface = None
 
 	def get_config(self):
 		if self.config is None:
@@ -76,6 +77,12 @@ class HomeAssistant:
 		return self.huetrigger
 
 
+	def setup_http_interface(self):
+		self.httpinterface = HttpInterface(self.get_event_bus(), self.get_state_machine())
+		self.httpinterface.start()
+
+		return self.httpinterface
+
 	def start(self):
 		self.setup_timer().start()
 
@@ -87,6 +94,10 @@ class HomeAssistant:
 				print ""
 				print "Interrupt received. Wrapping up and quiting.."
 				self.timer.stop()
+
+				if self.httpinterface is not None:
+					self.httpinterface.stop()
+
 				break
 
 

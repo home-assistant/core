@@ -38,6 +38,10 @@ class StateMachine:
 
 		return self.states[category]
 
+	def get_states(self):
+		for category in sorted(self.states.keys()):
+			yield category, self.states[category].state, self.states[category].last_changed
+
 
 def track_state_change(eventBus, category, fromState, toState, action):
 	fromState = ensure_list(fromState)
