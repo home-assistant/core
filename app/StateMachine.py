@@ -33,14 +33,18 @@ class StateMachine(object):
 
         self.lock.release()
 
+    def is_state(self, category, state):
+        assert category in self.states, "Category does not exist: {}".format(category)
+
+        return self.get_state(category).state == state
+
     def get_state(self, category):
         assert category in self.states, "Category does not exist: {}".format(category)
 
         return self.states[category]
 
     def get_states(self):
-        for category in sorted(self.states.keys()):
-            yield category, self.states[category].state, self.states[category].last_changed
+        return [(category, self.states[category].state, self.states[category].last_changed) for category in sorted(self.states.keys())]
 
 
 def track_state_change(eventbus, category, from_state, to_state, action):

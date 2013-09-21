@@ -9,8 +9,7 @@ STATE_DEVICE_DEFAULT = STATE_DEVICE_NOT_HOME
 
 # After how much time do we consider a device not home if
 # it does not show up on scans
-# 70 seconds is to ensure 2 scans
-TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(seconds=70)
+TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(seconds=60)
 
 STATE_CATEGORY_ALL_DEVICES = 'device.alldevices'
 STATE_CATEGORY_DEVICE_FORMAT = 'device.{}'
@@ -27,9 +26,9 @@ class DeviceTracker(object):
         temp_devices_to_track = device_scanner.get_devices_to_track()
 
         self.devices_to_track = { device: { 'name': temp_devices_to_track[device],
-                                                                                'last_seen': default_last_seen,
-                                                                                'category': STATE_CATEGORY_DEVICE_FORMAT.format(temp_devices_to_track[device]) }
-                                                          for device in temp_devices_to_track }
+                                            'last_seen': default_last_seen,
+                                            'category': STATE_CATEGORY_DEVICE_FORMAT.format(temp_devices_to_track[device]) }
+                                  for device in temp_devices_to_track }
 
         # Add categories to state machine
         statemachine.add_category(STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_DEFAULT)
@@ -41,8 +40,7 @@ class DeviceTracker(object):
 
 
     def device_state_categories(self):
-        for device in self.devices_to_track:
-            yield self.devices_to_track[device]['category']
+        return [self.devices_to_track[device]['category'] for device in self.devices_to_track]
 
 
     def set_state(self, device, state):
@@ -53,7 +51,8 @@ class DeviceTracker(object):
 
 
     def update_devices(self, found_devices):
-        # Keep track of devices that are home, all that are not will be marked not home
+        """Keep track of devices that are home, all that are not will be marked not home"""
+
         temp_tracking_devices = self.devices_to_track.keys()
 
         for device in found_devices:
@@ -71,7 +70,7 @@ class DeviceTracker(object):
             if datetime.now() - self.devices_to_track[device]['last_seen'] > TIME_SPAN_FOR_ERROR_IN_SCANNING:
                 self.set_state(device, STATE_DEVICE_NOT_HOME)
 
-        # Get the set of currently used statuses
+        # Get the currently used statuses
         states_of_devices = [self.statemachine.get_state(self.devices_to_track[device]['category']).state for device in self.devices_to_track]
 
         all_devices_state = STATE_DEVICE_HOME if STATE_DEVICE_HOME in states_of_devices else STATE_DEVICE_NOT_HOME

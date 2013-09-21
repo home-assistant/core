@@ -39,7 +39,7 @@ class Timer(threading.Thread):
                     break
 
 
-def track_time_change(eventBus, action, year='*', month='*', day='*', hour='*', minute='*', second='*', point_in_time=None, listen_once=False):
+def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', minute='*', second='*', point_in_time=None, listen_once=False):
     year, month, day = ensure_list(year), ensure_list(month), ensure_list(day)
     hour, minute, second = ensure_list(hour), ensure_list(minute), ensure_list(second)
 
@@ -60,4 +60,4 @@ def track_time_change(eventBus, action, year='*', month='*', day='*', hour='*', 
 
             action(event.data['now'])
 
-    eventBus.listen(EVENT_TIME_CHANGED, listener)
+    eventbus.listen(EVENT_TIME_CHANGED, listener)

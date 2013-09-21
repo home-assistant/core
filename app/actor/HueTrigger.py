@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from phue import Bridge
 
@@ -9,6 +9,9 @@ from app.DeviceTracker import STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME, STA
 from app.observer.Timer import track_time_change
 
 LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD = timedelta(minutes=15)
+
+LIGHT_TRANSITION_TIME_HUE = 9000 # 1/10th seconds
+LIGHT_TRANSITION_TIME = timedelta(seconds=LIGHT_TRANSITION_TIME_HUE/10)
 
 class HueTrigger(object):
     def __init__(self, config, eventbus, statemachine, device_tracker, weather):
@@ -31,57 +34,63 @@ class HueTrigger(object):
         track_state_change(eventbus, STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON, self.handle_sun_rising)
 
         # If the sun is already above horizon schedule the time-based pre-sun set event
-        if statemachine.get_state(STATE_CATEGORY_SUN).state == SUN_STATE_ABOVE_HORIZON:
+        if statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_ABOVE_HORIZON):
             self.handle_sun_rising(None, None, None)
 
 
     def get_lights_status(self):
         lights_are_on = sum([1 for light in self.lights if light.on]) > 0
 
-        light_needed = not lights_are_on and self.statemachine.get_state(STATE_CATEGORY_SUN).state == SUN_STATE_BELOW_HORIZON
+        light_needed = not lights_are_on and self.statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON)
 
         return lights_are_on, light_needed
 
+    def turn_light_on(self, light_id=None, transitiontime=None):
+        if light_id is None:
+            light_id = [light.light_id for light in self.lights]
 
-    def turn_lights_on(self, transitiontime=None):
         command = {'on': True, 'xy': [0.5119, 0.4147], 'bri':164}
 
         if transitiontime is not None:
             command['transitiontime'] = transitiontime
 
-        self.bridge.set_light([1, 2, 3], command)
+        self.bridge.set_light(light_id, command)
 
 
-    def turn_lights_off(self, transitiontime=None):
+    def turn_light_off(self, light_id=None, transitiontime=None):
+        if light_id is None:
+            light_id = [light.light_id for light in self.lights]
+
         command = {'on': False}
 
         if transitiontime is not None:
             command['transitiontime'] = transitiontime
 
-        self.bridge.set_light([1, 2, 3], command)
+        self.bridge.set_light(light_id, command)
 
 
     def handle_sun_rising(self, category, old_state, new_state):
-        # Schedule an event X minutes prior to sun setting
-        point_in_time = self.weather.next_sun_setting()-LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD
+        """The moment sun sets we want to have all the lights on.
+           We will schedule to have each light start after one another
+           and slowly transition in."""
 
-        self.logger.info("Will put lights on at {} to compensate less light from setting sun.".format(point_in_time))
+        start_point = self.weather.next_sun_setting() - LIGHT_TRANSITION_TIME * len(self.lights)
 
-        track_time_change(self.eventbus, self.handle_sun_setting, point_in_time=point_in_time)
+        # Lambda can keep track of function parameters, not from local parameters
+        # If we put the lambda directly in the below statement only the last light
+        # would be turned on..
+        def turn_on(light_id):
+            return lambda now: self.turn_light_on_before_sunset(light_id)
+
+        for index, light in enumerate(self.lights):
+            track_time_change(self.eventbus, turn_on(light.light_id),
+                              point_in_time=start_point + index * LIGHT_TRANSITION_TIME)
 
 
-    # Gets called when darkness starts falling in, slowly turn on the lights
-    def handle_sun_setting(self, now):
-        lights_are_on, light_needed = self.get_lights_status()
-
-        if not lights_are_on and self.statemachine.get_state(STATE_CATEGORY_ALL_DEVICES).state == STATE_DEVICE_HOME:
-            self.logger.info("Sun setting and devices home. Turning on lights.")
-
-            # We will start the lights now and by the time the sun sets
-            # the lights will be at full brightness
-            transitiontime = (self.weather.next_sun_setting() - datetime.now()).seconds * 10
-
-            self.turn_lights_on(transitiontime)
+    def turn_light_on_before_sunset(self, light_id=None):
+        """Helper function to turn on lights slowly if there are devices home and the light is not on yet."""
+        if self.statemachine.is_state(STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME) and not self.bridge.get_light(light_id, 'on'):
+            self.turn_light_on(light_id, LIGHT_TRANSITION_TIME_HUE)
 
 
     def handle_device_state_change(self, category, old_state, new_state):
@@ -90,9 +99,9 @@ class HueTrigger(object):
         # Specific device came home ?
         if category != STATE_CATEGORY_ALL_DEVICES and new_state.state == STATE_DEVICE_HOME and light_needed:
             self.logger.info("Home coming event for {}. Turning lights on".format(category))
-            self.turn_lights_on()
+            self.turn_light_on()
 
         # Did all devices leave the house?
         elif category == STATE_CATEGORY_ALL_DEVICES and new_state.state == STATE_DEVICE_NOT_HOME and lights_are_on:
             self.logger.info("Everyone has left. Turning lights off")
-            self.turn_lights_off()
+            self.turn_light_off()
