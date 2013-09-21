@@ -47,6 +47,8 @@ class TomatoDeviceScanner(object):
         # unqualified exec is not allowed in function '__init__' it contains a nested function with free variables
         # self.devices_to_track = {mac: known_devices[mac]['name'] for mac in known_devices if known_devices[mac]['track'] == '1'}
 
+        if len(self.devices_to_track) == 0:
+            self.logging.warning("Found no devices to track. Please update {}.".format(KNOWN_DEVICES_FILE))
 
     def get_devices_to_track(self):
         return self.devices_to_track
