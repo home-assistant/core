@@ -34,8 +34,8 @@ class WeatherWatcher(object):
         return ephem.localtime(self.observer.next_setting(self.sun))
 
     def update_sun_state(self, now=None):
-        next_rising = ephem.localtime(self.observer.next_rising(self.sun))
-        next_setting = ephem.localtime(self.observer.next_setting(self.sun))
+        next_rising = self.next_sun_rising()
+        next_setting = self.next_sun_setting()
 
         if next_rising > next_setting:
             new_state = SUN_STATE_ABOVE_HORIZON

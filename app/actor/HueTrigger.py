@@ -103,5 +103,5 @@ class HueTrigger(object):
 
         # Did all devices leave the house?
         elif category == STATE_CATEGORY_ALL_DEVICES and new_state.state == STATE_DEVICE_NOT_HOME and lights_are_on:
-            self.logger.info("Everyone has left. Turning lights off")
+            self.logger.info("Everyone has left but lights are on. Turning lights off")
             self.turn_light_off()

@@ -47,13 +47,13 @@ def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', 
         assert isinstance(event, Event), "event needs to be of Event type"
 
         if  (point_in_time is not None and event.data['now'] > point_in_time) or \
-                point_in_time is None and \
+                (point_in_time is None and \
                 matcher(event.data['now'].year, year) and \
                 matcher(event.data['now'].month, month) and \
                 matcher(event.data['now'].day, day) and \
                 matcher(event.data['now'].hour, hour) and \
                 matcher(event.data['now'].minute, minute) and \
-                matcher(event.data['now'].second, second):
+                matcher(event.data['now'].second, second)):
 
             # point_in_time are exact points in time so we always remove it after fire
             event.remove_listener = listen_once or point_in_time is not None
