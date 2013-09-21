@@ -19,9 +19,9 @@ class HueTrigger(object):
         self.statemachine = statemachine
         self.weather = weather
 
-        self.bridge = Bridge(config.get("hue","host"))
+        self.bridge = Bridge(config.get("hue","host") if config.has_option("hue","host") else None)
         self.lights = self.bridge.get_light_objects()
-        self.logger = logging.getLogger("HueTrigger")
+        self.logger = logging.getLogger(__name__)
 
         # Track home coming of each seperate device
         for category in device_tracker.device_state_categories():
