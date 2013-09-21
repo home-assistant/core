@@ -8,7 +8,7 @@ from app.StateMachine import track_state_change
 from app.DeviceTracker import STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME, STATE_DEVICE_NOT_HOME
 from app.observer.Timer import track_time_change
 
-LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD = timedelta(minutes=30)
+LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD = timedelta(minutes=15)
 
 class HueTrigger(object):
     def __init__(self, config, eventbus, statemachine, device_tracker, weather):
@@ -31,7 +31,7 @@ class HueTrigger(object):
         track_state_change(eventbus, STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON, self.handle_sun_rising)
 
         # If the sun is already above horizon schedule the time-based pre-sun set event
-        if statemachine.get_state(STATE_CATEGORY_SUN) == SUN_STATE_ABOVE_HORIZON:
+        if statemachine.get_state(STATE_CATEGORY_SUN).state == SUN_STATE_ABOVE_HORIZON:
             self.handle_sun_rising(None, None, None)
 
 
@@ -63,7 +63,11 @@ class HueTrigger(object):
 
     def handle_sun_rising(self, category, old_state, new_state):
         # Schedule an event X minutes prior to sun setting
-        track_time_change(self.eventbus, self.handle_sun_setting, point_in_time=self.weather.next_sun_setting()-LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD)
+        point_in_time = self.weather.next_sun_setting()-LIGHTS_TURNING_ON_BEFORE_SUN_SET_PERIOD
+
+        self.logger.info("Will put lights on at {} to compensate less light from setting sun.".format(point_in_time))
+
+        track_time_change(self.eventbus, self.handle_sun_setting, point_in_time=point_in_time)
 
 
     # Gets called when darkness starts falling in, slowly turn on the lights
