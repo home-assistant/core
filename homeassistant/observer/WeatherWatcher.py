@@ -19,10 +19,6 @@ class WeatherWatcher(object):
         self.eventbus = eventbus
         self.statemachine = statemachine
 
-        self.observer = ephem.Observer()
-        self.observer.lat = self.config.get('common','latitude')
-        self.observer.long = self.config.get('common','longitude')
-
         self.sun = ephem.Sun()
 
         statemachine.add_category(STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON)
@@ -30,20 +26,31 @@ class WeatherWatcher(object):
         self._update_sun_state()
 
 
-    def next_sun_rising(self):
+    def next_sun_rising(self, observer=None):
         """ Returns a datetime object that points at the next sun rising. """
-        return ephem.localtime(self.observer.next_rising(self.sun))
+
+        if observer is None:
+            observer = self._get_observer()
+
+        return ephem.localtime(observer.next_rising(self.sun))
 
 
-    def next_sun_setting(self):
+    def next_sun_setting(self, observer=None):
         """ Returns a datetime object that points at the next sun setting. """
-        return ephem.localtime(self.observer.next_setting(self.sun))
+
+        if observer is None:
+            observer = self._get_observer()
+
+        return ephem.localtime(observer.next_setting(self.sun))
 
 
     def _update_sun_state(self, now=None):
         """ Updates the state of the sun and schedules when to check next. """
-        next_rising = self.next_sun_rising()
-        next_setting = self.next_sun_setting()
+
+        observer = self._get_observer()
+
+        next_rising = self.next_sun_rising(observer)
+        next_setting = self.next_sun_setting(observer)
 
         if next_rising > next_setting:
             new_state = SUN_STATE_ABOVE_HORIZON
@@ -59,3 +66,12 @@ class WeatherWatcher(object):
 
         # +10 seconds to be sure that the change has occured
         track_time_change(self.eventbus, self._update_sun_state, point_in_time=next_change + timedelta(seconds=10))
+
+
+    def _get_observer(self):
+        """ Creates an observer representing the location from the config and the current time. """
+        observer = ephem.Observer()
+        observer.lat = self.config.get('common','latitude')
+        observer.long = self.config.get('common','longitude')
+
+        return observer
