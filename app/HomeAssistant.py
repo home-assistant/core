@@ -1,19 +1,25 @@
+import logging
 from ConfigParser import SafeConfigParser
 import time
 
 from app.StateMachine import StateMachine
 from app.EventBus import EventBus
-from app.DeviceTracker import DeviceTracker
 from app.HttpInterface import HttpInterface
 
+from app.observer.DeviceTracker import DeviceTracker
 from app.observer.WeatherWatcher import WeatherWatcher
 from app.observer.Timer import Timer
 
-from app.actor.HueTrigger import HueTrigger
+from app.actor.LightTrigger import LightTrigger
+
+CONFIG_FILE = "home-assistant.conf"
 
 class HomeAssistant(object):
+    """ Class to tie all modules together and handle dependencies. """
 
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
         self.config = None
         self.eventbus = None
         self.statemachine = None
@@ -22,19 +28,22 @@ class HomeAssistant(object):
         self.weatherwatcher = None
         self.devicetracker = None
 
-        self.huetrigger = None
+        self.lighttrigger = None
         self.httpinterface = None
+
 
     def get_config(self):
         if self.config is None:
+            self.logger.info("Loading HomeAssistant config")
             self.config = SafeConfigParser()
-            self.config.read("home-assistant.conf")
+            self.config.read(CONFIG_FILE)
 
         return self.config
 
 
     def get_event_bus(self):
         if self.eventbus is None:
+            self.logger.info("Setting up event bus")
             self.eventbus = EventBus()
 
         return self.eventbus
@@ -42,6 +51,7 @@ class HomeAssistant(object):
 
     def get_state_machine(self):
         if self.statemachine is None:
+            self.logger.info("Setting up state machine")
             self.statemachine = StateMachine(self.get_event_bus())
 
         return self.statemachine
@@ -49,12 +59,15 @@ class HomeAssistant(object):
 
     def setup_timer(self):
         if self.timer is None:
+            self.logger.info("Setting up timer")
             self.timer = Timer(self.get_event_bus())
 
         return self.timer
 
+
     def setup_weather_watcher(self):
         if self.weatherwatcher is None:
+            self.logger.info("Setting up weather watcher")
             self.weatherwatcher = WeatherWatcher(self.get_config(), self.get_event_bus(), self.get_state_machine())
 
         return self.weatherwatcher
@@ -62,28 +75,35 @@ class HomeAssistant(object):
 
     def setup_device_tracker(self, device_scanner):
         if self.devicetracker is None:
+            self.logger.info("Setting up device tracker")
             self.devicetracker = DeviceTracker(self.get_event_bus(), self.get_state_machine(), device_scanner)
 
         return self.devicetracker
 
 
-    def setup_hue_trigger(self):
-        if self.huetrigger is None:
-            assert self.devicetracker is not None, "Cannot setup Hue Trigger without a device tracker being setup"
+    def setup_light_trigger(self, light_control):
+        if self.lighttrigger is None:
+            self.logger.info("Setting up light trigger")
+            assert self.devicetracker is not None, "Cannot setup light trigger without a device tracker being setup"
 
-            self.huetrigger = HueTrigger(self.get_config(), self.get_event_bus(), self.get_state_machine(), self.devicetracker, self.setup_weather_watcher())
+            self.lighttrigger = LightTrigger(self.get_event_bus(), self.get_state_machine(), self.devicetracker, self.setup_weather_watcher(), light_control)
 
-        return self.huetrigger
+        return self.lighttrigger
 
 
     def setup_http_interface(self):
-        self.httpinterface = HttpInterface(self.get_event_bus(), self.get_state_machine())
-        self.httpinterface.start()
+        if self.httpinterface is None:
+            self.logger.info("Setting up HTTP interface")
+            self.httpinterface = HttpInterface(self.get_event_bus(), self.get_state_machine())
 
         return self.httpinterface
 
+
     def start(self):
         self.setup_timer().start()
+
+        if self.httpinterface is not None:
+            self.httpinterface.start()
 
         while True:
             try:

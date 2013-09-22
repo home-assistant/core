@@ -16,6 +16,7 @@ STATE_CATEGORY_DEVICE_FORMAT = 'device.{}'
 
 
 class DeviceTracker(object):
+    """ Class that tracks which devices are home and which are not. """
 
     def __init__(self, eventbus, statemachine, device_scanner):
         self.statemachine = statemachine
@@ -40,18 +41,12 @@ class DeviceTracker(object):
 
 
     def device_state_categories(self):
+        """ Returns a list of categories of devices that are being tracked by this class. """
         return [self.devices_to_track[device]['category'] for device in self.devices_to_track]
 
 
-    def set_state(self, device, state):
-        if state == STATE_DEVICE_HOME:
-            self.devices_to_track[device]['last_seen'] = datetime.now()
-
-        self.statemachine.set_state(self.devices_to_track[device]['category'], state)
-
-
     def update_devices(self, found_devices):
-        """Keep track of devices that are home, all that are not will be marked not home"""
+        """ Keep track of devices that are home, all that are not will be marked not home. """
 
         temp_tracking_devices = self.devices_to_track.keys()
 
@@ -60,7 +55,8 @@ class DeviceTracker(object):
             if device in temp_tracking_devices:
                 temp_tracking_devices.remove(device)
 
-                self.set_state(device, STATE_DEVICE_HOME)
+                self.devices_to_track[device]['last_seen'] = datetime.now()
+                self.statemachine.set_state(self.devices_to_track[device]['category'], STATE_DEVICE_HOME)
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
@@ -68,7 +64,7 @@ class DeviceTracker(object):
         # not show up for 1 scan beacuse of reboot etc
         for device in temp_tracking_devices:
             if datetime.now() - self.devices_to_track[device]['last_seen'] > TIME_SPAN_FOR_ERROR_IN_SCANNING:
-                self.set_state(device, STATE_DEVICE_NOT_HOME)
+                self.statemachine.set_state(self.devices_to_track[device]['category'], STATE_DEVICE_NOT_HOME)
 
         # Get the currently used statuses
         states_of_devices = [self.statemachine.get_state(self.devices_to_track[device]['category']).state for device in self.devices_to_track]

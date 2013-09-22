@@ -1,27 +1,40 @@
+import logging
 from datetime import datetime
 import threading
 import time
 
 from app.EventBus import Event
-from app.util import ensure_list, matcher
+from app.util import matcher
 
 TIME_INTERVAL = 10 # seconds
 
+# We want to be able to fire every time a minute starts (seconds=0).
+# We want this so other modules can use that to make sure they fire
+# every minute.
 assert 60 % TIME_INTERVAL == 0, "60 % TIME_INTERVAL should be 0!"
 
 EVENT_TIME_CHANGED = "time_changed"
 
 class Timer(threading.Thread):
+    """ Timer will sent out an event every TIME_INTERVAL seconds. """
+
     def __init__(self, eventbus):
         threading.Thread.__init__(self)
 
         self.eventbus = eventbus
         self._stop = threading.Event()
 
+
     def stop(self):
+        """ Tell the timer to stop. """
         self._stop.set()
 
+
     def run(self):
+        """ Start the timer. """
+        
+        logging.getLogger(__name__).info("Starting")
+
         now = datetime.now()
 
         while True:
@@ -40,8 +53,8 @@ class Timer(threading.Thread):
 
 
 def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', minute='*', second='*', point_in_time=None, listen_once=False):
-    year, month, day = ensure_list(year), ensure_list(month), ensure_list(day)
-    hour, minute, second = ensure_list(hour), ensure_list(minute), ensure_list(second)
+    year, month, day = list(year), list(month), list(day)
+    hour, minute, second = list(hour), list(minute), list(second)
 
     def listener(event):
         assert isinstance(event, Event), "event needs to be of Event type"

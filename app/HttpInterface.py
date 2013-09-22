@@ -1,5 +1,6 @@
 import threading
 import urlparse
+import logging
 
 import requests
 
@@ -8,10 +9,42 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 8080
 
+class HttpInterface(threading.Thread):
+    """ Provides an HTTP interface for Home Assistant. """
+
+    def __init__(self, eventbus, statemachine):
+        threading.Thread.__init__(self)
+
+        self.server = HTTPServer((SERVER_HOST, SERVER_PORT), RequestHandler)
+
+        self.server.eventbus = eventbus
+        self.server.statemachine = statemachine
+
+        self._stop = threading.Event()
+
+
+    def run(self):
+        """ Start the HTTP interface. """
+        logging.getLogger(__name__).info("Starting")
+
+        while not self._stop.is_set():
+            self.server.handle_request()
+
+
+    def stop(self):
+        """ Stop the HTTP interface. """
+        self._stop.set()
+
+        # Trigger a fake request to get the server to quit
+        requests.get("http://{}:{}".format(SERVER_HOST, SERVER_PORT))
+
 class RequestHandler(BaseHTTPRequestHandler):
+    """ Handles incoming HTTP requests """
 
     #Handler for the GET requests
     def do_GET(self):
+        """ Handle incoming GET requests. """
+
         if self.path == "/":
             self.send_response(200)
             self.send_header('Content-type','text/html')
@@ -51,6 +84,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
+        """ Handle incoming POST requests. """
+
         length = int(self.headers['Content-Length'])
         post_data = urlparse.parse_qs(self.rfile.read(length))
 
@@ -63,27 +98,3 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         else:
             self.send_response(404)
-
-
-class HttpInterface(threading.Thread):
-
-    def __init__(self, eventbus, statemachine):
-        threading.Thread.__init__(self)
-
-        self.server = HTTPServer((SERVER_HOST, SERVER_PORT), RequestHandler)
-
-        self.server.eventbus = eventbus
-        self.server.statemachine = statemachine
-
-        self._stop = threading.Event()
-
-
-    def run(self):
-        while not self._stop.is_set():
-            self.server.handle_request()
-
-    def stop(self):
-        self._stop.set()
-
-        # Trigger a fake request to get the server to quit
-        requests.get("http://{}:{}".format(SERVER_HOST, SERVER_PORT))
