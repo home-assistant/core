@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import ephem
 
-from app.observer.Timer import track_time_change
+from homeassistant.observer.Timer import track_time_change
 
 STATE_CATEGORY_SUN = "weather.sun"
 

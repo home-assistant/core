@@ -2,15 +2,15 @@ import logging
 from ConfigParser import SafeConfigParser
 import time
 
-from app.StateMachine import StateMachine
-from app.EventBus import EventBus
-from app.HttpInterface import HttpInterface
+from homeassistant.StateMachine import StateMachine
+from homeassistant.EventBus import EventBus
+from homeassistant.HttpInterface import HttpInterface
 
-from app.observer.DeviceTracker import DeviceTracker
-from app.observer.WeatherWatcher import WeatherWatcher
-from app.observer.Timer import Timer
+from homeassistant.observer.DeviceTracker import DeviceTracker
+from homeassistant.observer.WeatherWatcher import WeatherWatcher
+from homeassistant.observer.Timer import Timer
 
-from app.actor.LightTrigger import LightTrigger
+from homeassistant.actor.LightTrigger import LightTrigger
 
 CONFIG_FILE = "home-assistant.conf"
 

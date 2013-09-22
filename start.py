@@ -1,7 +1,7 @@
-from app.HomeAssistant import HomeAssistant
+from homeassistant.HomeAssistant import HomeAssistant
 
-from app.actor.HueLightControl import HueLightControl
-from app.observer.TomatoDeviceScanner import TomatoDeviceScanner
+from homeassistant.actor.HueLightControl import HueLightControl
+from homeassistant.observer.TomatoDeviceScanner import TomatoDeviceScanner
 
 ha = HomeAssistant()
 

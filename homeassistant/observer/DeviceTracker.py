@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from app.observer.Timer import track_time_change
+from homeassistant.observer.Timer import track_time_change
 
 STATE_DEVICE_NOT_HOME = 'device_not_home'
 STATE_DEVICE_HOME = 'device_home'

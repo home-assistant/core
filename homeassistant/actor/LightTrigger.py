@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime, timedelta
 
-from app.observer.WeatherWatcher import STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON
-from app.observer.DeviceTracker import STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME, STATE_DEVICE_NOT_HOME
-from app.StateMachine import track_state_change
-from app.observer.Timer import track_time_change
+from homeassistant.observer.WeatherWatcher import STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON
+from homeassistant.observer.DeviceTracker import STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME, STATE_DEVICE_NOT_HOME
+from homeassistant.StateMachine import track_state_change
+from homeassistant.observer.Timer import track_time_change
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
