@@ -17,8 +17,6 @@ class TomatoDeviceScanner(object):
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.lock = Lock()
-        self.date_updated = None
-        self.last_results = None
 
         # Read known devices
         if os.path.isfile(KNOWN_DEVICES_FILE):
@@ -35,6 +33,9 @@ class TomatoDeviceScanner(object):
             for name, _, mac, _ in dhcpd_lease:
                 if mac not in known_devices:
                     writer.writerow((mac, name, 0))
+
+            self.last_results = [mac for iface, mac, rssi, tx, rx, quality, unknown_num in wldev]
+            self.date_updated = datetime.now()
 
         # Create a dict with ID: NAME of the devices to track
         self.devices_to_track = dict()
@@ -67,6 +68,7 @@ class TomatoDeviceScanner(object):
                 exec(self._tomato_request("devlist"))
 
                 self.last_results = [mac for iface, mac, rssi, tx, rx, quality, unknown_num in wldev]
+                self.date_updated = datetime.now()
 
             except Exception as e:
                 self.logger.exception("Scanning failed")
