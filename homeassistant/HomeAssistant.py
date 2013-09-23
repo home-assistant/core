@@ -2,8 +2,10 @@ import logging
 from ConfigParser import SafeConfigParser
 import time
 
+from homeassistant.common import EVENT_START, EVENT_SHUTDOWN
+
 from homeassistant.StateMachine import StateMachine
-from homeassistant.EventBus import EventBus
+from homeassistant.EventBus import EventBus, Event
 from homeassistant.HttpInterface import HttpInterface
 
 from homeassistant.observer.DeviceTracker import DeviceTracker
@@ -100,10 +102,9 @@ class HomeAssistant(object):
 
 
     def start(self):
-        self.setup_timer().start()
-
-        if self.httpinterface is not None:
-            self.httpinterface.start()
+        self.setup_timer()
+        
+        self.get_event_bus().fire(Event(EVENT_START))
 
         while True:
             try:
@@ -111,10 +112,6 @@ class HomeAssistant(object):
 
             except KeyboardInterrupt:
                 print ""
-                print "Interrupt received. Wrapping up and quiting.."
-                self.timer.stop()
-
-                if self.httpinterface is not None:
-                    self.httpinterface.stop()
+                self.eventbus.fire(Event(EVENT_SHUTDOWN))
 
                 break

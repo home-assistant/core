@@ -3,6 +3,7 @@ from datetime import datetime
 import threading
 import time
 
+from homeassistant.common import EVENT_START, EVENT_SHUTDOWN
 from homeassistant.EventBus import Event
 from homeassistant.util import ensure_list, matcher
 
@@ -24,11 +25,8 @@ class Timer(threading.Thread):
         self.eventbus = eventbus
         self._stop = threading.Event()
 
-
-    def stop(self):
-        """ Tell the timer to stop. """
-        self._stop.set()
-
+        eventbus.listen(EVENT_START, lambda event: self.start())
+        eventbus.listen(EVENT_SHUTDOWN, lambda event: self._stop.set())
 
     def run(self):
         """ Start the timer. """

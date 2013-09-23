@@ -1,10 +1,11 @@
 import threading
 import urlparse
 import logging
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import requests
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from homeassistant.common import EVENT_START, EVENT_SHUTDOWN
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 8080
@@ -22,6 +23,8 @@ class HttpInterface(threading.Thread):
 
         self._stop = threading.Event()
 
+        eventbus.listen(EVENT_START, lambda event: self.start())
+        eventbus.listen(EVENT_SHUTDOWN, lambda event: self.stop())
 
     def run(self):
         """ Start the HTTP interface. """

@@ -1,3 +1,6 @@
+EVENT_START = "start"
+EVENT_SHUTDOWN = "shutdown"
+
 def ensure_list(parameter):
 	return parameter if isinstance(parameter, list) else [parameter]
 
