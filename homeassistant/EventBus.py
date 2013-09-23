@@ -61,7 +61,7 @@ class EventBus(object):
 class Event(object):
     """ An event to be sent over the eventbus. """
 
-    def __init__(self, event_type, data):
+    def __init__(self, event_type, data={}):
         self.event_type = event_type
         self.data = data
         self.stop_propegating = False
