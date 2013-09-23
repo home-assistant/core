@@ -3,7 +3,7 @@ from threading import RLock
 from datetime import datetime
 
 from homeassistant.EventBus import Event
-from homeassistant.util import matcher
+from homeassistant.util import ensure_list, matcher
 
 EVENT_STATE_CHANGED = "state_changed"
 
@@ -55,8 +55,8 @@ class StateMachine(object):
 
 def track_state_change(eventbus, category, from_state, to_state, action):
     """ Helper method to track specific state changes. """
-    from_state = list(from_state)
-    to_state = list(to_state)
+    from_state = ensure_list(from_state)
+    to_state = ensure_list(to_state)
 
     def listener(event):
         assert isinstance(event, Event), "event needs to be of Event type"

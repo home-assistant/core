@@ -4,7 +4,7 @@ import threading
 import time
 
 from homeassistant.EventBus import Event
-from homeassistant.util import matcher
+from homeassistant.util import ensure_list, matcher
 
 TIME_INTERVAL = 10 # seconds
 
@@ -53,9 +53,9 @@ class Timer(threading.Thread):
 
 
 def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', minute='*', second='*', point_in_time=None, listen_once=False):
-    year, month, day = list(year), list(month), list(day)
-    hour, minute, second = list(hour), list(minute), list(second)
-
+    year, month, day = ensure_list(year), ensure_list(month), ensure_list(day)
+    hour, minute, second = ensure_list(hour), ensure_list(minute), ensure_list(second)
+    
     def listener(event):
         assert isinstance(event, Event), "event needs to be of Event type"
 
