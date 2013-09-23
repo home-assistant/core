@@ -79,6 +79,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             write("<input type='submit' value='set state' />")
             write("</form>")
 
+            # Describe event bus:
+            for category in self.server.eventbus.listeners:
+                write("Event {}: {} listeners<br />".format(category, len(self.server.eventbus.listeners[category])))
+
         else:
             self.send_response(404)
 
