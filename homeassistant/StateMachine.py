@@ -3,7 +3,7 @@ from threading import RLock
 from datetime import datetime
 
 from homeassistant.EventBus import Event
-from homeassistant.util import ensure_list, matcher
+from homeassistant.common import ensure_list, matcher
 
 EVENT_STATE_CHANGED = "state_changed"
 

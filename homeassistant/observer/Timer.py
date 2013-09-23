@@ -5,7 +5,7 @@ import time
 
 from homeassistant.common import EVENT_START, EVENT_SHUTDOWN
 from homeassistant.EventBus import Event
-from homeassistant.util import ensure_list, matcher
+from homeassistant.common import ensure_list, matcher
 
 TIME_INTERVAL = 10 # seconds
 
