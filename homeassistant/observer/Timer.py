@@ -36,11 +36,6 @@ class Timer(threading.Thread):
         now = datetime.now()
 
         while True:
-            if self._stop.isSet():
-                break
-
-            self.eventbus.fire(Event(EVENT_TIME_CHANGED, {'now':now}))
-
             while True:
                 time.sleep(1)
 
@@ -48,6 +43,11 @@ class Timer(threading.Thread):
 
                 if self._stop.isSet() or now.second % TIME_INTERVAL == 0:
                     break
+
+            if self._stop.isSet():
+                break
+
+            self.eventbus.fire(Event(EVENT_TIME_CHANGED, {'now':now}))
 
 
 def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', minute='*', second='*', point_in_time=None, listen_once=False):
