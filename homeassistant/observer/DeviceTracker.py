@@ -5,11 +5,10 @@ from homeassistant.observer.Timer import track_time_change
 STATE_DEVICE_NOT_HOME = 'device_not_home'
 STATE_DEVICE_HOME = 'device_home'
 
-STATE_DEVICE_DEFAULT = STATE_DEVICE_NOT_HOME
 
 # After how much time do we consider a device not home if
 # it does not show up on scans
-TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(seconds=60)
+TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=1)
 
 STATE_CATEGORY_ALL_DEVICES = 'device.alldevices'
 STATE_CATEGORY_DEVICE_FORMAT = 'device.{}'
@@ -22,20 +21,31 @@ class DeviceTracker(object):
         self.statemachine = statemachine
         self.eventbus = eventbus
 
-        default_last_seen = datetime(1990, 1, 1)
-
         temp_devices_to_track = device_scanner.get_devices_to_track()
 
         self.devices_to_track = { device: { 'name': temp_devices_to_track[device],
-                                            'last_seen': default_last_seen,
                                             'category': STATE_CATEGORY_DEVICE_FORMAT.format(temp_devices_to_track[device]) }
                                   for device in temp_devices_to_track }
 
-        # Add categories to state machine
-        statemachine.add_category(STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_DEFAULT)
+        # Add categories to state machine and update last_seen attribute
+        # If we don't update now a change event will be fired on boot.
+        initial_search = device_scanner.scan_devices()
+
+        default_last_seen = datetime(1990, 1, 1)
 
         for device in self.devices_to_track:
-            self.statemachine.add_category(self.devices_to_track[device]['category'], STATE_DEVICE_DEFAULT)
+            if device in initial_search:
+                new_state = STATE_DEVICE_HOME
+                new_last_seen = datetime.now()
+            else:
+                new_state = STATE_DEVICE_NOT_HOME
+                new_last_seen = default_last_seen
+
+            self.devices_to_track[device]['last_seen'] = new_last_seen
+            self.statemachine.add_category(self.devices_to_track[device]['category'], new_state)
+
+        # Update all devices state
+        statemachine.add_category(STATE_CATEGORY_ALL_DEVICES, STATE_DEVICE_HOME if len(initial_search) > 0 else STATE_DEVICE_NOT_HOME)
 
         track_time_change(eventbus, lambda time: self.update_devices(device_scanner.scan_devices()))
 
