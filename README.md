@@ -43,4 +43,4 @@ This allows us to implement simple business rules to easily customize or extend 
       If the lights are off and the combined state of all tracked device equals 'Home':
         Turn on the lights
 
-These rules are currently implemented in the file [LightTrigger.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/actor/LightTrigger.py).
+These rules are currently implemented in the file [actors.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/actors.py).
