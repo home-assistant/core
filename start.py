@@ -1,12 +1,21 @@
-from homeassistant.HomeAssistant import HomeAssistant
+from ConfigParser import SafeConfigParser
 
-from homeassistant.actor.HueLightControl import HueLightControl
-from homeassistant.observer.TomatoDeviceScanner import TomatoDeviceScanner
+from homeassistant import HomeAssistant
 
-ha = HomeAssistant()
+from homeassistant.actors import HueLightControl
+from homeassistant.observers import TomatoDeviceScanner
 
-ha.setup_device_tracker(TomatoDeviceScanner(ha.get_config()))
-ha.setup_light_trigger(HueLightControl(ha.get_config()))
+config = SafeConfigParser()
+config.read("home-assistant.conf")
+
+tomato = TomatoDeviceScanner(config.get('tomato','host'), config.get('tomato','username'), 
+							 config.get('tomato','password'), config.get('tomato','http_id'))
+
+
+ha = HomeAssistant(config.get("common","latitude"), config.get("common","longitude"))
+
+ha.setup_light_trigger(tomato, HueLightControl())
+
 ha.setup_http_interface()
 
 ha.start()

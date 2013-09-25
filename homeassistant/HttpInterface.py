@@ -1,3 +1,11 @@
+"""
+homeassistant.httpinterface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module provides an HTTP interface for debug purposes.
+
+"""
+
 import threading
 import urlparse
 import logging
@@ -5,12 +13,12 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import requests
 
-from homeassistant.common import EVENT_START, EVENT_SHUTDOWN
+from .core import EVENT_START, EVENT_SHUTDOWN
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 8080
 
-class HttpInterface(threading.Thread):
+class HTTPInterface(threading.Thread):
     """ Provides an HTTP interface for Home Assistant. """
 
     def __init__(self, eventbus, statemachine):
