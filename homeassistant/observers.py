@@ -264,8 +264,6 @@ class TomatoDeviceScanner(object):
             with open(TOMATO_KNOWN_DEVICES_FILE) as inp:
                 self.known_devices = { row['mac']: row for row in csv.DictReader(inp) }
 
-        self._update_known_devices_file()
-
         # Create a dict with ID: NAME of the devices to track
         self.devices_to_track = {mac: info['name'] for mac, info in self.known_devices.items() if info['track'] == '1'}
 
@@ -297,8 +295,6 @@ class TomatoDeviceScanner(object):
                                                         data={'_http_id':self.http_id, 'exec':'devlist'},
                                                         auth=requests.auth.HTTPBasicAuth(self.username, self.password))
 
-                self.date_updated = datetime.now()
-
                 """
                 Tomato API:
                 arplist contains a list of lists with items:
@@ -325,26 +321,33 @@ class TomatoDeviceScanner(object):
                                      for param, value in re.findall(r"(?P<param>\w*) = (?P<value>.*);", req.text)
                                      if param in ["wldev","dhcpd_lease"]}
 
+                self.date_updated = datetime.now()
+
+                # If we come along any unknown devices we will write them to the known devices file
+                unknown_devices = [(name, mac) for name, _, mac, _ in self.last_results['dhcpd_lease'] if mac not in self.known_devices]
+
+                if len(unknown_devices) > 0:
+                    self.logger.info("Tomato:Found {} new devices, updating {}".format(len(unknown_devices), TOMATO_KNOWN_DEVICES_FILE))
+
+                    with open(TOMATO_KNOWN_DEVICES_FILE, 'a') as outp:
+                        writer = csv.writer(outp)
+
+                        for name, mac in unknown_devices:
+                            writer.writerow((mac, name, 0))
+                            self.known_devices[mac] = {'name':name, 'track': '0'}
+
             except requests.ConnectionError:
-                self.logger.exception("Scanning failed")
+                self.logger.exception("Tomato:Scanning failed")
 
                 return False
+
+            except IOError:
+                self.logger.exception("Tomato:Updating {} failed".format(TOMATO_KNOWN_DEVICES_FILE))
+
+                return True
 
             finally:
                 self.lock.release()
 
 
         return True
-
-    def _update_known_devices_file(self):
-        """ Update known devices csv file. """
-        self._update_tomato_info()
-
-        with open(TOMATO_KNOWN_DEVICES_FILE, 'a') as outp:
-            writer = csv.writer(outp)
-
-            for name, _, mac, _ in self.last_results['dhcpd_lease']:
-                if mac not in self.known_devices:
-                    self.known_devices[mac] = {'name':name, 'track': '0'}
-                    writer.writerow((mac, name, 0))
-
