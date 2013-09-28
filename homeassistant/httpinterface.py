@@ -74,7 +74,10 @@ class HTTPInterface(threading.Thread):
         self._stop.set()
 
         # Trigger a fake request to get the server to quit
-        requests.get("http://127.0.0.1:{}".format(SERVER_PORT))
+        try:
+            requests.get("http://127.0.0.1:{}".format(SERVER_PORT), timeout=0.001)
+        except requests.TimeOut:
+            pass
 
 class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """
