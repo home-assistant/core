@@ -13,6 +13,8 @@ import os
 from datetime import datetime, timedelta
 import threading
 import time
+import re
+import json
 
 import requests
 import ephem
@@ -191,8 +193,7 @@ class DeviceTracker(object):
                                   for device in temp_devices_to_track }
 
         # Add categories to state machine and update last_seen attribute
-        # If we don't update now a change event will be fired on boot.
-        initial_search = device_scanner.scan_devices()
+        initial_search = device_scanner.get_active_devices()
 
         default_last_seen = datetime(1990, 1, 1)
 
@@ -210,7 +211,7 @@ class DeviceTracker(object):
         # Update all devices state
         statemachine.add_category(STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME if len(initial_search) > 0 else DEVICE_STATE_NOT_HOME)
 
-        track_time_change(eventbus, lambda time: self.update_devices(device_scanner.scan_devices()))
+        track_time_change(eventbus, lambda time: self.update_devices(device_scanner.get_active_devices()))
 
 
     def device_state_categories(self):
@@ -258,35 +259,15 @@ class TomatoDeviceScanner(object):
         self.logger = logging.getLogger(__name__)
         self.lock = threading.Lock()
 
-        # Read known devices
+        # Read known devices if file exists
         if os.path.isfile(TOMATO_KNOWN_DEVICES_FILE):
             with open(TOMATO_KNOWN_DEVICES_FILE) as inp:
-                known_devices = { row['mac']: row for row in csv.DictReader(inp) }
+                self.known_devices = { row['mac']: row for row in csv.DictReader(inp) }
 
-        # Update known devices csv file for future use
-        with open(TOMATO_KNOWN_DEVICES_FILE, 'a') as outp:
-            writer = csv.writer(outp)
-
-            # Query for new devices
-            exec(self._tomato_request("devlist"))
-
-            for name, _, mac, _ in dhcpd_lease:
-                if mac not in known_devices:
-                    writer.writerow((mac, name, 0))
-
-            self.last_results = [mac for iface, mac, rssi, tx, rx, quality, unknown_num in wldev]
-            self.date_updated = datetime.now()
+        self._update_known_devices_file()
 
         # Create a dict with ID: NAME of the devices to track
-        self.devices_to_track = dict()
-
-        for mac in known_devices:
-            if known_devices[mac]['track'] == '1':
-                self.devices_to_track[mac] = known_devices[mac]['name']
-
-        # Quicker way of the previous statement but it doesn't go together with exec:
-        # unqualified exec is not allowed in function '__init__' it contains a nested function with free variables
-        # self.devices_to_track = {mac: known_devices[mac]['name'] for mac in known_devices if known_devices[mac]['track'] == '1'}
+        self.devices_to_track = {mac: info['name'] for mac, info in self.known_devices.items() if info['track'] == '1'}
 
         if len(self.devices_to_track) == 0:
             self.logger.warning("No devices to track. Please update {}.".format(TOMATO_KNOWN_DEVICES_FILE))
@@ -295,55 +276,75 @@ class TomatoDeviceScanner(object):
         """ Returns a ``dict`` with device_id: device_name values. """
         return self.devices_to_track
 
-    def scan_devices(self):
+    def get_active_devices(self):
         """ Scans for new devices and returns a list containing device_ids. """
-        self.lock.acquire()
+        self._update_tomato_info()
 
-        # We don't want to hammer the router. Only update if TOMATO_MIN_TIME_BETWEEN_SCANS has passed
-        if self.date_updated is None or datetime.now() - self.date_updated > TOMATO_MIN_TIME_BETWEEN_SCANS:
+        return [item[1] for item in self.last_results['wldev']]
+
+    def _update_tomato_info(self):
+        """ Ensures the information from the Tomato router is up to date.
+            Returns boolean if successful. """
+
+        # if date_updated is not defined (update has never ran) or the date is too old we scan for new data
+        if not hasattr(self,'date_updated') or datetime.now() - self.date_updated > TOMATO_MIN_TIME_BETWEEN_SCANS:
+            self.lock.acquire()
+
             self.logger.info("Tomato:Scanning")
 
             try:
-                # Query for new devices
-                exec(self._tomato_request("devlist"))
+                req = requests.post('http://{}/update.cgi'.format(self.host),
+                                                        data={'_http_id':self.http_id, 'exec':'devlist'},
+                                                        auth=requests.auth.HTTPBasicAuth(self.username, self.password))
 
-                self.last_results = [mac for iface, mac, rssi, tx, rx, quality, unknown_num in wldev]
                 self.date_updated = datetime.now()
 
-            except Exception as e:
+                """
+                Tomato API:
+                arplist contains a list of lists with items:
+                 - ip (string)
+                 - mac (string)
+                 - iface (string)
+
+                wldev contains list of lists with items:
+                 - iface (string)
+                 - mac (string)
+                 - rssi (int)
+                 - tx (int)
+                 - rx (int)
+                 - quality (int)
+                 - unknown_num (int)
+
+                dhcpd_lease contains a list of lists with items:
+                 - name (string)
+                 - ip (string)
+                 - mac (string)
+                 - lease_age (string)
+                """
+                self.last_results = {param: json.loads(value.replace("'",'"'))
+                                     for param, value in re.findall(r"(?P<param>\w*) = (?P<value>.*);", req.text)
+                                     if param in ["wldev","dhcpd_lease"]}
+
+            except requests.ConnectionError:
                 self.logger.exception("Scanning failed")
 
+                return False
 
-        self.lock.release()
-        return self.last_results
-
-    def _tomato_request(self, action):
-        """ Talk to the Tomato API. """
-        # Get router info
-        req = requests.post('http://{}/update.cgi'.format(self.host),
-                                                data={'_http_id':self.http_id, 'exec':action},
-                                                auth=requests.auth.HTTPBasicAuth(self.username, self.password))
-
-        return req.text
+            finally:
+                self.lock.release()
 
 
+        return True
 
-"""
-Tomato API:
-for ip, mac, iface in arplist:
-    pass
+    def _update_known_devices_file(self):
+        """ Update known devices csv file. """
+        self._update_tomato_info()
 
-print wlnoise
+        with open(TOMATO_KNOWN_DEVICES_FILE, 'a') as outp:
+            writer = csv.writer(outp)
 
-print dhcpd_static
+            for name, _, mac, _ in self.last_results['dhcpd_lease']:
+                if mac not in self.known_devices:
+                    self.known_devices[mac] = {'name':name, 'track': '0'}
+                    writer.writerow((mac, name, 0))
 
-for iface, mac, rssi, tx, rx, quality, unknown_num in wldev:
-    print mac, quality
-
-for name, ip, mac, lease in dhcpd_lease:
-    if name:
-        print name, ip
-
-    else:
-        print ip
-"""
