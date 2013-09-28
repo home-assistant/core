@@ -1,0 +1,2 @@
+python -B -m unittest homeassistant.test
+ 

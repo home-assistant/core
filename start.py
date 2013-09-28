@@ -16,6 +16,6 @@ ha = HomeAssistant(config.get("common","latitude"), config.get("common","longitu
 
 ha.setup_light_trigger(tomato, HueLightControl())
 
-ha.setup_http_interface()
+ha.setup_http_interface(config.get("common","api_password"))
 
 ha.start()

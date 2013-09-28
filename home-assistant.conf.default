@@ -1,6 +1,7 @@
 [common]
 latitude=32.87336
 longitude=-117.22743
+api_password=mypass
 
 [tomato]
 host=192.168.1.1

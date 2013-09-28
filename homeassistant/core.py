@@ -121,9 +121,9 @@ class StateMachine(object):
 
     def set_state(self, category, new_state):
         """ Set the state of a category. """
-        self.lock.acquire()
+        self._validate_category(category)
 
-        assert category in self.states, "Category does not exist: {}".format(category)
+        self.lock.acquire()
 
         old_state = self.states[category]
 
@@ -136,16 +136,27 @@ class StateMachine(object):
 
     def is_state(self, category, state):
         """ Returns True if category is specified state. """
-        assert category in self.states, "Category does not exist: {}".format(category)
+        self._validate_category(category)
 
         return self.get_state(category).state == state
 
     def get_state(self, category):
         """ Returns a tuple (state,last_changed) describing the state of the specified category. """
-        assert category in self.states, "Category does not exist: {}".format(category)
+        self._validate_category(category)
 
         return self.states[category]
 
     def get_states(self):
         """ Returns a list of tuples (category, state, last_changed) sorted by category. """
         return [(category, self.states[category].state, self.states[category].last_changed) for category in sorted(self.states.keys())]
+
+    def _validate_category(self, category):
+        if category not in self.states:
+            raise CategoryDoesNotExistException("Category {} does not exist.".format(category))
+
+
+class HomeAssistantException(Exception):
+    """ General Home Assistant exception occured. """
+
+class CategoryDoesNotExistException(HomeAssistantException):
+    """ Specified category does not exist within the state machine. """

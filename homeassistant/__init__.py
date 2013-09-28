@@ -40,11 +40,11 @@ class HomeAssistant(object):
         LightTrigger(self.eventbus, self.statemachine, self._setup_weather_watcher(), devicetracker, light_control)
 
 
-    def setup_http_interface(self):
+    def setup_http_interface(self, api_password):
         """ Sets up the HTTP interface. """
         if self.httpinterface is None:
             self.logger.info("Setting up HTTP interface")
-            self.httpinterface = HTTPInterface(self.eventbus, self.statemachine)
+            self.httpinterface = HTTPInterface(self.eventbus, self.statemachine, api_password)
 
         return self.httpinterface
 
