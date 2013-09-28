@@ -22,7 +22,27 @@ Installation instructions
 
 Done. Start it now by running `python start.py`
 
-Home Assistent architecture
+Web interface and API
+---------------------
+Home Assistent runs a webserver accessible by default on port 8080. At / it will provide a debug interface showing the current state of the system. At /api/ it provides an API so it can be controlled from other devices through HTTP POST requests. 
+
+To interface with the API requests should include the parameter api_password which matches the api_password in home-assistant.conf.
+
+The following API commands are currently supported:
+
+    /api/state/change - POST
+    parameter: api_password - string
+    parameter: category - string
+    parameter: new_state - string
+    Changes category 'category' to 'new_state'
+
+    /api/event/fire - POST
+    parameter: api_password - string
+    parameter: event_name - string
+    parameter: event_data - object encoded as JSON string (optional)
+    Fires an 'event_name' event containing data from 'event_data'
+
+Architecture
 ---------------------------
 
 Home Assistent has been built from the ground up with extensibility and modularity in mind. It is easy to swap in a different device tracker that polls another wireless router for example. 
