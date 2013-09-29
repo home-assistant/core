@@ -255,6 +255,9 @@ class TomatoDeviceScanner(object):
         self.logger = logging.getLogger(__name__)
         self.lock = threading.Lock()
 
+        self.date_updated = None
+        self.last_results = None
+
         # Read known devices if file exists
         if os.path.isfile(TOMATO_KNOWN_DEVICES_FILE):
             with open(TOMATO_KNOWN_DEVICES_FILE) as inp:
@@ -281,7 +284,7 @@ class TomatoDeviceScanner(object):
             Returns boolean if successful. """
 
         # if date_updated is not defined (update has never ran) or the date is too old we scan for new data
-        if not hasattr(self,'date_updated') or datetime.now() - self.date_updated > TOMATO_MIN_TIME_BETWEEN_SCANS:
+        if self.date_updated is None or datetime.now() - self.date_updated > TOMATO_MIN_TIME_BETWEEN_SCANS:
             self.lock.acquire()
 
             self.logger.info("Tomato:Scanning")
