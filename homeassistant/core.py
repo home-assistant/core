@@ -115,22 +115,23 @@ class StateMachine(object):
         self.eventbus = eventbus
         self.lock = RLock()
 
-    def add_category(self, category, initial_state):
-        """ Add a category which state we will keep track off. """
-        self.states[category] = State(initial_state, datetime.now())
-
     def set_state(self, category, new_state):
-        """ Set the state of a category. """
-        self._validate_category(category)
+        """ Set the state of a category, add category is it does not exist. """
 
         self.lock.acquire()
 
-        old_state = self.states[category]
-
-        if old_state.state != new_state:
+        # Add category is it does not exist
+        if category not in self.states:
             self.states[category] = State(new_state, datetime.now())
 
-            self.eventbus.fire(Event(EVENT_STATE_CHANGED, {'category':category, 'old_state':old_state, 'new_state':self.states[category]}))
+        # Change state and fire listeners
+        else:
+            old_state = self.states[category]
+
+            if old_state.state != new_state:
+                self.states[category] = State(new_state, datetime.now())
+
+                self.eventbus.fire(Event(EVENT_STATE_CHANGED, {'category':category, 'old_state':old_state, 'new_state':self.states[category]}))
 
         self.lock.release()
 
@@ -151,6 +152,7 @@ class StateMachine(object):
         return [(category, self.states[category].state, self.states[category].last_changed) for category in sorted(self.states.keys())]
 
     def _validate_category(self, category):
+        """ Helper function to throw an exception when the category does not exist. """
         if category not in self.states:
             raise CategoryDoesNotExistException("Category {} does not exist.".format(category))
 

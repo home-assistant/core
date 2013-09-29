@@ -122,7 +122,7 @@ class WeatherWatcher(object):
 
         self.sun = ephem.Sun()
 
-        self._update_sun_state(create_state=True)
+        self._update_sun_state()
 
 
     def next_sun_rising(self, observer=None):
@@ -143,7 +143,7 @@ class WeatherWatcher(object):
         return ephem.localtime(observer.next_setting(self.sun))
 
 
-    def _update_sun_state(self, now=None, create_state=False):
+    def _update_sun_state(self, now=None):
         """ Updates the state of the sun and schedules when to check next. """
 
         observer = self._get_observer()
@@ -161,11 +161,7 @@ class WeatherWatcher(object):
 
         self.logger.info("Sun:{}. Next change: {}".format(new_state, next_change.strftime("%H:%M")))
 
-        if create_state:
-            self.statemachine.add_category(STATE_CATEGORY_SUN, new_state)
-
-        else:
-            self.statemachine.set_state(STATE_CATEGORY_SUN, new_state)
+        self.statemachine.set_state(STATE_CATEGORY_SUN, new_state)
 
         # +10 seconds to be sure that the change has occured
         track_time_change(self.eventbus, self._update_sun_state, point_in_time=next_change + timedelta(seconds=10))
@@ -206,10 +202,10 @@ class DeviceTracker(object):
                 new_last_seen = default_last_seen
 
             self.devices_to_track[device]['last_seen'] = new_last_seen
-            self.statemachine.add_category(self.devices_to_track[device]['category'], new_state)
+            self.statemachine.set_state(self.devices_to_track[device]['category'], new_state)
 
         # Update all devices state
-        statemachine.add_category(STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME if len(initial_search) > 0 else DEVICE_STATE_NOT_HOME)
+        statemachine.set_state(STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME if len(initial_search) > 0 else DEVICE_STATE_NOT_HOME)
 
         track_time_change(eventbus, lambda time: self.update_devices(device_scanner.get_active_devices()))
 

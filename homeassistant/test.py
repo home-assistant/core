@@ -48,7 +48,7 @@ class TestHTTPInterface(HomeAssistantTestCase):
 
             HTTPInterface(self.eventbus, self.statemachine, API_PASSWORD)
 
-            self.statemachine.add_category("test", "INIT_STATE")
+            self.statemachine.set_state("test", "INIT_STATE")
 
             self.eventbus.fire(Event(EVENT_START))
 
@@ -96,7 +96,8 @@ class TestHTTPInterface(HomeAssistantTestCase):
                                                                     "new_state":"debug_state_change",
                                                                     "api_password":API_PASSWORD})
 
-        self.assertEqual(req.status_code, 400)
+        self.assertEqual(req.status_code, 200)
+        self.assertEqual(self.statemachine.get_state("test_category_that_does_not_exist").state, "debug_state_change")
 
     def test_api_fire_event_with_no_data(self):
         """ Test if the API allows us to fire an event. """
