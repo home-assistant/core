@@ -91,77 +91,63 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         get_data = parse_qs(url.query)
 
-        # Verify API password
-        if get_data.get('api_password', [''])[0] != self.server.api_password:
-            self.send_response(200)
-            self.send_header('Content-type','text/html')
-            self.end_headers()
-
-            write("<html>")
-            write("<form action='/' method='GET'>")
-            write("API password: <input name='api_password' />")
-            write("<input type='submit' value='submit' />")
-            write("</form>")
-            write("</html>")
+        if url.path == "/":
+            if self._verify_api_password(get_data.get('api_password', [''])[0], False):
+                self.send_response(200)
+                self.send_header('Content-type','text/html')
+                self.end_headers()
 
 
-        # Serve debug URL
-        elif url.path == "/":
-            self.send_response(200)
-            self.send_header('Content-type','text/html')
-            self.end_headers()
+                write("<html>")
 
+                # Flash message support
+                if self.server.flash_message is not None:
+                    write("<h3>{}</h3>".format(self.server.flash_message))
 
-            write("<html>")
+                    self.server.flash_message = None
 
-            # Flash message support
-            if self.server.flash_message is not None:
-                write("<h3>{}</h3>".format(self.server.flash_message))
+                # Describe state machine:
+                categories = []
 
-                self.server.flash_message = None
+                write("<table>")
+                write("<tr><th>Name</th><th>State</th><th>Last Changed</th></tr>")
 
-            # Describe state machine:
-            categories = []
+                for category, state, last_changed in self.server.statemachine.get_states():
+                    categories.append(category)
 
-            write("<table>")
-            write("<tr><th>Name</th><th>State</th><th>Last Changed</th></tr>")
+                    write("<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(category, state, last_changed.strftime("%H:%M:%S %d-%m-%Y")))
 
-            for category, state, last_changed in self.server.statemachine.get_states():
-                categories.append(category)
+                write("</table>")
 
-                write("<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(category, state, last_changed.strftime("%H:%M:%S %d-%m-%Y")))
+                # Small form to change the state
+                write("<br />Change state:<br />")
+                write("<form action='state/change' method='POST'>")
+                write("<input type='hidden' name='api_password' value='{}' />".format(self.server.api_password))
+                write("<select name='category'>")
 
-            write("</table>")
+                for category in categories:
+                    write("<option>{}</option>".format(category))
 
-            # Small form to change the state
-            write("<br />Change state:<br />")
-            write("<form action='state/change' method='POST'>")
-            write("<input type='hidden' name='api_password' value='{}' />".format(self.server.api_password))
-            write("<select name='category'>")
+                write("</select>")
 
-            for category in categories:
-                write("<option>{}</option>".format(category))
+                write("<input name='new_state' />")
+                write("<input type='submit' value='set state' />")
+                write("</form>")
 
-            write("</select>")
+                # Describe event bus:
+                for category in self.server.eventbus.listeners:
+                    write("Event {}: {} listeners<br />".format(category, len(self.server.eventbus.listeners[category])))
 
-            write("<input name='new_state' />")
-            write("<input type='submit' value='set state' />")
-            write("</form>")
+                # Form to allow firing events
+                write("<br /><br />")
+                write("<form action='event/fire' method='POST'>")
+                write("<input type='hidden' name='api_password' value='{}' />".format(self.server.api_password))
+                write("Event name: <input name='event_name' /><br />")
+                write("Event data (json): <input name='event_data' /><br />")
+                write("<input type='submit' value='fire event' />")
+                write("</form>")
 
-            # Describe event bus:
-            for category in self.server.eventbus.listeners:
-                write("Event {}: {} listeners<br />".format(category, len(self.server.eventbus.listeners[category])))
-
-            # Form to allow firing events
-            write("<br /><br />")
-            write("<form action='event/fire' method='POST'>")
-            write("<input type='hidden' name='api_password' value='{}' />".format(self.server.api_password))
-            write("Event name: <input name='event_name' /><br />")
-            write("Event data (json): <input name='event_data' /><br />")
-            write("<input type='submit' value='fire event' />")
-            write("</form>")
-
-            write("</html>")
+                write("</html>")
 
 
         else:
@@ -185,42 +171,62 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.server.logger.info(post_data)
         self.server.logger.info(action)
 
-
-        # Verify API password
-        if post_data.get("api_password", [''])[0] != self.server.api_password:
-            self._message(use_json, "API password missing or incorrect.", MESSAGE_STATUS_UNAUTHORIZED)
-
+        given_api_password = post_data.get("api_password", [''])[0]
 
         # Action to change the state
-        elif action == "state/change":
-            category, new_state = post_data['category'][0], post_data['new_state'][0]
+        if action == "state/change":
+            if self._verify_api_password(given_api_password, use_json):
+                category, new_state = post_data['category'][0], post_data['new_state'][0]
 
-            try:
-                self.server.statemachine.set_state(category, new_state)
+                try:
+                    self.server.statemachine.set_state(category, new_state)
 
-                self._message(use_json, "State of {} changed to {}.".format(category, new_state))
+                    self._message(use_json, "State of {} changed to {}.".format(category, new_state))
 
-            except CategoryDoesNotExistException:
-                self._message(use_json, "Category does not exist.", MESSAGE_STATUS_ERROR)
+                except CategoryDoesNotExistException:
+                    self._message(use_json, "Category does not exist.", MESSAGE_STATUS_ERROR)
 
         # Action to fire an event
         elif action == "event/fire":
-            try:
-                event_name = post_data['event_name'][0]
-                event_data = None if 'event_data' not in post_data or post_data['event_data'][0] == "" else json.loads(post_data['event_data'][0])
+            if self._verify_api_password(given_api_password, use_json):
+                try:
+                    event_name = post_data['event_name'][0]
+                    event_data = None if 'event_data' not in post_data or post_data['event_data'][0] == "" else json.loads(post_data['event_data'][0])
 
-                self.server.eventbus.fire(Event(event_name, event_data))
+                    self.server.eventbus.fire(Event(event_name, event_data))
 
-                self._message(use_json, "Event {} fired.".format(event_name))
+                    self._message(use_json, "Event {} fired.".format(event_name))
 
-            except ValueError:
-                # If JSON decode error
-                self._message(use_json, "Invalid event received.", MESSAGE_STATUS_ERROR)
-
+                except ValueError:
+                    # If JSON decode error
+                    self._message(use_json, "Invalid event received.", MESSAGE_STATUS_ERROR)
 
         else:
             self.send_response(404)
 
+
+    def _verify_api_password(self, api_password, use_json):
+        if api_password == self.server.api_password:
+            return True
+
+        elif use_json:
+            self._message(True, "API password missing or incorrect.", MESSAGE_STATUS_UNAUTHORIZED)            
+
+        else:
+            self.send_response(200)
+            self.send_header('Content-type','text/html')
+            self.end_headers()
+
+            write = lambda txt: self.wfile.write(txt+"\n")
+            
+            write("<html>")
+            write("<form action='/' method='GET'>")
+            write("API password: <input name='api_password' />")
+            write("<input type='submit' value='submit' />")
+            write("</form>")
+            write("</html>")
+
+        return False
 
     def _message(self, use_json, message, status=MESSAGE_STATUS_OK):
         """ Helper method to show a message to the user. """
