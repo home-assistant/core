@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from phue import Bridge
 
-from .core import track_state_change
+from . import track_state_change
 
 from .observers import (STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
                         STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,

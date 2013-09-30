@@ -1,21 +1,32 @@
 from ConfigParser import SafeConfigParser
 
-from homeassistant import HomeAssistant
+from homeassistant import StateMachine, EventBus, start_home_assistant
 
-from homeassistant.actors import HueLightControl
-from homeassistant.observers import TomatoDeviceScanner
-
+from homeassistant.observers import TomatoDeviceScanner, DeviceTracker, WeatherWatcher
+from homeassistant.actors import HueLightControl, LightTrigger
+from homeassistant.httpinterface import HTTPInterface
+# Read config
 config = SafeConfigParser()
 config.read("home-assistant.conf")
 
-tomato = TomatoDeviceScanner(config.get('tomato','host'), config.get('tomato','username'), 
+# Init core
+eventbus = EventBus()
+statemachine = StateMachine(eventbus)
+
+# Init observers
+tomato = TomatoDeviceScanner(config.get('tomato','host'), config.get('tomato','username'),
 							 config.get('tomato','password'), config.get('tomato','http_id'))
 
+devicetracker = DeviceTracker(eventbus, statemachine, tomato)
 
-ha = HomeAssistant(config.get("common","latitude"), config.get("common","longitude"))
+weatherwatcher = WeatherWatcher(eventbus, statemachine,
+								config.get("common","latitude"),
+								config.get("common","longitude"))
 
-ha.setup_light_trigger(tomato, HueLightControl())
+# Init actors
+LightTrigger(eventbus, statemachine, weatherwatcher, devicetracker, HueLightControl())
 
-ha.setup_http_interface(config.get("common","api_password"))
+# Init HTTP interface
+HTTPInterface(eventbus, statemachine, config.get("common","api_password"))
 
-ha.start()
+start_home_assistant(eventbus)

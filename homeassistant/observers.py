@@ -12,25 +12,13 @@ import csv
 import os
 from datetime import datetime, timedelta
 import threading
-import time
 import re
 import json
 
 import requests
 import ephem
 
-from .core import ensure_list, matcher, Event, EVENT_START, EVENT_SHUTDOWN
-
-TIMER_INTERVAL = 10 # seconds
-
-# We want to be able to fire every time a minute starts (seconds=0).
-# We want this so other modules can use that to make sure they fire
-# every minute.
-assert 60 % TIMER_INTERVAL == 0, "60 % TIMER_INTERVAL should be 0!"
-
-
-EVENT_TIME_CHANGED = "time_changed"
-
+from . import track_time_change
 
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_CATEGORY_ALL_DEVICES = 'device.alldevices'
@@ -42,72 +30,11 @@ SUN_STATE_BELOW_HORIZON = "below_horizon"
 DEVICE_STATE_NOT_HOME = 'device_not_home'
 DEVICE_STATE_HOME = 'device_home'
 
-
 # After how much time do we consider a device not home if
 # it does not show up on scans
 TOMATO_TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=1)
 TOMATO_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 TOMATO_KNOWN_DEVICES_FILE = "tomato_known_devices.csv"
-
-
-class Timer(threading.Thread):
-    """ Timer will sent out an event every TIMER_INTERVAL seconds. """
-
-    def __init__(self, eventbus):
-        threading.Thread.__init__(self)
-
-        self.eventbus = eventbus
-        self._stop = threading.Event()
-
-        eventbus.listen(EVENT_START, lambda event: self.start())
-        eventbus.listen(EVENT_SHUTDOWN, lambda event: self._stop.set())
-
-    def run(self):
-        """ Start the timer. """
-
-        logging.getLogger(__name__).info("Timer:starting")
-
-        now = datetime.now()
-
-        while True:
-            while True:
-                time.sleep(1)
-
-                now = datetime.now()
-
-                if self._stop.isSet() or now.second % TIMER_INTERVAL == 0:
-                    break
-
-            if self._stop.isSet():
-                break
-
-            self.eventbus.fire(Event(EVENT_TIME_CHANGED, {'now':now}))
-
-
-def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', minute='*', second='*', point_in_time=None, listen_once=False):
-    """ Adds a listener that will listen for a specified or matching time. """
-    year, month, day = ensure_list(year), ensure_list(month), ensure_list(day)
-    hour, minute, second = ensure_list(hour), ensure_list(minute), ensure_list(second)
-
-    def listener(event):
-        """ Listens for matching time_changed events. """
-        assert isinstance(event, Event), "event needs to be of Event type"
-
-        if  (point_in_time is not None and event.data['now'] > point_in_time) or \
-                (point_in_time is None and \
-                matcher(event.data['now'].year, year) and \
-                matcher(event.data['now'].month, month) and \
-                matcher(event.data['now'].day, day) and \
-                matcher(event.data['now'].hour, hour) and \
-                matcher(event.data['now'].minute, minute) and \
-                matcher(event.data['now'].second, second)):
-
-            # point_in_time are exact points in time so we always remove it after fire
-            event.remove_listener = listen_once or point_in_time is not None
-
-            action(event.data['now'])
-
-    eventbus.listen(EVENT_TIME_CHANGED, listener)
 
 
 class WeatherWatcher(object):

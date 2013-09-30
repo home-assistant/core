@@ -11,7 +11,7 @@ import time
 
 import requests
 
-from .core import EventBus, StateMachine, Event, EVENT_START, EVENT_SHUTDOWN
+from . import EventBus, StateMachine, Event, EVENT_START, EVENT_SHUTDOWN
 from .httpinterface import HTTPInterface, SERVER_PORT
 
 
@@ -28,6 +28,14 @@ class HomeAssistantTestCase(unittest.TestCase):
         cls.eventbus = EventBus()
         cls.statemachine = StateMachine(cls.eventbus)
         cls.init_ha = False
+
+        def start_ha(self):
+            cls.eventbus.fire(Event(EVENT_START))
+
+            # Give objects time to startup
+            time.sleep(1)
+
+        cls.start_ha = start_ha
 
     @classmethod
     def tearDownClass(cls):
@@ -50,10 +58,7 @@ class TestHTTPInterface(HomeAssistantTestCase):
 
             self.statemachine.set_state("test", "INIT_STATE")
 
-            self.eventbus.fire(Event(EVENT_START))
-
-            # Give objects time to start up
-            time.sleep(1)
+            self.start_ha()
 
 
     def test_debug_interface(self):

@@ -30,7 +30,7 @@ from urlparse import urlparse, parse_qs
 
 import requests
 
-from .core import EVENT_START, EVENT_SHUTDOWN, Event, CategoryDoesNotExistException
+from . import EVENT_START, EVENT_SHUTDOWN, Event, CategoryDoesNotExistException
 
 SERVER_PORT = 8080
 
@@ -168,9 +168,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             action = self.path[1:]
             use_json = False
 
-        self.server.logger.info(post_data)
-        self.server.logger.info(action)
-
         given_api_password = post_data.get("api_password", [''])[0]
 
         # Action to change the state
@@ -206,11 +203,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
     def _verify_api_password(self, api_password, use_json):
+        """ Helper method to verify the API password and take action if incorrect. """
         if api_password == self.server.api_password:
             return True
 
         elif use_json:
-            self._message(True, "API password missing or incorrect.", MESSAGE_STATUS_UNAUTHORIZED)            
+            self._message(True, "API password missing or incorrect.", MESSAGE_STATUS_UNAUTHORIZED)
 
         else:
             self.send_response(200)
@@ -218,7 +216,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
             write = lambda txt: self.wfile.write(txt+"\n")
-            
+
             write("<html>")
             write("<form action='/' method='GET'>")
             write("API password: <input name='api_password' />")
