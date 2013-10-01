@@ -21,8 +21,8 @@ import ephem
 from . import track_time_change
 
 STATE_CATEGORY_SUN = "weather.sun"
-STATE_CATEGORY_ALL_DEVICES = 'device.alldevices'
-STATE_CATEGORY_DEVICE_FORMAT = 'device.{}'
+STATE_CATEGORY_ALL_DEVICES = 'all_devices'
+STATE_CATEGORY_DEVICE_FORMAT = '{}'
 
 SUN_STATE_ABOVE_HORIZON = "above_horizon"
 SUN_STATE_BELOW_HORIZON = "below_horizon"
