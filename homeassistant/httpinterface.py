@@ -240,7 +240,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if use_json:
             self.send_response(response_code)
-            self.send_header('Content-type','application/json' if use_json else 'text/html')
+            self.send_header('Content-type','application/json')
             self.end_headers()
 
             self.wfile.write(json.dumps({'status': status, 'message':message}))
