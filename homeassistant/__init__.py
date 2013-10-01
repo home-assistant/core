@@ -198,7 +198,7 @@ class StateMachine(object):
 
     def get_states(self):
         """ Returns a list of tuples (category, state, last_changed) sorted by category. """
-        return [(category, self.states[category].state, self.states[category].last_changed) for category in sorted(self.states.keys())]
+        return [(category, self.states[category].state, self.states[category].last_changed) for category in sorted(self.states.keys(), key=lambda key: key.lower())]
 
     def _validate_category(self, category):
         """ Helper function to throw an exception when the category does not exist. """
