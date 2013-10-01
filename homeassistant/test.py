@@ -30,6 +30,8 @@ class HomeAssistantTestCase(unittest.TestCase):
         cls.init_ha = False
 
         def start_ha(self):
+            """ Classes will have to call this from setUp()
+                after initializing their components. """
             cls.eventbus.fire(Event(EVENT_START))
 
             # Give objects time to startup
