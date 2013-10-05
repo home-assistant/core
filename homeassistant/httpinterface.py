@@ -32,7 +32,7 @@ import requests
 
 from . import EVENT_START, EVENT_SHUTDOWN, Event, CategoryDoesNotExistException
 
-SERVER_PORT = 8080
+SERVER_PORT = 8123
 
 MESSAGE_STATUS_OK = "OK"
 MESSAGE_STATUS_ERROR = "ERROR"
