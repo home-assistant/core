@@ -26,8 +26,8 @@ Web interface and API
 ---------------------
 Home Assistent runs a webserver accessible on port 8123. At http://localhost:8123/ it will provide a debug interface showing the current state of the system. At http://localhost:8123/api/ it provides a password protected API so it can be controlled from other devices through HTTP POST requests. 
 
+A screenshot of the debug interface (battery and charging states are controlled by my phone):
 ![screenshot-debug-interface](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-debug-interface.png)
-<center>A screenshot of the debug interface (battery and charging states are controlled by my phone)</center>
 
 To interface with the API requests should include the parameter api_password which matches the api_password in home-assistant.conf.
 
