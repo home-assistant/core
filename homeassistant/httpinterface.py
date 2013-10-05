@@ -102,6 +102,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
                 write("<html>")
+                write("<head><title>Home Assistant</title></head>")
+                write("<body>")
 
                 # Flash message support
                 if self.server.flash_message is not None:
@@ -150,7 +152,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 write("<input type='submit' value='fire event' />")
                 write("</form>")
 
-                write("</html>")
+                write("</body></html>")
 
 
         else:
@@ -228,11 +230,13 @@ class RequestHandler(BaseHTTPRequestHandler):
             write = lambda txt: self.wfile.write(txt+"\n")
 
             write("<html>")
+            write("<head><title>Home Assistant</title></head>")
+            write("<body>")
             write("<form action='/' method='GET'>")
             write("API password: <input name='api_password' />")
             write("<input type='submit' value='submit' />")
             write("</form>")
-            write("</html>")
+            write("</body></html>")
 
         return False
 
