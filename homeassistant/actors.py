@@ -7,7 +7,7 @@ This module provides actors that will react to events happening within homeassis
 """
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from phue import Bridge
 
@@ -58,7 +58,7 @@ class LightTrigger(object):
            We will schedule to have each light start after one another
            and slowly transition in."""
 
-        start_point = self.weather.next_sun_setting() - LIGHT_TRANSITION_TIME * len(self.light_control.light_ids)
+        start_point = self._get_start_point_turn_light_before_sun_set()
 
         def turn_on(light_id):
             """ Lambda can keep track of function parameters, not from local parameters
@@ -84,14 +84,43 @@ class LightTrigger(object):
         light_needed = not lights_are_on and self.statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON)
 
         # Specific device came home ?
-        if category != STATE_CATEGORY_ALL_DEVICES and new_state.state == DEVICE_STATE_HOME and light_needed:
-            self.logger.info("Home coming event for {}. Turning lights on".format(category))
-            self.light_control.turn_light_on()
+        if category != STATE_CATEGORY_ALL_DEVICES and new_state.state == DEVICE_STATE_HOME:
+            # These variables are needed for the elif check
+            now = datetime.now()
+            start_point = self._get_start_point_turn_light_before_sun_set()
+
+            # Do we need lights?
+            if light_needed:
+                self.logger.info("Home coming event for {}. Turning lights on".format(category))
+                self.light_control.turn_light_on()
+
+            # Are we in the time span were we would turn on the lights if someone would be home?
+            # Check this by seeing if current time is later then the start point
+            elif now > start_point and now < self.weather.next_sun_setting():
+
+                # If this is the case check for every light if it would be on
+                # if someone was home when the fading in started and turn it on
+                for index, light_id in enumerate(self.light_control.light_ids):
+
+                    if now > start_point + index * LIGHT_TRANSITION_TIME:
+                        self.light_control.turn_light_on(light_id)
+
+                    else:
+                        # If this one was not the case then the following IFs are not True
+                        # as their points are even further in time, break
+                        break
+
 
         # Did all devices leave the house?
         elif category == STATE_CATEGORY_ALL_DEVICES and new_state.state == DEVICE_STATE_NOT_HOME and lights_are_on:
             self.logger.info("Everyone has left but lights are on. Turning lights off")
             self.light_control.turn_light_off()
+
+
+    def _get_start_point_turn_light_before_sun_set(self):
+        """ Helper method to calculate the point in time we have to start fading in lights
+            so that all the lights are on the moment the sun sets. """
+        return self.weather.next_sun_setting() - LIGHT_TRANSITION_TIME * len(self.light_control.light_ids)
 
 
 class HueLightControl(object):
