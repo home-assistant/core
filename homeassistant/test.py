@@ -90,15 +90,32 @@ class TestHTTPInterface(HomeAssistantTestCase):
 
 
     def test_api_state_change(self):
-        """ Test if the API allows us to change a state. """
+        """ Test if we can change the state of a category that exists. """
+
+        self.statemachine.set_state("test", "not_to_be_set_state")
+
         requests.post("{}/api/state/change".format(HTTP_BASE_URL), data={"category":"test",
                                                                     "new_state":"debug_state_change2",
                                                                     "api_password":API_PASSWORD})
 
         self.assertEqual(self.statemachine.get_state("test").state, "debug_state_change2")
 
+    def test_api_multiple_state_change(self):
+        """ Test if we can change multiple states in 1 request. """
+
+        self.statemachine.set_state("test", "not_to_be_set_state")
+        self.statemachine.set_state("test2", "not_to_be_set_state")
+
+        requests.post("{}/api/state/change".format(HTTP_BASE_URL), data={"category": ["test", "test2"],
+                                                                         "new_state": ["test_state_1", "test_state_2"],
+                                                                         "api_password":API_PASSWORD})
+
+        self.assertEqual(self.statemachine.get_state("test").state, "test_state_1")
+        self.assertEqual(self.statemachine.get_state("test2").state, "test_state_2")
+
     def test_api_state_change_of_non_existing_category(self):
         """ Test if the API allows us to change a state of a non existing category. """
+
         req = requests.post("{}/api/state/change".format(HTTP_BASE_URL), data={"category":"test_category_that_does_not_exist",
                                                                     "new_state":"debug_state_change",
                                                                     "api_password":API_PASSWORD})
@@ -146,6 +163,26 @@ class TestHTTPInterface(HomeAssistantTestCase):
         time.sleep(1)
 
         self.assertEqual(len(test_value), 1)
+
+
+    def test_api_fire_event_with_no_params(self):
+        """ Test how the API respsonds when we specify no event attributes. """
+        test_value = []
+
+        def listener(event):
+            """ Helper method that will verify that our event got called and
+                that test if our data came through. """
+            if "test" in event.data:
+                test_value.append(1)
+
+        self.eventbus.listen("test_event_with_data", listener)
+
+        requests.post("{}/api/event/fire".format(HTTP_BASE_URL), data={"api_password":API_PASSWORD})
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 0)
 
 
     def test_api_fire_event_with_invalid_json(self):

@@ -35,7 +35,10 @@ The following API commands are currently supported:
     parameter: category - string
     parameter: new_state - string
     Changes category 'category' to 'new_state'
-
+    It is possible to sent multiple values for category and new_state.
+    If the number of values for category and new_state do not match only
+    combinations where both values are supplied will be set.
+    
     /api/event/fire - POST
     parameter: api_password - string
     parameter: event_name - string

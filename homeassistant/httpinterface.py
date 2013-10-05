@@ -14,6 +14,9 @@ The api supports the following actions:
 parameter: category - string
 parameter: new_state - string
 Changes category 'category' to 'new_state'
+It is possible to sent multiple values for category and new_state.
+If the number of values for category and new_state do not match only
+combinations where both values are supplied will be set.
 
 /api/event/fire - POST
 parameter: event_name - string
@@ -30,7 +33,7 @@ from urlparse import urlparse, parse_qs
 
 import requests
 
-from . import EVENT_START, EVENT_SHUTDOWN, Event, CategoryDoesNotExistException
+from . import EVENT_START, EVENT_SHUTDOWN, Event
 
 SERVER_PORT = 8123
 
@@ -173,15 +176,18 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Action to change the state
         if action == "state/change":
             if self._verify_api_password(given_api_password, use_json):
-                category, new_state = post_data['category'][0], post_data['new_state'][0]
-
                 try:
-                    self.server.statemachine.set_state(category, new_state)
+                    changed = []
 
-                    self._message(use_json, "State of {} changed to {}.".format(category, new_state))
+                    for category, new_state in zip(post_data['category'], post_data['new_state']):
+                        self.server.statemachine.set_state(category, new_state)
+                        changed.append("{}={}".format(category, new_state))
 
-                except CategoryDoesNotExistException:
-                    self._message(use_json, "Category does not exist.", MESSAGE_STATUS_ERROR)
+                    self._message(use_json, "States changed: {}".format( ", ".join(changed) ) )
+
+                except KeyError:
+                    # If category or new_state don't exist in post data
+                    self._message(use_json, "Invalid state received.", MESSAGE_STATUS_ERROR)
 
         # Action to fire an event
         elif action == "event/fire":
@@ -196,7 +202,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 except ValueError:
                     # If JSON decode error
-                    self._message(use_json, "Invalid event received.", MESSAGE_STATUS_ERROR)
+                    self._message(use_json, "Invalid event received (1).", MESSAGE_STATUS_ERROR)
+
+                except KeyError:
+                    # If "event_name" not in post_data
+                    self._message(use_json, "Invalid event received (2).", MESSAGE_STATUS_ERROR)
 
         else:
             self.send_response(404)
