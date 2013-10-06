@@ -34,9 +34,13 @@ DEVICE_STATE_HOME = 'device_home'
 
 # After how much time do we consider a device not home if
 # it does not show up on scans
-TOMATO_TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=1)
+TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=1)
+
+# Return cached results if last scan was less then this time ago
 TOMATO_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
-TOMATO_KNOWN_DEVICES_FILE = "tomato_known_devices.csv"
+
+# Filename to save known devices to
+KNOWN_DEVICES_FILE = "known_devices.csv"
 
 
 def track_sun(eventbus, statemachine, latitude, longitude):
@@ -80,103 +84,153 @@ class DeviceTracker(object):
     def __init__(self, eventbus, statemachine, device_scanner):
         self.statemachine = statemachine
         self.eventbus = eventbus
+        self.device_scanner = device_scanner
+        self.logger = logging.getLogger(__name__)
 
-        temp_devices_to_track = device_scanner.get_devices_to_track()
+        self.lock = threading.Lock()
 
-        self.devices_to_track = { device: { 'name': temp_devices_to_track[device],
-                                            'category': STATE_CATEGORY_DEVICE_FORMAT.format(temp_devices_to_track[device]) }
-                                  for device in temp_devices_to_track }
+        self.known_devices = {}
 
-        # Add categories to state machine and update last_seen attribute
-        initial_search = device_scanner.get_active_devices()
+        # Read known devices if file exists
+        if os.path.isfile(KNOWN_DEVICES_FILE):
+            with open(KNOWN_DEVICES_FILE) as inp:
+                default_last_seen = datetime(1990, 1, 1)
 
-        default_last_seen = datetime(1990, 1, 1)
+                # Temp variable to keep track of which categories we use
+                # so we can ensure we have unique categories.
+                used_categories = []
 
-        for device in self.devices_to_track:
-            if device in initial_search:
-                new_state = DEVICE_STATE_HOME
-                new_last_seen = datetime.now()
-            else:
-                new_state = DEVICE_STATE_NOT_HOME
-                new_last_seen = default_last_seen
+                for row in csv.DictReader(inp):
+                    device = row['device']
 
-            self.devices_to_track[device]['last_seen'] = new_last_seen
-            self.statemachine.set_state(self.devices_to_track[device]['category'], new_state)
+                    row['track'] = True if row['track'] == '1' else False
 
-        # Update all devices state
-        statemachine.set_state(STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME if len(initial_search) > 0 else DEVICE_STATE_NOT_HOME)
+                    self.known_devices[device] = row
 
-        track_time_change(eventbus, lambda time: self.update_devices(device_scanner.get_active_devices()))
+                    # If we track this device setup tracking variables
+                    if row['track']:
+                        self.known_devices[device]['last_seen'] = default_last_seen
 
+                        # Make sure that each device is mapped to a unique category name
+                        name = row['name'] if row['name'] else "unnamed_device"
+
+                        tries = 0
+
+                        while True:
+                            tries += 1
+
+                            category = STATE_CATEGORY_DEVICE_FORMAT.format(name if tries == 1 else "{}_{}".format(name, tries))
+
+                            if category not in used_categories:
+                                break
+
+                        self.known_devices[device]['category'] = category
+                        used_categories.append(category)
+
+
+        if len(self.device_state_categories()) == 0:
+            self.logger.warning("No devices to track. Please update {}.".format(KNOWN_DEVICES_FILE))
+
+
+        track_time_change(eventbus, lambda time: self.update_devices(device_scanner.scan_devices()))
 
     def device_state_categories(self):
-        """ Returns a list of categories of devices that are being tracked by this class. """
-        return [self.devices_to_track[device]['category'] for device in self.devices_to_track]
-
+        """ Returns a list containing all categories that are maintained for devices. """
+        return [self.known_devices[device]['category'] for device in self.known_devices if self.known_devices[device]['track']]
 
     def update_devices(self, found_devices):
         """ Keep track of devices that are home, all that are not will be marked not home. """
+        self.lock.acquire()
 
-        temp_tracking_devices = self.devices_to_track.keys()
+        temp_tracking_devices = [device for device in self.known_devices if self.known_devices[device]['track']]
 
         for device in found_devices:
             # Are we tracking this device?
             if device in temp_tracking_devices:
                 temp_tracking_devices.remove(device)
 
-                self.devices_to_track[device]['last_seen'] = datetime.now()
-                self.statemachine.set_state(self.devices_to_track[device]['category'], DEVICE_STATE_HOME)
+                self.known_devices[device]['last_seen'] = datetime.now()
+                self.statemachine.set_state(self.known_devices[device]['category'], DEVICE_STATE_HOME)
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
         # Because we do not want to have stuff happening when the device does
         # not show up for 1 scan beacuse of reboot etc
         for device in temp_tracking_devices:
-            if datetime.now() - self.devices_to_track[device]['last_seen'] > TOMATO_TIME_SPAN_FOR_ERROR_IN_SCANNING:
-                self.statemachine.set_state(self.devices_to_track[device]['category'], DEVICE_STATE_NOT_HOME)
+            if datetime.now() - self.known_devices[device]['last_seen'] > TIME_SPAN_FOR_ERROR_IN_SCANNING:
+                self.statemachine.set_state(self.known_devices[device]['category'], DEVICE_STATE_NOT_HOME)
 
         # Get the currently used statuses
-        states_of_devices = [self.statemachine.get_state(self.devices_to_track[device]['category']).state for device in self.devices_to_track]
+        states_of_devices = [self.statemachine.get_state(category).state for category in self.device_state_categories()]
 
+        # Update the all devices category
         all_devices_state = DEVICE_STATE_HOME if DEVICE_STATE_HOME in states_of_devices else DEVICE_STATE_NOT_HOME
 
         self.statemachine.set_state(STATE_CATEGORY_ALL_DEVICES, all_devices_state)
 
+        # If we come along any unknown devices we will write them to the known devices file
+        unknown_devices = [device for device in found_devices if device not in self.known_devices]
+
+        if len(unknown_devices) > 0:
+            try:
+                # If file does not exist we will write the header too
+                should_write_header = not os.path.isfile(KNOWN_DEVICES_FILE)
+
+                with open(KNOWN_DEVICES_FILE, 'a') as outp:
+                    self.logger.info("DeviceTracker:Found {} new devices, updating {}".format(len(unknown_devices), KNOWN_DEVICES_FILE))
+                    writer = csv.writer(outp)
+
+                    if should_write_header:
+                        writer.writerow(("device", "name", "track"))
+
+                    for device in unknown_devices:
+                        # See if the device scanner knows the name
+                        temp_name = self.device_scanner.get_device_name(device)
+                        name = temp_name if temp_name else "unknown_device"
+
+                        writer.writerow((device, name, 0))
+                        self.known_devices[device] = {'name':name, 'track': False}
+
+            except IOError:
+                self.logger.exception("DeviceTracker:Error updating {} with {} new devices".format(KNOWN_DEVICES_FILE, len(unknown_devices)))
+
+        self.lock.release()
+
+
 class TomatoDeviceScanner(object):
-    """ This class tracks devices connected to a wireless router running Tomato firmware. """
+    """ This class queries a wireless router running Tomato firmware for connected devices.
+
+        A description of the Tomato API can be found on
+        http://paulusschoutsen.nl/blog/2013/10/tomato-api-documentation/ """
 
     def __init__(self, host, username, password, http_id):
-        self.host = host
-        self.username = username
-        self.password = password
-        self.http_id = http_id
+        self.req = requests.Request('POST', 'http://{}/update.cgi'.format(host),
+                                    data={'_http_id':http_id, 'exec':'devlist'},
+                                    auth=requests.auth.HTTPBasicAuth(username, password)).prepare()
 
         self.logger = logging.getLogger(__name__)
         self.lock = threading.Lock()
 
         self.date_updated = None
-        self.last_results = None
+        self.last_results = {"wldev": [], "dhcpd_lease": []}
 
-        # Read known devices if file exists
-        if os.path.isfile(TOMATO_KNOWN_DEVICES_FILE):
-            with open(TOMATO_KNOWN_DEVICES_FILE) as inp:
-                self.known_devices = { row['mac']: row for row in csv.DictReader(inp) }
+    def scan_devices(self):
+        """ Scans for new devices and returns a list containing found device ids. """
 
-        # Create a dict with ID: NAME of the devices to track
-        self.devices_to_track = {mac: info['name'] for mac, info in self.known_devices.items() if info['track'] == '1'}
-
-        if len(self.devices_to_track) == 0:
-            self.logger.warning("No devices to track. Please update {}.".format(TOMATO_KNOWN_DEVICES_FILE))
-
-    def get_devices_to_track(self):
-        """ Returns a ``dict`` with device_id: device_name values. """
-        return self.devices_to_track
-
-    def get_active_devices(self):
-        """ Scans for new devices and returns a list containing device_ids. """
         self._update_tomato_info()
 
         return [item[1] for item in self.last_results['wldev']]
+
+    def get_device_name(self, device):
+        """ Returns the name of the given device or None if we don't know. """
+
+        # Make sure there are results
+        if not self.date_updated:
+            self._update_tomato_info()
+
+        filter_named = [item[0] for item in self.last_results['dhcpd_lease'] if item[2] == device]
+
+        return None if len(filter_named) == 0 or filter_named[0] == "" else filter_named[0]
 
     def _update_tomato_info(self):
         """ Ensures the information from the Tomato router is up to date.
@@ -184,53 +238,29 @@ class TomatoDeviceScanner(object):
 
         self.lock.acquire()
 
-        # if date_updated is not defined (update has never ran) or the date is too old we scan for new data
-        if self.date_updated is None or datetime.now() - self.date_updated > TOMATO_MIN_TIME_BETWEEN_SCANS:
+        # if date_updated is None or the date is too old we scan for new data
+        if not self.date_updated or datetime.now() - self.date_updated > TOMATO_MIN_TIME_BETWEEN_SCANS:
             self.logger.info("Tomato:Scanning")
 
             try:
-                req = requests.post('http://{}/update.cgi'.format(self.host),
-                                                        data={'_http_id':self.http_id, 'exec':'devlist'},
-                                                        auth=requests.auth.HTTPBasicAuth(self.username, self.password))
+                response = requests.Session().send(self.req)
 
                 # Calling and parsing the Tomato api here. We only need the wldev and dhcpd_lease values.
                 # See http://paulusschoutsen.nl/blog/2013/10/tomato-api-documentation/ for what's going on here.
                 self.last_results = {param: json.loads(value.replace("'",'"'))
-                                     for param, value in re.findall(r"(?P<param>\w*) = (?P<value>.*);", req.text)
+                                     for param, value in re.findall(r"(?P<param>\w*) = (?P<value>.*);", response.text)
                                      if param in ["wldev","dhcpd_lease"]}
 
                 self.date_updated = datetime.now()
 
-                # If we come along any unknown devices we will write them to the known devices file
-                unknown_devices = [(name, mac) for name, _, mac, _ in self.last_results['dhcpd_lease'] if mac not in self.known_devices]
-
-                if len(unknown_devices) > 0:
-                    self.logger.info("Tomato:Found {} new devices, updating {}".format(len(unknown_devices), TOMATO_KNOWN_DEVICES_FILE))
-
-                    with open(TOMATO_KNOWN_DEVICES_FILE, 'a') as outp:
-                        writer = csv.writer(outp)
-
-                        for name, mac in unknown_devices:
-                            writer.writerow((mac, name, 0))
-                            self.known_devices[mac] = {'name':name, 'track': '0'}
 
             except requests.ConnectionError:
                 # If we could not connect to the router
                 self.logger.exception("Tomato:Failed to connect to the router")
 
-                return False
-
             except ValueError:
                 # If json decoder could not parse the response
                 self.logger.exception("Tomato:Failed to parse response from router")
-
-                return False
-
-            except IOError:
-                # If scanning was successful but we failed to be able to write to the known devices file
-                self.logger.exception("Tomato:Updating {} failed".format(TOMATO_KNOWN_DEVICES_FILE))
-
-                return True
 
             finally:
                 self.lock.release()
@@ -239,5 +269,3 @@ class TomatoDeviceScanner(object):
             # We acquired the lock before the IF check, release it before we return True
             self.lock.release()
 
-
-        return True

@@ -1,5 +1,5 @@
 home-assistant.conf
-tomato_known_devices.csv
+known_devices.csv
 
 # Hide sublime text stuff
 *.sublime-project

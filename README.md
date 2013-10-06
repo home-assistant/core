@@ -18,7 +18,7 @@ Installation instructions
 * Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
   * For Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
 * Setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS` from the commandline.
-* The first time the script will start it will create a file called `tomato_known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script.
+* The first time the script will start it will create a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script.
 
 Done. Start it now by running `python start.py`
 
