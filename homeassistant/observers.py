@@ -21,6 +21,8 @@ import ephem
 from . import track_time_change
 
 STATE_CATEGORY_SUN = "weather.sun"
+STATE_CATEGORY_NEXT_SUN_RISING = "weather.next_sun_rising"
+STATE_CATEGORY_NEXT_SUN_SETTING = "weather.next_setting"
 STATE_CATEGORY_ALL_DEVICES = 'all_devices'
 STATE_CATEGORY_DEVICE_FORMAT = '{}'
 
@@ -37,46 +39,19 @@ TOMATO_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 TOMATO_KNOWN_DEVICES_FILE = "tomato_known_devices.csv"
 
 
-class WeatherWatcher(object):
-    """ Class that keeps track of the state of the sun. """
+def track_sun(eventbus, statemachine, latitude, longitude):
+    """ Tracks the state of the sun. """
 
-    def __init__(self, eventbus, statemachine, latitude, longitude):
-        self.logger = logging.getLogger(__name__)
-        self.eventbus = eventbus
-        self.statemachine = statemachine
-        self.latitude = latitude
-        self.longitude = longitude
+    sun = ephem.Sun()
+    logger = logging.getLogger(__name__)
 
-        self.sun = ephem.Sun()
+    def update_sun_state(now):
+        observer = ephem.Observer()
+        observer.lat = latitude
+        observer.long = longitude
 
-        self._update_sun_state()
-
-
-    def next_sun_rising(self, observer=None):
-        """ Returns a datetime object that points at the next sun rising. """
-
-        if observer is None:
-            observer = self._get_observer()
-
-        return ephem.localtime(observer.next_rising(self.sun))
-
-
-    def next_sun_setting(self, observer=None):
-        """ Returns a datetime object that points at the next sun setting. """
-
-        if observer is None:
-            observer = self._get_observer()
-
-        return ephem.localtime(observer.next_setting(self.sun))
-
-
-    def _update_sun_state(self, now=None):
-        """ Updates the state of the sun and schedules when to check next. """
-
-        observer = self._get_observer()
-
-        next_rising = self.next_sun_rising(observer)
-        next_setting = self.next_sun_setting(observer)
+        next_rising = ephem.localtime(observer.next_rising(sun))
+        next_setting = ephem.localtime(observer.next_setting(sun))
 
         if next_rising > next_setting:
             new_state = SUN_STATE_ABOVE_HORIZON
@@ -86,21 +61,17 @@ class WeatherWatcher(object):
             new_state = SUN_STATE_BELOW_HORIZON
             next_change = next_rising
 
-        self.logger.info("Sun:{}. Next change: {}".format(new_state, next_change.strftime("%H:%M")))
+        logger.info("Sun:{}. Next change: {}".format(new_state, next_change.strftime("%H:%M")))
 
-        self.statemachine.set_state(STATE_CATEGORY_SUN, new_state)
+        statemachine.set_state(STATE_CATEGORY_SUN, new_state)
+        statemachine.set_state(STATE_CATEGORY_NEXT_SUN_RISING, next_rising.isoformat())
+        statemachine.set_state(STATE_CATEGORY_NEXT_SUN_SETTING, next_setting.isoformat())
 
         # +10 seconds to be sure that the change has occured
-        track_time_change(self.eventbus, self._update_sun_state, point_in_time=next_change + timedelta(seconds=10))
+        track_time_change(eventbus, update_sun_state, point_in_time=next_change + timedelta(seconds=10))
 
+    update_sun_state(None)
 
-    def _get_observer(self):
-        """ Creates an observer representing the location and the current time. """
-        observer = ephem.Observer()
-        observer.lat = self.latitude
-        observer.long = self.longitude
-
-        return observer
 
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
