@@ -22,7 +22,7 @@ from . import track_time_change
 
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_CATEGORY_NEXT_SUN_RISING = "weather.next_sun_rising"
-STATE_CATEGORY_NEXT_SUN_SETTING = "weather.next_setting"
+STATE_CATEGORY_NEXT_SUN_SETTING = "weather.next_sun_setting"
 STATE_CATEGORY_ALL_DEVICES = 'all_devices'
 STATE_CATEGORY_DEVICE_FORMAT = '{}'
 
