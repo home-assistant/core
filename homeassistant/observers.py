@@ -46,6 +46,7 @@ def track_sun(eventbus, statemachine, latitude, longitude):
     logger = logging.getLogger(__name__)
 
     def update_sun_state(now):
+        """ Method to update the current state of the sun and time the next update. """
         observer = ephem.Observer()
         observer.lat = latitude
         observer.long = longitude
