@@ -179,12 +179,12 @@ class TomatoDeviceScanner(object):
 
     def _update_tomato_info(self):
         """ Ensures the information from the Tomato router is up to date.
-            Returns boolean if successful. """
+            Returns boolean if scanning successful. """
+
+        self.lock.acquire()
 
         # if date_updated is not defined (update has never ran) or the date is too old we scan for new data
         if self.date_updated is None or datetime.now() - self.date_updated > TOMATO_MIN_TIME_BETWEEN_SCANS:
-            self.lock.acquire()
-
             self.logger.info("Tomato:Scanning")
 
             try:
@@ -192,28 +192,8 @@ class TomatoDeviceScanner(object):
                                                         data={'_http_id':self.http_id, 'exec':'devlist'},
                                                         auth=requests.auth.HTTPBasicAuth(self.username, self.password))
 
-                """
-                Tomato API:
-                arplist contains a list of lists with items:
-                 - ip (string)
-                 - mac (string)
-                 - iface (string)
-
-                wldev contains list of lists with items:
-                 - iface (string)
-                 - mac (string)
-                 - rssi (int)
-                 - tx (int)
-                 - rx (int)
-                 - quality (int)
-                 - unknown_num (int)
-
-                dhcpd_lease contains a list of lists with items:
-                 - name (string)
-                 - ip (string)
-                 - mac (string)
-                 - lease_age (string)
-                """
+                # Calling and parsing the Tomato api here. We only need the wldev and dhcpd_lease values.
+                # See http://paulusschoutsen.nl/blog/2013/10/tomato-api-documentation/ for what's going on here.
                 self.last_results = {param: json.loads(value.replace("'",'"'))
                                      for param, value in re.findall(r"(?P<param>\w*) = (?P<value>.*);", req.text)
                                      if param in ["wldev","dhcpd_lease"]}
@@ -234,17 +214,29 @@ class TomatoDeviceScanner(object):
                             self.known_devices[mac] = {'name':name, 'track': '0'}
 
             except requests.ConnectionError:
-                self.logger.exception("Tomato:Scanning failed")
+                # If we could not connect to the router
+                self.logger.exception("Tomato:Failed to connect to the router")
+
+                return False
+
+            except ValueError:
+                # If json decoder could not parse the response
+                self.logger.exception("Tomato:Failed to parse response from router")
 
                 return False
 
             except IOError:
+                # If scanning was successful but we failed to be able to write to the known devices file
                 self.logger.exception("Tomato:Updating {} failed".format(TOMATO_KNOWN_DEVICES_FILE))
 
                 return True
 
             finally:
                 self.lock.release()
+
+        else:
+            # We acquired the lock before the IF check, release it before we return True
+            self.lock.release()
 
 
         return True
