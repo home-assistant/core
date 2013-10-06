@@ -89,7 +89,11 @@ class DeviceTracker(object):
 
         self.lock = threading.Lock()
 
+        # Dictionary to keep track of known devices and devices we track
         self.known_devices = {}
+
+        # Did we encounter a valid known devices file
+        self.invalid_known_devices_file = False
 
         # Read known devices if file exists
         if os.path.isfile(KNOWN_DEVICES_FILE):
@@ -100,33 +104,37 @@ class DeviceTracker(object):
                 # so we can ensure we have unique categories.
                 used_categories = []
 
-                for row in csv.DictReader(inp):
-                    device = row['device']
+                try:
+                    for row in csv.DictReader(inp):
+                        device = row['device']
 
-                    row['track'] = True if row['track'] == '1' else False
+                        row['track'] = True if row['track'] == '1' else False
 
-                    self.known_devices[device] = row
+                        self.known_devices[device] = row
 
-                    # If we track this device setup tracking variables
-                    if row['track']:
-                        self.known_devices[device]['last_seen'] = default_last_seen
+                        # If we track this device setup tracking variables
+                        if row['track']:
+                            self.known_devices[device]['last_seen'] = default_last_seen
 
-                        # Make sure that each device is mapped to a unique category name
-                        name = row['name'] if row['name'] else "unnamed_device"
+                            # Make sure that each device is mapped to a unique category name
+                            name = row['name'] if row['name'] else "unnamed_device"
 
-                        tries = 0
+                            tries = 0
 
-                        while True:
-                            tries += 1
+                            while True:
+                                tries += 1
 
-                            category = STATE_CATEGORY_DEVICE_FORMAT.format(name if tries == 1 else "{}_{}".format(name, tries))
+                                category = STATE_CATEGORY_DEVICE_FORMAT.format(name if tries == 1 else "{}_{}".format(name, tries))
 
-                            if category not in used_categories:
-                                break
+                                if category not in used_categories:
+                                    break
 
-                        self.known_devices[device]['category'] = category
-                        used_categories.append(category)
+                            self.known_devices[device]['category'] = category
+                            used_categories.append(category)
 
+                except KeyError:
+                    self.invalid_known_devices_file = False
+                    self.logger.warning("Invalid {} found. We won't update it with new found devices.".format(KNOWN_DEVICES_FILE))
 
         if len(self.device_state_categories()) == 0:
             self.logger.warning("No devices to track. Please update {}.".format(KNOWN_DEVICES_FILE))
@@ -169,30 +177,32 @@ class DeviceTracker(object):
         self.statemachine.set_state(STATE_CATEGORY_ALL_DEVICES, all_devices_state)
 
         # If we come along any unknown devices we will write them to the known devices file
-        unknown_devices = [device for device in found_devices if device not in self.known_devices]
+        # but only if we did not encounter an invalid known devices file
+        if not self.invalid_known_devices_file:
+            unknown_devices = [device for device in found_devices if device not in self.known_devices]
 
-        if len(unknown_devices) > 0:
-            try:
-                # If file does not exist we will write the header too
-                should_write_header = not os.path.isfile(KNOWN_DEVICES_FILE)
+            if len(unknown_devices) > 0:
+                try:
+                    # If file does not exist we will write the header too
+                    should_write_header = not os.path.isfile(KNOWN_DEVICES_FILE)
 
-                with open(KNOWN_DEVICES_FILE, 'a') as outp:
-                    self.logger.info("DeviceTracker:Found {} new devices, updating {}".format(len(unknown_devices), KNOWN_DEVICES_FILE))
-                    writer = csv.writer(outp)
+                    with open(KNOWN_DEVICES_FILE, 'a') as outp:
+                        self.logger.info("DeviceTracker:Found {} new devices, updating {}".format(len(unknown_devices), KNOWN_DEVICES_FILE))
+                        writer = csv.writer(outp)
 
-                    if should_write_header:
-                        writer.writerow(("device", "name", "track"))
+                        if should_write_header:
+                            writer.writerow(("device", "name", "track"))
 
-                    for device in unknown_devices:
-                        # See if the device scanner knows the name
-                        temp_name = self.device_scanner.get_device_name(device)
-                        name = temp_name if temp_name else "unknown_device"
+                        for device in unknown_devices:
+                            # See if the device scanner knows the name
+                            temp_name = self.device_scanner.get_device_name(device)
+                            name = temp_name if temp_name else "unknown_device"
 
-                        writer.writerow((device, name, 0))
-                        self.known_devices[device] = {'name':name, 'track': False}
+                            writer.writerow((device, name, 0))
+                            self.known_devices[device] = {'name':name, 'track': False}
 
-            except IOError:
-                self.logger.exception("DeviceTracker:Error updating {} with {} new devices".format(KNOWN_DEVICES_FILE, len(unknown_devices)))
+                except IOError:
+                    self.logger.exception("DeviceTracker:Error updating {} with {} new devices".format(KNOWN_DEVICES_FILE, len(unknown_devices)))
 
         self.lock.release()
 
