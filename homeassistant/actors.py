@@ -6,14 +6,17 @@ This module provides actors that will react to events happening within homeassis
 
 """
 
+import os
 import logging
 from datetime import datetime, timedelta
+import re
 
 import dateutil.parser
 from phue import Bridge
+import requests
 
 from . import track_state_change
-
+from .util import sanitize_filename
 from .observers import (STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
                         STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
                         STATE_CATEGORY_NEXT_SUN_SETTING, track_time_change)
@@ -21,6 +24,8 @@ from .observers import (STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_A
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
 HUE_MAX_TRANSITION_TIME = 9000
+
+EVENT_DOWNLOAD_FILE = "download_file"
 
 EVENT_TURN_LIGHT_ON = "turn_light_on"
 EVENT_TURN_LIGHT_OFF = "turn_light_off"
@@ -55,10 +60,10 @@ class LightTrigger(object):
             self._handle_sun_rising(None, None, None)
 
         # Listen for light on and light off events
-        eventbus.listen(EVENT_TURN_LIGHT_ON, lambda event: self.light_control.turn_light_on(event.data.get("light_id", None), 
+        eventbus.listen(EVENT_TURN_LIGHT_ON, lambda event: self.light_control.turn_light_on(event.data.get("light_id", None),
                                                                                             event.data.get("transition_seconds", None)))
 
-        eventbus.listen(EVENT_TURN_LIGHT_OFF, lambda event: self.light_control.turn_light_off(event.data.get("light_id", None), 
+        eventbus.listen(EVENT_TURN_LIGHT_OFF, lambda event: self.light_control.turn_light_off(event.data.get("light_id", None),
                                                                                               event.data.get("transition_seconds", None)))
 
 
@@ -177,3 +182,59 @@ class HueLightControl(object):
             command['transitiontime'] = _hue_process_transition_time(transition_seconds)
 
         self.bridge.set_light(light_id, command)
+
+
+def setup_file_downloader(eventbus, download_path):
+    """ Listens for download events to download files. """
+
+    logger = logging.getLogger(__name__)
+
+    if not os.path.isdir(download_path):
+        logger.error("Download path {} does not exist. File Downloader not active.".format(download_path))
+        return
+
+    def download_file(event):
+        """ Downloads file specified in the url. """
+        try:
+            req = requests.get(event.data['url'], stream=True)
+            if req.status_code == 200:
+                filename = None
+
+                if 'content-disposition' in req.headers:
+                    match = re.findall(r"filename=(\S+)", req.headers['content-disposition'])
+
+                    if len(match) > 0:
+                        filename = match[0].strip("'\" ")
+
+                if not filename:
+                    filename = os.path.basename(event.data['url']).strip()
+
+                if not filename:
+                    filename = "ha_download"
+
+                # Remove stuff to ruin paths
+                filename = sanitize_filename(filename)
+
+                path, ext = os.path.splitext(os.path.join(download_path, filename))
+
+                # If file exist append a number. We test filename, filename_2, filename_3 etc..
+                tries = 0
+                while True:
+                    tries += 1
+
+                    final_path = path + ("" if tries == 1 else "_{}".format(tries)) + ext
+
+                    if not os.path.isfile(final_path):
+                        break
+
+                logger.info("FileDownloader:{} -> {}".format(event.data['url'], final_path))
+
+                with open(final_path, 'wb') as fil:
+                    for chunk in req.iter_content(1024):
+                        fil.write(chunk)
+
+        except requests.exceptions.ConnectionError:
+            logger.exception("FileDownloader:ConnectionError occured for {}".format(event.data['url']))
+
+
+    eventbus.listen(EVENT_DOWNLOAD_FILE, download_file)

@@ -3,7 +3,7 @@ from ConfigParser import SafeConfigParser
 from homeassistant import StateMachine, EventBus, start_home_assistant
 
 from homeassistant.observers import TomatoDeviceScanner, DeviceTracker, track_sun
-from homeassistant.actors import HueLightControl, LightTrigger
+from homeassistant.actors import HueLightControl, LightTrigger, setup_file_downloader
 from homeassistant.httpinterface import HTTPInterface
 
 from lib.pychromecast import play_youtube_video
@@ -31,6 +31,8 @@ LightTrigger(eventbus, statemachine, devicetracker, HueLightControl())
 if config.has_option("chromecast", "host"):
 	eventbus.listen("start_fireplace", lambda event: play_youtube_video(config.get("chromecast","host"), "eyU3bRy2x44"))
 	eventbus.listen("start_epic_sax", lambda event: play_youtube_video(config.get("chromecast","host"), "kxopViU98Xo"))
+
+setup_file_downloader(eventbus, "downloads")
 
 # Init HTTP interface
 HTTPInterface(eventbus, statemachine, config.get("common","api_password"))
