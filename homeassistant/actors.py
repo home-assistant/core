@@ -22,6 +22,8 @@ LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
 HUE_MAX_TRANSITION_TIME = 9000
 
+EVENT_TURN_LIGHT_ON = "turn_light_on"
+EVENT_TURN_LIGHT_OFF = "turn_light_off"
 
 def _hue_process_transition_time(transition_seconds):
     """ Transition time is in 1/10th seconds and cannot exceed MAX_TRANSITION_TIME. """
@@ -51,6 +53,13 @@ class LightTrigger(object):
         # If the sun is already above horizon schedule the time-based pre-sun set event
         if statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_ABOVE_HORIZON):
             self._handle_sun_rising(None, None, None)
+
+        # Listen for light on and light off events
+        eventbus.listen(EVENT_TURN_LIGHT_ON, lambda event: self.light_control.turn_light_on(event.data.get("light_id", None), 
+                                                                                            event.data.get("transition_seconds", None)))
+
+        eventbus.listen(EVENT_TURN_LIGHT_OFF, lambda event: self.light_control.turn_light_off(event.data.get("light_id", None), 
+                                                                                              event.data.get("transition_seconds", None)))
 
 
     def _handle_sun_rising(self, category, old_state, new_state):
