@@ -48,6 +48,19 @@ The following API commands are currently supported:
     parameter: event_data - object encoded as JSON string (optional)
     Fires an 'event_name' event containing data from 'event_data'
 
+Android remote control
+----------------------
+
+Using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) I built an Android app that:
+
+ * provides buttons to control the lights and the chromecast
+ * sent updates every 30 minutes on the battery status
+ * sent updates when the phone is being charged via usb or wireless 
+
+The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.apk) and [Tasker project XML](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.prj.xml) can be found in [/android-tasker/](https://github.com/balloob/home-assistant/tree/master/android-taster)
+
+![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-android-tasker.png)
+
 Architecture
 ---------------------------
 

@@ -1,0 +1,649 @@
+<TaskerData sr="" dvi="1" tv="4.1u3m">
+	<Profile sr="prof24" ve="2">
+		<cdate>1381116787665</cdate>
+		<edate>1381116787665</edate>
+		<id>24</id>
+		<mid0>20</mid0>
+		<Event sr="con0" ve="2">
+			<code>411</code>
+			<pri>0</pri>
+		</Event>
+	</Profile>
+	<Profile sr="prof25" ve="2">
+		<cdate>1380613730755</cdate>
+		<clp>true</clp>
+		<edate>1381001553706</edate>
+		<id>25</id>
+		<mid0>23</mid0>
+		<mid1>20</mid1>
+		<nme>HA Power USB</nme>
+		<pri>10</pri>
+		<State sr="con0">
+			<code>10</code>
+			<Int sr="arg0" val="2"/>
+		</State>
+	</Profile>
+	<Profile sr="prof26" ve="2">
+		<cdate>1380613730755</cdate>
+		<clp>true</clp>
+		<edate>1381110280839</edate>
+		<id>26</id>
+		<mid0>22</mid0>
+		<mid1>20</mid1>
+		<nme>HA Power Wireless</nme>
+		<pri>10</pri>
+		<State sr="con0">
+			<code>10</code>
+			<Int sr="arg0" val="3"/>
+		</State>
+	</Profile>
+	<Profile sr="prof5" ve="2">
+		<cdate>1380496514959</cdate>
+		<cldm>1500</cldm>
+		<clp>true</clp>
+		<edate>1381110261999</edate>
+		<id>5</id>
+		<mid0>7</mid0>
+		<nme>HA Battery Changed</nme>
+		<Event sr="con0" ve="2">
+			<code>203</code>
+			<pri>0</pri>
+		</Event>
+	</Profile>
+	<Project sr="proj0">
+		<cdate>1381110247781</cdate>
+		<name>Home Assistant</name>
+		<pids>24,26,5,25</pids>
+		<scenes>Variable Query,Home Assistant Start</scenes>
+		<tids>14,16,4,15,7,20,6,8,22,23,9,11,12,13</tids>
+		<Kid sr="Kid">
+			<launchID>12</launchID>
+			<pkg>nl.paulus.homeassistant</pkg>
+			<vnme>1.0</vnme>
+			<vnum>10</vnum>
+		</Kid>
+		<Img sr="icon" ve="2">
+			<nme>cust_animal_penguin</nme>
+		</Img>
+	</Project>
+	<Scene sr="sceneHome Assistant Start">
+		<backColour>-637534208</backColour>
+		<cdate>1381113309678</cdate>
+		<edate>1381118413367</edate>
+		<heightLand>-1</heightLand>
+		<heightPort>688</heightPort>
+		<nme>Home Assistant Start</nme>
+		<widthLand>-1</widthLand>
+		<widthPort>523</widthPort>
+		<TextElement sr="elements0" ve="2">
+			<flags>4</flags>
+			<geom>0,17,523,107,-1,-1,-1,-1</geom>
+			<Str sr="arg0" ve="3">TextTitle</Str>
+			<Str sr="arg1" ve="3">Home Assistant</Str>
+			<Int sr="arg2" val="33"/>
+			<Int sr="arg3" val="100"/>
+			<Str sr="arg4" ve="3">#FFFFFFFF</Str>
+			<Int sr="arg5" val="0"/>
+			<Int sr="arg6" val="0"/>
+			<Int sr="arg7" val="0"/>
+		</TextElement>
+		<ListElement sr="elements1">
+			<flags>4</flags>
+			<geom>23,136,477,514,-1,-1,-1,-1</geom>
+			<itemclickTask>13</itemclickTask>
+			<Str sr="arg0" ve="3">Menu1</Str>
+			<Int sr="arg1" val="0"/>
+			<Str sr="arg2" ve="3"/>
+			<Int sr="arg3" val="0"/>
+			<Scene sr="arg4">
+				<Scene sr="val">
+					<backColour>0</backColour>
+					<cdate>1381113396824</cdate>
+					<edate>1381113396824</edate>
+					<heightLand>-1</heightLand>
+					<heightPort>100</heightPort>
+					<nme>Builtin Item Layout</nme>
+					<widthLand>-1</widthLand>
+					<widthPort>440</widthPort>
+					<ImageElement sr="elements0">
+						<flags>5</flags>
+						<geom>340,10,90,80,-1,-1,-1,-1</geom>
+						<Str sr="arg0" ve="3">Icon</Str>
+						<Img sr="arg1" ve="2">
+							<nme>hd_aaa_ext_tiles_small</nme>
+						</Img>
+						<Int sr="arg2" val="255"/>
+					</ImageElement>
+					<TextElement sr="elements1" ve="2">
+						<flags>5</flags>
+						<geom>60,10,270,80,-1,-1,-1,-1</geom>
+						<Str sr="arg0" ve="3">Label</Str>
+						<Str sr="arg1" ve="3"/>
+						<Int sr="arg2" val="18"/>
+						<Int sr="arg3"/>
+						<Str sr="arg4" ve="3">#FFFFFFFF</Str>
+						<Int sr="arg5" val="3"/>
+						<Int sr="arg6"/>
+						<Int sr="arg7"/>
+					</TextElement>
+					<TextElement sr="elements2" ve="2">
+						<flags>1</flags>
+						<geom>10,10,40,80,-1,-1,-1,-1</geom>
+						<Str sr="arg0" ve="3">Index</Str>
+						<Str sr="arg1" ve="3">1.</Str>
+						<Int sr="arg2" val="18"/>
+						<Int sr="arg3"/>
+						<Str sr="arg4" ve="3">#FFFFFFFF</Str>
+						<Int sr="arg5" val="3"/>
+						<Int sr="arg6"/>
+						<Int sr="arg7"/>
+					</TextElement>
+				</Scene>
+			</Scene>
+			<Int sr="arg5" val="1"/>
+			<Int sr="arg6" val="1"/>
+			<RectElement sr="background">
+				<flags>4</flags>
+				<geom>-1,-1,-1,-1,-1,-1,-1,-1</geom>
+				<Str sr="arg0" ve="3"/>
+				<Int sr="arg1" val="0"/>
+				<Str sr="arg2" ve="3">#77333333</Str>
+				<Str sr="arg3" ve="3">#77333333</Str>
+				<Int sr="arg4" val="0"/>
+				<Str sr="arg5" ve="3">#FF000000</Str>
+				<Int sr="arg6" val="0"/>
+				<Int sr="arg7" val="0"/>
+			</RectElement>
+			<ListElementItem sr="item0">
+				<label>Light On</label>
+				<Action sr="action" ve="3">
+					<code>130</code>
+					<Str sr="arg0" ve="3">Light On</Str>
+					<Int sr="arg1" val="0"/>
+					<Int sr="arg2" val="5"/>
+					<Str sr="arg3" ve="3"/>
+					<Str sr="arg4" ve="3"/>
+					<Str sr="arg5" ve="3"/>
+				</Action>
+				<Img sr="icon" ve="2">
+					<nme>hd_aaa_ext_sun</nme>
+				</Img>
+			</ListElementItem>
+			<ListElementItem sr="item1">
+				<label>Light Off</label>
+				<Action sr="action" ve="3">
+					<code>130</code>
+					<Str sr="arg0" ve="3">Light Off</Str>
+					<Int sr="arg1" val="0"/>
+					<Int sr="arg2" val="5"/>
+					<Str sr="arg3" ve="3"/>
+					<Str sr="arg4" ve="3"/>
+					<Str sr="arg5" ve="3"/>
+				</Action>
+				<Img sr="icon" ve="2">
+					<nme>hd_device_access_bightness_low</nme>
+				</Img>
+			</ListElementItem>
+			<ListElementItem sr="item2">
+				<label>Start Fireplace</label>
+				<Action sr="action" ve="3">
+					<code>130</code>
+					<Str sr="arg0" ve="3">Start Fireplace</Str>
+					<Int sr="arg1" val="0"/>
+					<Int sr="arg2" val="5"/>
+					<Str sr="arg3" ve="3"/>
+					<Str sr="arg4" ve="3"/>
+					<Str sr="arg5" ve="3"/>
+				</Action>
+				<Img sr="icon" ve="2">
+					<nme>hd_aaa_ext_coffee</nme>
+				</Img>
+			</ListElementItem>
+			<ListElementItem sr="item3">
+				<label>Start Epic Sax</label>
+				<Action sr="action" ve="3">
+					<code>130</code>
+					<Str sr="arg0" ve="3">Start Epic Sax</Str>
+					<Int sr="arg1" val="0"/>
+					<Int sr="arg2" val="5"/>
+					<Str sr="arg3" ve="3"/>
+					<Str sr="arg4" ve="3"/>
+					<Str sr="arg5" ve="3"/>
+				</Action>
+				<Img sr="icon" ve="2">
+					<nme>hd_aaa_ext_guitar</nme>
+				</Img>
+			</ListElementItem>
+			<ListElementItem sr="item4">
+				<label>Settings</label>
+				<Action sr="action" ve="3">
+					<code>130</code>
+					<Str sr="arg0" ve="3">Setup</Str>
+					<Int sr="arg1" val="0"/>
+					<Int sr="arg2" val="5"/>
+					<Str sr="arg3" ve="3"/>
+					<Str sr="arg4" ve="3"/>
+					<Str sr="arg5" ve="3"/>
+				</Action>
+				<Img sr="icon" ve="2">
+					<nme>hd_action_settings</nme>
+				</Img>
+			</ListElementItem>
+		</ListElement>
+	</Scene>
+	<Scene sr="sceneVariable Query">
+		<backColour>-16777216</backColour>
+		<cdate>1381112175910</cdate>
+		<edate>1381112254701</edate>
+		<heightLand>-1</heightLand>
+		<heightPort>380</heightPort>
+		<nme>Variable Query</nme>
+		<widthLand>-1</widthLand>
+		<widthPort>440</widthPort>
+		<TextElement sr="elements0" ve="2">
+			<flags>4</flags>
+			<geom>8,0,432,96,8,0,432,96</geom>
+			<Str sr="arg0" ve="3">Title</Str>
+			<Str sr="arg1" ve="3">Title</Str>
+			<Int sr="arg2" val="32"/>
+			<Int sr="arg3"/>
+			<Str sr="arg4" ve="3">#FF0099CC</Str>
+			<Int sr="arg5" val="3"/>
+			<Int sr="arg6"/>
+			<Int sr="arg7"/>
+		</TextElement>
+		<RectElement sr="elements1">
+			<flags>5</flags>
+			<geom>0,96,440,4,-1,-1,-1,-1</geom>
+			<Str sr="arg0" ve="3">Header</Str>
+			<Int sr="arg1" val="0"/>
+			<Str sr="arg2" ve="3">#77333333</Str>
+			<Str sr="arg3" ve="3">#77333333</Str>
+			<Int sr="arg4" val="0"/>
+			<Str sr="arg5" ve="3">#FF000000</Str>
+			<Int sr="arg6" val="0"/>
+			<Int sr="arg7" val="0"/>
+		</RectElement>
+		<EditTextElement sr="elements2">
+			<flags>13</flags>
+			<geom>20,156,400,96,-1,-1,-1,-1</geom>
+			<Str sr="arg0" ve="3">TextEdit1</Str>
+			<Str sr="arg1" ve="3"/>
+			<Int sr="arg2" val="16"/>
+			<Int sr="arg3" val="100"/>
+			<Str sr="arg4" ve="3">#FFFFFFFF</Str>
+			<Int sr="arg5" val="0"/>
+			<Int sr="arg6" val="0"/>
+		</EditTextElement>
+		<RectElement sr="elements3">
+			<flags>5</flags>
+			<geom>0,300,440,4,-1,-1,-1,-1</geom>
+			<Str sr="arg0" ve="3">Footer</Str>
+			<Int sr="arg1" val="0"/>
+			<Str sr="arg2" ve="3">#77333333</Str>
+			<Str sr="arg3" ve="3">#77333333</Str>
+			<Int sr="arg4" val="0"/>
+			<Str sr="arg5" ve="3">#FF000000</Str>
+			<Int sr="arg6" val="0"/>
+			<Int sr="arg7" val="0"/>
+		</RectElement>
+		<ImageElement sr="elements4">
+			<clickTask>-936</clickTask>
+			<flags>4</flags>
+			<geom>70,300,80,80,-1,-1,-1,-1</geom>
+			<Str sr="arg0" ve="3">Accept</Str>
+			<Img sr="arg1" ve="2">
+				<nme>hd_navigation_accept</nme>
+			</Img>
+			<Int sr="arg2" val="255"/>
+		</ImageElement>
+		<ImageElement sr="elements5">
+			<clickTask>-936</clickTask>
+			<flags>4</flags>
+			<geom>290,300,80,80,-1,-1,-1,-1</geom>
+			<Str sr="arg0" ve="3">Cancel</Str>
+			<Img sr="arg1" ve="2">
+				<nme>hd_content_remove</nme>
+			</Img>
+			<Int sr="arg2" val="255"/>
+		</ImageElement>
+	</Scene>
+	<Task sr="task11">
+		<cdate>1381110672417</cdate>
+		<edate>1381116046765</edate>
+		<id>11</id>
+		<nme>Open Debug Interface</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>104</code>
+			<Str sr="arg0" ve="3">Http://%HA_HOST:%HA_PORT/?api_password=%HA_API_PASSWORD</Str>
+		</Action>
+	</Task>
+	<Task sr="task12">
+		<cdate>1381113015963</cdate>
+		<edate>1381116866174</edate>
+		<id>12</id>
+		<nme>Start Screen</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>47</code>
+			<Str sr="arg0" ve="3">Home Assistant Start</Str>
+			<Int sr="arg1" val="5"/>
+			<Int sr="arg2" val="100"/>
+			<Int sr="arg3" val="100"/>
+			<Int sr="arg4" val="0"/>
+			<Int sr="arg5" val="0"/>
+		</Action>
+		<Action sr="act1" ve="3">
+			<code>49</code>
+			<Str sr="arg0" ve="3">Home Assistant Start</Str>
+		</Action>
+	</Task>
+	<Task sr="task13">
+		<cdate>1381114398467</cdate>
+		<edate>1381114398467</edate>
+		<id>13</id>
+		<pri>11</pri>
+		<Action sr="act0" ve="3">
+			<code>49</code>
+			<lhs>%tap_label</lhs>
+			<op>2</op>
+			<rhs>Settings</rhs>
+			<Str sr="arg0" ve="3">Home Assistant Start</Str>
+		</Action>
+	</Task>
+	<Task sr="task14">
+		<cdate>1381114829583</cdate>
+		<edate>1381115098684</edate>
+		<id>14</id>
+		<nme>API Fire Event</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>116</code>
+			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
+			<Str sr="arg1" ve="3">/api/event/fire</Str>
+			<Str sr="arg2" ve="3">api_password=%HA_API_PASSWORD
+event_name=%par1</Str>
+			<Str sr="arg3" ve="3"/>
+			<Int sr="arg4" val="10"/>
+			<Str sr="arg5" ve="3"/>
+			<Str sr="arg6" ve="3"/>
+		</Action>
+	</Task>
+	<Task sr="task15">
+		<cdate>1380262442154</cdate>
+		<edate>1381115642332</edate>
+		<id>15</id>
+		<nme>Light On</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">turn_light_on</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hd_aaa_ext_sun</nme>
+		</Img>
+	</Task>
+	<Task sr="task16">
+		<cdate>1380262442154</cdate>
+		<edate>1381115613658</edate>
+		<id>16</id>
+		<nme>Start Epic Sax</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">start_epic_sax</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hd_aaa_ext_guitar</nme>
+		</Img>
+	</Task>
+	<Task sr="task20">
+		<cdate>1380613530339</cdate>
+		<edate>1381116102459</edate>
+		<id>20</id>
+		<nme>Charging None</nme>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">Update Charging</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">none</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+	</Task>
+	<Task sr="task22">
+		<cdate>1380613530339</cdate>
+		<edate>1381116000403</edate>
+		<id>22</id>
+		<nme>Charging Wireless</nme>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">Update Charging</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">wireless</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+	</Task>
+	<Task sr="task23">
+		<cdate>1380613530339</cdate>
+		<edate>1381115997137</edate>
+		<id>23</id>
+		<nme>Charging USB</nme>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">Update Charging</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">usb</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+	</Task>
+	<Task sr="task4">
+		<cdate>1380262442154</cdate>
+		<edate>1381115633261</edate>
+		<id>4</id>
+		<nme>Light Off</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">turn_light_off</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hd_device_access_bightness_low</nme>
+		</Img>
+	</Task>
+	<Task sr="task6">
+		<cdate>1380522560890</cdate>
+		<edate>1381117976853</edate>
+		<id>6</id>
+		<nme>Setup</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>118</code>
+			<lhs>%HA_HOST</lhs>
+			<op>10</op>
+			<rhs></rhs>
+			<Str sr="arg0" ve="3">icanhazip.com</Str>
+			<Str sr="arg1" ve="3"/>
+			<Str sr="arg2" ve="3"/>
+			<Str sr="arg3" ve="3"/>
+			<Int sr="arg4" val="10"/>
+			<Str sr="arg5" ve="3"/>
+			<Str sr="arg6" ve="3">%HA_HOST</Str>
+		</Action>
+		<Action sr="act1" ve="3">
+			<code>547</code>
+			<lhs>%HA_HOST</lhs>
+			<op>10</op>
+			<rhs></rhs>
+			<Str sr="arg0" ve="3">%HA_HOST</Str>
+			<Str sr="arg1" ve="3">%HTTPD</Str>
+			<Int sr="arg2" val="0"/>
+			<Int sr="arg3" val="0"/>
+		</Action>
+		<Action sr="act2" ve="3">
+			<code>547</code>
+			<lhs>%HA_PORT</lhs>
+			<op>10</op>
+			<rhs></rhs>
+			<Str sr="arg0" ve="3">%HA_PORT</Str>
+			<Str sr="arg1" ve="3">8123</Str>
+			<Int sr="arg2" val="0"/>
+			<Int sr="arg3" val="0"/>
+		</Action>
+		<Action sr="act3" ve="3">
+			<code>547</code>
+			<lhs>%HA_API_PASSWORD</lhs>
+			<op>10</op>
+			<rhs></rhs>
+			<Str sr="arg0" ve="3">%HA_API_PASSWORD</Str>
+			<Str sr="arg1" ve="3">My password</Str>
+			<Int sr="arg2" val="0"/>
+			<Int sr="arg3" val="0"/>
+		</Action>
+		<Action sr="act4" ve="3">
+			<code>547</code>
+			<lhs>%HA_DEVICE_NAME</lhs>
+			<op>10</op>
+			<rhs></rhs>
+			<Str sr="arg0" ve="3">%HA_DEVICE_NAME</Str>
+			<Str sr="arg1" ve="3">%DEVMOD</Str>
+			<Int sr="arg2" val="0"/>
+			<Int sr="arg3" val="0"/>
+		</Action>
+		<Action sr="act5" ve="3">
+			<code>595</code>
+			<Str sr="arg0" ve="3">Host</Str>
+			<Str sr="arg1" ve="3">%HA_HOST</Str>
+			<Int sr="arg2" val="0"/>
+			<Str sr="arg3" ve="3">%HA_HOST</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3">Variable Query</Str>
+			<Int sr="arg6" val="40"/>
+			<Int sr="arg7" val="1"/>
+		</Action>
+		<Action sr="act6" ve="3">
+			<code>595</code>
+			<Str sr="arg0" ve="3">Port</Str>
+			<Str sr="arg1" ve="3">%HA_PORT</Str>
+			<Int sr="arg2" val="4"/>
+			<Str sr="arg3" ve="3">%HA_PORT</Str>
+			<Str sr="arg4" ve="3">%HA_PORT</Str>
+			<Str sr="arg5" ve="3">Variable Query</Str>
+			<Int sr="arg6" val="40"/>
+			<Int sr="arg7" val="1"/>
+		</Action>
+		<Action sr="act7" ve="3">
+			<code>595</code>
+			<Str sr="arg0" ve="3">API Password</Str>
+			<Str sr="arg1" ve="3">%HA_API_PASSWORD</Str>
+			<Int sr="arg2" val="0"/>
+			<Str sr="arg3" ve="3">%HA_API_PASSWORD</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3">Variable Query</Str>
+			<Int sr="arg6" val="40"/>
+			<Int sr="arg7" val="1"/>
+		</Action>
+		<Action sr="act8" ve="3">
+			<code>595</code>
+			<label>Ask device name</label>
+			<Str sr="arg0" ve="3">Device name</Str>
+			<Str sr="arg1" ve="3">%HA_DEVICE_NAME</Str>
+			<Int sr="arg2" val="0"/>
+			<Str sr="arg3" ve="3">%HA_DEVICE_NAME</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3">Variable Query</Str>
+			<Int sr="arg6" val="40"/>
+			<Int sr="arg7" val="1"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hd_ab_action_settings</nme>
+		</Img>
+	</Task>
+	<Task sr="task7">
+		<cdate>1380262442154</cdate>
+		<edate>1381111978825</edate>
+		<id>7</id>
+		<nme>Update Battery</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>116</code>
+			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
+			<Str sr="arg1" ve="3">/api/state/change</Str>
+			<Str sr="arg2" ve="3">api_password=%HA_API_PASSWORD
+category=%HA_DEVICE_NAME.battery
+new_state=%BATT</Str>
+			<Str sr="arg3" ve="3"/>
+			<Int sr="arg4" val="10"/>
+			<Str sr="arg5" ve="3"/>
+			<Str sr="arg6" ve="3"/>
+		</Action>
+	</Task>
+	<Task sr="task8">
+		<cdate>1380262442154</cdate>
+		<edate>1381115955507</edate>
+		<id>8</id>
+		<nme>Update Charging</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>547</code>
+			<Str sr="arg0" ve="3">%HA_CHARGING</Str>
+			<Str sr="arg1" ve="3">%par1</Str>
+			<Int sr="arg2" val="0"/>
+			<Int sr="arg3" val="0"/>
+		</Action>
+		<Action sr="act1" ve="3">
+			<code>116</code>
+			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
+			<Str sr="arg1" ve="3">/api/state/change</Str>
+			<Str sr="arg2" ve="3">api_password=%HA_API_PASSWORD
+category=%HA_DEVICE_NAME.charging
+new_state=%HA_CHARGING
+category=%HA_DEVICE_NAME.battery
+new_state=%BATT</Str>
+			<Str sr="arg3" ve="3"/>
+			<Int sr="arg4" val="10"/>
+			<Str sr="arg5" ve="3"/>
+			<Str sr="arg6" ve="3"/>
+		</Action>
+	</Task>
+	<Task sr="task9">
+		<cdate>1380262442154</cdate>
+		<edate>1381115659673</edate>
+		<id>9</id>
+		<nme>Start Fireplace</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">start_fireplace</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hd_aaa_ext_coffee</nme>
+		</Img>
+	</Task>
+</TaskerData>
