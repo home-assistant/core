@@ -108,15 +108,17 @@ class EventBus(object):
         assert isinstance(event, Event), "event needs to be an instance of Event"
 
         def run():
-            """ We dont want the eventbus to be blocking,
-                We dont want the eventbus to crash when one of its listeners throws an Exception
-                So run in a thread. """
+            """ We dont want the eventbus to be blocking - run in a thread. """
             self.lock.acquire()
 
             self.logger.info("EventBus:Event {}: {}".format(event.event_type, event.data))
 
             for callback in chain(self.listeners[ALL_EVENTS], self.listeners[event.event_type]):
-                callback(event)
+                try:
+                    callback(event)
+
+                except:
+                    self.logger.exception("EventBus:Exception in listener")
 
                 if event.remove_listener:
                     if callback in self.listeners[ALL_EVENTS]:
