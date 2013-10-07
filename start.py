@@ -6,6 +6,8 @@ from homeassistant.observers import TomatoDeviceScanner, DeviceTracker, track_su
 from homeassistant.actors import HueLightControl, LightTrigger
 from homeassistant.httpinterface import HTTPInterface
 
+from lib.pychromecast import play_youtube_video
+
 # Read config
 config = SafeConfigParser()
 config.read("home-assistant.conf")
@@ -24,6 +26,11 @@ track_sun(eventbus, statemachine, config.get("common","latitude"), config.get("c
 
 # Init actors
 LightTrigger(eventbus, statemachine, devicetracker, HueLightControl())
+
+# If a chromecast is specified, add some chromecast specific event triggers
+if config.has_option("chromecast", "host"):
+	eventbus.listen("start_fireplace", lambda event: play_youtube_video(config.get("chromecast","host"), "eyU3bRy2x44"))
+	eventbus.listen("start_epic_sax", lambda event: play_youtube_video(config.get("chromecast","host"), "kxopViU98Xo"))
 
 # Init HTTP interface
 HTTPInterface(eventbus, statemachine, config.get("common","api_password"))
