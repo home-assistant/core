@@ -16,6 +16,8 @@ import dateutil.parser
 from phue import Bridge
 import requests
 
+from .packages.pychromecast import pychromecast
+
 from . import track_state_change
 from .util import sanitize_filename
 from .observers import (STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
@@ -28,7 +30,7 @@ HUE_MAX_TRANSITION_TIME = 9000
 
 EVENT_DOWNLOAD_FILE = "download_file"
 EVENT_BROWSE_URL = "browse_url"
-
+EVENT_CHROMECAST_YOUTUBE_VIDEO = "chromecast.play_youtube_video"
 EVENT_TURN_LIGHT_ON = "turn_light_on"
 EVENT_TURN_LIGHT_OFF = "turn_light_off"
 
@@ -244,3 +246,9 @@ def setup_file_downloader(eventbus, download_path):
 def setup_webbrowser(eventbus):
     """ Listen for browse_url events and opens the url in the default webbrowser. """
     eventbus.listen(EVENT_BROWSE_URL, lambda event: webbrowser.open(event.data['url']))
+
+def setup_chromecast(eventbus, host):
+    """ Listen for chromecast events. """
+    eventbus.listen("start_fireplace", lambda event: pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
+    eventbus.listen("start_epic_sax", lambda event: pychromecast.play_youtube_video(host, "kxopViU98Xo"))
+    eventbus.listen(EVENT_CHROMECAST_YOUTUBE_VIDEO, lambda event: pychromecast.play_youtube_video(host, event.data['video']))

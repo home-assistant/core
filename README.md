@@ -14,7 +14,7 @@ Installation instructions
 -------------------------
 
 * install python modules [python-dateutil](http://labix.org/python-dateutil), [PyEphem](http://rhodesmill.org/pyephem/), [Requests](http://python-requests.org) and [PHue](https://github.com/studioimaginaire/phue): `pip install python-dateutil pyephem requests phue`
-* Clone the repository `git clone https://github.com/balloob/home-assistant.git`.
+* Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
 * Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
   * For Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
 * Setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS` from the commandline.

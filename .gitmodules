@@ -1,0 +1,3 @@
+[submodule "homeassistant/packages/pychromecast"]
+	path = homeassistant/packages/pychromecast
+	url = https://github.com/balloob/pychromecast.git
