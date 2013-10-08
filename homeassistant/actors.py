@@ -10,6 +10,7 @@ import os
 import logging
 from datetime import datetime, timedelta
 import re
+import webbrowser
 
 import dateutil.parser
 from phue import Bridge
@@ -26,6 +27,7 @@ LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 HUE_MAX_TRANSITION_TIME = 9000
 
 EVENT_DOWNLOAD_FILE = "download_file"
+EVENT_BROWSE_URL = "browse_url"
 
 EVENT_TURN_LIGHT_ON = "turn_light_on"
 EVENT_TURN_LIGHT_OFF = "turn_light_off"
@@ -238,3 +240,7 @@ def setup_file_downloader(eventbus, download_path):
 
 
     eventbus.listen(EVENT_DOWNLOAD_FILE, download_file)
+
+def setup_webbrowser(eventbus):
+    """ Listen for browse_url events and opens the url in the default webbrowser. """
+    eventbus.listen(EVENT_BROWSE_URL, lambda event: webbrowser.open(event.data['url']))
