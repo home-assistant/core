@@ -257,16 +257,20 @@ class TomatoDeviceScanner(object):
 
                 # Calling and parsing the Tomato api here. We only need the wldev and dhcpd_lease values.
                 # See http://paulusschoutsen.nl/blog/2013/10/tomato-api-documentation/ for what's going on here.
-                self.last_results = {param: json.loads(value.replace("'",'"'))
-                                     for param, value in re.findall(r"(?P<param>\w*) = (?P<value>.*);", response.text)
-                                     if param in ["wldev","dhcpd_lease"]}
+                if response.status_code == 200:
+                    self.last_results = {param: json.loads(value.replace("'",'"'))
+                                         for param, value in re.findall(r"(?P<param>\w*) = (?P<value>.*);", response.text)
+                                         if param in ["wldev","dhcpd_lease"]}
 
-                self.date_updated = datetime.now()
+                    self.date_updated = datetime.now()
 
+                elif response.status_code == 401:
+                    # Authentication error
+                    self.logger.exception("Tomato:Failed to authenticate, please check your username and password")
 
             except requests.ConnectionError:
-                # If we could not connect to the router
-                self.logger.exception("Tomato:Failed to connect to the router")
+                # We get this if we could not connect to the router or an invalid http_id was supplied
+                self.logger.exception("Tomato:Failed to connect to the router or invalid http_id supplied")
 
             except ValueError:
                 # If json decoder could not parse the response
