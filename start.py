@@ -33,7 +33,7 @@ actors.LightTrigger(eventbus, statemachine,
                     devicetracker, actors.HueLightControl())
 
 actors.setup_chromecast(eventbus, config.get("chromecast", "host"))
-actors.setup_file_downloader(eventbus, "downloads")
+actors.setup_file_downloader(eventbus, config.get("downloader", "download_dir"))
 actors.setup_webbrowser(eventbus)
 
 # Init HTTP interface
