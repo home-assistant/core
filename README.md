@@ -1,19 +1,23 @@
 Home Assistant
 ==============
 
-Home Assistant automatically switches the lights on and off based on nearby devices and the position of the sun.
+Home Assistant provides a platform for home automation. It does so by having modules that observe and trigger actors to do various tasks.
 
 It is currently able to do the following things:
- * Turn on the lights when one of the tracked devices is nearby
- * Turn off the lights when everybody leaves
- * Turn on the lights when the sun sets and one of the tracked devices is home
+ * Track if devices are home by monitoring connected devices to a wireless router
+ * Turn on the lights when people get home when it is dark
+ * Slowly turn on the lights to compensate for light loss when the sun sets
+ * Turn off the lights when everybody leaves the house
+ * Start YouTube video's on the Chromecast
+ * Download files to the host
+ * Open a url in the default browser on the host
 
-It currently works with any wireless router with [Tomato firmware](http://www.polarcloud.com/tomato) in combination with [Philips Hue](http://meethue.com). The system is built modular so support for other wireless routers or other actions can be implemented easily.
+It currently works with any wireless router with [Tomato firmware](http://www.polarcloud.com/tomato) in combination with [Philips Hue](http://meethue.com) and the [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast). The system is built modular so support for other wireless routers, other devices or actions can be implemented easily.
 
 Installation instructions
 -------------------------
 
-* install python modules [python-dateutil](http://labix.org/python-dateutil), [PyEphem](http://rhodesmill.org/pyephem/), [Requests](http://python-requests.org) and [PHue](https://github.com/studioimaginaire/phue): `pip install python-dateutil pyephem requests phue`
+* Install python modules [python-dateutil](http://labix.org/python-dateutil), [PyEphem](http://rhodesmill.org/pyephem/), [Requests](http://python-requests.org) and [PHue](https://github.com/studioimaginaire/phue): `pip install python-dateutil pyephem requests phue`
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
 * Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
   * For Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
@@ -53,9 +57,9 @@ Android remote control
 
 Using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) I built an Android app that:
 
- * provides buttons to control the lights and the chromecast
- * sent updates every 30 minutes on the battery status
- * sent updates when the phone is being charged via usb or wireless 
+ * Provides buttons to control the lights and the chromecast
+ * Sent updates every 30 minutes on the battery status
+ * Sent updates when the phone is being charged via usb or wireless
 
 The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.apk) and [Tasker project XML](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.prj.xml) can be found in [/android-tasker/](https://github.com/balloob/home-assistant/tree/master/android-tasker)
 
