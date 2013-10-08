@@ -44,11 +44,16 @@ MESSAGE_STATUS_UNAUTHORIZED = "UNAUTHORIZED"
 class HTTPInterface(threading.Thread):
     """ Provides an HTTP interface for Home Assistant. """
 
-    def __init__(self, eventbus, statemachine, api_password, server_port=SERVER_PORT, server_host=None):
+    # pylint: disable=too-many-arguments
+    def __init__(self, eventbus, statemachine, api_password,
+                 server_port=None, server_host=None):
         threading.Thread.__init__(self)
 
+        if not server_port:
+            server_port = SERVER_PORT
+
         # If no server host is given, accept all incoming requests
-        if server_host is None:
+        if not server_host:
             server_host = '0.0.0.0'
 
         self.server = HTTPServer((server_host, server_port), RequestHandler)
@@ -78,7 +83,8 @@ class HTTPInterface(threading.Thread):
 
         # Trigger a fake request to get the server to quit
         try:
-            requests.get("http://127.0.0.1:{}".format(SERVER_PORT), timeout=0.001)
+            requests.get("http://127.0.0.1:{}".format(SERVER_PORT),
+                         timeout=0.001)
         except requests.exceptions.RequestException:
             pass
 
@@ -86,7 +92,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """
 
     #Handler for the GET requests
-    def do_GET(self):
+    def do_GET(self):    # pylint: disable=invalid-name
         """ Handle incoming GET requests. """
         write = lambda txt: self.wfile.write(txt+"\n")
 
@@ -94,19 +100,21 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         get_data = parse_qs(url.query)
 
+        api_password = get_data.get('api_password', [''])[0]
+
         if url.path == "/":
-            if self._verify_api_password(get_data.get('api_password', [''])[0], False):
+            if self._verify_api_password(api_password, False):
                 self.send_response(200)
                 self.send_header('Content-type','text/html')
                 self.end_headers()
 
 
-                write("<html>")
-                write("<head><title>Home Assistant</title></head>")
-                write("<body>")
+                write(("<html>"
+                       "<head><title>Home Assistant</title></head>"
+                       "<body>"))
 
                 # Flash message support
-                if self.server.flash_message is not None:
+                if self.server.flash_message:
                     write("<h3>{}</h3>".format(self.server.flash_message))
 
                     self.server.flash_message = None
@@ -114,20 +122,28 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # Describe state machine:
                 categories = []
 
-                write("<table>")
-                write("<tr><th>Name</th><th>State</th><th>Last Changed</th></tr>")
+                write(("<table><tr>"
+                       "<th>Name</th><th>State</th>"
+                       "<th>Last Changed</th></tr>"))
 
-                for category, state, last_changed in self.server.statemachine.get_states():
+                for category, state, last_changed in \
+                        self.server.statemachine.get_states():
+
                     categories.append(category)
 
-                    write("<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(category, state, last_changed.strftime("%H:%M:%S %d-%m-%Y")))
+                    write("<tr><td>{}</td><td>{}</td><td>{}</td></tr>".
+                        format(category, state,
+                               last_changed.strftime("%H:%M:%S %d-%m-%Y")))
 
                 write("</table>")
 
                 # Small form to change the state
-                write("<br />Change state:<br />")
-                write("<form action='state/change' method='POST'>")
-                write("<input type='hidden' name='api_password' value='{}' />".format(self.server.api_password))
+                write(("<br />Change state:<br />"
+                       "<form action='state/change' method='POST'>"))
+
+                write("<input type='hidden' name='api_password' value='{}' />".
+                        format(self.server.api_password))
+
                 write("<select name='category'>")
 
                 for category in categories:
@@ -135,22 +151,26 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 write("</select>")
 
-                write("<input name='new_state' />")
-                write("<input type='submit' value='set state' />")
-                write("</form>")
+                write(("<input name='new_state' />"
+                       "<input type='submit' value='set state' />"
+                       "</form>"))
 
                 # Describe event bus:
                 for category in self.server.eventbus.listeners:
-                    write("Event {}: {} listeners<br />".format(category, len(self.server.eventbus.listeners[category])))
+                    write("Event {}: {} listeners<br />".format(category,
+                            len(self.server.eventbus.listeners[category])))
 
                 # Form to allow firing events
-                write("<br /><br />")
-                write("<form action='event/fire' method='POST'>")
-                write("<input type='hidden' name='api_password' value='{}' />".format(self.server.api_password))
-                write("Event name: <input name='event_name' /><br />")
-                write("Event data (json): <input name='event_data' /><br />")
-                write("<input type='submit' value='fire event' />")
-                write("</form>")
+                write(("<br />"
+                       "<form action='event/fire' method='POST'>"))
+
+                write("<input type='hidden' name='api_password' value='{}' />".
+                        format(self.server.api_password))
+
+                write(("Event name: <input name='event_name' /><br />"
+                       "Event data (json): <input name='event_data' /><br />"
+                       "<input type='submit' value='fire event' />"
+                       "</form>"))
 
                 write("</body></html>")
 
@@ -158,8 +178,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
 
-
-    def do_POST(self):
+    def do_POST(self):    # pylint: disable=invalid-name, too-many-branches
         """ Handle incoming POST requests. """
 
         length = int(self.headers['Content-Length'])
@@ -181,46 +200,63 @@ class RequestHandler(BaseHTTPRequestHandler):
                 try:
                     changed = []
 
-                    for category, new_state in zip(post_data['category'], post_data['new_state']):
+                    for category, new_state in zip(post_data['category'],
+                                                   post_data['new_state']):
+
                         self.server.statemachine.set_state(category, new_state)
+
                         changed.append("{}={}".format(category, new_state))
 
-                    self._message(use_json, "States changed: {}".format( ", ".join(changed) ) )
+                    self._message(use_json, "States changed: {}".
+                                                format( ", ".join(changed) ) )
 
                 except KeyError:
                     # If category or new_state don't exist in post data
-                    self._message(use_json, "Invalid state received.", MESSAGE_STATUS_ERROR)
+                    self._message(use_json, "Invalid state received.",
+                                                        MESSAGE_STATUS_ERROR)
 
         # Action to fire an event
         elif action == "event/fire":
             if self._verify_api_password(given_api_password, use_json):
                 try:
                     event_name = post_data['event_name'][0]
-                    event_data = None if 'event_data' not in post_data or post_data['event_data'][0] == "" else json.loads(post_data['event_data'][0])
+
+                    if (not 'event_data' in post_data or
+                        post_data['event_data'][0] == ""):
+
+                        event_data = None
+
+                    else:
+                        event_data = json.loads(post_data['event_data'][0])
 
                     self.server.eventbus.fire(Event(event_name, event_data))
 
-                    self._message(use_json, "Event {} fired.".format(event_name))
+                    self._message(use_json, "Event {} fired.".
+                                                format(event_name))
 
                 except ValueError:
                     # If JSON decode error
-                    self._message(use_json, "Invalid event received (1).", MESSAGE_STATUS_ERROR)
+                    self._message(use_json, "Invalid event received (1).",
+                                                        MESSAGE_STATUS_ERROR)
 
                 except KeyError:
                     # If "event_name" not in post_data
-                    self._message(use_json, "Invalid event received (2).", MESSAGE_STATUS_ERROR)
+                    self._message(use_json, "Invalid event received (2).",
+                                                        MESSAGE_STATUS_ERROR)
 
         else:
             self.send_response(404)
 
 
     def _verify_api_password(self, api_password, use_json):
-        """ Helper method to verify the API password and take action if incorrect. """
+        """ Helper method to verify the API password
+            and take action if incorrect. """
         if api_password == self.server.api_password:
             return True
 
         elif use_json:
-            self._message(True, "API password missing or incorrect.", MESSAGE_STATUS_UNAUTHORIZED)
+            self._message(True, "API password missing or incorrect.",
+                                                MESSAGE_STATUS_UNAUTHORIZED)
 
         else:
             self.send_response(200)
@@ -229,14 +265,14 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             write = lambda txt: self.wfile.write(txt+"\n")
 
-            write("<html>")
-            write("<head><title>Home Assistant</title></head>")
-            write("<body>")
-            write("<form action='/' method='GET'>")
-            write("API password: <input name='api_password' />")
-            write("<input type='submit' value='submit' />")
-            write("</form>")
-            write("</body></html>")
+            write(("<html>"
+                   "<head><title>Home Assistant</title></head>"
+                   "<body>"
+                   "<form action='/' method='GET'>"
+                   "API password: <input name='api_password' />"
+                   "<input type='submit' value='submit' />"
+                   "</form>"
+                   "</body></html>"))
 
         return False
 
@@ -250,7 +286,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         else:
             self.server.logger.error(log_message)
-            response_code = 401 if status == MESSAGE_STATUS_UNAUTHORIZED else 400
+            response_code = (401 if status == MESSAGE_STATUS_UNAUTHORIZED
+                                                                    else 400)
 
         if use_json:
             self.send_response(response_code)
@@ -263,5 +300,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.server.flash_message = message
 
             self.send_response(301)
-            self.send_header("Location", "/?api_password={}".format(self.server.api_password))
+            self.send_header("Location", "/?api_password={}".
+                                format(self.server.api_password))
             self.end_headers()

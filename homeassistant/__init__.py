@@ -50,7 +50,9 @@ def ensure_list(parameter):
 
 def matcher(subject, pattern):
     """ Returns True if subject matches the pattern.
-        Pattern is either a list of allowed subjects or a '*'. """
+
+    Pattern is either a list of allowed subjects or a '*'.
+    """
     return '*' in pattern or subject in pattern
 
 def track_state_change(eventbus, category, from_state, to_state, action):
@@ -66,21 +68,28 @@ def track_state_change(eventbus, category, from_state, to_state, action):
                 matcher(event.data['old_state'].state, from_state) and \
                 matcher(event.data['new_state'].state, to_state):
 
-            action(event.data['category'], event.data['old_state'], event.data['new_state'])
+            action(event.data['category'],
+                   event.data['old_state'],
+                   event.data['new_state'])
 
     eventbus.listen(EVENT_STATE_CHANGED, listener)
 
-def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', minute='*', second='*', point_in_time=None, listen_once=False):
+# pylint: disable=too-many-arguments
+def track_time_change(eventbus, action,
+                      year='*', month='*', day='*',
+                      hour='*', minute='*', second='*',
+                      point_in_time=None, listen_once=False):
     """ Adds a listener that will listen for a specified or matching time. """
     year, month, day = ensure_list(year), ensure_list(month), ensure_list(day)
-    hour, minute, second = ensure_list(hour), ensure_list(minute), ensure_list(second)
+    hour, minute = ensure_list(hour), ensure_list(minute)
+    second = ensure_list(second)
 
     def listener(event):
         """ Listens for matching time_changed events. """
         assert isinstance(event, Event), "event needs to be of Event type"
 
-        if  (point_in_time is not None and event.data['now'] > point_in_time) or \
-                (point_in_time is None and \
+        if  (point_in_time and event.data['now'] > point_in_time) or \
+                (not point_in_time and \
                 matcher(event.data['now'].year, year) and \
                 matcher(event.data['now'].month, month) and \
                 matcher(event.data['now'].day, day) and \
@@ -88,7 +97,8 @@ def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', 
                 matcher(event.data['now'].minute, minute) and \
                 matcher(event.data['now'].second, second)):
 
-            # point_in_time are exact points in time so we always remove it after fire
+            # point_in_time are exact points in time
+            # so we always remove it after fire
             event.remove_listener = listen_once or point_in_time is not None
 
             action(event.data['now'])
@@ -96,7 +106,7 @@ def track_time_change(eventbus, action, year='*', month='*', day='*', hour='*', 
     eventbus.listen(EVENT_TIME_CHANGED, listener)
 
 class EventBus(object):
-    """ Class provides an eventbus. Allows code to listen for events and fire them. """
+    """ Class that allows code to listen for- and fire events. """
 
     def __init__(self):
         self.listeners = defaultdict(list)
@@ -105,19 +115,22 @@ class EventBus(object):
 
     def fire(self, event):
         """ Fire an event. """
-        assert isinstance(event, Event), "event needs to be an instance of Event"
+        assert isinstance(event, Event), \
+                    "event needs to be an instance of Event"
 
         def run():
             """ We dont want the eventbus to be blocking - run in a thread. """
             self.lock.acquire()
 
-            self.logger.info("EventBus:Event {}: {}".format(event.event_type, event.data))
+            self.logger.info("EventBus:Event {}: {}".format(
+                                event.event_type, event.data))
 
-            for callback in chain(self.listeners[ALL_EVENTS], self.listeners[event.event_type]):
+            for callback in chain(self.listeners[ALL_EVENTS],
+                                  self.listeners[event.event_type]):
                 try:
                     callback(event)
 
-                except:
+                except Exception:  #pylint: disable=broad-except
                     self.logger.exception("EventBus:Exception in listener")
 
                 if event.remove_listener:
@@ -139,13 +152,16 @@ class EventBus(object):
     def listen(self, event_type, callback):
         """ Listen for all events or events of a specific type.
 
-            To listen to all events specify the constant ``ALL_EVENTS`` as event_type. """
+        To listen to all events specify the constant ``ALL_EVENTS``
+        as event_type.
+        """
         self.lock.acquire()
 
         self.listeners[event_type].append(callback)
 
         self.lock.release()
 
+# pylint: disable=too-few-public-methods
 class Event(object):
     """ An event to be sent over the eventbus. """
 
@@ -182,7 +198,10 @@ class StateMachine(object):
             if old_state.state != new_state:
                 self.states[category] = State(new_state, datetime.now())
 
-                self.eventbus.fire(Event(EVENT_STATE_CHANGED, {'category':category, 'old_state':old_state, 'new_state':self.states[category]}))
+                self.eventbus.fire(Event(EVENT_STATE_CHANGED,
+                    {'category':category,
+                     'old_state':old_state,
+                     'new_state':self.states[category]}))
 
         self.lock.release()
 
@@ -193,19 +212,27 @@ class StateMachine(object):
         return self.get_state(category).state == state
 
     def get_state(self, category):
-        """ Returns a tuple (state,last_changed) describing the state of the specified category. """
+        """ Returns a tuple (state,last_changed) describing
+            the state of the specified category. """
         self._validate_category(category)
 
         return self.states[category]
 
     def get_states(self):
-        """ Returns a list of tuples (category, state, last_changed) sorted by category. """
-        return [(category, self.states[category].state, self.states[category].last_changed) for category in sorted(self.states.keys(), key=lambda key: key.lower())]
+        """ Returns a list of tuples (category, state, last_changed)
+            sorted by category case-insensitive. """
+        return [(category,
+                 self.states[category].state,
+                 self.states[category].last_changed)
+                for category in
+                sorted(self.states.keys(), key=lambda key: key.lower())]
 
     def _validate_category(self, category):
-        """ Helper function to throw an exception when the category does not exist. """
+        """ Helper function to throw an exception
+            when the category does not exist. """
         if category not in self.states:
-            raise CategoryDoesNotExistException("Category {} does not exist.".format(category))
+            raise CategoryDoesNotExistException(
+                    "Category {} does not exist.".format(category))
 
 class Timer(threading.Thread):
     """ Timer will sent out an event every TIMER_INTERVAL seconds. """
