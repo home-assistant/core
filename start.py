@@ -35,6 +35,7 @@ actors.LightTrigger(eventbus, statemachine,
 actors.setup_chromecast(eventbus, config.get("chromecast", "host"))
 actors.setup_file_downloader(eventbus, config.get("downloader", "download_dir"))
 actors.setup_webbrowser(eventbus)
+actors.setup_media_buttons(eventbus)
 
 # Init HTTP interface
 HTTPInterface(eventbus, statemachine, config.get("common","api_password"))

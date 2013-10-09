@@ -17,7 +17,7 @@ import dateutil.parser
 from phue import Bridge
 import requests
 
-from .packages.pychromecast import pychromecast
+from .packages import pychromecast, pykeyboard
 
 from . import track_state_change
 from .util import sanitize_filename
@@ -35,7 +35,10 @@ EVENT_BROWSE_URL = "browse_url"
 EVENT_CHROMECAST_YOUTUBE_VIDEO = "chromecast.play_youtube_video"
 EVENT_TURN_LIGHT_ON = "turn_light_on"
 EVENT_TURN_LIGHT_OFF = "turn_light_off"
-
+EVENT_KEYBOARD_VOLUME_UP = "keyboard.volume_up"
+EVENT_KEYBOARD_VOLUME_DOWN = "keyboard.volume_down"
+EVENT_KEYBOARD_VOLUME_MUTE = "keyboard.volume_mute"
+EVENT_KEYBOARD_MEDIA_PLAY_PAUSE = "keyboard.media_play_pause"
 
 def _hue_process_transition_time(transition_seconds):
     """ Transition time is in 1/10th seconds
@@ -313,3 +316,20 @@ def setup_chromecast(eventbus, host):
 
     eventbus.listen(EVENT_CHROMECAST_YOUTUBE_VIDEO,
       lambda event: pychromecast.play_youtube_video(host, event.data['video']))
+
+def setup_media_buttons(eventbus):
+    """ Listen for keyboard events. """
+    keyboard = pykeyboard.PyKeyboard()
+    keyboard.special_key_assignment()
+
+    eventbus.listen(EVENT_KEYBOARD_VOLUME_UP,
+      lambda event: keyboard.tap_key(keyboard.volume_up_key))
+
+    eventbus.listen(EVENT_KEYBOARD_VOLUME_DOWN,
+      lambda event: keyboard.tap_key(keyboard.volume_down_key))
+
+    eventbus.listen(EVENT_KEYBOARD_VOLUME_MUTE,
+      lambda event: keyboard.tap_key(keyboard.volume_mute_key))
+
+    eventbus.listen(EVENT_KEYBOARD_MEDIA_PLAY_PAUSE,
+      lambda event: keyboard.tap_key(keyboard.media_play_pause_key))
