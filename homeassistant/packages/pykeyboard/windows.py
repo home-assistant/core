@@ -16,7 +16,7 @@
 from ctypes import *
 import win32api
 from win32con import *
-import pythoncom, pyHook
+import pythoncom
 
 from .base import PyKeyboardMeta, PyKeyboardEventMeta
 
@@ -224,6 +224,8 @@ class PyKeyboardEvent(PyKeyboardEventMeta):
     to listen for keyboard input.
     """
     def __init__(self):
+        import pyHook
+
         PyKeyboardEventMeta.__init__(self)
         self.hm = pyHook.HookManager()
         self.shift_state = 0  # 0 is off, 1 is on
