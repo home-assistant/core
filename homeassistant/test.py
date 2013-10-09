@@ -11,7 +11,7 @@ import time
 
 import requests
 
-from . import EventBus, StateMachine, Event, EVENT_START, EVENT_SHUTDOWN
+from . import EventBus, StateMachine, EVENT_START, EVENT_SHUTDOWN
 from .httpinterface import HTTPInterface, SERVER_PORT
 
 
@@ -34,7 +34,7 @@ class TestHTTPInterface(unittest.TestCase):
 
             self.statemachine.set_state("test", "INIT_STATE")
 
-            self.eventbus.fire(Event(EVENT_START))
+            self.eventbus.fire(EVENT_START)
 
             # Give objects time to startup
             time.sleep(1)
@@ -48,7 +48,7 @@ class TestHTTPInterface(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):    # pylint: disable=invalid-name
         """ things to be run when tests are done. """
-        cls.eventbus.fire(Event(EVENT_SHUTDOWN))
+        cls.eventbus.fire(EVENT_SHUTDOWN)
 
         time.sleep(1)
 

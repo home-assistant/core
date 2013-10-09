@@ -33,7 +33,7 @@ from urlparse import urlparse, parse_qs
 
 import requests
 
-from . import EVENT_START, EVENT_SHUTDOWN, Event
+from . import EVENT_START, EVENT_SHUTDOWN
 
 SERVER_PORT = 8123
 
@@ -229,7 +229,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     else:
                         event_data = json.loads(post_data['event_data'][0])
 
-                    self.server.eventbus.fire(Event(event_name, event_data))
+                    self.server.eventbus.fire(event_name, event_data)
 
                     self._message(use_json, "Event {} fired.".
                                                 format(event_name))
