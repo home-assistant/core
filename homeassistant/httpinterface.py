@@ -31,9 +31,7 @@ import logging
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from urlparse import urlparse, parse_qs
 
-import requests
-
-from . import EVENT_START, EVENT_SHUTDOWN
+from . import EVENT_START
 
 SERVER_PORT = 8123
 
@@ -48,6 +46,8 @@ class HTTPInterface(threading.Thread):
     def __init__(self, eventbus, statemachine, api_password,
                  server_port=None, server_host=None):
         threading.Thread.__init__(self)
+
+        self.daemon = True
 
         if not server_port:
             server_port = SERVER_PORT
@@ -64,29 +64,13 @@ class HTTPInterface(threading.Thread):
         self.server.statemachine = statemachine
         self.server.api_password = api_password
 
-        self._stop = threading.Event()
-
         eventbus.listen(EVENT_START, lambda event: self.start())
-        eventbus.listen(EVENT_SHUTDOWN, lambda event: self.stop())
 
     def run(self):
         """ Start the HTTP interface. """
         self.server.logger.info("Starting")
 
-        while not self._stop.is_set():
-            self.server.handle_request()
-
-
-    def stop(self):
-        """ Stop the HTTP interface. """
-        self._stop.set()
-
-        # Trigger a fake request to get the server to quit
-        try:
-            requests.get("http://127.0.0.1:{}".format(SERVER_PORT),
-                         timeout=0.001)
-        except requests.exceptions.RequestException:
-            pass
+        self.server.serve_forever()
 
 class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """

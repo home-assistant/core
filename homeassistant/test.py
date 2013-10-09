@@ -11,7 +11,7 @@ import time
 
 import requests
 
-from . import EventBus, StateMachine, EVENT_START, EVENT_SHUTDOWN
+from . import EventBus, StateMachine, EVENT_START
 from .httpinterface import HTTPInterface, SERVER_PORT
 
 
@@ -44,13 +44,6 @@ class TestHTTPInterface(unittest.TestCase):
         """ things to be run when tests are started. """
         cls.eventbus = EventBus()
         cls.statemachine = StateMachine(cls.eventbus)
-
-    @classmethod
-    def tearDownClass(cls):    # pylint: disable=invalid-name
-        """ things to be run when tests are done. """
-        cls.eventbus.fire(EVENT_SHUTDOWN)
-
-        time.sleep(1)
 
     def test_debug_interface(self):
         """ Test if we can login by comparing not logged in screen to

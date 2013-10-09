@@ -17,7 +17,6 @@ logging.basicConfig(level=logging.INFO)
 
 ALL_EVENTS = '*'
 EVENT_START = "start"
-EVENT_SHUTDOWN = "shutdown"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 
@@ -41,9 +40,6 @@ def start_home_assistant(eventbus):
             time.sleep(1)
 
         except KeyboardInterrupt:
-            print ""
-            eventbus.fire(EVENT_SHUTDOWN)
-
             break
 
 def ensure_list(parameter):
@@ -218,18 +214,15 @@ class Timer(threading.Thread):
     def __init__(self, eventbus):
         threading.Thread.__init__(self)
 
+        self.daemon = True
         self.eventbus = eventbus
-        self._stop = threading.Event()
 
         eventbus.listen(EVENT_START, lambda event: self.start())
-        eventbus.listen(EVENT_SHUTDOWN, lambda event: self._stop.set())
 
     def run(self):
         """ Start the timer. """
 
         logging.getLogger(__name__).info("Timer:starting")
-
-        now = datetime.now()
 
         while True:
             while True:
@@ -237,11 +230,8 @@ class Timer(threading.Thread):
 
                 now = datetime.now()
 
-                if self._stop.isSet() or now.second % TIMER_INTERVAL == 0:
+                if now.second % TIMER_INTERVAL == 0:
                     break
-
-            if self._stop.isSet():
-                break
 
             self.eventbus.fire(EVENT_TIME_CHANGED, {'now':now})
 
