@@ -11,13 +11,13 @@ import time
 
 import requests
 
-from . import EventBus, StateMachine, EVENT_START
-from .httpinterface import HTTPInterface, SERVER_PORT
+import homeassistant as ha
+import homeassistant.httpinterface as httpinterface
 
 
 API_PASSWORD = "test1234"
 
-HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
+HTTP_BASE_URL = "http://127.0.0.1:{}".format(httpinterface.SERVER_PORT)
 
 # pylint: disable=too-many-public-methods
 class TestHTTPInterface(unittest.TestCase):
@@ -30,11 +30,12 @@ class TestHTTPInterface(unittest.TestCase):
         if not TestHTTPInterface.HTTP_init:
             TestHTTPInterface.HTTP_init = True
 
-            HTTPInterface(self.eventbus, self.statemachine, API_PASSWORD)
+            httpinterface.HTTPInterface(self.eventbus, self.statemachine,
+                                                                API_PASSWORD)
 
             self.statemachine.set_state("test", "INIT_STATE")
 
-            self.eventbus.fire(EVENT_START)
+            self.eventbus.fire(ha.EVENT_START)
 
             # Give objects time to startup
             time.sleep(1)
@@ -42,8 +43,8 @@ class TestHTTPInterface(unittest.TestCase):
     @classmethod
     def setUpClass(cls):    # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        cls.eventbus = EventBus()
-        cls.statemachine = StateMachine(cls.eventbus)
+        cls.eventbus = ha.EventBus()
+        cls.statemachine = ha.StateMachine(cls.eventbus)
 
     def test_debug_interface(self):
         """ Test if we can login by comparing not logged in screen to

@@ -31,7 +31,8 @@ import logging
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from urlparse import urlparse, parse_qs
 
-from . import EVENT_START
+import homeassistant
+import homeassistant.util as util
 
 SERVER_PORT = 8123
 
@@ -64,7 +65,7 @@ class HTTPInterface(threading.Thread):
         self.server.statemachine = statemachine
         self.server.api_password = api_password
 
-        eventbus.listen(EVENT_START, lambda event: self.start())
+        eventbus.listen(homeassistant.EVENT_START, lambda event: self.start())
 
     def run(self):
         """ Start the HTTP interface. """
@@ -117,7 +118,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                     write("<tr><td>{}</td><td>{}</td><td>{}</td></tr>".
                         format(category, state,
-                               last_changed.strftime("%H:%M:%S %d-%m-%Y")))
+                               util.datetime_to_str(last_changed)))
 
                 write("</table>")
 

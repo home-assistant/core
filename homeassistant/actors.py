@@ -11,24 +11,17 @@ import os
 import logging
 from datetime import datetime, timedelta
 import re
-import webbrowser
 
-import dateutil.parser
-from phue import Bridge
 import requests
 
-from .packages import pychromecast, pykeyboard
-
-from . import track_state_change
-from .util import sanitize_filename
-from .observers import (
+import homeassistant as ha
+import homeassistant.util as util
+from homeassistant.observers import (
     STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
     STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
-    STATE_CATEGORY_NEXT_SUN_SETTING, track_time_change)
+    STATE_CATEGORY_NEXT_SUN_SETTING)
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
-
-HUE_MAX_TRANSITION_TIME = 9000 # 900 seconds = 15 minutes
 
 EVENT_DOWNLOAD_FILE = "download_file"
 EVENT_BROWSE_URL = "browse_url"
@@ -43,7 +36,9 @@ EVENT_KEYBOARD_MEDIA_PLAY_PAUSE = "keyboard.media_play_pause"
 def _hue_process_transition_time(transition_seconds):
     """ Transition time is in 1/10th seconds
         and cannot exceed MAX_TRANSITION_TIME. """
-    return min(HUE_MAX_TRANSITION_TIME, transition_seconds * 10)
+
+    # Max transition time for Hue is 900 seconds/15 minutes
+    return min(9000, transition_seconds * 10)
 
 
 # pylint: disable=too-few-public-methods
@@ -60,18 +55,18 @@ class LightTrigger(object):
 
         # Track home coming of each seperate device
         for category in device_tracker.device_state_categories():
-            track_state_change(eventbus, category,
+            ha.track_state_change(eventbus, category,
                                DEVICE_STATE_NOT_HOME, DEVICE_STATE_HOME,
                                self._handle_device_state_change)
 
         # Track when all devices are gone to shut down lights
-        track_state_change(eventbus, STATE_CATEGORY_ALL_DEVICES,
+        ha.track_state_change(eventbus, STATE_CATEGORY_ALL_DEVICES,
                            DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
                            self._handle_device_state_change)
 
         # Track every time sun rises so we can schedule a time-based
         # pre-sun set event
-        track_state_change(eventbus, STATE_CATEGORY_SUN,
+        ha.track_state_change(eventbus, STATE_CATEGORY_SUN,
                            SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
                            self._handle_sun_rising)
 
@@ -109,7 +104,7 @@ class LightTrigger(object):
             return lambda now: self._turn_light_on_before_sunset(light_id)
 
         for index, light_id in enumerate(self.light_control.light_ids):
-            track_time_change(self.eventbus, turn_on(light_id),
+            ha.track_time_change(self.eventbus, turn_on(light_id),
                               point_in_time=start_point +
                                             index * LIGHT_TRANSITION_TIME)
 
@@ -176,7 +171,7 @@ class LightTrigger(object):
 
     def _next_sun_setting(self):
         """ Returns the datetime object representing the next sun setting. """
-        return dateutil.parser.parse(
+        return util.str_to_datetime(
             self.statemachine.get_state(STATE_CATEGORY_NEXT_SUN_SETTING).state)
 
     def _time_for_light_before_sun_set(self):
@@ -193,14 +188,21 @@ class HueLightControl(object):
     """ Class to interface with the Hue light system. """
 
     def __init__(self, host=None):
-        self.bridge = Bridge(host)
+        try:
+            import phue
+        except ImportError:
+            logging.getLogger(__name__).error(("HueLightControl:"
+                        "Unable to init due to missing dependency phue."))
+            return
+
+        self.bridge = phue.Bridge(host)
         self.lights = self.bridge.get_light_objects()
         self.light_ids = [light.light_id for light in self.lights]
 
 
     def is_light_on(self, light_id=None):
         """ Returns if specified or all light are on. """
-        if light_id is None:
+        if not light_id:
             return sum([1 for light in self.lights if light.on]) > 0
 
         else:
@@ -209,7 +211,7 @@ class HueLightControl(object):
 
     def turn_light_on(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights on. """
-        if light_id is None:
+        if not light_id:
             light_id = self.light_ids
 
         command = {'on': True, 'xy': [0.5119, 0.4147], 'bri':164}
@@ -223,7 +225,7 @@ class HueLightControl(object):
 
     def turn_light_off(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights off. """
-        if light_id is None:
+        if not light_id:
             light_id = self.light_ids
 
         command = {'on': False}
@@ -243,7 +245,8 @@ def setup_file_downloader(eventbus, download_path):
     if not os.path.isdir(download_path):
 
         logger.error(
-            "Download path {} does not exist. File Downloader not active.".
+            ("FileDownloader:"
+             "Download path {} does not exist. File Downloader not active.").
             format(download_path))
 
         return
@@ -270,7 +273,7 @@ def setup_file_downloader(eventbus, download_path):
                     filename = "ha_download"
 
                 # Remove stuff to ruin paths
-                filename = sanitize_filename(filename)
+                filename = util.sanitize_filename(filename)
 
                 path, ext = os.path.splitext(os.path.join(download_path,
                                                           filename))
@@ -303,11 +306,16 @@ def setup_file_downloader(eventbus, download_path):
 def setup_webbrowser(eventbus):
     """ Listen for browse_url events and open
         the url in the default webbrowser. """
+
+    import webbrowser
+
     eventbus.listen(EVENT_BROWSE_URL,
       lambda event: webbrowser.open(event.data['url']))
 
 def setup_chromecast(eventbus, host):
     """ Listen for chromecast events. """
+    from homeassistant.packages import pychromecast
+
     eventbus.listen("start_fireplace",
       lambda event: pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
 
@@ -319,6 +327,13 @@ def setup_chromecast(eventbus, host):
 
 def setup_media_buttons(eventbus):
     """ Listen for keyboard events. """
+    try:
+        import pykeyboard
+    except ImportError:
+        logging.getLogger(__name__).error(("MediaButtons:"
+                    "Unable to setup due to missing dependency PyUserInput."))
+        return
+
     keyboard = pykeyboard.PyKeyboard()
     keyboard.special_key_assignment()
 

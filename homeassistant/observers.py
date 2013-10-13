@@ -16,9 +16,9 @@ import re
 import json
 
 import requests
-import ephem
 
-from . import track_time_change
+import homeassistant as ha
+import homeassistant.util as util
 
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_CATEGORY_NEXT_SUN_RISING = "weather.next_sun_rising"
@@ -45,9 +45,16 @@ KNOWN_DEVICES_FILE = "known_devices.csv"
 
 def track_sun(eventbus, statemachine, latitude, longitude):
     """ Tracks the state of the sun. """
+    logger = logging.getLogger(__name__)
+
+    try:
+        import ephem
+    except ImportError:
+        logger.error(("TrackSun:"
+                          "Unable to setup due to missing dependency ephem."))
+        return
 
     sun = ephem.Sun() # pylint: disable=no-member
-    logger = logging.getLogger(__name__)
 
     def update_sun_state(now):    # pylint: disable=unused-argument
         """ Method to update the current state of the sun and
@@ -72,12 +79,12 @@ def track_sun(eventbus, statemachine, latitude, longitude):
 
         statemachine.set_state(STATE_CATEGORY_SUN, new_state)
         statemachine.set_state(STATE_CATEGORY_NEXT_SUN_RISING,
-                               next_rising.isoformat())
+                                            util.datetime_to_str(next_rising))
         statemachine.set_state(STATE_CATEGORY_NEXT_SUN_SETTING,
-                               next_setting.isoformat())
+                                            util.datetime_to_str(next_setting))
 
         # +10 seconds to be sure that the change has occured
-        track_time_change(eventbus, update_sun_state,
+        ha.track_time_change(eventbus, update_sun_state,
                           point_in_time=next_change + timedelta(seconds=10))
 
     update_sun_state(None)
@@ -156,7 +163,7 @@ class DeviceTracker(object):
                                                 format(KNOWN_DEVICES_FILE))
 
 
-        track_time_change(eventbus,
+        ha.track_time_change(eventbus,
           lambda time: self.update_devices(device_scanner.scan_devices()))
 
     def device_state_categories(self):
