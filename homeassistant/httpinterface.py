@@ -141,12 +141,16 @@ class RequestHandler(BaseHTTPRequestHandler):
                        "</form>"))
 
                 # Describe event bus:
-                for category in self.server.eventbus.listeners:
-                    write("Event {}: {} listeners<br />".format(category,
-                            len(self.server.eventbus.listeners[category])))
+                write(("<table><tr><th>Event</th><th>Listeners</th></tr>"))
+
+                for category in sorted(self.server.eventbus.listeners,
+                                                key=lambda key: key.lower()):
+                    write("<tr><td>{}</td><td>{}</td></tr>".
+                        format(category,
+                               len(self.server.eventbus.listeners[category])))
 
                 # Form to allow firing events
-                write(("<br />"
+                write(("</table><br />"
                        "<form action='event/fire' method='POST'>"))
 
                 write("<input type='hidden' name='api_password' value='{}' />".
