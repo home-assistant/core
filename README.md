@@ -17,7 +17,7 @@ It currently works with any wireless router with [Tomato firmware](http://www.po
 Installation instructions
 -------------------------
 
-* Install python modules [python-dateutil](http://labix.org/python-dateutil), [PyEphem](http://rhodesmill.org/pyephem/), [Requests](http://python-requests.org) and [PHue](https://github.com/studioimaginaire/phue): `pip install python-dateutil pyephem requests phue`
+* Install python modules [PyEphem](http://rhodesmill.org/pyephem/), [Requests](http://python-requests.org) and [PHue](https://github.com/studioimaginaire/phue): `pip install pyephem requests phue`
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
 * Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
   * For Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
