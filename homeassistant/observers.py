@@ -52,7 +52,7 @@ def track_sun(eventbus, statemachine, latitude, longitude):
     except ImportError:
         logger.error(("TrackSun:"
                           "Unable to setup due to missing dependency ephem."))
-        return
+        return False
 
     sun = ephem.Sun() # pylint: disable=no-member
 
@@ -89,6 +89,7 @@ def track_sun(eventbus, statemachine, latitude, longitude):
 
     update_sun_state(None)
 
+    return True
 
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
@@ -278,6 +279,8 @@ class TomatoDeviceScanner(object):
         self.date_updated = None
         self.last_results = {"wldev": [], "dhcpd_lease": []}
 
+        self.success_init = self._update_tomato_info()
+
     def scan_devices(self):
         """ Scans for new devices and return a
             list containing found device ids. """
@@ -331,10 +334,14 @@ class TomatoDeviceScanner(object):
 
                     self.date_updated = datetime.now()
 
+                    return True
+
                 elif response.status_code == 401:
                     # Authentication error
                     self.logger.exception(("Tomato:Failed to authenticate, "
                         "please check your username and password"))
+
+                    return False
 
             except requests.ConnectionError:
                 # We get this if we could not connect to the router or
@@ -342,10 +349,14 @@ class TomatoDeviceScanner(object):
                 self.logger.exception(("Tomato:Failed to connect to the router"
                     "or invalid http_id supplied"))
 
+                return False
+
             except ValueError:
                 # If json decoder could not parse the response
                 self.logger.exception(("Tomato:Failed to parse response "
                     "from router"))
+
+                return False
 
             finally:
                 self.lock.release()
@@ -354,3 +365,5 @@ class TomatoDeviceScanner(object):
             # We acquired the lock before the IF check,
             # release it before we return True
             self.lock.release()
+
+            return True

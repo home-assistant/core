@@ -193,11 +193,16 @@ class HueLightControl(object):
         except ImportError:
             logging.getLogger(__name__).error(("HueLightControl:"
                         "Unable to init due to missing dependency phue."))
+
+            self.success_init = False
+
             return
 
         self.bridge = phue.Bridge(host)
         self.lights = self.bridge.get_light_objects()
         self.light_ids = [light.light_id for light in self.lights]
+
+        self.success_init = True
 
 
     def is_light_on(self, light_id=None):
@@ -249,7 +254,7 @@ def setup_file_downloader(eventbus, download_path):
              "Download path {} does not exist. File Downloader not active.").
             format(download_path))
 
-        return
+        return False
 
     def download_file(event):
         """ Downloads file specified in the url. """
@@ -303,6 +308,8 @@ def setup_file_downloader(eventbus, download_path):
 
     eventbus.listen(EVENT_DOWNLOAD_FILE, download_file)
 
+    return True
+
 def setup_webbrowser(eventbus):
     """ Listen for browse_url events and open
         the url in the default webbrowser. """
@@ -311,6 +318,8 @@ def setup_webbrowser(eventbus):
 
     eventbus.listen(EVENT_BROWSE_URL,
       lambda event: webbrowser.open(event.data['url']))
+
+    return True
 
 def setup_chromecast(eventbus, host):
     """ Listen for chromecast events. """
@@ -325,6 +334,8 @@ def setup_chromecast(eventbus, host):
     eventbus.listen(EVENT_CHROMECAST_YOUTUBE_VIDEO,
       lambda event: pychromecast.play_youtube_video(host, event.data['video']))
 
+    return True
+
 def setup_media_buttons(eventbus):
     """ Listen for keyboard events. """
     try:
@@ -332,7 +343,8 @@ def setup_media_buttons(eventbus):
     except ImportError:
         logging.getLogger(__name__).error(("MediaButtons:"
                     "Unable to setup due to missing dependency PyUserInput."))
-        return
+
+        return False
 
     keyboard = pykeyboard.PyKeyboard()
     keyboard.special_key_assignment()
@@ -348,3 +360,5 @@ def setup_media_buttons(eventbus):
 
     eventbus.listen(EVENT_KEYBOARD_MEDIA_PLAY_PAUSE,
       lambda event: keyboard.tap_key(keyboard.media_play_pause_key))
+
+    return True
