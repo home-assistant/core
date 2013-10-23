@@ -50,8 +50,7 @@ def track_sun(eventbus, statemachine, latitude, longitude):
     try:
         import ephem
     except ImportError:
-        logger.error(("TrackSun:"
-                          "Unable to setup due to missing dependency ephem."))
+        logger.exception(("TrackSun:Error while importing dependency ephem."))
         return False
 
     sun = ephem.Sun() # pylint: disable=no-member

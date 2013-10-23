@@ -191,8 +191,8 @@ class HueLightControl(object):
         try:
             import phue
         except ImportError:
-            logging.getLogger(__name__).error(("HueLightControl:"
-                        "Unable to init due to missing dependency phue."))
+            logging.getLogger(__name__).exception(("HueLightControl:"
+                        "Error while importing dependency phue."))
 
             self.success_init = False
 
@@ -341,8 +341,8 @@ def setup_media_buttons(eventbus):
     try:
         import pykeyboard
     except ImportError:
-        logging.getLogger(__name__).error(("MediaButtons:"
-                    "Unable to setup due to missing dependency PyUserInput."))
+        logging.getLogger(__name__).exception(("MediaButtons:"
+                    "Error while importing dependency PyUserInput."))
 
         return False
 
