@@ -318,7 +318,7 @@ class TomatoDeviceScanner(object):
             self.logger.info("Tomato:Scanning")
 
             try:
-                response = requests.Session().send(self.req)
+                response = requests.Session().send(self.req, timeout=1)
 
                 # Calling and parsing the Tomato api here. We only need the
                 # wldev and dhcpd_lease values. For API description see:
@@ -343,11 +343,19 @@ class TomatoDeviceScanner(object):
 
                     return False
 
-            except requests.ConnectionError:
+            except requests.exceptions.ConnectionError:
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied
                 self.logger.exception(("Tomato:Failed to connect to the router"
-                    "or invalid http_id supplied"))
+                    " or invalid http_id supplied"))
+
+                return False
+
+            except requests.exceptions.Timeout:
+                # We get this if we could not connect to the router or
+                # an invalid http_id was supplied
+                self.logger.exception(("Tomato:Connection to the router "
+                    "timed out"))
 
                 return False
 
