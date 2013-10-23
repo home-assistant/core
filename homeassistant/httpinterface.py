@@ -111,14 +111,17 @@ class RequestHandler(BaseHTTPRequestHandler):
                        "<th>Name</th><th>State</th>"
                        "<th>Last Changed</th></tr>"))
 
-                for category, state, last_changed in \
-                        self.server.statemachine.get_states():
+                for category in \
+                    sorted(self.server.statemachine.categories,
+                                            key=lambda key: key.lower()):
 
                     categories.append(category)
 
+                    state = self.server.statemachine.get_state(category)
+
                     write("<tr><td>{}</td><td>{}</td><td>{}</td></tr>".
-                        format(category, state,
-                               util.datetime_to_str(last_changed)))
+                        format(category, state.state,
+                               util.datetime_to_str(state.last_changed)))
 
                 write("</table>")
 

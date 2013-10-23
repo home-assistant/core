@@ -149,19 +149,24 @@ class EventBus(object):
             pass
 
 class StateMachine(object):
-    """ Helper class that tracks the state of different objects. """
+    """ Helper class that tracks the state of different categories. """
 
     def __init__(self, eventbus):
         self.states = dict()
         self.eventbus = eventbus
         self.lock = threading.Lock()
 
+    @property
+    def categories(self):
+        """ List of categories which states are being tracked. """
+        return self.states.keys()
+
     def set_state(self, category, new_state):
-        """ Set the state of a category, add category is it does not exist. """
+        """ Set the state of a category, add category if it does not exist. """
 
         self.lock.acquire()
 
-        # Add category is it does not exist
+        # Add category if it does not exist
         if category not in self.states:
             self.states[category] = State(new_state, datetime.now())
 
@@ -191,15 +196,6 @@ class StateMachine(object):
         self._validate_category(category)
 
         return self.states[category]
-
-    def get_states(self):
-        """ Returns a list of tuples (category, state, last_changed)
-            sorted by category case-insensitive. """
-        return [(category,
-                 self.states[category].state,
-                 self.states[category].last_changed)
-                for category in
-                sorted(self.states.keys(), key=lambda key: key.lower())]
 
     def _validate_category(self, category):
         """ Helper function to throw an exception
