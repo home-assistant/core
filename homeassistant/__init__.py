@@ -10,7 +10,6 @@ import time
 import logging
 import threading
 from collections import defaultdict, namedtuple
-from itertools import chain
 from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
@@ -122,8 +121,10 @@ class EventBus(object):
             """ Fire listeners for event. """
             event = Event(self, event_type, event_data)
 
-            for listener in chain(self.listeners[ALL_EVENTS],
-                                  self.listeners[event.event_type]):
+            # We do not use itertools.chain() because some listeners might
+            # choose to remove themselves as a listener while being executed
+            for listener in self.listeners[ALL_EVENTS] + \
+                                  self.listeners[event.event_type]:
                 try:
                     listener(event)
 
@@ -141,10 +142,29 @@ class EventBus(object):
         """
         self.listeners[event_type].append(listener)
 
+    def listen_once(self, event_type, listener):
+        """ Listen once for event of a specific type.
+
+        To listen to all events specify the constant ``ALL_EVENTS``
+        as event_type.
+        """
+
+        def onetime_listener(event):
+            """ Removes listener from eventbus and then fires listener. """
+            self.remove_listener(event_type, onetime_listener)
+
+            listener(event)
+
+        self.listen(event_type, onetime_listener)
+
     def remove_listener(self, event_type, listener):
         """ Removes a listener of a specific event_type. """
         try:
             self.listeners[event_type].remove(listener)
+
+            if len(self.listeners[event_type]) == 0:
+                del self.listeners[event_type]
+
         except ValueError:
             pass
 
@@ -213,7 +233,7 @@ class Timer(threading.Thread):
         self.daemon = True
         self.eventbus = eventbus
 
-        eventbus.listen(EVENT_START, lambda event: self.start())
+        eventbus.listen_once(EVENT_START, lambda event: self.start())
 
     def run(self):
         """ Start the timer. """

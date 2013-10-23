@@ -65,7 +65,8 @@ class HTTPInterface(threading.Thread):
         self.server.statemachine = statemachine
         self.server.api_password = api_password
 
-        eventbus.listen(homeassistant.EVENT_START, lambda event: self.start())
+        eventbus.listen_once(homeassistant.EVENT_START,
+                                                    lambda event: self.start())
 
     def run(self):
         """ Start the HTTP interface. """
