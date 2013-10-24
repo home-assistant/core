@@ -240,14 +240,27 @@ class Timer(threading.Thread):
 
         logging.getLogger(__name__).info("Timer:starting")
 
+        last_fired_on_second = -1
+
         while True:
-            while True:
-                time.sleep(1)
+            # Sleep till it is the next time that we have to fire an event.
+            # Aim for halfway through the second that matches TIMER_INTERVAL.
+            # So if TIMER_INTERVAL is 10 fire at .5, 10.5, 20.5, etc seconds.
+            # This will yield the best results because time.sleep() is not
+            # 100% accurate because of non-realtime OS's
+            now = datetime.now()
+
+            if now.second % TIMER_INTERVAL > 0 or \
+                                    now.second == last_fired_on_second:
+
+                slp_seconds = TIMER_INTERVAL - now.second % TIMER_INTERVAL + \
+                                .5 - now.microsecond/1000000.0
+
+                time.sleep(slp_seconds)
 
                 now = datetime.now()
 
-                if now.second % TIMER_INTERVAL == 0:
-                    break
+            last_fired_on_second = now.second
 
             self.eventbus.fire(EVENT_TIME_CHANGED, {'now':now})
 
