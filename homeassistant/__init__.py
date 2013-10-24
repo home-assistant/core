@@ -26,7 +26,7 @@ TIMER_INTERVAL = 10 # seconds
 # every minute.
 assert 60 % TIMER_INTERVAL == 0, "60 % TIMER_INTERVAL should be 0!"
 
-State = namedtuple("State", ['state','last_changed'])
+State = namedtuple("State", ['state', 'last_changed', 'attributes'])
 
 def start_home_assistant(eventbus):
     """ Start home assistant. """
@@ -181,21 +181,29 @@ class StateMachine(object):
         """ List of categories which states are being tracked. """
         return self.states.keys()
 
-    def set_state(self, category, new_state):
-        """ Set the state of a category, add category if it does not exist. """
+    def set_state(self, category, new_state, attributes=None):
+        """ Set the state of a category, add category if it does not exist.
+
+        Attributes is an optional dict to specify attributes of this state. """
+
+        attributes = attributes or {}
 
         self.lock.acquire()
 
         # Add category if it does not exist
         if category not in self.states:
-            self.states[category] = State(new_state, datetime.now())
+            self.states[category] = State(new_state, datetime.now(),
+                                                                attributes)
 
         # Change state and fire listeners
         else:
             old_state = self.states[category]
 
-            if old_state.state != new_state:
-                self.states[category] = State(new_state, datetime.now())
+            if old_state.state != new_state or \
+                old_state.attributes != attributes:
+
+                self.states[category] = State(new_state, datetime.now(),
+                                                                attributes)
 
                 self.eventbus.fire(EVENT_STATE_CHANGED,
                     {'category':category,

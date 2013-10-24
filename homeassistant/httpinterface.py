@@ -110,7 +110,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 write(("<table><tr>"
                        "<th>Name</th><th>State</th>"
-                       "<th>Last Changed</th></tr>"))
+                       "<th>Last Changed</th><th>Attributes</th></tr>"))
 
                 for category in \
                     sorted(self.server.statemachine.categories,
@@ -120,9 +120,17 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                     state = self.server.statemachine.get_state(category)
 
-                    write("<tr><td>{}</td><td>{}</td><td>{}</td></tr>".
-                        format(category, state.state,
-                               util.datetime_to_str(state.last_changed)))
+                    attributes = "<br>".join(
+                        ["{}: {}".format(attr, state.attributes[attr])
+                         for attr in state.attributes])
+
+                    write(("<tr>"
+                           "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+                           "</tr>").
+                        format(category,
+                               state.state,
+                               util.datetime_to_str(state.last_changed),
+                               attributes))
 
                 write("</table>")
 

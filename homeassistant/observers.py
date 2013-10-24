@@ -21,8 +21,8 @@ import homeassistant as ha
 import homeassistant.util as util
 
 STATE_CATEGORY_SUN = "weather.sun"
-STATE_CATEGORY_NEXT_SUN_RISING = "weather.sun.next_rising"
-STATE_CATEGORY_NEXT_SUN_SETTING = "weather.sun.next_setting"
+STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
+STATE_ATTRIBUTE_NEXT_SUN_SETTING = "next_setting"
 STATE_CATEGORY_ALL_DEVICES = 'all_devices'
 STATE_CATEGORY_DEVICE_FORMAT = '{}'
 
@@ -76,11 +76,12 @@ def track_sun(eventbus, statemachine, latitude, longitude):
         logger.info("Sun:{}. Next change: {}".
                         format(new_state, next_change.strftime("%H:%M")))
 
-        statemachine.set_state(STATE_CATEGORY_SUN, new_state)
-        statemachine.set_state(STATE_CATEGORY_NEXT_SUN_RISING,
-                                            util.datetime_to_str(next_rising))
-        statemachine.set_state(STATE_CATEGORY_NEXT_SUN_SETTING,
-                                            util.datetime_to_str(next_setting))
+        state_attributes = {
+          STATE_ATTRIBUTE_NEXT_SUN_RISING: util.datetime_to_str(next_rising),
+          STATE_ATTRIBUTE_NEXT_SUN_SETTING: util.datetime_to_str(next_setting)
+        }
+
+        statemachine.set_state(STATE_CATEGORY_SUN, new_state, state_attributes)
 
         # +10 seconds to be sure that the change has occured
         ha.track_time_change(eventbus, update_sun_state,

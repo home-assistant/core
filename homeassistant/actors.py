@@ -19,7 +19,7 @@ import homeassistant.util as util
 from homeassistant.observers import (
     STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
     STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
-    STATE_CATEGORY_NEXT_SUN_SETTING)
+    STATE_ATTRIBUTE_NEXT_SUN_SETTING)
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
@@ -171,8 +171,10 @@ class LightTrigger(object):
 
     def _next_sun_setting(self):
         """ Returns the datetime object representing the next sun setting. """
+        state = self.statemachine.get_state(STATE_CATEGORY_SUN)
+
         return util.str_to_datetime(
-            self.statemachine.get_state(STATE_CATEGORY_NEXT_SUN_SETTING).state)
+                            state.attributes[STATE_ATTRIBUTE_NEXT_SUN_SETTING])
 
     def _time_for_light_before_sun_set(self):
         """ Helper method to calculate the point in time we have to start
