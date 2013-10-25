@@ -16,7 +16,6 @@ It currently works with any wireless router with [Tomato firmware](http://www.po
 
 Installation instructions
 -------------------------
-
 * Install python modules [PyEphem](http://rhodesmill.org/pyephem/), [Requests](http://python-requests.org) and [PHue](https://github.com/studioimaginaire/phue): `pip install pyephem requests phue`
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
 * Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
@@ -37,10 +36,35 @@ To interface with the API requests should include the parameter api_password whi
 
 The following API commands are currently supported:
 
+    /api/state/categories - POST
+    parameter: api_password - string
+    Will list all the categories for which a state is currently tracked. Returns a json object like this:
+
+    ```json
+    {"status": "OK", 
+     "message":"State categories", 
+     "categories": ["all_devices", "Paulus_Nexus_4"]}
+    ```
+
+    /api/state/get - POST
+    parameter: api_password - string
+    parameter: category - string
+    Will get the current state of a category. Returns a json object like this:
+
+    ```json
+    {"status": "OK", 
+     "message": "State of all_devices",
+     "category": "all_devices",
+     "state": "device_home",
+     "last_changed": "19:10:39 25-10-2013",
+     "attributes": {}}
+    ```
+
     /api/state/change - POST
     parameter: api_password - string
     parameter: category - string
     parameter: new_state - string
+    parameter: attributes - object encoded as JSON string (optional)
     Changes category 'category' to 'new_state'
     It is possible to sent multiple values for category and new_state.
     If the number of values for category and new_state do not match only
@@ -66,9 +90,10 @@ The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Ho
 ![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-android-tasker.png)
 
 Architecture
----------------------------
-
+------------
 Home Assistent has been built from the ground up with extensibility and modularity in mind. It is easy to swap in a different device tracker that polls another wireless router for example. 
+
+![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/architecture.png)
 
 The beating heart of Home Assistant is an event bus. Different modules are able to fire and listen for specific events. On top of this is a state machine that allows modules to track the state of different things. For example each device that is being tracked will have a state of either 'Home' or 'Not Home'. 
 
@@ -87,3 +112,54 @@ This allows us to implement simple business rules to easily customize or extend 
         Turn on the lights
 
 These rules are currently implemented in the file [actors.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/actors.py).
+
+### Supported observers
+
+**track_sun**
+Tracks the state of the sun and when the next sun rising and setting will occur.
+Depends on: latitude and longitude
+Action: maintains state of `weather.sun` including attributes `next_rising` and `next_setting`
+
+**TomatoDeviceScanner**
+A device scanner that scans a Tomato-based router and retrieves currently connected devices. To be used by `DeviceTracker`.
+Depends on: host, username, password and http_id to login to Tomato Router.
+
+**DeviceTracker**
+Keeps track of which devices are currently home.
+Depends on: a device scanner
+Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `known_devices.csv`.
+
+### Supported actors
+
+**HueLightControl**
+A light control for controlling the Philips Hue lights.
+
+**LightTrigger**
+Turns lights on or off using supplied light control based on state of the sun and devices that are home.
+Depends on: light control, track_sun, DeviceTracker
+Action: 
+ * Turns lights off when all devices leave home. 
+ * Turns lights on when a device is home while sun is setting. 
+ * Turns lights on when a device gets home after sun set.
+
+Listens for events `turn_light_on` and `turn_light_off`:
+Turn a or all lights on or off
+
+Optional event_data:
+  - `light_id` - only act on specific light. Else targets all.
+  - `transition_seconds` - seconds to take to swithc to new state.
+
+**file_downloader**
+Listen for `download_file` events to start downloading from the `url` specified in event_data.
+
+**webbrowser**
+Listen for `browse_url` events and opens a browser with the `url` specified in event_data.
+
+**chromecast**
+Listen for `chromecast.play_youtube_video` events and starts playing the specified video on the YouTube app on the ChromeCast. Specify video using `video` in event_data.
+
+Also listens for `start_fireplace` and `start_epic_sax` events to play a pre-defined movie.
+
+**media_buttons**
+Listens for the events `keyboard.volume_up`, `keyboard.volume_down` and `keyboard.media_play_pause` to simulate the pressing of the appropriate media button.
+Depends on: PyUserInput
