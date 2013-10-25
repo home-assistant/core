@@ -27,6 +27,7 @@ Fires an 'event_name' event containing data from 'event_data'
 
 import json
 import threading
+import itertools
 import logging
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from urlparse import urlparse, parse_qs
@@ -179,7 +180,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
 
-    def do_POST(self):    # pylint: disable=invalid-name, too-many-branches
+    # pylint: disable=invalid-name, too-many-branches, too-many-statements
+    def do_POST(self):
         """ Handle incoming POST requests. """
 
         length = int(self.headers['Content-Length'])
@@ -196,24 +198,69 @@ class RequestHandler(BaseHTTPRequestHandler):
         given_api_password = post_data.get("api_password", [''])[0]
 
         # Action to change the state
-        if action == "state/change":
+        if action == "state/categories":
+            if self._verify_api_password(given_api_password, use_json):
+                self._response(use_json, "State categories",
+                    json_data=
+                        {'categories': self.server.statemachine.categories})
+
+        elif action == "state/get":
+            if self._verify_api_password(given_api_password, use_json):
+                try:
+                    category = post_data['category'][0]
+
+                    state = self.server.statemachine.get_state(category)
+
+                    self._response(use_json,
+                        "State of {}".format(category),
+                        json_data={'category': category,
+                                   'state': state.state,
+                                   'last_changed':
+                                      util.datetime_to_str(state.last_changed),
+                                   'attributes': state.attributes
+                                   })
+
+
+                except KeyError:
+                    # If category or new_state don't exist in post data
+                    self._response(use_json, "Invalid state received.",
+                                                        MESSAGE_STATUS_ERROR)
+
+        elif action == "state/change":
             if self._verify_api_password(given_api_password, use_json):
                 try:
                     changed = []
 
-                    for category, new_state in zip(post_data['category'],
-                                                   post_data['new_state']):
+                    for idx, category, new_state in zip(itertools.count(),
+                                                        post_data['category'],
+                                                        post_data['new_state']
+                                                       ):
 
-                        self.server.statemachine.set_state(category, new_state)
+                        # See if we also received attributes for this state
+                        try:
+                            attributes = json.loads(
+                                                post_data['attributes'][idx])
+                        except KeyError:
+                            # Happens if key 'attributes' or idx does not exist
+                            attributes = None
+
+                        self.server.statemachine.set_state(category,
+                                                           new_state,
+                                                           attributes)
 
                         changed.append("{}={}".format(category, new_state))
 
-                    self._message(use_json, "States changed: {}".
+                    self._response(use_json, "States changed: {}".
                                                 format( ", ".join(changed) ) )
 
                 except KeyError:
                     # If category or new_state don't exist in post data
-                    self._message(use_json, "Invalid state received.",
+                    self._response(use_json, "Invalid parameters received.",
+                                                        MESSAGE_STATUS_ERROR)
+
+                except ValueError:
+                    # If json.loads doesn't understand the attributes
+                    self._response(use_json, "Invalid state data received.",
                                                         MESSAGE_STATUS_ERROR)
 
         # Action to fire an event
@@ -232,17 +279,17 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                     self.server.eventbus.fire(event_name, event_data)
 
-                    self._message(use_json, "Event {} fired.".
+                    self._response(use_json, "Event {} fired.".
                                                 format(event_name))
 
                 except ValueError:
                     # If JSON decode error
-                    self._message(use_json, "Invalid event received (1).",
+                    self._response(use_json, "Invalid event received (1).",
                                                         MESSAGE_STATUS_ERROR)
 
                 except KeyError:
                     # If "event_name" not in post_data
-                    self._message(use_json, "Invalid event received (2).",
+                    self._response(use_json, "Invalid event received (2).",
                                                         MESSAGE_STATUS_ERROR)
 
         else:
@@ -256,7 +303,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return True
 
         elif use_json:
-            self._message(True, "API password missing or incorrect.",
+            self._response(True, "API password missing or incorrect.",
                                                 MESSAGE_STATUS_UNAUTHORIZED)
 
         else:
@@ -277,7 +324,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         return False
 
-    def _message(self, use_json, message, status=MESSAGE_STATUS_OK):
+    def _response(self, use_json, message,
+                        status=MESSAGE_STATUS_OK, json_data=None):
         """ Helper method to show a message to the user. """
         log_message = "{}: {}".format(status, message)
 
@@ -295,7 +343,11 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header('Content-type','application/json')
             self.end_headers()
 
-            self.wfile.write(json.dumps({'status': status, 'message':message}))
+            json_data = json_data or {}
+            json_data['status'] = status
+            json_data['message'] = message
+
+            self.wfile.write(json.dumps(json_data))
 
         else:
             self.server.flash_message = message

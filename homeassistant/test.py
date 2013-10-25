@@ -12,7 +12,9 @@ import time
 import requests
 
 import homeassistant as ha
+import homeassistant.remote as remote
 import homeassistant.httpinterface as httpinterface
+import homeassistant.util as util
 
 
 API_PASSWORD = "test1234"
@@ -45,6 +47,8 @@ class TestHTTPInterface(unittest.TestCase):
         """ things to be run when tests are started. """
         cls.eventbus = ha.EventBus()
         cls.statemachine = ha.StateMachine(cls.eventbus)
+        cls.remote_sm = remote.StateMachine("127.0.0.1", API_PASSWORD)
+        cls.remote_eb = remote.EventBus("127.0.0.1", API_PASSWORD)
 
     def test_debug_interface(self):
         """ Test if we can login by comparing not logged in screen to
@@ -78,6 +82,35 @@ class TestHTTPInterface(unittest.TestCase):
         self.assertEqual(req.status_code, 401)
 
 
+    def test_api_list_state_categories(self):
+        """ Test if the debug interface allows us to list state categories. """
+        req = requests.post("{}/api/state/categories".format(HTTP_BASE_URL),
+                data={"api_password":API_PASSWORD})
+
+        data = req.json()
+
+        self.assertEqual(self.statemachine.categories,
+                         data['categories'])
+
+
+    def test_api_get_state(self):
+        """ Test if the debug interface allows us to list state categories. """
+        req = requests.post("{}/api/state/get".format(HTTP_BASE_URL),
+                data={"api_password":API_PASSWORD,
+                      "category": "test"})
+
+        data = req.json()
+
+        state = self.statemachine.get_state("test")
+        trunc_last_changed = state.last_changed.replace(microsecond=0)
+
+        self.assertEqual(data['category'], "test")
+        self.assertEqual(data['state'], state.state)
+        self.assertEqual(util.str_to_datetime(data['last_changed']),
+                                                        trunc_last_changed)
+        self.assertEqual(data['attributes'], state.attributes)
+
+
     def test_api_state_change(self):
         """ Test if we can change the state of a category that exists. """
 
@@ -90,6 +123,38 @@ class TestHTTPInterface(unittest.TestCase):
 
         self.assertEqual(self.statemachine.get_state("test").state,
                          "debug_state_change2")
+
+
+    # pylint: disable=invalid-name
+    def test_remote_sm_list_state_categories(self):
+        """ Test if the debug interface allows us to list state categories. """
+
+        self.assertEqual(self.statemachine.categories,
+                         self.remote_sm.categories)
+
+
+    def test_remote_sm_get_state(self):
+        """ Test if the debug interface allows us to list state categories. """
+        remote_state = self.remote_sm.get_state("test")
+
+        state = self.statemachine.get_state("test")
+        trunc_last_changed = state.last_changed.replace(microsecond=0)
+
+        self.assertEqual(remote_state.state, state.state)
+        self.assertEqual(remote_state.last_changed, trunc_last_changed)
+        self.assertEqual(remote_state.attributes, state.attributes)
+
+
+    def test_remote_sm_state_change(self):
+        """ Test if we can change the state of a category that exists. """
+
+        self.remote_sm.set_state("test", "set_remotely", {"test": 1})
+
+        state = self.statemachine.get_state("test")
+
+        self.assertEqual(state.state, "set_remotely")
+        self.assertEqual(state.attributes['test'], 1)
+
 
     def test_api_multiple_state_change(self):
         """ Test if we can change multiple states in 1 request. """
@@ -134,7 +199,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.eventbus.listen("test_event_no_data", listener)
+        self.eventbus.listen_once("test_event_no_data", listener)
 
         requests.post("{}/api/event/fire".format(HTTP_BASE_URL),
             data={"event_name":"test_event_no_data",
@@ -145,7 +210,6 @@ class TestHTTPInterface(unittest.TestCase):
         time.sleep(1)
 
         self.assertEqual(len(test_value), 1)
-
 
     # pylint: disable=invalid-name
     def test_api_fire_event_with_data(self):
@@ -158,7 +222,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        self.eventbus.listen("test_event_with_data", listener)
+        self.eventbus.listen_once("test_event_with_data", listener)
 
         requests.post("{}/api/event/fire".format(HTTP_BASE_URL),
             data={"event_name":"test_event_with_data",
@@ -182,7 +246,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        self.eventbus.listen("test_event_with_data", listener)
+        self.eventbus.listen_once("test_event_with_data", listener)
 
         requests.post("{}/api/event/fire".format(HTTP_BASE_URL),
             data={"api_password":API_PASSWORD})
@@ -202,7 +266,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.eventbus.listen("test_event_with_bad_data", listener)
+        self.eventbus.listen_once("test_event_with_bad_data", listener)
 
         req = requests.post("{}/api/event/fire".format(HTTP_BASE_URL),
             data={"event_name":"test_event_with_bad_data",
@@ -215,3 +279,41 @@ class TestHTTPInterface(unittest.TestCase):
 
         self.assertEqual(req.status_code, 400)
         self.assertEqual(len(test_value), 0)
+
+    # pylint: disable=invalid-name
+    def test_remote_eb_fire_event_with_no_data(self):
+        """ Test if the remote eventbus allows us to fire an event. """
+        test_value = []
+
+        def listener(event):   # pylint: disable=unused-argument
+            """ Helper method that will verify our event got called. """
+            test_value.append(1)
+
+        self.eventbus.listen_once("test_event_no_data", listener)
+
+        self.remote_eb.fire("test_event_no_data")
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
+
+    # pylint: disable=invalid-name
+    def test_remote_eb_fire_event_with_data(self):
+        """ Test if the remote eventbus allows us to fire an event. """
+        test_value = []
+
+        def listener(event):   # pylint: disable=unused-argument
+            """ Helper method that will verify our event got called. """
+            if event.data["test"] == 1:
+                test_value.append(1)
+
+        self.eventbus.listen_once("test_event_with_data", listener)
+
+        self.remote_eb.fire("test_event_with_data", {"test": 1})
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
+
