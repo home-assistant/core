@@ -147,6 +147,8 @@ class EventBus(object):
 
         To listen to all events specify the constant ``ALL_EVENTS``
         as event_type.
+
+        Note: at the moment it is impossible to remove a one time listener.
         """
 
         def onetime_listener(event):
@@ -214,7 +216,6 @@ class StateMachine(object):
 
     def is_state(self, category, state):
         """ Returns True if category is specified state. """
-        self._validate_category(category)
 
         return self.get_state(category).state == state
 
