@@ -215,23 +215,21 @@ class StateMachine(object):
         self.lock.release()
 
     def is_state(self, category, state):
-        """ Returns True if category is specified state. """
+        """ Returns True if category exists and is specified state. """
 
-        return self.get_state(category).state == state
+        state = self.states.get(category, None)
+
+        return state and state.state == state
 
     def get_state(self, category):
         """ Returns a tuple (state,last_changed) describing
             the state of the specified category. """
-        self._validate_category(category)
-
-        return self.states[category]
-
-    def _validate_category(self, category):
-        """ Helper function to throw an exception
-            when the category does not exist. """
         if category not in self.states:
             raise CategoryDoesNotExistException(
                     "Category {} does not exist.".format(category))
+
+        return self.states[category]
+
 
 class Timer(threading.Thread):
     """ Timer will sent out an event every TIMER_INTERVAL seconds. """
