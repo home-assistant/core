@@ -18,7 +18,6 @@ import json
 import requests
 
 import homeassistant as ha
-import homeassistant.util as util
 
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
@@ -77,8 +76,8 @@ def track_sun(eventbus, statemachine, latitude, longitude):
                         format(new_state, next_change.strftime("%H:%M")))
 
         state_attributes = {
-          STATE_ATTRIBUTE_NEXT_SUN_RISING: util.datetime_to_str(next_rising),
-          STATE_ATTRIBUTE_NEXT_SUN_SETTING: util.datetime_to_str(next_setting)
+          STATE_ATTRIBUTE_NEXT_SUN_RISING: ha.datetime_to_str(next_rising),
+          STATE_ATTRIBUTE_NEXT_SUN_SETTING: ha.datetime_to_str(next_setting)
         }
 
         statemachine.set_state(STATE_CATEGORY_SUN, new_state, state_attributes)
@@ -203,7 +202,7 @@ class DeviceTracker(object):
                     DEVICE_STATE_NOT_HOME)
 
         # Get the currently used statuses
-        states_of_devices = [self.statemachine.get_state(category).state
+        states_of_devices = [self.statemachine.get_state(category)['state']
                              for category in self.device_state_categories()]
 
         # Update the all devices category

@@ -14,7 +14,7 @@ import requests
 import homeassistant as ha
 import homeassistant.remote as remote
 import homeassistant.httpinterface as httpinterface
-import homeassistant.util as util
+
 
 
 API_PASSWORD = "test1234"
@@ -65,7 +65,7 @@ class TestHTTPInterface(unittest.TestCase):
                   "new_state":"debug_state_change",
                   "api_password":API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test").state,
+        self.assertEqual(self.statemachine.get_state("test")['state'],
                          "debug_state_change")
 
 
@@ -102,13 +102,13 @@ class TestHTTPInterface(unittest.TestCase):
         data = req.json()
 
         state = self.statemachine.get_state("test")
-        trunc_last_changed = state.last_changed.replace(microsecond=0)
+
 
         self.assertEqual(data['category'], "test")
-        self.assertEqual(data['state'], state.state)
-        self.assertEqual(util.str_to_datetime(data['last_changed']),
-                                                        trunc_last_changed)
-        self.assertEqual(data['attributes'], state.attributes)
+        self.assertEqual(data['state'], state['state'])
+        self.assertEqual(ha.str_to_datetime(data['last_changed']),
+                                                        state['last_changed'])
+        self.assertEqual(data['attributes'], state['attributes'])
 
 
     def test_api_state_change(self):
@@ -121,7 +121,7 @@ class TestHTTPInterface(unittest.TestCase):
                   "new_state":"debug_state_change2",
                   "api_password":API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test").state,
+        self.assertEqual(self.statemachine.get_state("test")['state'],
                          "debug_state_change2")
 
 
@@ -138,11 +138,10 @@ class TestHTTPInterface(unittest.TestCase):
         remote_state = self.remote_sm.get_state("test")
 
         state = self.statemachine.get_state("test")
-        trunc_last_changed = state.last_changed.replace(microsecond=0)
 
-        self.assertEqual(remote_state.state, state.state)
-        self.assertEqual(remote_state.last_changed, trunc_last_changed)
-        self.assertEqual(remote_state.attributes, state.attributes)
+        self.assertEqual(remote_state['state'], state['state'])
+        self.assertEqual(remote_state['last_changed'], state['last_changed'])
+        self.assertEqual(remote_state['attributes'], state['attributes'])
 
 
     def test_remote_sm_state_change(self):
@@ -152,8 +151,8 @@ class TestHTTPInterface(unittest.TestCase):
 
         state = self.statemachine.get_state("test")
 
-        self.assertEqual(state.state, "set_remotely")
-        self.assertEqual(state.attributes['test'], 1)
+        self.assertEqual(state['state'], "set_remotely")
+        self.assertEqual(state['attributes']['test'], 1)
 
 
     def test_api_multiple_state_change(self):
@@ -167,9 +166,9 @@ class TestHTTPInterface(unittest.TestCase):
                   "new_state": ["test_state_1", "test_state_2"],
                   "api_password":API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test").state,
+        self.assertEqual(self.statemachine.get_state("test")['state'],
                          "test_state_1")
-        self.assertEqual(self.statemachine.get_state("test2").state,
+        self.assertEqual(self.statemachine.get_state("test2")['state'],
                          "test_state_2")
 
     # pylint: disable=invalid-name
@@ -185,7 +184,7 @@ class TestHTTPInterface(unittest.TestCase):
                       "api_password":API_PASSWORD})
 
         cur_state = (self.statemachine.
-                        get_state("test_category_that_does_not_exist").state)
+                        get_state("test_category_that_does_not_exist")['state'])
 
         self.assertEqual(req.status_code, 200)
         self.assertEqual(cur_state, new_state)

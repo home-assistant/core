@@ -32,8 +32,7 @@ import logging
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from urlparse import urlparse, parse_qs
 
-import homeassistant
-import homeassistant.util as util
+import homeassistant as ha
 
 SERVER_PORT = 8123
 
@@ -66,8 +65,7 @@ class HTTPInterface(threading.Thread):
         self.server.statemachine = statemachine
         self.server.api_password = api_password
 
-        eventbus.listen_once(homeassistant.EVENT_START,
-                                                    lambda event: self.start())
+        eventbus.listen_once(ha.EVENT_START, lambda event: self.start())
 
     def run(self):
         """ Start the HTTP interface. """
@@ -122,15 +120,15 @@ class RequestHandler(BaseHTTPRequestHandler):
                     state = self.server.statemachine.get_state(category)
 
                     attributes = "<br>".join(
-                        ["{}: {}".format(attr, state.attributes[attr])
-                         for attr in state.attributes])
+                        ["{}: {}".format(attr, state['attributes'][attr])
+                         for attr in state['attributes']])
 
                     write(("<tr>"
                            "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
                            "</tr>").
                         format(category,
-                               state.state,
-                               util.datetime_to_str(state.last_changed),
+                               state['state'],
+                               ha.datetime_to_str(state['last_changed']),
                                attributes))
 
                 write("</table>")
@@ -211,14 +209,16 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                     state = self.server.statemachine.get_state(category)
 
-                    self._response(use_json,
-                        "State of {}".format(category),
-                        json_data={'category': category,
-                                   'state': state.state,
-                                   'last_changed':
-                                      util.datetime_to_str(state.last_changed),
-                                   'attributes': state.attributes
-                                   })
+                    state['category'] = category
+
+                    state['last_changed'] = ha.datetime_to_str(
+                                                    state['last_changed'])
+
+
+                    print state
+
+                    self._response(use_json, "State of {}".format(category),
+                                   json_data=state)
 
 
                 except KeyError:

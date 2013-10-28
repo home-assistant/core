@@ -173,8 +173,8 @@ class LightTrigger(object):
         """ Returns the datetime object representing the next sun setting. """
         state = self.statemachine.get_state(STATE_CATEGORY_SUN)
 
-        return util.str_to_datetime(
-                            state.attributes[STATE_ATTRIBUTE_NEXT_SUN_SETTING])
+        return ha.str_to_datetime(
+                        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_SETTING])
 
     def _time_for_light_before_sun_set(self):
         """ Helper method to calculate the point in time we have to start

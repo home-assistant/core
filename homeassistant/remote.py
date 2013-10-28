@@ -4,6 +4,9 @@ homeassistant.remote
 
 A module containing drop in replacements for core parts that will interface
 with a remote instance of home assistant.
+
+If a connection error occurs while communicating with the API a
+HomeAssistantException will be raised.
 """
 
 import threading
@@ -12,9 +15,8 @@ import json
 
 import requests
 
-import homeassistant
+import homeassistant as ha
 import homeassistant.httpinterface as httpinterface
-import homeassistant.util as util
 
 def _setup_call_api(host, port, base_path, api_password):
     """ Helper method to setup a call api method. """
@@ -33,13 +35,13 @@ def _setup_call_api(host, port, base_path, api_password):
     return _call_api
 
 
-class EventBus(homeassistant.EventBus):
+class EventBus(ha.EventBus):
     """ Drop-in replacement for a normal eventbus that will forward events to
     a remote eventbus.
     """
 
     def __init__(self, host, api_password, port=None):
-        homeassistant.EventBus.__init__(self)
+        ha.EventBus.__init__(self)
 
         self._call_api = _setup_call_api(host, port, "event/", api_password)
 
@@ -55,7 +57,15 @@ class EventBus(homeassistant.EventBus):
                 'event_data': json.dumps(event_data)}
 
         try:
-            self._call_api("fire", data)
+            req = self._call_api("fire", data)
+
+            if req.status_code != 200:
+                error = "Error firing event: {} - {}".format(
+                            req.status_code, req.text)
+
+                self.logger.error("EventBus:{}".format(error))
+                raise ha.HomeAssistantException(error)
+
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("EventBus:Error connecting to server")
@@ -73,13 +83,13 @@ class EventBus(homeassistant.EventBus):
 
         raise NotImplementedError
 
-class StateMachine(homeassistant.StateMachine):
+class StateMachine(ha.StateMachine):
     """ Drop-in replacement for a normal statemachine that communicates with a
     remote statemachine.
     """
 
     def __init__(self, host, api_password, port=None):
-        homeassistant.StateMachine.__init__(self, None)
+        ha.StateMachine.__init__(self, None)
 
         self._call_api = _setup_call_api(host, port, "state/", api_password)
 
@@ -103,6 +113,10 @@ class StateMachine(homeassistant.StateMachine):
             self.logger.exception("StateMachine:Got unexpected result")
             return []
 
+        except KeyError: # If 'categories' key not in parsed json
+            self.logger.exception("StateMachine:Got unexpected result (2)")
+            return []
+
     def set_state(self, category, new_state, attributes=None):
         """ Set the state of a category, add category if it does not exist.
 
@@ -117,17 +131,24 @@ class StateMachine(homeassistant.StateMachine):
                 'attributes': json.dumps(attributes)}
 
         try:
-            self._call_api('change', data)
+            req = self._call_api('change', data)
+
+            if req.status_code != 200:
+                error = "Error changing state: {} - {}".format(
+                            req.status_code, req.text)
+
+                self.logger.error("StateMachine:{}".format(error))
+                raise ha.HomeAssistantException(error)
 
         except requests.exceptions.ConnectionError:
-            # Raise a Home Assistant error??
             self.logger.exception("StateMachine:Error connecting to server")
+            raise ha.HomeAssistantException("Error connecting to server")
 
         finally:
             self.lock.release()
 
     def get_state(self, category):
-        """ Returns a tuple (state,last_changed) describing
+        """ Returns a dict (state,last_changed, attributes) describing
             the state of the specified category. """
 
         try:
@@ -135,13 +156,20 @@ class StateMachine(homeassistant.StateMachine):
 
             data = req.json()
 
-            return homeassistant.State(data['state'],
-                            util.str_to_datetime(data['last_changed']),
-                            data['attributes'])
+            return ha.create_state(data['state'],
+                            data['attributes'],
+                            ha.str_to_datetime(data['last_changed']))
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("StateMachine:Error connecting to server")
+            raise ha.HomeAssistantException("Error connecting to server")
 
         except ValueError: # If req.json() can't parse the json
             self.logger.exception("StateMachine:Got unexpected result")
-            return []
+            raise ha.HomeAssistantException(
+                            "Got unexpected result: {}".format(req.text))
+
+        except KeyError: # If not all expected keys are in the returned JSON
+            self.logger.exception("StateMachine:Got unexpected result (2)")
+            raise ha.HomeAssistantException(
+                            "Got unexpected result (2): {}".format(req.text))

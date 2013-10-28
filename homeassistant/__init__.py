@@ -26,7 +26,7 @@ TIMER_INTERVAL = 10 # seconds
 # every minute.
 assert 60 % TIMER_INTERVAL == 0, "60 % TIMER_INTERVAL should be 0!"
 
-State = namedtuple("State", ['state', 'last_changed', 'attributes'])
+DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
 
 def start_home_assistant(eventbus):
     """ Start home assistant. """
@@ -41,6 +41,14 @@ def start_home_assistant(eventbus):
         except KeyboardInterrupt:
             break
 
+def datetime_to_str(dattim):
+    """ Converts datetime to a string format. """
+    return dattim.strftime(DATE_STR_FORMAT)
+
+def str_to_datetime(dt_str):
+    """ Converts a string to a datetime object. """
+    return datetime.strptime(dt_str, DATE_STR_FORMAT)
+
 def ensure_list(parameter):
     """ Wraps parameter in a list if it is not one and returns it. """
     return parameter if isinstance(parameter, list) else [parameter]
@@ -52,6 +60,18 @@ def matcher(subject, pattern):
     """
     return '*' in pattern or subject in pattern
 
+def create_state(state, attributes=None, last_changed=None):
+    """ Creates a new state and initializes defaults where necessary. """
+    attributes = attributes or {}
+    last_changed = last_changed or datetime.now()
+
+    # We do not want microseconds, as they get lost when we do datetime_to_str
+    last_changed = last_changed.replace(microsecond=0)
+
+    return {'state': state,
+            'attributes': attributes,
+            'last_changed': last_changed}
+
 def track_state_change(eventbus, category, from_state, to_state, action):
     """ Helper method to track specific state changes. """
     from_state = ensure_list(from_state)
@@ -60,8 +80,8 @@ def track_state_change(eventbus, category, from_state, to_state, action):
     def listener(event):
         """ State change listener that listens for specific state changes. """
         if category == event.data['category'] and \
-                matcher(event.data['old_state'].state, from_state) and \
-                matcher(event.data['new_state'].state, to_state):
+                matcher(event.data['old_state']['state'], from_state) and \
+                matcher(event.data['new_state']['state'], to_state):
 
             action(event.data['category'],
                    event.data['old_state'],
@@ -81,21 +101,23 @@ def track_time_change(eventbus, action,
 
     def listener(event):
         """ Listens for matching time_changed events. """
-        if  (point_in_time and event.data['now'] > point_in_time) or \
+        now = str_to_datetime(event.data['now'])
+
+        if  (point_in_time and now > point_in_time) or \
                 (not point_in_time and \
-                matcher(event.data['now'].year, year) and \
-                matcher(event.data['now'].month, month) and \
-                matcher(event.data['now'].day, day) and \
-                matcher(event.data['now'].hour, hour) and \
-                matcher(event.data['now'].minute, minute) and \
-                matcher(event.data['now'].second, second)):
+                matcher(now.year, year) and \
+                matcher(now.month, month) and \
+                matcher(now.day, day) and \
+                matcher(now.hour, hour) and \
+                matcher(now.minute, minute) and \
+                matcher(now.second, second)):
 
             # point_in_time are exact points in time
             # so we always remove it after fire
             if listen_once or point_in_time:
                 event.eventbus.remove_listener(EVENT_TIME_CHANGED, listener)
 
-            action(event.data['now'])
+            action(now)
 
     eventbus.listen(EVENT_TIME_CHANGED, listener)
 
@@ -194,18 +216,16 @@ class StateMachine(object):
 
         # Add category if it does not exist
         if category not in self.states:
-            self.states[category] = State(new_state, datetime.now(),
-                                                                attributes)
+            self.states[category] = create_state(new_state, attributes)
 
         # Change state and fire listeners
         else:
             old_state = self.states[category]
 
-            if old_state.state != new_state or \
-                old_state.attributes != attributes:
+            if old_state['state'] != new_state or \
+                old_state['attributes'] != attributes:
 
-                self.states[category] = State(new_state, datetime.now(),
-                                                                attributes)
+                self.states[category] = create_state(new_state, attributes)
 
                 self.eventbus.fire(EVENT_STATE_CHANGED,
                     {'category':category,
@@ -219,16 +239,17 @@ class StateMachine(object):
 
         state = self.states.get(category, None)
 
-        return state and state.state == state
+        return state and state['state'] == state
 
     def get_state(self, category):
-        """ Returns a tuple (state,last_changed) describing
+        """ Returns a dict (state,last_changed, attributes) describing
             the state of the specified category. """
         if category not in self.states:
             raise CategoryDoesNotExistException(
                     "Category {} does not exist.".format(category))
 
-        return self.states[category]
+        # Make a copy so people won't accidently mutate the state
+        return dict(self.states[category])
 
 
 class Timer(threading.Thread):
@@ -269,7 +290,8 @@ class Timer(threading.Thread):
 
             last_fired_on_second = now.second
 
-            self.eventbus.fire(EVENT_TIME_CHANGED, {'now':now})
+            self.eventbus.fire(EVENT_TIME_CHANGED,
+                                    {'now': datetime_to_str(now)})
 
 class HomeAssistantException(Exception):
     """ General Home Assistant exception occured. """
