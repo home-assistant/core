@@ -67,9 +67,9 @@
 	<Project sr="proj0">
 		<cdate>1381110247781</cdate>
 		<name>Home Assistant</name>
-		<pids>5,3,25,26,24</pids>
+		<pids>26,24,25,3,5</pids>
 		<scenes>Variable Query,Home Assistant Start</scenes>
-		<tids>19,8,10,6,16,9,20,14,11,4,23,15,12,13,22</tids>
+		<tids>8,19,4,14,6,11,13,23,20,22,9,10,16,15,12</tids>
 		<Kid sr="Kid">
 			<launchID>12</launchID>
 			<pkg>nl.paulus.homeassistant</pkg>
@@ -386,7 +386,7 @@
 	</Task>
 	<Task sr="task14">
 		<cdate>1381114829583</cdate>
-		<edate>1383030731979</edate>
+		<edate>1383031605479</edate>
 		<id>14</id>
 		<nme>API Fire Event</nme>
 		<pri>10</pri>
@@ -441,16 +441,15 @@
 	</Task>
 	<Task sr="task19">
 		<cdate>1380262442154</cdate>
-		<edate>1383030903842</edate>
+		<edate>1383031630485</edate>
 		<id>19</id>
 		<nme>Update Battery</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>116</code>
 			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
-			<Str sr="arg1" ve="3">/api/state/change</Str>
+			<Str sr="arg1" ve="3">/api/states/%HA_DEVICE_NAME.charging</Str>
 			<Str sr="arg2" ve="3">api_password=%HA_API_PASSWORD
-category=%HA_DEVICE_NAME.charging
 new_state=%HA_CHARGING
 attributes={"battery":%BATT}</Str>
 			<Str sr="arg3" ve="3"/>
@@ -633,7 +632,7 @@ attributes={"battery":%BATT}</Str>
 	</Task>
 	<Task sr="task8">
 		<cdate>1380262442154</cdate>
-		<edate>1383030906782</edate>
+		<edate>1383031596400</edate>
 		<id>8</id>
 		<nme>Update Charging</nme>
 		<pri>10</pri>
