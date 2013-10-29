@@ -317,7 +317,7 @@ class TomatoDeviceScanner(object):
             self.logger.info("Tomato:Scanning")
 
             try:
-                response = requests.Session().send(self.req, timeout=1)
+                response = requests.Session().send(self.req, timeout=3)
 
                 # Calling and parsing the Tomato api here. We only need the
                 # wldev and dhcpd_lease values. For API description see:
