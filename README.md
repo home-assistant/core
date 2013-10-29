@@ -34,47 +34,54 @@ A screenshot of the debug interface (battery and charging states are controlled 
 
 To interface with the API requests should include the parameter api_password which matches the api_password in home-assistant.conf.
 
-The following API commands are currently supported:
+All API calls have to be accompanied by an 'api_password' parameter and will
+return JSON. If successful calls will return status code 200 or 201.
 
-    /api/state/categories - POST
-    parameter: api_password - string
-    Will list all the categories for which a state is currently tracked. Returns a json object like this:
+Other status codes that can occur are:
+ - 400 (Bad Request)
+ - 401 (Unauthorized)
+ - 404 (Not Found)
+ - 405 (Method not allowed)
 
-    ```json
-    {"status": "OK", 
-     "message":"State categories", 
-     "categories": ["all_devices", "Paulus_Nexus_4"]}
-    ```
+The api supports the following actions:
 
-    /api/state/get - POST
-    parameter: api_password - string
-    parameter: category - string
-    Will get the current state of a category. Returns a json object like this:
+`/api/states` - GET
+Returns a list of categories for which a state is available
+Example result:
+```json{
+    "categories": [
+        "Paulus_Nexus_4", 
+        "weather.sun", 
+        "all_devices"
+    ]
+}```
 
-    ```json
-    {"status": "OK", 
-     "message": "State of all_devices",
-     "category": "all_devices",
-     "state": "device_home",
-     "last_changed": "19:10:39 25-10-2013",
-     "attributes": {}}
-    ```
+`/api/states/<category>` - GET
+Returns the current state from a category
+Example result:
+```json{
+    "attributes": {
+        "next_rising": "07:04:15 29-10-2013", 
+        "next_setting": "18:00:31 29-10-2013"
+    }, 
+    "category": "weather.sun", 
+    "last_changed": "23:24:33 28-10-2013", 
+    "state": "below_horizon"
+}```
 
-    /api/state/change - POST
-    parameter: api_password - string
-    parameter: category - string
-    parameter: new_state - string
-    parameter: attributes - object encoded as JSON string (optional)
-    Changes category 'category' to 'new_state'
-    It is possible to sent multiple values for category and new_state.
-    If the number of values for category and new_state do not match only
-    combinations where both values are supplied will be set.
-    
-    /api/event/fire - POST
-    parameter: api_password - string
-    parameter: event_name - string
-    parameter: event_data - object encoded as JSON string (optional)
-    Fires an 'event_name' event containing data from 'event_data'
+`/api/states/<category>` - POST
+Updates the current state of a category. Returns status code 201 if successful
+with location header of updated resource.
+parameter: new_state - string
+optional parameter: attributes - JSON encoded object
+
+`/api/events/<event_type>` - POST
+Fires an event with event_type
+optional parameter: event_data - JSON encoded object
+Example result:
+```json{
+    "message": "Event download_file fired."
+}```
 
 Android remote control
 ----------------------

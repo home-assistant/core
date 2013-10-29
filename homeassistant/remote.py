@@ -12,25 +12,33 @@ HomeAssistantException will be raised.
 import threading
 import logging
 import json
+import urlparse
 
 import requests
 
 import homeassistant as ha
-import homeassistant.httpinterface as httpinterface
+import homeassistant.httpinterface as hah
 
-def _setup_call_api(host, port, base_path, api_password):
+METHOD_GET = "get"
+METHOD_POST = "post"
+
+def _setup_call_api(host, port, api_password):
     """ Helper method to setup a call api method. """
-    port = port or httpinterface.SERVER_PORT
+    port = port or hah.SERVER_PORT
 
-    base_url = "http://{}:{}/api/{}".format(host, port, base_path)
+    base_url = "http://{}:{}".format(host, port)
 
-    def _call_api(action, data=None):
+    def _call_api(method, path, data=None):
         """ Makes a call to the Home Assistant api. """
         data = data or {}
-
         data['api_password'] = api_password
 
-        return requests.post(base_url + action, data=data)
+        url = urlparse.urljoin(base_url, path)
+
+        if method == METHOD_GET:
+            return requests.get(url, params=data)
+        else:
+            return requests.request(method, url, data=data)
 
     return _call_api
 
@@ -43,21 +51,19 @@ class EventBus(ha.EventBus):
     def __init__(self, host, api_password, port=None):
         ha.EventBus.__init__(self)
 
-        self._call_api = _setup_call_api(host, port, "event/", api_password)
+        self._call_api = _setup_call_api(host, port, api_password)
 
         self.logger = logging.getLogger(__name__)
 
     def fire(self, event_type, event_data=None):
         """ Fire an event. """
 
-        if not event_data:
-            event_data = {}
-
-        data = {'event_name': event_type,
-                'event_data': json.dumps(event_data)}
+        data = {'event_data': json.dumps(event_data)} if event_data else None
 
         try:
-            req = self._call_api("fire", data)
+            req = self._call_api(METHOD_POST,
+                                 hah.URL_API_EVENTS_EVENT.format(event_type),
+                                 data)
 
             if req.status_code != 200:
                 error = "Error firing event: {} - {}".format(
@@ -65,7 +71,6 @@ class EventBus(ha.EventBus):
 
                 self.logger.error("EventBus:{}".format(error))
                 raise ha.HomeAssistantException(error)
-
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("EventBus:Error connecting to server")
@@ -91,7 +96,7 @@ class StateMachine(ha.StateMachine):
     def __init__(self, host, api_password, port=None):
         ha.StateMachine.__init__(self, None)
 
-        self._call_api = _setup_call_api(host, port, "state/", api_password)
+        self._call_api = _setup_call_api(host, port, api_password)
 
         self.lock = threading.Lock()
         self.logger = logging.getLogger(__name__)
@@ -101,7 +106,7 @@ class StateMachine(ha.StateMachine):
         """ List of categories which states are being tracked. """
 
         try:
-            req = self._call_api("categories")
+            req = self._call_api(METHOD_GET, hah.URL_API_STATES)
 
             return req.json()['categories']
 
@@ -126,14 +131,15 @@ class StateMachine(ha.StateMachine):
 
         self.lock.acquire()
 
-        data = {'category': category,
-                'new_state': new_state,
+        data = {'new_state': new_state,
                 'attributes': json.dumps(attributes)}
 
         try:
-            req = self._call_api('change', data)
+            req = self._call_api(METHOD_POST,
+                                 hah.URL_API_STATES_CATEGORY.format(category),
+                                 data)
 
-            if req.status_code != 200:
+            if req.status_code != 201:
                 error = "Error changing state: {} - {}".format(
                             req.status_code, req.text)
 
@@ -152,7 +158,8 @@ class StateMachine(ha.StateMachine):
             the state of the specified category. """
 
         try:
-            req = self._call_api("get", {'category': category})
+            req = self._call_api(METHOD_GET,
+                                 hah.URL_API_STATES_CATEGORY.format(category))
 
             data = req.json()
 

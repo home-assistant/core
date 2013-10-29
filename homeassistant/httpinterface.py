@@ -4,31 +4,63 @@ homeassistant.httpinterface
 
 This module provides an API and a HTTP interface for debug purposes.
 
-By default it will run on port 8080.
+By default it will run on port 8123.
 
-All API calls have to be accompanied by an 'api_password' parameter.
+All API calls have to be accompanied by an 'api_password' parameter and will
+return JSON. If successful calls will return status code 200 or 201.
+
+Other status codes that can occur are:
+ - 400 (Bad Request)
+ - 401 (Unauthorized)
+ - 404 (Not Found)
+ - 405 (Method not allowed)
 
 The api supports the following actions:
 
-/api/state/change - POST
-parameter: category - string
-parameter: new_state - string
-Changes category 'category' to 'new_state'
-It is possible to sent multiple values for category and new_state.
-If the number of values for category and new_state do not match only
-combinations where both values are supplied will be set.
+/api/states - GET
+Returns a list of categories for which a state is available
+Example result:
+{
+    "categories": [
+        "Paulus_Nexus_4",
+        "weather.sun",
+        "all_devices"
+    ]
+}
 
-/api/event/fire - POST
-parameter: event_name - string
-parameter: event_data - JSON-string (optional)
-Fires an 'event_name' event containing data from 'event_data'
+/api/states/<category> - GET
+Returns the current state from a category
+Example result:
+{
+    "attributes": {
+        "next_rising": "07:04:15 29-10-2013",
+        "next_setting": "18:00:31 29-10-2013"
+    },
+    "category": "weather.sun",
+    "last_changed": "23:24:33 28-10-2013",
+    "state": "below_horizon"
+}
+
+/api/states/<category> - POST
+Updates the current state of a category. Returns status code 201 if successful
+with location header of updated resource.
+parameter: new_state - string
+optional parameter: attributes - JSON encoded object
+
+/api/events/<event_type> - POST
+Fires an event with event_type
+optional parameter: event_data - JSON encoded object
+Example result:
+{
+    "message": "Event download_file fired."
+}
 
 """
 
 import json
 import threading
-import itertools
 import logging
+import re
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from urlparse import urlparse, parse_qs
 
@@ -36,9 +68,24 @@ import homeassistant as ha
 
 SERVER_PORT = 8123
 
-MESSAGE_STATUS_OK = "OK"
-MESSAGE_STATUS_ERROR = "ERROR"
-MESSAGE_STATUS_UNAUTHORIZED = "UNAUTHORIZED"
+HTTP_OK = 200
+HTTP_CREATED = 201
+HTTP_MOVED_PERMANENTLY = 301
+HTTP_BAD_REQUEST = 400
+HTTP_UNAUTHORIZED = 401
+HTTP_NOT_FOUND = 404
+HTTP_METHOD_NOT_ALLOWED = 405
+
+URL_ROOT = "/"
+
+URL_STATES_CATEGORY = "/states/{}"
+URL_API_STATES = "/api/states"
+URL_API_STATES_CATEGORY = "/api/states/{}"
+
+URL_EVENTS_EVENT = "/events/{}"
+URL_API_EVENTS = "/api/events"
+URL_API_EVENTS_EVENT = "/api/events/{}"
+
 
 class HTTPInterface(threading.Thread):
     """ Provides an HTTP interface for Home Assistant. """
@@ -76,238 +123,110 @@ class HTTPInterface(threading.Thread):
 class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """
 
-    #Handler for the GET requests
-    def do_GET(self):    # pylint: disable=invalid-name
-        """ Handle incoming GET requests. """
-        write = lambda txt: self.wfile.write(txt+"\n")
+    PATHS = [ ('GET', '/', '_handle_get_root'),
 
+              # /states
+              ('GET', '/states', '_handle_get_states'),
+              ('GET', re.compile(r'/states/(?P<category>[a-zA-Z\.\_0-9]+)'),
+                                    '_handle_get_states_category'),
+              ('POST', re.compile(r'/states/(?P<category>[a-zA-Z\.\_0-9]+)'),
+                                    '_handle_post_states_category'),
+
+              # /events
+              ('POST', re.compile(r'/events/(?P<event_type>\w+)'),
+                                    '_handle_post_events_event_type')
+                ]
+
+    def _handle_request(self, method): # pylint: disable=too-many-branches
+        """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
 
-        get_data = parse_qs(url.query)
+        # Read query input
+        data = parse_qs(url.query)
 
-        api_password = get_data.get('api_password', [''])[0]
+        # Did we get post input ?
+        content_length = int(self.headers.get('Content-Length', 0))
 
-        if url.path == "/":
-            if self._verify_api_password(api_password, False):
-                self.send_response(200)
-                self.send_header('Content-type','text/html')
-                self.end_headers()
+        if content_length:
+            data.update(parse_qs(self.rfile.read(content_length)))
 
+        try:
+            api_password = data['api_password'][0]
+        except KeyError:
+            api_password = ''
 
-                write(("<html>"
-                       "<head><title>Home Assistant</title></head>"
-                       "<body>"))
-
-                # Flash message support
-                if self.server.flash_message:
-                    write("<h3>{}</h3>".format(self.server.flash_message))
-
-                    self.server.flash_message = None
-
-                # Describe state machine:
-                categories = []
-
-                write(("<table><tr>"
-                       "<th>Name</th><th>State</th>"
-                       "<th>Last Changed</th><th>Attributes</th></tr>"))
-
-                for category in \
-                    sorted(self.server.statemachine.categories,
-                                            key=lambda key: key.lower()):
-
-                    categories.append(category)
-
-                    state = self.server.statemachine.get_state(category)
-
-                    attributes = "<br>".join(
-                        ["{}: {}".format(attr, state['attributes'][attr])
-                         for attr in state['attributes']])
-
-                    write(("<tr>"
-                           "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-                           "</tr>").
-                        format(category,
-                               state['state'],
-                               state['last_changed'],
-                               attributes))
-
-                write("</table>")
-
-                # Small form to change the state
-                write(("<br />Change state:<br />"
-                       "<form action='state/change' method='POST'>"))
-
-                write("<input type='hidden' name='api_password' value='{}' />".
-                        format(self.server.api_password))
-
-                write("<select name='category'>")
-
-                for category in categories:
-                    write("<option>{}</option>".format(category))
-
-                write("</select>")
-
-                write(("<input name='new_state' />"
-                       "<input type='submit' value='set state' />"
-                       "</form>"))
-
-                # Describe event bus:
-                write(("<table><tr><th>Event</th><th>Listeners</th></tr>"))
-
-                for category in sorted(self.server.eventbus.listeners,
-                                                key=lambda key: key.lower()):
-                    write("<tr><td>{}</td><td>{}</td></tr>".
-                        format(category,
-                               len(self.server.eventbus.listeners[category])))
-
-                # Form to allow firing events
-                write(("</table><br />"
-                       "<form action='event/fire' method='POST'>"))
-
-                write("<input type='hidden' name='api_password' value='{}' />".
-                        format(self.server.api_password))
-
-                write(("Event name: <input name='event_name' /><br />"
-                       "Event data (json): <input name='event_data' /><br />"
-                       "<input type='submit' value='fire event' />"
-                       "</form>"))
-
-                write("</body></html>")
-
+        # We respond to API requests with JSON
+        # For other requests we respond with html
+        if url.path.startswith('/api/'):
+            path = url.path[4:]
+            # pylint: disable=attribute-defined-outside-init
+            self.use_json = True
 
         else:
-            self.send_response(404)
-
-    # pylint: disable=invalid-name, too-many-branches, too-many-statements
-    def do_POST(self):
-        """ Handle incoming POST requests. """
-
-        length = int(self.headers['Content-Length'])
-        post_data = parse_qs(self.rfile.read(length))
-
-        if self.path.startswith('/api/'):
-            action = self.path[5:]
-            use_json = True
-
-        else:
-            action = self.path[1:]
-            use_json = False
-
-        given_api_password = post_data.get("api_password", [''])[0]
-
-        # Action to change the state
-        if action == "state/categories":
-            if self._verify_api_password(given_api_password, use_json):
-                self._response(use_json, "State categories",
-                    json_data=
-                        {'categories': self.server.statemachine.categories})
-
-        elif action == "state/get":
-            if self._verify_api_password(given_api_password, use_json):
-                try:
-                    category = post_data['category'][0]
-
-                    state = self.server.statemachine.get_state(category)
-
-                    state['category'] = category
-
-                    self._response(use_json, "State of {}".format(category),
-                                   json_data=state)
+            path = url.path
+            # pylint: disable=attribute-defined-outside-init
+            self.use_json = False
 
 
-                except KeyError:
-                    # If category or new_state don't exist in post data
-                    self._response(use_json, "Invalid state received.",
-                                                        MESSAGE_STATUS_ERROR)
+        path_matched_but_not_method = False
+        handle_request_method = False
 
-        elif action == "state/change":
-            if self._verify_api_password(given_api_password, use_json):
-                try:
-                    changed = []
+        # Check every url to find matching result
+        for t_method, t_path, t_handler in RequestHandler.PATHS:
 
-                    for idx, category, new_state in zip(itertools.count(),
-                                                        post_data['category'],
-                                                        post_data['new_state']
-                                                       ):
+            # we either do string-comparison or regular expression matching
+            if isinstance(t_path, str):
+                path_match = path == t_path
+            else:
+                path_match = t_path.match(path) #pylint:disable=maybe-no-member
 
-                        # See if we also received attributes for this state
-                        try:
-                            attributes = json.loads(
-                                                post_data['attributes'][idx])
-                        except KeyError:
-                            # Happens if key 'attributes' or idx does not exist
-                            attributes = None
 
-                        self.server.statemachine.set_state(category,
-                                                           new_state,
-                                                           attributes)
+            if path_match and method == t_method:
+                # Call the method
+                handle_request_method = getattr(self, t_handler)
+                break
 
-                        changed.append("{}={}".format(category, new_state))
+            elif path_match:
+                path_matched_but_not_method = True
 
-                    self._response(use_json, "States changed: {}".
-                                                format( ", ".join(changed) ) )
 
-                except KeyError:
-                    # If category or new_state don't exist in post data
-                    self._response(use_json, "Invalid parameters received.",
-                                                        MESSAGE_STATUS_ERROR)
+        if handle_request_method:
 
-                except ValueError:
-                    # If json.loads doesn't understand the attributes
-                    self._response(use_json, "Invalid state data received.",
-                                                        MESSAGE_STATUS_ERROR)
+            if self._verify_api_password(api_password):
+                handle_request_method(path_match, data)
 
-        # Action to fire an event
-        elif action == "event/fire":
-            if self._verify_api_password(given_api_password, use_json):
-                try:
-                    event_name = post_data['event_name'][0]
-
-                    if (not 'event_data' in post_data or
-                        post_data['event_data'][0] == ""):
-
-                        event_data = None
-
-                    else:
-                        event_data = json.loads(post_data['event_data'][0])
-
-                    self.server.eventbus.fire(event_name, event_data)
-
-                    self._response(use_json, "Event {} fired.".
-                                                format(event_name))
-
-                except ValueError:
-                    # If JSON decode error
-                    self._response(use_json, "Invalid event received (1).",
-                                                        MESSAGE_STATUS_ERROR)
-
-                except KeyError:
-                    # If "event_name" not in post_data
-                    self._response(use_json, "Invalid event received (2).",
-                                                        MESSAGE_STATUS_ERROR)
+        elif path_matched_but_not_method:
+            self.send_response(HTTP_METHOD_NOT_ALLOWED)
 
         else:
-            self.send_response(404)
+            self.send_response(HTTP_NOT_FOUND)
 
 
-    def _verify_api_password(self, api_password, use_json):
+    def do_GET(self): # pylint: disable=invalid-name
+        """ GET request handler. """
+        self._handle_request('GET')
+
+    def do_POST(self): # pylint: disable=invalid-name
+        """ POST request handler. """
+        self._handle_request('POST')
+
+    def _verify_api_password(self, api_password):
         """ Helper method to verify the API password
             and take action if incorrect. """
         if api_password == self.server.api_password:
             return True
 
-        elif use_json:
-            self._response(True, "API password missing or incorrect.",
-                                                MESSAGE_STATUS_UNAUTHORIZED)
+        elif self.use_json:
+            self._message("API password missing or incorrect.",
+                                                            HTTP_UNAUTHORIZED)
 
         else:
-            self.send_response(200)
+            self.send_response(HTTP_OK)
             self.send_header('Content-type','text/html')
             self.end_headers()
 
-            write = lambda txt: self.wfile.write(txt+"\n")
-
-            write(("<html>"
+            self.wfile.write((
+                   "<html>"
                    "<head><title>Home Assistant</title></head>"
                    "<body>"
                    "<form action='/' method='GET'>"
@@ -318,35 +237,164 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         return False
 
-    def _response(self, use_json, message,
-                        status=MESSAGE_STATUS_OK, json_data=None):
-        """ Helper method to show a message to the user. """
-        log_message = "{}: {}".format(status, message)
+    # pylint: disable=unused-argument
+    def _handle_get_root(self, path_match, data):
+        """ Renders the debug interface. """
 
-        if status == MESSAGE_STATUS_OK:
-            self.server.logger.info(log_message)
-            response_code = 200
+        write = lambda txt: self.wfile.write(txt+"\n")
 
+        self.send_response(HTTP_OK)
+        self.send_header('Content-type','text/html')
+        self.end_headers()
+
+        write(("<html>"
+               "<head><title>Home Assistant</title></head>"
+               "<body>"))
+
+        # Flash message support
+        if self.server.flash_message:
+            write("<h3>{}</h3>".format(self.server.flash_message))
+
+            self.server.flash_message = None
+
+        # Describe state machine:
+        categories = []
+
+        write(("<table><tr>"
+               "<th>Name</th><th>State</th>"
+               "<th>Last Changed</th><th>Attributes</th></tr>"))
+
+        for category in \
+            sorted(self.server.statemachine.categories,
+                                    key=lambda key: key.lower()):
+
+            categories.append(category)
+
+            state = self.server.statemachine.get_state(category)
+
+            attributes = "<br>".join(
+                ["{}: {}".format(attr, state['attributes'][attr])
+                 for attr in state['attributes']])
+
+            write(("<tr>"
+                   "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+                   "</tr>").
+                format(category,
+                       state['state'],
+                       state['last_changed'],
+                       attributes))
+
+        write("</table>")
+
+        # Describe event bus:
+        write(("<table><tr><th>Event</th><th>Listeners</th></tr>"))
+
+        for category in sorted(self.server.eventbus.listeners,
+                                        key=lambda key: key.lower()):
+            write("<tr><td>{}</td><td>{}</td></tr>".
+                format(category,
+                       len(self.server.eventbus.listeners[category])))
+
+        # Form to allow firing events
+        write("</table>")
+
+        write("</body></html>")
+
+    # pylint: disable=unused-argument
+    def _handle_get_states(self, path_match, data):
+        """ Returns the categories which state is being tracked. """
+        self._write_json({'categories': self.server.statemachine.categories})
+
+    # pylint: disable=unused-argument
+    def _handle_get_states_category(self, path_match, data):
+        """ Returns the state of a specific category. """
+        try:
+            category = path_match.group('category')
+
+            state = self.server.statemachine.get_state(category)
+
+            state['category'] = category
+
+            self._write_json(state)
+
+        except KeyError:
+            # If category or new_state don't exist in post data
+            self._message("Invalid state received.", HTTP_BAD_REQUEST)
+
+
+    def _handle_post_states_category(self, path_match, data):
+        """ Handles updating the state of a category. """
+        try:
+            category = path_match.group('category')
+
+            new_state = data['new_state'][0]
+
+            try:
+                attributes = json.loads(data['attributes'][0])
+            except KeyError:
+                # Happens if key 'attributes' does not exist
+                attributes = None
+
+            self.server.statemachine.set_state(category,
+                                               new_state,
+                                               attributes)
+
+            self._redirect("/states/{}".format(category),
+                           "State changed: {}={}".format(category, new_state),
+                           HTTP_CREATED)
+
+        except KeyError:
+            # If category or new_state don't exist in post data
+            self._message("Invalid parameters received.",
+                                                HTTP_BAD_REQUEST)
+
+        except ValueError:
+            # Occurs during error parsing json
+            self._message("Invalid JSON for attributes", HTTP_BAD_REQUEST)
+
+    def _handle_post_events_event_type(self, path_match, data):
+        """ Handles firing of an event. """
+        event_type = path_match.group('event_type')
+
+        try:
+            try:
+                event_data = json.loads(data['event_data'][0])
+            except KeyError:
+                # Happens if key 'event_data' does not exist
+                event_data = None
+
+            self.server.eventbus.fire(event_type, event_data)
+
+            self._message("Event {} fired.".format(event_type))
+
+        except ValueError:
+            # Occurs during error parsing json
+            self._message("Invalid JSON for event_data", HTTP_BAD_REQUEST)
+
+    def _message(self, message, status_code=HTTP_OK):
+        """ Helper method to return a message to the caller. """
+        if self.use_json:
+            self._write_json({'message': message}, status_code=status_code)
         else:
-            self.server.logger.error(log_message)
-            response_code = (401 if status == MESSAGE_STATUS_UNAUTHORIZED
-                                                                    else 400)
+            self._redirect('/', message)
 
-        if use_json:
-            self.send_response(response_code)
-            self.send_header('Content-type','application/json')
-            self.end_headers()
-
-            json_data = json_data or {}
-            json_data['status'] = status
-            json_data['message'] = message
-
-            self.wfile.write(json.dumps(json_data))
-
-        else:
+    def _redirect(self, location, message=None,
+                  status_code=HTTP_MOVED_PERMANENTLY):
+        """ Helper method to redirect caller. """
+        # Only save as flash message if we will go to debug interface next
+        if not self.use_json and message:
             self.server.flash_message = message
 
-            self.send_response(301)
-            self.send_header("Location", "/?api_password={}".
-                                format(self.server.api_password))
-            self.end_headers()
+        self.send_response(status_code)
+        self.send_header("Location", "{}?api_password={}".
+                            format(location, self.server.api_password))
+        self.end_headers()
+
+    def _write_json(self, data=None, status_code=HTTP_OK):
+        """ Helper method to return JSON to the caller. """
+        self.send_response(status_code)
+        self.send_header('Content-type','application/json')
+        self.end_headers()
+
+        if data:
+            self.wfile.write(json.dumps(data, indent=4, sort_keys=True))
