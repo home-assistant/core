@@ -36,6 +36,7 @@ class TestHTTPInterface(unittest.TestCase):
                                                                 API_PASSWORD)
 
             self.statemachine.set_state("test", "INIT_STATE")
+            self.sm_with_remote_eb.set_state("test", "INIT_STATE")
 
             self.eventbus.fire(ha.EVENT_START)
 
@@ -49,6 +50,7 @@ class TestHTTPInterface(unittest.TestCase):
         cls.statemachine = ha.StateMachine(cls.eventbus)
         cls.remote_sm = remote.StateMachine("127.0.0.1", API_PASSWORD)
         cls.remote_eb = remote.EventBus("127.0.0.1", API_PASSWORD)
+        cls.sm_with_remote_eb = ha.StateMachine(cls.remote_eb)
 
     def test_debug_interface(self):
         """ Test if we can login by comparing not logged in screen to
@@ -106,8 +108,7 @@ class TestHTTPInterface(unittest.TestCase):
 
         self.assertEqual(data['category'], "test")
         self.assertEqual(data['state'], state['state'])
-        self.assertEqual(ha.str_to_datetime(data['last_changed']),
-                                                        state['last_changed'])
+        self.assertEqual(data['last_changed'], state['last_changed'])
         self.assertEqual(data['attributes'], state['attributes'])
 
 
@@ -310,6 +311,24 @@ class TestHTTPInterface(unittest.TestCase):
         self.eventbus.listen_once("test_event_with_data", listener)
 
         self.remote_eb.fire("test_event_with_data", {"test": 1})
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
+
+    def test_local_sm_with_remote_eb(self):
+        """ Test if we get the event if we change a state on a
+        StateMachine connected to a remote eventbus. """
+        test_value = []
+
+        def listener(event):   # pylint: disable=unused-argument
+            """ Helper method that will verify our event got called. """
+            test_value.append(1)
+
+        self.eventbus.listen_once(ha.EVENT_STATE_CHANGED, listener)
+
+        self.sm_with_remote_eb.set_state("test", "local sm with remote eb")
 
         # Allow the event to take place
         time.sleep(1)

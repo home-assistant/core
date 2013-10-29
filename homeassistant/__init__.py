@@ -65,12 +65,9 @@ def create_state(state, attributes=None, last_changed=None):
     attributes = attributes or {}
     last_changed = last_changed or datetime.now()
 
-    # We do not want microseconds, as they get lost when we do datetime_to_str
-    last_changed = last_changed.replace(microsecond=0)
-
     return {'state': state,
             'attributes': attributes,
-            'last_changed': last_changed}
+            'last_changed': datetime_to_str(last_changed)}
 
 def track_state_change(eventbus, category, from_state, to_state, action):
     """ Helper method to track specific state changes. """

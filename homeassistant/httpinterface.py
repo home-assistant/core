@@ -128,7 +128,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                            "</tr>").
                         format(category,
                                state['state'],
-                               ha.datetime_to_str(state['last_changed']),
+                               state['last_changed'],
                                attributes))
 
                 write("</table>")
@@ -210,12 +210,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                     state = self.server.statemachine.get_state(category)
 
                     state['category'] = category
-
-                    state['last_changed'] = ha.datetime_to_str(
-                                                    state['last_changed'])
-
-
-                    print state
 
                     self._response(use_json, "State of {}".format(category),
                                    json_data=state)
