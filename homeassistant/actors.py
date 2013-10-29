@@ -109,7 +109,7 @@ class LightTrigger(object):
                                             index * LIGHT_TRANSITION_TIME)
 
     def _turn_light_on_before_sunset(self, light_id=None):
-        """ Helper function to turn on lights slowlyif there
+        """ Helper function to turn on lights slowly if there
             are devices home and the light is not on yet. """
         if self.statemachine.is_state(STATE_CATEGORY_ALL_DEVICES,
            DEVICE_STATE_HOME) and not self.light_control.is_light_on(light_id):
@@ -127,7 +127,7 @@ class LightTrigger(object):
 
         # Specific device came home ?
         if (category != STATE_CATEGORY_ALL_DEVICES and
-            new_state.state == DEVICE_STATE_HOME):
+            new_state['state'] == DEVICE_STATE_HOME):
 
             # These variables are needed for the elif check
             now = datetime.now()
@@ -163,7 +163,7 @@ class LightTrigger(object):
 
         # Did all devices leave the house?
         elif (category == STATE_CATEGORY_ALL_DEVICES and
-              new_state.state == DEVICE_STATE_NOT_HOME and lights_are_on):
+              new_state['state'] == DEVICE_STATE_NOT_HOME and lights_are_on):
 
             self.logger.info(("Everyone has left but lights are on. "
                               "Turning lights off"))
