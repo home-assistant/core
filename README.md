@@ -27,15 +27,16 @@ Done. Start it now by running `python start.py`
 
 Web interface and API
 ---------------------
-Home Assistent runs a webserver accessible on port 8123. At http://localhost:8123/ it will provide a debug interface showing the current state of the system. At http://localhost:8123/api/ it provides a password protected API so it can be controlled from other devices through HTTP POST requests. 
+Home Assistent runs a webserver accessible on port 8123. 
 
-A screenshot of the debug interface (battery and charging states are controlled by my phone):
+  * At http://localhost:8123/ it will provide a debug interface showing the current state of the system.
+  * At http://localhost:8123/api/ it provides a password protected API.
+
+A screenshot of the debug interface:
 ![screenshot-debug-interface](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-debug-interface.png)
 
-To interface with the API requests should include the parameter api_password which matches the api_password in home-assistant.conf.
-
-All API calls have to be accompanied by an 'api_password' parameter and will
-return JSON. If successful calls will return status code 200 or 201.
+All API calls have to be accompanied by an 'api_password' parameter (as specified in `home-assistant.conf`) and will
+return JSON encoded objects. If successful calls will return status code 200 or 201.
 
 Other status codes that can occur are:
  - 400 (Bad Request)
@@ -45,21 +46,24 @@ Other status codes that can occur are:
 
 The api supports the following actions:
 
-`/api/states` - GET
+**/api/states - GET**<br>
 Returns a list of categories for which a state is available
-Example result:
-```json{
+
+```json
+{
     "categories": [
         "Paulus_Nexus_4", 
         "weather.sun", 
         "all_devices"
     ]
-}```
+}
+```
 
-`/api/states/<category>` - GET
+**/api/states/&lt;category>** - GET<br>
 Returns the current state from a category
-Example result:
-```json{
+
+```json
+{
     "attributes": {
         "next_rising": "07:04:15 29-10-2013", 
         "next_setting": "18:00:31 29-10-2013"
@@ -67,30 +71,31 @@ Example result:
     "category": "weather.sun", 
     "last_changed": "23:24:33 28-10-2013", 
     "state": "below_horizon"
-}```
+}
+```
 
-`/api/states/<category>` - POST
-Updates the current state of a category. Returns status code 201 if successful
-with location header of updated resource.
-parameter: new_state - string
+**/api/states/&lt;category>** - POST<br>
+Updates the current state of a category. Returns status code 201 if successful with location header of updated resource.<br>
+parameter: new_state - string<br>
 optional parameter: attributes - JSON encoded object
 
-`/api/events/<event_type>` - POST
-Fires an event with event_type
+**/api/events/&lt;event_type>** - POST<br>
+Fires an event with event_type<br>
 optional parameter: event_data - JSON encoded object
-Example result:
-```json{
+
+```json
+{
     "message": "Event download_file fired."
-}```
+}
+```
 
 Android remote control
 ----------------------
 
-Using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) I built an Android app that:
+An app has been built using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) that:
 
  * Provides buttons to control the lights and the chromecast
- * Sent updates every 30 minutes on the battery status
- * Sent updates when the phone is being charged via usb or wireless
+ * Tracks the charging state and battery level for each phone
 
 The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.apk) and [Tasker project XML](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.prj.xml) can be found in [/android-tasker/](https://github.com/balloob/home-assistant/tree/master/android-tasker)
 
