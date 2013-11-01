@@ -234,9 +234,9 @@ class StateMachine(object):
     def is_state(self, category, state):
         """ Returns True if category exists and is specified state. """
 
-        state = self.states.get(category, None)
+        cur_state = self.states.get(category, None)
 
-        return state and state['state'] == state
+        return cur_state and cur_state['state'] == state
 
     def get_state(self, category):
         """ Returns a dict (state,last_changed, attributes) describing
