@@ -73,8 +73,11 @@ def from_config_file(config_path):
 
     # Init actors
     # Light control
-    if config.has_section("hue") and config.has_option("hue", "host"):
-        light_control = actors.HueLightControl(config.get("hue", "host"))
+    if config.has_section("hue"):
+        if config.has_option("hue", "host"):
+            light_control = actors.HueLightControl(config.get("hue", "host"))
+        else:
+            light_control = actors.HueLightControl()
 
         statusses.append(("Light Control - Hue", light_control.success_init))
 
