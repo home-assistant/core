@@ -240,11 +240,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                    "<html>"
                    "<head><title>Home Assistant</title></head>"
                    "<body>"
-                   "<form action='/' method='GET'>"
+                   "<form action='{}' method='GET'>"
                    "API password: <input name='api_password' />"
                    "<input type='submit' value='submit' />"
                    "</form>"
-                   "</body></html>"))
+                   "</body></html>").format(self.path))
 
         return False
 
