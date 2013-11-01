@@ -124,8 +124,15 @@ class EventBus(object):
     """ Class that allows code to listen for- and fire events. """
 
     def __init__(self):
-        self.listeners = defaultdict(list)
+        self._listeners = defaultdict(list)
         self.logger = logging.getLogger(__name__)
+
+    @property
+    def listeners(self):
+        """ List of events that is being listened for. """
+        return { key: len(self._listeners[key])
+                 for key in self._listeners.keys()
+                 if len(self._listeners[key]) > 0 }
 
     def fire(self, event_type, event_data=None):
         """ Fire an event. """
@@ -142,8 +149,8 @@ class EventBus(object):
 
             # We do not use itertools.chain() because some listeners might
             # choose to remove themselves as a listener while being executed
-            for listener in self.listeners[ALL_EVENTS] + \
-                                  self.listeners[event.event_type]:
+            for listener in self._listeners[ALL_EVENTS] + \
+                                  self._listeners[event.event_type]:
                 try:
                     listener(event)
 
@@ -159,7 +166,7 @@ class EventBus(object):
         To listen to all events specify the constant ``ALL_EVENTS``
         as event_type.
         """
-        self.listeners[event_type].append(listener)
+        self._listeners[event_type].append(listener)
 
     def listen_once(self, event_type, listener):
         """ Listen once for event of a specific type.
@@ -181,10 +188,10 @@ class EventBus(object):
     def remove_listener(self, event_type, listener):
         """ Removes a listener of a specific event_type. """
         try:
-            self.listeners[event_type].remove(listener)
+            self._listeners[event_type].remove(listener)
 
-            if len(self.listeners[event_type]) == 0:
-                del self.listeners[event_type]
+            if len(self._listeners[event_type]) == 0:
+                del self._listeners[event_type]
 
         except ValueError:
             pass

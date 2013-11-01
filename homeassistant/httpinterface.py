@@ -144,6 +144,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                                     '_handle_post_states_category'),
 
               # /events
+              ('GET', '/events', '_handle_get_events'),
               ('POST', re.compile(r'/events/(?P<event_type>\w+)'),
                                     '_handle_post_events_event_type')
                 ]
@@ -300,11 +301,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Describe event bus:
         write(("<table><tr><th>Event</th><th>Listeners</th></tr>"))
 
-        for category in sorted(self.server.eventbus.listeners,
-                                        key=lambda key: key.lower()):
-            write("<tr><td>{}</td><td>{}</td></tr>".
-                format(category,
-                       len(self.server.eventbus.listeners[category])))
+        for event_type, count in sorted(self.server.eventbus.listeners.items()):
+            write("<tr><td>{}</td><td>{}</td></tr>".format(event_type, count))
 
         # Form to allow firing events
         write("</table>")
@@ -367,6 +365,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Occurs during error parsing json
             self._message("Invalid JSON for attributes",
                                                 HTTP_UNPROCESSABLE_ENTITY)
+
+    def _handle_get_events(self, path_match, data):
+        """ Handles getting overview of event listeners. """
+        self._write_json({'listeners': self.server.eventbus.listeners})
 
     def _handle_post_events_event_type(self, path_match, data):
         """ Handles firing of an event. """

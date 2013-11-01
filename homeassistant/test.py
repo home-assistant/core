@@ -34,6 +34,7 @@ def ensure_homeassistant_started():
         core = {'eventbus': ha.EventBus()}
         core['statemachine'] = ha.StateMachine(core['eventbus'])
 
+        core['eventbus'].listen('test_event', len)
         core['statemachine'].set_state('test','a_state')
 
         hah.HTTPInterface(core['eventbus'], core['statemachine'],
@@ -83,14 +84,14 @@ class TestHTTPInterface(unittest.TestCase):
     def test_api_password(self):
         """ Test if we get access denied if we omit or provide
             a wrong api password. """
-        req = requests.post(
+        req = requests.get(
                 _url(hah.URL_API_STATES_CATEGORY.format("test")))
 
         self.assertEqual(req.status_code, 401)
 
-        req = requests.post(
+        req = requests.get(
                 _url(hah.URL_API_STATES_CATEGORY.format("test")),
-                data={"api_password":"not the password"})
+                params={"api_password":"not the password"})
 
         self.assertEqual(req.status_code, 401)
 
@@ -125,7 +126,7 @@ class TestHTTPInterface(unittest.TestCase):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
                 _url(hah.URL_API_STATES_CATEGORY.format("does_not_exist")),
-                data={"api_password":API_PASSWORD})
+                params={"api_password":API_PASSWORD})
 
         self.assertEqual(req.status_code, 422)
 
@@ -227,6 +228,15 @@ class TestHTTPInterface(unittest.TestCase):
         self.assertEqual(req.status_code, 422)
         self.assertEqual(len(test_value), 0)
 
+    def test_api_get_event_listeners(self):
+        """ Test if we can get the list of events being listened for. """
+        req = requests.get(_url(hah.URL_API_EVENTS),
+                                        params={"api_password":API_PASSWORD})
+
+        data = req.json()
+
+        self.assertEqual(data['listeners'], self.eventbus.listeners)
+
 class TestRemote(unittest.TestCase):
     """ Test the homeassistant.remote module. """
 
@@ -273,6 +283,9 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(state['state'], "set_remotely")
         self.assertEqual(state['attributes']['test'], 1)
 
+    def test_remote_eb_listening_for_same(self):
+        """ Test if remote EB correctly reports listener overview. """
+        self.assertEqual(self.eventbus.listeners, self.remote_eb.listeners)
 
    # pylint: disable=invalid-name
     def test_remote_eb_fire_event_with_no_data(self):

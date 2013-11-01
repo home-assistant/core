@@ -55,6 +55,35 @@ class EventBus(ha.EventBus):
 
         self.logger = logging.getLogger(__name__)
 
+    @property
+    def listeners(self):
+        """ List of events that is being listened for. """
+        try:
+            req = self._call_api(METHOD_GET, hah.URL_API_EVENTS)
+
+            if req.status_code == 200:
+                data = req.json()
+
+                return data['listeners']
+
+            else:
+                raise ha.HomeAssistantException(
+                            "Got unexpected result (3): {}.".format(req.text))
+
+        except requests.exceptions.ConnectionError:
+            self.logger.exception("EventBus:Error connecting to server")
+            raise ha.HomeAssistantException("Error connecting to server")
+
+        except ValueError: # If req.json() can't parse the json
+            self.logger.exception("EventBus:Got unexpected result")
+            raise ha.HomeAssistantException(
+                            "Got unexpected result: {}".format(req.text))
+
+        except KeyError: # If not all expected keys are in the returned JSON
+            self.logger.exception("EventBus:Got unexpected result (2)")
+            raise ha.HomeAssistantException(
+                            "Got unexpected result (2): {}".format(req.text))
+
     def fire(self, event_type, event_data=None):
         """ Fire an event. """
 
