@@ -231,23 +231,20 @@ class StateMachine(object):
 
         self.lock.release()
 
-    def is_state(self, category, state):
-        """ Returns True if category exists and is specified state. """
-
-        cur_state = self.states.get(category, None)
-
-        return cur_state and cur_state['state'] == state
-
     def get_state(self, category):
         """ Returns a dict (state,last_changed, attributes) describing
             the state of the specified category. """
         if category not in self.states:
-            raise CategoryDoesNotExistException(
-                    "Category {} does not exist.".format(category))
+            return None
+        else:
+            # Make a copy so people won't accidently mutate the state
+            return dict(self.states[category])
 
-        # Make a copy so people won't accidently mutate the state
-        return dict(self.states[category])
+    def is_state(self, category, state):
+        """ Returns True if category exists and is specified state. """
+        cur_state = self.get_state(category)
 
+        return cur_state and cur_state['state'] == state
 
 class Timer(threading.Thread):
     """ Timer will sent out an event every TIMER_INTERVAL seconds. """
@@ -292,8 +289,5 @@ class Timer(threading.Thread):
 
 class HomeAssistantException(Exception):
     """ General Home Assistant exception occured. """
-
-class CategoryDoesNotExistException(HomeAssistantException):
-    """ Specified category does not exist within the state machine. """
 
 
