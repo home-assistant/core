@@ -75,9 +75,21 @@ Returns the current state from a category
 ```
 
 **/api/states/&lt;category>** - POST<br>
-Updates the current state of a category. Returns status code 201 if successful with location header of updated resource.<br>
+Updates the current state of a category. Returns status code 201 if successful with location header of updated resource and the new state in the body.<br>
 parameter: new_state - string<br>
 optional parameter: attributes - JSON encoded object
+
+```json
+{
+    "attributes": {
+        "next_rising": "07:04:15 29-10-2013", 
+        "next_setting": "18:00:31 29-10-2013"
+    }, 
+    "category": "weather.sun", 
+    "last_changed": "23:24:33 28-10-2013", 
+    "state": "below_horizon"
+}
+```
 
 **/api/events/&lt;event_type>** - POST<br>
 Fires an event with event_type<br>

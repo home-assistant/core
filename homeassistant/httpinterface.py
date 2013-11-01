@@ -43,9 +43,19 @@ Example result:
 
 /api/states/<category> - POST
 Updates the current state of a category. Returns status code 201 if successful
-with location header of updated resource.
+with location header of updated resource and as body the new state.
 parameter: new_state - string
 optional parameter: attributes - JSON encoded object
+Example result:
+{
+    "attributes": {
+        "next_rising": "07:04:15 29-10-2013",
+        "next_setting": "18:00:31 29-10-2013"
+    },
+    "category": "weather.sun",
+    "last_changed": "23:24:33 28-10-2013",
+    "state": "below_horizon"
+}
 
 /api/events/<event_type> - POST
 Fires an event with event_type
@@ -75,6 +85,7 @@ HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
+HTTP_UNPROCESSABLE_ENTITY = 422
 
 URL_ROOT = "/"
 
@@ -308,19 +319,18 @@ class RequestHandler(BaseHTTPRequestHandler):
     # pylint: disable=unused-argument
     def _handle_get_states_category(self, path_match, data):
         """ Returns the state of a specific category. """
-        try:
-            category = path_match.group('category')
+        category = path_match.group('category')
 
-            state = self.server.statemachine.get_state(category)
+        state = self.server.statemachine.get_state(category)
 
+        if state:
             state['category'] = category
 
             self._write_json(state)
 
-        except KeyError:
-            # If category or new_state don't exist in post data
-            self._message("Invalid state received.", HTTP_BAD_REQUEST)
-
+        else:
+            # If category does not exist
+            self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)
 
     def _handle_post_states_category(self, path_match, data):
         """ Handles updating the state of a category. """
@@ -335,22 +345,28 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # Happens if key 'attributes' does not exist
                 attributes = None
 
+            # Write state
             self.server.statemachine.set_state(category,
                                                new_state,
                                                attributes)
 
-            self._redirect("/states/{}".format(category),
-                           "State changed: {}={}".format(category, new_state),
-                           HTTP_CREATED)
+            # Return state
+            state = self.server.statemachine.get_state(category)
+
+            state['category'] = category
+
+            self._write_json(state, status_code=HTTP_CREATED,
+                             location=URL_STATES_CATEGORY.format(category))
 
         except KeyError:
-            # If category or new_state don't exist in post data
-            self._message("Invalid parameters received.",
+            # If new_state don't exist in post data
+            self._message("No new_state submitted.",
                                                 HTTP_BAD_REQUEST)
 
         except ValueError:
             # Occurs during error parsing json
-            self._message("Invalid JSON for attributes", HTTP_BAD_REQUEST)
+            self._message("Invalid JSON for attributes",
+                                                HTTP_UNPROCESSABLE_ENTITY)
 
     def _handle_post_events_event_type(self, path_match, data):
         """ Handles firing of an event. """
@@ -369,31 +385,32 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         except ValueError:
             # Occurs during error parsing json
-            self._message("Invalid JSON for event_data", HTTP_BAD_REQUEST)
+            self._message("Invalid JSON for event_data",
+                                                    HTTP_UNPROCESSABLE_ENTITY)
 
     def _message(self, message, status_code=HTTP_OK):
         """ Helper method to return a message to the caller. """
         if self.use_json:
             self._write_json({'message': message}, status_code=status_code)
         else:
-            self._redirect('/', message)
-
-    def _redirect(self, location, message=None,
-                  status_code=HTTP_MOVED_PERMANENTLY):
-        """ Helper method to redirect caller. """
-        # Only save as flash message if we will go to debug interface next
-        if not self.use_json and message:
             self.server.flash_message = message
+            self._redirect('/')
 
-        self.send_response(status_code)
+    def _redirect(self, location):
+        """ Helper method to redirect caller. """
+        self.send_response(HTTP_MOVED_PERMANENTLY)
         self.send_header("Location", "{}?api_password={}".
                             format(location, self.server.api_password))
         self.end_headers()
 
-    def _write_json(self, data=None, status_code=HTTP_OK):
+    def _write_json(self, data=None, status_code=HTTP_OK, location=None):
         """ Helper method to return JSON to the caller. """
         self.send_response(status_code)
         self.send_header('Content-type','application/json')
+
+        if location:
+            self.send_header('Location', location)
+
         self.end_headers()
 
         if data:

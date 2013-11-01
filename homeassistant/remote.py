@@ -161,11 +161,20 @@ class StateMachine(ha.StateMachine):
             req = self._call_api(METHOD_GET,
                                  hah.URL_API_STATES_CATEGORY.format(category))
 
-            data = req.json()
+            if req.status_code == 200:
+                data = req.json()
 
-            return ha.create_state(data['state'],
-                            data['attributes'],
-                            ha.str_to_datetime(data['last_changed']))
+                return ha.create_state(data['state'],
+                                data['attributes'],
+                                ha.str_to_datetime(data['last_changed']))
+
+            elif req.status_code == 422:
+                # Category does not exist
+                return None
+
+            else:
+                raise ha.HomeAssistantException(
+                            "Got unexpected result (3): {}.".format(req.text))
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("StateMachine:Error connecting to server")
