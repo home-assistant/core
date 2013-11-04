@@ -71,10 +71,12 @@ import json
 import threading
 import logging
 import re
+import os
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from urlparse import urlparse, parse_qs
 
 import homeassistant as ha
+import homeassistant.util as util
 
 SERVER_PORT = 8123
 
@@ -89,14 +91,13 @@ HTTP_UNPROCESSABLE_ENTITY = 422
 
 URL_ROOT = "/"
 
-URL_STATES_CATEGORY = "/states/{}"
 URL_API_STATES = "/api/states"
 URL_API_STATES_CATEGORY = "/api/states/{}"
 
-URL_EVENTS_EVENT = "/events/{}"
 URL_API_EVENTS = "/api/events"
 URL_API_EVENTS_EVENT = "/api/events/{}"
 
+URL_STATIC = "/static/{}"
 
 class HTTPInterface(threading.Thread):
     """ Provides an HTTP interface for Home Assistant. """
@@ -134,20 +135,29 @@ class HTTPInterface(threading.Thread):
 class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """
 
-    PATHS = [ ('GET', '/', '_handle_get_root'),
+    PATHS = [ # debug interface
+              ('GET', '/', '_handle_get_root'),
 
               # /states
-              ('GET', '/states', '_handle_get_states'),
-              ('GET', re.compile(r'/states/(?P<category>[a-zA-Z\.\_0-9]+)'),
-                                    '_handle_get_states_category'),
-              ('POST', re.compile(r'/states/(?P<category>[a-zA-Z\.\_0-9]+)'),
-                                    '_handle_post_states_category'),
+              ('GET', '/api/states', '_handle_get_api_states'),
+              ('GET',
+               re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
+               '_handle_get_api_states_category'),
+              ('POST',
+               re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
+               '_handle_post_api_states_category'),
 
               # /events
-              ('GET', '/events', '_handle_get_events'),
-              ('POST', re.compile(r'/events/(?P<event_type>\w+)'),
-                                    '_handle_post_events_event_type')
+              ('GET', '/api/events', '_handle_get_api_events'),
+              ('POST', re.compile(r'/api/events/(?P<event_type>\w+)'),
+                                    '_handle_post_api_events_event_type'),
+
+              # Statis files
+              ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9\/]+)'),
+                                    '_handle_get_static')
                 ]
+
+    use_json = False
 
     def _handle_request(self, method): # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
@@ -167,30 +177,25 @@ class RequestHandler(BaseHTTPRequestHandler):
         except KeyError:
             api_password = ''
 
-        # We respond to API requests with JSON
-        # For other requests we respond with html
         if url.path.startswith('/api/'):
-            path = url.path[4:]
-            # pylint: disable=attribute-defined-outside-init
             self.use_json = True
 
-        else:
-            path = url.path
-            # pylint: disable=attribute-defined-outside-init
-            self.use_json = False
-
-
+        # Var to keep track if we found a path that matched a handler but
+        # the method was different
         path_matched_but_not_method = False
+
+        # Var to hold the handler for this path and method if found
         handle_request_method = False
 
-        # Check every url to find matching result
+        # Check every handler to find matching result
         for t_method, t_path, t_handler in RequestHandler.PATHS:
 
             # we either do string-comparison or regular expression matching
             if isinstance(t_path, str):
-                path_match = path == t_path
+                path_match = url.path == t_path
             else:
-                path_match = t_path.match(path) #pylint:disable=maybe-no-member
+                # pylint: disable=maybe-no-member
+                path_match = t_path.match(url.path)
 
 
             if path_match and method == t_method:
@@ -202,9 +207,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                 path_matched_but_not_method = True
 
 
+        # Did we find a handler for the incoming request?
         if handle_request_method:
 
-            if self._verify_api_password(api_password):
+            # Do not enforce api password for static files
+            if handle_request_method == self._handle_get_static or \
+               self._verify_api_password(api_password):
+
                 handle_request_method(path_match, data)
 
         elif path_matched_but_not_method:
@@ -231,7 +240,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         elif self.use_json:
             self._message("API password missing or incorrect.",
                                                             HTTP_UNAUTHORIZED)
-
         else:
             self.send_response(HTTP_OK)
             self.send_header('Content-type','text/html')
@@ -310,12 +318,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         write("</body></html>")
 
     # pylint: disable=unused-argument
-    def _handle_get_states(self, path_match, data):
+    def _handle_get_api_states(self, path_match, data):
         """ Returns the categories which state is being tracked. """
         self._write_json({'categories': self.server.statemachine.categories})
 
     # pylint: disable=unused-argument
-    def _handle_get_states_category(self, path_match, data):
+    def _handle_get_api_states_category(self, path_match, data):
         """ Returns the state of a specific category. """
         category = path_match.group('category')
 
@@ -330,7 +338,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             # If category does not exist
             self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)
 
-    def _handle_post_states_category(self, path_match, data):
+    # pylint: disable=invalid-name
+    def _handle_post_api_states_category(self, path_match, data):
         """ Handles updating the state of a category. """
         try:
             category = path_match.group('category')
@@ -348,13 +357,17 @@ class RequestHandler(BaseHTTPRequestHandler):
                                                new_state,
                                                attributes)
 
-            # Return state
-            state = self.server.statemachine.get_state(category)
+            # Return state if json, else redirect to main page
+            if self.use_json:
+                state = self.server.statemachine.get_state(category)
 
-            state['category'] = category
+                state['category'] = category
 
-            self._write_json(state, status_code=HTTP_CREATED,
-                             location=URL_STATES_CATEGORY.format(category))
+                self._write_json(state, status_code=HTTP_CREATED,
+                            location=URL_API_STATES_CATEGORY.format(category))
+            else:
+                self._message("State of {} changed to {}".format(
+                                                        category, new_state))
 
         except KeyError:
             # If new_state don't exist in post data
@@ -366,11 +379,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._message("Invalid JSON for attributes",
                                                 HTTP_UNPROCESSABLE_ENTITY)
 
-    def _handle_get_events(self, path_match, data):
+    def _handle_get_api_events(self, path_match, data):
         """ Handles getting overview of event listeners. """
         self._write_json({'listeners': self.server.eventbus.listeners})
 
-    def _handle_post_events_event_type(self, path_match, data):
+    # pylint: disable=invalid-name
+    def _handle_post_api_events_event_type(self, path_match, data):
         """ Handles firing of an event. """
         event_type = path_match.group('event_type')
 
@@ -389,6 +403,28 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Occurs during error parsing json
             self._message("Invalid JSON for event_data",
                                                     HTTP_UNPROCESSABLE_ENTITY)
+
+    def _handle_get_static(self, path_match, data):
+        """ Returns a static file. """
+        req_file = util.sanitize_filename(path_match.group('file'))
+
+        path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
+
+        if os.path.isfile(path):
+            self.send_response(HTTP_OK)
+            self.end_headers()
+
+            with open(path, 'rb') as inp:
+                data = inp.read(1024)
+
+                while data:
+                    self.wfile.write(data)
+
+                    data = inp.read(1024)
+
+        else:
+            self.send_response(HTTP_NOT_FOUND)
+            self.end_headers()
 
     def _message(self, message, status_code=HTTP_OK):
         """ Helper method to return a message to the caller. """

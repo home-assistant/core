@@ -70,17 +70,6 @@ class TestHTTPInterface(unittest.TestCase):
         self.assertNotEqual(without_pw.text, with_pw.text)
 
 
-    def test_debug_state_change(self):
-        """ Test if the debug interface allows us to change a state. """
-        requests.post(
-            _url(hah.URL_STATES_CATEGORY.format("test")),
-                        data={"new_state":"debug_state_change",
-                              "api_password":API_PASSWORD})
-
-        self.assertEqual(self.statemachine.get_state("test")['state'],
-                         "debug_state_change")
-
-
     def test_api_password(self):
         """ Test if we get access denied if we omit or provide
             a wrong api password. """
@@ -173,7 +162,7 @@ class TestHTTPInterface(unittest.TestCase):
         self.eventbus.listen_once("test_event_no_data", listener)
 
         requests.post(
-            _url(hah.URL_EVENTS_EVENT.format("test_event_no_data")),
+            _url(hah.URL_API_EVENTS_EVENT.format("test_event_no_data")),
             data={"api_password":API_PASSWORD})
 
         # Allow the event to take place
@@ -195,7 +184,7 @@ class TestHTTPInterface(unittest.TestCase):
         self.eventbus.listen_once("test_event_with_data", listener)
 
         requests.post(
-            _url(hah.URL_EVENTS_EVENT.format("test_event_with_data")),
+            _url(hah.URL_API_EVENTS_EVENT.format("test_event_with_data")),
             data={"event_data":'{"test": 1}',
                   "api_password":API_PASSWORD})
 
