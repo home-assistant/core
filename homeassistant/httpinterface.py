@@ -90,10 +90,11 @@ HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422
 
 URL_ROOT = "/"
+URL_CHANGE_STATE = "/change_state"
+URL_FIRE_EVENT = "/fire_event"
 
 URL_API_STATES = "/api/states"
 URL_API_STATES_CATEGORY = "/api/states/{}"
-
 URL_API_EVENTS = "/api/events"
 URL_API_EVENTS_EVENT = "/api/events/{}"
 
@@ -137,6 +138,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     PATHS = [ # debug interface
               ('GET', '/', '_handle_get_root'),
+              ('POST', re.compile(r'/change_state'), '_handle_change_state'),
+              ('POST', re.compile(r'/fire_event'), '_handle_fire_event'),
 
               # /states
               ('GET', '/api/states', '_handle_get_api_states'),
@@ -145,12 +148,12 @@ class RequestHandler(BaseHTTPRequestHandler):
                '_handle_get_api_states_category'),
               ('POST',
                re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
-               '_handle_post_api_states_category'),
+               '_handle_change_state'),
 
               # /events
               ('GET', '/api/events', '_handle_get_api_events'),
               ('POST', re.compile(r'/api/events/(?P<event_type>\w+)'),
-                                    '_handle_post_api_events_event_type'),
+                                    '_handle_fire_event'),
 
               # Statis files
               ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9\/]+)'),
@@ -221,7 +224,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         else:
             self.send_response(HTTP_NOT_FOUND)
-
 
     def do_GET(self): # pylint: disable=invalid-name
         """ GET request handler. """
@@ -306,43 +308,50 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         write("</table>")
 
+        # Change state form
+        write(("<br><form method='post' action='/change_state'>"
+               "<input type='hidden' name='api_password' value='{}'>"
+               "<b>Change state:</b><br>"
+               "Category: <input name='category'><br>"
+               "State: <input name='new_state'><br>"
+               "Attributes: <input name='attributes'><br>"
+               "<input type='submit' value='change state'></form>").format(
+               self.server.api_password))
+
         # Describe event bus:
         write(("<table><tr><th>Event</th><th>Listeners</th></tr>"))
 
         for event_type, count in sorted(self.server.eventbus.listeners.items()):
             write("<tr><td>{}</td><td>{}</td></tr>".format(event_type, count))
 
-        # Form to allow firing events
         write("</table>")
+
+        # Form to allow firing events
+        write(("<br><form method='post' action='/fire_event'>"
+               "<input type='hidden' name='api_password' value='{}'>"
+               "<b>Fire event:</b><br>"
+               "Event type: <input name='event_type'><br>"
+               "Event data: <input name='event_data'><br>"
+               "<input type='submit' value='fire event'></form>").format(
+               self.server.api_password))
+
 
         write("</body></html>")
 
-    # pylint: disable=unused-argument
-    def _handle_get_api_states(self, path_match, data):
-        """ Returns the categories which state is being tracked. """
-        self._write_json({'categories': self.server.statemachine.categories})
-
-    # pylint: disable=unused-argument
-    def _handle_get_api_states_category(self, path_match, data):
-        """ Returns the state of a specific category. """
-        category = path_match.group('category')
-
-        state = self.server.statemachine.get_state(category)
-
-        if state:
-            state['category'] = category
-
-            self._write_json(state)
-
-        else:
-            # If category does not exist
-            self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)
-
     # pylint: disable=invalid-name
-    def _handle_post_api_states_category(self, path_match, data):
-        """ Handles updating the state of a category. """
+    def _handle_change_state(self, path_match, data):
+        """ Handles updating the state of a category.
+
+        This handles the following paths:
+        /change_state
+        /api/states/<category>
+        """
         try:
-            category = path_match.group('category')
+            try:
+                category = path_match.group('category')
+            except IndexError:
+                # If group 'category' does not exist in path_match
+                category = data['category'][0]
 
             new_state = data['new_state'][0]
 
@@ -379,16 +388,21 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._message("Invalid JSON for attributes",
                                                 HTTP_UNPROCESSABLE_ENTITY)
 
-    def _handle_get_api_events(self, path_match, data):
-        """ Handles getting overview of event listeners. """
-        self._write_json({'listeners': self.server.eventbus.listeners})
-
     # pylint: disable=invalid-name
-    def _handle_post_api_events_event_type(self, path_match, data):
-        """ Handles firing of an event. """
-        event_type = path_match.group('event_type')
+    def _handle_fire_event(self, path_match, data):
+        """ Handles firing of an event.
 
+        This handles the following paths:
+        /fire_event
+        /api/events/<event_type>
+        """
         try:
+            try:
+                event_type = path_match.group('event_type')
+            except IndexError:
+                # If group event_type does not exist in path_match
+                event_type = data['event_type'][0]
+
             try:
                 event_data = json.loads(data['event_data'][0])
             except KeyError:
@@ -399,10 +413,39 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             self._message("Event {} fired.".format(event_type))
 
+        except KeyError:
+            # Occurs if event_type does not exist in data
+            self._message("No event_type received.", HTTP_BAD_REQUEST)
+
         except ValueError:
             # Occurs during error parsing json
             self._message("Invalid JSON for event_data",
                                                     HTTP_UNPROCESSABLE_ENTITY)
+
+    # pylint: disable=unused-argument
+    def _handle_get_api_states(self, path_match, data):
+        """ Returns the categories which state is being tracked. """
+        self._write_json({'categories': self.server.statemachine.categories})
+
+    # pylint: disable=unused-argument
+    def _handle_get_api_states_category(self, path_match, data):
+        """ Returns the state of a specific category. """
+        category = path_match.group('category')
+
+        state = self.server.statemachine.get_state(category)
+
+        if state:
+            state['category'] = category
+
+            self._write_json(state)
+
+        else:
+            # If category does not exist
+            self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)
+
+    def _handle_get_api_events(self, path_match, data):
+        """ Handles getting overview of event listeners. """
+        self._write_json({'listeners': self.server.eventbus.listeners})
 
     def _handle_get_static(self, path_match, data):
         """ Returns a static file. """
@@ -430,9 +473,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         """ Helper method to return a message to the caller. """
         if self.use_json:
             self._write_json({'message': message}, status_code=status_code)
-        else:
+        elif status_code == HTTP_OK:
             self.server.flash_message = message
             self._redirect('/')
+        else:
+            self.send_error(status_code, message)
 
     def _redirect(self, location):
         """ Helper method to redirect caller. """

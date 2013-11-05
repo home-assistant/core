@@ -85,6 +85,43 @@ class TestHTTPInterface(unittest.TestCase):
         self.assertEqual(req.status_code, 401)
 
 
+    def test_debug_change_state(self):
+        """ Test if we can change a state from the debug interface. """
+        self.statemachine.set_state("test", "not_to_be_set_state")
+
+        requests.post(_url(hah.URL_CHANGE_STATE),
+            data={"category": "test",
+                  "new_state":"debug_state_change2",
+                  "api_password":API_PASSWORD})
+
+        self.assertEqual(self.statemachine.get_state("test")['state'],
+                         "debug_state_change2")
+
+    def test_debug_fire_event(self):
+        """ Test if we can fire an event from the debug interface. """
+        test_value = []
+
+        def listener(event):   # pylint: disable=unused-argument
+            """ Helper method that will verify that our event got called and
+                that test if our data came through. """
+            if "test" in event.data:
+                test_value.append(1)
+
+        self.eventbus.listen_once("test_event_with_data", listener)
+
+        requests.post(
+            _url(hah.URL_FIRE_EVENT),
+            data={"event_type": "test_event_with_data",
+                  "event_data":'{"test": 1}',
+                  "api_password":API_PASSWORD})
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
+
+
+
     def test_api_list_state_categories(self):
         """ Test if the debug interface allows us to list state categories. """
         req = requests.get(_url(hah.URL_API_STATES),
