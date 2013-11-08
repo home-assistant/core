@@ -248,14 +248,27 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
             self.wfile.write((
-                   "<html>"
-                   "<head><title>Home Assistant</title></head>"
-                   "<body>"
-                   "<form action='{}' method='GET'>"
-                   "API password: <input name='api_password' />"
-                   "<input type='submit' value='submit' />"
-                   "</form>"
-                   "</body></html>").format(self.path))
+                "<html>"
+                "<head><title>Home Assistant</title>"
+                "<link rel='stylesheet' type='text/css' "
+                    "href='/static/style.css'>"
+                "<link rel='icon' href='/static/favicon.ico' "
+                    "type='image/x-icon' />"
+                "</head>"
+                "<body>"
+                "<div class='container'>"
+                "<form class='form-signin' action='{}' method='GET'>"
+
+                "<input type='text' class='form-control' name='api_password' "
+                    "placeholder='API Password for Home Assistant' "
+                    "required autofocus>"
+
+                "<button class='btn btn-lg btn-primary btn-block' "
+                    "type='submit'>Enter</button>"
+
+                "</form>"
+                "</div>"
+                "</body></html>").format(self.path))
 
         return False
 
@@ -270,21 +283,39 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         write(("<html>"
-               "<head><title>Home Assistant</title></head>"
-               "<body>"))
+               "<head><title>Home Assistant</title>"
+               "<link rel='stylesheet' type='text/css' "
+                    "href='/static/style.css'>"
+               "<link rel='icon' href='/static/favicon.ico' "
+                    "type='image/x-icon' />"
+               "</head>"
+               "<body>"
+               "<div class='container'>"
+               "<div class='page-header'><h1>Home Assistant</h1></div>"
+               ))
 
         # Flash message support
         if self.server.flash_message:
-            write("<h3>{}</h3>".format(self.server.flash_message))
+            write(("<div class='row'><div class='alert alert-success'>"
+                    "{}</div></div>").format(self.server.flash_message))
 
             self.server.flash_message = None
 
         # Describe state machine:
         categories = []
 
-        write(("<table><tr>"
-               "<th>Name</th><th>State</th>"
-               "<th>Last Changed</th><th>Attributes</th></tr>"))
+        write(("<div class='row'>"
+               "<div class='col-xs-12'>"
+               "<div class='panel panel-primary'>"
+               "<div class='panel-heading'><h2 class='panel-title'>"
+                    "States</h2></div>"
+               "<form method='post' action='/change_state' "
+                    "class='form-change-state'>"
+               "<input type='hidden' name='api_password' value='{}'>"
+               "<table class='table'><tr>"
+               "<th>Category</th><th>State</th>"
+               "<th>Attributes</th><th>Last Changed</th>"
+               "</tr>").format(self.server.api_password))
 
         for category in \
             sorted(self.server.statemachine.categories,
@@ -303,40 +334,83 @@ class RequestHandler(BaseHTTPRequestHandler):
                    "</tr>").
                 format(category,
                        state['state'],
-                       state['last_changed'],
-                       attributes))
+                       attributes,
+                       state['last_changed']))
 
-        write("</table>")
 
         # Change state form
-        write(("<br><form method='post' action='/change_state'>"
-               "<input type='hidden' name='api_password' value='{}'>"
-               "<b>Change state:</b><br>"
-               "Category: <input name='category'><br>"
-               "State: <input name='new_state'><br>"
-               "Attributes: <input name='attributes'><br>"
-               "<input type='submit' value='change state'></form>").format(
-               self.server.api_password))
+        write(("<tr><td><input name='category' class='form-control' "
+                 "placeholder='Category'></td>"
+               "<td><input name='new_state' class='form-control' "
+                 "placeholder='New State'></td>"
+               "<td><textarea rows='3' name='attributes' class='form-control' "
+                 "placeholder='State Attributes (JSON, optional)'>"
+                 "</textarea></td>"
+               "<td><button type='submit' class='btn btn-default'>"
+                    "Set State</button></td></tr>"
+
+               "</table></form></div>"
+
+               "</div></div>"))
+
+
 
         # Describe event bus:
-        write(("<table><tr><th>Event</th><th>Listeners</th></tr>"))
+        write(("<div class='row'>"
+               "<div class='col-xs-6'>"
+               "<div class='panel panel-primary'>"
+               "<div class='panel-heading'><h2 class='panel-title'>"
+                    "Events</h2></div>"
+               "<table class='table'>"
+               "<tr><th>Event Type</th><th>Listeners</th></tr>"))
 
         for event_type, count in sorted(self.server.eventbus.listeners.items()):
             write("<tr><td>{}</td><td>{}</td></tr>".format(event_type, count))
 
-        write("</table>")
+        write(( "</table></div></div>"
 
-        # Form to allow firing events
-        write(("<br><form method='post' action='/fire_event'>"
-               "<input type='hidden' name='api_password' value='{}'>"
-               "<b>Fire event:</b><br>"
-               "Event type: <input name='event_type'><br>"
-               "Event data: <input name='event_data'><br>"
-               "<input type='submit' value='fire event'></form>").format(
-               self.server.api_password))
+                "<div class='col-xs-6'>"
+               "<div class='panel panel-primary'>"
+               "<div class='panel-heading'><h2 class='panel-title'>"
+                    "Fire Event</h2></div>"
+                "<div class='panel-body'>"
+                "<form method='post' action='/fire_event' "
+                    "class='form-horizontal form-fire-event'>"
+                "<input type='hidden' name='api_password' value='{}'>"
+
+                "<div class='form-group'>"
+                  "<label for='event_type' class='col-xs-3 control-label'>"
+                    "Event type</label>"
+                  "<div class='col-xs-9'>"
+                    "<input type='text' class='form-control' id='event_type'"
+                      " name='event_type' placeholder='Event Type'>"
+                  "</div>"
+                "</div>"
 
 
-        write("</body></html>")
+                "<div class='form-group'>"
+                  "<label for='event_data' class='col-xs-3 control-label'>"
+                    "Event data</label>"
+                  "<div class='col-xs-9'>"
+                    "<textarea rows='3' class='form-control' id='event_data'"
+                      " name='event_data' placeholder='Event Data "
+                      "(JSON, optional)'></textarea>"
+                  "</div>"
+                "</div>"
+
+                "<div class='form-group'>"
+                  "<div class='col-xs-offset-3 col-xs-9'>"
+                    "<button type='submit' class='btn btn-default'>"
+                    "Fire Event</button>"
+                  "</div>"
+                "</div>"
+
+                "</form>"
+                "</div></div></div>"
+                "</div>").format(self.server.api_password))
+
+
+        write("</div></body></html>")
 
     # pylint: disable=invalid-name
     def _handle_change_state(self, path_match, data):
@@ -455,6 +529,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if os.path.isfile(path):
             self.send_response(HTTP_OK)
+
+            # TODO: correct header for mime-type and caching
+
             self.end_headers()
 
             with open(path, 'rb') as inp:

@@ -1,0 +1,39 @@
+@import url(//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css);
+
+.panel > form, .panel > form > .table {
+	margin-bottom: 0;
+}
+
+.panel .table {
+	font-size: inherit;
+}
+
+.form-signin {
+  max-width: 330px;
+  margin: 0 auto;
+}
+
+.form-signin .form-control {
+  margin-top: 40px;
+  position: relative;
+  font-size: 16px;
+  height: auto;
+  padding: 10px;
+  margin-bottom: -1px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  text-align: center;
+}
+
+.form-signin .btn-primary {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.form-fire-event {
+	margin-bottom: 0px;
+}
+
+.form-fire-event .form-group:last-child {
+	margin-bottom: 0;
+}
