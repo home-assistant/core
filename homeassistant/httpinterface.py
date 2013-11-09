@@ -152,8 +152,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
               # /events
               ('GET', '/api/events', '_handle_get_api_events'),
-              ('POST', re.compile(r'/api/events/(?P<event_type>\w+)'),
-                                    '_handle_fire_event'),
+              ('POST',
+                re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
+                '_handle_fire_event'),
 
               # Statis files
               ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9\/]+)'),

@@ -87,14 +87,14 @@ class TestHTTPInterface(unittest.TestCase):
 
     def test_debug_change_state(self):
         """ Test if we can change a state from the debug interface. """
-        self.statemachine.set_state("test", "not_to_be_set_state")
+        self.statemachine.set_state("test.test", "not_to_be_set_state")
 
         requests.post(_url(hah.URL_CHANGE_STATE),
-            data={"category": "test",
+            data={"category": "test.test",
                   "new_state":"debug_state_change2",
                   "api_password":API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test")['state'],
+        self.assertEqual(self.statemachine.get_state("test.test")['state'],
                          "debug_state_change2")
 
     def test_debug_fire_event(self):
@@ -159,13 +159,13 @@ class TestHTTPInterface(unittest.TestCase):
     def test_api_state_change(self):
         """ Test if we can change the state of a category that exists. """
 
-        self.statemachine.set_state("test", "not_to_be_set_state")
+        self.statemachine.set_state("test.test", "not_to_be_set_state")
 
-        requests.post(_url(hah.URL_API_STATES_CATEGORY.format("test")),
+        requests.post(_url(hah.URL_API_STATES_CATEGORY.format("test.test")),
             data={"new_state":"debug_state_change2",
                   "api_password":API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test")['state'],
+        self.assertEqual(self.statemachine.get_state("test.test")['state'],
                          "debug_state_change2")
 
     # pylint: disable=invalid-name
@@ -196,10 +196,10 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.eventbus.listen_once("test_event_no_data", listener)
+        self.eventbus.listen_once("test.event_no_data", listener)
 
         requests.post(
-            _url(hah.URL_API_EVENTS_EVENT.format("test_event_no_data")),
+            _url(hah.URL_API_EVENTS_EVENT.format("test.event_no_data")),
             data={"api_password":API_PASSWORD})
 
         # Allow the event to take place
