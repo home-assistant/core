@@ -32,6 +32,8 @@ EVENT_KEYBOARD_VOLUME_UP = "keyboard.volume_up"
 EVENT_KEYBOARD_VOLUME_DOWN = "keyboard.volume_down"
 EVENT_KEYBOARD_VOLUME_MUTE = "keyboard.volume_mute"
 EVENT_KEYBOARD_MEDIA_PLAY_PAUSE = "keyboard.media_play_pause"
+EVENT_KEYBOARD_MEDIA_NEXT_TRACK = "keyboard.media_next_track"
+EVENT_KEYBOARD_MEDIA_PREV_TRACK = "keyboard.media_prev_track"
 
 def _hue_process_transition_time(transition_seconds):
     """ Transition time is in 1/10th seconds
@@ -362,5 +364,11 @@ def setup_media_buttons(eventbus):
 
     eventbus.listen(EVENT_KEYBOARD_MEDIA_PLAY_PAUSE,
       lambda event: keyboard.tap_key(keyboard.media_play_pause_key))
+
+    eventbus.listen(EVENT_KEYBOARD_MEDIA_NEXT_TRACK,
+      lambda event: keyboard.tap_key(keyboard.media_next_track_key))
+
+    eventbus.listen(EVENT_KEYBOARD_MEDIA_PREV_TRACK,
+      lambda event: keyboard.tap_key(keyboard.media_prev_track_key))
 
     return True
