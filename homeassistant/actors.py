@@ -97,11 +97,11 @@ class LightTrigger(object):
 
         start_point = self._time_for_light_before_sun_set()
 
-        def turn_on(light_id):
+        def turn_on(light):
             """ Lambda can keep track of function parameters but not local
             parameters. If we put the lambda directly in the below statement
             only the last light would be turned on.. """
-            return lambda now: self._turn_light_on_before_sunset(light_id)
+            return lambda now: self._turn_light_on_before_sunset(light)
 
         for index, light_id in enumerate(self.light_control.light_ids):
             ha.track_time_change(self.eventbus, turn_on(light_id),
@@ -146,7 +146,7 @@ class LightTrigger(object):
             # if someone would be home?
             # Check this by seeing if current time is later then the point
             # in time when we would start putting the lights on.
-            elif now > start_point and now < self._next_sun_setting():
+            elif start_point < now < self._next_sun_setting():
 
                 # Check for every light if it would be on if someone was home
                 # when the fading in started and turn it on if so

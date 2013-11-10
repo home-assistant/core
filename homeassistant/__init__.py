@@ -42,21 +42,31 @@ def start_home_assistant(eventbus):
             break
 
 def datetime_to_str(dattim):
-    """ Converts datetime to a string format. """
+    """ Converts datetime to a string format.
+
+    @rtype : str
+    """
     return dattim.strftime(DATE_STR_FORMAT)
 
 def str_to_datetime(dt_str):
-    """ Converts a string to a datetime object. """
+    """ Converts a string to a datetime object.
+
+    @rtype: datetime
+    """
     return datetime.strptime(dt_str, DATE_STR_FORMAT)
 
 def ensure_list(parameter):
-    """ Wraps parameter in a list if it is not one and returns it. """
+    """ Wraps parameter in a list if it is not one and returns it.
+
+    @rtype : list
+    """
     return parameter if isinstance(parameter, list) else [parameter]
 
 def matcher(subject, pattern):
     """ Returns True if subject matches the pattern.
 
     Pattern is either a list of allowed subjects or a '*'.
+    @rtype : bool
     """
     return '*' in pattern or subject in pattern
 
@@ -100,7 +110,7 @@ def track_time_change(eventbus, action,
         """ Listens for matching time_changed events. """
         now = str_to_datetime(event.data['now'])
 
-        if  (point_in_time and now > point_in_time) or \
+        if (point_in_time and now > point_in_time) or \
                 (not point_in_time and \
                 matcher(now.year, year) and \
                 matcher(now.month, month) and \

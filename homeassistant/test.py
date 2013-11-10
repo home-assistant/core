@@ -35,7 +35,7 @@ def ensure_homeassistant_started():
         core['statemachine'] = ha.StateMachine(core['eventbus'])
 
         core['eventbus'].listen('test_event', len)
-        core['statemachine'].set_state('test','a_state')
+        core['statemachine'].set_state('test', 'a_state')
 
         hah.HTTPInterface(core['eventbus'], core['statemachine'],
                             API_PASSWORD)

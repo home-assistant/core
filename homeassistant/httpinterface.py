@@ -157,8 +157,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 '_handle_fire_event'),
 
               # Statis files
-              ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9\/]+)'),
-                                    '_handle_get_static')
+              ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
+               '_handle_get_static')
                 ]
 
     use_json = False
