@@ -19,13 +19,16 @@ API_PASSWORD = "test1234"
 
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(hah.SERVER_PORT)
 
+
 def _url(path=""):
     """ Helper method to generate urls. """
     return HTTP_BASE_URL + path
 
-class HAHelper(object): # pylint: disable=too-few-public-methods
+
+class HAHelper(object):  # pylint: disable=too-few-public-methods
     """ Helper class to keep track of current running HA instance. """
     core = None
+
 
 def ensure_homeassistant_started():
     """ Ensures home assistant is started. """
@@ -38,7 +41,7 @@ def ensure_homeassistant_started():
         core['statemachine'].set_state('test', 'a_state')
 
         hah.HTTPInterface(core['eventbus'], core['statemachine'],
-                            API_PASSWORD)
+                          API_PASSWORD)
 
         core['eventbus'].fire(ha.EVENT_START)
 
@@ -48,6 +51,7 @@ def ensure_homeassistant_started():
         HAHelper.core = core
 
     return HAHelper.core['eventbus'], HAHelper.core['statemachine']
+
 
 # pylint: disable=too-many-public-methods
 class TestHTTPInterface(unittest.TestCase):
@@ -63,36 +67,34 @@ class TestHTTPInterface(unittest.TestCase):
             logged in screen. """
 
         with_pw = requests.get(
-                    _url("/?api_password={}".format(API_PASSWORD)))
+            _url("/?api_password={}".format(API_PASSWORD)))
 
         without_pw = requests.get(_url())
 
         self.assertNotEqual(without_pw.text, with_pw.text)
 
-
     def test_api_password(self):
         """ Test if we get access denied if we omit or provide
             a wrong api password. """
         req = requests.get(
-                _url(hah.URL_API_STATES_CATEGORY.format("test")))
+            _url(hah.URL_API_STATES_CATEGORY.format("test")))
 
         self.assertEqual(req.status_code, 401)
 
         req = requests.get(
-                _url(hah.URL_API_STATES_CATEGORY.format("test")),
-                params={"api_password":"not the password"})
+            _url(hah.URL_API_STATES_CATEGORY.format("test")),
+            params={"api_password": "not the password"})
 
         self.assertEqual(req.status_code, 401)
-
 
     def test_debug_change_state(self):
         """ Test if we can change a state from the debug interface. """
         self.statemachine.set_state("test.test", "not_to_be_set_state")
 
         requests.post(_url(hah.URL_CHANGE_STATE),
-            data={"category": "test.test",
-                  "new_state":"debug_state_change2",
-                  "api_password":API_PASSWORD})
+                      data={"category": "test.test",
+                            "new_state": "debug_state_change2",
+                            "api_password": API_PASSWORD})
 
         self.assertEqual(self.statemachine.get_state("test.test")['state'],
                          "debug_state_change2")
@@ -112,32 +114,29 @@ class TestHTTPInterface(unittest.TestCase):
         requests.post(
             _url(hah.URL_FIRE_EVENT),
             data={"event_type": "test_event_with_data",
-                  "event_data":'{"test": 1}',
-                  "api_password":API_PASSWORD})
+                  "event_data": '{"test": 1}',
+                  "api_password": API_PASSWORD})
 
         # Allow the event to take place
         time.sleep(1)
 
         self.assertEqual(len(test_value), 1)
 
-
-
     def test_api_list_state_categories(self):
         """ Test if the debug interface allows us to list state categories. """
         req = requests.get(_url(hah.URL_API_STATES),
-                data={"api_password":API_PASSWORD})
+                           data={"api_password": API_PASSWORD})
 
         data = req.json()
 
         self.assertEqual(self.statemachine.categories,
                          data['categories'])
 
-
     def test_api_get_state(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
-                _url(hah.URL_API_STATES_CATEGORY.format("test")),
-                data={"api_password":API_PASSWORD})
+            _url(hah.URL_API_STATES_CATEGORY.format("test")),
+            data={"api_password": API_PASSWORD})
 
         data = req.json()
 
@@ -151,8 +150,8 @@ class TestHTTPInterface(unittest.TestCase):
     def test_api_get_non_existing_state(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
-                _url(hah.URL_API_STATES_CATEGORY.format("does_not_exist")),
-                params={"api_password":API_PASSWORD})
+            _url(hah.URL_API_STATES_CATEGORY.format("does_not_exist")),
+            params={"api_password": API_PASSWORD})
 
         self.assertEqual(req.status_code, 422)
 
@@ -162,8 +161,8 @@ class TestHTTPInterface(unittest.TestCase):
         self.statemachine.set_state("test.test", "not_to_be_set_state")
 
         requests.post(_url(hah.URL_API_STATES_CATEGORY.format("test.test")),
-            data={"new_state":"debug_state_change2",
-                  "api_password":API_PASSWORD})
+                      data={"new_state": "debug_state_change2",
+                            "api_password": API_PASSWORD})
 
         self.assertEqual(self.statemachine.get_state("test.test")['state'],
                          "debug_state_change2")
@@ -176,13 +175,13 @@ class TestHTTPInterface(unittest.TestCase):
         new_state = "debug_state_change"
 
         req = requests.post(
-                _url(hah.URL_API_STATES_CATEGORY.format(
-                                        "test_category_that_does_not_exist")),
-                data={"new_state": new_state,
-                      "api_password": API_PASSWORD})
+            _url(hah.URL_API_STATES_CATEGORY.format(
+                "test_category_that_does_not_exist")),
+            data={"new_state": new_state,
+                  "api_password": API_PASSWORD})
 
         cur_state = (self.statemachine.
-                       get_state("test_category_that_does_not_exist")['state'])
+                     get_state("test_category_that_does_not_exist")['state'])
 
         self.assertEqual(req.status_code, 201)
         self.assertEqual(cur_state, new_state)
@@ -200,7 +199,7 @@ class TestHTTPInterface(unittest.TestCase):
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test.event_no_data")),
-            data={"api_password":API_PASSWORD})
+            data={"api_password": API_PASSWORD})
 
         # Allow the event to take place
         time.sleep(1)
@@ -222,14 +221,13 @@ class TestHTTPInterface(unittest.TestCase):
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event_with_data")),
-            data={"event_data":'{"test": 1}',
-                  "api_password":API_PASSWORD})
+            data={"event_data": '{"test": 1}',
+                  "api_password": API_PASSWORD})
 
         # Allow the event to take place
         time.sleep(1)
 
         self.assertEqual(len(test_value), 1)
-
 
     # pylint: disable=invalid-name
     def test_api_fire_event_with_invalid_json(self):
@@ -244,9 +242,8 @@ class TestHTTPInterface(unittest.TestCase):
 
         req = requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event")),
-            data={"event_data":'not json',
-                  "api_password":API_PASSWORD})
-
+            data={"event_data": 'not json',
+                  "api_password": API_PASSWORD})
 
         # It shouldn't but if it fires, allow the event to take place
         time.sleep(1)
@@ -257,11 +254,12 @@ class TestHTTPInterface(unittest.TestCase):
     def test_api_get_event_listeners(self):
         """ Test if we can get the list of events being listened for. """
         req = requests.get(_url(hah.URL_API_EVENTS),
-                                        params={"api_password":API_PASSWORD})
+                           params={"api_password": API_PASSWORD})
 
         data = req.json()
 
         self.assertEqual(data['listeners'], self.eventbus.listeners)
+
 
 class TestRemote(unittest.TestCase):
     """ Test the homeassistant.remote module. """
@@ -283,7 +281,6 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(self.statemachine.categories,
                          self.remote_sm.categories)
 
-
     def test_remote_sm_get_state(self):
         """ Test if the debug interface allows us to list state categories. """
         remote_state = self.remote_sm.get_state("test")
@@ -293,7 +290,6 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_state['state'], state['state'])
         self.assertEqual(remote_state['last_changed'], state['last_changed'])
         self.assertEqual(remote_state['attributes'], state['attributes'])
-
 
     def test_remote_sm_get_non_existing_state(self):
         """ Test if the debug interface allows us to list state categories. """

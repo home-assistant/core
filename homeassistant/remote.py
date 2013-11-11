@@ -22,6 +22,7 @@ import homeassistant.httpinterface as hah
 METHOD_GET = "get"
 METHOD_POST = "post"
 
+
 def _setup_call_api(host, port, api_password):
     """ Helper method to setup a call api method. """
     port = port or hah.SERVER_PORT
@@ -68,21 +69,21 @@ class EventBus(ha.EventBus):
 
             else:
                 raise ha.HomeAssistantException(
-                            "Got unexpected result (3): {}.".format(req.text))
+                    "Got unexpected result (3): {}.".format(req.text))
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("EventBus:Error connecting to server")
             raise ha.HomeAssistantException("Error connecting to server")
 
-        except ValueError: # If req.json() can't parse the json
+        except ValueError:  # If req.json() can't parse the json
             self.logger.exception("EventBus:Got unexpected result")
             raise ha.HomeAssistantException(
-                            "Got unexpected result: {}".format(req.text))
+                "Got unexpected result: {}".format(req.text))
 
-        except KeyError: # If not all expected keys are in the returned JSON
+        except KeyError:  # If not all expected keys are in the returned JSON
             self.logger.exception("EventBus:Got unexpected result (2)")
             raise ha.HomeAssistantException(
-                            "Got unexpected result (2): {}".format(req.text))
+                "Got unexpected result (2): {}".format(req.text))
 
     def fire(self, event_type, event_data=None):
         """ Fire an event. """
@@ -96,7 +97,7 @@ class EventBus(ha.EventBus):
 
             if req.status_code != 200:
                 error = "Error firing event: {} - {}".format(
-                            req.status_code, req.text)
+                        req.status_code, req.text)
 
                 self.logger.error("EventBus:{}".format(error))
                 raise ha.HomeAssistantException(error)
@@ -116,6 +117,7 @@ class EventBus(ha.EventBus):
         Will throw NotImplementedError. """
 
         raise NotImplementedError
+
 
 class StateMachine(ha.StateMachine):
     """ Drop-in replacement for a normal statemachine that communicates with a
@@ -143,11 +145,11 @@ class StateMachine(ha.StateMachine):
             self.logger.exception("StateMachine:Error connecting to server")
             return []
 
-        except ValueError: # If req.json() can't parse the json
+        except ValueError:  # If req.json() can't parse the json
             self.logger.exception("StateMachine:Got unexpected result")
             return []
 
-        except KeyError: # If 'categories' key not in parsed json
+        except KeyError:  # If 'categories' key not in parsed json
             self.logger.exception("StateMachine:Got unexpected result (2)")
             return []
 
@@ -170,7 +172,7 @@ class StateMachine(ha.StateMachine):
 
             if req.status_code != 201:
                 error = "Error changing state: {} - {}".format(
-                            req.status_code, req.text)
+                        req.status_code, req.text)
 
                 self.logger.error("StateMachine:{}".format(error))
                 raise ha.HomeAssistantException(error)
@@ -193,9 +195,9 @@ class StateMachine(ha.StateMachine):
             if req.status_code == 200:
                 data = req.json()
 
-                return ha.create_state(data['state'],
-                                data['attributes'],
-                                ha.str_to_datetime(data['last_changed']))
+                return ha.create_state(data['state'], data['attributes'],
+                                       ha.str_to_datetime(
+                                           data['last_changed']))
 
             elif req.status_code == 422:
                 # Category does not exist
@@ -203,18 +205,18 @@ class StateMachine(ha.StateMachine):
 
             else:
                 raise ha.HomeAssistantException(
-                            "Got unexpected result (3): {}.".format(req.text))
+                    "Got unexpected result (3): {}.".format(req.text))
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("StateMachine:Error connecting to server")
             raise ha.HomeAssistantException("Error connecting to server")
 
-        except ValueError: # If req.json() can't parse the json
+        except ValueError:  # If req.json() can't parse the json
             self.logger.exception("StateMachine:Got unexpected result")
             raise ha.HomeAssistantException(
-                            "Got unexpected result: {}".format(req.text))
+                "Got unexpected result: {}".format(req.text))
 
-        except KeyError: # If not all expected keys are in the returned JSON
+        except KeyError:  # If not all expected keys are in the returned JSON
             self.logger.exception("StateMachine:Got unexpected result (2)")
             raise ha.HomeAssistantException(
-                            "Got unexpected result (2): {}".format(req.text))
+                "Got unexpected result (2): {}".format(req.text))

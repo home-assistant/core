@@ -100,6 +100,7 @@ URL_API_EVENTS_EVENT = "/api/events/{}"
 
 URL_STATIC = "/static/{}"
 
+
 class HTTPInterface(threading.Thread):
     """ Provides an HTTP interface for Home Assistant. """
 
@@ -133,37 +134,38 @@ class HTTPInterface(threading.Thread):
 
         self.server.serve_forever()
 
+
 class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """
 
-    PATHS = [ # debug interface
-              ('GET', '/', '_handle_get_root'),
-              ('POST', re.compile(r'/change_state'), '_handle_change_state'),
-              ('POST', re.compile(r'/fire_event'), '_handle_fire_event'),
+    PATHS = [  # debug interface
+        ('GET', '/', '_handle_get_root'),
+        ('POST', re.compile(r'/change_state'), '_handle_change_state'),
+        ('POST', re.compile(r'/fire_event'), '_handle_fire_event'),
 
-              # /states
-              ('GET', '/api/states', '_handle_get_api_states'),
-              ('GET',
-               re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
-               '_handle_get_api_states_category'),
-              ('POST',
-               re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
-               '_handle_change_state'),
+        # /states
+        ('GET', '/api/states', '_handle_get_api_states'),
+        ('GET',
+         re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
+         '_handle_get_api_states_category'),
+        ('POST',
+         re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
+         '_handle_change_state'),
 
-              # /events
-              ('GET', '/api/events', '_handle_get_api_events'),
-              ('POST',
-                re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
-                '_handle_fire_event'),
+        # /events
+        ('GET', '/api/events', '_handle_get_api_events'),
+        ('POST',
+         re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
+         '_handle_fire_event'),
 
-              # Statis files
-              ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
-               '_handle_get_static')
-                ]
+        # Statis files
+        ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
+         '_handle_get_static')
+    ]
 
     use_json = False
 
-    def _handle_request(self, method): # pylint: disable=too-many-branches
+    def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
 
@@ -201,7 +203,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # pylint: disable=maybe-no-member
                 path_match = t_path.match(url.path)
 
-
             if path_match and method == t_method:
                 # Call the method
                 handle_request_method = getattr(self, t_handler)
@@ -209,7 +210,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             elif path_match:
                 path_matched_but_not_method = True
-
 
         # Did we find a handler for the incoming request?
         if handle_request_method:
@@ -226,11 +226,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(HTTP_NOT_FOUND)
 
-    def do_GET(self): # pylint: disable=invalid-name
+    def do_GET(self):  # pylint: disable=invalid-name
         """ GET request handler. """
         self._handle_request('GET')
 
-    def do_POST(self): # pylint: disable=invalid-name
+    def do_POST(self):  # pylint: disable=invalid-name
         """ POST request handler. """
         self._handle_request('POST')
 
@@ -241,11 +241,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             return True
 
         elif self.use_json:
-            self._message("API password missing or incorrect.",
-                                                            HTTP_UNAUTHORIZED)
+            self._message(
+                "API password missing or incorrect.", HTTP_UNAUTHORIZED)
+
         else:
             self.send_response(HTTP_OK)
-            self.send_header('Content-type','text/html')
+            self.send_header('Content-type', 'text/html')
             self.end_headers()
 
             self.wfile.write((
@@ -280,7 +281,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         write = lambda txt: self.wfile.write(txt+"\n")
 
         self.send_response(HTTP_OK)
-        self.send_header('Content-type','text/html')
+        self.send_header('Content-type', 'text/html')
         self.end_headers()
 
         write(("<html>"
@@ -297,8 +298,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Flash message support
         if self.server.flash_message:
-            write(("<div class='row'><div class='alert alert-success'>"
-                    "{}</div></div>").format(self.server.flash_message))
+            write(("<div class='row'><div class='col-xs-12'>"
+                   "<div class='alert alert-success'>"
+                    "{}</div></div></div>").format(self.server.flash_message))
 
             self.server.flash_message = None
 
@@ -320,7 +322,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         for category in \
             sorted(self.server.statemachine.categories,
-                                    key=lambda key: key.lower()):
+                   key=lambda key: key.lower()):
 
             categories.append(category)
 
@@ -332,12 +334,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             write(("<tr>"
                    "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-                   "</tr>").
-                format(category,
-                       state['state'],
-                       attributes,
-                       state['last_changed']))
-
+                   "</tr>").format(
+                  category,
+                  state['state'],
+                  attributes,
+                  state['last_changed']))
 
         # Change state form
         write(("<tr><td><input name='category' class='form-control' "
@@ -354,8 +355,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                "</div></div>"))
 
-
-
         # Describe event bus:
         write(("<div class='row'>"
                "<div class='col-xs-6'>"
@@ -365,51 +364,49 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<table class='table'>"
                "<tr><th>Event Type</th><th>Listeners</th></tr>"))
 
-        for event_type, count in sorted(self.server.eventbus.listeners.items()):
+        for event_type, count in sorted(
+                self.server.eventbus.listeners.items()):
             write("<tr><td>{}</td><td>{}</td></tr>".format(event_type, count))
 
-        write(( "</table></div></div>"
+        write(("</table></div></div>"
 
-                "<div class='col-xs-6'>"
+               "<div class='col-xs-6'>"
                "<div class='panel panel-primary'>"
                "<div class='panel-heading'><h2 class='panel-title'>"
                     "Fire Event</h2></div>"
-                "<div class='panel-body'>"
-                "<form method='post' action='/fire_event' "
-                    "class='form-horizontal form-fire-event'>"
-                "<input type='hidden' name='api_password' value='{}'>"
+               "<div class='panel-body'>"
+               "<form method='post' action='/fire_event' "
+                   "class='form-horizontal form-fire-event'>"
+               "<input type='hidden' name='api_password' value='{}'>"
 
-                "<div class='form-group'>"
-                  "<label for='event_type' class='col-xs-3 control-label'>"
-                    "Event type</label>"
-                  "<div class='col-xs-9'>"
-                    "<input type='text' class='form-control' id='event_type'"
-                      " name='event_type' placeholder='Event Type'>"
-                  "</div>"
-                "</div>"
+               "<div class='form-group'>"
+                 "<label for='event_type' class='col-xs-3 control-label'>"
+                   "Event type</label>"
+                 "<div class='col-xs-9'>"
+                   "<input type='text' class='form-control' id='event_type'"
+                     " name='event_type' placeholder='Event Type'>"
+                 "</div>"
+               "</div>"
 
+               "<div class='form-group'>"
+                 "<label for='event_data' class='col-xs-3 control-label'>"
+                   "Event data</label>"
+                 "<div class='col-xs-9'>"
+                   "<textarea rows='3' class='form-control' id='event_data'"
+                     " name='event_data' placeholder='Event Data "
+                     "(JSON, optional)'></textarea>"
+                 "</div>"
+               "</div>"
 
-                "<div class='form-group'>"
-                  "<label for='event_data' class='col-xs-3 control-label'>"
-                    "Event data</label>"
-                  "<div class='col-xs-9'>"
-                    "<textarea rows='3' class='form-control' id='event_data'"
-                      " name='event_data' placeholder='Event Data "
-                      "(JSON, optional)'></textarea>"
-                  "</div>"
-                "</div>"
-
-                "<div class='form-group'>"
-                  "<div class='col-xs-offset-3 col-xs-9'>"
-                    "<button type='submit' class='btn btn-default'>"
-                    "Fire Event</button>"
-                  "</div>"
-                "</div>"
-
-                "</form>"
-                "</div></div></div>"
-                "</div>").format(self.server.api_password))
-
+               "<div class='form-group'>"
+                 "<div class='col-xs-offset-3 col-xs-9'>"
+                   "<button type='submit' class='btn btn-default'>"
+                   "Fire Event</button>"
+                 "</div>"
+               "</div>"
+               "</form>"
+               "</div></div></div>"
+               "</div>").format(self.server.api_password))
 
         write("</div></body></html>")
 
@@ -448,20 +445,21 @@ class RequestHandler(BaseHTTPRequestHandler):
                 state['category'] = category
 
                 self._write_json(state, status_code=HTTP_CREATED,
-                            location=URL_API_STATES_CATEGORY.format(category))
+                                 location=
+                                 URL_API_STATES_CATEGORY.format(category))
             else:
-                self._message("State of {} changed to {}".format(
-                                                        category, new_state))
+                self._message(
+                    "State of {} changed to {}".format(category, new_state))
 
         except KeyError:
             # If new_state don't exist in post data
-            self._message("No new_state submitted.",
-                                                HTTP_BAD_REQUEST)
+            self._message(
+                "No new_state submitted.", HTTP_BAD_REQUEST)
 
         except ValueError:
             # Occurs during error parsing json
-            self._message("Invalid JSON for attributes",
-                                                HTTP_UNPROCESSABLE_ENTITY)
+            self._message(
+                "Invalid JSON for attributes", HTTP_UNPROCESSABLE_ENTITY)
 
     # pylint: disable=invalid-name
     def _handle_fire_event(self, path_match, data):
@@ -494,8 +492,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         except ValueError:
             # Occurs during error parsing json
-            self._message("Invalid JSON for event_data",
-                                                    HTTP_UNPROCESSABLE_ENTITY)
+            self._message(
+                "Invalid JSON for event_data", HTTP_UNPROCESSABLE_ENTITY)
 
     # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):
@@ -560,14 +558,17 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _redirect(self, location):
         """ Helper method to redirect caller. """
         self.send_response(HTTP_MOVED_PERMANENTLY)
-        self.send_header("Location", "{}?api_password={}".
-                            format(location, self.server.api_password))
+
+        self.send_header(
+            "Location", "{}?api_password={}".format(
+                location, self.server.api_password))
+
         self.end_headers()
 
     def _write_json(self, data=None, status_code=HTTP_OK, location=None):
         """ Helper method to return JSON to the caller. """
         self.send_response(status_code)
-        self.send_header('Content-type','application/json')
+        self.send_header('Content-type', 'application/json')
 
         if location:
             self.send_header('Location', location)

@@ -19,7 +19,7 @@ EVENT_START = "start"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 
-TIMER_INTERVAL = 10 # seconds
+TIMER_INTERVAL = 10  # seconds
 
 # We want to be able to fire every time a minute starts (seconds=0).
 # We want this so other modules can use that to make sure they fire
@@ -27,6 +27,7 @@ TIMER_INTERVAL = 10 # seconds
 assert 60 % TIMER_INTERVAL == 0, "60 % TIMER_INTERVAL should be 0!"
 
 DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
+
 
 def start_home_assistant(eventbus):
     """ Start home assistant. """
@@ -41,12 +42,14 @@ def start_home_assistant(eventbus):
         except KeyboardInterrupt:
             break
 
+
 def datetime_to_str(dattim):
     """ Converts datetime to a string format.
 
     @rtype : str
     """
     return dattim.strftime(DATE_STR_FORMAT)
+
 
 def str_to_datetime(dt_str):
     """ Converts a string to a datetime object.
@@ -55,12 +58,14 @@ def str_to_datetime(dt_str):
     """
     return datetime.strptime(dt_str, DATE_STR_FORMAT)
 
+
 def ensure_list(parameter):
     """ Wraps parameter in a list if it is not one and returns it.
 
     @rtype : list
     """
     return parameter if isinstance(parameter, list) else [parameter]
+
 
 def matcher(subject, pattern):
     """ Returns True if subject matches the pattern.
@@ -70,6 +75,7 @@ def matcher(subject, pattern):
     """
     return '*' in pattern or subject in pattern
 
+
 def create_state(state, attributes=None, last_changed=None):
     """ Creates a new state and initializes defaults where necessary. """
     attributes = attributes or {}
@@ -78,6 +84,7 @@ def create_state(state, attributes=None, last_changed=None):
     return {'state': state,
             'attributes': attributes,
             'last_changed': datetime_to_str(last_changed)}
+
 
 def track_state_change(eventbus, category, from_state, to_state, action):
     """ Helper method to track specific state changes. """
@@ -96,6 +103,7 @@ def track_state_change(eventbus, category, from_state, to_state, action):
 
     eventbus.listen(EVENT_STATE_CHANGED, listener)
 
+
 # pylint: disable=too-many-arguments
 def track_time_change(eventbus, action,
                       year='*', month='*', day='*',
@@ -111,12 +119,12 @@ def track_time_change(eventbus, action,
         now = str_to_datetime(event.data['now'])
 
         if (point_in_time and now > point_in_time) or \
-                (not point_in_time and \
-                matcher(now.year, year) and \
-                matcher(now.month, month) and \
-                matcher(now.day, day) and \
-                matcher(now.hour, hour) and \
-                matcher(now.minute, minute) and \
+           (not point_in_time and
+                matcher(now.year, year) and
+                matcher(now.month, month) and
+                matcher(now.day, day) and
+                matcher(now.hour, hour) and
+                matcher(now.minute, minute) and
                 matcher(now.second, second)):
 
             # point_in_time are exact points in time
@@ -128,7 +136,9 @@ def track_time_change(eventbus, action,
 
     eventbus.listen(EVENT_TIME_CHANGED, listener)
 
+
 Event = namedtuple("Event", ["eventbus", "event_type", "data"])
+
 
 class EventBus(object):
     """ Class that allows code to listen for- and fire events. """
@@ -140,9 +150,9 @@ class EventBus(object):
     @property
     def listeners(self):
         """ List of events that is being listened for. """
-        return { key: len(self._listeners[key])
-                 for key in self._listeners.keys()
-                 if len(self._listeners[key]) > 0 }
+        return {key: len(self._listeners[key])
+                for key in self._listeners.keys()
+                if len(self._listeners[key]) > 0}
 
     def fire(self, event_type, event_data=None):
         """ Fire an event. """
@@ -151,7 +161,7 @@ class EventBus(object):
             event_data = {}
 
         self.logger.info("EventBus:Event {}: {}".format(
-                                                    event_type, event_data))
+                         event_type, event_data))
 
         def run():
             """ Fire listeners for event. """
@@ -160,11 +170,11 @@ class EventBus(object):
             # We do not use itertools.chain() because some listeners might
             # choose to remove themselves as a listener while being executed
             for listener in self._listeners[ALL_EVENTS] + \
-                                  self._listeners[event.event_type]:
+                    self._listeners[event.event_type]:
                 try:
                     listener(event)
 
-                except Exception:  #pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except
                     self.logger.exception("EventBus:Exception in listener")
 
         # We dont want the eventbus to be blocking - run in a thread.
@@ -206,6 +216,7 @@ class EventBus(object):
         except ValueError:
             pass
 
+
 class StateMachine(object):
     """ Helper class that tracks the state of different categories. """
 
@@ -237,14 +248,14 @@ class StateMachine(object):
             old_state = self.states[category]
 
             if old_state['state'] != new_state or \
-                old_state['attributes'] != attributes:
+               old_state['attributes'] != attributes:
 
                 self.states[category] = create_state(new_state, attributes)
 
                 self.eventbus.fire(EVENT_STATE_CHANGED,
-                    {'category':category,
-                     'old_state':old_state,
-                     'new_state':self.states[category]})
+                                   {'category': category,
+                                    'old_state': old_state,
+                                    'new_state': self.states[category]})
 
         self.lock.release()
 
@@ -262,6 +273,7 @@ class StateMachine(object):
         cur_state = self.get_state(category)
 
         return cur_state and cur_state['state'] == state
+
 
 class Timer(threading.Thread):
     """ Timer will sent out an event every TIMER_INTERVAL seconds. """
@@ -290,10 +302,10 @@ class Timer(threading.Thread):
             now = datetime.now()
 
             if now.second % TIMER_INTERVAL > 0 or \
-                                    now.second == last_fired_on_second:
+               now.second == last_fired_on_second:
 
                 slp_seconds = TIMER_INTERVAL - now.second % TIMER_INTERVAL + \
-                                .5 - now.microsecond/1000000.0
+                    .5 - now.microsecond/1000000.0
 
                 time.sleep(slp_seconds)
 
@@ -302,9 +314,8 @@ class Timer(threading.Thread):
             last_fired_on_second = now.second
 
             self.eventbus.fire(EVENT_TIME_CHANGED,
-                                    {'now': datetime_to_str(now)})
+                               {'now': datetime_to_str(now)})
+
 
 class HomeAssistantException(Exception):
     """ General Home Assistant exception occured. """
-
-

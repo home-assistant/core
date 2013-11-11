@@ -52,7 +52,7 @@ def track_sun(eventbus, statemachine, latitude, longitude):
         logger.exception("TrackSun:Error while importing dependency ephem.")
         return False
 
-    sun = ephem.Sun() # pylint: disable=no-member
+    sun = ephem.Sun()  # pylint: disable=no-member
 
     def update_sun_state(now):    # pylint: disable=unused-argument
         """ Method to update the current state of the sun and
@@ -72,23 +72,25 @@ def track_sun(eventbus, statemachine, latitude, longitude):
             new_state = SUN_STATE_BELOW_HORIZON
             next_change = next_rising
 
-        logger.info("Sun:{}. Next change: {}".
-                        format(new_state, next_change.strftime("%H:%M")))
+        logger.info(
+            "Sun:{}. Next change: {}".format(new_state,
+                                             next_change.strftime("%H:%M")))
 
         state_attributes = {
-          STATE_ATTRIBUTE_NEXT_SUN_RISING: ha.datetime_to_str(next_rising),
-          STATE_ATTRIBUTE_NEXT_SUN_SETTING: ha.datetime_to_str(next_setting)
+            STATE_ATTRIBUTE_NEXT_SUN_RISING: ha.datetime_to_str(next_rising),
+            STATE_ATTRIBUTE_NEXT_SUN_SETTING: ha.datetime_to_str(next_setting)
         }
 
         statemachine.set_state(STATE_CATEGORY_SUN, new_state, state_attributes)
 
         # +10 seconds to be sure that the change has occured
         ha.track_time_change(eventbus, update_sun_state,
-                          point_in_time=next_change + timedelta(seconds=10))
+                             point_in_time=next_change + timedelta(seconds=10))
 
     update_sun_state(None)
 
     return True
+
 
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
@@ -142,7 +144,7 @@ class DeviceTracker(object):
                                     suffix = "_{}".format(tries)
 
                                 category = STATE_CATEGORY_DEVICE_FORMAT.format(
-                                            name + suffix)
+                                    name + suffix)
 
                                 if category not in used_categories:
                                     break
@@ -154,18 +156,22 @@ class DeviceTracker(object):
 
                 except KeyError:
                     self.invalid_known_devices_file = False
-                    self.logger.warning(("Invalid {} found. "
+                    self.logger.warning((
+                        "Invalid {} found. "
                         "We won't update it with new found devices.").
                         format(KNOWN_DEVICES_FILE))
 
-        if len(self.device_state_categories()) == 0:
-            self.logger.warning("No devices to track. Please update {}.".
-                                                format(KNOWN_DEVICES_FILE))
-
+        if len(self.device_state_categories) == 0:
+            self.logger.warning(
+                "No devices to track. Please update {}.".format(
+                    KNOWN_DEVICES_FILE))
 
         ha.track_time_change(eventbus,
-          lambda time: self.update_devices(device_scanner.scan_devices()))
+                             lambda time:
+                             self.update_devices(
+                                 device_scanner.scan_devices()))
 
+    @property
     def device_state_categories(self):
         """ Returns a list containing all categories
             that are maintained for devices. """
@@ -195,7 +201,7 @@ class DeviceTracker(object):
         # not show up for 1 scan beacuse of reboot etc
         for device in temp_tracking_devices:
             if (datetime.now() - self.known_devices[device]['last_seen'] >
-                TIME_SPAN_FOR_ERROR_IN_SCANNING):
+               TIME_SPAN_FOR_ERROR_IN_SCANNING):
 
                 self.statemachine.set_state(
                     self.known_devices[device]['category'],
@@ -203,7 +209,7 @@ class DeviceTracker(object):
 
         # Get the currently used statuses
         states_of_devices = [self.statemachine.get_state(category)['state']
-                             for category in self.device_state_categories()]
+                             for category in self.device_state_categories]
 
         # Update the all devices category
         all_devices_state = (DEVICE_STATE_HOME if DEVICE_STATE_HOME
@@ -226,7 +232,8 @@ class DeviceTracker(object):
                     is_new_file = not os.path.isfile(KNOWN_DEVICES_FILE)
 
                     with open(KNOWN_DEVICES_FILE, 'a') as outp:
-                        self.logger.info(("DeviceTracker:Found {} new devices,"
+                        self.logger.info((
+                            "DeviceTracker:Found {} new devices,"
                             " updating {}").format(len(unknown_devices),
                                                    KNOWN_DEVICES_FILE))
 
@@ -237,19 +244,20 @@ class DeviceTracker(object):
 
                         for device in unknown_devices:
                             # See if the device scanner knows the name
-                            temp_name = self.device_scanner.get_device_name(
-                                                                        device)
+                            temp_name = \
+                                self.device_scanner.get_device_name(device)
 
                             name = temp_name if temp_name else "unknown_device"
 
                             writer.writerow((device, name, 0))
-                            self.known_devices[device] = {'name':name,
+                            self.known_devices[device] = {'name': name,
                                                           'track': False}
 
                 except IOError:
-                    self.logger.exception(("DeviceTracker:Error updating {}"
-                        "with {} new devices").format(KNOWN_DEVICES_FILE,
-                                                      len(unknown_devices)))
+                    self.logger.exception((
+                        "DeviceTracker:Error updating {}"
+                        "with {} new devices").format(
+                        KNOWN_DEVICES_FILE, len(unknown_devices)))
 
         self.lock.release()
 
@@ -268,7 +276,7 @@ class TomatoDeviceScanner(object):
                                     data={'_http_id': http_id,
                                           'exec': 'devlist'},
                                     auth=requests.auth.HTTPBasicAuth(
-                                                username, password)).prepare()
+                                        username, password)).prepare()
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
@@ -298,7 +306,6 @@ class TomatoDeviceScanner(object):
         filter_named = [item[0] for item in self.last_results['dhcpd_lease']
                         if item[2] == device]
 
-
         if len(filter_named) == 0 or filter_named[0] == "":
             return None
         else:
@@ -312,7 +319,7 @@ class TomatoDeviceScanner(object):
 
         # if date_updated is None or the date is too old we scan for new data
         if (not self.date_updated or datetime.now() - self.date_updated >
-            TOMATO_MIN_TIME_BETWEEN_SCANS):
+           TOMATO_MIN_TIME_BETWEEN_SCANS):
 
             self.logger.info("Tomato:Scanning")
 
@@ -321,15 +328,16 @@ class TomatoDeviceScanner(object):
 
                 # Calling and parsing the Tomato api here. We only need the
                 # wldev and dhcpd_lease values. For API description see:
-                # http://paulusschoutsen.nl/blog/2013/10/tomato-api-documentation/
+                # http://paulusschoutsen.nl/
+                #   blog/2013/10/tomato-api-documentation/
                 if response.status_code == 200:
 
-                    for param, value in self.parse_api_pattern.findall(
-                                                                response.text):
+                    for param, value in \
+                            self.parse_api_pattern.findall(response.text):
 
                         if param == 'wldev' or param == 'dhcpd_lease':
-                            self.last_results[param] = json.loads(value.
-                                                            replace("'",'"'))
+                            self.last_results[param] = \
+                                json.loads(value.replace("'", '"'))
 
                     self.date_updated = datetime.now()
 
@@ -337,7 +345,8 @@ class TomatoDeviceScanner(object):
 
                 elif response.status_code == 401:
                     # Authentication error
-                    self.logger.exception(("Tomato:Failed to authenticate, "
+                    self.logger.exception((
+                        "Tomato:Failed to authenticate, "
                         "please check your username and password"))
 
                     return False
@@ -345,7 +354,8 @@ class TomatoDeviceScanner(object):
             except requests.exceptions.ConnectionError:
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied
-                self.logger.exception(("Tomato:Failed to connect to the router"
+                self.logger.exception((
+                    "Tomato:Failed to connect to the router"
                     " or invalid http_id supplied"))
 
                 return False
@@ -353,15 +363,15 @@ class TomatoDeviceScanner(object):
             except requests.exceptions.Timeout:
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied
-                self.logger.exception(("Tomato:Connection to the router "
-                    "timed out"))
+                self.logger.exception(
+                    "Tomato:Connection to the router timed out")
 
                 return False
 
             except ValueError:
                 # If json decoder could not parse the response
-                self.logger.exception(("Tomato:Failed to parse response "
-                    "from router"))
+                self.logger.exception(
+                    "Tomato:Failed to parse response from router")
 
                 return False
 

@@ -35,6 +35,7 @@ EVENT_KEYBOARD_MEDIA_PLAY_PAUSE = "keyboard.media_play_pause"
 EVENT_KEYBOARD_MEDIA_NEXT_TRACK = "keyboard.media_next_track"
 EVENT_KEYBOARD_MEDIA_PREV_TRACK = "keyboard.media_prev_track"
 
+
 def _hue_process_transition_time(transition_seconds):
     """ Transition time is in 1/10th seconds
         and cannot exceed MAX_TRANSITION_TIME. """
@@ -56,21 +57,21 @@ class LightTrigger(object):
         self.logger = logging.getLogger(__name__)
 
         # Track home coming of each seperate device
-        for category in device_tracker.device_state_categories():
+        for category in device_tracker.device_state_categories:
             ha.track_state_change(eventbus, category,
-                               DEVICE_STATE_NOT_HOME, DEVICE_STATE_HOME,
-                               self._handle_device_state_change)
+                                  DEVICE_STATE_NOT_HOME, DEVICE_STATE_HOME,
+                                  self._handle_device_state_change)
 
         # Track when all devices are gone to shut down lights
         ha.track_state_change(eventbus, STATE_CATEGORY_ALL_DEVICES,
-                           DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
-                           self._handle_device_state_change)
+                              DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
+                              self._handle_device_state_change)
 
         # Track every time sun rises so we can schedule a time-based
         # pre-sun set event
         ha.track_state_change(eventbus, STATE_CATEGORY_SUN,
-                           SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
-                           self._handle_sun_rising)
+                              SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
+                              self._handle_sun_rising)
 
         # If the sun is already above horizon
         # schedule the time-based pre-sun set event
@@ -107,8 +108,8 @@ class LightTrigger(object):
 
         for index, light_id in enumerate(self.light_control.light_ids):
             ha.track_time_change(self.eventbus, turn_on(light_id),
-                              point_in_time=start_point +
-                                            index * LIGHT_TRANSITION_TIME)
+                                 point_in_time=(start_point +
+                                                index * LIGHT_TRANSITION_TIME))
 
     def _turn_light_on_before_sunset(self, light_id=None):
         """ Helper function to turn on lights slowly if there
@@ -125,11 +126,11 @@ class LightTrigger(object):
 
         light_needed = (not lights_are_on and
                         self.statemachine.is_state(STATE_CATEGORY_SUN,
-                                                  SUN_STATE_BELOW_HORIZON))
+                                                   SUN_STATE_BELOW_HORIZON))
 
         # Specific device came home ?
         if (category != STATE_CATEGORY_ALL_DEVICES and
-            new_state['state'] == DEVICE_STATE_HOME):
+           new_state['state'] == DEVICE_STATE_HOME):
 
             # These variables are needed for the elif check
             now = datetime.now()
@@ -140,7 +141,7 @@ class LightTrigger(object):
 
                 self.logger.info(
                     "Home coming event for {}. Turning lights on".
-                        format(category))
+                    format(category))
 
                 self.light_control.turn_light_on()
 
@@ -162,7 +163,6 @@ class LightTrigger(object):
                         # will all the following then, break.
                         break
 
-
         # Did all devices leave the house?
         elif (category == STATE_CATEGORY_ALL_DEVICES and
               new_state['state'] == DEVICE_STATE_NOT_HOME and lights_are_on):
@@ -176,7 +176,7 @@ class LightTrigger(object):
         state = self.statemachine.get_state(STATE_CATEGORY_SUN)
 
         return ha.str_to_datetime(
-                        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_SETTING])
+            state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_SETTING])
 
     def _time_for_light_before_sun_set(self):
         """ Helper method to calculate the point in time we have to start
@@ -185,7 +185,7 @@ class LightTrigger(object):
         """
 
         return (self._next_sun_setting() -
-            LIGHT_TRANSITION_TIME * len(self.light_control.light_ids))
+                LIGHT_TRANSITION_TIME * len(self.light_control.light_ids))
 
 
 class HueLightControl(object):
@@ -195,8 +195,8 @@ class HueLightControl(object):
         try:
             import phue
         except ImportError:
-            logging.getLogger(__name__).exception(("HueLightControl:"
-                        "Error while importing dependency phue."))
+            logging.getLogger(__name__).exception(
+                "HueLightControl: Error while importing dependency phue.")
 
             self.success_init = False
 
@@ -208,7 +208,6 @@ class HueLightControl(object):
 
         self.success_init = True
 
-
     def is_light_on(self, light_id=None):
         """ Returns if specified or all light are on. """
         if not light_id:
@@ -217,20 +216,18 @@ class HueLightControl(object):
         else:
             return self.bridge.get_light(light_id, 'on')
 
-
     def turn_light_on(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights on. """
         if not light_id:
             light_id = self.light_ids
 
-        command = {'on': True, 'xy': [0.5119, 0.4147], 'bri':164}
+        command = {'on': True, 'xy': [0.5119, 0.4147], 'bri': 164}
 
         if transition_seconds:
-            command['transitiontime'] = _hue_process_transition_time(
-                                                    transition_seconds)
+            command['transitiontime'] = \
+                _hue_process_transition_time(transition_seconds)
 
         self.bridge.set_light(light_id, command)
-
 
     def turn_light_off(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights off. """
@@ -240,8 +237,8 @@ class HueLightControl(object):
         command = {'on': False}
 
         if transition_seconds:
-            command['transitiontime'] = _hue_process_transition_time(
-                                                    transition_seconds)
+            command['transitiontime'] = \
+                _hue_process_transition_time(transition_seconds)
 
         self.bridge.set_light(light_id, command)
 
@@ -307,12 +304,12 @@ def setup_file_downloader(eventbus, download_path):
 
         except requests.exceptions.ConnectionError:
             logger.exception("FileDownloader:ConnectionError occured for {}".
-                format(event.data['url']))
-
+                             format(event.data['url']))
 
     eventbus.listen(EVENT_DOWNLOAD_FILE, download_file)
 
     return True
+
 
 def setup_webbrowser(eventbus):
     """ Listen for browse_url events and open
@@ -321,32 +318,37 @@ def setup_webbrowser(eventbus):
     import webbrowser
 
     eventbus.listen(EVENT_BROWSE_URL,
-      lambda event: webbrowser.open(event.data['url']))
+                    lambda event: webbrowser.open(event.data['url']))
 
     return True
+
 
 def setup_chromecast(eventbus, host):
     """ Listen for chromecast events. """
     from homeassistant.packages import pychromecast
 
     eventbus.listen("start_fireplace",
-      lambda event: pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
+                    lambda event:
+                    pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
 
     eventbus.listen("start_epic_sax",
-      lambda event: pychromecast.play_youtube_video(host, "kxopViU98Xo"))
+                    lambda event:
+                    pychromecast.play_youtube_video(host, "kxopViU98Xo"))
 
     eventbus.listen(EVENT_CHROMECAST_YOUTUBE_VIDEO,
-      lambda event: pychromecast.play_youtube_video(host, event.data['video']))
+                    lambda event:
+                    pychromecast.play_youtube_video(host, event.data['video']))
 
     return True
+
 
 def setup_media_buttons(eventbus):
     """ Listen for keyboard events. """
     try:
         import pykeyboard
     except ImportError:
-        logging.getLogger(__name__).exception(("MediaButtons:"
-                    "Error while importing dependency PyUserInput."))
+        logging.getLogger(__name__).exception(
+            "MediaButtons: Error while importing dependency PyUserInput.")
 
         return False
 
@@ -354,21 +356,27 @@ def setup_media_buttons(eventbus):
     keyboard.special_key_assignment()
 
     eventbus.listen(EVENT_KEYBOARD_VOLUME_UP,
-      lambda event: keyboard.tap_key(keyboard.volume_up_key))
+                    lambda event:
+                    keyboard.tap_key(keyboard.volume_up_key))
 
     eventbus.listen(EVENT_KEYBOARD_VOLUME_DOWN,
-      lambda event: keyboard.tap_key(keyboard.volume_down_key))
+                    lambda event:
+                    keyboard.tap_key(keyboard.volume_down_key))
 
     eventbus.listen(EVENT_KEYBOARD_VOLUME_MUTE,
-      lambda event: keyboard.tap_key(keyboard.volume_mute_key))
+                    lambda event:
+                    keyboard.tap_key(keyboard.volume_mute_key))
 
     eventbus.listen(EVENT_KEYBOARD_MEDIA_PLAY_PAUSE,
-      lambda event: keyboard.tap_key(keyboard.media_play_pause_key))
+                    lambda event:
+                    keyboard.tap_key(keyboard.media_play_pause_key))
 
     eventbus.listen(EVENT_KEYBOARD_MEDIA_NEXT_TRACK,
-      lambda event: keyboard.tap_key(keyboard.media_next_track_key))
+                    lambda event:
+                    keyboard.tap_key(keyboard.media_next_track_key))
 
     eventbus.listen(EVENT_KEYBOARD_MEDIA_PREV_TRACK,
-      lambda event: keyboard.tap_key(keyboard.media_prev_track_key))
+                    lambda event:
+                    keyboard.tap_key(keyboard.media_prev_track_key))
 
     return True
