@@ -15,7 +15,8 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 
 ALL_EVENTS = '*'
-EVENT_START = "start"
+EVENT_HOMEASSISTANT_START = "homeassistant.start"
+EVENT_HOMEASSISTANT_STOP = "homeassistant.stop"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 
@@ -31,13 +32,26 @@ DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
 
 def start_home_assistant(eventbus):
     """ Start home assistant. """
+    request_shutdown = threading.Event()
+
+    def forge_shutdown_listener(request_shutdown):
+        """ Creates a listener for shutdowns.
+        Local variables cannot be referenced but parameters can. """
+        return lambda event: request_shutdown.set()
+
+    eventbus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                         forge_shutdown_listener(request_shutdown))
+
     Timer(eventbus)
 
-    eventbus.fire(EVENT_START)
+    eventbus.fire(EVENT_HOMEASSISTANT_START)
 
     while True:
         try:
             time.sleep(1)
+
+            if request_shutdown.isSet():
+                break
 
         except KeyboardInterrupt:
             break
@@ -284,7 +298,8 @@ class Timer(threading.Thread):
         self.daemon = True
         self.eventbus = eventbus
 
-        eventbus.listen_once(EVENT_START, lambda event: self.start())
+        eventbus.listen_once(EVENT_HOMEASSISTANT_START,
+                             lambda event: self.start())
 
     def run(self):
         """ Start the timer. """

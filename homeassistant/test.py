@@ -43,7 +43,7 @@ def ensure_homeassistant_started():
         hah.HTTPInterface(core['eventbus'], core['statemachine'],
                           API_PASSWORD)
 
-        core['eventbus'].fire(ha.EVENT_START)
+        core['eventbus'].fire(ha.EVENT_HOMEASSISTANT_START)
 
         # Give objects time to startup
         time.sleep(1)
