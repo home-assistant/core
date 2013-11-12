@@ -34,13 +34,8 @@ def start_home_assistant(eventbus):
     """ Start home assistant. """
     request_shutdown = threading.Event()
 
-    def forge_shutdown_listener(request_shutdown):
-        """ Creates a listener for shutdowns.
-        Local variables cannot be referenced but parameters can. """
-        return lambda event: request_shutdown.set()
-
     eventbus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                         forge_shutdown_listener(request_shutdown))
+                         lambda event: request_shutdown.set())
 
     Timer(eventbus)
 
