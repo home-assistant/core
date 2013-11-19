@@ -239,6 +239,19 @@ class StateMachine(object):
         """ List of categories which states are being tracked. """
         return self.states.keys()
 
+    def remove_category(self, category):
+        """ Removes a category from the state machine.
+
+        Returns boolean to indicate if a category was removed. """
+        try:
+            del self.states[category]
+
+            return True
+
+        except KeyError:
+            # if category does not exist
+            return False
+
     def set_state(self, category, new_state, attributes=None):
         """ Set the state of a category, add category if it does not exist.
 
@@ -271,11 +284,13 @@ class StateMachine(object):
     def get_state(self, category):
         """ Returns a dict (state,last_changed, attributes) describing
             the state of the specified category. """
-        if category not in self.states:
-            return None
-        else:
+        try:
             # Make a copy so people won't accidently mutate the state
             return dict(self.states[category])
+
+        except KeyError:
+            # If category does not exist
+            return None
 
     def is_state(self, category, state):
         """ Returns True if category exists and is specified state. """

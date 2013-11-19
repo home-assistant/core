@@ -19,6 +19,8 @@ import requests
 
 import homeassistant as ha
 
+EVENT_DEVICE_TRACKER_RELOAD = "device_tracker.reload_devices_csv"
+
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
 STATE_ATTRIBUTE_NEXT_SUN_SETTING = "next_setting"
@@ -109,74 +111,23 @@ class DeviceTracker(object):
         # Did we encounter a valid known devices file
         self.invalid_known_devices_file = False
 
-        # Read known devices if file exists
-        if os.path.isfile(KNOWN_DEVICES_FILE):
-            with open(KNOWN_DEVICES_FILE) as inp:
-                default_last_seen = datetime(1990, 1, 1)
-
-                # Temp variable to keep track of which categories we use
-                # so we can ensure we have unique categories.
-                used_categories = []
-
-                try:
-                    for row in csv.DictReader(inp):
-                        device = row['device']
-
-                        row['track'] = True if row['track'] == '1' else False
-
-                        # If we track this device setup tracking variables
-                        if row['track']:
-                            row['last_seen'] = default_last_seen
-
-                            # Make sure that each device is mapped
-                            # to a unique category name
-                            name = row['name']
-
-                            if not name:
-                                name = "unnamed_device"
-
-                            tries = 0
-                            suffix = ""
-                            while True:
-                                tries += 1
-
-                                if tries > 1:
-                                    suffix = "_{}".format(tries)
-
-                                category = STATE_CATEGORY_DEVICE_FORMAT.format(
-                                    name + suffix)
-
-                                if category not in used_categories:
-                                    break
-
-                            row['category'] = category
-                            used_categories.append(category)
-
-                        self.known_devices[device] = row
-
-                except KeyError:
-                    self.invalid_known_devices_file = False
-                    self.logger.warning((
-                        "Invalid {} found. "
-                        "We won't update it with new found devices.").
-                        format(KNOWN_DEVICES_FILE))
-
-        if len(self.device_state_categories) == 0:
-            self.logger.warning(
-                "No devices to track. Please update {}.".format(
-                    KNOWN_DEVICES_FILE))
+        self._read_known_devices_file()
 
         ha.track_time_change(eventbus,
                              lambda time:
                              self.update_devices(
                                  device_scanner.scan_devices()))
 
+        eventbus.listen(EVENT_DEVICE_TRACKER_RELOAD,
+                        lambda event: self._read_known_devices_file())
+
     @property
     def device_state_categories(self):
-        """ Returns a list containing all categories
+        """ Returns a set containing all categories
             that are maintained for devices. """
-        return [self.known_devices[device]['category'] for device
-                in self.known_devices if self.known_devices[device]['track']]
+        return set([self.known_devices[device]['category'] for device
+                    in self.known_devices
+                    if self.known_devices[device]['track']])
 
     def update_devices(self, found_devices):
         """ Update device states based on the found devices. """
@@ -260,6 +211,92 @@ class DeviceTracker(object):
                         KNOWN_DEVICES_FILE, len(unknown_devices)))
 
         self.lock.release()
+
+    def _read_known_devices_file(self):
+        """ Parse and process the known devices file. """
+
+        # Read known devices if file exists
+        if os.path.isfile(KNOWN_DEVICES_FILE):
+            self.lock.acquire()
+
+            known_devices = {}
+
+            with open(KNOWN_DEVICES_FILE) as inp:
+                default_last_seen = datetime(1990, 1, 1)
+
+                # Temp variable to keep track of which categories we use
+                # so we can ensure we have unique categories.
+                used_categories = []
+
+                try:
+                    for row in csv.DictReader(inp):
+                        device = row['device']
+
+                        row['track'] = True if row['track'] == '1' else False
+
+                        # If we track this device setup tracking variables
+                        if row['track']:
+                            row['last_seen'] = default_last_seen
+
+                            # Make sure that each device is mapped
+                            # to a unique category name
+                            name = row['name']
+
+                            if not name:
+                                name = "unnamed_device"
+
+                            tries = 0
+                            suffix = ""
+                            while True:
+                                tries += 1
+
+                                if tries > 1:
+                                    suffix = "_{}".format(tries)
+
+                                category = STATE_CATEGORY_DEVICE_FORMAT.format(
+                                    name + suffix)
+
+                                if category not in used_categories:
+                                    break
+
+                            row['category'] = category
+                            used_categories.append(category)
+
+                        known_devices[device] = row
+
+                    if len(known_devices) == 0:
+                        self.logger.warning(
+                            "No devices to track. Please update {}.".format(
+                                KNOWN_DEVICES_FILE))
+
+                    # Remove categories that are no longer maintained
+                    new_categories = set([known_devices[device]['category']
+                                         for device in known_devices
+                                         if known_devices[device]['track']])
+
+                    for category in \
+                            self.device_state_categories - new_categories:
+
+                        print "Removing ", category
+                        self.statemachine.remove_category(category)
+
+                    # File parsed, warnings given if necessary
+                    # categories cleaned up, make it available
+                    self.known_devices = known_devices
+
+                    self.logger.info(
+                        "DeviceTracker:Loaded devices from {}".format(
+                            KNOWN_DEVICES_FILE))
+
+                except KeyError:
+                    self.invalid_known_devices_file = True
+                    self.logger.warning((
+                        "Invalid {} found. "
+                        "We won't update it with new found devices.").
+                        format(KNOWN_DEVICES_FILE))
+
+                finally:
+                    self.lock.release()
 
 
 class TomatoDeviceScanner(object):
