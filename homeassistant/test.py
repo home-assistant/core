@@ -34,23 +34,23 @@ def ensure_homeassistant_started():
     """ Ensures home assistant is started. """
 
     if not HAHelper.core:
-        core = {'eventbus': ha.EventBus()}
-        core['statemachine'] = ha.StateMachine(core['eventbus'])
+        core = {'bus': ha.Bus()}
+        core['statemachine'] = ha.StateMachine(core['bus'])
 
-        core['eventbus'].listen('test_event', len)
+        core['bus'].listen_event('test_event', len)
         core['statemachine'].set_state('test', 'a_state')
 
-        hah.HTTPInterface(core['eventbus'], core['statemachine'],
+        hah.HTTPInterface(core['bus'], core['statemachine'],
                           API_PASSWORD)
 
-        core['eventbus'].fire(ha.EVENT_HOMEASSISTANT_START)
+        core['bus'].fire_event(ha.EVENT_HOMEASSISTANT_START)
 
         # Give objects time to startup
         time.sleep(1)
 
         HAHelper.core = core
 
-    return HAHelper.core['eventbus'], HAHelper.core['statemachine']
+    return HAHelper.core['bus'], HAHelper.core['statemachine']
 
 
 # pylint: disable=too-many-public-methods
@@ -60,7 +60,7 @@ class TestHTTPInterface(unittest.TestCase):
     @classmethod
     def setUpClass(cls):    # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        cls.eventbus, cls.statemachine = ensure_homeassistant_started()
+        cls.bus, cls.statemachine = ensure_homeassistant_started()
 
     def test_debug_interface(self):
         """ Test if we can login by comparing not logged in screen to
@@ -109,7 +109,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        self.eventbus.listen_once("test_event_with_data", listener)
+        self.bus.listen_once_event("test_event_with_data", listener)
 
         requests.post(
             _url(hah.URL_FIRE_EVENT),
@@ -195,7 +195,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.eventbus.listen_once("test.event_no_data", listener)
+        self.bus.listen_once_event("test.event_no_data", listener)
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test.event_no_data")),
@@ -217,7 +217,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        self.eventbus.listen_once("test_event_with_data", listener)
+        self.bus.listen_once_event("test_event_with_data", listener)
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event_with_data")),
@@ -238,7 +238,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.eventbus.listen_once("test_event_with_bad_data", listener)
+        self.bus.listen_once_event("test_event_with_bad_data", listener)
 
         req = requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event")),
@@ -258,7 +258,59 @@ class TestHTTPInterface(unittest.TestCase):
 
         data = req.json()
 
-        self.assertEqual(data['listeners'], self.eventbus.listeners)
+        self.assertEqual(data['event_listeners'], self.bus.event_listeners)
+
+    def test_api_get_services(self):
+        """ Test if we can get a dict describing current services. """
+        req = requests.get(_url(hah.URL_API_SERVICES),
+                           params={"api_password": API_PASSWORD})
+
+        data = req.json()
+
+        self.assertEqual(data['services'], self.bus.services)
+
+    def test_api_call_service_no_data(self):
+        """ Test if the API allows us to call a service. """
+        test_value = []
+
+        def listener(service_call):   # pylint: disable=unused-argument
+            """ Helper method that will verify that our service got called. """
+            test_value.append(1)
+
+        self.bus.register_service("test_domain", "test_service", listener)
+
+        requests.post(
+            _url(hah.URL_API_SERVICES_SERVICE.format(
+                "test_domain", "test_service")),
+            data={"api_password": API_PASSWORD})
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
+
+    def test_api_call_service_with_data(self):
+        """ Test if the API allows us to call a service. """
+        test_value = []
+
+        def listener(service_call):   # pylint: disable=unused-argument
+            """ Helper method that will verify that our service got called and
+                that test if our data came through. """
+            if "test" in service_call.data:
+                test_value.append(1)
+
+        self.bus.register_service("test_domain", "test_service", listener)
+
+        requests.post(
+            _url(hah.URL_API_SERVICES_SERVICE.format(
+                "test_domain", "test_service")),
+            data={"service_data": '{"test": 1}',
+                  "api_password": API_PASSWORD})
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
 
 
 class TestRemote(unittest.TestCase):
@@ -267,10 +319,10 @@ class TestRemote(unittest.TestCase):
     @classmethod
     def setUpClass(cls):    # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        cls.eventbus, cls.statemachine = ensure_homeassistant_started()
+        cls.bus, cls.statemachine = ensure_homeassistant_started()
 
         cls.remote_sm = remote.StateMachine("127.0.0.1", API_PASSWORD)
-        cls.remote_eb = remote.EventBus("127.0.0.1", API_PASSWORD)
+        cls.remote_eb = remote.Bus("127.0.0.1", API_PASSWORD)
         cls.sm_with_remote_eb = ha.StateMachine(cls.remote_eb)
         cls.sm_with_remote_eb.set_state("test", "a_state")
 
@@ -307,20 +359,21 @@ class TestRemote(unittest.TestCase):
 
     def test_remote_eb_listening_for_same(self):
         """ Test if remote EB correctly reports listener overview. """
-        self.assertEqual(self.eventbus.listeners, self.remote_eb.listeners)
+        self.assertEqual(self.bus.event_listeners,
+                         self.remote_eb.event_listeners)
 
    # pylint: disable=invalid-name
     def test_remote_eb_fire_event_with_no_data(self):
-        """ Test if the remote eventbus allows us to fire an event. """
+        """ Test if the remote bus allows us to fire an event. """
         test_value = []
 
         def listener(event):   # pylint: disable=unused-argument
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.eventbus.listen_once("test_event_no_data", listener)
+        self.bus.listen_once_event("test_event_no_data", listener)
 
-        self.remote_eb.fire("test_event_no_data")
+        self.remote_eb.fire_event("test_event_no_data")
 
         # Allow the event to take place
         time.sleep(1)
@@ -329,7 +382,7 @@ class TestRemote(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_remote_eb_fire_event_with_data(self):
-        """ Test if the remote eventbus allows us to fire an event. """
+        """ Test if the remote bus allows us to fire an event. """
         test_value = []
 
         def listener(event):   # pylint: disable=unused-argument
@@ -337,9 +390,46 @@ class TestRemote(unittest.TestCase):
             if event.data["test"] == 1:
                 test_value.append(1)
 
-        self.eventbus.listen_once("test_event_with_data", listener)
+        self.bus.listen_once_event("test_event_with_data", listener)
 
-        self.remote_eb.fire("test_event_with_data", {"test": 1})
+        self.remote_eb.fire_event("test_event_with_data", {"test": 1})
+
+        # Allow the event to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
+
+   # pylint: disable=invalid-name
+    def test_remote_eb_call_service_with_no_data(self):
+        """ Test if the remote bus allows us to fire a service. """
+        test_value = []
+
+        def listener(service_call):   # pylint: disable=unused-argument
+            """ Helper method that will verify our service got called. """
+            test_value.append(1)
+
+        self.bus.register_service("test_domain", "test_service", listener)
+
+        self.remote_eb.call_service("test_domain", "test_service")
+
+        # Allow the service call to take place
+        time.sleep(1)
+
+        self.assertEqual(len(test_value), 1)
+
+    # pylint: disable=invalid-name
+    def test_remote_eb_call_service_with_data(self):
+        """ Test if the remote bus allows us to fire an event. """
+        test_value = []
+
+        def listener(service_call):   # pylint: disable=unused-argument
+            """ Helper method that will verify our service got called. """
+            if service_call.data["test"] == 1:
+                test_value.append(1)
+
+        self.bus.register_service("test_domain", "test_service", listener)
+
+        self.remote_eb.call_service("test_domain", "test_service", {"test": 1})
 
         # Allow the event to take place
         time.sleep(1)
@@ -348,14 +438,14 @@ class TestRemote(unittest.TestCase):
 
     def test_local_sm_with_remote_eb(self):
         """ Test if we get the event if we change a state on a
-        StateMachine connected to a remote eventbus. """
+        StateMachine connected to a remote bus. """
         test_value = []
 
         def listener(event):   # pylint: disable=unused-argument
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.eventbus.listen_once(ha.EVENT_STATE_CHANGED, listener)
+        self.bus.listen_once_event(ha.EVENT_STATE_CHANGED, listener)
 
         self.sm_with_remote_eb.set_state("test", "local sm with remote eb")
 

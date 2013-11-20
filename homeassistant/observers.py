@@ -19,7 +19,8 @@ import requests
 
 import homeassistant as ha
 
-EVENT_DEVICE_TRACKER_RELOAD = "device_tracker.reload_devices_csv"
+DOMAIN_DEVICE_TRACKER = "device_tracker"
+SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
 
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
@@ -44,7 +45,7 @@ TOMATO_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
 
-def track_sun(eventbus, statemachine, latitude, longitude):
+def track_sun(bus, statemachine, latitude, longitude):
     """ Tracks the state of the sun. """
     logger = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ def track_sun(eventbus, statemachine, latitude, longitude):
         statemachine.set_state(STATE_CATEGORY_SUN, new_state, state_attributes)
 
         # +10 seconds to be sure that the change has occured
-        ha.track_time_change(eventbus, update_sun_state,
+        ha.track_time_change(bus, update_sun_state,
                              point_in_time=next_change + timedelta(seconds=10))
 
     update_sun_state(None)
@@ -97,9 +98,9 @@ def track_sun(eventbus, statemachine, latitude, longitude):
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
-    def __init__(self, eventbus, statemachine, device_scanner):
+    def __init__(self, bus, statemachine, device_scanner):
         self.statemachine = statemachine
-        self.eventbus = eventbus
+        self.bus = bus
         self.device_scanner = device_scanner
         self.logger = logging.getLogger(__name__)
 
@@ -113,13 +114,14 @@ class DeviceTracker(object):
 
         self._read_known_devices_file()
 
-        ha.track_time_change(eventbus,
+        ha.track_time_change(bus,
                              lambda time:
                              self.update_devices(
                                  device_scanner.scan_devices()))
 
-        eventbus.listen(EVENT_DEVICE_TRACKER_RELOAD,
-                        lambda event: self._read_known_devices_file())
+        bus.register_service(DOMAIN_DEVICE_TRACKER,
+                             SERVICE_DEVICE_TRACKER_RELOAD,
+                             lambda service: self._read_known_devices_file())
 
     @property
     def device_state_categories(self):

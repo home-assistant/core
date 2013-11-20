@@ -23,17 +23,23 @@ from homeassistant.observers import (
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
-EVENT_DOWNLOAD_FILE = "download_file"
-EVENT_BROWSE_URL = "browse_url"
-EVENT_CHROMECAST_YOUTUBE_VIDEO = "chromecast.play_youtube_video"
-EVENT_TURN_LIGHT_ON = "turn_light_on"
-EVENT_TURN_LIGHT_OFF = "turn_light_off"
-EVENT_KEYBOARD_VOLUME_UP = "keyboard.volume_up"
-EVENT_KEYBOARD_VOLUME_DOWN = "keyboard.volume_down"
-EVENT_KEYBOARD_VOLUME_MUTE = "keyboard.volume_mute"
-EVENT_KEYBOARD_MEDIA_PLAY_PAUSE = "keyboard.media_play_pause"
-EVENT_KEYBOARD_MEDIA_NEXT_TRACK = "keyboard.media_next_track"
-EVENT_KEYBOARD_MEDIA_PREV_TRACK = "keyboard.media_prev_track"
+DOMAIN_DOWNLOADER = "downloader"
+DOMAIN_BROWSER = "browser"
+DOMAIN_CHROMECAST = "chromecast"
+DOMAIN_KEYBOARD = "keyboard"
+DOMAIN_LIGHT_CONTROL = "light_control"
+
+SERVICE_DOWNLOAD_FILE = "download_file"
+SERVICE_BROWSE_URL = "browse_url"
+SERVICE_CHROMECAST_YOUTUBE_VIDEO = "play_youtube_video"
+SERVICE_TURN_LIGHT_ON = "turn_light_on"
+SERVICE_TURN_LIGHT_OFF = "turn_light_off"
+SERVICE_KEYBOARD_VOLUME_UP = "volume_up"
+SERVICE_KEYBOARD_VOLUME_DOWN = "volume_down"
+SERVICE_KEYBOARD_VOLUME_MUTE = "volume_mute"
+SERVICE_KEYBOARD_MEDIA_PLAY_PAUSE = "media_play_pause"
+SERVICE_KEYBOARD_MEDIA_NEXT_TRACK = "media_next_track"
+SERVICE_KEYBOARD_MEDIA_PREV_TRACK = "media_prev_track"
 
 
 def _hue_process_transition_time(transition_seconds):
@@ -49,8 +55,8 @@ class LightTrigger(object):
     """ Class to turn on lights based on state of devices and the sun
         or triggered by light events. """
 
-    def __init__(self, eventbus, statemachine, device_tracker, light_control):
-        self.eventbus = eventbus
+    def __init__(self, bus, statemachine, device_tracker, light_control):
+        self.bus = bus
         self.statemachine = statemachine
         self.light_control = light_control
 
@@ -58,18 +64,18 @@ class LightTrigger(object):
 
         # Track home coming of each seperate device
         for category in device_tracker.device_state_categories:
-            ha.track_state_change(eventbus, category,
+            ha.track_state_change(bus, category,
                                   DEVICE_STATE_NOT_HOME, DEVICE_STATE_HOME,
                                   self._handle_device_state_change)
 
         # Track when all devices are gone to shut down lights
-        ha.track_state_change(eventbus, STATE_CATEGORY_ALL_DEVICES,
+        ha.track_state_change(bus, STATE_CATEGORY_ALL_DEVICES,
                               DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
                               self._handle_device_state_change)
 
         # Track every time sun rises so we can schedule a time-based
         # pre-sun set event
-        ha.track_state_change(eventbus, STATE_CATEGORY_SUN,
+        ha.track_state_change(bus, STATE_CATEGORY_SUN,
                               SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
                               self._handle_sun_rising)
 
@@ -77,20 +83,6 @@ class LightTrigger(object):
         # schedule the time-based pre-sun set event
         if statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_ABOVE_HORIZON):
             self._handle_sun_rising(None, None, None)
-
-        def handle_light_event(event):
-            """ Hande a turn light on or off event. """
-            light_id = event.data.get("light_id", None)
-            transition_seconds = event.data.get("transition_seconds", None)
-
-            if event.event_type == EVENT_TURN_LIGHT_ON:
-                self.light_control.turn_light_on(light_id, transition_seconds)
-            else:
-                self.light_control.turn_light_off(light_id, transition_seconds)
-
-        # Listen for light on and light off events
-        eventbus.listen(EVENT_TURN_LIGHT_ON, handle_light_event)
-        eventbus.listen(EVENT_TURN_LIGHT_OFF, handle_light_event)
 
     # pylint: disable=unused-argument
     def _handle_sun_rising(self, category, old_state, new_state):
@@ -107,7 +99,7 @@ class LightTrigger(object):
             return lambda now: self._turn_light_on_before_sunset(light)
 
         for index, light_id in enumerate(self.light_control.light_ids):
-            ha.track_time_change(self.eventbus, turn_on(light_id),
+            ha.track_time_change(self.bus, turn_on(light_id),
                                  point_in_time=(start_point +
                                                 index * LIGHT_TRANSITION_TIME))
 
@@ -243,7 +235,30 @@ class HueLightControl(object):
         self.bridge.set_light(light_id, command)
 
 
-def setup_file_downloader(eventbus, download_path):
+def setup_light_control_services(bus, light_control):
+    """ Exposes light control via services. """
+
+    def handle_light_event(service):
+        """ Hande a turn light on or off service call. """
+        light_id = service.data.get("light_id", None)
+        transition_seconds = service.data.get("transition_seconds", None)
+
+        if service.service == SERVICE_TURN_LIGHT_ON:
+            light_control.turn_light_on(light_id, transition_seconds)
+        else:
+            light_control.turn_light_off(light_id, transition_seconds)
+
+    # Listen for light on and light off events
+    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON,
+                         handle_light_event)
+
+    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF,
+                         handle_light_event)
+
+    return True
+
+
+def setup_file_downloader(bus, download_path):
     """ Listens for download events to download files. """
 
     logger = logging.getLogger(__name__)
@@ -257,11 +272,11 @@ def setup_file_downloader(eventbus, download_path):
 
         return False
 
-    def download_file(event):
+    def download_file(service):
         """ Downloads file specified in the url. """
 
         try:
-            req = requests.get(event.data['url'], stream=True)
+            req = requests.get(service.data['url'], stream=True)
             if req.status_code == 200:
                 filename = None
 
@@ -273,7 +288,7 @@ def setup_file_downloader(eventbus, download_path):
                         filename = match[0].strip("'\" ")
 
                 if not filename:
-                    filename = os.path.basename(event.data['url']).strip()
+                    filename = os.path.basename(service.data['url']).strip()
 
                 if not filename:
                     filename = "ha_download"
@@ -296,7 +311,7 @@ def setup_file_downloader(eventbus, download_path):
                         break
 
                 logger.info("FileDownloader:{} -> {}".format(
-                            event.data['url'], final_path))
+                            service.data['url'], final_path))
 
                 with open(final_path, 'wb') as fil:
                     for chunk in req.iter_content(1024):
@@ -304,45 +319,47 @@ def setup_file_downloader(eventbus, download_path):
 
         except requests.exceptions.ConnectionError:
             logger.exception("FileDownloader:ConnectionError occured for {}".
-                             format(event.data['url']))
+                             format(service.data['url']))
 
-    eventbus.listen(EVENT_DOWNLOAD_FILE, download_file)
+    bus.register_service(DOMAIN_DOWNLOADER, SERVICE_DOWNLOAD_FILE,
+                         download_file)
 
     return True
 
 
-def setup_webbrowser(eventbus):
+def setup_webbrowser(bus):
     """ Listen for browse_url events and open
         the url in the default webbrowser. """
 
     import webbrowser
 
-    eventbus.listen(EVENT_BROWSE_URL,
-                    lambda event: webbrowser.open(event.data['url']))
+    bus.register_service(DOMAIN_BROWSER, SERVICE_BROWSE_URL,
+                         lambda event: webbrowser.open(event.data['url']))
 
     return True
 
 
-def setup_chromecast(eventbus, host):
+def setup_chromecast(bus, host):
     """ Listen for chromecast events. """
     from homeassistant.packages import pychromecast
 
-    eventbus.listen("start_fireplace",
-                    lambda event:
-                    pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
+    bus.register_service(DOMAIN_CHROMECAST, "start_fireplace",
+                         lambda event:
+                         pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
 
-    eventbus.listen("start_epic_sax",
-                    lambda event:
-                    pychromecast.play_youtube_video(host, "kxopViU98Xo"))
+    bus.register_service(DOMAIN_CHROMECAST, "start_epic_sax",
+                         lambda event:
+                         pychromecast.play_youtube_video(host, "kxopViU98Xo"))
 
-    eventbus.listen(EVENT_CHROMECAST_YOUTUBE_VIDEO,
-                    lambda event:
-                    pychromecast.play_youtube_video(host, event.data['video']))
+    bus.register_service(DOMAIN_CHROMECAST, SERVICE_CHROMECAST_YOUTUBE_VIDEO,
+                         lambda event:
+                         pychromecast.play_youtube_video(host,
+                                                         event.data['video']))
 
     return True
 
 
-def setup_media_buttons(eventbus):
+def setup_media_buttons(bus):
     """ Listen for keyboard events. """
     try:
         import pykeyboard
@@ -355,28 +372,28 @@ def setup_media_buttons(eventbus):
     keyboard = pykeyboard.PyKeyboard()
     keyboard.special_key_assignment()
 
-    eventbus.listen(EVENT_KEYBOARD_VOLUME_UP,
-                    lambda event:
-                    keyboard.tap_key(keyboard.volume_up_key))
+    bus.register_service(DOMAIN_KEYBOARD, SERVICE_KEYBOARD_VOLUME_UP,
+                         lambda event:
+                         keyboard.tap_key(keyboard.volume_up_key))
 
-    eventbus.listen(EVENT_KEYBOARD_VOLUME_DOWN,
-                    lambda event:
-                    keyboard.tap_key(keyboard.volume_down_key))
+    bus.register_service(DOMAIN_KEYBOARD, SERVICE_KEYBOARD_VOLUME_DOWN,
+                         lambda event:
+                         keyboard.tap_key(keyboard.volume_down_key))
 
-    eventbus.listen(EVENT_KEYBOARD_VOLUME_MUTE,
-                    lambda event:
-                    keyboard.tap_key(keyboard.volume_mute_key))
+    bus.register_service(DOMAIN_KEYBOARD, SERVICE_KEYBOARD_VOLUME_MUTE,
+                         lambda event:
+                         keyboard.tap_key(keyboard.volume_mute_key))
 
-    eventbus.listen(EVENT_KEYBOARD_MEDIA_PLAY_PAUSE,
-                    lambda event:
-                    keyboard.tap_key(keyboard.media_play_pause_key))
+    bus.register_service(DOMAIN_KEYBOARD, SERVICE_KEYBOARD_MEDIA_PLAY_PAUSE,
+                         lambda event:
+                         keyboard.tap_key(keyboard.media_play_pause_key))
 
-    eventbus.listen(EVENT_KEYBOARD_MEDIA_NEXT_TRACK,
-                    lambda event:
-                    keyboard.tap_key(keyboard.media_next_track_key))
+    bus.register_service(DOMAIN_KEYBOARD, SERVICE_KEYBOARD_MEDIA_NEXT_TRACK,
+                         lambda event:
+                         keyboard.tap_key(keyboard.media_next_track_key))
 
-    eventbus.listen(EVENT_KEYBOARD_MEDIA_PREV_TRACK,
-                    lambda event:
-                    keyboard.tap_key(keyboard.media_prev_track_key))
+    bus.register_service(DOMAIN_KEYBOARD, SERVICE_KEYBOARD_MEDIA_PREV_TRACK,
+                         lambda event:
+                         keyboard.tap_key(keyboard.media_prev_track_key))
 
     return True

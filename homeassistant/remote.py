@@ -36,28 +36,58 @@ def _setup_call_api(host, port, api_password):
 
         url = urlparse.urljoin(base_url, path)
 
-        if method == METHOD_GET:
-            return requests.get(url, params=data)
-        else:
-            return requests.request(method, url, data=data)
+        try:
+            if method == METHOD_GET:
+                return requests.get(url, params=data)
+            else:
+                return requests.request(method, url, data=data)
+
+        except requests.exceptions.ConnectionError:
+            logging.getLogger(__name__).exception("Error connecting to server")
+            raise ha.HomeAssistantException("Error connecting to server")
 
     return _call_api
 
 
-class EventBus(ha.EventBus):
-    """ Drop-in replacement for a normal eventbus that will forward events to
-    a remote eventbus.
+class Bus(ha.Bus):
+    """ Drop-in replacement for a normal bus that will forward interaction to
+    a remote bus.
     """
 
     def __init__(self, host, api_password, port=None):
-        ha.EventBus.__init__(self)
-
-        self._call_api = _setup_call_api(host, port, api_password)
+        ha.Bus.__init__(self)
 
         self.logger = logging.getLogger(__name__)
 
+        self._call_api = _setup_call_api(host, port, api_password)
+
     @property
-    def listeners(self):
+    def services(self):
+        """ List the available services. """
+        try:
+            req = self._call_api(METHOD_GET, hah.URL_API_SERVICES)
+
+            if req.status_code == 200:
+                data = req.json()
+
+                return data['services']
+
+            else:
+                raise ha.HomeAssistantException(
+                    "Got unexpected result (3): {}.".format(req.text))
+
+        except ValueError:  # If req.json() can't parse the json
+            self.logger.exception("Bus:Got unexpected result")
+            raise ha.HomeAssistantException(
+                "Got unexpected result: {}".format(req.text))
+
+        except KeyError:  # If not all expected keys are in the returned JSON
+            self.logger.exception("Bus:Got unexpected result (2)")
+            raise ha.HomeAssistantException(
+                "Got unexpected result (2): {}".format(req.text))
+
+    @property
+    def event_listeners(self):
         """ List of events that is being listened for. """
         try:
             req = self._call_api(METHOD_GET, hah.URL_API_EVENTS)
@@ -65,54 +95,72 @@ class EventBus(ha.EventBus):
             if req.status_code == 200:
                 data = req.json()
 
-                return data['listeners']
+                return data['event_listeners']
 
             else:
                 raise ha.HomeAssistantException(
                     "Got unexpected result (3): {}.".format(req.text))
 
-        except requests.exceptions.ConnectionError:
-            self.logger.exception("EventBus:Error connecting to server")
-            raise ha.HomeAssistantException("Error connecting to server")
-
         except ValueError:  # If req.json() can't parse the json
-            self.logger.exception("EventBus:Got unexpected result")
+            self.logger.exception("Bus:Got unexpected result")
             raise ha.HomeAssistantException(
                 "Got unexpected result: {}".format(req.text))
 
         except KeyError:  # If not all expected keys are in the returned JSON
-            self.logger.exception("EventBus:Got unexpected result (2)")
+            self.logger.exception("Bus:Got unexpected result (2)")
             raise ha.HomeAssistantException(
                 "Got unexpected result (2): {}".format(req.text))
 
-    def fire(self, event_type, event_data=None):
-        """ Fire an event. """
+    def call_service(self, domain, service, service_data=None):
+        """ Calls a service. """
 
-        data = {'event_data': json.dumps(event_data)} if event_data else None
+        if service_data:
+            data = {'service_data': json.dumps(service_data)}
+        else:
+            data = None
 
-        try:
-            req = self._call_api(METHOD_POST,
-                                 hah.URL_API_EVENTS_EVENT.format(event_type),
-                                 data)
+        req = self._call_api(METHOD_POST,
+                             hah.URL_API_SERVICES_SERVICE.format(
+                                 domain, service),
+                             data)
 
-            if req.status_code != 200:
-                error = "Error firing event: {} - {}".format(
-                        req.status_code, req.text)
+        if req.status_code != 200:
+            error = "Error calling service: {} - {}".format(
+                    req.status_code, req.text)
 
-                self.logger.error("EventBus:{}".format(error))
-                raise ha.HomeAssistantException(error)
+            self.logger.error("Bus:{}".format(error))
+            raise ha.HomeAssistantException(error)
 
-        except requests.exceptions.ConnectionError:
-            self.logger.exception("EventBus:Error connecting to server")
-
-    def listen(self, event_type, listener):
-        """ Not implemented for remote eventbus.
+    def register_service(self, domain, service, service_callback):
+        """ Not implemented for remote bus.
 
         Will throw NotImplementedError. """
         raise NotImplementedError
 
-    def remove_listener(self, event_type, listener):
-        """ Not implemented for remote eventbus.
+    def fire_event(self, event_type, event_data=None):
+        """ Fire an event. """
+
+        data = {'event_data': json.dumps(event_data)} if event_data else None
+
+        req = self._call_api(METHOD_POST,
+                             hah.URL_API_EVENTS_EVENT.format(event_type),
+                             data)
+
+        if req.status_code != 200:
+            error = "Error firing event: {} - {}".format(
+                    req.status_code, req.text)
+
+            self.logger.error("Bus:{}".format(error))
+            raise ha.HomeAssistantException(error)
+
+    def listen_event(self, event_type, listener):
+        """ Not implemented for remote bus.
+
+        Will throw NotImplementedError. """
+        raise NotImplementedError
+
+    def remove_event_listener(self, event_type, listener):
+        """ Not implemented for remote bus.
 
         Will throw NotImplementedError. """
 

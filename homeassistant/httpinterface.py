@@ -97,6 +97,8 @@ URL_API_STATES = "/api/states"
 URL_API_STATES_CATEGORY = "/api/states/{}"
 URL_API_EVENTS = "/api/events"
 URL_API_EVENTS_EVENT = "/api/events/{}"
+URL_API_SERVICES = "/api/services"
+URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
 
 URL_STATIC = "/static/{}"
 
@@ -105,7 +107,7 @@ class HTTPInterface(threading.Thread):
     """ Provides an HTTP interface for Home Assistant. """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, eventbus, statemachine, api_password,
+    def __init__(self, bus, statemachine, api_password,
                  server_port=None, server_host=None):
         threading.Thread.__init__(self)
 
@@ -122,12 +124,12 @@ class HTTPInterface(threading.Thread):
 
         self.server.flash_message = None
         self.server.logger = logging.getLogger(__name__)
-        self.server.eventbus = eventbus
+        self.server.bus = bus
         self.server.statemachine = statemachine
         self.server.api_password = api_password
 
-        eventbus.listen_once(ha.EVENT_HOMEASSISTANT_START,
-                             lambda event: self.start())
+        bus.listen_once_event(ha.EVENT_HOMEASSISTANT_START,
+                              lambda event: self.start())
 
     def run(self):
         """ Start the HTTP interface. """
@@ -143,6 +145,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         ('GET', '/', '_handle_get_root'),
         ('POST', re.compile(r'/change_state'), '_handle_change_state'),
         ('POST', re.compile(r'/fire_event'), '_handle_fire_event'),
+        ('POST', re.compile(r'/call_service'), '_handle_call_service'),
 
         # /states
         ('GET', '/api/states', '_handle_get_api_states'),
@@ -158,6 +161,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         ('POST',
          re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
          '_handle_fire_event'),
+
+        # /services
+        ('GET', '/api/services', '_handle_get_api_services'),
+        ('POST',
+         re.compile((r'/api/services/'
+                     r'(?P<domain>[a-zA-Z\._0-9]+)/'
+                     r'(?P<service>[a-zA-Z\._0-9]+)')),
+         '_handle_call_service'),
 
         # Statis files
         ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
@@ -301,7 +312,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if self.server.flash_message:
             write(("<div class='row'><div class='col-xs-12'>"
                    "<div class='alert alert-success'>"
-                    "{}</div></div></div>").format(self.server.flash_message))
+                   "{}</div></div></div>").format(self.server.flash_message))
 
             self.server.flash_message = None
 
@@ -356,18 +367,82 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                "</div></div>"))
 
-        # Describe event bus:
+        # Describe bus/services:
+        write(("<div class='row'>"
+               "<div class='col-xs-6'>"
+               "<div class='panel panel-primary'>"
+               "<div class='panel-heading'><h2 class='panel-title'>"
+                    "Services</h2></div>"
+               "<table class='table'>"
+               "<tr><th>Domain</th><th>Service</th></tr>"))
+
+        for domain, services in sorted(
+                self.server.bus.services.items()):
+            write("<tr><td>{}</td><td>{}</td></tr>".format(
+                domain, ", ".join(services)))
+
+        write(("</table></div></div>"
+
+               "<div class='col-xs-6'>"
+               "<div class='panel panel-primary'>"
+               "<div class='panel-heading'><h2 class='panel-title'>"
+                    "Call Service</h2></div>"
+               "<div class='panel-body'>"
+               "<form method='post' action='/call_service' "
+                   "class='form-horizontal form-fire-event'>"
+               "<input type='hidden' name='api_password' value='{}'>"
+
+               "<div class='form-group'>"
+                 "<label for='domain' class='col-xs-3 control-label'>"
+                   "Domain</label>"
+                 "<div class='col-xs-9'>"
+                   "<input type='text' class='form-control' id='domain'"
+                     " name='domain' placeholder='Service Domain'>"
+                 "</div>"
+               "</div>"
+
+               "<div class='form-group'>"
+                 "<label for='service' class='col-xs-3 control-label'>"
+                   "Service</label>"
+                 "<div class='col-xs-9'>"
+                   "<input type='text' class='form-control' id='service'"
+                     " name='service' placeholder='Service name'>"
+                 "</div>"
+               "</div>"
+
+               "<div class='form-group'>"
+                 "<label for='service_data' class='col-xs-3 control-label'>"
+                   "Service data</label>"
+                 "<div class='col-xs-9'>"
+                   "<textarea rows='3' class='form-control' id='service_data'"
+                     " name='service_data' placeholder='Service Data "
+                     "(JSON, optional)'></textarea>"
+                 "</div>"
+               "</div>"
+
+               "<div class='form-group'>"
+                 "<div class='col-xs-offset-3 col-xs-9'>"
+                   "<button type='submit' class='btn btn-default'>"
+                   "Call Service</button>"
+                 "</div>"
+               "</div>"
+               "</form>"
+               "</div></div></div>"
+               "</div>").format(self.server.api_password))
+
+        # Describe bus/events:
         write(("<div class='row'>"
                "<div class='col-xs-6'>"
                "<div class='panel panel-primary'>"
                "<div class='panel-heading'><h2 class='panel-title'>"
                     "Events</h2></div>"
                "<table class='table'>"
-               "<tr><th>Event Type</th><th>Listeners</th></tr>"))
+               "<tr><th>Event</th><th>Listeners</th></tr>"))
 
-        for event_type, count in sorted(
-                self.server.eventbus.listeners.items()):
-            write("<tr><td>{}</td><td>{}</td></tr>".format(event_type, count))
+        for event, listener_count in sorted(
+                self.server.bus.event_listeners.items()):
+            write("<tr><td>{}</td><td>{}</td></tr>".format(
+                event, listener_count))
 
         write(("</table></div></div>"
 
@@ -483,7 +558,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # Happens if key 'event_data' does not exist
                 event_data = None
 
-            self.server.eventbus.fire(event_type, event_data)
+            self.server.bus.fire_event(event_type, event_data)
 
             self._message("Event {} fired.".format(event_type))
 
@@ -495,6 +570,41 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Occurs during error parsing json
             self._message(
                 "Invalid JSON for event_data", HTTP_UNPROCESSABLE_ENTITY)
+
+    def _handle_call_service(self, path_match, data):
+        """ Handles calling a service.
+
+        This handles the following paths:
+        /call_service
+        /api/services/<domain>/<service>
+        """
+        try:
+            try:
+                domain = path_match.group('domain')
+                service = path_match.group('service')
+            except IndexError:
+                # If group domain or service does not exist in path_match
+                domain = data['domain'][0]
+                service = data['service'][0]
+
+            try:
+                service_data = json.loads(data['service_data'][0])
+            except KeyError:
+                # Happens if key 'service_data' does not exist
+                service_data = None
+
+            self.server.bus.call_service(domain, service, service_data)
+
+            self._message("Service {}/{} called.".format(domain, service))
+
+        except KeyError:
+            # Occurs if domain or service does not exist in data
+            self._message("No domain or service received.", HTTP_BAD_REQUEST)
+
+        except ValueError:
+            # Occurs during error parsing json
+            self._message(
+                "Invalid JSON for service_data", HTTP_UNPROCESSABLE_ENTITY)
 
     # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):
@@ -519,7 +629,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _handle_get_api_events(self, path_match, data):
         """ Handles getting overview of event listeners. """
-        self._write_json({'listeners': self.server.eventbus.listeners})
+        self._write_json({'event_listeners': self.server.bus.event_listeners})
+
+    def _handle_get_api_services(self, path_match, data):
+        """ Handles getting overview of services. """
+        self._write_json({'services': self.server.bus.services})
 
     def _handle_get_static(self, path_match, data):
         """ Returns a static file. """

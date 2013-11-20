@@ -23,8 +23,8 @@ def from_config_file(config_path):
     config.read(config_path)
 
     # Init core
-    eventbus = ha.EventBus()
-    statemachine = ha.StateMachine(eventbus)
+    bus = ha.Bus()
+    statemachine = ha.StateMachine(bus)
 
     # Init observers
     # Device scanner
@@ -53,7 +53,7 @@ def from_config_file(config_path):
     # Device Tracker
     if device_scanner:
         device_tracker = observers.DeviceTracker(
-            eventbus, statemachine, device_scanner)
+            bus, statemachine, device_scanner)
 
         statusses.append(("Device Tracker", True))
 
@@ -66,7 +66,7 @@ def from_config_file(config_path):
 
         statusses.append(("Weather - Ephem",
                           observers.track_sun(
-                              eventbus, statemachine,
+                              bus, statemachine,
                               config.get("common", "latitude"),
                               config.get("common", "longitude"))))
 
@@ -86,7 +86,9 @@ def from_config_file(config_path):
 
     # Light trigger
     if light_control:
-        actors.LightTrigger(eventbus, statemachine,
+        actors.setup_light_control_services(bus, light_control)
+
+        actors.LightTrigger(bus, statemachine,
                             device_tracker, light_control)
 
         statusses.append(("Light Trigger", True))
@@ -94,22 +96,22 @@ def from_config_file(config_path):
     if config.has_option("chromecast", "host"):
         statusses.append(("Chromecast",
                           actors.setup_chromecast(
-                              eventbus, config.get("chromecast", "host"))))
+                              bus, config.get("chromecast", "host"))))
 
     if config.has_option("downloader", "download_dir"):
         result = actors.setup_file_downloader(
-            eventbus, config.get("downloader", "download_dir"))
+            bus, config.get("downloader", "download_dir"))
 
         statusses.append(("Downloader", result))
 
-    statusses.append(("Webbrowser", actors.setup_webbrowser(eventbus)))
+    statusses.append(("Webbrowser", actors.setup_webbrowser(bus)))
 
-    statusses.append(("Media Buttons", actors.setup_media_buttons(eventbus)))
+    statusses.append(("Media Buttons", actors.setup_media_buttons(bus)))
 
     # Init HTTP interface
     if config.has_option("httpinterface", "api_password"):
         httpinterface.HTTPInterface(
-            eventbus, statemachine,
+            bus, statemachine,
             config.get("httpinterface", "api_password"))
 
         statusses.append(("HTTPInterface", True))
@@ -121,4 +123,4 @@ def from_config_file(config_path):
 
         logger.info("{}: {}".format(component, status))
 
-    ha.start_home_assistant(eventbus)
+    ha.start_home_assistant(bus)

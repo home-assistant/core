@@ -59,6 +59,35 @@ Returns a list of categories for which a state is available
 }
 ```
 
+**/api/events - GET**<br>
+Returns a dict with as keys the events and as value the number of listeners.
+
+```json
+{
+    "event_listeners": {
+      "state_changed": 5,
+      "time_changed": 2
+    }  
+}
+```
+
+**/api/services - GET**<br>
+Returns a dict with as keys the domain and as value a list of published services.
+
+```json
+{
+    "services": {
+      "browser": [
+          "browse_url"
+      ],
+      "keyboard": [
+          "volume_up",
+          "volume_down"
+      ]
+    }  
+}
+```
+
 **/api/states/&lt;category>** - GET<br>
 Returns the current state from a category
 
@@ -98,6 +127,16 @@ optional parameter: event_data - JSON encoded object
 ```json
 {
     "message": "Event download_file fired."
+}
+```
+
+**/api/services/&lt;domain>/&lt;service>** - POST<br>
+Calls a service within a specific domain.<br>
+optional parameter: service_data - JSON encoded object
+
+```json
+{
+    "message": "Service keyboard/volume_up called."
 }
 ```
 
