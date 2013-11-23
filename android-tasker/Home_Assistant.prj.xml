@@ -1,17 +1,8 @@
-<TaskerData sr="" dvi="1" tv="4.1u3m">
-	<Profile sr="prof24" ve="2">
-		<cdate>1381116787665</cdate>
-		<clp>true</clp>
-		<edate>1382062270688</edate>
-		<id>24</id>
-		<mid0>20</mid0>
-		<Event sr="con0" ve="2">
-			<code>411</code>
-			<pri>0</pri>
-		</Event>
-	</Profile>
+<TaskerData sr="" dvi="1" tv="4.2u2m">
+	<dmetric>1080.0,1776.0</dmetric>
 	<Profile sr="prof25" ve="2">
 		<cdate>1380613730755</cdate>
+		<clp>true</clp>
 		<edate>1382769497429</edate>
 		<id>25</id>
 		<mid0>23</mid0>
@@ -67,21 +58,20 @@
 	<Project sr="proj0">
 		<cdate>1381110247781</cdate>
 		<name>Home Assistant</name>
-		<pids>26,24,25,3,5</pids>
-		<scenes>Variable Query,Home Assistant Start</scenes>
-		<tids>8,19,4,14,6,11,13,23,20,22,9,10,16,15,12</tids>
+		<pids>25,5,26,3</pids>
+		<scenes>Home Assistant Start,Variable Query</scenes>
+		<tids>15,20,10,8,19,29,14,24,23,9,12,7,30,35,16,4,31,13,6,22,28,11,32</tids>
 		<Kid sr="Kid">
 			<launchID>12</launchID>
 			<pkg>nl.paulus.homeassistant</pkg>
-			<vnme>1.1</vnme>
-			<vnum>14</vnum>
+			<vnme>1.2</vnme>
+			<vnum>16</vnum>
 		</Kid>
 		<Img sr="icon" ve="2">
 			<nme>cust_animal_penguin</nme>
 		</Img>
 	</Project>
 	<Scene sr="sceneHome Assistant Start">
-		<backColour>-637534208</backColour>
 		<cdate>1381113309678</cdate>
 		<edate>1381162068611</edate>
 		<heightLand>-1</heightLand>
@@ -111,7 +101,6 @@
 			<Int sr="arg3" val="0"/>
 			<Scene sr="arg4">
 				<Scene sr="val">
-					<backColour>0</backColour>
 					<cdate>1381113396824</cdate>
 					<edate>1381113396824</edate>
 					<heightLand>-1</heightLand>
@@ -152,6 +141,16 @@
 						<Int sr="arg6"/>
 						<Int sr="arg7"/>
 					</TextElement>
+					<PropertiesElement sr="props">
+						<Int sr="arg0" val="1"/>
+						<Int sr="arg1" val="0"/>
+						<Str sr="arg2" ve="3">#00000000</Str>
+						<Int sr="arg3" val="0"/>
+						<Str sr="arg4" ve="3">Builtin Item Layout</Str>
+						<Str sr="arg5" ve="3"/>
+						<Img sr="arg6" ve="2"/>
+						<Str sr="arg7" ve="3"/>
+					</PropertiesElement>
 				</Scene>
 			</Scene>
 			<Int sr="arg5" val="1"/>
@@ -244,9 +243,18 @@
 				</Img>
 			</ListElementItem>
 		</ListElement>
+		<PropertiesElement sr="props">
+			<Int sr="arg0" val="1"/>
+			<Int sr="arg1" val="0"/>
+			<Str sr="arg2" ve="3">#DA000000</Str>
+			<Int sr="arg3" val="0"/>
+			<Str sr="arg4" ve="3">Home Assistant Start</Str>
+			<Str sr="arg5" ve="3"/>
+			<Img sr="arg6" ve="2"/>
+			<Str sr="arg7" ve="3"/>
+		</PropertiesElement>
 	</Scene>
 	<Scene sr="sceneVariable Query">
-		<backColour>-16777216</backColour>
 		<cdate>1381112175910</cdate>
 		<edate>1381112254701</edate>
 		<heightLand>-1</heightLand>
@@ -288,6 +296,7 @@
 			<Str sr="arg4" ve="3">#FFFFFFFF</Str>
 			<Int sr="arg5" val="0"/>
 			<Int sr="arg6" val="0"/>
+			<Int sr="arg7" val="1000"/>
 		</EditTextElement>
 		<RectElement sr="elements3">
 			<flags>5</flags>
@@ -321,6 +330,16 @@
 			</Img>
 			<Int sr="arg2" val="255"/>
 		</ImageElement>
+		<PropertiesElement sr="props">
+			<Int sr="arg0" val="1"/>
+			<Int sr="arg1" val="0"/>
+			<Str sr="arg2" ve="3">#FF000000</Str>
+			<Int sr="arg3" val="0"/>
+			<Str sr="arg4" ve="3">Variable Query</Str>
+			<Str sr="arg5" ve="3"/>
+			<Img sr="arg6" ve="2"/>
+			<Str sr="arg7" ve="3"/>
+		</PropertiesElement>
 	</Scene>
 	<Task sr="task10">
 		<cdate>1380613530339</cdate>
@@ -329,7 +348,7 @@
 		<nme>Charging AC</nme>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">Update Charging</Str>
+			<Str sr="arg0" ve="3">_Update Charging</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
 			<Str sr="arg3" ve="3">ac</Str>
@@ -339,18 +358,18 @@
 	</Task>
 	<Task sr="task11">
 		<cdate>1381110672417</cdate>
-		<edate>1383030844501</edate>
+		<edate>1384035370683</edate>
 		<id>11</id>
 		<nme>Open Debug Interface</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>104</code>
-			<Str sr="arg0" ve="3">Http://%HA_HOST:%HA_PORT/?api_password=%HA_API_PASSWORD</Str>
+			<Str sr="arg0" ve="3">http://%HA_HOST:%HA_PORT/?api_password=%HA_API_PASSWORD</Str>
 		</Action>
 	</Task>
 	<Task sr="task12">
 		<cdate>1381113015963</cdate>
-		<edate>1383030888271</edate>
+		<edate>1384219718372</edate>
 		<id>12</id>
 		<nme>Start Screen</nme>
 		<pri>10</pri>
@@ -360,15 +379,16 @@
 			<Int sr="arg1" val="5"/>
 			<Int sr="arg2" val="100"/>
 			<Int sr="arg3" val="100"/>
-			<Int sr="arg4" val="0"/>
+			<Int sr="arg4" val="1"/>
 			<Int sr="arg5" val="0"/>
+			<Int sr="arg6" val="0"/>
 		</Action>
 		<Action sr="act1" ve="3">
 			<code>49</code>
 			<Str sr="arg0" ve="3">Home Assistant Start</Str>
 		</Action>
 		<Img sr="icn" ve="2">
-			<nme>hd_aaa_ext_tiles_small</nme>
+			<nme>cust_animal_penguin</nme>
 		</Img>
 	</Task>
 	<Task sr="task13">
@@ -386,7 +406,7 @@
 	</Task>
 	<Task sr="task14">
 		<cdate>1381114829583</cdate>
-		<edate>1383031605479</edate>
+		<edate>1385172544321</edate>
 		<id>14</id>
 		<nme>API Fire Event</nme>
 		<pri>10</pri>
@@ -403,16 +423,16 @@
 	</Task>
 	<Task sr="task15">
 		<cdate>1380262442154</cdate>
-		<edate>1383030894445</edate>
+		<edate>1385172407910</edate>
 		<id>15</id>
 		<nme>Light On</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Str sr="arg0" ve="3">API Call Service</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
-			<Str sr="arg3" ve="3">turn_light_on</Str>
+			<Str sr="arg3" ve="3">light_control/turn_light_on</Str>
 			<Str sr="arg4" ve="3"/>
 			<Str sr="arg5" ve="3"/>
 		</Action>
@@ -422,16 +442,16 @@
 	</Task>
 	<Task sr="task16">
 		<cdate>1380262442154</cdate>
-		<edate>1383030896170</edate>
+		<edate>1385172575157</edate>
 		<id>16</id>
 		<nme>Start Epic Sax</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Str sr="arg0" ve="3">API Call Service</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
-			<Str sr="arg3" ve="3">start_epic_sax</Str>
+			<Str sr="arg3" ve="3">chromecast/start_epic_sax</Str>
 			<Str sr="arg4" ve="3"/>
 			<Str sr="arg5" ve="3"/>
 		</Action>
@@ -441,11 +461,22 @@
 	</Task>
 	<Task sr="task19">
 		<cdate>1380262442154</cdate>
-		<edate>1383031630485</edate>
+		<edate>1385168742271</edate>
 		<id>19</id>
 		<nme>Update Battery</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
+			<code>547</code>
+			<label>Make sure charging var exist</label>
+			<lhs>%HA_CHARGING</lhs>
+			<op>10</op>
+			<rhs></rhs>
+			<Str sr="arg0" ve="3">%HA_CHARGING</Str>
+			<Str sr="arg1" ve="3">none</Str>
+			<Int sr="arg2" val="0"/>
+			<Int sr="arg3" val="0"/>
+		</Action>
+		<Action sr="act1" ve="3">
 			<code>116</code>
 			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
 			<Str sr="arg1" ve="3">/api/states/%HA_DEVICE_NAME.charging</Str>
@@ -460,12 +491,12 @@ attributes={"battery":%BATT}</Str>
 	</Task>
 	<Task sr="task20">
 		<cdate>1380613530339</cdate>
-		<edate>1383030848142</edate>
+		<edate>1384131240468</edate>
 		<id>20</id>
 		<nme>Charging None</nme>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">Update Charging</Str>
+			<Str sr="arg0" ve="3">_Update Charging</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
 			<Str sr="arg3" ve="3">none</Str>
@@ -480,7 +511,7 @@ attributes={"battery":%BATT}</Str>
 		<nme>Charging Wireless</nme>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">Update Charging</Str>
+			<Str sr="arg0" ve="3">_Update Charging</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
 			<Str sr="arg3" ve="3">wireless</Str>
@@ -495,7 +526,7 @@ attributes={"battery":%BATT}</Str>
 		<nme>Charging USB</nme>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">Update Charging</Str>
+			<Str sr="arg0" ve="3">_Update Charging</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
 			<Str sr="arg3" ve="3">usb</Str>
@@ -503,28 +534,158 @@ attributes={"battery":%BATT}</Str>
 			<Str sr="arg5" ve="3"/>
 		</Action>
 	</Task>
+	<Task sr="task24">
+		<cdate>1381114829583</cdate>
+		<edate>1385171414147</edate>
+		<id>24</id>
+		<nme>API Call Service</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>116</code>
+			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
+			<Str sr="arg1" ve="3">/api/services/%par1</Str>
+			<Str sr="arg2" ve="3">api_password=%HA_API_PASSWORD</Str>
+			<Str sr="arg3" ve="3"/>
+			<Int sr="arg4" val="10"/>
+			<Str sr="arg5" ve="3"/>
+			<Str sr="arg6" ve="3"/>
+		</Action>
+	</Task>
+	<Task sr="task28">
+		<cdate>1384035383644</cdate>
+		<edate>1385172806993</edate>
+		<id>28</id>
+		<nme>Volume Down</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Call Service</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">keyboard/volume_down</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hl_images_rotate_left</nme>
+		</Img>
+	</Task>
+	<Task sr="task29">
+		<cdate>1384035383644</cdate>
+		<edate>1385172552470</edate>
+		<id>29</id>
+		<nme>Play Pause</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Call Service</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">keyboard/media_play_pause</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hl_av_pause</nme>
+		</Img>
+	</Task>
+	<Task sr="task30">
+		<cdate>1384035383644</cdate>
+		<edate>1385172803463</edate>
+		<id>30</id>
+		<nme>Volume Mute Toggle</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Call Service</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">keyboard/volume_mute</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hl_device_access_volume_muted</nme>
+		</Img>
+	</Task>
+	<Task sr="task31">
+		<cdate>1384035383644</cdate>
+		<edate>1385172559562</edate>
+		<id>31</id>
+		<nme>Next Track</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Call Service</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">keyboard/media_next_track</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hl_av_next</nme>
+		</Img>
+	</Task>
+	<Task sr="task32">
+		<cdate>1384035383644</cdate>
+		<edate>1385172567948</edate>
+		<id>32</id>
+		<nme>Prev Track</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Call Service</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">keyboard/media_prev_track</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hl_av_previous</nme>
+		</Img>
+	</Task>
+	<Task sr="task35">
+		<cdate>1381114829583</cdate>
+		<edate>1385171427412</edate>
+		<id>35</id>
+		<nme>API Call Service With Data</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>116</code>
+			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
+			<Str sr="arg1" ve="3">/api/services/%par1</Str>
+			<Str sr="arg2" ve="3">api_password=%HA_API_PASSWORD
+service_data=%par2</Str>
+			<Str sr="arg3" ve="3"/>
+			<Int sr="arg4" val="10"/>
+			<Str sr="arg5" ve="3"/>
+			<Str sr="arg6" ve="3"/>
+		</Action>
+	</Task>
 	<Task sr="task4">
 		<cdate>1380262442154</cdate>
-		<edate>1383030892718</edate>
+		<edate>1385172327711</edate>
 		<id>4</id>
 		<nme>Light Off</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Str sr="arg0" ve="3">API Call Service</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
-			<Str sr="arg3" ve="3">turn_light_off</Str>
+			<Str sr="arg3" ve="3">light_control/turn_light_off</Str>
 			<Str sr="arg4" ve="3"/>
 			<Str sr="arg5" ve="3"/>
 		</Action>
 		<Img sr="icn" ve="2">
-			<nme>hd_device_access_bightness_low</nme>
+			<nme>hl_device_access_bightness_low</nme>
 		</Img>
 	</Task>
 	<Task sr="task6">
 		<cdate>1380522560890</cdate>
-		<edate>1383030900554</edate>
+		<edate>1383958813434</edate>
 		<id>6</id>
 		<nme>Setup</nme>
 		<pri>10</pri>
@@ -630,11 +791,30 @@ attributes={"battery":%BATT}</Str>
 			<nme>hd_ab_action_settings</nme>
 		</Img>
 	</Task>
+	<Task sr="task7">
+		<cdate>1384035383644</cdate>
+		<edate>1385172808590</edate>
+		<id>7</id>
+		<nme>Volume Up</nme>
+		<pri>10</pri>
+		<Action sr="act0" ve="3">
+			<code>130</code>
+			<Str sr="arg0" ve="3">API Call Service</Str>
+			<Int sr="arg1" val="0"/>
+			<Int sr="arg2" val="5"/>
+			<Str sr="arg3" ve="3">keyboard/volume_up</Str>
+			<Str sr="arg4" ve="3"/>
+			<Str sr="arg5" ve="3"/>
+		</Action>
+		<Img sr="icn" ve="2">
+			<nme>hl_images_rotate_right</nme>
+		</Img>
+	</Task>
 	<Task sr="task8">
 		<cdate>1380262442154</cdate>
-		<edate>1383031596400</edate>
+		<edate>1385168720242</edate>
 		<id>8</id>
-		<nme>Update Charging</nme>
+		<nme>_Update Charging</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>547</code>
@@ -655,16 +835,16 @@ attributes={"battery":%BATT}</Str>
 	</Task>
 	<Task sr="task9">
 		<cdate>1380262442154</cdate>
-		<edate>1383030890674</edate>
+		<edate>1385172578142</edate>
 		<id>9</id>
 		<nme>Start Fireplace</nme>
 		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>130</code>
-			<Str sr="arg0" ve="3">API Fire Event</Str>
+			<Str sr="arg0" ve="3">API Call Service</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
-			<Str sr="arg3" ve="3">start_fireplace</Str>
+			<Str sr="arg3" ve="3">chromecast/start_fireplace</Str>
 			<Str sr="arg4" ve="3"/>
 			<Str sr="arg5" ve="3"/>
 		</Action>
