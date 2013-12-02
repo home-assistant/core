@@ -2,8 +2,8 @@
 homeassistant.actors
 ~~~~~~~~~~~~~~~~~~~~
 
-This module provides actors that will react
-to events happening within homeassistant.
+This module provides actors that will react to events happening within
+homeassistant or provide services.
 
 """
 

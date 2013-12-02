@@ -12,7 +12,7 @@ It is currently able to do the following things:
  * Download files to the host
  * Open a url in the default browser on the host
 
-It currently works with any wireless router with [Tomato firmware](http://www.polarcloud.com/tomato) in combination with [Philips Hue](http://meethue.com) and the [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast). The system is built modular so support for other wireless routers, other devices or actions can be implemented easily.
+It currently works with any wireless router running [Tomato firmware](http://www.polarcloud.com/tomato) in combination with [Philips Hue](http://meethue.com) and the [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast). The system is built modular so support for other wireless routers, other devices or actions can be implemented easily.
 
 Installation instructions
 -------------------------
@@ -21,7 +21,7 @@ Installation instructions
 * Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
   * For Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
 * Setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS` from the commandline.
-* The first time the script will start it will create a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script.
+* While running the script it will create and maintain a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script or call the service `device_tracker/reload_devices_csv`.
 
 Done. Start it now by running `python start.py`
 
@@ -29,7 +29,7 @@ Web interface and API
 ---------------------
 Home Assistent runs a webserver accessible on port 8123. 
 
-  * At http://localhost:8123/ it will provide a debug interface showing the current state of the system.
+  * At http://localhost:8123/ it will provide a debug interface showing the current state of the system and an overview of registered services.
   * At http://localhost:8123/api/ it provides a password protected API.
 
 A screenshot of the debug interface:
@@ -146,7 +146,7 @@ Android remote control
 An app has been built using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) that:
 
  * Provides buttons to control the lights and the chromecast
- * Tracks the charging state and battery level for each phone
+ * Reports the charging state and battery level of the phone
 
 The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.apk) and [Tasker project XML](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.prj.xml) can be found in [/android-tasker/](https://github.com/balloob/home-assistant/tree/master/android-tasker)
 
@@ -154,13 +154,13 @@ The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Ho
 
 Architecture
 ------------
-Home Assistent has been built from the ground up with extensibility and modularity in mind. It is easy to swap in a different device tracker that polls another wireless router for example. 
+The core of Home Assistant exists of two components; a Bus for calling services and firing events and a State Machine that keeps track of the state of things.
 
 ![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/architecture.png)
 
-The beating heart of Home Assistant is an event bus. Different modules are able to fire and listen for specific events. On top of this is a state machine that allows modules to track the state of different things. For example each device that is being tracked will have a state of either 'Home' or 'Not Home'. 
+For example to control the lights there are two components. One is the device tracker that polls the wireless router for connected devices and updates the state of the tracked devices in the State Machine to be either 'Home' or 'Not Home'.
 
-This allows us to implement simple business rules to easily customize or extend functionality: 
+When a state is changed a state_changed event is fired for which the light trigger component is listening. Based on the new state of the device combined with the state of the sun it will decide if it should turn the lights on or off:
 
     In the event that the state of device 'Paulus Nexus 4' changes to the 'Home' state:
       If the sun has set and the lights are not on:
@@ -174,7 +174,14 @@ This allows us to implement simple business rules to easily customize or extend 
       If the lights are off and the combined state of all tracked device equals 'Home':
         Turn on the lights
 
-These rules are currently implemented in the file [actors.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/actors.py).
+The light trigger component also registers the service turn_light_on with the Bus. When this is called it will turn on the lights.
+
+By using the Bus as a central communication hub between components it is easy to replace components or add functionality. For example if you would want to change the way devices are detected you only have to write a component that updates the State Machine and you're good to go.
+
+The components have been categorized into two categories: 
+
+ 1 components that observe (implemented in [observers.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/observers.py))
+ 2 components that act on observations or provide services (implemented in [actors.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/actors.py))
 
 ### Supported observers
 
@@ -190,7 +197,7 @@ Depends on: host, username, password and http_id to login to Tomato Router.
 **DeviceTracker**
 Keeps track of which devices are currently home.
 Depends on: a device scanner
-Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `known_devices.csv`.
+Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `known_devices.csv`. Will also provide a service to reload `known_devices.csv`.
 
 ### Supported actors
 
@@ -198,31 +205,32 @@ Action: sets the state per device and maintains a combined state called `all_dev
 A light control for controlling the Philips Hue lights.
 
 **LightTrigger**
-Turns lights on or off using supplied light control based on state of the sun and devices that are home.
+Turns lights on or off using a light control component based on state of the sun and devices that are home.
 Depends on: light control, track_sun, DeviceTracker
 Action: 
  * Turns lights off when all devices leave home. 
  * Turns lights on when a device is home while sun is setting. 
  * Turns lights on when a device gets home after sun set.
 
-Listens for events `turn_light_on` and `turn_light_off`:
-Turn a or all lights on or off
+Registers services `light_control/turn_light_on` and `light_control/turn_light_off` to turn a or all lights on or off.
 
-Optional event_data:
+Optional service data:
   - `light_id` - only act on specific light. Else targets all.
   - `transition_seconds` - seconds to take to swithc to new state.
 
+**media_buttons**
+Registers services that will simulate key presses on the keyboard. It currently offers the following Buttons as a Service (BaaS): `keyboard/volume_up`, `keyboard/volume_down` and `keyboard/media_play_pause`
+This actor depends on: PyUserInput
+
 **file_downloader**
-Listen for `download_file` events to start downloading from the `url` specified in event_data.
+Registers service `downloader/download_file` that will download files. File to download is specified in the `url` field in the service data.
 
 **webbrowser**
-Listen for `browse_url` events and opens a browser with the `url` specified in event_data.
+Registers service `browser/browse_url` that opens `url` as specified in event_data in the system default browser.
 
 **chromecast**
-Listen for `chromecast.play_youtube_video` events and starts playing the specified video on the YouTube app on the ChromeCast. Specify video using `video` in event_data.
+Registers three services to start playing YouTube video's on the ChromeCast.
 
-Also listens for `start_fireplace` and `start_epic_sax` events to play a pre-defined movie.
+Service `chromecast/play_youtube_video` starts playing the specified video on the YouTube app on the ChromeCast. Specify video using `video` in service_data.
 
-**media_buttons**
-Listens for the events `keyboard.volume_up`, `keyboard.volume_down` and `keyboard.media_play_pause` to simulate the pressing of the appropriate media button.
-Depends on: PyUserInput
+Service `chromecast/start_fireplace` will start a YouTube movie simulating a fireplace and the `chromecast/start_epic_sax` service will start playing Epic Sax Guy 10h version.
