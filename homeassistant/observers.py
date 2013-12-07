@@ -18,12 +18,16 @@ import json
 import requests
 
 import homeassistant as ha
+import homeassistant.util as util
 
 DOMAIN_DEVICE_TRACKER = "device_tracker"
 DOMAIN_CHROMECAST = "chromecast"
+DOMAIN_LIGHT_CONTROL = "light_control"
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
 SERVICE_CHROMECAST_YOUTUBE_VIDEO = "play_youtube_video"
+SERVICE_TURN_LIGHT_ON = "turn_light_on"
+SERVICE_TURN_LIGHT_OFF = "turn_light_off"
 
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
@@ -34,8 +38,14 @@ STATE_CATEGORY_DEVICE_FORMAT = 'device.{}'
 
 STATE_CATEGORY_CHROMECAST = 'chromecast'
 
+STATE_CATEGORY_ALL_LIGHTS = 'light.ALL'
+STATE_CATEGORY_LIGHT_FORMAT = "light.{}"
+
 SUN_STATE_ABOVE_HORIZON = "above_horizon"
 SUN_STATE_BELOW_HORIZON = "below_horizon"
+
+LIGHT_STATE_ON = "on"
+LIGHT_STATE_OFF = "off"
 
 DEVICE_STATE_NOT_HOME = 'device_not_home'
 DEVICE_STATE_HOME = 'device_home'
@@ -127,6 +137,48 @@ def setup_chromecast(bus, statemachine, host):
                                 "options": status.options})
 
     ha.track_time_change(bus, update_chromecast_state)
+
+    return True
+
+
+def setup_light_control_services(bus, statemachine, light_control):
+    """ Exposes light control via statemachine and services. """
+
+    def update_light_state(time):  # pylint: disable=unused-argument
+        """ Track the state of the lights. """
+        status = {light_id: light_control.is_light_on(light_id)
+                  for light_id in light_control.light_ids}
+
+        for light_id, state in status.items():
+            state_category = STATE_CATEGORY_LIGHT_FORMAT.format(
+                util.slugify(light_control.get_light_name(light_id)))
+
+            statemachine.set_state(state_category,
+                                   LIGHT_STATE_ON if state
+                                   else LIGHT_STATE_OFF)
+
+        statemachine.set_state(STATE_CATEGORY_ALL_LIGHTS,
+                               LIGHT_STATE_ON if True in status.values()
+                               else LIGHT_STATE_OFF)
+
+    ha.track_time_change(bus, update_light_state, second=[0, 30])
+
+    def handle_light_event(service):
+        """ Hande a turn light on or off service call. """
+        light_id = service.data.get("light_id", None)
+        transition_seconds = service.data.get("transition_seconds", None)
+
+        if service.service == SERVICE_TURN_LIGHT_ON:
+            light_control.turn_light_on(light_id, transition_seconds)
+        else:
+            light_control.turn_light_off(light_id, transition_seconds)
+
+    # Listen for light on and light off events
+    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON,
+                         handle_light_event)
+
+    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF,
+                         handle_light_event)
 
     return True
 

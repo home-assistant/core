@@ -26,12 +26,9 @@ LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 DOMAIN_DOWNLOADER = "downloader"
 DOMAIN_BROWSER = "browser"
 DOMAIN_KEYBOARD = "keyboard"
-DOMAIN_LIGHT_CONTROL = "light_control"
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 SERVICE_BROWSE_URL = "browse_url"
-SERVICE_TURN_LIGHT_ON = "turn_light_on"
-SERVICE_TURN_LIGHT_OFF = "turn_light_off"
 SERVICE_KEYBOARD_VOLUME_UP = "volume_up"
 SERVICE_KEYBOARD_VOLUME_DOWN = "volume_down"
 SERVICE_KEYBOARD_VOLUME_MUTE = "volume_mute"
@@ -192,19 +189,30 @@ class HueLightControl(object):
 
             return
 
-        self.bridge = phue.Bridge(host)
-        self.lights = self.bridge.get_light_objects()
-        self.light_ids = [light.light_id for light in self.lights]
+        self._bridge = phue.Bridge(host)
+
+        self._light_map = {light.light_id: light
+                           for light in self._bridge.get_light_objects()}
 
         self.success_init = True
+
+    @property
+    def light_ids(self):
+        """ Return a list of light ids. """
+        return self._light_map.keys()
+
+    def get_light_name(self, light_id):
+        """ Return the name of the specified light. """
+        return self._light_map[light_id].name
 
     def is_light_on(self, light_id=None):
         """ Returns if specified or all light are on. """
         if not light_id:
-            return sum([1 for light in self.lights if light.on]) > 0
+            return sum(
+                [1 for light in self._light_map.values() if light.on]) > 0
 
         else:
-            return self.bridge.get_light(light_id, 'on')
+            return self._bridge.get_light(light_id, 'on')
 
     def turn_light_on(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights on. """
@@ -217,7 +225,7 @@ class HueLightControl(object):
             command['transitiontime'] = \
                 _hue_process_transition_time(transition_seconds)
 
-        self.bridge.set_light(light_id, command)
+        self._bridge.set_light(light_id, command)
 
     def turn_light_off(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights off. """
@@ -230,30 +238,7 @@ class HueLightControl(object):
             command['transitiontime'] = \
                 _hue_process_transition_time(transition_seconds)
 
-        self.bridge.set_light(light_id, command)
-
-
-def setup_light_control_services(bus, light_control):
-    """ Exposes light control via services. """
-
-    def handle_light_event(service):
-        """ Hande a turn light on or off service call. """
-        light_id = service.data.get("light_id", None)
-        transition_seconds = service.data.get("transition_seconds", None)
-
-        if service.service == SERVICE_TURN_LIGHT_ON:
-            light_control.turn_light_on(light_id, transition_seconds)
-        else:
-            light_control.turn_light_off(light_id, transition_seconds)
-
-    # Listen for light on and light off events
-    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON,
-                         handle_light_event)
-
-    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF,
-                         handle_light_event)
-
-    return True
+        self._bridge.set_light(light_id, command)
 
 
 def setup_file_downloader(bus, download_path):

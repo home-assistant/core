@@ -92,7 +92,7 @@ def from_config_file(config_path):
 
     # Light trigger
     if light_control:
-        actors.setup_light_control_services(bus, light_control)
+        observers.setup_light_control_services(bus, statemachine, light_control)
 
         actors.LightTrigger(bus, statemachine,
                             device_tracker, light_control)
