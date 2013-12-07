@@ -20,13 +20,19 @@ import requests
 import homeassistant as ha
 
 DOMAIN_DEVICE_TRACKER = "device_tracker"
+DOMAIN_CHROMECAST = "chromecast"
+
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
+SERVICE_CHROMECAST_YOUTUBE_VIDEO = "play_youtube_video"
 
 STATE_CATEGORY_SUN = "weather.sun"
 STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
 STATE_ATTRIBUTE_NEXT_SUN_SETTING = "next_setting"
+
 STATE_CATEGORY_ALL_DEVICES = 'all_devices'
 STATE_CATEGORY_DEVICE_FORMAT = '{}'
+
+STATE_CATEGORY_CHROMECAST = 'chromecast'
 
 SUN_STATE_ABOVE_HORIZON = "above_horizon"
 SUN_STATE_BELOW_HORIZON = "below_horizon"
@@ -91,6 +97,36 @@ def track_sun(bus, statemachine, latitude, longitude):
                              point_in_time=next_change + timedelta(seconds=10))
 
     update_sun_state(None)
+
+    return True
+
+
+def setup_chromecast(bus, statemachine, host):
+    """ Listen for chromecast events. """
+    from homeassistant.packages import pychromecast
+
+    bus.register_service(DOMAIN_CHROMECAST, "start_fireplace",
+                         lambda event:
+                         pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
+
+    bus.register_service(DOMAIN_CHROMECAST, "start_epic_sax",
+                         lambda event:
+                         pychromecast.play_youtube_video(host, "kxopViU98Xo"))
+
+    bus.register_service(DOMAIN_CHROMECAST, SERVICE_CHROMECAST_YOUTUBE_VIDEO,
+                         lambda event:
+                         pychromecast.play_youtube_video(host,
+                                                         event.data['video']))
+
+    def update_chromecast_state(time):  # pylint: disable=unused-argument
+        """ Retrieve state of Chromecast and update statemachine. """
+        status = pychromecast.get_app_status(host)
+
+        statemachine.set_state(STATE_CATEGORY_CHROMECAST, status.name,
+                               {"state": status.state,
+                                "options": status.options})
+
+    ha.track_time_change(bus, update_chromecast_state)
 
     return True
 

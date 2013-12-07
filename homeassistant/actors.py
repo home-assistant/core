@@ -25,13 +25,11 @@ LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
 DOMAIN_DOWNLOADER = "downloader"
 DOMAIN_BROWSER = "browser"
-DOMAIN_CHROMECAST = "chromecast"
 DOMAIN_KEYBOARD = "keyboard"
 DOMAIN_LIGHT_CONTROL = "light_control"
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 SERVICE_BROWSE_URL = "browse_url"
-SERVICE_CHROMECAST_YOUTUBE_VIDEO = "play_youtube_video"
 SERVICE_TURN_LIGHT_ON = "turn_light_on"
 SERVICE_TURN_LIGHT_OFF = "turn_light_off"
 SERVICE_KEYBOARD_VOLUME_UP = "volume_up"
@@ -335,26 +333,6 @@ def setup_webbrowser(bus):
 
     bus.register_service(DOMAIN_BROWSER, SERVICE_BROWSE_URL,
                          lambda event: webbrowser.open(event.data['url']))
-
-    return True
-
-
-def setup_chromecast(bus, host):
-    """ Listen for chromecast events. """
-    from homeassistant.packages import pychromecast
-
-    bus.register_service(DOMAIN_CHROMECAST, "start_fireplace",
-                         lambda event:
-                         pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
-
-    bus.register_service(DOMAIN_CHROMECAST, "start_epic_sax",
-                         lambda event:
-                         pychromecast.play_youtube_video(host, "kxopViU98Xo"))
-
-    bus.register_service(DOMAIN_CHROMECAST, SERVICE_CHROMECAST_YOUTUBE_VIDEO,
-                         lambda event:
-                         pychromecast.play_youtube_video(host,
-                                                         event.data['video']))
 
     return True
 

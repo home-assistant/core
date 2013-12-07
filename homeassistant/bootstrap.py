@@ -70,6 +70,12 @@ def from_config_file(config_path):
                               config.get("common", "latitude"),
                               config.get("common", "longitude"))))
 
+    if config.has_option("chromecast", "host"):
+        statusses.append(("Chromecast",
+                          observers.setup_chromecast(
+                              bus, statemachine,
+                              config.get("chromecast", "host"))))
+
     # --------------------------
     # Init actors
     # Light control
@@ -92,11 +98,6 @@ def from_config_file(config_path):
                             device_tracker, light_control)
 
         statusses.append(("Light Trigger", True))
-
-    if config.has_option("chromecast", "host"):
-        statusses.append(("Chromecast",
-                          actors.setup_chromecast(
-                              bus, config.get("chromecast", "host"))))
 
     if config.has_option("downloader", "download_dir"):
         result = actors.setup_file_downloader(
