@@ -278,10 +278,8 @@ class DeviceTracker(object):
 
                             # Make sure that each device is mapped
                             # to a unique category name
-                            name = row['name']
-
-                            if not name:
-                                name = "unnamed_device"
+                            name = util.slugify(row['name']) if row['name'] \
+                                else "unnamed_device"
 
                             tries = 0
                             suffix = ""
