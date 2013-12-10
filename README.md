@@ -5,12 +5,16 @@ Home Assistant provides a platform for home automation. It does so by having mod
 
 It is currently able to do the following things:
  * Track if devices are home by monitoring connected devices to a wireless router
+ * Track which lights are on
+ * Track what your Chromecasts are up to
  * Turn on the lights when people get home when it is dark
  * Slowly turn on the lights to compensate for light loss when the sun sets
  * Turn off the lights when everybody leaves the house
  * Start YouTube video's on the Chromecast
  * Download files to the host
  * Open a url in the default browser on the host
+
+![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-states.png)
 
 It currently works with any wireless router running [Tomato firmware](http://www.polarcloud.com/tomato) in combination with [Philips Hue](http://meethue.com) and the [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast). The system is built modular so support for other wireless routers, other devices or actions can be implemented easily.
 
