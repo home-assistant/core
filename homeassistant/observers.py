@@ -36,7 +36,7 @@ STATE_ATTRIBUTE_NEXT_SUN_SETTING = "next_setting"
 STATE_CATEGORY_ALL_DEVICES = 'devices'
 STATE_CATEGORY_DEVICE_FORMAT = 'devices.{}'
 
-STATE_CATEGORY_CHROMECAST = 'chromecast'
+STATE_CATEGORY_CHROMECAST_FORMAT = 'chromecasts.{}'
 
 STATE_CATEGORY_ALL_LIGHTS = 'lights'
 STATE_CATEGORY_LIGHT_FORMAT = "lights.{}"
@@ -117,6 +117,15 @@ def setup_chromecast(bus, statemachine, host):
     """ Listen for chromecast events. """
     from homeassistant.packages import pychromecast
 
+    try:
+        device = pychromecast.get_device_status(host)
+    except (requests.exceptions.RequestException,
+            pychromecast.PyChromecastException):
+        return False
+
+    category = STATE_CATEGORY_CHROMECAST_FORMAT.format(util.slugify(
+        device.friendly_name))
+
     bus.register_service(DOMAIN_CHROMECAST, "start_fireplace",
                          lambda event:
                          pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
@@ -134,7 +143,7 @@ def setup_chromecast(bus, statemachine, host):
         """ Retrieve state of Chromecast and update statemachine. """
         status = pychromecast.get_app_status(host)
 
-        statemachine.set_state(STATE_CATEGORY_CHROMECAST, status.name,
+        statemachine.set_state(category, status.name,
                                {"state": status.state,
                                 "options": status.options})
 
