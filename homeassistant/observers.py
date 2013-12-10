@@ -159,10 +159,9 @@ def setup_chromecast(bus, statemachine, host):
     """ Listen for chromecast events. """
     from homeassistant.packages import pychromecast
 
-    try:
-        device = pychromecast.get_device_status(host)
-    except (requests.exceptions.RequestException,
-            pychromecast.PyChromecastException):
+    device = pychromecast.get_device_status(host)
+
+    if not device:
         return False
 
     category = STATE_CATEGORY_CHROMECAST_FORMAT.format(util.slugify(
@@ -185,9 +184,12 @@ def setup_chromecast(bus, statemachine, host):
         """ Retrieve state of Chromecast and update statemachine. """
         status = pychromecast.get_app_status(host)
 
-        statemachine.set_state(category, status.name,
-                               {"state": status.state,
-                                "options": status.options})
+        if status:
+            statemachine.set_state(category, status.name,
+                                   {"state": status.state,
+                                    "options": status.options})
+        else:
+            statemachine.set_state(category, "none")
 
     ha.track_time_change(bus, update_chromecast_state)
 
