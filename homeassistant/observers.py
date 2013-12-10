@@ -191,6 +191,8 @@ def setup_chromecast(bus, statemachine, host):
 
     ha.track_time_change(bus, update_chromecast_state)
 
+    update_chromecast_state(None)
+
     return True
 
 
