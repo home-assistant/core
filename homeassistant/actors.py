@@ -18,13 +18,12 @@ import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.observers import (
     STATE_CATEGORY_SUN, SUN_STATE_BELOW_HORIZON, SUN_STATE_ABOVE_HORIZON,
-    STATE_ATTRIBUTE_NEXT_SUN_SETTING, STATE_ATTRIBUTE_NEXT_SUN_RISING,
+    is_sun_up, next_sun_setting,
 
     STATE_CATEGORY_ALL_DEVICES, DEVICE_STATE_HOME, DEVICE_STATE_NOT_HOME,
-    STATE_CATEGORY_DEVICE_FORMAT,
+    STATE_CATEGORY_DEVICE_FORMAT, get_device_ids, is_device_home,
 
-    DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON, SERVICE_TURN_LIGHT_OFF,
-    STATE_CATEGORY_ALL_LIGHTS, STATE_CATEGORY_LIGHT_FORMAT, LIGHT_STATE_ON)
+    is_light_on, turn_light_on, turn_light_off, get_light_ids)
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
@@ -42,89 +41,14 @@ SERVICE_KEYBOARD_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_KEYBOARD_MEDIA_PREV_TRACK = "media_prev_track"
 
 
-def is_sun_up(statemachine):
-    """ Returns if the sun is currently up based on the statemachine. """
-    return statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_ABOVE_HORIZON)
-
-
-def next_sun_setting(statemachine):
-    """ Returns the datetime object representing the next sun setting. """
-    state = statemachine.get_state(STATE_CATEGORY_SUN)
-
-    return None if not state else ha.str_to_datetime(
-        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_SETTING])
-
-
-def next_sun_rising(statemachine):
-    """ Returns the datetime object representing the next sun setting. """
-    state = statemachine.get_state(STATE_CATEGORY_SUN)
-
-    return None if not state else ha.str_to_datetime(
-        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_RISING])
-
-
-def is_device_home(statemachine, device_id=None):
-    """ Returns if any or specified device is home. """
-    category = STATE_CATEGORY_DEVICE_FORMAT.format(device_id) if device_id \
-        else STATE_CATEGORY_ALL_DEVICES
-
-    return statemachine.is_state(category, DEVICE_STATE_HOME)
-
-
-def is_light_on(statemachine, light_id=None):
-    """ Returns if the lights are on based on the statemachine. """
-    category = STATE_CATEGORY_LIGHT_FORMAT.format(light_id) if light_id \
-        else STATE_CATEGORY_ALL_LIGHTS
-
-    return statemachine.is_state(category, LIGHT_STATE_ON)
-
-
-def turn_light_on(bus, light_id=None, transition_seconds=None):
-    """ Turns all or specified light on. """
-    data = {}
-
-    if light_id:
-        data["light_id"] = light_id
-
-    if transition_seconds:
-        data["transition_seconds"] = transition_seconds
-
-    bus.call_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON, data)
-
-
-def turn_light_off(bus, light_id=None, transition_seconds=None):
-    """ Turns all or specified light off. """
-    data = {}
-
-    if light_id:
-        data["light_id"] = light_id
-
-    if transition_seconds:
-        data["transition_seconds"] = transition_seconds
-
-    bus.call_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF, data)
-
-
-def get_light_count(statemachine):
-    """ Get the number of lights being tracked in the statemachine. """
-    return len(get_light_ids(statemachine))
-
-
-def get_light_ids(statemachine):
-    """ Get the light IDs that are being tracked in the statemachine. """
-    lights_prefix = STATE_CATEGORY_LIGHT_FORMAT.format("")
-
-    light_id_part = slice(len(lights_prefix), None)
-
-    return [cat[light_id_part] for cat in statemachine.categories
-            if cat.startswith(lights_prefix)]
-
-
 # pylint: disable=too-many-branches
-def setup_device_light_triggers(bus, statemachine, device_state_categories):
+def setup_device_light_triggers(bus, statemachine):
     """ Triggers to turn lights on or off based on device precense. """
 
     logger = logging.getLogger(__name__)
+
+    device_state_categories = [STATE_CATEGORY_DEVICE_FORMAT.format(device_id)
+                               for device_id in get_device_ids(statemachine)]
 
     if len(device_state_categories) == 0:
         logger.error("LightTrigger:No devices given to track")
@@ -141,7 +65,7 @@ def setup_device_light_triggers(bus, statemachine, device_state_categories):
     # Calculates the time when to start fading lights in when sun sets
     time_for_light_before_sun_set = lambda: \
         (next_sun_setting(statemachine) - LIGHT_TRANSITION_TIME *
-         get_light_count(statemachine))
+         len(statemachine))
 
     # pylint: disable=unused-argument
     def handle_sun_rising(category, old_state, new_state):

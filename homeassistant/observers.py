@@ -63,6 +63,43 @@ LIGHTS_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
 
+def _get_grouped_states(statemachine, category_format_string):
+    """ Get states that are part of a group of states.
+
+    Example category_format_string can be devices.{}
+
+    If input states are devices, devices.paulus and devices.paulus.charging
+    then the output will be paulus.
+    """
+    group_prefix = category_format_string.format("")
+
+    id_part = slice(len(group_prefix), None)
+
+    return [cat[id_part] for cat in statemachine.categories
+            if cat.startswith(group_prefix) and cat.count(".") == 1]
+
+
+def is_sun_up(statemachine):
+    """ Returns if the sun is currently up based on the statemachine. """
+    return statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_ABOVE_HORIZON)
+
+
+def next_sun_setting(statemachine):
+    """ Returns the datetime object representing the next sun setting. """
+    state = statemachine.get_state(STATE_CATEGORY_SUN)
+
+    return None if not state else ha.str_to_datetime(
+        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_SETTING])
+
+
+def next_sun_rising(statemachine):
+    """ Returns the datetime object representing the next sun setting. """
+    state = statemachine.get_state(STATE_CATEGORY_SUN)
+
+    return None if not state else ha.str_to_datetime(
+        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_RISING])
+
+
 def track_sun(bus, statemachine, latitude, longitude):
     """ Tracks the state of the sun. """
     logger = logging.getLogger(__name__)
@@ -113,6 +150,11 @@ def track_sun(bus, statemachine, latitude, longitude):
     return True
 
 
+def get_chromecast_ids(statemachine):
+    """ Gets the IDs of the different Chromecasts that are being tracked. """
+    return _get_grouped_states(statemachine, STATE_CATEGORY_CHROMECAST_FORMAT)
+
+
 def setup_chromecast(bus, statemachine, host):
     """ Listen for chromecast events. """
     from homeassistant.packages import pychromecast
@@ -150,6 +192,45 @@ def setup_chromecast(bus, statemachine, host):
     ha.track_time_change(bus, update_chromecast_state)
 
     return True
+
+
+def is_light_on(statemachine, light_id=None):
+    """ Returns if the lights are on based on the statemachine. """
+    category = STATE_CATEGORY_LIGHT_FORMAT.format(light_id) if light_id \
+        else STATE_CATEGORY_ALL_LIGHTS
+
+    return statemachine.is_state(category, LIGHT_STATE_ON)
+
+
+def turn_light_on(bus, light_id=None, transition_seconds=None):
+    """ Turns all or specified light on. """
+    data = {}
+
+    if light_id:
+        data["light_id"] = light_id
+
+    if transition_seconds:
+        data["transition_seconds"] = transition_seconds
+
+    bus.call_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON, data)
+
+
+def turn_light_off(bus, light_id=None, transition_seconds=None):
+    """ Turns all or specified light off. """
+    data = {}
+
+    if light_id:
+        data["light_id"] = light_id
+
+    if transition_seconds:
+        data["transition_seconds"] = transition_seconds
+
+    bus.call_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF, data)
+
+
+def get_light_ids(statemachine):
+    """ Get the light IDs that are being tracked in the statemachine. """
+    return _get_grouped_states(statemachine, STATE_CATEGORY_LIGHT_FORMAT)
 
 
 def setup_light_control(bus, statemachine, light_control):
@@ -207,6 +288,19 @@ def setup_light_control(bus, statemachine, light_control):
     return True
 
 
+def get_device_ids(statemachine):
+    """ Returns the devices that are being tracked in the statemachine. """
+    return _get_grouped_states(statemachine, STATE_CATEGORY_DEVICE_FORMAT)
+
+
+def is_device_home(statemachine, device_id=None):
+    """ Returns if any or specified device is home. """
+    category = STATE_CATEGORY_DEVICE_FORMAT.format(device_id) if device_id \
+        else STATE_CATEGORY_ALL_DEVICES
+
+    return statemachine.is_state(category, DEVICE_STATE_HOME)
+
+
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
@@ -234,6 +328,8 @@ class DeviceTracker(object):
         bus.register_service(DOMAIN_DEVICE_TRACKER,
                              SERVICE_DEVICE_TRACKER_RELOAD,
                              lambda service: self._read_known_devices_file())
+
+        self.update_devices(device_scanner.scan_devices())
 
     @property
     def device_state_categories(self):

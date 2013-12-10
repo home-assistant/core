@@ -52,13 +52,9 @@ def from_config_file(config_path):
 
     # Device Tracker
     if device_scanner:
-        device_tracker = observers.DeviceTracker(
-            bus, statemachine, device_scanner)
+        observers.DeviceTracker(bus, statemachine, device_scanner)
 
         statusses.append(("Device Tracker", True))
-
-    else:
-        device_tracker = None
 
     # Sun tracker
     if config.has_option("common", "latitude") and \
@@ -95,13 +91,11 @@ def from_config_file(config_path):
         observers.setup_light_control(bus, statemachine, light_control)
 
         statusses.append(("Light Trigger", actors.setup_device_light_triggers(
-            bus, statemachine, device_tracker.device_state_categories)))
+                          bus, statemachine)))
 
     if config.has_option("downloader", "download_dir"):
-        result = actors.setup_file_downloader(
-            bus, config.get("downloader", "download_dir"))
-
-        statusses.append(("Downloader", result))
+        statusses.append(("Downloader", actors.setup_file_downloader(
+            bus, config.get("downloader", "download_dir"))))
 
     statusses.append(("Webbrowser", actors.setup_webbrowser(bus)))
 
