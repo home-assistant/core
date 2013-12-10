@@ -65,7 +65,7 @@ def setup_device_light_triggers(bus, statemachine):
     # Calculates the time when to start fading lights in when sun sets
     time_for_light_before_sun_set = lambda: \
         (next_sun_setting(statemachine) - LIGHT_TRANSITION_TIME *
-         len(statemachine))
+         len(light_ids))
 
     # pylint: disable=unused-argument
     def handle_sun_rising(category, old_state, new_state):

@@ -1,0 +1,15 @@
+homeassistant/httpinterface.py:268:21: E126 continuation line over-indented for hanging indent
+homeassistant/httpinterface.py:302:21: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:326:21: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:357:18: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:364:21: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:375:21: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:389:21: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:392:20: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:396:18: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:400:22: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:438:21: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:452:21: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:455:20: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:459:18: E127 continuation line over-indented for visual indent
+homeassistant/httpinterface.py:463:22: E127 continuation line over-indented for visual indent
