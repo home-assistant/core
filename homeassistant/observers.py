@@ -33,13 +33,13 @@ STATE_CATEGORY_SUN = "weather.sun"
 STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
 STATE_ATTRIBUTE_NEXT_SUN_SETTING = "next_setting"
 
-STATE_CATEGORY_ALL_DEVICES = 'device.ALL'
-STATE_CATEGORY_DEVICE_FORMAT = 'device.{}'
+STATE_CATEGORY_ALL_DEVICES = 'devices'
+STATE_CATEGORY_DEVICE_FORMAT = 'devices.{}'
 
 STATE_CATEGORY_CHROMECAST = 'chromecast'
 
-STATE_CATEGORY_ALL_LIGHTS = 'light.ALL'
-STATE_CATEGORY_LIGHT_FORMAT = "light.{}"
+STATE_CATEGORY_ALL_LIGHTS = 'lights'
+STATE_CATEGORY_LIGHT_FORMAT = "lights.{}"
 
 SUN_STATE_ABOVE_HORIZON = "above_horizon"
 SUN_STATE_BELOW_HORIZON = "below_horizon"
@@ -56,6 +56,8 @@ TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=1)
 
 # Return cached results if last scan was less then this time ago
 TOMATO_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+
+LIGHTS_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 # Filename to save known devices to
 KNOWN_DEVICES_FILE = "known_devices.csv"
@@ -141,25 +143,34 @@ def setup_chromecast(bus, statemachine, host):
     return True
 
 
-def setup_light_control_services(bus, statemachine, light_control):
+def setup_light_control(bus, statemachine, light_control):
     """ Exposes light control via statemachine and services. """
 
     def update_light_state(time):  # pylint: disable=unused-argument
         """ Track the state of the lights. """
-        status = {light_id: light_control.is_light_on(light_id)
-                  for light_id in light_control.light_ids}
+        try:
+            should_update = datetime.now() - update_light_state.last_updated \
+                > LIGHTS_MIN_TIME_BETWEEN_SCANS
 
-        for light_id, state in status.items():
-            state_category = STATE_CATEGORY_LIGHT_FORMAT.format(
-                util.slugify(light_control.get_light_name(light_id)))
+        except AttributeError:  # if last_updated does not exist
+            should_update = True
 
-            statemachine.set_state(state_category,
-                                   LIGHT_STATE_ON if state
+        if should_update:
+            update_light_state.last_updated = datetime.now()
+
+            status = {light_id: light_control.is_light_on(light_id)
+                      for light_id in light_control.light_ids}
+
+            for light_id, state in status.items():
+                state_category = STATE_CATEGORY_LIGHT_FORMAT.format(light_id)
+
+                statemachine.set_state(state_category,
+                                       LIGHT_STATE_ON if state
+                                       else LIGHT_STATE_OFF)
+
+            statemachine.set_state(STATE_CATEGORY_ALL_LIGHTS,
+                                   LIGHT_STATE_ON if True in status.values()
                                    else LIGHT_STATE_OFF)
-
-        statemachine.set_state(STATE_CATEGORY_ALL_LIGHTS,
-                               LIGHT_STATE_ON if True in status.values()
-                               else LIGHT_STATE_OFF)
 
     ha.track_time_change(bus, update_light_state, second=[0, 30])
 
@@ -173,12 +184,16 @@ def setup_light_control_services(bus, statemachine, light_control):
         else:
             light_control.turn_light_off(light_id, transition_seconds)
 
+        update_light_state(None)
+
     # Listen for light on and light off events
     bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON,
                          handle_light_event)
 
     bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF,
                          handle_light_event)
+
+    update_light_state(None)
 
     return True
 

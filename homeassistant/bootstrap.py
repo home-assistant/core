@@ -92,12 +92,10 @@ def from_config_file(config_path):
 
     # Light trigger
     if light_control:
-        observers.setup_light_control_services(bus, statemachine, light_control)
+        observers.setup_light_control(bus, statemachine, light_control)
 
-        actors.LightTrigger(bus, statemachine,
-                            device_tracker, light_control)
-
-        statusses.append(("Light Trigger", True))
+        statusses.append(("Light Trigger", actors.setup_device_light_triggers(
+            bus, statemachine, device_tracker.device_state_categories)))
 
     if config.has_option("downloader", "download_dir"):
         result = actors.setup_file_downloader(
