@@ -5,6 +5,10 @@ known_devices.csv
 *.sublime-project
 *.sublime-workspace
 
+# Hide code validator output
+pep8.txt
+pylint.txt
+
 # Hide some OS X stuff
 .DS_Store
 .AppleDouble
@@ -14,6 +18,7 @@ Icon
 # Thumbnails
 ._*
 
+.idea
 
 # GITHUB Proposed Python stuff:
 *.py[cod]
