@@ -1,19 +1,16 @@
 """
-homeassistant.observers
-~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.sun
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This module provides observers that can change the state or fire
-events based on observations.
-
+Provides functionality to keep track of devices.
 """
-
 import logging
-import csv
-import os
-from datetime import datetime, timedelta
 import threading
+import os
+import csv
 import re
 import json
+from datetime import datetime, timedelta
 
 import requests
 
@@ -21,34 +18,15 @@ import homeassistant as ha
 import homeassistant.util as util
 
 DOMAIN_DEVICE_TRACKER = "device_tracker"
-DOMAIN_CHROMECAST = "chromecast"
-DOMAIN_LIGHT_CONTROL = "light_control"
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
-SERVICE_CHROMECAST_YOUTUBE_VIDEO = "play_youtube_video"
-SERVICE_TURN_LIGHT_ON = "turn_light_on"
-SERVICE_TURN_LIGHT_OFF = "turn_light_off"
-
-STATE_CATEGORY_SUN = "weather.sun"
-STATE_ATTRIBUTE_NEXT_SUN_RISING = "next_rising"
-STATE_ATTRIBUTE_NEXT_SUN_SETTING = "next_setting"
 
 STATE_CATEGORY_ALL_DEVICES = 'devices'
-STATE_CATEGORY_DEVICE_FORMAT = 'devices.{}'
+STATE_CATEGORY_FORMAT = 'devices.{}'
 
-STATE_CATEGORY_CHROMECAST_FORMAT = 'chromecasts.{}'
+STATE_NOT_HOME = 'device_not_home'
+STATE_HOME = 'device_home'
 
-STATE_CATEGORY_ALL_LIGHTS = 'lights'
-STATE_CATEGORY_LIGHT_FORMAT = "lights.{}"
-
-SUN_STATE_ABOVE_HORIZON = "above_horizon"
-SUN_STATE_BELOW_HORIZON = "below_horizon"
-
-LIGHT_STATE_ON = "on"
-LIGHT_STATE_OFF = "off"
-
-DEVICE_STATE_NOT_HOME = 'device_not_home'
-DEVICE_STATE_HOME = 'device_home'
 
 # After how much time do we consider a device not home if
 # it does not show up on scans
@@ -57,255 +35,28 @@ TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=1)
 # Return cached results if last scan was less then this time ago
 TOMATO_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-LIGHTS_MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 # Filename to save known devices to
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
 
-def _get_grouped_states(statemachine, category_format_string):
-    """ Get states that are part of a group of states.
+def get_categories(statemachine):
+    """ Returns the categories of devices that are being tracked in the
+        statemachine. """
+    return ha.get_grouped_state_cats(statemachine, STATE_CATEGORY_FORMAT,
+                                     False)
 
-    Example category_format_string can be devices.{}
 
-    If input states are devices, devices.paulus and devices.paulus.charging
-    then the output will be paulus.
-    """
-    group_prefix = category_format_string.format("")
-
-    id_part = slice(len(group_prefix), None)
-
-    return [cat[id_part] for cat in statemachine.categories
-            if cat.startswith(group_prefix) and cat.count(".") == 1]
-
-
-def is_sun_up(statemachine):
-    """ Returns if the sun is currently up based on the statemachine. """
-    return statemachine.is_state(STATE_CATEGORY_SUN, SUN_STATE_ABOVE_HORIZON)
-
-
-def next_sun_setting(statemachine):
-    """ Returns the datetime object representing the next sun setting. """
-    state = statemachine.get_state(STATE_CATEGORY_SUN)
-
-    return None if not state else ha.str_to_datetime(
-        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_SETTING])
-
-
-def next_sun_rising(statemachine):
-    """ Returns the datetime object representing the next sun setting. """
-    state = statemachine.get_state(STATE_CATEGORY_SUN)
-
-    return None if not state else ha.str_to_datetime(
-        state['attributes'][STATE_ATTRIBUTE_NEXT_SUN_RISING])
-
-
-def track_sun(bus, statemachine, latitude, longitude):
-    """ Tracks the state of the sun. """
-    logger = logging.getLogger(__name__)
-
-    try:
-        import ephem
-    except ImportError:
-        logger.exception("TrackSun:Error while importing dependency ephem.")
-        return False
-
-    sun = ephem.Sun()  # pylint: disable=no-member
-
-    def update_sun_state(now):    # pylint: disable=unused-argument
-        """ Method to update the current state of the sun and
-            set time of next setting and rising. """
-        observer = ephem.Observer()
-        observer.lat = latitude
-        observer.long = longitude
-
-        next_rising = ephem.localtime(observer.next_rising(sun))
-        next_setting = ephem.localtime(observer.next_setting(sun))
-
-        if next_rising > next_setting:
-            new_state = SUN_STATE_ABOVE_HORIZON
-            next_change = next_setting
-
-        else:
-            new_state = SUN_STATE_BELOW_HORIZON
-            next_change = next_rising
-
-        logger.info(
-            "Sun:{}. Next change: {}".format(new_state,
-                                             next_change.strftime("%H:%M")))
-
-        state_attributes = {
-            STATE_ATTRIBUTE_NEXT_SUN_RISING: ha.datetime_to_str(next_rising),
-            STATE_ATTRIBUTE_NEXT_SUN_SETTING: ha.datetime_to_str(next_setting)
-        }
-
-        statemachine.set_state(STATE_CATEGORY_SUN, new_state, state_attributes)
-
-        # +10 seconds to be sure that the change has occured
-        ha.track_time_change(bus, update_sun_state,
-                             point_in_time=next_change + timedelta(seconds=10))
-
-    update_sun_state(None)
-
-    return True
-
-
-def get_chromecast_ids(statemachine):
-    """ Gets the IDs of the different Chromecasts that are being tracked. """
-    return _get_grouped_states(statemachine, STATE_CATEGORY_CHROMECAST_FORMAT)
-
-
-def setup_chromecast(bus, statemachine, host):
-    """ Listen for chromecast events. """
-    from homeassistant.packages import pychromecast
-
-    device = pychromecast.get_device_status(host)
-
-    if not device:
-        return False
-
-    category = STATE_CATEGORY_CHROMECAST_FORMAT.format(util.slugify(
-        device.friendly_name))
-
-    bus.register_service(DOMAIN_CHROMECAST, "start_fireplace",
-                         lambda event:
-                         pychromecast.play_youtube_video(host, "eyU3bRy2x44"))
-
-    bus.register_service(DOMAIN_CHROMECAST, "start_epic_sax",
-                         lambda event:
-                         pychromecast.play_youtube_video(host, "kxopViU98Xo"))
-
-    bus.register_service(DOMAIN_CHROMECAST, SERVICE_CHROMECAST_YOUTUBE_VIDEO,
-                         lambda event:
-                         pychromecast.play_youtube_video(host,
-                                                         event.data['video']))
-
-    def update_chromecast_state(time):  # pylint: disable=unused-argument
-        """ Retrieve state of Chromecast and update statemachine. """
-        status = pychromecast.get_app_status(host)
-
-        if status:
-            statemachine.set_state(category, status.name,
-                                   {"friendly_name":
-                                        pychromecast.get_friendly_name(
-                                            status.name),
-                                    "state": status.state,
-                                    "options": status.options})
-        else:
-            statemachine.set_state(category, "none")
-
-    ha.track_time_change(bus, update_chromecast_state)
-
-    update_chromecast_state(None)
-
-    return True
-
-
-def is_light_on(statemachine, light_id=None):
-    """ Returns if the lights are on based on the statemachine. """
-    category = STATE_CATEGORY_LIGHT_FORMAT.format(light_id) if light_id \
-        else STATE_CATEGORY_ALL_LIGHTS
-
-    return statemachine.is_state(category, LIGHT_STATE_ON)
-
-
-def turn_light_on(bus, light_id=None, transition_seconds=None):
-    """ Turns all or specified light on. """
-    data = {}
-
-    if light_id:
-        data["light_id"] = light_id
-
-    if transition_seconds:
-        data["transition_seconds"] = transition_seconds
-
-    bus.call_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON, data)
-
-
-def turn_light_off(bus, light_id=None, transition_seconds=None):
-    """ Turns all or specified light off. """
-    data = {}
-
-    if light_id:
-        data["light_id"] = light_id
-
-    if transition_seconds:
-        data["transition_seconds"] = transition_seconds
-
-    bus.call_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF, data)
-
-
-def get_light_ids(statemachine):
-    """ Get the light IDs that are being tracked in the statemachine. """
-    return _get_grouped_states(statemachine, STATE_CATEGORY_LIGHT_FORMAT)
-
-
-def setup_light_control(bus, statemachine, light_control):
-    """ Exposes light control via statemachine and services. """
-
-    def update_light_state(time):  # pylint: disable=unused-argument
-        """ Track the state of the lights. """
-        try:
-            should_update = datetime.now() - update_light_state.last_updated \
-                > LIGHTS_MIN_TIME_BETWEEN_SCANS
-
-        except AttributeError:  # if last_updated does not exist
-            should_update = True
-
-        if should_update:
-            update_light_state.last_updated = datetime.now()
-
-            status = {light_id: light_control.is_light_on(light_id)
-                      for light_id in light_control.light_ids}
-
-            for light_id, state in status.items():
-                state_category = STATE_CATEGORY_LIGHT_FORMAT.format(light_id)
-
-                statemachine.set_state(state_category,
-                                       LIGHT_STATE_ON if state
-                                       else LIGHT_STATE_OFF)
-
-            statemachine.set_state(STATE_CATEGORY_ALL_LIGHTS,
-                                   LIGHT_STATE_ON if True in status.values()
-                                   else LIGHT_STATE_OFF)
-
-    ha.track_time_change(bus, update_light_state, second=[0, 30])
-
-    def handle_light_event(service):
-        """ Hande a turn light on or off service call. """
-        light_id = service.data.get("light_id", None)
-        transition_seconds = service.data.get("transition_seconds", None)
-
-        if service.service == SERVICE_TURN_LIGHT_ON:
-            light_control.turn_light_on(light_id, transition_seconds)
-        else:
-            light_control.turn_light_off(light_id, transition_seconds)
-
-        update_light_state(None)
-
-    # Listen for light on and light off events
-    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_ON,
-                         handle_light_event)
-
-    bus.register_service(DOMAIN_LIGHT_CONTROL, SERVICE_TURN_LIGHT_OFF,
-                         handle_light_event)
-
-    update_light_state(None)
-
-    return True
-
-
-def get_device_ids(statemachine):
+def get_ids(statemachine):
     """ Returns the devices that are being tracked in the statemachine. """
-    return _get_grouped_states(statemachine, STATE_CATEGORY_DEVICE_FORMAT)
+    return ha.get_grouped_state_cats(statemachine, STATE_CATEGORY_FORMAT, True)
 
 
-def is_device_home(statemachine, device_id=None):
+def is_home(statemachine, device_id=None):
     """ Returns if any or specified device is home. """
-    category = STATE_CATEGORY_DEVICE_FORMAT.format(device_id) if device_id \
+    category = STATE_CATEGORY_FORMAT.format(device_id) if device_id \
         else STATE_CATEGORY_ALL_DEVICES
 
-    return statemachine.is_state(category, DEVICE_STATE_HOME)
+    return statemachine.is_state(category, STATE_HOME)
 
 
 class DeviceTracker(object):
@@ -350,6 +101,8 @@ class DeviceTracker(object):
         """ Update device states based on the found devices. """
         self.lock.acquire()
 
+        now = datetime.now()
+
         temp_tracking_devices = [device for device in self.known_devices
                                  if self.known_devices[device]['track']]
 
@@ -358,30 +111,30 @@ class DeviceTracker(object):
             if device in temp_tracking_devices:
                 temp_tracking_devices.remove(device)
 
-                self.known_devices[device]['last_seen'] = datetime.now()
+                self.known_devices[device]['last_seen'] = now
 
                 self.statemachine.set_state(
-                    self.known_devices[device]['category'], DEVICE_STATE_HOME)
+                    self.known_devices[device]['category'], STATE_HOME)
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
         # Because we do not want to have stuff happening when the device does
         # not show up for 1 scan beacuse of reboot etc
         for device in temp_tracking_devices:
-            if (datetime.now() - self.known_devices[device]['last_seen'] >
+            if (now - self.known_devices[device]['last_seen'] >
                TIME_SPAN_FOR_ERROR_IN_SCANNING):
 
                 self.statemachine.set_state(
                     self.known_devices[device]['category'],
-                    DEVICE_STATE_NOT_HOME)
+                    STATE_NOT_HOME)
 
         # Get the currently used statuses
         states_of_devices = [self.statemachine.get_state(category)['state']
                              for category in self.device_state_categories]
 
         # Update the all devices category
-        all_devices_state = (DEVICE_STATE_HOME if DEVICE_STATE_HOME
-                             in states_of_devices else DEVICE_STATE_NOT_HOME)
+        all_devices_state = (STATE_HOME if STATE_HOME
+                             in states_of_devices else STATE_NOT_HOME)
 
         self.statemachine.set_state(STATE_CATEGORY_ALL_DEVICES,
                                     all_devices_state)
@@ -468,7 +221,7 @@ class DeviceTracker(object):
                                 if tries > 1:
                                     suffix = "_{}".format(tries)
 
-                                category = STATE_CATEGORY_DEVICE_FORMAT.format(
+                                category = STATE_CATEGORY_FORMAT.format(
                                     name + suffix)
 
                                 if category not in used_categories:

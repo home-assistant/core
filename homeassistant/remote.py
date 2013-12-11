@@ -17,7 +17,7 @@ import urlparse
 import requests
 
 import homeassistant as ha
-import homeassistant.httpinterface as hah
+import homeassistant.components.httpinterface as hah
 
 METHOD_GET = "get"
 METHOD_POST = "post"

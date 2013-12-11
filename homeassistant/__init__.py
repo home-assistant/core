@@ -16,8 +16,10 @@ logging.basicConfig(level=logging.INFO)
 
 ALL_EVENTS = '*'
 
-
 DOMAIN_HOMEASSISTANT = "homeassistant"
+
+SERVICE_TURN_ON = "turn_on"
+SERVICE_TURN_OFF = "turn_off"
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
 EVENT_HOMEASSISTANT_START = "homeassistant.start"
@@ -87,6 +89,27 @@ def _matcher(subject, pattern):
     @rtype : bool
     """
     return '*' in pattern or subject in pattern
+
+
+def get_grouped_state_cats(statemachine, cat_format_string, strip_prefix):
+    """ Get states that are part of a group of states.
+
+    Example category_format_string can be "devices.{}"
+
+    If input states are devices, devices.paulus and devices.paulus.charging
+    then the output will be paulus if strip_prefix is True, else devices.paulus
+    """
+    group_prefix = cat_format_string.format("")
+
+    if strip_prefix:
+        id_part = slice(len(group_prefix), None)
+
+        return [cat[id_part] for cat in statemachine.categories
+                if cat.startswith(group_prefix) and cat.count(".") == 1]
+
+    else:
+        return [cat for cat in statemachine.categories
+                if cat.startswith(group_prefix) and cat.count(".") == 1]
 
 
 def create_state(state, attributes=None, last_changed=None):

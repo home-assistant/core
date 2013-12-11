@@ -9,7 +9,7 @@ It is currently able to do the following things:
  * Track what your Chromecasts are up to
  * Turn on the lights when people get home when it is dark
  * Slowly turn on the lights to compensate for light loss when the sun sets
- * Turn off the lights when everybody leaves the house
+ * Turn off lights and connected devices when everybody leaves the house
  * Start YouTube video's on the Chromecast
  * Download files to the host
  * Open a url in the default browser on the host

@@ -13,7 +13,7 @@ import requests
 
 import homeassistant as ha
 import homeassistant.remote as remote
-import homeassistant.httpinterface as hah
+import homeassistant.components.httpinterface as hah
 
 API_PASSWORD = "test1234"
 

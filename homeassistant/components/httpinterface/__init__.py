@@ -1,5 +1,5 @@
 """
-homeassistant.httpinterface
+homeassistant.components.httpinterface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module provides an API and a HTTP interface for debug purposes.
