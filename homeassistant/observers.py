@@ -186,7 +186,10 @@ def setup_chromecast(bus, statemachine, host):
 
         if status:
             statemachine.set_state(category, status.name,
-                                   {"state": status.state,
+                                   {"friendly_name":
+                                        pychromecast.get_friendly_name(
+                                            status.name),
+                                    "state": status.state,
                                     "options": status.options})
         else:
             statemachine.set_state(category, "none")
