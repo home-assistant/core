@@ -5,7 +5,7 @@ homeassistant.components.chromecast
 Provides functionality to interact with Chromecasts.
 """
 
-from homeassistant.packages import pychromecast
+from homeassistant.external import pychromecast
 
 import homeassistant as ha
 import homeassistant.util as util
