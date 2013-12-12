@@ -16,7 +16,13 @@ It is currently able to do the following things:
 
 ![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/states.png)
 
-It currently works with any wireless router running [Tomato firmware](http://www.polarcloud.com/tomato) in combination with [Philips Hue](http://meethue.com) and the [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast). The system is built modular so support for other wireless routers, other devices or actions can be implemented easily.
+Current compatible devices:
+ * Wireless router running [Tomato firmware](http://www.polarcloud.com/tomato)
+ * Netgear wireless routers (tested with R6300)
+ * [Philips Hue](http://meethue.com)
+ * [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast)
+
+The system is built modular so support for other wireless routers, other devices or actions can be implemented easily.
 
 Installation instructions
 -------------------------

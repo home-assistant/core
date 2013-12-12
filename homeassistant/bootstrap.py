@@ -42,10 +42,22 @@ def from_config_file(config_path):
         statusses.append(("Device Scanner - Tomato",
                           device_scanner.success_init))
 
-        if not device_scanner.success_init:
-            device_scanner = None
+    elif config.has_option('netgear', 'host') and \
+         config.has_option('netgear', 'username') and \
+         config.has_option('netgear', 'password'):
+
+        device_scanner = device.NetgearDeviceScanner(
+            config.get('netgear', 'host'),
+            config.get('netgear', 'username'),
+            config.get('netgear', 'password'))
+
+        statusses.append(("Device Scanner - Netgear",
+                          device_scanner.success_init))
 
     else:
+        device_scanner = None
+
+    if device_scanner and not device_scanner.success_init:
         device_scanner = None
 
     # Device Tracker
