@@ -6,6 +6,7 @@ longitude=-117.22743
 api_password=mypass
 
 [hue]
+host=192.168.1.2
 
 [tomato]
 host=192.168.1.1
@@ -13,8 +14,13 @@ username=admin
 password=PASSWORD
 http_id=aaaaaaaaaaaaaaa
 
+[netgear]
+host=192.168.1.1
+username=admin
+password=PASSWORD
+
 [chromecast]
-host=192.168.1.120
+host=192.168.1.3
 
 [downloader]
 download_dir=downloads
