@@ -1,4 +1,4 @@
-<TaskerData sr="" dvi="1" tv="4.2u2m">
+<TaskerData sr="" dvi="1" tv="4.2u3m">
 	<dmetric>1080.0,1776.0</dmetric>
 	<Profile sr="prof25" ve="2">
 		<cdate>1380613730755</cdate>
@@ -58,9 +58,9 @@
 	<Project sr="proj0">
 		<cdate>1381110247781</cdate>
 		<name>Home Assistant</name>
-		<pids>25,5,26,3</pids>
-		<scenes>Home Assistant Start,Variable Query</scenes>
-		<tids>15,20,10,8,19,29,14,24,23,9,12,7,30,35,16,4,31,13,6,22,28,11,32</tids>
+		<pids>3,25,26,5</pids>
+		<scenes>Variable Query,Home Assistant Start</scenes>
+		<tids>20,19,9,24,4,8,22,10,30,31,16,6,15,35,13,23,14,11,12,7,28,32,29</tids>
 		<Kid sr="Kid">
 			<launchID>12</launchID>
 			<pkg>nl.paulus.homeassistant</pkg>
@@ -406,7 +406,7 @@
 	</Task>
 	<Task sr="task14">
 		<cdate>1381114829583</cdate>
-		<edate>1385172544321</edate>
+		<edate>1385537340259</edate>
 		<id>14</id>
 		<nme>API Fire Event</nme>
 		<pri>10</pri>
@@ -420,10 +420,15 @@
 			<Str sr="arg5" ve="3"/>
 			<Str sr="arg6" ve="3"/>
 		</Action>
+		<Action sr="act1" ve="3">
+			<code>548</code>
+			<Str sr="arg0" ve="3">Fired event %par1</Str>
+			<Int sr="arg1" val="0"/>
+		</Action>
 	</Task>
 	<Task sr="task15">
 		<cdate>1380262442154</cdate>
-		<edate>1385172407910</edate>
+		<edate>1386787405570</edate>
 		<id>15</id>
 		<nme>Light On</nme>
 		<pri>10</pri>
@@ -432,7 +437,7 @@
 			<Str sr="arg0" ve="3">API Call Service</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
-			<Str sr="arg3" ve="3">light_control/turn_light_on</Str>
+			<Str sr="arg3" ve="3">light/turn_on</Str>
 			<Str sr="arg4" ve="3"/>
 			<Str sr="arg5" ve="3"/>
 		</Action>
@@ -461,7 +466,7 @@
 	</Task>
 	<Task sr="task19">
 		<cdate>1380262442154</cdate>
-		<edate>1385168742271</edate>
+		<edate>1386695312804</edate>
 		<id>19</id>
 		<nme>Update Battery</nme>
 		<pri>10</pri>
@@ -479,7 +484,7 @@
 		<Action sr="act1" ve="3">
 			<code>116</code>
 			<Str sr="arg0" ve="3">%HA_HOST:%HA_PORT</Str>
-			<Str sr="arg1" ve="3">/api/states/%HA_DEVICE_NAME.charging</Str>
+			<Str sr="arg1" ve="3">/api/states/devices.%HA_DEVICE_NAME.charging</Str>
 			<Str sr="arg2" ve="3">api_password=%HA_API_PASSWORD
 new_state=%HA_CHARGING
 attributes={"battery":%BATT}</Str>
@@ -491,9 +496,10 @@ attributes={"battery":%BATT}</Str>
 	</Task>
 	<Task sr="task20">
 		<cdate>1380613530339</cdate>
-		<edate>1384131240468</edate>
+		<edate>1386695398714</edate>
 		<id>20</id>
 		<nme>Charging None</nme>
+		<pri>10</pri>
 		<Action sr="act0" ve="3">
 			<code>130</code>
 			<Str sr="arg0" ve="3">_Update Charging</Str>
@@ -536,7 +542,7 @@ attributes={"battery":%BATT}</Str>
 	</Task>
 	<Task sr="task24">
 		<cdate>1381114829583</cdate>
-		<edate>1385171414147</edate>
+		<edate>1385537314797</edate>
 		<id>24</id>
 		<nme>API Call Service</nme>
 		<pri>10</pri>
@@ -549,6 +555,11 @@ attributes={"battery":%BATT}</Str>
 			<Int sr="arg4" val="10"/>
 			<Str sr="arg5" ve="3"/>
 			<Str sr="arg6" ve="3"/>
+		</Action>
+		<Action sr="act1" ve="3">
+			<code>548</code>
+			<Str sr="arg0" ve="3">Called service %par1</Str>
+			<Int sr="arg1" val="0"/>
 		</Action>
 	</Task>
 	<Task sr="task28">
@@ -648,7 +659,7 @@ attributes={"battery":%BATT}</Str>
 	</Task>
 	<Task sr="task35">
 		<cdate>1381114829583</cdate>
-		<edate>1385171427412</edate>
+		<edate>1385537324133</edate>
 		<id>35</id>
 		<nme>API Call Service With Data</nme>
 		<pri>10</pri>
@@ -663,10 +674,15 @@ service_data=%par2</Str>
 			<Str sr="arg5" ve="3"/>
 			<Str sr="arg6" ve="3"/>
 		</Action>
+		<Action sr="act1" ve="3">
+			<code>548</code>
+			<Str sr="arg0" ve="3">Called service %par1</Str>
+			<Int sr="arg1" val="0"/>
+		</Action>
 	</Task>
 	<Task sr="task4">
 		<cdate>1380262442154</cdate>
-		<edate>1385172327711</edate>
+		<edate>1386787393520</edate>
 		<id>4</id>
 		<nme>Light Off</nme>
 		<pri>10</pri>
@@ -675,7 +691,7 @@ service_data=%par2</Str>
 			<Str sr="arg0" ve="3">API Call Service</Str>
 			<Int sr="arg1" val="0"/>
 			<Int sr="arg2" val="5"/>
-			<Str sr="arg3" ve="3">light_control/turn_light_off</Str>
+			<Str sr="arg3" ve="3">light/turn_off</Str>
 			<Str sr="arg4" ve="3"/>
 			<Str sr="arg5" ve="3"/>
 		</Action>
@@ -793,7 +809,7 @@ service_data=%par2</Str>
 	</Task>
 	<Task sr="task7">
 		<cdate>1384035383644</cdate>
-		<edate>1385172808590</edate>
+		<edate>1386787431769</edate>
 		<id>7</id>
 		<nme>Volume Up</nme>
 		<pri>10</pri>
@@ -812,7 +828,7 @@ service_data=%par2</Str>
 	</Task>
 	<Task sr="task8">
 		<cdate>1380262442154</cdate>
-		<edate>1385168720242</edate>
+		<edate>1386695263222</edate>
 		<id>8</id>
 		<nme>_Update Charging</nme>
 		<pri>10</pri>
@@ -835,7 +851,7 @@ service_data=%par2</Str>
 	</Task>
 	<Task sr="task9">
 		<cdate>1380262442154</cdate>
-		<edate>1385172578142</edate>
+		<edate>1386787379497</edate>
 		<id>9</id>
 		<nme>Start Fireplace</nme>
 		<pri>10</pri>
