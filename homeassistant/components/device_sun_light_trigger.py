@@ -126,7 +126,7 @@ def setup(bus, statemachine):
             logger.info(
                 "Everyone has left but there are devices on. Turning them off")
 
-            shutdown_devices(bus, statemachine)
+            general.shutdown_devices(bus, statemachine)
 
     # Track home coming of each seperate device
     for category in device_state_categories:
