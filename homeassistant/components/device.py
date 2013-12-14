@@ -17,6 +17,8 @@ import requests
 import homeassistant as ha
 import homeassistant.util as util
 
+import homeassistant.external.pynetgear as pynetgear
+
 DOMAIN_DEVICE_TRACKER = "device_tracker"
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
@@ -392,24 +394,11 @@ class TomatoDeviceScanner(object):
 
 
 class NetgearDeviceScanner(object):
-    """ This class queries a Netgear wireless router.
-
-    Tested with the Netgear R6300.
-    """
+    """ This class queries a Netgear wireless router using the SOAP-api. """
 
     def __init__(self, host, username, password):
-        self.req = requests.Request('GET',
-                                    'http://{}/DEV_device.htm'.format(host),
-                                    auth=requests.auth.HTTPBasicAuth(
-                                        username, password)).prepare()
+        self._api = pynetgear.Netgear(host, username, password)
 
-        self.req_main_page = requests.Request('GET',
-                                    'http://{}/start.htm'.format(host),
-                                    auth=requests.auth.HTTPBasicAuth(
-                                        username, password)).prepare()
-
-
-        self.parse_api_pattern = re.compile(r'ttext">(.*?)<')
 
         self.logger = logging.getLogger(__name__)
         self.lock = threading.Lock()
@@ -425,19 +414,19 @@ class NetgearDeviceScanner(object):
 
         self._update_info()
 
-        return [item[2] for item in self.last_results]
+        return [device.mac for device in self.last_results]
 
-    def get_device_name(self, device):
+    def get_device_name(self, mac):
         """ Returns the name of the given device or None if we don't know. """
 
         # Make sure there are results
         if not self.date_updated:
             self._update_info()
 
-        filter_named = [item[1] for item in self.last_results
-                        if item[2] == device]
+        filter_named = [device.name for device in self.last_results
+                        if device.mac == mac]
 
-        if len(filter_named) == 0 or filter_named[0] == "--":
+        if len(filter_named) == 0:
             return None
         else:
             return filter_named[0]
@@ -454,58 +443,11 @@ class NetgearDeviceScanner(object):
 
             self.logger.info("Netgear:Scanning")
 
-            try:
-                response = requests.Session().send(self.req, timeout=3)
+            self.last_results = self._api.get_attached_devices()
 
-                # Netgear likes us to hit the main page first
-                # So first 401 we get we will first hit main page
-                if response.status_code == 401:
-                    response = requests.Session().send(self.req_main_page, timeout=3)
-                    response = requests.Session().send(self.req, timeout=3)
+            self.lock.release()
 
-                if response.status_code == 200:
-
-                    entries = self.parse_api_pattern.findall(response.text)
-
-                    if len(entries) % 3 != 0:
-                        self.logger.error("Netgear:Failed to parse response")
-                        return False
-
-                    else:
-                        self.last_results = [entries[i:i+3] for i
-                                             in xrange(0, len(entries), 3)]
-
-                        self.date_updated = datetime.now()
-
-                        return True
-
-                elif response.status_code == 401:
-                    # Authentication error
-                    self.logger.exception((
-                        "Netgear:Failed to authenticate, "
-                        "please check your username and password"))
-
-                    return False
-
-            except requests.exceptions.ConnectionError:
-                # We get this if we could not connect to the router or
-                # an invalid http_id was supplied
-                self.logger.exception((
-                    "Netgear:Failed to connect to the router"
-                    " or invalid http_id supplied"))
-
-                return False
-
-            except requests.exceptions.Timeout:
-                # We get this if we could not connect to the router or
-                # an invalid http_id was supplied
-                self.logger.exception(
-                    "Netgear:Connection to the router timed out")
-
-                return False
-
-            finally:
-                self.lock.release()
+            return True
 
         else:
             # We acquired the lock before the IF check,
