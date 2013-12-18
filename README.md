@@ -4,15 +4,20 @@ Home Assistant
 Home Assistant provides a platform for home automation. It does so by having modules that observe and trigger actors to do various tasks.
 
 It is currently able to do the following things:
- * Track if devices are home by monitoring connected devices to a wireless router
+ * Track if devices are home by monitoring connected devices to a wireless router (currently supporting modern Netgear routers or routers running Tomato firmware)
  * Track which lights are on
  * Track what your Chromecasts are up to
- * Turn on the lights when people get home when it is dark
- * Slowly turn on the lights to compensate for light loss when the sun sets
+ * Turn on the lights when people get home when the sun is setting or has set
+ * Slowly turn on the lights to compensate for light loss when the sun sets and people are home
  * Turn off lights and connected devices when everybody leaves the house
- * Start YouTube video's on the Chromecast
- * Download files to the host
- * Open a url in the default browser on the host
+ * Start YouTube video’s on the Chromecast
+ * Quit current running application on a Chromecast
+ * Download files to the host machine
+ * Open a url in the default browser at the host machine
+ * Simulate key presses on the host for Play/Pause, Next track, Prev track, Volume up, Volume Down
+ * Controllable via a REST API and web interface
+ * Support for thin client Home Assistant instances that will forward all their commands to the main instance
+ * Android Tasker project to control Home Assistant from your phone and report charging state. Combine it with AutoVoice to be able to tell your phones to turn the lights off!
 
 ![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/states.png)
 
