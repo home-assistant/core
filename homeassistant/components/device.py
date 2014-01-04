@@ -64,10 +64,13 @@ def is_home(statemachine, device_id=None):
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
-    def __init__(self, bus, statemachine, device_scanner):
+    def __init__(self, bus, statemachine, device_scanner, error_scanning=None):
         self.statemachine = statemachine
         self.bus = bus
         self.device_scanner = device_scanner
+
+        self.error_scanning = error_scanning or TIME_SPAN_FOR_ERROR_IN_SCANNING
+
         self.logger = logging.getLogger(__name__)
 
         self.lock = threading.Lock()
@@ -75,7 +78,7 @@ class DeviceTracker(object):
         # Dictionary to keep track of known devices and devices we track
         self.known_devices = {}
 
-        # Did we encounter a valid known devices file
+        # Did we encounter an invalid known devices file
         self.invalid_known_devices_file = False
 
         self._read_known_devices_file()
@@ -124,7 +127,7 @@ class DeviceTracker(object):
         # not show up for 1 scan beacuse of reboot etc
         for device in temp_tracking_devices:
             if (now - self.known_devices[device]['last_seen'] >
-               TIME_SPAN_FOR_ERROR_IN_SCANNING):
+               self.error_scanning):
 
                 self.statemachine.set_state(
                     self.known_devices[device]['category'],
@@ -149,7 +152,7 @@ class DeviceTracker(object):
             unknown_devices = [device for device in found_devices
                                if device not in self.known_devices]
 
-            if len(unknown_devices) > 0:
+            if unknown_devices:
                 try:
                     # If file does not exist we will write the header too
                     is_new_file = not os.path.isfile(KNOWN_DEVICES_FILE)
@@ -215,26 +218,23 @@ class DeviceTracker(object):
                             name = util.slugify(row['name']) if row['name'] \
                                 else "unnamed_device"
 
-                            tries = 0
-                            suffix = ""
-                            while True:
+                            category = STATE_CATEGORY_FORMAT.format(name)
+                            tries = 1
+
+                            while category in used_categories:
                                 tries += 1
 
-                                if tries > 1:
-                                    suffix = "_{}".format(tries)
+                                suffix = "_{}".format(tries)
 
                                 category = STATE_CATEGORY_FORMAT.format(
                                     name + suffix)
-
-                                if category not in used_categories:
-                                    break
 
                             row['category'] = category
                             used_categories.append(category)
 
                         known_devices[device] = row
 
-                    if len(known_devices) == 0:
+                    if not known_devices:
                         self.logger.warning(
                             "No devices to track. Please update {}.".format(
                                 KNOWN_DEVICES_FILE))
@@ -247,7 +247,9 @@ class DeviceTracker(object):
                     for category in \
                             self.device_state_categories - new_categories:
 
-                        print "Removing ", category
+                        self.logger.info(
+                            "DeviceTracker:Removing category {}".format(
+                                category))
                         self.statemachine.remove_category(category)
 
                     # File parsed, warnings given if necessary
@@ -313,7 +315,7 @@ class TomatoDeviceScanner(object):
         filter_named = [item[0] for item in self.last_results['dhcpd_lease']
                         if item[2] == device]
 
-        if len(filter_named) == 0 or filter_named[0] == "":
+        if not filter_named or not filter_named[0]:
             return None
         else:
             return filter_named[0]
@@ -399,7 +401,6 @@ class NetgearDeviceScanner(object):
     def __init__(self, host, username, password):
         self._api = pynetgear.Netgear(host, username, password)
 
-
         self.logger = logging.getLogger(__name__)
         self.lock = threading.Lock()
 
@@ -426,32 +427,26 @@ class NetgearDeviceScanner(object):
         filter_named = [device.name for device in self.last_results
                         if device.mac == mac]
 
-        if len(filter_named) == 0:
-            return None
-        else:
+        if filter_named:
             return filter_named[0]
+        else:
+            return None
 
     def _update_info(self):
         """ Retrieves latest information from the Netgear router.
             Returns boolean if scanning successful. """
 
-        self.lock.acquire()
+        with self.lock:
+            # if date_updated is None or the date is too old we scan for
+            # new data
+            if (not self.date_updated or datetime.now() - self.date_updated >
+               MIN_TIME_BETWEEN_SCANS):
 
-        # if date_updated is None or the date is too old we scan for new data
-        if (not self.date_updated or datetime.now() - self.date_updated >
-           MIN_TIME_BETWEEN_SCANS):
+                self.logger.info("Netgear:Scanning")
 
-            self.logger.info("Netgear:Scanning")
+                self.last_results = self._api.get_attached_devices()
 
-            self.last_results = self._api.get_attached_devices()
+                return True
 
-            self.lock.release()
-
-            return True
-
-        else:
-            # We acquired the lock before the IF check,
-            # release it before we return True
-            self.lock.release()
-
-            return True
+            else:
+                return True

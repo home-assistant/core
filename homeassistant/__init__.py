@@ -47,12 +47,9 @@ def start_home_assistant(bus):
 
     bus.fire_event(EVENT_HOMEASSISTANT_START)
 
-    while True:
+    while not request_shutdown.isSet():
         try:
             time.sleep(1)
-
-            if request_shutdown.isSet():
-                break
 
         except KeyboardInterrupt:
             break
@@ -356,10 +353,10 @@ class StateMachine(object):
         self.lock.release()
 
     def get_state(self, category):
-        """ Returns a dict (state,last_changed, attributes) describing
+        """ Returns a dict (state, last_changed, attributes) describing
             the state of the specified category. """
         try:
-            # Make a copy so people won't accidently mutate the state
+            # Make a copy so people won't mutate the state
             return dict(self.states[category])
 
         except KeyError:
@@ -393,16 +390,19 @@ class Timer(threading.Thread):
         last_fired_on_second = -1
 
         while True:
-            # Sleep till it is the next time that we have to fire an event.
-            # Aim for halfway through the second that matches TIMER_INTERVAL.
-            # So if TIMER_INTERVAL is 10 fire at .5, 10.5, 20.5, etc seconds.
-            # This will yield the best results because time.sleep() is not
-            # 100% accurate because of non-realtime OS's
             now = datetime.now()
 
-            if now.second % TIMER_INTERVAL > 0 or \
+            # First check checks if we are not on a second matching the
+            # timer interval. Second check checks if we did not already fire
+            # this interval.
+            if now.second % TIMER_INTERVAL or \
                now.second == last_fired_on_second:
 
+                # Sleep till it is the next time that we have to fire an event.
+                # Aim for halfway through the second that fits TIMER_INTERVAL.
+                # If TIMER_INTERVAL is 10 fire at .5, 10.5, 20.5, etc seconds.
+                # This will yield the best results because time.sleep() is not
+                # 100% accurate because of non-realtime OS's
                 slp_seconds = TIMER_INTERVAL - now.second % TIMER_INTERVAL + \
                     .5 - now.microsecond/1000000.0
 

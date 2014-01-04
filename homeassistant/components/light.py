@@ -145,8 +145,8 @@ class HueLightControl(object):
     def is_light_on(self, light_id=None):
         """ Returns if specified or all light are on. """
         if not light_id:
-            return sum(
-                [1 for light in self._light_map.values() if light.on]) > 0
+            return any(
+                [True for light in self._light_map.values() if light.on])
 
         else:
             return self._bridge.get_light(self._convert_id(light_id), 'on')

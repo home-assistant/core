@@ -59,15 +59,12 @@ def setup(bus, download_path):
                                                           filename))
 
                 # If file exist append a number. We test filename, filename_2..
-                tries = 0
-                while True:
+                tries = 1
+                final_path = path + ext
+                while os.path.isfile(final_path):
                     tries += 1
 
-                    name_suffix = "" if tries == 1 else "_{}".format(tries)
-                    final_path = path + name_suffix + ext
-
-                    if not os.path.isfile(final_path):
-                        break
+                    final_path = path + "_{}".format(tries) + ext
 
                 logger.info("FileDownloader:{} -> {}".format(
                             service.data['url'], final_path))

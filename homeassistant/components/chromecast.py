@@ -94,7 +94,7 @@ def setup(bus, statemachine, host):
                                     ATTR_STATE: status.state,
                                     ATTR_OPTIONS: status.options})
         else:
-            statemachine.set_state(category, STATE_NO_APP)
+            statemachine.set_state(category, STATE_NO_APP, {ATTR_HOST: host})
 
     ha.track_time_change(bus, update_chromecast_state)
 
