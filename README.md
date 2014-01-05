@@ -169,15 +169,15 @@ The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Ho
 
 Architecture
 ------------
-The core of Home Assistant exists of two components; a Bus for calling services and firing events and a State Machine that keeps track of the state of things.
+The core of Home Assistant exists of two parts; a Bus for calling services and firing events and a State Machine that keeps track of the state of things.
 
 ![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/architecture.png)
 
-For example to control the lights there are two components. One is the device tracker that polls the wireless router for connected devices and updates the state of the tracked devices in the State Machine to be either 'Home' or 'Not Home'.
+For example to control the lights there are two components. One is the device_tracker that polls the wireless router for connected devices and updates the state of the tracked devices in the State Machine to be either 'Home' or 'Not Home'.
 
-When a state is changed a state_changed event is fired for which the light trigger component is listening. Based on the new state of the device combined with the state of the sun it will decide if it should turn the lights on or off:
+When a state is changed a state_changed event is fired for which the device_sun_light_trigger component is listening. Based on the new state of the device combined with the state of the sun it will decide if it should turn the lights on or off:
 
-    In the event that the state of device 'Paulus Nexus 4' changes to the 'Home' state:
+    In the event that the state of device 'Paulus Nexus 5' changes to the 'Home' state:
       If the sun has set and the lights are not on:
         Turn on the lights
     
@@ -189,37 +189,23 @@ When a state is changed a state_changed event is fired for which the light trigg
       If the lights are off and the combined state of all tracked device equals 'Home':
         Turn on the lights
 
-The light trigger component also registers the service turn_light_on with the Bus. When this is called it will turn on the lights.
+By using the Bus as a central communication hub between components it is easy to replace components or add functionality. For example if you would want to change the way devices are detected you only have to write a component that updates the device states in the State Machine.
 
-By using the Bus as a central communication hub between components it is easy to replace components or add functionality. For example if you would want to change the way devices are detected you only have to write a component that updates the State Machine and you're good to go.
+### Components
 
-The components have been categorized into two categories: 
-
- 1 components that observe (implemented in [observers.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/observers.py))
- 2 components that act on observations or provide services (implemented in [actors.py](https://github.com/balloob/home-assistant/blob/master/homeassistant/actors.py))
-
-### Supported observers
-
-**track_sun**
+**sun**
 Tracks the state of the sun and when the next sun rising and setting will occur.
 Depends on: latitude and longitude
 Action: maintains state of `weather.sun` including attributes `next_rising` and `next_setting`
 
-**TomatoDeviceScanner**
-A device scanner that scans a Tomato-based router and retrieves currently connected devices. To be used by `DeviceTracker`.
-Depends on: host, username, password and http_id to login to Tomato Router.
-
-**DeviceTracker**
+**device_tracker**
 Keeps track of which devices are currently home.
-Depends on: a device scanner
-Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `known_devices.csv`. Will also provide a service to reload `known_devices.csv`.
+Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `known_devices.csv`. 
 
-### Supported actors
+**Light**
+Keeps track which lights are turned on and can control the lights.
 
-**HueLightControl**
-A light control for controlling the Philips Hue lights.
-
-**LightTrigger**
+**device_sun_light_trigger**
 Turns lights on or off using a light control component based on state of the sun and devices that are home.
 Depends on: light control, track_sun, DeviceTracker
 Action: 
@@ -233,19 +219,19 @@ Optional service data:
   - `light_id` - only act on specific light. Else targets all.
   - `transition_seconds` - seconds to take to swithc to new state.
 
-**media_buttons**
-Registers services that will simulate key presses on the keyboard. It currently offers the following Buttons as a Service (BaaS): `keyboard/volume_up`, `keyboard/volume_down` and `keyboard/media_play_pause`
-This actor depends on: PyUserInput
-
-**file_downloader**
-Registers service `downloader/download_file` that will download files. File to download is specified in the `url` field in the service data.
-
-**webbrowser**
-Registers service `browser/browse_url` that opens `url` as specified in event_data in the system default browser.
-
 **chromecast**
 Registers three services to start playing YouTube video's on the ChromeCast.
 
 Service `chromecast/play_youtube_video` starts playing the specified video on the YouTube app on the ChromeCast. Specify video using `video` in service_data.
 
 Service `chromecast/start_fireplace` will start a YouTube movie simulating a fireplace and the `chromecast/start_epic_sax` service will start playing Epic Sax Guy 10h version.
+
+**media_buttons**
+Registers services that will simulate key presses on the keyboard. It currently offers the following Buttons as a Service (BaaS): `keyboard/volume_up`, `keyboard/volume_down` and `keyboard/media_play_pause`
+This actor depends on: PyUserInput
+
+**downloader**
+Registers service `downloader/download_file` that will download files. File to download is specified in the `url` field in the service data.
+
+**browser**
+Registers service `browser/browse_url` that opens `url` as specified in event_data in the system default browser.
