@@ -105,7 +105,8 @@ def setup(bus, statemachine, light_group=None):
                     "Home coming event for {}. Turning lights on".
                     format(category))
 
-                light.turn_on(bus)
+                for light_id in light_ids:
+                    light.turn_on(bus, light_id)
 
             # Are we in the time span were we would turn on the lights
             # if someone would be home?
