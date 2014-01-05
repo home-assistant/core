@@ -12,7 +12,7 @@ import requests
 
 import homeassistant.util as util
 
-DOMAIN_DOWNLOADER = "downloader"
+DOMAIN = "downloader"
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 
@@ -77,7 +77,7 @@ def setup(bus, download_path):
             logger.exception("FileDownloader:ConnectionError occured for {}".
                              format(service.data['url']))
 
-    bus.register_service(DOMAIN_DOWNLOADER, SERVICE_DOWNLOAD_FILE,
+    bus.register_service(DOMAIN, SERVICE_DOWNLOAD_FILE,
                          download_file)
 
     return True

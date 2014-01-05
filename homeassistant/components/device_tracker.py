@@ -1,5 +1,5 @@
 """
-homeassistant.components.sun
+homeassistant.components.tracker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to keep track of devices.
@@ -16,23 +16,23 @@ import requests
 
 import homeassistant as ha
 import homeassistant.util as util
+import homeassistant.components.group as group
 
 import homeassistant.external.pynetgear as pynetgear
 
-DOMAIN_DEVICE_TRACKER = "device_tracker"
+DOMAIN = "device_tracker"
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
 
-STATE_CATEGORY_ALL_DEVICES = 'devices'
-STATE_CATEGORY_FORMAT = 'devices.{}'
+STATE_GROUP_NAME_ALL_DEVICES = 'all_tracked_devices'
+STATE_CATEGORY_ALL_DEVICES = group.STATE_CATEGORY_FORMAT.format(
+    STATE_GROUP_NAME_ALL_DEVICES)
 
-STATE_NOT_HOME = 'device_not_home'
-STATE_HOME = 'device_home'
-
+STATE_CATEGORY_FORMAT = DOMAIN + '.{}'
 
 # After how much time do we consider a device not home if
 # it does not show up on scans
-TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=1)
+TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=3)
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
@@ -41,26 +41,15 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
 
-def get_categories(statemachine):
-    """ Returns the categories of devices that are being tracked in the
-        statemachine. """
-    return ha.get_grouped_state_cats(statemachine, STATE_CATEGORY_FORMAT,
-                                     False)
-
-
-def get_ids(statemachine):
-    """ Returns the devices that are being tracked in the statemachine. """
-    return ha.get_grouped_state_cats(statemachine, STATE_CATEGORY_FORMAT, True)
-
-
 def is_home(statemachine, device_id=None):
     """ Returns if any or specified device is home. """
     category = STATE_CATEGORY_FORMAT.format(device_id) if device_id \
         else STATE_CATEGORY_ALL_DEVICES
 
-    return statemachine.is_state(category, STATE_HOME)
+    return statemachine.is_state(category, ha.STATE_HOME)
 
 
+# pylint: disable=too-many-instance-attributes
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
@@ -88,11 +77,14 @@ class DeviceTracker(object):
                              self.update_devices(
                                  device_scanner.scan_devices()))
 
-        bus.register_service(DOMAIN_DEVICE_TRACKER,
+        bus.register_service(DOMAIN,
                              SERVICE_DEVICE_TRACKER_RELOAD,
                              lambda service: self._read_known_devices_file())
 
         self.update_devices(device_scanner.scan_devices())
+
+        group.setup(bus, statemachine, STATE_GROUP_NAME_ALL_DEVICES,
+                    list(self.device_state_categories))
 
     @property
     def device_state_categories(self):
@@ -119,7 +111,7 @@ class DeviceTracker(object):
                 self.known_devices[device]['last_seen'] = now
 
                 self.statemachine.set_state(
-                    self.known_devices[device]['category'], STATE_HOME)
+                    self.known_devices[device]['category'], ha.STATE_HOME)
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
@@ -131,18 +123,7 @@ class DeviceTracker(object):
 
                 self.statemachine.set_state(
                     self.known_devices[device]['category'],
-                    STATE_NOT_HOME)
-
-        # Get the currently used statuses
-        states_of_devices = [self.statemachine.get_state(category)['state']
-                             for category in self.device_state_categories]
-
-        # Update the all devices category
-        all_devices_state = (STATE_HOME if STATE_HOME
-                             in states_of_devices else STATE_NOT_HOME)
-
-        self.statemachine.set_state(STATE_CATEGORY_ALL_DEVICES,
-                                    all_devices_state)
+                    ha.STATE_NOT_HOME)
 
         # If we come along any unknown devices we will write them to the
         # known devices file but only if we did not encounter an invalid
@@ -407,7 +388,14 @@ class NetgearDeviceScanner(object):
         self.date_updated = None
         self.last_results = []
 
-        self.success_init = self._update_info()
+        self.logger.info("Netgear:Logging in")
+        if self._api.login():
+            self.success_init = self._update_info()
+
+        else:
+            self.logger.error("Netgear:Failed to Login")
+
+            self.success_init = False
 
     def scan_devices(self):
         """ Scans for new devices and return a
@@ -445,6 +433,8 @@ class NetgearDeviceScanner(object):
                 self.logger.info("Netgear:Scanning")
 
                 self.last_results = self._api.get_attached_devices()
+
+                self.date_updated = datetime.now()
 
                 return True
 

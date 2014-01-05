@@ -20,7 +20,7 @@ def shutdown_devices(bus, statemachine):
 def setup(bus, statemachine):
     """ Setup services related to homeassistant. """
 
-    bus.register_service(ha.DOMAIN_HOMEASSISTANT, SERVICE_SHUTDOWN_DEVICES,
+    bus.register_service(ha.DOMAIN, SERVICE_SHUTDOWN_DEVICES,
                          lambda service: shutdown_devices(bus, statemachine))
 
     return True

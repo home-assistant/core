@@ -5,7 +5,7 @@ homeassistant.components.browser
 Provides functionality to launch a webbrowser on the host machine.
 """
 
-DOMAIN_BROWSER = "browser"
+DOMAIN = "browser"
 
 SERVICE_BROWSE_URL = "browse_url"
 
@@ -16,7 +16,7 @@ def setup(bus):
 
     import webbrowser
 
-    bus.register_service(DOMAIN_BROWSER, SERVICE_BROWSE_URL,
+    bus.register_service(DOMAIN, SERVICE_BROWSE_URL,
                          lambda service: webbrowser.open(service.data['url']))
 
     return True

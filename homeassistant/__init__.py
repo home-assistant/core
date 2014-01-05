@@ -16,7 +16,12 @@ logging.basicConfig(level=logging.INFO)
 
 ALL_EVENTS = '*'
 
-DOMAIN_HOMEASSISTANT = "homeassistant"
+DOMAIN = "homeassistant"
+
+STATE_ON = "on"
+STATE_OFF = "off"
+STATE_NOT_HOME = 'device_not_home'
+STATE_HOME = 'device_home'
 
 SERVICE_TURN_ON = "turn_on"
 SERVICE_TURN_OFF = "turn_off"
@@ -40,7 +45,7 @@ def start_home_assistant(bus):
     """ Start home assistant. """
     request_shutdown = threading.Event()
 
-    bus.register_service(DOMAIN_HOMEASSISTANT, SERVICE_HOMEASSISTANT_STOP,
+    bus.register_service(DOMAIN, SERVICE_HOMEASSISTANT_STOP,
                          lambda service: request_shutdown.set())
 
     Timer(bus)
@@ -88,25 +93,19 @@ def _matcher(subject, pattern):
     return '*' in pattern or subject in pattern
 
 
-def get_grouped_state_cats(statemachine, cat_format_string, strip_prefix):
-    """ Get states that are part of a group of states.
+def split_state_category(category):
+    """ Splits a state category into domain, object_id. """
+    return category.split(".", 1)
 
-    Example category_format_string can be "devices.{}"
 
-    If input states are devices, devices.paulus and devices.paulus.charging
-    then the output will be paulus if strip_prefix is True, else devices.paulus
-    """
-    group_prefix = cat_format_string.format("")
-
-    if strip_prefix:
-        id_part = slice(len(group_prefix), None)
-
-        return [cat[id_part] for cat in statemachine.categories
-                if cat.startswith(group_prefix) and cat.count(".") == 1]
-
-    else:
-        return [cat for cat in statemachine.categories
-                if cat.startswith(group_prefix) and cat.count(".") == 1]
+def filter_categories(categories, domain_filter=None, object_id_only=False):
+    """ Filter a list of categories based on domain. Setting object_id_only
+        will only return the object_ids. """
+    return [
+        split_state_category(cat)[1] if object_id_only else cat
+        for cat in categories if
+        not domain_filter or cat.startswith(domain_filter)
+        ]
 
 
 def create_state(state, attributes=None, last_changed=None):
@@ -119,10 +118,10 @@ def create_state(state, attributes=None, last_changed=None):
             'last_changed': datetime_to_str(last_changed)}
 
 
-def track_state_change(bus, category, from_state, to_state, action):
+def track_state_change(bus, category, action, from_state=None, to_state=None):
     """ Helper method to track specific state changes. """
-    from_state = _ensure_list(from_state)
-    to_state = _ensure_list(to_state)
+    from_state = _ensure_list(from_state) if from_state else [ALL_EVENTS]
+    to_state = _ensure_list(to_state) if to_state else [ALL_EVENTS]
 
     def listener(event):
         """ State change listener that listens for specific state changes. """

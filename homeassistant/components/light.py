@@ -1,5 +1,5 @@
 """
-homeassistant.components.sun
+homeassistant.components.light
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to interact with lights.
@@ -10,14 +10,15 @@ from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
+import homeassistant.components.group as group
 
 DOMAIN = "light"
 
-STATE_CATEGORY_ALL_LIGHTS = 'lights'
-STATE_CATEGORY_FORMAT = "lights.{}"
+STATE_GROUP_NAME_ALL_LIGHTS = 'all_lights'
+STATE_CATEGORY_ALL_LIGHTS = group.STATE_CATEGORY_FORMAT.format(
+    STATE_GROUP_NAME_ALL_LIGHTS)
 
-STATE_ON = "on"
-STATE_OFF = "off"
+STATE_CATEGORY_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -27,7 +28,7 @@ def is_on(statemachine, light_id=None):
     category = STATE_CATEGORY_FORMAT.format(light_id) if light_id \
         else STATE_CATEGORY_ALL_LIGHTS
 
-    return statemachine.is_state(category, STATE_ON)
+    return statemachine.is_state(category, ha.STATE_ON)
 
 
 def turn_on(bus, light_id=None, transition_seconds=None):
@@ -56,13 +57,10 @@ def turn_off(bus, light_id=None, transition_seconds=None):
     bus.call_service(DOMAIN, ha.SERVICE_TURN_OFF, data)
 
 
-def get_ids(statemachine):
-    """ Get the light IDs that are being tracked in the statemachine. """
-    return ha.get_grouped_state_cats(statemachine, STATE_CATEGORY_FORMAT, True)
-
-
 def setup(bus, statemachine, light_control):
     """ Exposes light control via statemachine and services. """
+
+    logger = logging.getLogger(__name__)
 
     def update_light_state(time):  # pylint: disable=unused-argument
         """ Track the state of the lights. """
@@ -74,6 +72,8 @@ def setup(bus, statemachine, light_control):
             should_update = True
 
         if should_update:
+            logger.info("Updating light status")
+
             update_light_state.last_updated = datetime.now()
 
             status = {light_id: light_control.is_light_on(light_id)
@@ -82,17 +82,21 @@ def setup(bus, statemachine, light_control):
             for light_id, state in status.items():
                 state_category = STATE_CATEGORY_FORMAT.format(light_id)
 
-                statemachine.set_state(state_category,
-                                       STATE_ON if state
-                                       else STATE_OFF)
+                new_state = ha.STATE_ON if state else ha.STATE_OFF
 
-            statemachine.set_state(STATE_CATEGORY_ALL_LIGHTS,
-                                   STATE_ON if True in status.values()
-                                   else STATE_OFF)
+                statemachine.set_state(state_category, new_state)
 
     ha.track_time_change(bus, update_light_state, second=[0, 30])
 
-    def handle_light_event(service):
+    update_light_state(None)
+
+    # Track the all lights state
+    light_cats = [STATE_CATEGORY_FORMAT.format(light_id) for light_id
+                  in light_control.light_ids]
+
+    group.setup(bus, statemachine, STATE_GROUP_NAME_ALL_LIGHTS, light_cats)
+
+    def handle_light_service(service):
         """ Hande a turn light on or off service call. """
         light_id = service.data.get("light_id", None)
         transition_seconds = service.data.get("transition_seconds", None)
@@ -106,12 +110,10 @@ def setup(bus, statemachine, light_control):
 
     # Listen for light on and light off events
     bus.register_service(DOMAIN, ha.SERVICE_TURN_ON,
-                         handle_light_event)
+                         handle_light_service)
 
     bus.register_service(DOMAIN, ha.SERVICE_TURN_OFF,
-                         handle_light_event)
-
-    update_light_state(None)
+                         handle_light_service)
 
     return True
 
