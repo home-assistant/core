@@ -148,10 +148,16 @@ class HueLightControl(object):
         """ Returns if specified or all light are on. """
         if not light_id:
             return any(
-                [True for light in self._light_map.values() if light.on])
+                True for light in self._light_map.values()
+                if self.is_light_on(light))
 
         else:
-            return self._bridge.get_light(self._convert_id(light_id), 'on')
+            state = self._bridge.get_light(self._convert_id(light_id))
+
+            try:
+                return state and state['reachable'] and state['state']['on']
+            except KeyError:  # If reachable, state or on not exists in state.
+                return False
 
     def turn_light_on(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights on. """
