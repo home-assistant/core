@@ -86,7 +86,7 @@ def setup(bus, statemachine, light_group=None):
 
     def handle_device_state_change(category, old_state, new_state):
         """ Function to handle tracked device state changes. """
-        lights_are_on = light.is_on(statemachine)
+        lights_are_on = group.is_on(statemachine, light_group)
 
         light_needed = not (lights_are_on or sun.is_up(statemachine))
 

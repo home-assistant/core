@@ -30,6 +30,23 @@ def _get_group_type(state):
     return None
 
 
+def is_on(statemachine, group):
+    """ Returns if the group state is in its ON-state. """
+    state = statemachine.get_state(group)
+
+    if state:
+        group_type = _get_group_type(state['state'])
+
+        if group_type:
+            group_on = _GROUP_TYPES[group_type][0]
+
+            return state['state'] == group_on
+        else:
+            return False
+    else:
+        return False
+
+
 def get_categories(statemachine, group_name):
     """ Get the categories that make up this group. """
     state = statemachine.get_state(STATE_CATEGORY_FORMAT.format(group_name))
