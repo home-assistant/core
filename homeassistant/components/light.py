@@ -122,22 +122,41 @@ class HueLightControl(object):
     """ Class to interface with the Hue light system. """
 
     def __init__(self, host=None):
+        logger = logging.getLogger(__name__)
+
         try:
             import phue
+            import socket
         except ImportError:
-            logging.getLogger(__name__).exception(
-                "HueLightControl: Error while importing dependency phue.")
+            logger.exception(
+                "HueLightControl:Error while importing dependency phue.")
 
             self.success_init = False
+            self._light_map = {}
 
             return
 
-        self._bridge = phue.Bridge(host)
+        try:
+            self._bridge = phue.Bridge(host)
+        except socket.error:  # Error connecting using Phue
+            logger.exception((
+                "HueLightControl:Error while connecting to the bridge. "
+                "Is phue registered?"))
+
+            self.success_init = False
+            self._light_map = {}
+
+            return
 
         self._light_map = {util.slugify(light.name): light for light
                            in self._bridge.get_light_objects()}
 
-        self.success_init = True
+        if not self._light_map:
+            logger.error("HueLightControl:Could not find any lights. ")
+
+            self.success_init = False
+        else:
+            self.success_init = True
 
     @property
     def light_ids(self):
@@ -148,15 +167,21 @@ class HueLightControl(object):
         """ Returns if specified or all light are on. """
         if not light_id:
             return any(
-                True for light in self._light_map.values()
-                if self.is_light_on(light))
+                True for light_id in self._light_map.keys()
+                if self.is_light_on(light_id))
 
         else:
-            state = self._bridge.get_light(self._convert_id(light_id))
+            light_id = self._convert_id(light_id)
+
+            if not light_id:  # Not valid light_id submitted
+                return False
+
+            state = self._bridge.get_light(light_id)
 
             try:
-                return state and state['reachable'] and state['state']['on']
-            except KeyError:  # If reachable, state or on not exists in state.
+                return state['state']['reachable'] and state['state']['on']
+            except KeyError:
+                # If key 'state', 'reachable' or 'on' not exists.
                 return False
 
     def turn_light_on(self, light_id=None, transition_seconds=None):
@@ -171,6 +196,10 @@ class HueLightControl(object):
         """ Helper method to turn lights on or off. """
         if light_id:
             light_id = self._convert_id(light_id)
+
+            if not light_id:  # Not valid light id submitted
+                return
+
         else:
             light_id = [light.light_id for light in self._light_map.values()]
 
@@ -179,11 +208,14 @@ class HueLightControl(object):
 
         if transition_seconds:
             # Transition time is in 1/10th seconds and cannot exceed
-            # MAX_TRANSITION_TIME which is 900 seconds for Hue.
+            # 900 seconds.
             command['transitiontime'] = min(9000, transition_seconds * 10)
 
         self._bridge.set_light(light_id, command)
 
     def _convert_id(self, light_id):
         """ Returns internal light id to be used with phue. """
-        return self._light_map[light_id].light_id
+        try:
+            return self._light_map[light_id].light_id
+        except KeyError:  # if light_id is not a valid key
+            return None
