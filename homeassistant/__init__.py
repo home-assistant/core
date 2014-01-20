@@ -117,24 +117,24 @@ def track_time_change(bus, action,
                       hour=None, minute=None, second=None,
                       point_in_time=None, listen_once=False):
     """ Adds a listener that will listen for a specified or matching time. """
-    year, month = _process_match_param(year), _process_match_param(month)
-    day = _process_match_param(day)
-
-    hour, minute = _process_match_param(hour), _process_match_param(minute)
-    second = _process_match_param(second)
+    pmp = _process_match_param
+    year, month, day = pmp(year), pmp(month), pmp(day)
+    hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
     def listener(event):
         """ Listens for matching time_changed events. """
         now = event.data['now']
 
+        mat = _matcher
+
         if (point_in_time and now > point_in_time) or \
            (not point_in_time and
-                _matcher(now.year, year) and
-                _matcher(now.month, month) and
-                _matcher(now.day, day) and
-                _matcher(now.hour, hour) and
-                _matcher(now.minute, minute) and
-                _matcher(now.second, second)):
+                mat(now.year, year) and
+                mat(now.month, month) and
+                mat(now.day, day) and
+                mat(now.hour, hour) and
+                mat(now.minute, minute) and
+                mat(now.second, second)):
 
             # point_in_time are exact points in time
             # so we always remove it after fire
