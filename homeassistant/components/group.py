@@ -47,9 +47,9 @@ def is_on(statemachine, group):
         return False
 
 
-def get_categories(statemachine, group_name):
+def get_categories(statemachine, group):
     """ Get the categories that make up this group. """
-    state = statemachine.get_state(STATE_CATEGORY_FORMAT.format(group_name))
+    state = statemachine.get_state(group)
 
     return state['attributes'][STATE_ATTR_CATEGORIES] if state else []
 

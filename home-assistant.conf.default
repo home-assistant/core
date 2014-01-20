@@ -27,7 +27,7 @@ download_dir=downloads
 
 [device_sun_light_trigger]
 # Example how you can specify a specific group that has to be turned on
-# light_group=living_room
+# light_group=group.living_room
 
 # A comma seperated list of states that have to be tracked
 # As a single group
