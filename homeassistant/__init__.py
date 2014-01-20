@@ -213,8 +213,8 @@ class Bus(object):
         # Copy the list of the current listeners because some listeners
         # choose to remove themselves as a listener while being executed
         # which causes the iterator to be confused.
-        listeners = self._event_listeners.get(MATCH_ALL, []) + \
-                    self._event_listeners.get(event_type, [])
+        get = self._event_listeners.get
+        listeners = get(MATCH_ALL, []) + get(event_type, [])
 
         if not listeners:
             return
@@ -248,7 +248,6 @@ class Bus(object):
             self._event_listeners[event_type].append(listener)
         except KeyError:  # event_type did not exist
             self._event_listeners[event_type] = [listener]
-
 
     def listen_once_event(self, event_type, listener):
         """ Listen once for event of a specific type.
