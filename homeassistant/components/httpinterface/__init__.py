@@ -350,7 +350,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                   category,
                   state.state,
                   attributes,
-                  state.last_changed))
+                  util.datetime_to_str(state.last_changed)))
 
         # Change state form
         write(("<tr><td><input name='category' class='form-control' "
