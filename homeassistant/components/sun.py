@@ -10,7 +10,7 @@ from datetime import timedelta
 import homeassistant as ha
 import homeassistant.util as util
 
-STATE_CATEGORY = "weather.sun"
+ENTITY_ID = "weather.sun"
 
 STATE_ABOVE_HORIZON = "above_horizon"
 STATE_BELOW_HORIZON = "below_horizon"
@@ -21,12 +21,12 @@ STATE_ATTR_NEXT_SETTING = "next_setting"
 
 def is_up(statemachine):
     """ Returns if the sun is currently up based on the statemachine. """
-    return statemachine.is_state(STATE_CATEGORY, STATE_ABOVE_HORIZON)
+    return statemachine.is_state(ENTITY_ID, STATE_ABOVE_HORIZON)
 
 
 def next_setting(statemachine):
     """ Returns the datetime object representing the next sun setting. """
-    state = statemachine.get_state(STATE_CATEGORY)
+    state = statemachine.get_state(ENTITY_ID)
 
     return None if not state else util.str_to_datetime(
         state.attributes[STATE_ATTR_NEXT_SETTING])
@@ -34,7 +34,7 @@ def next_setting(statemachine):
 
 def next_rising(statemachine):
     """ Returns the datetime object representing the next sun setting. """
-    state = statemachine.get_state(STATE_CATEGORY)
+    state = statemachine.get_state(ENTITY_ID)
 
     return None if not state else util.str_to_datetime(
         state.attributes[STATE_ATTR_NEXT_RISING])
@@ -79,7 +79,7 @@ def setup(bus, statemachine, latitude, longitude):
             STATE_ATTR_NEXT_SETTING: util.datetime_to_str(next_setting_dt)
         }
 
-        statemachine.set_state(STATE_CATEGORY, new_state, state_attributes)
+        statemachine.set_state(ENTITY_ID, new_state, state_attributes)
 
         # +10 seconds to be sure that the change has occured
         ha.track_time_change(bus, update_sun_state,

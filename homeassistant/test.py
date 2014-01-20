@@ -77,12 +77,12 @@ class TestHTTPInterface(unittest.TestCase):
         """ Test if we get access denied if we omit or provide
             a wrong api password. """
         req = requests.get(
-            _url(hah.URL_API_STATES_CATEGORY.format("test")))
+            _url(hah.URL_API_STATES_ENTITY.format("test")))
 
         self.assertEqual(req.status_code, 401)
 
         req = requests.get(
-            _url(hah.URL_API_STATES_CATEGORY.format("test")),
+            _url(hah.URL_API_STATES_ENTITY.format("test")),
             params={"api_password": "not the password"})
 
         self.assertEqual(req.status_code, 401)
@@ -92,7 +92,7 @@ class TestHTTPInterface(unittest.TestCase):
         self.statemachine.set_state("test.test", "not_to_be_set_state")
 
         requests.post(_url(hah.URL_CHANGE_STATE),
-                      data={"category": "test.test",
+                      data={"entity_id": "test.test",
                             "new_state": "debug_state_change2",
                             "api_password": API_PASSWORD})
 
@@ -122,20 +122,20 @@ class TestHTTPInterface(unittest.TestCase):
 
         self.assertEqual(len(test_value), 1)
 
-    def test_api_list_state_categories(self):
-        """ Test if the debug interface allows us to list state categories. """
+    def test_api_list_state_entities(self):
+        """ Test if the debug interface allows us to list state entities. """
         req = requests.get(_url(hah.URL_API_STATES),
                            data={"api_password": API_PASSWORD})
 
         data = req.json()
 
-        self.assertEqual(self.statemachine.categories,
-                         data['categories'])
+        self.assertEqual(self.statemachine.entity_ids,
+                         data['entity_ids'])
 
     def test_api_get_state(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
-            _url(hah.URL_API_STATES_CATEGORY.format("test")),
+            _url(hah.URL_API_STATES_ENTITY.format("test")),
             data={"api_password": API_PASSWORD})
 
         data = ha.State.from_json_dict(req.json())
@@ -149,17 +149,17 @@ class TestHTTPInterface(unittest.TestCase):
     def test_api_get_non_existing_state(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
-            _url(hah.URL_API_STATES_CATEGORY.format("does_not_exist")),
+            _url(hah.URL_API_STATES_ENTITY.format("does_not_exist")),
             params={"api_password": API_PASSWORD})
 
         self.assertEqual(req.status_code, 422)
 
     def test_api_state_change(self):
-        """ Test if we can change the state of a category that exists. """
+        """ Test if we can change the state of an entity that exists. """
 
         self.statemachine.set_state("test.test", "not_to_be_set_state")
 
-        requests.post(_url(hah.URL_API_STATES_CATEGORY.format("test.test")),
+        requests.post(_url(hah.URL_API_STATES_ENTITY.format("test.test")),
                       data={"new_state": "debug_state_change2",
                             "api_password": API_PASSWORD})
 
@@ -167,20 +167,20 @@ class TestHTTPInterface(unittest.TestCase):
                          "debug_state_change2")
 
     # pylint: disable=invalid-name
-    def test_api_state_change_of_non_existing_category(self):
+    def test_api_state_change_of_non_existing_entity(self):
         """ Test if the API allows us to change a state of
-            a non existing category. """
+            a non existing entity. """
 
         new_state = "debug_state_change"
 
         req = requests.post(
-            _url(hah.URL_API_STATES_CATEGORY.format(
-                "test_category_that_does_not_exist")),
+            _url(hah.URL_API_STATES_ENTITY.format(
+                "test_entity_that_does_not_exist")),
             data={"new_state": new_state,
                   "api_password": API_PASSWORD})
 
         cur_state = (self.statemachine.
-                     get_state("test_category_that_does_not_exist").state)
+                     get_state("test_entity_that_does_not_exist").state)
 
         self.assertEqual(req.status_code, 201)
         self.assertEqual(cur_state, new_state)
@@ -326,14 +326,14 @@ class TestRemote(unittest.TestCase):
         cls.sm_with_remote_eb.set_state("test", "a_state")
 
     # pylint: disable=invalid-name
-    def test_remote_sm_list_state_categories(self):
-        """ Test if the debug interface allows us to list state categories. """
+    def test_remote_sm_list_state_entities(self):
+        """ Test if the debug interface allows us to list state entity ids. """
 
-        self.assertEqual(self.statemachine.categories,
-                         self.remote_sm.categories)
+        self.assertEqual(self.statemachine.entity_ids,
+                         self.remote_sm.entity_ids)
 
     def test_remote_sm_get_state(self):
-        """ Test if the debug interface allows us to list state categories. """
+        """ Test if debug interface allows us to get state of an entity. """
         remote_state = self.remote_sm.get_state("test")
 
         state = self.statemachine.get_state("test")
@@ -343,11 +343,11 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_state.attributes, state.attributes)
 
     def test_remote_sm_get_non_existing_state(self):
-        """ Test if the debug interface allows us to list state categories. """
+        """ Test remote state machine to get state of non existing entity. """
         self.assertEqual(self.remote_sm.get_state("test_does_not_exist"), None)
 
     def test_remote_sm_state_change(self):
-        """ Test if we can change the state of a category that exists. """
+        """ Test if we can change the state of an existing entity. """
 
         self.remote_sm.set_state("test", "set_remotely", {"test": 1})
 

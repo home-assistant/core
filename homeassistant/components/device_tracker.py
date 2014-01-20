@@ -24,11 +24,11 @@ DOMAIN = "device_tracker"
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
 
-STATE_GROUP_NAME_ALL_DEVICES = 'all_tracked_devices'
-STATE_CATEGORY_ALL_DEVICES = group.STATE_CATEGORY_FORMAT.format(
-    STATE_GROUP_NAME_ALL_DEVICES)
+GROUP_NAME_ALL_DEVICES = 'all_tracked_devices'
+ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format(
+    GROUP_NAME_ALL_DEVICES)
 
-STATE_CATEGORY_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 # After how much time do we consider a device not home if
 # it does not show up on scans
@@ -43,10 +43,10 @@ KNOWN_DEVICES_FILE = "known_devices.csv"
 
 def is_home(statemachine, device_id=None):
     """ Returns if any or specified device is home. """
-    category = STATE_CATEGORY_FORMAT.format(device_id) if device_id \
-        else STATE_CATEGORY_ALL_DEVICES
+    entity = ENTITY_ID_FORMAT.format(device_id) if device_id \
+        else ENTITY_ID_ALL_DEVICES
 
-    return statemachine.is_state(category, ha.STATE_HOME)
+    return statemachine.is_state(entity, ha.STATE_HOME)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -83,14 +83,14 @@ class DeviceTracker(object):
 
         self.update_devices(device_scanner.scan_devices())
 
-        group.setup(bus, statemachine, STATE_GROUP_NAME_ALL_DEVICES,
-                    list(self.device_state_categories))
+        group.setup(bus, statemachine, GROUP_NAME_ALL_DEVICES,
+                    list(self.device_entity_ids))
 
     @property
-    def device_state_categories(self):
-        """ Returns a set containing all categories
-            that are maintained for devices. """
-        return set([self.known_devices[device]['category'] for device
+    def device_entity_ids(self):
+        """ Returns a set containing all device entity ids
+            that are being tracked. """
+        return set([self.known_devices[device]['entity_id'] for device
                     in self.known_devices
                     if self.known_devices[device]['track']])
 
@@ -111,7 +111,7 @@ class DeviceTracker(object):
                 self.known_devices[device]['last_seen'] = now
 
                 self.statemachine.set_state(
-                    self.known_devices[device]['category'], ha.STATE_HOME)
+                    self.known_devices[device]['entity_id'], ha.STATE_HOME)
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
@@ -122,7 +122,7 @@ class DeviceTracker(object):
                self.error_scanning):
 
                 self.statemachine.set_state(
-                    self.known_devices[device]['category'],
+                    self.known_devices[device]['entity_id'],
                     ha.STATE_NOT_HOME)
 
         # If we come along any unknown devices we will write them to the
@@ -180,9 +180,9 @@ class DeviceTracker(object):
             with open(KNOWN_DEVICES_FILE) as inp:
                 default_last_seen = datetime(1990, 1, 1)
 
-                # Temp variable to keep track of which categories we use
-                # so we can ensure we have unique categories.
-                used_categories = []
+                # Temp variable to keep track of which entity ids we use
+                # so we can ensure we have unique entity ids.
+                used_entity_ids = []
 
                 try:
                     for row in csv.DictReader(inp):
@@ -195,23 +195,23 @@ class DeviceTracker(object):
                             row['last_seen'] = default_last_seen
 
                             # Make sure that each device is mapped
-                            # to a unique category name
+                            # to a unique entity_id name
                             name = util.slugify(row['name']) if row['name'] \
                                 else "unnamed_device"
 
-                            category = STATE_CATEGORY_FORMAT.format(name)
+                            entity_id = ENTITY_ID_FORMAT.format(name)
                             tries = 1
 
-                            while category in used_categories:
+                            while entity_id in used_entity_ids:
                                 tries += 1
 
                                 suffix = "_{}".format(tries)
 
-                                category = STATE_CATEGORY_FORMAT.format(
+                                entity_id = ENTITY_ID_FORMAT.format(
                                     name + suffix)
 
-                            row['category'] = category
-                            used_categories.append(category)
+                            row['entity_id'] = entity_id
+                            used_entity_ids.append(entity_id)
 
                         known_devices[device] = row
 
@@ -220,21 +220,21 @@ class DeviceTracker(object):
                             "No devices to track. Please update {}.".format(
                                 KNOWN_DEVICES_FILE))
 
-                    # Remove categories that are no longer maintained
-                    new_categories = set([known_devices[device]['category']
+                    # Remove entities that are no longer maintained
+                    new_entity_ids = set([known_devices[device]['entity_id']
                                          for device in known_devices
                                          if known_devices[device]['track']])
 
-                    for category in \
-                            self.device_state_categories - new_categories:
+                    for entity_id in \
+                            self.device_entity_ids - new_entity_ids:
 
                         self.logger.info(
-                            "DeviceTracker:Removing category {}".format(
-                                category))
-                        self.statemachine.remove_category(category)
+                            "DeviceTracker:Removing entity {}".format(
+                                entity_id))
+                        self.statemachine.remove_entity(entity_id)
 
                     # File parsed, warnings given if necessary
-                    # categories cleaned up, make it available
+                    # entities cleaned up, make it available
                     self.known_devices = known_devices
 
                     self.logger.info(

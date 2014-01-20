@@ -138,10 +138,10 @@ def from_config_file(config_path):
 
     # Init groups
     if has_section("groups"):
-        for name, categories in config.items("groups"):
+        for name, entity_ids in config.items("groups"):
             add_status("Group - {}".format(name),
                        group.setup(bus, statemachine, name,
-                                   categories.split(",")))
+                                   entity_ids.split(",")))
 
     # Light trigger
     if light_control:

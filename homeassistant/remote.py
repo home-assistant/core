@@ -202,13 +202,13 @@ class StateMachine(ha.StateMachine):
         self.logger = logging.getLogger(__name__)
 
     @property
-    def categories(self):
-        """ List of categories which states are being tracked. """
+    def entity_ids(self):
+        """ List of entity ids which states are being tracked. """
 
         try:
             req = self._call_api(METHOD_GET, hah.URL_API_STATES)
 
-            return req.json()['categories']
+            return req.json()['entity_ids']
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("StateMachine:Error connecting to server")
@@ -218,19 +218,19 @@ class StateMachine(ha.StateMachine):
             self.logger.exception("StateMachine:Got unexpected result")
             return []
 
-        except KeyError:  # If 'categories' key not in parsed json
+        except KeyError:  # If 'entity_ids' key not in parsed json
             self.logger.exception("StateMachine:Got unexpected result (2)")
             return []
 
-    def remove_category(self, category):
+    def remove_entity(self, entity_id):
         """ This method is not implemented for remote statemachine.
 
         Throws NotImplementedError. """
 
         raise NotImplementedError
 
-    def set_state(self, category, new_state, attributes=None):
-        """ Set the state of a category, add category if it does not exist.
+    def set_state(self, entity_id, new_state, attributes=None):
+        """ Set the state of a entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state. """
 
@@ -243,7 +243,7 @@ class StateMachine(ha.StateMachine):
 
         try:
             req = self._call_api(METHOD_POST,
-                                 hah.URL_API_STATES_CATEGORY.format(category),
+                                 hah.URL_API_STATES_ENTITY.format(entity_id),
                                  data)
 
             if req.status_code != 201:
@@ -260,13 +260,12 @@ class StateMachine(ha.StateMachine):
         finally:
             self.lock.release()
 
-    def get_state(self, category):
-        """ Returns a dict (state,last_changed, attributes) describing
-            the state of the specified category. """
+    def get_state(self, entity_id):
+        """ Returns the state of the specified entity. """
 
         try:
             req = self._call_api(METHOD_GET,
-                                 hah.URL_API_STATES_CATEGORY.format(category))
+                                 hah.URL_API_STATES_ENTITY.format(entity_id))
 
             if req.status_code == 200:
                 data = req.json()
@@ -274,7 +273,7 @@ class StateMachine(ha.StateMachine):
                 return ha.State.from_json_dict(data)
 
             elif req.status_code == 422:
-                # Category does not exist
+                # Entity does not exist
                 return None
 
             else:

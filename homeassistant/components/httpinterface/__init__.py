@@ -18,31 +18,31 @@ Other status codes that can occur are:
 The api supports the following actions:
 
 /api/states - GET
-Returns a list of categories for which a state is available
+Returns a list of entities for which a state is available
 Example result:
 {
-    "categories": [
+    "entity_ids": [
         "Paulus_Nexus_4",
         "weather.sun",
         "all_devices"
     ]
 }
 
-/api/states/<category> - GET
-Returns the current state from a category
+/api/states/<entity_id> - GET
+Returns the current state from an entity
 Example result:
 {
     "attributes": {
         "next_rising": "07:04:15 29-10-2013",
         "next_setting": "18:00:31 29-10-2013"
     },
-    "category": "weather.sun",
+    "entity_id": "weather.sun",
     "last_changed": "23:24:33 28-10-2013",
     "state": "below_horizon"
 }
 
-/api/states/<category> - POST
-Updates the current state of a category. Returns status code 201 if successful
+/api/states/<entity_id> - POST
+Updates the current state of an entity. Returns status code 201 if successful
 with location header of updated resource and as body the new state.
 parameter: new_state - string
 optional parameter: attributes - JSON encoded object
@@ -52,7 +52,7 @@ Example result:
         "next_rising": "07:04:15 29-10-2013",
         "next_setting": "18:00:31 29-10-2013"
     },
-    "category": "weather.sun",
+    "entity_id": "weather.sun",
     "last_changed": "23:24:33 28-10-2013",
     "state": "below_horizon"
 }
@@ -94,7 +94,7 @@ URL_CHANGE_STATE = "/change_state"
 URL_FIRE_EVENT = "/fire_event"
 
 URL_API_STATES = "/api/states"
-URL_API_STATES_CATEGORY = "/api/states/{}"
+URL_API_STATES_ENTITY = "/api/states/{}"
 URL_API_EVENTS = "/api/events"
 URL_API_EVENTS_EVENT = "/api/events/{}"
 URL_API_SERVICES = "/api/services"
@@ -150,10 +150,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         # /states
         ('GET', '/api/states', '_handle_get_api_states'),
         ('GET',
-         re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
-         '_handle_get_api_states_category'),
+         re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+         '_handle_get_api_states_entity'),
         ('POST',
-         re.compile(r'/api/states/(?P<category>[a-zA-Z\._0-9]+)'),
+         re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
          '_handle_change_state'),
 
         # /events
@@ -317,8 +317,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.server.flash_message = None
 
         # Describe state machine:
-        categories = []
-
         write(("<div class='row'>"
                "<div class='col-xs-12'>"
                "<div class='panel panel-primary'>"
@@ -328,17 +326,15 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "class='form-change-state'>"
                "<input type='hidden' name='api_password' value='{}'>"
                "<table class='table'><tr>"
-               "<th>Category</th><th>State</th>"
+               "<th>Entity ID</th><th>State</th>"
                "<th>Attributes</th><th>Last Changed</th>"
                "</tr>").format(self.server.api_password))
 
-        for category in \
-            sorted(self.server.statemachine.categories,
+        for entity_id in \
+            sorted(self.server.statemachine.entity_ids,
                    key=lambda key: key.lower()):
 
-            categories.append(category)
-
-            state = self.server.statemachine.get_state(category)
+            state = self.server.statemachine.get_state(entity_id)
 
             attributes = "<br>".join(
                 ["{}: {}".format(attr, state.attributes[attr])
@@ -347,14 +343,14 @@ class RequestHandler(BaseHTTPRequestHandler):
             write(("<tr>"
                    "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
                    "</tr>").format(
-                  category,
+                  entity_id,
                   state.state,
                   attributes,
                   util.datetime_to_str(state.last_changed)))
 
         # Change state form
-        write(("<tr><td><input name='category' class='form-control' "
-                 "placeholder='Category'></td>"
+        write(("<tr><td><input name='entity_id' class='form-control' "
+                 "placeholder='Entity ID'></td>"
                "<td><input name='new_state' class='form-control' "
                  "placeholder='New State'></td>"
                "<td><textarea rows='3' name='attributes' class='form-control' "
@@ -488,18 +484,18 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     # pylint: disable=invalid-name
     def _handle_change_state(self, path_match, data):
-        """ Handles updating the state of a category.
+        """ Handles updating the state of an entity.
 
         This handles the following paths:
         /change_state
-        /api/states/<category>
+        /api/states/<entity_id>
         """
         try:
             try:
-                category = path_match.group('category')
+                entity_id = path_match.group('entity_id')
             except IndexError:
-                # If group 'category' does not exist in path_match
-                category = data['category'][0]
+                # If group 'entity_id' does not exist in path_match
+                entity_id = data['entity_id'][0]
 
             new_state = data['new_state'][0]
 
@@ -510,21 +506,21 @@ class RequestHandler(BaseHTTPRequestHandler):
                 attributes = None
 
             # Write state
-            self.server.statemachine.set_state(category,
+            self.server.statemachine.set_state(entity_id,
                                                new_state,
                                                attributes)
 
             # Return state if json, else redirect to main page
             if self.use_json:
-                state = self.server.statemachine.get_state(category)
+                state = self.server.statemachine.get_state(entity_id)
 
-                self._write_json(state.to_json_dict(category),
+                self._write_json(state.to_json_dict(entity_id),
                                  status_code=HTTP_CREATED,
                                  location=
-                                 URL_API_STATES_CATEGORY.format(category))
+                                 URL_API_STATES_ENTITY.format(entity_id))
             else:
                 self._message(
-                    "State of {} changed to {}".format(category, new_state))
+                    "State of {} changed to {}".format(entity_id, new_state))
 
         except KeyError:
             # If new_state don't exist in post data
@@ -607,20 +603,20 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):
-        """ Returns the categories which state is being tracked. """
-        self._write_json({'categories': self.server.statemachine.categories})
+        """ Returns the entitie ids which state are being tracked. """
+        self._write_json({'entity_ids': self.server.statemachine.entity_ids})
 
     # pylint: disable=unused-argument
-    def _handle_get_api_states_category(self, path_match, data):
-        """ Returns the state of a specific category. """
-        category = path_match.group('category')
+    def _handle_get_api_states_entity(self, path_match, data):
+        """ Returns the state of a specific entity. """
+        entity_id = path_match.group('entity_id')
 
-        state = self.server.statemachine.get_state(category)
+        state = self.server.statemachine.get_state(entity_id)
 
         if state:
-            self._write_json(state.to_json_dict(category))
+            self._write_json(state.to_json_dict(entity_id))
         else:
-            # If category does not exist
+            # If entity_id does not exist
             self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)
 
     def _handle_get_api_events(self, path_match, data):

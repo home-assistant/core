@@ -62,11 +62,11 @@ Other status codes that can occur are:
 The api supports the following actions:
 
 **/api/states - GET**<br>
-Returns a list of categories for which a state is available
+Returns a list of entity ids for which a state is available
 
 ```json
 {
-    "categories": [
+    "entity_ids": [
         "Paulus_Nexus_4", 
         "weather.sun", 
         "all_devices"
@@ -103,8 +103,8 @@ Returns a dict with as keys the domain and as value a list of published services
 }
 ```
 
-**/api/states/&lt;category>** - GET<br>
-Returns the current state from a category
+**/api/states/&lt;entity_id>** - GET<br>
+Returns the current state from an entity
 
 ```json
 {
@@ -112,14 +112,14 @@ Returns the current state from a category
         "next_rising": "07:04:15 29-10-2013", 
         "next_setting": "18:00:31 29-10-2013"
     }, 
-    "category": "weather.sun", 
+    "entity_id": "weather.sun", 
     "last_changed": "23:24:33 28-10-2013", 
     "state": "below_horizon"
 }
 ```
 
-**/api/states/&lt;category>** - POST<br>
-Updates the current state of a category. Returns status code 201 if successful with location header of updated resource and the new state in the body.<br>
+**/api/states/&lt;entity_id>** - POST<br>
+Updates the current state of an entity. Returns status code 201 if successful with location header of updated resource and the new state in the body.<br>
 parameter: new_state - string<br>
 optional parameter: attributes - JSON encoded object
 
@@ -129,7 +129,7 @@ optional parameter: attributes - JSON encoded object
         "next_rising": "07:04:15 29-10-2013", 
         "next_setting": "18:00:31 29-10-2013"
     }, 
-    "category": "weather.sun", 
+    "entity_id": "weather.sun", 
     "last_changed": "23:24:33 28-10-2013", 
     "state": "below_horizon"
 }

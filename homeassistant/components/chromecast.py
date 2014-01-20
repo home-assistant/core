@@ -16,7 +16,7 @@ DOMAIN = "chromecast"
 
 SERVICE_YOUTUBE_VIDEO = "play_youtube_video"
 
-STATE_CATEGORY_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 STATE_NO_APP = "none"
 
 ATTR_FRIENDLY_NAME = "friendly_name"
@@ -29,15 +29,15 @@ def turn_off(statemachine, cc_id=None):
     """ Exits any running app on the specified ChromeCast and shows
     idle screen. Will quit all ChromeCasts if nothing specified. """
 
-    cats = [STATE_CATEGORY_FORMAT.format(cc_id)] if cc_id \
-        else ha.filter_categories(statemachine.categories, DOMAIN)
+    entity_ids = [ENTITY_ID_FORMAT.format(cc_id)] if cc_id \
+        else ha.filter_entity_ids(statemachine.entity_ids, DOMAIN)
 
-    for cat in cats:
-        state = statemachine.get_state(cat)
+    for entity_id in entity_ids:
+        state = statemachine.get_state(entity_id)
 
-        if state and \
-           state.state != STATE_NO_APP or \
-           state.state != pychromecast.APP_ID_HOME:
+        if (state and
+            (state.state != STATE_NO_APP or
+             state.state != pychromecast.APP_ID_HOME)):
 
             pychromecast.quit_app(state.attributes[ATTR_HOST])
 
@@ -53,7 +53,7 @@ def setup(bus, statemachine, host):
         logger.error("Could not find Chromecast")
         return False
 
-    category = STATE_CATEGORY_FORMAT.format(util.slugify(
+    entity = ENTITY_ID_FORMAT.format(util.slugify(
         device.friendly_name))
 
     bus.register_service(DOMAIN, ha.SERVICE_TURN_OFF,
@@ -80,7 +80,7 @@ def setup(bus, statemachine, host):
         status = pychromecast.get_app_status(host)
 
         if status:
-            statemachine.set_state(category, status.name,
+            statemachine.set_state(entity, status.name,
                                    {ATTR_FRIENDLY_NAME:
                                        pychromecast.get_friendly_name(
                                            status.name),
@@ -88,7 +88,7 @@ def setup(bus, statemachine, host):
                                     ATTR_STATE: status.state,
                                     ATTR_OPTIONS: status.options})
         else:
-            statemachine.set_state(category, STATE_NO_APP, {ATTR_HOST: host})
+            statemachine.set_state(entity, STATE_NO_APP, {ATTR_HOST: host})
 
     ha.track_time_change(bus, update_chromecast_state)
 

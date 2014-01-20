@@ -22,20 +22,20 @@ def setup(bus, statemachine, light_group=None):
 
     logger = logging.getLogger(__name__)
 
-    device_state_categories = ha.filter_categories(statemachine.categories,
-                                                   device_tracker.DOMAIN)
+    device_entity_ids = ha.filter_entity_ids(statemachine.entity_ids,
+                                             device_tracker.DOMAIN)
 
-    if not device_state_categories:
+    if not device_entity_ids:
         logger.error("LightTrigger:No devices found to track")
 
         return False
 
     if not light_group:
-        light_group = light.STATE_GROUP_NAME_ALL_LIGHTS
+        light_group = light.GROUP_NAME_ALL_LIGHTS
 
     # Get the light IDs from the specified group
-    light_ids = ha.filter_categories(
-        group.get_categories(statemachine, light_group), light.DOMAIN, True)
+    light_ids = ha.filter_entity_ids(
+        group.get_entity_ids(statemachine, light_group), light.DOMAIN, True)
 
     if not light_ids:
         logger.error("LightTrigger:No lights found to turn on ")
@@ -48,7 +48,7 @@ def setup(bus, statemachine, light_group=None):
          len(light_ids))
 
     # pylint: disable=unused-argument
-    def handle_sun_rising(category, old_state, new_state):
+    def handle_sun_rising(entity, old_state, new_state):
         """The moment sun sets we want to have all the lights on.
            We will schedule to have each light start after one another
            and slowly transition in."""
@@ -76,7 +76,7 @@ def setup(bus, statemachine, light_group=None):
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
-    ha.track_state_change(bus, sun.STATE_CATEGORY, handle_sun_rising,
+    ha.track_state_change(bus, sun.ENTITY_ID, handle_sun_rising,
                           sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
 
     # If the sun is already above horizon
@@ -84,14 +84,14 @@ def setup(bus, statemachine, light_group=None):
     if sun.is_up(statemachine):
         handle_sun_rising(None, None, None)
 
-    def handle_device_state_change(category, old_state, new_state):
+    def handle_device_state_change(entity, old_state, new_state):
         """ Function to handle tracked device state changes. """
         lights_are_on = group.is_on(statemachine, light_group)
 
         light_needed = not (lights_are_on or sun.is_up(statemachine))
 
         # Specific device came home ?
-        if (category != device_tracker.STATE_CATEGORY_ALL_DEVICES and
+        if (entity != device_tracker.ENTITY_ID_ALL_DEVICES and
            new_state.state == ha.STATE_HOME):
 
             # These variables are needed for the elif check
@@ -103,7 +103,7 @@ def setup(bus, statemachine, light_group=None):
 
                 logger.info(
                     "Home coming event for {}. Turning lights on".
-                    format(category))
+                    format(entity))
 
                 for light_id in light_ids:
                     light.turn_on(bus, light_id)
@@ -127,7 +127,7 @@ def setup(bus, statemachine, light_group=None):
                         break
 
         # Did all devices leave the house?
-        elif (category == device_tracker.STATE_CATEGORY_ALL_DEVICES and
+        elif (entity == device_tracker.ENTITY_ID_ALL_DEVICES and
               new_state.state == ha.STATE_NOT_HOME and lights_are_on):
 
             logger.info(
@@ -136,12 +136,12 @@ def setup(bus, statemachine, light_group=None):
             general.shutdown_devices(bus, statemachine)
 
     # Track home coming of each seperate device
-    for category in device_state_categories:
-        ha.track_state_change(bus, category, handle_device_state_change,
+    for entity in device_entity_ids:
+        ha.track_state_change(bus, entity, handle_device_state_change,
                               ha.STATE_NOT_HOME, ha.STATE_HOME)
 
     # Track when all devices are gone to shut down lights
-    ha.track_state_change(bus, device_tracker.STATE_CATEGORY_ALL_DEVICES,
+    ha.track_state_change(bus, device_tracker.ENTITY_ID_ALL_DEVICES,
                           handle_device_state_change, ha.STATE_HOME,
                           ha.STATE_NOT_HOME)
 

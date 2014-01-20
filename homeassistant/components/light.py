@@ -14,21 +14,21 @@ import homeassistant.components.group as group
 
 DOMAIN = "light"
 
-STATE_GROUP_NAME_ALL_LIGHTS = 'all_lights'
-STATE_CATEGORY_ALL_LIGHTS = group.STATE_CATEGORY_FORMAT.format(
-    STATE_GROUP_NAME_ALL_LIGHTS)
+GROUP_NAME_ALL_LIGHTS = 'all_lights'
+ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format(
+    GROUP_NAME_ALL_LIGHTS)
 
-STATE_CATEGORY_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
 def is_on(statemachine, light_id=None):
     """ Returns if the lights are on based on the statemachine. """
-    category = STATE_CATEGORY_FORMAT.format(light_id) if light_id \
-        else STATE_CATEGORY_ALL_LIGHTS
+    entity_id = ENTITY_ID_FORMAT.format(light_id) if light_id \
+        else ENTITY_ID_ALL_LIGHTS
 
-    return statemachine.is_state(category, ha.STATE_ON)
+    return statemachine.is_state(entity_id, ha.STATE_ON)
 
 
 def turn_on(bus, light_id=None, transition_seconds=None):
@@ -80,21 +80,21 @@ def setup(bus, statemachine, light_control):
                       for light_id in light_control.light_ids}
 
             for light_id, state in status.items():
-                state_category = STATE_CATEGORY_FORMAT.format(light_id)
+                entity_id = ENTITY_ID_FORMAT.format(light_id)
 
                 new_state = ha.STATE_ON if state else ha.STATE_OFF
 
-                statemachine.set_state(state_category, new_state)
+                statemachine.set_state(entity_id, new_state)
 
     ha.track_time_change(bus, update_light_state, second=[0, 30])
 
     update_light_state(None)
 
     # Track the all lights state
-    light_cats = [STATE_CATEGORY_FORMAT.format(light_id) for light_id
+    entity_ids = [ENTITY_ID_FORMAT.format(light_id) for light_id
                   in light_control.light_ids]
 
-    group.setup(bus, statemachine, STATE_GROUP_NAME_ALL_LIGHTS, light_cats)
+    group.setup(bus, statemachine, GROUP_NAME_ALL_LIGHTS, entity_ids)
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """

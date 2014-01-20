@@ -3,13 +3,13 @@ homeassistant
 ~~~~~~~~~~~~~
 
 Home Assistant is a Home Automation framework for observing the state
-of objects and react to changes.
+of entities and react to changes.
 """
 
 import time
 import logging
 import threading
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 import datetime as dt
 
 import homeassistant.util as util
@@ -78,33 +78,33 @@ def _matcher(subject, pattern):
     return MATCH_ALL == pattern or subject in pattern
 
 
-def split_state_category(category):
-    """ Splits a state category into domain, object_id. """
-    return category.split(".", 1)
+def split_entity_id(entity_id):
+    """ Splits a state entity_id into domain, object_id. """
+    return entity_id.split(".", 1)
 
 
-def filter_categories(categories, domain_filter=None, strip_domain=False):
-    """ Filter a list of categories based on domain. Setting strip_domain
+def filter_entity_ids(entity_ids, domain_filter=None, strip_domain=False):
+    """ Filter a list of entities based on domain. Setting strip_domain
         will only return the object_ids. """
     return [
-        split_state_category(cat)[1] if strip_domain else cat
-        for cat in categories if
-        not domain_filter or cat.startswith(domain_filter)
+        split_entity_id(entity_id)[1] if strip_domain else entity_id
+        for entity_id in entity_ids if
+        not domain_filter or entity_id.startswith(domain_filter)
         ]
 
 
-def track_state_change(bus, category, action, from_state=None, to_state=None):
+def track_state_change(bus, entity_id, action, from_state=None, to_state=None):
     """ Helper method to track specific state changes. """
     from_state = _process_match_param(from_state)
     to_state = _process_match_param(to_state)
 
     def listener(event):
         """ State change listener that listens for specific state changes. """
-        if category == event.data['category'] and \
+        if entity_id == event.data['entity_id'] and \
                 _matcher(event.data['old_state'].state, from_state) and \
                 _matcher(event.data['new_state'].state, to_state):
 
-            action(event.data['category'],
+            action(event.data['entity_id'],
                    event.data['old_state'],
                    event.data['new_state'])
 
@@ -304,7 +304,11 @@ class State(object):
         else:
             self.last_changed = last_changed
 
-    def to_json_dict(self, category=None):
+    def copy(self):
+        """ Creates a copy of itself. """
+        return State(self.state, dict(self.attributes), self.last_changed)
+
+    def to_json_dict(self, entity_id=None):
         """ Converts State to a dict to be used within JSON.
         Ensures: state == State.from_json_dict(state.to_json_dict()) """
 
@@ -312,14 +316,10 @@ class State(object):
                      'attributes': self.attributes,
                      'last_changed': util.datetime_to_str(self.last_changed)}
 
-        if category:
-            json_dict['category'] = category
+        if entity_id:
+            json_dict['entity_id'] = entity_id
 
         return json_dict
-
-    def copy(self):
-        """ Creates a copy of itself. """
-        return State(self.state, dict(self.attributes), self.last_changed)
 
     @staticmethod
     def from_json_dict(json_dict):
@@ -345,75 +345,75 @@ class State(object):
 
 
 class StateMachine(object):
-    """ Helper class that tracks the state of different categories. """
+    """ Helper class that tracks the state of different entities. """
 
     def __init__(self, bus):
-        self.states = dict()
+        self.states = {}
         self.bus = bus
         self.lock = threading.Lock()
 
     @property
-    def categories(self):
-        """ List of categories which states are being tracked. """
+    def entity_ids(self):
+        """ List of entitie ids that are being tracked. """
         with self.lock:
             return self.states.keys()
 
-    def remove_category(self, category):
-        """ Removes a category from the state machine.
+    def remove_entity(self, entity_id):
+        """ Removes a entity from the state machine.
 
-        Returns boolean to indicate if a category was removed. """
+        Returns boolean to indicate if a entity was removed. """
         with self.lock:
             try:
-                del self.states[category]
+                del self.states[entity_id]
 
                 return True
 
             except KeyError:
-                # if category does not exist
+                # if entity does not exist
                 return False
 
-    def set_state(self, category, new_state, attributes=None):
-        """ Set the state of a category, add category if it does not exist.
+    def set_state(self, entity_id, new_state, attributes=None):
+        """ Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state. """
 
         attributes = attributes or {}
 
         with self.lock:
-            # Add category if it does not exist
-            if category not in self.states:
-                self.states[category] = State(new_state, attributes)
+            # Add entity if it does not exist
+            if entity_id not in self.states:
+                self.states[entity_id] = State(new_state, attributes)
 
             # Change state and fire listeners
             else:
-                old_state = self.states[category]
+                old_state = self.states[entity_id]
 
                 if old_state.state != new_state or \
                    old_state.attributes != attributes:
 
-                    self.states[category] = State(new_state, attributes)
+                    self.states[entity_id] = State(new_state, attributes)
 
                     self.bus.fire_event(EVENT_STATE_CHANGED,
-                                        {'category': category,
+                                        {'entity_id': entity_id,
                                          'old_state': old_state,
-                                         'new_state': self.states[category]})
+                                         'new_state': self.states[entity_id]})
 
-    def get_state(self, category):
+    def get_state(self, entity_id):
         """ Returns a dict (state, last_changed, attributes) describing
-            the state of the specified category. """
+            the state of the specified entity. """
         with self.lock:
             try:
                 # Make a copy so people won't mutate the state
-                return self.states[category].copy()
+                return self.states[entity_id].copy()
 
             except KeyError:
-                # If category does not exist
+                # If entity does not exist
                 return None
 
-    def is_state(self, category, state):
-        """ Returns True if category exists and is specified state. """
+    def is_state(self, entity_id, state):
+        """ Returns True if entity exists and is specified state. """
         try:
-            return self.get_state(category).state == state
+            return self.get_state(entity_id).state == state
         except AttributeError:
             # get_state returned None
             return False
@@ -438,8 +438,10 @@ class Timer(threading.Thread):
 
         last_fired_on_second = -1
 
+        calc_now = dt.datetime.now
+
         while True:
-            now = dt.datetime.now()
+            now = calc_now()
 
             # First check checks if we are not on a second matching the
             # timer interval. Second check checks if we did not already fire
@@ -457,7 +459,7 @@ class Timer(threading.Thread):
 
                 time.sleep(slp_seconds)
 
-                now = dt.datetime.now()
+                now = calc_now()
 
             last_fired_on_second = now.second
 
