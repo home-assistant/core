@@ -8,6 +8,7 @@ import logging
 from datetime import timedelta
 
 import homeassistant as ha
+import homeassistant.util as util
 
 STATE_CATEGORY = "weather.sun"
 
@@ -27,16 +28,16 @@ def next_setting(statemachine):
     """ Returns the datetime object representing the next sun setting. """
     state = statemachine.get_state(STATE_CATEGORY)
 
-    return None if not state else ha.str_to_datetime(
-        state['attributes'][STATE_ATTR_NEXT_SETTING])
+    return None if not state else util.str_to_datetime(
+        state.attributes[STATE_ATTR_NEXT_SETTING])
 
 
 def next_rising(statemachine):
     """ Returns the datetime object representing the next sun setting. """
     state = statemachine.get_state(STATE_CATEGORY)
 
-    return None if not state else ha.str_to_datetime(
-        state['attributes'][STATE_ATTR_NEXT_RISING])
+    return None if not state else util.str_to_datetime(
+        state.attributes[STATE_ATTR_NEXT_RISING])
 
 
 def setup(bus, statemachine, latitude, longitude):
@@ -74,8 +75,8 @@ def setup(bus, statemachine, latitude, longitude):
                                              next_change.strftime("%H:%M")))
 
         state_attributes = {
-            STATE_ATTR_NEXT_RISING: ha.datetime_to_str(next_rising_dt),
-            STATE_ATTR_NEXT_SETTING: ha.datetime_to_str(next_setting_dt)
+            STATE_ATTR_NEXT_RISING: util.datetime_to_str(next_rising_dt),
+            STATE_ATTR_NEXT_SETTING: util.datetime_to_str(next_setting_dt)
         }
 
         statemachine.set_state(STATE_CATEGORY, new_state, state_attributes)

@@ -35,12 +35,11 @@ def is_on(statemachine, group):
     state = statemachine.get_state(group)
 
     if state:
-        group_type = _get_group_type(state['state'])
+        group_type = _get_group_type(state.state)
 
         if group_type:
-            group_on = _GROUP_TYPES[group_type][0]
-
-            return state['state'] == group_on
+            # We found group_type, compare to ON-state
+            return state.state == _GROUP_TYPES[group_type][0]
         else:
             return False
     else:
@@ -51,7 +50,7 @@ def get_categories(statemachine, group):
     """ Get the categories that make up this group. """
     state = statemachine.get_state(group)
 
-    return state['attributes'][STATE_ATTR_CATEGORIES] if state else []
+    return state.attributes[STATE_ATTR_CATEGORIES] if state else []
 
 
 # pylint: disable=too-many-branches
@@ -73,7 +72,7 @@ def setup(bus, statemachine, name, categories):
 
         # Try to determine group type if we didn't yet
         if not group_type and state:
-            group_type = _get_group_type(state['state'])
+            group_type = _get_group_type(state.state)
 
             if group_type:
                 group_on, group_off = _GROUP_TYPES[group_type]
@@ -82,7 +81,7 @@ def setup(bus, statemachine, name, categories):
             else:
                 # We did not find a matching group_type
                 errors.append("Found unexpected state '{}'".format(
-                              name, state['state']))
+                              name, state.state))
 
                 break
 
@@ -91,13 +90,13 @@ def setup(bus, statemachine, name, categories):
             errors.append("Category {} does not exist".format(cat))
 
         # Check if category is valid state
-        elif state['state'] != group_off and state['state'] != group_on:
+        elif state.state != group_off and state.state != group_on:
 
             errors.append("State of {} is {} (expected: {}, {})".format(
-                cat, state['state'], group_off, group_on))
+                cat, state.state, group_off, group_on))
 
         # Keep track of the group state to init later on
-        elif group_state == group_off and state['state'] == group_on:
+        elif group_state == group_off and state.state == group_on:
             group_state = group_on
 
     if errors:
@@ -114,17 +113,17 @@ def setup(bus, statemachine, name, categories):
         """ Updates the group state based on a state change by a tracked
             category. """
 
-        cur_group_state = statemachine.get_state(group_cat)['state']
+        cur_group_state = statemachine.get_state(group_cat).state
 
         # if cur_group_state = OFF and new_state = ON: set ON
         # if cur_group_state = ON and new_state = OFF: research
         # else: ignore
 
-        if cur_group_state == group_off and new_state['state'] == group_on:
+        if cur_group_state == group_off and new_state.state == group_on:
 
             statemachine.set_state(group_cat, group_on, state_attr)
 
-        elif cur_group_state == group_on and new_state['state'] == group_off:
+        elif cur_group_state == group_on and new_state.state == group_off:
 
             # Check if any of the other states is still on
             if not any([statemachine.is_state(cat, group_on)

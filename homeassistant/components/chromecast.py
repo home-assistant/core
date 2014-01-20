@@ -36,10 +36,10 @@ def turn_off(statemachine, cc_id=None):
         state = statemachine.get_state(cat)
 
         if state and \
-           state['state'] != STATE_NO_APP or \
-           state['state'] != pychromecast.APP_ID_HOME:
+           state.state != STATE_NO_APP or \
+           state.state != pychromecast.APP_ID_HOME:
 
-            pychromecast.quit_app(state['attributes'][ATTR_HOST])
+            pychromecast.quit_app(state.attributes[ATTR_HOST])
 
 
 def setup(bus, statemachine, host):

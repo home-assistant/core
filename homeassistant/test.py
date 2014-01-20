@@ -96,7 +96,7 @@ class TestHTTPInterface(unittest.TestCase):
                             "new_state": "debug_state_change2",
                             "api_password": API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test.test")['state'],
+        self.assertEqual(self.statemachine.get_state("test.test").state,
                          "debug_state_change2")
 
     def test_debug_fire_event(self):
@@ -138,14 +138,13 @@ class TestHTTPInterface(unittest.TestCase):
             _url(hah.URL_API_STATES_CATEGORY.format("test")),
             data={"api_password": API_PASSWORD})
 
-        data = req.json()
+        data = ha.State.from_json_dict(req.json())
 
         state = self.statemachine.get_state("test")
 
-        self.assertEqual(data['category'], "test")
-        self.assertEqual(data['state'], state['state'])
-        self.assertEqual(data['last_changed'], state['last_changed'])
-        self.assertEqual(data['attributes'], state['attributes'])
+        self.assertEqual(data.state, state.state)
+        self.assertEqual(data.last_changed, state.last_changed)
+        self.assertEqual(data.attributes, state.attributes)
 
     def test_api_get_non_existing_state(self):
         """ Test if the debug interface allows us to get a state. """
@@ -164,7 +163,7 @@ class TestHTTPInterface(unittest.TestCase):
                       data={"new_state": "debug_state_change2",
                             "api_password": API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test.test")['state'],
+        self.assertEqual(self.statemachine.get_state("test.test").state,
                          "debug_state_change2")
 
     # pylint: disable=invalid-name
@@ -181,7 +180,7 @@ class TestHTTPInterface(unittest.TestCase):
                   "api_password": API_PASSWORD})
 
         cur_state = (self.statemachine.
-                     get_state("test_category_that_does_not_exist")['state'])
+                     get_state("test_category_that_does_not_exist").state)
 
         self.assertEqual(req.status_code, 201)
         self.assertEqual(cur_state, new_state)
@@ -339,9 +338,9 @@ class TestRemote(unittest.TestCase):
 
         state = self.statemachine.get_state("test")
 
-        self.assertEqual(remote_state['state'], state['state'])
-        self.assertEqual(remote_state['last_changed'], state['last_changed'])
-        self.assertEqual(remote_state['attributes'], state['attributes'])
+        self.assertEqual(remote_state.state, state.state)
+        self.assertEqual(remote_state.last_changed, state.last_changed)
+        self.assertEqual(remote_state.attributes, state.attributes)
 
     def test_remote_sm_get_non_existing_state(self):
         """ Test if the debug interface allows us to list state categories. """
@@ -354,8 +353,8 @@ class TestRemote(unittest.TestCase):
 
         state = self.statemachine.get_state("test")
 
-        self.assertEqual(state['state'], "set_remotely")
-        self.assertEqual(state['attributes']['test'], 1)
+        self.assertEqual(state.state, "set_remotely")
+        self.assertEqual(state.attributes['test'], 1)
 
     def test_remote_eb_listening_for_same(self):
         """ Test if remote EB correctly reports listener overview. """

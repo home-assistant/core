@@ -49,6 +49,18 @@ def _setup_call_api(host, port, api_password):
     return _call_api
 
 
+class JSONEncoder(json.JSONEncoder):
+    """ JSONEncoder that supports Home Assistant objects. """
+
+    def default(self, obj):  # pylint: disable=method-hidden
+        """ Checks if Home Assistat object and encodes if possible.
+        Else hand it off to original method. """
+        if isinstance(obj, ha.State):
+            return obj.to_json_dict()
+
+        return json.JSONEncoder.default(self, obj)
+
+
 class Bus(ha.Bus):
     """ Drop-in replacement for a normal bus that will forward interaction to
     a remote bus.
@@ -140,7 +152,10 @@ class Bus(ha.Bus):
     def fire_event(self, event_type, event_data=None):
         """ Fire an event. """
 
-        data = {'event_data': json.dumps(event_data)} if event_data else None
+        if event_data:
+            data = {'event_data': json.dumps(event_data, cls=JSONEncoder)}
+        else:
+            data = None
 
         req = self._call_api(METHOD_POST,
                              hah.URL_API_EVENTS_EVENT.format(event_type),
@@ -154,6 +169,12 @@ class Bus(ha.Bus):
             raise ha.HomeAssistantException(error)
 
     def listen_event(self, event_type, listener):
+        """ Not implemented for remote bus.
+
+        Will throw NotImplementedError. """
+        raise NotImplementedError
+
+    def listen_once_event(self, event_type, listener):
         """ Not implemented for remote bus.
 
         Will throw NotImplementedError. """
@@ -201,6 +222,13 @@ class StateMachine(ha.StateMachine):
             self.logger.exception("StateMachine:Got unexpected result (2)")
             return []
 
+    def remove_category(self, category):
+        """ This method is not implemented for remote statemachine.
+
+        Throws NotImplementedError. """
+
+        raise NotImplementedError
+
     def set_state(self, category, new_state, attributes=None):
         """ Set the state of a category, add category if it does not exist.
 
@@ -243,9 +271,7 @@ class StateMachine(ha.StateMachine):
             if req.status_code == 200:
                 data = req.json()
 
-                return ha.create_state(data['state'], data['attributes'],
-                                       ha.str_to_datetime(
-                                           data['last_changed']))
+                return ha.State.from_json_dict(data)
 
             elif req.status_code == 422:
                 # Category does not exist

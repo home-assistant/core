@@ -341,16 +341,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             state = self.server.statemachine.get_state(category)
 
             attributes = "<br>".join(
-                ["{}: {}".format(attr, state['attributes'][attr])
-                 for attr in state['attributes']])
+                ["{}: {}".format(attr, state.attributes[attr])
+                 for attr in state.attributes])
 
             write(("<tr>"
                    "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
                    "</tr>").format(
                   category,
-                  state['state'],
+                  state.state,
                   attributes,
-                  state['last_changed']))
+                  state.last_changed))
 
         # Change state form
         write(("<tr><td><input name='category' class='form-control' "
@@ -518,9 +518,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             if self.use_json:
                 state = self.server.statemachine.get_state(category)
 
-                state['category'] = category
-
-                self._write_json(state, status_code=HTTP_CREATED,
+                self._write_json(state.to_json_dict(category),
+                                 status_code=HTTP_CREATED,
                                  location=
                                  URL_API_STATES_CATEGORY.format(category))
             else:
@@ -619,10 +618,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         state = self.server.statemachine.get_state(category)
 
         if state:
-            state['category'] = category
-
-            self._write_json(state)
-
+            self._write_json(state.to_json_dict(category))
         else:
             # If category does not exist
             self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)

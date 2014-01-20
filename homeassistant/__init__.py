@@ -2,19 +2,21 @@
 homeassistant
 ~~~~~~~~~~~~~
 
-Module to control the lights based on devices at home and the state of the sun.
-
+Home Assistant is a Home Automation framework for observing the state
+of objects and react to changes.
 """
 
 import time
 import logging
 import threading
 from collections import defaultdict, namedtuple
-from datetime import datetime
+import datetime as dt
+
+import homeassistant.util as util
 
 logging.basicConfig(level=logging.INFO)
 
-ALL_EVENTS = '*'
+MATCH_ALL = '*'
 
 DOMAIN = "homeassistant"
 
@@ -38,8 +40,6 @@ TIMER_INTERVAL = 10  # seconds
 # every minute.
 assert 60 % TIMER_INTERVAL == 0, "60 % TIMER_INTERVAL should be 0!"
 
-DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
-
 
 def start_home_assistant(bus):
     """ Start home assistant. """
@@ -60,37 +60,22 @@ def start_home_assistant(bus):
             break
 
 
-def datetime_to_str(dattim):
-    """ Converts datetime to a string format.
-
-    @rtype : str
-    """
-    return dattim.strftime(DATE_STR_FORMAT)
-
-
-def str_to_datetime(dt_str):
-    """ Converts a string to a datetime object.
-
-    @rtype: datetime
-    """
-    return datetime.strptime(dt_str, DATE_STR_FORMAT)
-
-
-def _ensure_list(parameter):
-    """ Wraps parameter in a list if it is not one and returns it.
-
-    @rtype : list
-    """
-    return parameter if isinstance(parameter, list) else [parameter]
+def _process_match_param(parameter):
+    """ Wraps parameter in a list if it is not one and returns it. """
+    if parameter is None:
+        return MATCH_ALL
+    elif isinstance(parameter, list):
+        return parameter
+    else:
+        return [parameter]
 
 
 def _matcher(subject, pattern):
     """ Returns True if subject matches the pattern.
 
-    Pattern is either a list of allowed subjects or a '*'.
-    @rtype : bool
+    Pattern is either a list of allowed subjects or a `MATCH_ALL`.
     """
-    return '*' in pattern or subject in pattern
+    return MATCH_ALL == pattern or subject in pattern
 
 
 def split_state_category(category):
@@ -98,36 +83,26 @@ def split_state_category(category):
     return category.split(".", 1)
 
 
-def filter_categories(categories, domain_filter=None, object_id_only=False):
-    """ Filter a list of categories based on domain. Setting object_id_only
+def filter_categories(categories, domain_filter=None, strip_domain=False):
+    """ Filter a list of categories based on domain. Setting strip_domain
         will only return the object_ids. """
     return [
-        split_state_category(cat)[1] if object_id_only else cat
+        split_state_category(cat)[1] if strip_domain else cat
         for cat in categories if
         not domain_filter or cat.startswith(domain_filter)
         ]
 
 
-def create_state(state, attributes=None, last_changed=None):
-    """ Creates a new state and initializes defaults where necessary. """
-    attributes = attributes or {}
-    last_changed = last_changed or datetime.now()
-
-    return {'state': state,
-            'attributes': attributes,
-            'last_changed': datetime_to_str(last_changed)}
-
-
 def track_state_change(bus, category, action, from_state=None, to_state=None):
     """ Helper method to track specific state changes. """
-    from_state = _ensure_list(from_state) if from_state else [ALL_EVENTS]
-    to_state = _ensure_list(to_state) if to_state else [ALL_EVENTS]
+    from_state = _process_match_param(from_state)
+    to_state = _process_match_param(to_state)
 
     def listener(event):
         """ State change listener that listens for specific state changes. """
         if category == event.data['category'] and \
-                _matcher(event.data['old_state']['state'], from_state) and \
-                _matcher(event.data['new_state']['state'], to_state):
+                _matcher(event.data['old_state'].state, from_state) and \
+                _matcher(event.data['new_state'].state, to_state):
 
             action(event.data['category'],
                    event.data['old_state'],
@@ -138,19 +113,19 @@ def track_state_change(bus, category, action, from_state=None, to_state=None):
 
 # pylint: disable=too-many-arguments
 def track_time_change(bus, action,
-                      year='*', month='*', day='*',
-                      hour='*', minute='*', second='*',
+                      year=None, month=None, day=None,
+                      hour=None, minute=None, second=None,
                       point_in_time=None, listen_once=False):
     """ Adds a listener that will listen for a specified or matching time. """
-    year, month = _ensure_list(year), _ensure_list(month)
-    day = _ensure_list(day)
+    year, month = _process_match_param(year), _process_match_param(month)
+    day = _process_match_param(day)
 
-    hour, minute = _ensure_list(hour), _ensure_list(minute)
-    second = _ensure_list(second)
+    hour, minute = _process_match_param(hour), _process_match_param(minute)
+    second = _process_match_param(second)
 
     def listener(event):
         """ Listens for matching time_changed events. """
-        now = str_to_datetime(event.data['now'])
+        now = event.data['now']
 
         if (point_in_time and now > point_in_time) or \
            (not point_in_time and
@@ -180,7 +155,7 @@ class Bus(object):
     """
 
     def __init__(self):
-        self._event_listeners = defaultdict(list)
+        self._event_listeners = {}
         self._services = {}
         self.logger = logging.getLogger(__name__)
 
@@ -196,8 +171,7 @@ class Bus(object):
         of listeners.
         """
         return {key: len(self._event_listeners[key])
-                for key in self._event_listeners.keys()
-                if len(self._event_listeners[key]) > 0}
+                for key in self._event_listeners}
 
     def call_service(self, domain, service, service_data=None):
         """ Calls a service. """
@@ -236,8 +210,16 @@ class Bus(object):
     def fire_event(self, event_type, event_data=None):
         """ Fire an event. """
 
-        if not event_data:
-            event_data = {}
+        # Copy the list of the current listeners because some listeners
+        # choose to remove themselves as a listener while being executed
+        # which causes the iterator to be confused.
+        listeners = self._event_listeners.get(MATCH_ALL, []) + \
+                    self._event_listeners.get(event_type, [])
+
+        if not listeners:
+            return
+
+        event_data = event_data or {}
 
         self.logger.info("Bus:Event {}: {}".format(
                          event_type, event_data))
@@ -246,10 +228,7 @@ class Bus(object):
             """ Fire listeners for event. """
             event = Event(self, event_type, event_data)
 
-            # We do not use itertools.chain() because some listeners might
-            # choose to remove themselves as a listener while being executed
-            for listener in self._event_listeners[ALL_EVENTS] + \
-                    self._event_listeners[event.event_type]:
+            for listener in listeners:
                 try:
                     listener(event)
 
@@ -262,15 +241,19 @@ class Bus(object):
     def listen_event(self, event_type, listener):
         """ Listen for all events or events of a specific type.
 
-        To listen to all events specify the constant ``ALL_EVENTS``
+        To listen to all events specify the constant ``MATCH_ALL``
         as event_type.
         """
-        self._event_listeners[event_type].append(listener)
+        try:
+            self._event_listeners[event_type].append(listener)
+        except KeyError:  # event_type did not exist
+            self._event_listeners[event_type] = [listener]
+
 
     def listen_once_event(self, event_type, listener):
         """ Listen once for event of a specific type.
 
-        To listen to all events specify the constant ``ALL_EVENTS``
+        To listen to all events specify the constant ``MATCH_ALL``
         as event_type.
 
         Note: at the moment it is impossible to remove a one time listener.
@@ -292,8 +275,65 @@ class Bus(object):
             if len(self._event_listeners[event_type]) == 0:
                 del self._event_listeners[event_type]
 
-        except ValueError:
+        except (KeyError, ValueError):
             pass
+
+
+class State(object):
+    """ Object to represent a state within the state machine. """
+
+    def __init__(self, state, attributes=None, last_changed=None):
+        self.state = state
+        self.attributes = attributes or {}
+        last_changed = last_changed or dt.datetime.now()
+
+        # Strip microsecond from last_changed else we cannot guarantee
+        # state == State.from_json_dict(state.to_json_dict())
+        # This behavior occurs because to_json_dict strips microseconds
+        if last_changed.microsecond:
+            self.last_changed = last_changed - dt.timedelta(
+                microseconds=last_changed.microsecond)
+        else:
+            self.last_changed = last_changed
+
+    def to_json_dict(self, category=None):
+        """ Converts State to a dict to be used within JSON.
+        Ensures: state == State.from_json_dict(state.to_json_dict()) """
+
+        json_dict = {'state': self.state,
+                     'attributes': self.attributes,
+                     'last_changed': util.datetime_to_str(self.last_changed)}
+
+        if category:
+            json_dict['category'] = category
+
+        return json_dict
+
+    def copy(self):
+        """ Creates a copy of itself. """
+        return State(self.state, dict(self.attributes), self.last_changed)
+
+    @staticmethod
+    def from_json_dict(json_dict):
+        """ Static method to create a state from a dict.
+        Ensures: state == State.from_json_dict(state.to_json_dict()) """
+
+        try:
+            last_changed = json_dict.get('last_changed')
+
+            if last_changed:
+                last_changed = util.str_to_datetime(last_changed)
+
+            return State(json_dict['state'],
+                         json_dict.get('attributes'),
+                         last_changed)
+        except KeyError:  # if key 'state' did not exist
+            return None
+
+    def __repr__(self):
+        return "{}({}, {})".format(
+            self.state, self.attributes,
+            util.datetime_to_str(self.last_changed))
 
 
 class StateMachine(object):
@@ -333,16 +373,16 @@ class StateMachine(object):
 
         # Add category if it does not exist
         if category not in self.states:
-            self.states[category] = create_state(new_state, attributes)
+            self.states[category] = State(new_state, attributes)
 
         # Change state and fire listeners
         else:
             old_state = self.states[category]
 
-            if old_state['state'] != new_state or \
-               old_state['attributes'] != attributes:
+            if old_state.state != new_state or \
+               old_state.attributes != attributes:
 
-                self.states[category] = create_state(new_state, attributes)
+                self.states[category] = State(new_state, attributes)
 
                 self.bus.fire_event(EVENT_STATE_CHANGED,
                                     {'category': category,
@@ -356,7 +396,7 @@ class StateMachine(object):
             the state of the specified category. """
         try:
             # Make a copy so people won't mutate the state
-            return dict(self.states[category])
+            return self.states[category].copy()
 
         except KeyError:
             # If category does not exist
@@ -366,7 +406,7 @@ class StateMachine(object):
         """ Returns True if category exists and is specified state. """
         cur_state = self.get_state(category)
 
-        return cur_state and cur_state['state'] == state
+        return cur_state and cur_state.state == state
 
 
 class Timer(threading.Thread):
@@ -389,7 +429,7 @@ class Timer(threading.Thread):
         last_fired_on_second = -1
 
         while True:
-            now = datetime.now()
+            now = dt.datetime.now()
 
             # First check checks if we are not on a second matching the
             # timer interval. Second check checks if we did not already fire
@@ -407,12 +447,12 @@ class Timer(threading.Thread):
 
                 time.sleep(slp_seconds)
 
-                now = datetime.now()
+                now = dt.datetime.now()
 
             last_fired_on_second = now.second
 
             self.bus.fire_event(EVENT_TIME_CHANGED,
-                                {'now': datetime_to_str(now)})
+                                {'now': now})
 
 
 class HomeAssistantException(Exception):

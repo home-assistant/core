@@ -92,7 +92,7 @@ def setup(bus, statemachine, light_group=None):
 
         # Specific device came home ?
         if (category != device_tracker.STATE_CATEGORY_ALL_DEVICES and
-           new_state['state'] == ha.STATE_HOME):
+           new_state.state == ha.STATE_HOME):
 
             # These variables are needed for the elif check
             now = datetime.now()
@@ -128,7 +128,7 @@ def setup(bus, statemachine, light_group=None):
 
         # Did all devices leave the house?
         elif (category == device_tracker.STATE_CATEGORY_ALL_DEVICES and
-              new_state['state'] == ha.STATE_NOT_HOME and lights_are_on):
+              new_state.state == ha.STATE_NOT_HOME and lights_are_on):
 
             logger.info(
                 "Everyone has left but there are devices on. Turning them off")
