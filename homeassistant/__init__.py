@@ -379,24 +379,27 @@ class StateMachine(object):
 
         attributes = attributes or {}
 
-        with self.lock:
-            # Add entity if it does not exist
-            if entity_id not in self.states:
-                self.states[entity_id] = State(new_state, attributes)
+        state = State(new_state, attributes)
 
+        with self.lock:
             # Change state and fire listeners
-            else:
+            try:
                 old_state = self.states[entity_id]
 
+            except KeyError:
+                # If state did not exist yet
+                pass
+
+            else:
                 if old_state.state != new_state or \
                    old_state.attributes != attributes:
-
-                    self.states[entity_id] = State(new_state, attributes)
 
                     self.bus.fire_event(EVENT_STATE_CHANGED,
                                         {'entity_id': entity_id,
                                          'old_state': old_state,
-                                         'new_state': self.states[entity_id]})
+                                         'new_state': state})
+
+            self.states[entity_id] = State(new_state, attributes)
 
     def get_state(self, entity_id):
         """ Returns a dict (state, last_changed, attributes) describing
