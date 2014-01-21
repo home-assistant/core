@@ -30,12 +30,11 @@ def setup(bus, statemachine, light_group=None):
 
         return False
 
-    if not light_group:
-        light_group = light.GROUP_NAME_ALL_LIGHTS
+    light_group = light_group or light.GROUP_NAME_ALL_LIGHTS
 
     # Get the light IDs from the specified group
     light_ids = ha.filter_entity_ids(
-        group.get_entity_ids(statemachine, light_group), light.DOMAIN, True)
+        group.get_entity_ids(statemachine, light_group), light.DOMAIN)
 
     if not light_ids:
         logger.error("LightTrigger:No lights found to turn on ")

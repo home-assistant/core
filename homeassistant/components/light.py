@@ -23,20 +23,19 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-def is_on(statemachine, light_id=None):
+def is_on(statemachine, entity_id=None):
     """ Returns if the lights are on based on the statemachine. """
-    entity_id = ENTITY_ID_FORMAT.format(light_id) if light_id \
-        else ENTITY_ID_ALL_LIGHTS
+    entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
 
     return statemachine.is_state(entity_id, ha.STATE_ON)
 
 
-def turn_on(bus, light_id=None, transition_seconds=None):
+def turn_on(bus, entity_id=None, transition_seconds=None):
     """ Turns all or specified light on. """
     data = {}
 
-    if light_id:
-        data["light_id"] = light_id
+    if entity_id:
+        data["light_id"] = ha.split_entity_id(entity_id)[1]
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
@@ -44,12 +43,12 @@ def turn_on(bus, light_id=None, transition_seconds=None):
     bus.call_service(DOMAIN, ha.SERVICE_TURN_ON, data)
 
 
-def turn_off(bus, light_id=None, transition_seconds=None):
+def turn_off(bus, entity_id=None, transition_seconds=None):
     """ Turns all or specified light off. """
     data = {}
 
-    if light_id:
-        data["light_id"] = light_id
+    if entity_id:
+        data["light_id"] = ha.split_entity_id(entity_id)[1]
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
