@@ -379,8 +379,6 @@ class StateMachine(object):
 
         attributes = attributes or {}
 
-        state = State(new_state, attributes)
-
         with self.lock:
             # Change state and fire listeners
             try:
@@ -388,7 +386,7 @@ class StateMachine(object):
 
             except KeyError:
                 # If state did not exist yet
-                pass
+                self.states[entity_id] = State(new_state, attributes)
 
             else:
                 if old_state.state != new_state or \
@@ -399,7 +397,7 @@ class StateMachine(object):
                                          'old_state': old_state,
                                          'new_state': state})
 
-            self.states[entity_id] = State(new_state, attributes)
+                    self.states[entity_id] = State(new_state, attributes)
 
     def get_state(self, entity_id):
         """ Returns a dict (state, last_changed, attributes) describing
