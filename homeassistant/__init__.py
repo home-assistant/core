@@ -62,7 +62,7 @@ def start_home_assistant(bus):
 
 def _process_match_param(parameter):
     """ Wraps parameter in a list if it is not one and returns it. """
-    if parameter is None:
+    if not parameter:
         return MATCH_ALL
     elif isinstance(parameter, list):
         return parameter
@@ -290,14 +290,18 @@ class Bus(object):
 class State(object):
     """ Object to represent a state within the state machine. """
 
-    def __init__(self, state, attributes=None, last_changed=None):
+    __slots__ = ['entity_id','state','attributes','last_changed']
+
+    def __init__(self, entity_id, state, attributes=None, last_changed=None):
+        self.entity_id = entity_id
         self.state = state
         self.attributes = attributes or {}
         last_changed = last_changed or dt.datetime.now()
 
         # Strip microsecond from last_changed else we cannot guarantee
-        # state == State.from_json_dict(state.to_json_dict())
-        # This behavior occurs because to_json_dict strips microseconds
+        # state == State.from_dict(state.as_dict())
+        # This behavior occurs because to_dict uses datetime_to_str
+        # which strips microseconds
         if last_changed.microsecond:
             self.last_changed = last_changed - dt.timedelta(
                 microseconds=last_changed.microsecond)
@@ -306,23 +310,20 @@ class State(object):
 
     def copy(self):
         """ Creates a copy of itself. """
-        return State(self.state, dict(self.attributes), self.last_changed)
+        return State(self.entity_id, self.state,
+                     dict(self.attributes), self.last_changed)
 
-    def to_json_dict(self, entity_id=None):
+    def as_dict(self):
         """ Converts State to a dict to be used within JSON.
-        Ensures: state == State.from_json_dict(state.to_json_dict()) """
+        Ensures: state == State.from_dict(state.as_dict()) """
 
-        json_dict = {'state': self.state,
-                     'attributes': self.attributes,
-                     'last_changed': util.datetime_to_str(self.last_changed)}
-
-        if entity_id:
-            json_dict['entity_id'] = entity_id
-
-        return json_dict
+        return {'entity_id': self.entity_id,
+                'state': self.state,
+                'attributes': self.attributes,
+                'last_changed': util.datetime_to_str(self.last_changed)}
 
     @staticmethod
-    def from_json_dict(json_dict):
+    def from_dict(json_dict):
         """ Static method to create a state from a dict.
         Ensures: state == State.from_json_dict(state.to_json_dict()) """
 
@@ -332,14 +333,15 @@ class State(object):
             if last_changed:
                 last_changed = util.str_to_datetime(last_changed)
 
-            return State(json_dict['state'],
+            return State(json_dict['entity_id'],
+                         json_dict['state'],
                          json_dict.get('attributes'),
                          last_changed)
         except KeyError:  # if key 'state' did not exist
             return None
 
     def __repr__(self):
-        return "{}({}, {})".format(
+        return "<state {}:{}, {}>".format(
             self.state, self.attributes,
             util.datetime_to_str(self.last_changed))
 
@@ -386,22 +388,23 @@ class StateMachine(object):
 
             except KeyError:
                 # If state did not exist yet
-                self.states[entity_id] = State(new_state, attributes)
+                self.states[entity_id] = State(entity_id, new_state,
+                                               attributes)
 
             else:
                 if old_state.state != new_state or \
                    old_state.attributes != attributes:
+
+                    state = self.states[entity_id] = \
+                        State(entity_id, new_state, attributes)
 
                     self.bus.fire_event(EVENT_STATE_CHANGED,
                                         {'entity_id': entity_id,
                                          'old_state': old_state,
                                          'new_state': state})
 
-                    self.states[entity_id] = State(new_state, attributes)
-
     def get_state(self, entity_id):
-        """ Returns a dict (state, last_changed, attributes) describing
-            the state of the specified entity. """
+        """ Returns the state of the specified entity. """
         with self.lock:
             try:
                 # Make a copy so people won't mutate the state

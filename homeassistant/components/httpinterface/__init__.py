@@ -514,7 +514,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             if self.use_json:
                 state = self.server.statemachine.get_state(entity_id)
 
-                self._write_json(state.to_json_dict(entity_id),
+                self._write_json(state.as_dict(),
                                  status_code=HTTP_CREATED,
                                  location=
                                  URL_API_STATES_ENTITY.format(entity_id))
@@ -613,10 +613,10 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         state = self.server.statemachine.get_state(entity_id)
 
-        if state:
-            self._write_json(state.to_json_dict(entity_id))
-        else:
-            # If entity_id does not exist
+        try:
+            self._write_json(state.as_dict())
+        except AttributeError:
+            # If state for entity_id does not exist
             self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)
 
     def _handle_get_api_events(self, path_match, data):

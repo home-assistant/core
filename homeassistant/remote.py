@@ -56,7 +56,7 @@ class JSONEncoder(json.JSONEncoder):
         """ Checks if Home Assistat object and encodes if possible.
         Else hand it off to original method. """
         if isinstance(obj, ha.State):
-            return obj.to_json_dict()
+            return obj.as_dict()
 
         return json.JSONEncoder.default(self, obj)
 
@@ -270,7 +270,7 @@ class StateMachine(ha.StateMachine):
             if req.status_code == 200:
                 data = req.json()
 
-                return ha.State.from_json_dict(data)
+                return ha.State.from_dict(data)
 
             elif req.status_code == 422:
                 # Entity does not exist

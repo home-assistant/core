@@ -138,7 +138,7 @@ class TestHTTPInterface(unittest.TestCase):
             _url(hah.URL_API_STATES_ENTITY.format("test")),
             data={"api_password": API_PASSWORD})
 
-        data = ha.State.from_json_dict(req.json())
+        data = ha.State.from_dict(req.json())
 
         state = self.statemachine.get_state("test")
 
