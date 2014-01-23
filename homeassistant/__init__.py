@@ -290,7 +290,7 @@ class Bus(object):
 class State(object):
     """ Object to represent a state within the state machine. """
 
-    __slots__ = ['entity_id','state','attributes','last_changed']
+    __slots__ = ['entity_id', 'state', 'attributes', 'last_changed']
 
     def __init__(self, entity_id, state, attributes=None, last_changed=None):
         self.entity_id = entity_id
