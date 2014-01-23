@@ -80,7 +80,9 @@ def setup(bus, statemachine, host):
         status = pychromecast.get_app_status(host)
 
         if status:
-            statemachine.set_state(entity, status.name,
+            state = STATE_NO_APP if status.name == pychromecast.APP_ID_HOME \
+                else status.name
+            statemachine.set_state(entity, state,
                                    {ATTR_FRIENDLY_NAME:
                                        pychromecast.get_friendly_name(
                                            status.name),
