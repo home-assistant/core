@@ -33,38 +33,38 @@ SERVICE_TURN_OFF = 'turn_off'
 _LOADED_MOD = {}
 
 
-def _get_module(module):
-    """ Helper function to load a module. """
-    try:
-        return _LOADED_MOD[module]
-
-    except KeyError:
-        # if module key did not exist in loaded dict
-        try:
-            module = _LOADED_MOD[module] = importlib.import_module(
-                'homeassistant.components.'+module)
-
-            return module
-
-        except ImportError:
-            # If module does not exist
-            return None
-
-
 def is_on(statemachine, entity_id=None):
     """ Loads up the module to call the is_on method.
     If there is no entity id given we will check all. """
     entity_ids = [entity_id] if entity_id else statemachine.entity_ids
 
+    # Save reference locally because those lookups are way faster
+    modules = _LOADED_MOD
+
     for entity_id in entity_ids:
         domain = util.split_entity_id(entity_id)[0]
 
+        # See if we have the module locally cached, else import it
+        # Does this code look chaotic? Yes!
         try:
-            if _get_module(domain).is_on(statemachine, entity_id):
+            module = modules[domain]
+
+        except KeyError:
+            # If modules[domain] does not exist, import module
+            try:
+                module = modules[domain] = importlib.import_module(
+                    'homeassistant.components.'+domain)
+
+            except ImportError:
+                # If we got a bogus domain the input will fail
+                module = modules[domain] = None
+
+        try:
+            if module.is_on(statemachine, entity_id):
                 return True
 
         except AttributeError:
-            # method is_on does not exist within module
+            # module is None or method is_on does not exist
             pass
 
     return False
