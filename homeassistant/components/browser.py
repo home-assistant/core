@@ -17,6 +17,9 @@ def setup(bus):
     import webbrowser
 
     bus.register_service(DOMAIN, SERVICE_BROWSE_URL,
-                         lambda service: webbrowser.open(service.data['url']))
+                         lambda service:
+                         webbrowser.open(
+                             service.data.get('url',
+                                              'https://www.google.com')))
 
     return True
