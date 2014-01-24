@@ -9,6 +9,7 @@ import logging
 import homeassistant as ha
 from homeassistant.components import general
 
+
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def from_config_file(config_path):
     """ Starts home assistant with all possible functionality
