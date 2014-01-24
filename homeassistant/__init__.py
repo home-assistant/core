@@ -221,13 +221,13 @@ class Bus(object):
             get = self._event_listeners.get
             listeners = get(MATCH_ALL, []) + get(event_type, [])
 
+            self.logger.info("Bus:Event {}: {}".format(
+                             event_type, event_data))
+
             if not listeners:
                 return
 
             event_data = event_data or {}
-
-            self.logger.info("Bus:Event {}: {}".format(
-                             event_type, event_data))
 
             def run():
                 """ Fire listeners for event. """
