@@ -16,7 +16,9 @@ import requests
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import general, group
+import homeassistant.components as components
+
+from homeassistant.components import group
 
 DOMAIN = "device_tracker"
 
@@ -43,7 +45,7 @@ def is_on(statemachine, entity_id=None):
     """ Returns if any or specified device is home. """
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
-    return statemachine.is_state(entity, general.STATE_HOME)
+    return statemachine.is_state(entity, components.STATE_HOME)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -110,7 +112,7 @@ class DeviceTracker(object):
                 known_dev[device]['last_seen'] = now
 
                 self.statemachine.set_state(
-                    known_dev[device]['entity_id'], general.STATE_HOME)
+                    known_dev[device]['entity_id'], components.STATE_HOME)
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
@@ -120,7 +122,7 @@ class DeviceTracker(object):
             if (now - known_dev[device]['last_seen'] > self.error_scanning):
 
                 self.statemachine.set_state(known_dev[device]['entity_id'],
-                                            general.STATE_NOT_HOME)
+                                            components.STATE_NOT_HOME)
 
         # If we come along any unknown devices we will write them to the
         # known devices file but only if we did not encounter an invalid

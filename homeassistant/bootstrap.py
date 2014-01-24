@@ -7,7 +7,7 @@ import ConfigParser
 import logging
 
 import homeassistant as ha
-from homeassistant.components import general
+import homeassistant.components as components
 
 
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
@@ -134,7 +134,7 @@ def from_config_file(config_path):
         add_status("Downloader", downloader.setup(
             bus, get_opt("downloader", "download_dir")))
 
-    add_status("General", general.setup(bus))
+    add_status("Core components", components.setup(bus))
 
     if has_section('browser'):
         add_status("Browser", load_module('browser').setup(bus))

@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import general, group
+import homeassistant.components as components
+from homeassistant.components import group
 
 DOMAIN = "light"
 
@@ -27,7 +28,7 @@ def is_on(statemachine, entity_id=None):
     """ Returns if the lights are on based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
 
-    return statemachine.is_state(entity_id, general.STATE_ON)
+    return statemachine.is_state(entity_id, components.STATE_ON)
 
 
 # pylint: disable=unused-argument
@@ -36,12 +37,12 @@ def turn_on(bus, entity_id=None, transition_seconds=None):
     data = {}
 
     if entity_id:
-        data[general.ATTR_ENTITY_ID] = entity_id
+        data[components.ATTR_ENTITY_ID] = entity_id
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
 
-    bus.call_service(DOMAIN, general.SERVICE_TURN_ON, data)
+    bus.call_service(DOMAIN, components.SERVICE_TURN_ON, data)
 
 
 # pylint: disable=unused-argument
@@ -50,12 +51,12 @@ def turn_off(bus, entity_id=None, transition_seconds=None):
     data = {}
 
     if entity_id:
-        data[general.ATTR_ENTITY_ID] = entity_id
+        data[components.ATTR_ENTITY_ID] = entity_id
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
 
-    bus.call_service(DOMAIN, general.SERVICE_TURN_OFF, data)
+    bus.call_service(DOMAIN, components.SERVICE_TURN_OFF, data)
 
 
 def setup(bus, statemachine, light_control):
@@ -87,8 +88,9 @@ def setup(bus, statemachine, light_control):
             status = {light_id: light_control.is_light_on(light_id)
                       for light_id in light_control.light_ids}
 
-            for light_id, state in status.items():
-                new_state = general.STATE_ON if state else general.STATE_OFF
+            for light_id, is_light_on in status.items():
+                new_state = (components.STATE_ON if is_light_on
+                             else components.STATE_OFF)
 
                 statemachine.set_state(entity_ids[light_id], new_state)
 
@@ -101,12 +103,12 @@ def setup(bus, statemachine, light_control):
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
-        entity_id = service.data.get(general.ATTR_ENTITY_ID, None)
+        entity_id = service.data.get(components.ATTR_ENTITY_ID, None)
         transition_seconds = service.data.get("transition_seconds", None)
 
         object_id = util.split_entity_id(entity_id)[1] if entity_id else None
 
-        if service.service == general.SERVICE_TURN_ON:
+        if service.service == components.SERVICE_TURN_ON:
             light_control.turn_light_on(object_id, transition_seconds)
         else:
             light_control.turn_light_off(object_id, transition_seconds)
@@ -114,10 +116,10 @@ def setup(bus, statemachine, light_control):
         update_light_state(None)
 
     # Listen for light on and light off events
-    bus.register_service(DOMAIN, general.SERVICE_TURN_ON,
+    bus.register_service(DOMAIN, components.SERVICE_TURN_ON,
                          handle_light_service)
 
-    bus.register_service(DOMAIN, general.SERVICE_TURN_OFF,
+    bus.register_service(DOMAIN, components.SERVICE_TURN_OFF,
                          handle_light_service)
 
     return True

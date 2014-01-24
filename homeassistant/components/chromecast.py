@@ -8,7 +8,7 @@ import logging
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import general
+import homeassistant.components as components
 
 DOMAIN = 'chromecast'
 
@@ -55,12 +55,12 @@ def setup(bus, statemachine, host):
 
     entity = ENTITY_ID_FORMAT.format(util.slugify(device.friendly_name))
 
-    if not bus.has_service(DOMAIN, general.SERVICE_TURN_OFF):
+    if not bus.has_service(DOMAIN, components.SERVICE_TURN_OFF):
         def _turn_off_service(service):
             """ Service to exit any running app on the specified ChromeCast and
             shows idle screen. Will quit all ChromeCasts if nothing specified.
             """
-            entity_id = service.data.get(general.ATTR_ENTITY_ID)
+            entity_id = service.data.get(components.ATTR_ENTITY_ID)
 
             entity_ids = [entity_id] if entity_id \
                 else util.filter_entity_ids(statemachine.entity_ids, DOMAIN)
@@ -75,7 +75,7 @@ def setup(bus, statemachine, host):
                     # KeyError: ATTR_HOST did not exist
                     pass
 
-        bus.register_service(DOMAIN, general.SERVICE_TURN_OFF,
+        bus.register_service(DOMAIN, components.SERVICE_TURN_OFF,
                              _turn_off_service)
 
     bus.register_service(DOMAIN, "start_fireplace",

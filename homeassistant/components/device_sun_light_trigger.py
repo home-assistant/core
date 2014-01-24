@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
-
-from . import light, sun, device_tracker, general, group
+import homeassistant.components as components
+from . import light, sun, device_tracker, group
 
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
@@ -92,7 +92,7 @@ def setup(bus, statemachine, light_group=None):
 
         # Specific device came home ?
         if (entity != device_tracker.ENTITY_ID_ALL_DEVICES and
-           new_state.state == general.STATE_HOME):
+           new_state.state == components.STATE_HOME):
 
             # These variables are needed for the elif check
             now = datetime.now()
@@ -130,7 +130,7 @@ def setup(bus, statemachine, light_group=None):
 
         # Did all devices leave the house?
         elif (entity == device_tracker.ENTITY_ID_ALL_DEVICES and
-              new_state.state == general.STATE_NOT_HOME and lights_are_on):
+              new_state.state == components.STATE_NOT_HOME and lights_are_on):
 
             logger.info(
                 "Everyone has left but there are devices on. Turning them off")
@@ -140,11 +140,11 @@ def setup(bus, statemachine, light_group=None):
     # Track home coming of each seperate device
     for entity in device_entity_ids:
         ha.track_state_change(bus, entity, _handle_device_state_change,
-                              general.STATE_NOT_HOME, general.STATE_HOME)
+                              components.STATE_NOT_HOME, components.STATE_HOME)
 
     # Track when all devices are gone to shut down lights
     ha.track_state_change(bus, device_tracker.ENTITY_ID_ALL_DEVICES,
-                          _handle_device_state_change, general.STATE_HOME,
-                          general.STATE_NOT_HOME)
+                          _handle_device_state_change, components.STATE_HOME,
+                          components.STATE_NOT_HOME)
 
     return True
