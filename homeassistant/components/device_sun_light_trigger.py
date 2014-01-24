@@ -135,7 +135,7 @@ def setup(bus, statemachine, light_group=None):
             logger.info(
                 "Everyone has left but there are devices on. Turning them off")
 
-            light.turn_off(bus, statemachine)
+            light.turn_off(bus)
 
     # Track home coming of each seperate device
     for entity in device_entity_ids:
