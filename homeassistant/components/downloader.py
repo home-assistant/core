@@ -8,8 +8,6 @@ import os
 import logging
 import re
 
-import requests
-
 import homeassistant.util as util
 
 DOMAIN = "downloader"
@@ -22,11 +20,18 @@ def setup(bus, download_path):
 
     logger = logging.getLogger(__name__)
 
+    try:
+        import requests
+    except ImportError:
+        logger.exception(("Failed to import requests. "
+                          "Did you maybe not execute 'pip install requests'?"))
+
+        return False
+
     if not os.path.isdir(download_path):
 
         logger.error(
-            ("FileDownloader:"
-             "Download path {} does not exist. File Downloader not active.").
+            ("Download path {} does not exist. File Downloader not active.").
             format(download_path))
 
         return False
@@ -66,7 +71,7 @@ def setup(bus, download_path):
 
                     final_path = path + "_{}".format(tries) + ext
 
-                logger.info("FileDownloader:{} -> {}".format(
+                logger.info("{} -> {}".format(
                             service.data['url'], final_path))
 
                 with open(final_path, 'wb') as fil:
@@ -74,7 +79,7 @@ def setup(bus, download_path):
                         fil.write(chunk)
 
         except requests.exceptions.ConnectionError:
-            logger.exception("FileDownloader:ConnectionError occured for {}".
+            logger.exception("ConnectionError occured for {}".
                              format(service.data['url']))
 
     bus.register_service(DOMAIN, SERVICE_DOWNLOAD_FILE,
