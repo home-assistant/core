@@ -177,16 +177,18 @@ class Bus(object):
             return {key: len(self._event_listeners[key])
                     for key in self._event_listeners}
 
+    def has_service(self, domain, service):
+        """ Returns True if specified service exists. """
+        return (domain in self._services and
+                service in self._services[domain])
+
     def call_service(self, domain, service, service_data=None):
         """ Calls a service. """
-        with self.service_lock:
-            try:
-                self._services[domain][service]
-            except KeyError:
-                # Domain or Service does not exist
-                raise ServiceDoesNotExistException(
-                    "Service does not exist: {}/{}".format(domain, service))
+        if not self.has_service(domain, service):
+            raise ServiceDoesNotExistError(
+                "Service does not exist: {}/{}".format(domain, service))
 
+        with self.service_lock:
             service_data = service_data or {}
 
             def run():
