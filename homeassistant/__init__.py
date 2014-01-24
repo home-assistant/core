@@ -471,9 +471,9 @@ class Timer(threading.Thread):
                                 {'now': now})
 
 
-class HomeAssistantException(Exception):
+class HomeAssistantError(Exception):
     """ General Home Assistant exception occured. """
 
 
-class ServiceDoesNotExistException(HomeAssistantException):
+class ServiceDoesNotExistError(HomeAssistantError):
     """ A service has been referenced that deos not exist. """
