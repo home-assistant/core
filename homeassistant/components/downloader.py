@@ -31,7 +31,7 @@ def setup(bus, download_path):
 
         return False
 
-    def download_file(service):
+    def _download_file(service):
         """ Downloads file specified in the url. """
 
         try:
@@ -78,6 +78,6 @@ def setup(bus, download_path):
                              format(service.data['url']))
 
     bus.register_service(DOMAIN, SERVICE_DOWNLOAD_FILE,
-                         download_file)
+                         _download_file)
 
     return True

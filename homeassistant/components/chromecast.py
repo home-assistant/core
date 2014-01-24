@@ -6,45 +6,45 @@ Provides functionality to interact with Chromecasts.
 """
 import logging
 
-from homeassistant.external import pychromecast
-
 import homeassistant as ha
 import homeassistant.util as util
+from homeassistant.components import general
 
+DOMAIN = 'chromecast'
 
-DOMAIN = "chromecast"
-
-SERVICE_YOUTUBE_VIDEO = "play_youtube_video"
+SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-STATE_NO_APP = "none"
+STATE_NO_APP = 'no_app'
 
-ATTR_FRIENDLY_NAME = "friendly_name"
-ATTR_HOST = "host"
-ATTR_STATE = "state"
-ATTR_OPTIONS = "options"
+ATTR_FRIENDLY_NAME = 'friendly_name'
+ATTR_HOST = 'host'
+ATTR_STATE = 'state'
+ATTR_OPTIONS = 'options'
 
 
-def turn_off(statemachine, cc_id=None):
-    """ Exits any running app on the specified ChromeCast and shows
-    idle screen. Will quit all ChromeCasts if nothing specified. """
+def is_on(statemachine, entity_id=None):
+    """ Returns true if specified ChromeCast entity_id is on.
+    Will check all chromecasts if no entity_id specified. """
 
-    entity_ids = [ENTITY_ID_FORMAT.format(cc_id)] if cc_id \
-        else ha.filter_entity_ids(statemachine.entity_ids, DOMAIN)
+    entity_ids = [entity_id] if entity_id \
+        else util.filter_entity_ids(statemachine.entity_ids, DOMAIN)
 
-    for entity_id in entity_ids:
-        state = statemachine.get_state(entity_id)
-
-        if (state and
-            (state.state != STATE_NO_APP or
-             state.state != pychromecast.APP_ID_HOME)):
-
-            pychromecast.quit_app(state.attributes[ATTR_HOST])
+    return any(not statemachine.is_state(entity_id, STATE_NO_APP)
+               for entity_id in entity_ids)
 
 
 def setup(bus, statemachine, host):
     """ Listen for chromecast events. """
     logger = logging.getLogger(__name__)
+
+    try:
+        from homeassistant.external import pychromecast
+    except ImportError:
+        logger.exception(("Failed to import pychromecast. "
+                          "Did you maybe not cloned the git submodules?"))
+
+        return False
 
     logger.info("Getting device status")
     device = pychromecast.get_device_status(host)
@@ -53,13 +53,30 @@ def setup(bus, statemachine, host):
         logger.error("Could not find Chromecast")
         return False
 
-    entity = ENTITY_ID_FORMAT.format(util.slugify(
-        device.friendly_name))
+    entity = ENTITY_ID_FORMAT.format(util.slugify(device.friendly_name))
 
-    bus.register_service(DOMAIN, ha.SERVICE_TURN_OFF,
-                         lambda service:
-                         turn_off(statemachine,
-                                  service.data.get("cc_id", None)))
+    if not bus.has_service(DOMAIN, general.SERVICE_TURN_OFF):
+        def _turn_off_service(service):
+            """ Service to exit any running app on the specified ChromeCast and
+            shows idle screen. Will quit all ChromeCasts if nothing specified.
+            """
+            entity_id = service.data.get(general.ATTR_ENTITY_ID)
+
+            entity_ids = [entity_id] if entity_id \
+                else util.filter_entity_ids(statemachine.entity_ids, DOMAIN)
+
+            for entity_id in entity_ids:
+                state = statemachine.get_state(entity_id)
+
+                try:
+                    pychromecast.quit_app(state.attributes[ATTR_HOST])
+                except (AttributeError, KeyError):
+                    # AttributeError: state returned None
+                    # KeyError: ATTR_HOST did not exist
+                    pass
+
+        bus.register_service(DOMAIN, general.SERVICE_TURN_OFF,
+                             _turn_off_service)
 
     bus.register_service(DOMAIN, "start_fireplace",
                          lambda service:
@@ -74,7 +91,7 @@ def setup(bus, statemachine, host):
                          pychromecast.play_youtube_video(
                              host, service.data['video']))
 
-    def update_chromecast_state(time):  # pylint: disable=unused-argument
+    def _update_chromecast_state(time):  # pylint: disable=unused-argument
         """ Retrieve state of Chromecast and update statemachine. """
         logger.info("Updating app status")
         status = pychromecast.get_app_status(host)
@@ -92,8 +109,8 @@ def setup(bus, statemachine, host):
         else:
             statemachine.set_state(entity, STATE_NO_APP, {ATTR_HOST: host})
 
-    ha.track_time_change(bus, update_chromecast_state)
+    ha.track_time_change(bus, _update_chromecast_state)
 
-    update_chromecast_state(None)
+    _update_chromecast_state(None)
 
     return True

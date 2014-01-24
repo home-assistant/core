@@ -592,6 +592,10 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             self._message("Service {}/{} called.".format(domain, service))
 
+        except ha.ServiceDoesNotExistError:
+            # If the service does not exist
+            self._message('Service does not exist', HTTP_BAD_REQUEST)
+
         except KeyError:
             # Occurs if domain or service does not exist in data
             self._message("No domain or service received.", HTTP_BAD_REQUEST)

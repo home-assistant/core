@@ -10,7 +10,7 @@ from datetime import timedelta
 import homeassistant as ha
 import homeassistant.util as util
 
-ENTITY_ID = "weather.sun"
+ENTITY_ID = "sun.sun"
 
 STATE_ABOVE_HORIZON = "above_horizon"
 STATE_BELOW_HORIZON = "below_horizon"
@@ -19,9 +19,11 @@ STATE_ATTR_NEXT_RISING = "next_rising"
 STATE_ATTR_NEXT_SETTING = "next_setting"
 
 
-def is_up(statemachine):
+def is_on(statemachine, entity_id=None):
     """ Returns if the sun is currently up based on the statemachine. """
-    return statemachine.is_state(ENTITY_ID, STATE_ABOVE_HORIZON)
+    entity_id = entity_id or ENTITY_ID
+
+    return statemachine.is_state(entity_id, STATE_ABOVE_HORIZON)
 
 
 def next_setting(statemachine):

@@ -6,7 +6,7 @@ A module containing drop in replacements for core parts that will interface
 with a remote instance of home assistant.
 
 If a connection error occurs while communicating with the API a
-HomeAssistantException will be raised.
+HomeAssistantError will be raised.
 """
 
 import threading
@@ -44,7 +44,7 @@ def _setup_call_api(host, port, api_password):
 
         except requests.exceptions.ConnectionError:
             logging.getLogger(__name__).exception("Error connecting to server")
-            raise ha.HomeAssistantException("Error connecting to server")
+            raise ha.HomeAssistantError("Error connecting to server")
 
     return _call_api
 
@@ -85,17 +85,17 @@ class Bus(ha.Bus):
                 return data['services']
 
             else:
-                raise ha.HomeAssistantException(
+                raise ha.HomeAssistantError(
                     "Got unexpected result (3): {}.".format(req.text))
 
         except ValueError:  # If req.json() can't parse the json
             self.logger.exception("Bus:Got unexpected result")
-            raise ha.HomeAssistantException(
+            raise ha.HomeAssistantError(
                 "Got unexpected result: {}".format(req.text))
 
         except KeyError:  # If not all expected keys are in the returned JSON
             self.logger.exception("Bus:Got unexpected result (2)")
-            raise ha.HomeAssistantException(
+            raise ha.HomeAssistantError(
                 "Got unexpected result (2): {}".format(req.text))
 
     @property
@@ -110,17 +110,17 @@ class Bus(ha.Bus):
                 return data['event_listeners']
 
             else:
-                raise ha.HomeAssistantException(
+                raise ha.HomeAssistantError(
                     "Got unexpected result (3): {}.".format(req.text))
 
         except ValueError:  # If req.json() can't parse the json
             self.logger.exception("Bus:Got unexpected result")
-            raise ha.HomeAssistantException(
+            raise ha.HomeAssistantError(
                 "Got unexpected result: {}".format(req.text))
 
         except KeyError:  # If not all expected keys are in the returned JSON
             self.logger.exception("Bus:Got unexpected result (2)")
-            raise ha.HomeAssistantException(
+            raise ha.HomeAssistantError(
                 "Got unexpected result (2): {}".format(req.text))
 
     def call_service(self, domain, service, service_data=None):
@@ -141,7 +141,11 @@ class Bus(ha.Bus):
                     req.status_code, req.text)
 
             self.logger.error("Bus:{}".format(error))
-            raise ha.HomeAssistantException(error)
+
+            if req.status_code == 400:
+                raise ha.ServiceDoesNotExistError(error)
+            else:
+                raise ha.HomeAssistantError(error)
 
     def register_service(self, domain, service, service_callback):
         """ Not implemented for remote bus.
@@ -166,7 +170,7 @@ class Bus(ha.Bus):
                     req.status_code, req.text)
 
             self.logger.error("Bus:{}".format(error))
-            raise ha.HomeAssistantException(error)
+            raise ha.HomeAssistantError(error)
 
     def listen_event(self, event_type, listener):
         """ Not implemented for remote bus.
@@ -251,11 +255,11 @@ class StateMachine(ha.StateMachine):
                         req.status_code, req.text)
 
                 self.logger.error("StateMachine:{}".format(error))
-                raise ha.HomeAssistantException(error)
+                raise ha.HomeAssistantError(error)
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("StateMachine:Error connecting to server")
-            raise ha.HomeAssistantException("Error connecting to server")
+            raise ha.HomeAssistantError("Error connecting to server")
 
         finally:
             self.lock.release()
@@ -277,19 +281,19 @@ class StateMachine(ha.StateMachine):
                 return None
 
             else:
-                raise ha.HomeAssistantException(
+                raise ha.HomeAssistantError(
                     "Got unexpected result (3): {}.".format(req.text))
 
         except requests.exceptions.ConnectionError:
             self.logger.exception("StateMachine:Error connecting to server")
-            raise ha.HomeAssistantException("Error connecting to server")
+            raise ha.HomeAssistantError("Error connecting to server")
 
         except ValueError:  # If req.json() can't parse the json
             self.logger.exception("StateMachine:Got unexpected result")
-            raise ha.HomeAssistantException(
+            raise ha.HomeAssistantError(
                 "Got unexpected result: {}".format(req.text))
 
         except KeyError:  # If not all expected keys are in the returned JSON
             self.logger.exception("StateMachine:Got unexpected result (2)")
-            raise ha.HomeAssistantException(
+            raise ha.HomeAssistantError(
                 "Got unexpected result (2): {}".format(req.text))

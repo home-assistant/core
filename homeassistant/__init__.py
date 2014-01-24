@@ -20,16 +20,9 @@ MATCH_ALL = '*'
 
 DOMAIN = "homeassistant"
 
-STATE_ON = "on"
-STATE_OFF = "off"
-STATE_NOT_HOME = 'device_not_home'
-STATE_HOME = 'device_home'
-
-SERVICE_TURN_ON = "turn_on"
-SERVICE_TURN_OFF = "turn_off"
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
-EVENT_HOMEASSISTANT_START = "homeassistant.start"
+EVENT_HOMEASSISTANT_START = "homeassistant_start"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 
@@ -76,21 +69,6 @@ def _matcher(subject, pattern):
     Pattern is either a list of allowed subjects or a `MATCH_ALL`.
     """
     return MATCH_ALL == pattern or subject in pattern
-
-
-def split_entity_id(entity_id):
-    """ Splits a state entity_id into domain, object_id. """
-    return entity_id.split(".", 1)
-
-
-def filter_entity_ids(entity_ids, domain_filter=None, strip_domain=False):
-    """ Filter a list of entities based on domain. Setting strip_domain
-        will only return the object_ids. """
-    return [
-        split_entity_id(entity_id)[1] if strip_domain else entity_id
-        for entity_id in entity_ids if
-        not domain_filter or entity_id.startswith(domain_filter)
-        ]
 
 
 def track_state_change(bus, entity_id, action, from_state=None, to_state=None):

@@ -134,7 +134,7 @@ def from_config_file(config_path):
         add_status("Downloader", downloader.setup(
             bus, get_opt("downloader", "download_dir")))
 
-    add_status("General", general.setup(bus, statemachine))
+    add_status("General", general.setup(bus))
 
     if has_section('browser'):
         add_status("Browser", load_module('browser').setup(bus))

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
-import homeassistant.components.group as group
+from homeassistant.components import general, group
 
 DOMAIN = "light"
 
@@ -27,39 +27,48 @@ def is_on(statemachine, entity_id=None):
     """ Returns if the lights are on based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
 
-    return statemachine.is_state(entity_id, ha.STATE_ON)
+    return statemachine.is_state(entity_id, general.STATE_ON)
 
 
+# pylint: disable=unused-argument
 def turn_on(bus, entity_id=None, transition_seconds=None):
     """ Turns all or specified light on. """
     data = {}
 
     if entity_id:
-        data["light_id"] = ha.split_entity_id(entity_id)[1]
+        data[general.ATTR_ENTITY_ID] = entity_id
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
 
-    bus.call_service(DOMAIN, ha.SERVICE_TURN_ON, data)
+    bus.call_service(DOMAIN, general.SERVICE_TURN_ON, data)
 
 
+# pylint: disable=unused-argument
 def turn_off(bus, entity_id=None, transition_seconds=None):
     """ Turns all or specified light off. """
     data = {}
 
     if entity_id:
-        data["light_id"] = ha.split_entity_id(entity_id)[1]
+        data[general.ATTR_ENTITY_ID] = entity_id
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
 
-    bus.call_service(DOMAIN, ha.SERVICE_TURN_OFF, data)
+    bus.call_service(DOMAIN, general.SERVICE_TURN_OFF, data)
 
 
 def setup(bus, statemachine, light_control):
     """ Exposes light control via statemachine and services. """
 
     logger = logging.getLogger(__name__)
+
+    entity_ids = {light_id: ENTITY_ID_FORMAT.format(light_id) for light_id
+                  in light_control.light_ids}
+
+    if not entity_ids:
+        logger.error("Light:Found no lights to track")
+        return
 
     def update_light_state(time):  # pylint: disable=unused-argument
         """ Track the state of the lights. """
@@ -79,39 +88,36 @@ def setup(bus, statemachine, light_control):
                       for light_id in light_control.light_ids}
 
             for light_id, state in status.items():
-                entity_id = ENTITY_ID_FORMAT.format(light_id)
+                new_state = general.STATE_ON if state else general.STATE_OFF
 
-                new_state = ha.STATE_ON if state else ha.STATE_OFF
-
-                statemachine.set_state(entity_id, new_state)
+                statemachine.set_state(entity_ids[light_id], new_state)
 
     ha.track_time_change(bus, update_light_state, second=[0, 30])
 
     update_light_state(None)
 
     # Track the all lights state
-    entity_ids = [ENTITY_ID_FORMAT.format(light_id) for light_id
-                  in light_control.light_ids]
-
-    group.setup(bus, statemachine, GROUP_NAME_ALL_LIGHTS, entity_ids)
+    group.setup(bus, statemachine, GROUP_NAME_ALL_LIGHTS, entity_ids.values())
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
-        light_id = service.data.get("light_id", None)
+        entity_id = service.data.get(general.ATTR_ENTITY_ID, None)
         transition_seconds = service.data.get("transition_seconds", None)
 
-        if service.service == ha.SERVICE_TURN_ON:
-            light_control.turn_light_on(light_id, transition_seconds)
+        object_id = util.split_entity_id(entity_id)[1] if entity_id else None
+
+        if service.service == general.SERVICE_TURN_ON:
+            light_control.turn_light_on(object_id, transition_seconds)
         else:
-            light_control.turn_light_off(light_id, transition_seconds)
+            light_control.turn_light_off(object_id, transition_seconds)
 
         update_light_state(None)
 
     # Listen for light on and light off events
-    bus.register_service(DOMAIN, ha.SERVICE_TURN_ON,
+    bus.register_service(DOMAIN, general.SERVICE_TURN_ON,
                          handle_light_service)
 
-    bus.register_service(DOMAIN, ha.SERVICE_TURN_OFF,
+    bus.register_service(DOMAIN, general.SERVICE_TURN_OFF,
                          handle_light_service)
 
     return True

@@ -9,6 +9,7 @@ import logging
 from datetime import datetime, timedelta
 
 import homeassistant as ha
+import homeassistant.util as util
 
 from . import light, sun, device_tracker, general, group
 
@@ -22,8 +23,8 @@ def setup(bus, statemachine, light_group=None):
 
     logger = logging.getLogger(__name__)
 
-    device_entity_ids = ha.filter_entity_ids(statemachine.entity_ids,
-                                             device_tracker.DOMAIN)
+    device_entity_ids = util.filter_entity_ids(statemachine.entity_ids,
+                                               device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("LightTrigger:No devices found to track")
@@ -33,7 +34,7 @@ def setup(bus, statemachine, light_group=None):
     light_group = light_group or light.GROUP_NAME_ALL_LIGHTS
 
     # Get the light IDs from the specified group
-    light_ids = ha.filter_entity_ids(
+    light_ids = util.filter_entity_ids(
         group.get_entity_ids(statemachine, light_group), light.DOMAIN)
 
     if not light_ids:
@@ -55,7 +56,7 @@ def setup(bus, statemachine, light_group=None):
         def turn_light_on_before_sunset(light_id):
             """ Helper function to turn on lights slowly if there
                 are devices home and the light is not on yet. """
-            if (device_tracker.is_home(statemachine) and
+            if (device_tracker.is_on(statemachine) and
                not light.is_on(statemachine, light_id)):
 
                 light.turn_on(bus, light_id, LIGHT_TRANSITION_TIME.seconds)
@@ -80,18 +81,18 @@ def setup(bus, statemachine, light_group=None):
 
     # If the sun is already above horizon
     # schedule the time-based pre-sun set event
-    if sun.is_up(statemachine):
+    if sun.is_on(statemachine):
         handle_sun_rising(None, None, None)
 
-    def handle_device_state_change(entity, old_state, new_state):
+    def _handle_device_state_change(entity, old_state, new_state):
         """ Function to handle tracked device state changes. """
         lights_are_on = group.is_on(statemachine, light_group)
 
-        light_needed = not (lights_are_on or sun.is_up(statemachine))
+        light_needed = not (lights_are_on or sun.is_on(statemachine))
 
         # Specific device came home ?
         if (entity != device_tracker.ENTITY_ID_ALL_DEVICES and
-           new_state.state == ha.STATE_HOME):
+           new_state.state == general.STATE_HOME):
 
             # These variables are needed for the elif check
             now = datetime.now()
@@ -104,6 +105,8 @@ def setup(bus, statemachine, light_group=None):
                     "Home coming event for {}. Turning lights on".
                     format(entity))
 
+                # Turn on lights directly instead of calling group.turn_on
+                # So we skip fetching the entity ids again.
                 for light_id in light_ids:
                     light.turn_on(bus, light_id)
 
@@ -127,21 +130,21 @@ def setup(bus, statemachine, light_group=None):
 
         # Did all devices leave the house?
         elif (entity == device_tracker.ENTITY_ID_ALL_DEVICES and
-              new_state.state == ha.STATE_NOT_HOME and lights_are_on):
+              new_state.state == general.STATE_NOT_HOME and lights_are_on):
 
             logger.info(
                 "Everyone has left but there are devices on. Turning them off")
 
-            general.shutdown_devices(bus, statemachine)
+            light.turn_off(bus, statemachine)
 
     # Track home coming of each seperate device
     for entity in device_entity_ids:
-        ha.track_state_change(bus, entity, handle_device_state_change,
-                              ha.STATE_NOT_HOME, ha.STATE_HOME)
+        ha.track_state_change(bus, entity, _handle_device_state_change,
+                              general.STATE_NOT_HOME, general.STATE_HOME)
 
     # Track when all devices are gone to shut down lights
     ha.track_state_change(bus, device_tracker.ENTITY_ID_ALL_DEVICES,
-                          handle_device_state_change, ha.STATE_HOME,
-                          ha.STATE_NOT_HOME)
+                          _handle_device_state_change, general.STATE_HOME,
+                          general.STATE_NOT_HOME)
 
     return True

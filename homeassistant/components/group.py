@@ -8,6 +8,7 @@ Provides functionality to group devices that can be turned on or off.
 import logging
 
 import homeassistant as ha
+from homeassistant.components import general as gen
 
 DOMAIN = "group"
 
@@ -16,8 +17,8 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 STATE_ATTR_ENTITY_IDS = "entity_ids"
 
 _GROUP_TYPES = {
-    "on_off": (ha.STATE_ON, ha.STATE_OFF),
-    "home_not_home": (ha.STATE_HOME, ha.STATE_NOT_HOME)
+    "on_off": (gen.STATE_ON, gen.STATE_OFF),
+    "home_not_home": (gen.STATE_HOME, gen.STATE_NOT_HOME)
 }
 
 
@@ -30,9 +31,9 @@ def _get_group_type(state):
     return None
 
 
-def is_on(statemachine, group):
+def is_on(statemachine, entity_id):
     """ Returns if the group state is in its ON-state. """
-    state = statemachine.get_state(group)
+    state = statemachine.get_state(entity_id)
 
     if state:
         group_type = _get_group_type(state.state)
@@ -46,17 +47,18 @@ def is_on(statemachine, group):
         return False
 
 
-def get_entity_ids(statemachine, group):
+def get_entity_ids(statemachine, entity_id):
     """ Get the entity ids that make up this group. """
     try:
-        return statemachine.get_state(group).attributes[STATE_ATTR_ENTITY_IDS]
+        return \
+            statemachine.get_state(entity_id).attributes[STATE_ATTR_ENTITY_IDS]
     except (AttributeError, KeyError):
         # AttributeError if state did not exist
         # KeyError if key did not exist in attributes
         return []
 
 
-# pylint: disable=too-many-branches
+# pylint: disable=too-many-branches, too-many-locals
 def setup(bus, statemachine, name, entity_ids):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
@@ -135,6 +137,33 @@ def setup(bus, statemachine, name, entity_ids):
 
     for entity_id in entity_ids:
         ha.track_state_change(bus, entity_id, _update_group_state)
+
+    # group.setup is called to setup each group. Only the first time will we
+    # register a turn_on and turn_off method for groups.
+
+    if not bus.has_service(DOMAIN, gen.SERVICE_TURN_ON):
+        def _turn_group_on_service(service):
+            """ Call general.turn_on for each entity_id from this group. """
+            for entity_id in get_entity_ids(statemachine,
+                                            service.data.get(
+                                                gen.ATTR_ENTITY_ID)):
+
+                gen.turn_on(bus, entity_id)
+
+        bus.register_service(DOMAIN, gen.SERVICE_TURN_ON,
+                             _turn_group_on_service)
+
+    if not bus.has_service(DOMAIN, gen.SERVICE_TURN_OFF):
+        def _turn_group_off_service(service):
+            """ Call general.turn_off for each entity_id from this group. """
+            for entity_id in get_entity_ids(statemachine,
+                                            service.data.get(
+                                                gen.ATTR_ENTITY_ID)):
+
+                gen.turn_off(bus, entity_id)
+
+        bus.register_service(DOMAIN, gen.SERVICE_TURN_OFF,
+                             _turn_group_off_service)
 
     statemachine.set_state(group_entity_id, group_state, state_attr)
 

@@ -16,9 +16,7 @@ import requests
 
 import homeassistant as ha
 import homeassistant.util as util
-import homeassistant.components.group as group
-
-import homeassistant.external.pynetgear as pynetgear
+from homeassistant.components import general, group
 
 DOMAIN = "device_tracker"
 
@@ -41,12 +39,11 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
 
-def is_home(statemachine, device_id=None):
+def is_on(statemachine, entity_id=None):
     """ Returns if any or specified device is home. """
-    entity = ENTITY_ID_FORMAT.format(device_id) if device_id \
-        else ENTITY_ID_ALL_DEVICES
+    entity = entity_id or ENTITY_ID_ALL_DEVICES
 
-    return statemachine.is_state(entity, ha.STATE_HOME)
+    return statemachine.is_state(entity, general.STATE_HOME)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -100,30 +97,30 @@ class DeviceTracker(object):
 
         now = datetime.now()
 
-        temp_tracking_devices = [device for device in self.known_devices
-                                 if self.known_devices[device]['track']]
+        known_dev = self.known_devices
+
+        temp_tracking_devices = [device for device in known_dev
+                                 if known_dev[device]['track']]
 
         for device in found_devices:
             # Are we tracking this device?
             if device in temp_tracking_devices:
                 temp_tracking_devices.remove(device)
 
-                self.known_devices[device]['last_seen'] = now
+                known_dev[device]['last_seen'] = now
 
                 self.statemachine.set_state(
-                    self.known_devices[device]['entity_id'], ha.STATE_HOME)
+                    known_dev[device]['entity_id'], general.STATE_HOME)
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
         # Because we do not want to have stuff happening when the device does
         # not show up for 1 scan beacuse of reboot etc
         for device in temp_tracking_devices:
-            if (now - self.known_devices[device]['last_seen'] >
-               self.error_scanning):
+            if (now - known_dev[device]['last_seen'] > self.error_scanning):
 
-                self.statemachine.set_state(
-                    self.known_devices[device]['entity_id'],
-                    ha.STATE_NOT_HOME)
+                self.statemachine.set_state(known_dev[device]['entity_id'],
+                                            general.STATE_NOT_HOME)
 
         # If we come along any unknown devices we will write them to the
         # known devices file but only if we did not encounter an invalid
@@ -131,7 +128,7 @@ class DeviceTracker(object):
         if not self.invalid_known_devices_file:
 
             unknown_devices = [device for device in found_devices
-                               if device not in self.known_devices]
+                               if device not in known_dev]
 
             if unknown_devices:
                 try:
@@ -151,14 +148,13 @@ class DeviceTracker(object):
 
                         for device in unknown_devices:
                             # See if the device scanner knows the name
-                            temp_name = \
-                                self.device_scanner.get_device_name(device)
-
-                            name = temp_name if temp_name else "unknown_device"
+                            # else defaults to unknown device
+                            name = (self.device_scanner.get_device_name(device)
+                                    or "unknown_device")
 
                             writer.writerow((device, name, 0))
-                            self.known_devices[device] = {'name': name,
-                                                          'track': False}
+                            known_dev[device] = {'name': name,
+                                                 'track': False}
 
                 except IOError:
                     self.logger.exception((
@@ -380,17 +376,28 @@ class NetgearDeviceScanner(object):
     """ This class queries a Netgear wireless router using the SOAP-api. """
 
     def __init__(self, host, username, password):
-        self._api = pynetgear.Netgear(host, username, password)
-
         self.logger = logging.getLogger(__name__)
-        self.lock = threading.Lock()
-
         self.date_updated = None
         self.last_results = []
 
+        try:
+            import homeassistant.external.pynetgear as pynetgear
+        except ImportError:
+            self.logger.exception(
+                ("Netgear:Failed to import pynetgear. "
+                 "Did you maybe not cloned the git submodules?"))
+
+            self.success_init = False
+
+            return
+
+        self._api = pynetgear.Netgear(host, username, password)
+        self.lock = threading.Lock()
+
         self.logger.info("Netgear:Logging in")
         if self._api.login():
-            self.success_init = self._update_info()
+            self.success_init = True
+            self._update_info()
 
         else:
             self.logger.error("Netgear:Failed to Login")
@@ -423,6 +430,8 @@ class NetgearDeviceScanner(object):
     def _update_info(self):
         """ Retrieves latest information from the Netgear router.
             Returns boolean if scanning successful. """
+        if not self.success_init:
+            return
 
         with self.lock:
             # if date_updated is None or the date is too old we scan for
@@ -436,7 +445,7 @@ class NetgearDeviceScanner(object):
 
                 self.date_updated = datetime.now()
 
-                return True
+                return
 
             else:
-                return True
+                return
