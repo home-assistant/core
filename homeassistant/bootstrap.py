@@ -2,15 +2,12 @@
 Provides methods to bootstrap a home assistant instance.
 """
 
+import importlib
 import ConfigParser
 import logging
 
 import homeassistant as ha
-from homeassistant.components import (general, chromecast,
-                                      device_sun_light_trigger, device_tracker,
-                                      downloader, keyboard, light, sun,
-                                      browser, httpinterface, group)
-
+from homeassistant.components import general
 
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def from_config_file(config_path):
@@ -33,6 +30,8 @@ def from_config_file(config_path):
     get_opt = config.get
     has_section = config.has_section
     add_status = lambda name, result: statusses.append((name, result))
+    load_module = lambda module: importlib.import_module(
+        'homeassistant.components.'+module)
 
     def get_opt_safe(section, option, default=None):
         """ Failure proof option retriever. """
@@ -49,6 +48,8 @@ def from_config_file(config_path):
         opt_fields = "host, username, password"
 
         if has_section('device_tracker.tomato'):
+            device_tracker = load_module('device_tracker')
+
             dev_scan_name = "Tomato"
             opt_fields += ", http_id"
 
@@ -59,6 +60,8 @@ def from_config_file(config_path):
                 get_opt('device_tracker.tomato', 'http_id'))
 
         elif has_section('device_tracker.netgear'):
+            device_tracker = load_module('device_tracker')
+
             dev_scan_name = "Netgear"
 
             dev_scan = device_tracker.NetgearDeviceScanner(
@@ -91,14 +94,20 @@ def from_config_file(config_path):
     if has_opt("common", "latitude") and \
        has_opt("common", "longitude"):
 
+        sun = load_module('sun')
+
         add_status("Weather - Ephem",
                    sun.setup(
                        bus, statemachine,
                        get_opt("common", "latitude"),
                        get_opt("common", "longitude")))
+    else:
+        sun = None
 
     # Chromecast
     if has_opt("chromecast", "host"):
+        chromecast = load_module('chromecast')
+
         chromecast_started = chromecast.setup(bus, statemachine,
                                               get_opt("chromecast", "host"))
 
@@ -108,28 +117,34 @@ def from_config_file(config_path):
 
     # Light control
     if has_section("light.hue"):
+        light = load_module('light')
+
         light_control = light.HueLightControl(get_opt_safe("hue", "host"))
 
-        add_status("Light Control - Hue", light_control.success_init)
+        add_status("Light - Hue", light_control.success_init)
 
         light.setup(bus, statemachine, light_control)
     else:
         light_control = None
 
     if has_opt("downloader", "download_dir"):
+        downloader = load_module('downloader')
+
         add_status("Downloader", downloader.setup(
             bus, get_opt("downloader", "download_dir")))
 
-    # Currently only works with Chromecast or Light_Control
-    if chromecast_started or light_control:
-        add_status("General", general.setup(bus, statemachine))
+    add_status("General", general.setup(bus, statemachine))
 
-    add_status("Browser", browser.setup(bus))
+    if has_section('browser'):
+        add_status("Browser", load_module('browser').setup(bus))
 
-    add_status("Media Buttons", keyboard.setup(bus))
+    if has_section('keyboard'):
+        add_status("Keyboard", load_module('keyboard').setup(bus))
 
     # Init HTTP interface
     if has_opt("httpinterface", "api_password"):
+        httpinterface = load_module('httpinterface')
+
         httpinterface.HTTPInterface(
             bus, statemachine,
             get_opt("httpinterface", "api_password"))
@@ -137,17 +152,21 @@ def from_config_file(config_path):
         add_status("HTTPInterface", True)
 
     # Init groups
-    if has_section("groups"):
-        for name, entity_ids in config.items("groups"):
+    if has_section("group"):
+        group = load_module('group')
+
+        for name, entity_ids in config.items("group"):
             add_status("Group - {}".format(name),
                        group.setup(bus, statemachine, name,
                                    entity_ids.split(",")))
 
     # Light trigger
-    if light_control:
+    if light_control and sun:
+        device_sun_light_trigger = load_module('device_sun_light_trigger')
+
         light_group = get_opt_safe("device_sun_light_trigger", "light_group")
 
-        add_status("Light Trigger",
+        add_status("Device Sun Light Trigger",
                    device_sun_light_trigger.setup(bus, statemachine,
                                                   light_group))
 

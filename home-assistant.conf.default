@@ -31,6 +31,6 @@ download_dir=downloads
 
 # A comma seperated list of states that have to be tracked
 # As a single group
-[groups]
+[group]
 living_room=light.Bowl,light.Ceiling,light.TV_back_light
 bedroom=light.Bed_light
