@@ -89,10 +89,11 @@ class ThreadPool(object):
     # pylint: disable=too-few-public-methods
     def __init__(self, worker_count, job_handler):
         queue = self.queue = Queue.Queue()
+        current_jobs = self.current_jobs = []
 
         for _ in xrange(worker_count):
             worker = threading.Thread(target=_threadpool_worker,
-                                      args=(queue, job_handler))
+                                      args=(queue, current_jobs, job_handler))
             worker.daemon = True
             worker.start()
 
@@ -101,9 +102,21 @@ class ThreadPool(object):
         self.queue.put(args)
 
 
-def _threadpool_worker(queue, job_handler):
+def _threadpool_worker(queue, current_jobs, job_handler):
     """ Provides the base functionality of a worker for the thread pool. """
     while True:
+        # Get new item from queue
         job = queue.get()
+
+        # Add to current running jobs
+        job_log = (datetime.datetime.now(), job)
+        current_jobs.append(job_log)
+
+        # Do the job
         job_handler(job)
+
+        # Remove from current running job
+        current_jobs.remove(job_log)
+
+        # Tell queue a task is done
         queue.task_done()
