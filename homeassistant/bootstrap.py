@@ -19,7 +19,8 @@ def from_config_file(config_path):
     logging.basicConfig(level=logging.INFO)
 
     # Log errors to a file
-    err_handler = logging.FileHandler("home-assistant.log", mode='w')
+    err_handler = logging.FileHandler("home-assistant.log",
+                                      mode='w', delay=True)
     err_handler.setLevel(logging.ERROR)
     err_handler.setFormatter(
         logging.Formatter('%(asctime)s %(name)s: %(message)s',
