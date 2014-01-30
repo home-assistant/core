@@ -56,7 +56,7 @@ def setup(bus, statemachine, host):
     entity = ENTITY_ID_FORMAT.format(util.slugify(device.friendly_name))
 
     if not bus.has_service(DOMAIN, components.SERVICE_TURN_OFF):
-        def _turn_off_service(service):
+        def turn_off_service(service):
             """ Service to exit any running app on the specified ChromeCast and
             shows idle screen. Will quit all ChromeCasts if nothing specified.
             """
@@ -76,7 +76,7 @@ def setup(bus, statemachine, host):
                     pass
 
         bus.register_service(DOMAIN, components.SERVICE_TURN_OFF,
-                             _turn_off_service)
+                             turn_off_service)
 
     bus.register_service(DOMAIN, "start_fireplace",
                          lambda service:
@@ -91,7 +91,7 @@ def setup(bus, statemachine, host):
                          pychromecast.play_youtube_video(
                              host, service.data['video']))
 
-    def _update_chromecast_state(time):  # pylint: disable=unused-argument
+    def update_chromecast_state(time):  # pylint: disable=unused-argument
         """ Retrieve state of Chromecast and update statemachine. """
         logger.info("Updating app status")
         status = pychromecast.get_app_status(host)
@@ -109,8 +109,8 @@ def setup(bus, statemachine, host):
         else:
             statemachine.set_state(entity, STATE_NO_APP, {ATTR_HOST: host})
 
-    ha.track_time_change(bus, _update_chromecast_state)
+    ha.track_time_change(bus, update_chromecast_state)
 
-    _update_chromecast_state(None)
+    update_chromecast_state(None)
 
     return True

@@ -71,16 +71,19 @@ class DeviceTracker(object):
 
         self._read_known_devices_file()
 
-        ha.track_time_change(bus,
-                             lambda time:
-                             self.update_devices(
-                                 device_scanner.scan_devices()))
+        # Wrap it in a func instead of lambda so it can be identified in
+        # the bus by its __name__ attribute.
+        def update_device_state(time):  # pylint: disable=unused-argument
+            """ Triggers update of the device states. """
+            self.update_devices()
+
+        ha.track_time_change(bus, update_device_state)
 
         bus.register_service(DOMAIN,
                              SERVICE_DEVICE_TRACKER_RELOAD,
                              lambda service: self._read_known_devices_file())
 
-        self.update_devices(device_scanner.scan_devices())
+        self.update_devices()
 
         group.setup(bus, statemachine, GROUP_NAME_ALL_DEVICES,
                     list(self.device_entity_ids))
@@ -93,9 +96,11 @@ class DeviceTracker(object):
                     in self.known_devices
                     if self.known_devices[device]['track']])
 
-    def update_devices(self, found_devices):
+    def update_devices(self, found_devices=None):
         """ Update device states based on the found devices. """
         self.lock.acquire()
+
+        found_devices = found_devices or self.device_scanner.scan_devices()
 
         now = datetime.now()
 

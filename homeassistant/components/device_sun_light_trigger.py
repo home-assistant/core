@@ -48,7 +48,7 @@ def setup(bus, statemachine, light_group=None):
          len(light_ids))
 
     # pylint: disable=unused-argument
-    def handle_sun_rising(entity, old_state, new_state):
+    def schedule_light_on_sun_rise(entity, old_state, new_state):
         """The moment sun sets we want to have all the lights on.
            We will schedule to have each light start after one another
            and slowly transition in."""
@@ -76,15 +76,16 @@ def setup(bus, statemachine, light_group=None):
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
-    ha.track_state_change(bus, sun.ENTITY_ID, handle_sun_rising,
+    ha.track_state_change(bus, sun.ENTITY_ID,
+                          schedule_light_on_sun_rise,
                           sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
 
     # If the sun is already above horizon
     # schedule the time-based pre-sun set event
     if sun.is_on(statemachine):
-        handle_sun_rising(None, None, None)
+        schedule_light_on_sun_rise(None, None, None)
 
-    def _handle_device_state_change(entity, old_state, new_state):
+    def check_light_on_dev_state_change(entity, old_state, new_state):
         """ Function to handle tracked device state changes. """
         lights_are_on = group.is_on(statemachine, light_group)
 
@@ -139,12 +140,12 @@ def setup(bus, statemachine, light_group=None):
 
     # Track home coming of each seperate device
     for entity in device_entity_ids:
-        ha.track_state_change(bus, entity, _handle_device_state_change,
+        ha.track_state_change(bus, entity, check_light_on_dev_state_change,
                               components.STATE_NOT_HOME, components.STATE_HOME)
 
     # Track when all devices are gone to shut down lights
     ha.track_state_change(bus, device_tracker.ENTITY_ID_ALL_DEVICES,
-                          _handle_device_state_change, components.STATE_HOME,
-                          components.STATE_NOT_HOME)
+                          check_light_on_dev_state_change,
+                          components.STATE_HOME, components.STATE_NOT_HOME)
 
     return True

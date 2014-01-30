@@ -114,7 +114,7 @@ def setup(bus, statemachine, name, entity_ids):
     state_attr = {STATE_ATTR_ENTITY_IDS: entity_ids}
 
     # pylint: disable=unused-argument
-    def _update_group_state(entity_id, old_state, new_state):
+    def update_group_state(entity_id, old_state, new_state):
         """ Updates the group state based on a state change by a tracked
             entity. """
 
@@ -136,13 +136,13 @@ def setup(bus, statemachine, name, entity_ids):
                 statemachine.set_state(group_entity_id, group_off, state_attr)
 
     for entity_id in entity_ids:
-        ha.track_state_change(bus, entity_id, _update_group_state)
+        ha.track_state_change(bus, entity_id, update_group_state)
 
     # group.setup is called to setup each group. Only the first time will we
     # register a turn_on and turn_off method for groups.
 
     if not bus.has_service(DOMAIN, components.SERVICE_TURN_ON):
-        def _turn_group_on_service(service):
+        def turn_group_on_service(service):
             """ Call components.turn_on for each entity_id from this group. """
             for entity_id in get_entity_ids(statemachine,
                                             service.data.get(
@@ -151,10 +151,10 @@ def setup(bus, statemachine, name, entity_ids):
                 components.turn_on(bus, entity_id)
 
         bus.register_service(DOMAIN, components.SERVICE_TURN_ON,
-                             _turn_group_on_service)
+                             turn_group_on_service)
 
     if not bus.has_service(DOMAIN, components.SERVICE_TURN_OFF):
-        def _turn_group_off_service(service):
+        def turn_group_off_service(service):
             """ Call components.turn_off for each entity_id in this group. """
             for entity_id in get_entity_ids(statemachine,
                                             service.data.get(
@@ -163,7 +163,7 @@ def setup(bus, statemachine, name, entity_ids):
                 components.turn_off(bus, entity_id)
 
         bus.register_service(DOMAIN, components.SERVICE_TURN_OFF,
-                             _turn_group_off_service)
+                             turn_group_off_service)
 
     statemachine.set_state(group_entity_id, group_state, state_attr)
 
