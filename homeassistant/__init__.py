@@ -13,8 +13,6 @@ import datetime as dt
 
 import homeassistant.util as util
 
-logging.basicConfig(level=logging.INFO)
-
 MATCH_ALL = '*'
 
 DOMAIN = "homeassistant"

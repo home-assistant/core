@@ -15,6 +15,18 @@ def from_config_file(config_path):
     """ Starts home assistant with all possible functionality
         based on a config file. """
 
+    # Setup the logging for home assistant.
+    logging.basicConfig(level=logging.INFO)
+
+    # Log errors to a file
+    err_handler = logging.FileHandler("home-assistant.log", mode='w')
+    err_handler.setLevel(logging.ERROR)
+    err_handler.setFormatter(
+        logging.Formatter('%(asctime)s %(name)s: %(message)s',
+                          datefmt='%H:%M %d-%m-%y'))
+    logging.getLogger('').addHandler(err_handler)
+
+    # Start the actual bootstrapping
     logger = logging.getLogger(__name__)
 
     statusses = []
