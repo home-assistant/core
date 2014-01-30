@@ -98,34 +98,43 @@ def track_time_change(bus, action,
                       hour=None, minute=None, second=None,
                       point_in_time=None, listen_once=False):
     """ Adds a listener that will listen for a specified or matching time. """
-    pmp = _process_match_param
-    year, month, day = pmp(year), pmp(month), pmp(day)
-    hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
-    def time_listener(event):
-        """ Listens for matching time_changed events. """
-        now = event.data['now']
+    # We do not have to wrap the function if all parameters are None
+    if any((val is not None for val in
+            (year, month, day, hour, minute, second,
+             point_in_time, listen_once or None))):
 
-        mat = _matcher
+        pmp = _process_match_param
+        year, month, day = pmp(year), pmp(month), pmp(day)
+        hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
-        if (point_in_time and now > point_in_time) or \
-           (not point_in_time and
-                mat(now.year, year) and
-                mat(now.month, month) and
-                mat(now.day, day) and
-                mat(now.hour, hour) and
-                mat(now.minute, minute) and
-                mat(now.second, second)):
+        def time_listener(event):
+            """ Listens for matching time_changed events. """
+            now = event.data['now']
 
-            # point_in_time are exact points in time
-            # so we always remove it after fire
-            if listen_once or point_in_time:
-                bus.remove_event_listener(EVENT_TIME_CHANGED, time_listener)
+            mat = _matcher
 
-            action(now)
+            if (point_in_time and now > point_in_time) or \
+               (not point_in_time and
+                    mat(now.year, year) and
+                    mat(now.month, month) and
+                    mat(now.day, day) and
+                    mat(now.hour, hour) and
+                    mat(now.minute, minute) and
+                    mat(now.second, second)):
 
-    # Let the string representation make sense
-    time_listener.__name__ = 'Time listener for {}'.format(action.__name__)
+                # point_in_time are exact points in time
+                # so we always remove it after fire
+                if listen_once or point_in_time:
+                    bus.remove_event_listener(EVENT_TIME_CHANGED,
+                                              time_listener)
+
+                action(now)
+
+        # Let the string representation make sense
+        time_listener.__name__ = 'Time listener for {}'.format(action.__name__)
+    else:
+        time_listener = action
 
     bus.listen_event(EVENT_TIME_CHANGED, time_listener)
 
