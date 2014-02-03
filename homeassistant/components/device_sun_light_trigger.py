@@ -42,10 +42,15 @@ def setup(bus, statemachine, light_group=None):
 
         return False
 
-    # Calculates the time when to start fading lights in when sun sets
-    time_for_light_before_sun_set = lambda: \
-        (sun.next_setting(statemachine) - LIGHT_TRANSITION_TIME *
-         len(light_ids))
+    def calc_time_for_light_when_sunset():
+        """ Calculates the time when to start fading lights in when sun sets.
+        Returns None if no next_setting data available. """
+        next_setting = sun.next_setting(statemachine)
+
+        if next_setting:
+            return (next_setting - LIGHT_TRANSITION_TIME * len(light_ids))
+        else:
+            return None
 
     # pylint: disable=unused-argument
     def schedule_light_on_sun_rise(entity, old_state, new_state):
@@ -67,12 +72,14 @@ def setup(bus, statemachine, light_group=None):
             only the last light will be turned on.. """
             return lambda now: turn_light_on_before_sunset(light_id)
 
-        start_point = time_for_light_before_sun_set()
+        start_point = calc_time_for_light_when_sunset()
 
-        for index, light_id in enumerate(light_ids):
-            ha.track_time_change(bus, turn_on(light_id),
-                                 point_in_time=(start_point +
-                                                index * LIGHT_TRANSITION_TIME))
+        if start_point:
+            for index, light_id in enumerate(light_ids):
+                ha.track_time_change(bus, turn_on(light_id),
+                                     point_in_time=(
+                                         start_point +
+                                         index * LIGHT_TRANSITION_TIME))
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
@@ -97,7 +104,7 @@ def setup(bus, statemachine, light_group=None):
 
             # These variables are needed for the elif check
             now = datetime.now()
-            start_point = time_for_light_before_sun_set()
+            start_point = calc_time_for_light_when_sunset()
 
             # Do we need lights?
             if light_needed:
@@ -115,7 +122,8 @@ def setup(bus, statemachine, light_group=None):
             # if someone would be home?
             # Check this by seeing if current time is later then the point
             # in time when we would start putting the lights on.
-            elif start_point < now < sun.next_setting(statemachine):
+            elif (start_point and
+                  start_point < now < sun.next_setting(statemachine)):
 
                 # Check for every light if it would be on if someone was home
                 # when the fading in started and turn it on if so
