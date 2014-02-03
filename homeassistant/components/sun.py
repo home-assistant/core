@@ -30,16 +30,24 @@ def next_setting(statemachine):
     """ Returns the datetime object representing the next sun setting. """
     state = statemachine.get_state(ENTITY_ID)
 
-    return None if not state else util.str_to_datetime(
-        state.attributes[STATE_ATTR_NEXT_SETTING])
+    try:
+        return util.str_to_datetime(state.attributes[STATE_ATTR_NEXT_SETTING])
+    except (AttributeError, KeyError):
+        # AttributeError if state is None
+        # KeyError if STATE_ATTR_NEXT_SETTING does not exist
+        return None
 
 
 def next_rising(statemachine):
-    """ Returns the datetime object representing the next sun setting. """
+    """ Returns the datetime object representing the next sun rising. """
     state = statemachine.get_state(ENTITY_ID)
 
-    return None if not state else util.str_to_datetime(
-        state.attributes[STATE_ATTR_NEXT_RISING])
+    try:
+        return util.str_to_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
+    except (AttributeError, KeyError):
+        # AttributeError if state is None
+        # KeyError if STATE_ATTR_NEXT_RISING does not exist
+        return None
 
 
 def setup(bus, statemachine, latitude, longitude):
