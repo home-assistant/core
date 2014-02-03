@@ -88,7 +88,7 @@ class ThreadPool(object):
 
     # pylint: disable=too-few-public-methods
     def __init__(self, worker_count, job_handler):
-        queue = self.queue = Queue.Queue()
+        queue = self.queue = Queue.PriorityQueue()
         current_jobs = self.current_jobs = []
 
         for _ in xrange(worker_count):
@@ -97,16 +97,16 @@ class ThreadPool(object):
             worker.daemon = True
             worker.start()
 
-    def add_job(self, *args):
+    def add_job(self, priority, job):
         """ Add a job to be sent to the workers. """
-        self.queue.put(args)
+        self.queue.put((priority, job))
 
 
 def _threadpool_worker(queue, current_jobs, job_handler):
     """ Provides the base functionality of a worker for the thread pool. """
     while True:
         # Get new item from queue
-        job = queue.get()
+        job = queue.get()[1]
 
         # Add to current running jobs
         job_log = (datetime.datetime.now(), job)
