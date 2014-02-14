@@ -327,16 +327,21 @@ class Bus(object):
         as event_type.
 
         Note: at the moment it is impossible to remove a one time listener.
-        Note2: it is also not guaranteed that it will only run once
         """
+        @ft.wraps(listener)
         def onetime_listener(event):
             """ Removes listener from eventbus and then fires listener. """
-            self.remove_event_listener(event_type, onetime_listener)
+            if not hasattr(onetime_listener, 'run'):
+                # Set variable so that we will never run twice.
+                # Because the event bus might have to wait till a thread comes
+                # available to execute this listener it might occur that the
+                # listener gets lined up twice to be executed.
+                # This will make sure the second time it does nothing.
+                onetime_listener.run = True
 
-            listener(event)
+                self.remove_event_listener(event_type, onetime_listener)
 
-        onetime_listener.__name__ = "One time listener for {}".format(
-            listener.__name__)
+                listener(event)
 
         self.listen_event(event_type, onetime_listener)
 
@@ -363,16 +368,16 @@ class Bus(object):
 
             self.last_busy_notice = dt.datetime.now()
 
-            logger = self.logger
+            log_error = self.logger.error
 
-            logger.error(
+            log_error(
                 "Bus:All {} threads are busy and {} jobs pending".format(
                     self.thread_count, self.pool.queue.qsize()))
 
             jobs = self.pool.current_jobs
 
             for start, job in jobs:
-                logger.error("Bus:Current job from {}: {}".format(
+                log_error("Bus:Current job from {}: {}".format(
                     util.datetime_to_str(start), job))
 
 
