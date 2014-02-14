@@ -10,6 +10,7 @@ import time
 import logging
 import threading
 import datetime as dt
+import functools as ft
 
 import homeassistant.util as util
 
@@ -36,6 +37,7 @@ PRIO_SERVICE_DEFAULT = 1
 PRIO_EVENT_STATE = 2
 PRIO_EVENT_TIME = 3
 PRIO_EVENT_DEFAULT = 4
+
 
 def start_home_assistant(bus):
     """ Start home assistant. """
@@ -79,6 +81,7 @@ def track_state_change(bus, entity_id, action, from_state=None, to_state=None):
     from_state = _process_match_param(from_state)
     to_state = _process_match_param(to_state)
 
+    @ft.wraps(action)
     def state_listener(event):
         """ State change listener that listens for specific state changes. """
         if entity_id == event.data['entity_id'] and \
@@ -89,55 +92,70 @@ def track_state_change(bus, entity_id, action, from_state=None, to_state=None):
                    event.data['old_state'],
                    event.data['new_state'])
 
-    # Let the string representation make sense
-    state_listener.__name__ = 'State listener for {}'.format(action.__name__)
-
     bus.listen_event(EVENT_STATE_CHANGED, state_listener)
+
+
+def track_point_in_time(bus, action, point_in_time):
+    """ Adds a listener that will fire once after a spefic point in time. """
+
+    @ft.wraps(action)
+    def point_in_time_listener(event):
+        """ Listens for matching time_changed events. """
+        now = event.data['now']
+
+        if now > point_in_time and not hasattr(point_in_time_listener, 'run'):
+
+            # Set variable so that we will never run twice.
+            # Because the event bus might have to wait till a thread comes
+            # available to execute this listener it might occur that the
+            # listener gets lined up twice to be executed. This will make sure
+            # the second time it does nothing.
+            point_in_time_listener.run = True
+
+            bus.remove_event_listener(EVENT_TIME_CHANGED,
+                                      point_in_time_listener)
+
+            action(now)
+
+    bus.listen_event(EVENT_TIME_CHANGED, point_in_time_listener)
 
 
 # pylint: disable=too-many-arguments
 def track_time_change(bus, action,
                       year=None, month=None, day=None,
-                      hour=None, minute=None, second=None,
-                      point_in_time=None, listen_once=False):
-    """ Adds a listener that will listen for a specified or matching time. """
+                      hour=None, minute=None, second=None):
+    """ Adds a listener that will fire if time matches a pattern. """
 
-    # We do not have to wrap the function if all parameters are None
+    # We do not have to wrap the function with time pattern matching logic if
+    # no pattern given
     if any((val is not None for val in
-            (year, month, day, hour, minute, second,
-             point_in_time, listen_once or None))):
+            (year, month, day, hour, minute, second))):
 
         pmp = _process_match_param
         year, month, day = pmp(year), pmp(month), pmp(day)
         hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
+        @ft.wraps(action)
         def time_listener(event):
             """ Listens for matching time_changed events. """
             now = event.data['now']
 
             mat = _matcher
 
-            if (point_in_time and now > point_in_time) or \
-               (not point_in_time and
-                    mat(now.year, year) and
-                    mat(now.month, month) and
-                    mat(now.day, day) and
-                    mat(now.hour, hour) and
-                    mat(now.minute, minute) and
-                    mat(now.second, second)):
-
-                # point_in_time are exact points in time
-                # so we always remove it after fire
-                if listen_once or point_in_time:
-                    bus.remove_event_listener(EVENT_TIME_CHANGED,
-                                              time_listener)
+            if mat(now.year, year) and \
+               mat(now.month, month) and \
+               mat(now.day, day) and \
+               mat(now.hour, hour) and \
+               mat(now.minute, minute) and \
+               mat(now.second, second):
 
                 action(now)
 
-        # Let the string representation make sense
-        time_listener.__name__ = 'Time listener for {}'.format(action.__name__)
     else:
-        time_listener = action
+        @ft.wraps(action)
+        def time_listener(event):
+            """ Fires every time event that comes in. """
+            action(event.data['now'])
 
     bus.listen_event(EVENT_TIME_CHANGED, time_listener)
 

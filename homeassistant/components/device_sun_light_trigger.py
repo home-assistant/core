@@ -76,10 +76,9 @@ def setup(bus, statemachine, light_group=None):
 
         if start_point:
             for index, light_id in enumerate(light_ids):
-                ha.track_time_change(bus, turn_on(light_id),
-                                     point_in_time=(
-                                         start_point +
-                                         index * LIGHT_TRANSITION_TIME))
+                ha.track_point_in_time(bus, turn_on(light_id),
+                                       (start_point +
+                                        index * LIGHT_TRANSITION_TIME))
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event

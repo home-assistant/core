@@ -92,8 +92,8 @@ def setup(bus, statemachine, latitude, longitude):
         statemachine.set_state(ENTITY_ID, new_state, state_attributes)
 
         # +10 seconds to be sure that the change has occured
-        ha.track_time_change(bus, update_sun_state,
-                             point_in_time=next_change + timedelta(seconds=10))
+        ha.track_point_in_time(bus, update_sun_state,
+                               next_change + timedelta(seconds=10))
 
     update_sun_state(None)
 
