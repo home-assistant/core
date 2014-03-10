@@ -290,10 +290,10 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _handle_get_root(self, path_match, data):
         """ Renders the debug interface. """
 
-        write = lambda txt: self.wfile.write(txt+"\n")
+        write = lambda txt: self.wfile.write(txt.encode("UTF-8")+"\n")
 
         self.send_response(HTTP_OK)
-        self.send_header('Content-type', 'text/html')
+        self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
 
         write(("<html>"
