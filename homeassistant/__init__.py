@@ -171,7 +171,7 @@ def create_bus_job_handler(logger):
         except Exception:  # pylint: disable=broad-except
             # Catch any exception our service/event_listener might throw
             # We do not want to crash our ThreadPool
-            logger.exception("BusHandler:Exception doing job")
+            logger.exception(u"BusHandler:Exception doing job")
 
     return job_handler
 
@@ -189,10 +189,10 @@ class ServiceCall(object):
 
     def __repr__(self):
         if self.data:
-            return "<ServiceCall {}.{}: {}>".format(
+            return u"<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
         else:
-            return "<ServiceCall {}.{}>".format(self.domain, self.service)
+            return u"<ServiceCall {}.{}>".format(self.domain, self.service)
 
 
 # pylint: disable=too-few-public-methods
@@ -207,10 +207,10 @@ class Event(object):
 
     def __repr__(self):
         if self.data:
-            return "<Event {}: {}>".format(
+            return u"<Event {}: {}>".format(
                 self.event_type, util.repr_helper(self.data))
         else:
-            return "<Event {}>".format(self.event_type)
+            return u"<Event {}>".format(self.event_type)
 
 
 class Bus(object):
@@ -268,7 +268,7 @@ class Bus(object):
 
             except KeyError:  # if key domain or service does not exist
                 raise ServiceDoesNotExistError(
-                    "Service does not exist: {}/{}".format(domain, service))
+                    u"Service does not exist: {}/{}".format(domain, service))
 
     def register_service(self, domain, service, service_func):
         """ Register a service. """
@@ -290,7 +290,7 @@ class Bus(object):
 
             event = Event(event_type, event_data)
 
-            self.logger.info("Bus:Handling {}".format(event))
+            self.logger.info(u"Bus:Handling {}".format(event))
 
             if not listeners:
                 return
@@ -371,13 +371,13 @@ class Bus(object):
             log_error = self.logger.error
 
             log_error(
-                "Bus:All {} threads are busy and {} jobs pending".format(
+                u"Bus:All {} threads are busy and {} jobs pending".format(
                     self.thread_count, self.pool.queue.qsize()))
 
             jobs = self.pool.current_jobs
 
             for start, job in jobs:
-                log_error("Bus:Current job from {}: {}".format(
+                log_error(u"Bus:Current job from {}: {}".format(
                     util.datetime_to_str(start), job))
 
 
@@ -436,11 +436,11 @@ class State(object):
 
     def __repr__(self):
         if self.attributes:
-            return "<state {}:{} @ {}>".format(
+            return u"<state {}:{} @ {}>".format(
                 self.state, util.repr_helper(self.attributes),
                 util.datetime_to_str(self.last_changed))
         else:
-            return "<state {} @ {}>".format(
+            return u"<state {} @ {}>".format(
                 self.state, util.datetime_to_str(self.last_changed))
 
 

@@ -209,10 +209,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         for t_method, t_path, t_handler in RequestHandler.PATHS:
 
             # we either do string-comparison or regular expression matching
+            # pylint: disable=maybe-no-member
             if isinstance(t_path, str):
                 path_match = url.path == t_path
             else:
-                # pylint: disable=maybe-no-member
                 path_match = t_path.match(url.path)
 
             if path_match and method == t_method:
@@ -335,13 +335,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             state = self.server.statemachine.get_state(entity_id)
 
-            attributes = "<br>".join(
-                ["{}: {}".format(attr, state.attributes[attr])
+            attributes = u"<br>".join(
+                [u"{}: {}".format(attr, state.attributes[attr])
                  for attr in state.attributes])
 
-            write(("<tr>"
-                   "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-                   "</tr>").format(
+            write((u"<tr>"
+                   u"<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+                   u"</tr>").format(
                   entity_id,
                   state.state,
                   attributes,

@@ -7,7 +7,7 @@ import re
 RE_SANITIZE_FILENAME = re.compile(r"(~|(\.\.)|/|\+)")
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
 
-DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
+DATE_STR_FORMAT = u"%H:%M:%S %d-%m-%Y"
 
 
 def sanitize_filename(filename):
@@ -59,15 +59,15 @@ def filter_entity_ids(entity_ids, domain_filter=None, strip_domain=False):
 def repr_helper(inp):
     """ Helps creating a more readable string representation of objects. """
     if isinstance(inp, dict):
-        return ", ".join(
-            repr_helper(key)+"="+repr_helper(item) for key, item in inp.items()
+        return u", ".join(
+            repr_helper(key)+u"="+repr_helper(item) for key, item in inp.items()
             )
     elif isinstance(inp, list):
-        return '[' + ', '.join(inp) + ']'
+        return u'[' + u', '.join(inp) + u']'
     elif isinstance(inp, datetime.datetime):
         return datetime_to_str(inp)
     else:
-        return str(inp)
+        return unicode(inp)
 
 
 # Reason why I decided to roll my own ThreadPool instead of using
