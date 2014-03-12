@@ -20,7 +20,6 @@ username=admin
 password=PASSWORD
 
 [chromecast]
-host=192.168.1.3
 
 [downloader]
 download_dir=downloads

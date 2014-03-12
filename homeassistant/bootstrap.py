@@ -119,11 +119,10 @@ def from_config_file(config_path):
         sun = None
 
     # Chromecast
-    if has_opt("chromecast", "host"):
+    if has_section("chromecast"):
         chromecast = load_module('chromecast')
 
-        chromecast_started = chromecast.setup(bus, statemachine,
-                                              get_opt("chromecast", "host"))
+        chromecast_started = chromecast.setup(bus, statemachine)
 
         add_status("Chromecast", chromecast_started)
     else:

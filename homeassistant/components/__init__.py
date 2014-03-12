@@ -30,6 +30,13 @@ STATE_HOME = 'home'
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
 
+SERVICE_VOLUME_UP = "volume_up"
+SERVICE_VOLUME_DOWN = "volume_down"
+SERVICE_VOLUME_MUTE = "volume_mute"
+SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
+SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
+SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
+
 _LOADED_MOD = {}
 
 
