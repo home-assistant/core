@@ -60,8 +60,8 @@ def repr_helper(inp):
     """ Helps creating a more readable string representation of objects. """
     if isinstance(inp, dict):
         return u", ".join(
-            repr_helper(key)+u"="+repr_helper(item) for key, item in inp.items()
-            )
+            repr_helper(key)+u"="+repr_helper(item) for key, item
+            in inp.items())
     elif isinstance(inp, list):
         return u'[' + u', '.join(inp) + u']'
     elif isinstance(inp, datetime.datetime):

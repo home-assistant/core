@@ -100,12 +100,13 @@ def setup(bus, statemachine):
 
     casts = {}
 
+    eid_form = ENTITY_ID_FORMAT.format
+
     for host in hosts:
         try:
             cast = pychromecast.PyChromecast(host)
 
-            entity_id = ENTITY_ID_FORMAT.format(
-                            util.slugify(cast.device.friendly_name))
+            entity_id = eid_form(util.slugify(cast.device.friendly_name))
 
             casts[entity_id] = cast
 
