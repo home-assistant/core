@@ -6,12 +6,15 @@ Provides functionality to interact with lights.
 """
 
 import logging
+import socket
 from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
-import homeassistant.components as components
-from homeassistant.components import group
+from homeassistant.components import (group, STATE_ON, STATE_OFF,
+                                      SERVICE_TURN_ON, SERVICE_TURN_OFF,
+                                      ATTR_ENTITY_ID)
+
 
 DOMAIN = "light"
 
@@ -28,35 +31,33 @@ def is_on(statemachine, entity_id=None):
     """ Returns if the lights are on based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
 
-    return statemachine.is_state(entity_id, components.STATE_ON)
+    return statemachine.is_state(entity_id, STATE_ON)
 
 
-# pylint: disable=unused-argument
 def turn_on(bus, entity_id=None, transition_seconds=None):
     """ Turns all or specified light on. """
     data = {}
 
     if entity_id:
-        data[components.ATTR_ENTITY_ID] = entity_id
+        data[ATTR_ENTITY_ID] = entity_id
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
 
-    bus.call_service(DOMAIN, components.SERVICE_TURN_ON, data)
+    bus.call_service(DOMAIN, SERVICE_TURN_ON, data)
 
 
-# pylint: disable=unused-argument
 def turn_off(bus, entity_id=None, transition_seconds=None):
     """ Turns all or specified light off. """
     data = {}
 
     if entity_id:
-        data[components.ATTR_ENTITY_ID] = entity_id
+        data[ATTR_ENTITY_ID] = entity_id
 
     if transition_seconds:
         data["transition_seconds"] = transition_seconds
 
-    bus.call_service(DOMAIN, components.SERVICE_TURN_OFF, data)
+    bus.call_service(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 def setup(bus, statemachine, light_control):
@@ -64,12 +65,8 @@ def setup(bus, statemachine, light_control):
 
     logger = logging.getLogger(__name__)
 
-    entity_ids = {light_id: ENTITY_ID_FORMAT.format(light_id) for light_id
-                  in light_control.light_ids}
-
-    if not entity_ids:
-        logger.error("Light:Found no lights to track")
-        return
+    ent_to_light = {}
+    light_to_ent = {}
 
     def update_light_state(time):  # pylint: disable=unused-argument
         """ Track the state of the lights. """
@@ -82,44 +79,63 @@ def setup(bus, statemachine, light_control):
 
         if should_update:
             logger.info("Updating light status")
-
             update_light_state.last_updated = datetime.now()
+            names = None
 
-            status = {light_id: light_control.is_light_on(light_id)
-                      for light_id in light_control.light_ids}
+            states = light_control.get_states()
 
-            for light_id, is_light_on in status.items():
-                new_state = (components.STATE_ON if is_light_on
-                             else components.STATE_OFF)
+            for light_id, is_light_on in states.items():
+                try:
+                    entity_id = light_to_ent[light_id]
+                except KeyError:
+                    # We have not seen this light before, set it up
 
-                statemachine.set_state(entity_ids[light_id], new_state)
+                    # Load light names if not loaded this update call
+                    if names is None:
+                        names = light_control.get_names()
 
-    ha.track_time_change(bus, update_light_state, second=[0, 30])
+                    name = names.get(
+                        light_id, "Unknown Light {}".format(len(ent_to_light)))
 
+                    logger.info("Found new light {}".format(name))
+
+                    entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
+
+                    ent_to_light[entity_id] = light_id
+                    light_to_ent[light_id] = entity_id
+
+                statemachine.set_state(entity_id,
+                                       STATE_ON if is_light_on else STATE_OFF)
+
+    # Update light state and discover lights for tracking the group
     update_light_state(None)
 
-    # Track the all lights state
-    group.setup(bus, statemachine, GROUP_NAME_ALL_LIGHTS, entity_ids.values())
+    # Track all lights in a group
+    group.setup(bus, statemachine,
+                GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
-        entity_id = service.data.get(components.ATTR_ENTITY_ID, None)
+        entity_id = service.data.get(ATTR_ENTITY_ID, None)
         transition_seconds = service.data.get("transition_seconds", None)
 
-        object_id = util.split_entity_id(entity_id)[1] if entity_id else None
-
-        if service.service == components.SERVICE_TURN_ON:
-            light_control.turn_light_on(object_id, transition_seconds)
+        if service.service == SERVICE_TURN_ON:
+            light_control.turn_light_on(ent_to_light.get(entity_id),
+                                        transition_seconds)
         else:
-            light_control.turn_light_off(object_id, transition_seconds)
+            light_control.turn_light_off(ent_to_light.get(entity_id),
+                                         transition_seconds)
 
         update_light_state(None)
 
-    # Listen for light on and light off events
-    bus.register_service(DOMAIN, components.SERVICE_TURN_ON,
+    # Update light state every 30 seconds
+    ha.track_time_change(bus, update_light_state, second=[0, 30])
+
+    # Listen for light on and light off service calls
+    bus.register_service(DOMAIN, SERVICE_TURN_ON,
                          handle_light_service)
 
-    bus.register_service(DOMAIN, components.SERVICE_TURN_OFF,
+    bus.register_service(DOMAIN, SERVICE_TURN_OFF,
                          handle_light_service)
 
     return True
@@ -133,13 +149,11 @@ class HueLightControl(object):
 
         try:
             import phue
-            import socket
         except ImportError:
             logger.exception(
                 "HueLightControl:Error while importing dependency phue.")
 
             self.success_init = False
-            self._light_map = {}
 
             return
 
@@ -151,45 +165,40 @@ class HueLightControl(object):
                 "Is phue registered?"))
 
             self.success_init = False
-            self._light_map = {}
 
             return
 
-        self._light_map = {util.slugify(light.name): light for light
-                           in self._bridge.get_light_objects()}
-
-        if not self._light_map:
+        if len(self._bridge.get_light()) == 0:
             logger.error("HueLightControl:Could not find any lights. ")
 
             self.success_init = False
         else:
             self.success_init = True
 
-    @property
-    def light_ids(self):
-        """ Return a list of light ids. """
-        return self._light_map.keys()
+    def get_names(self):
+        """ Return a dict with id mapped to name. """
+        try:
+            return {int(item[0]): item[1]['name'] for item
+                    in self._bridge.get_light().items()}
 
-    def is_light_on(self, light_id=None):
-        """ Returns if specified or all light are on. """
-        if not light_id:
-            return any(
-                True for light_id in self._light_map.keys()
-                if self.is_light_on(light_id))
+        except (socket.error, KeyError):
+            # socket.error because sometimes we cannot reach Hue
+            # KeyError if we got unexpected data
+            return {}
 
-        else:
-            light_id = self._convert_id(light_id)
+    def get_states(self):
+        """ Return a dict with id mapped to boolean is_on. """
 
-            if not light_id:  # Not valid light_id submitted
-                return False
+        try:
+            # Light is on if reachable and on
+            return {int(itm[0]):
+                    itm[1]['state']['reachable'] and itm[1]['state']['on']
+                    for itm in self._bridge.get_api()['lights'].items()}
 
-            state = self._bridge.get_light(light_id)
-
-            try:
-                return state['state']['reachable'] and state['state']['on']
-            except KeyError:
-                # If key 'state', 'reachable' or 'on' not exists.
-                return False
+        except (socket.error, KeyError):
+            # socket.error because sometimes we cannot reach Hue
+            # KeyError if we got unexpected data
+            return {}
 
     def turn_light_on(self, light_id=None, transition_seconds=None):
         """ Turn the specified or all lights on. """
@@ -199,30 +208,19 @@ class HueLightControl(object):
         """ Turn the specified or all lights off. """
         self._turn_light(False, light_id, transition_seconds)
 
-    def _turn_light(self, turn, light_id=None, transition_seconds=None):
+    def _turn_light(self, turn, light_id, transition_seconds):
         """ Helper method to turn lights on or off. """
-        if light_id:
-            light_id = self._convert_id(light_id)
-
-            if not light_id:  # Not valid light id submitted
-                return
-
+        if turn:
+            command = {'on': True, 'xy': [0.5119, 0.4147], 'bri': 164}
         else:
-            light_id = [light.light_id for light in self._light_map.values()]
+            command = {'on': False}
 
-        command = {'on': True, 'xy': [0.5119, 0.4147], 'bri': 164} if turn \
-            else {'on': False}
+        if light_id is None:
+            light_id = [light.light_id for light in self._bridge.lights]
 
-        if transition_seconds:
+        if transition_seconds is not None:
             # Transition time is in 1/10th seconds and cannot exceed
             # 900 seconds.
             command['transitiontime'] = min(9000, transition_seconds * 10)
 
         self._bridge.set_light(light_id, command)
-
-    def _convert_id(self, light_id):
-        """ Returns internal light id to be used with phue. """
-        try:
-            return self._light_map[light_id].light_id
-        except KeyError:  # if light_id is not a valid key
-            return None
