@@ -3,8 +3,9 @@ import threading
 import Queue
 import datetime
 import re
+import os
 
-RE_SANITIZE_FILENAME = re.compile(r"(~|(\.\.)|/|\+)")
+RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
 
 DATE_STR_FORMAT = u"%H:%M:%S %d-%m-%Y"
