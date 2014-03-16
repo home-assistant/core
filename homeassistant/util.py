@@ -3,7 +3,6 @@ import threading
 import Queue
 import datetime
 import re
-import os
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
@@ -63,12 +62,61 @@ def repr_helper(inp):
         return u", ".join(
             repr_helper(key)+u"="+repr_helper(item) for key, item
             in inp.items())
-    elif isinstance(inp, list):
-        return u'[' + u', '.join(inp) + u']'
     elif isinstance(inp, datetime.datetime):
         return datetime_to_str(inp)
     else:
         return unicode(inp)
+
+
+# Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
+# License: Code is given as is. Use at your own risk and discretion.
+# pylint: disable=invalid-name
+def color_RGB_to_xy(R, G, B):
+    ''' Convert from RGB color to XY color. '''
+    var_R = (R / 255.)
+    var_G = (G / 255.)
+    var_B = (B / 255.)
+
+    if var_R > 0.04045:
+        var_R = ((var_R + 0.055) / 1.055) ** 2.4
+    else:
+        var_R /= 12.92
+
+    if var_G > 0.04045:
+        var_G = ((var_G + 0.055) / 1.055) ** 2.4
+    else:
+        var_G /= 12.92
+
+    if var_B > 0.04045:
+        var_B = ((var_B + 0.055) / 1.055) ** 2.4
+    else:
+        var_B /= 12.92
+
+    var_R *= 100
+    var_G *= 100
+    var_B *= 100
+
+    # Observer. = 2 deg, Illuminant = D65
+    X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805
+    Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
+    Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505
+
+    # Convert XYZ to xy, see CIE 1931 color space on wikipedia
+    return X / (X + Y + Z), Y / (X + Y + Z)
+
+
+def dict_get_convert(dic, key, value_type, default=None):
+    """ Get a value from a dic and ensure it is value_type. """
+    return convert(dic[key], value_type, default) if key in dic else default
+
+
+def convert(value, to_type, default=None):
+    """ Converts value to to_type, returns default if fails. """
+    try:
+        return to_type(value)
+    except ValueError:
+        # If value could not be converted
+        return default
 
 
 # Reason why I decided to roll my own ThreadPool instead of using

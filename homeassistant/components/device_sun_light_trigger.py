@@ -15,6 +15,8 @@ from . import light, sun, device_tracker, group
 
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
+LIGHT_BRIGHTNESS = 164
+LIGHT_XY_COLOR = [0.5119, 0.4147]
 
 
 # pylint: disable=too-many-branches
@@ -64,7 +66,10 @@ def setup(bus, statemachine, light_group=None):
             if (device_tracker.is_on(statemachine) and
                not light.is_on(statemachine, light_id)):
 
-                light.turn_on(bus, light_id, LIGHT_TRANSITION_TIME.seconds)
+                light.turn_on(bus, light_id,
+                              transition=LIGHT_TRANSITION_TIME.seconds,
+                              brightness=LIGHT_BRIGHTNESS,
+                              xy_color=LIGHT_XY_COLOR)
 
         def turn_on(light_id):
             """ Lambda can keep track of function parameters but not local
@@ -115,7 +120,9 @@ def setup(bus, statemachine, light_group=None):
                 # Turn on lights directly instead of calling group.turn_on
                 # So we skip fetching the entity ids again.
                 for light_id in light_ids:
-                    light.turn_on(bus, light_id)
+                    light.turn_on(bus, light_id,
+                                  brightness=LIGHT_BRIGHTNESS,
+                                  xy_color=LIGHT_XY_COLOR)
 
             # Are we in the time span were we would turn on the lights
             # if someone would be home?
