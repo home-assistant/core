@@ -5,37 +5,37 @@ Home Assistant provides a platform for home automation. It does so by having mod
 
 It is currently able to do the following things:
  * Track if devices are home by monitoring connected devices to a wireless router (currently supporting modern Netgear routers or routers running Tomato firmware)
- * Track which lights are on
- * Track what your Chromecasts are up to
+ * Track and control lights
+ * Track and control WeMo switches
+ * Track and control Chromecasts
  * Turn on the lights when people get home when the sun is setting or has set
  * Slowly turn on the lights to compensate for light loss when the sun sets and people are home
  * Turn off lights and connected devices when everybody leaves the house
- * Start YouTube video’s on the Chromecast
- * Quit current running application on a Chromecast
  * Download files to the host machine
  * Open a url in the default browser at the host machine
  * Simulate key presses on the host for Play/Pause, Next track, Prev track, Volume up, Volume Down
  * Controllable via a REST API and web interface
- * Support for thin client Home Assistant instances that will forward all their commands to the main instance
- * Android Tasker project to control Home Assistant from your phone and report charging state. Combine it with AutoVoice to be able to tell your phones to turn the lights off!
+ * Support for remoting Home Assistant instances through a Python API
+ * Android Tasker project to control Home Assistant from your phone and report charging state.
 
 ![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/states.png)
 
 Current compatible devices:
- * Wireless router running [Tomato firmware](http://www.polarcloud.com/tomato)
- * Netgear wireless routers (tested with R6300)
+ * [WeMo switches](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/)
  * [Philips Hue](http://meethue.com)
  * [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast)
+ * Wireless router running [Tomato firmware](http://www.polarcloud.com/tomato)
+ * Netgear wireless routers (tested with R6300)
 
-The system is built modular so support for other wireless routers, other devices or actions can be implemented easily.
+The system is built modular so support for other devices or actions can be implemented easily.
 
 Installation instructions
 -------------------------
-* Install python modules [PyEphem](http://rhodesmill.org/pyephem/), [Requests](http://python-requests.org) and [PHue](https://github.com/studioimaginaire/phue): `pip install pyephem requests phue`
+* The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support, [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support and [ouimeaux](https://github.com/iancmcc/ouimeaux) for WeMo support. Install these using `pip install pyephem requests phue ouimeaux pychromecast`.
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
 * Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
   * For Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
-* Setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS` from the commandline.
+* If you want to use Hue, setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS` from the commandline and follow the instructions.
 * While running the script it will create and maintain a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script or call the service `device_tracker/reload_devices_csv`.
 
 Done. Start it now by running `python start.py`
@@ -204,6 +204,9 @@ Action: sets the state per device and maintains a combined state called `all_dev
 
 **Light**
 Keeps track which lights are turned on and can control the lights.
+
+**WeMo**
+Keeps track which WeMo switches are in the network and allows you to control them.
 
 **device_sun_light_trigger**
 Turns lights on or off using a light control component based on state of the sun and devices that are home.

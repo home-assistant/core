@@ -21,6 +21,7 @@ import homeassistant as ha
 import homeassistant.util as util
 
 ATTR_ENTITY_ID = 'entity_id'
+ATTR_FRIENDLY_NAME = "friendly_name"
 
 STATE_ON = 'on'
 STATE_OFF = 'off'

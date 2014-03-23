@@ -128,6 +128,12 @@ def from_config_file(config_path):
     else:
         chromecast_started = False
 
+    # WeMo
+    if has_section("wemo"):
+        wemo = load_module('wemo')
+
+        add_status("WeMo", wemo.setup(bus, statemachine))
+
     # Light control
     if has_section("light.hue"):
         light = load_module('light')
