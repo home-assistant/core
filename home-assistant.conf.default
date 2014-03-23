@@ -21,6 +21,8 @@ password=PASSWORD
 
 [chromecast]
 
+[wemo]
+
 [downloader]
 download_dir=downloads
 
