@@ -74,7 +74,9 @@ def setup(bus, statemachine):
 
         except KeyError:
             # New device, set it up
-            entity_id = ENTITY_ID_FORMAT.format(util.slugify(device.name))
+            entity_id = util.ensure_unique_string(
+                ENTITY_ID_FORMAT.format(util.slugify(device.name)),
+                ent_to_dev.keys())
 
             sno_to_ent[device.serialnumber] = entity_id
             ent_to_dev[entity_id] = device

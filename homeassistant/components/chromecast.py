@@ -17,7 +17,6 @@ SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 STATE_NO_APP = 'no_app'
 
-ATTR_FRIENDLY_NAME = 'friendly_name'
 ATTR_HOST = 'host'
 ATTR_STATE = 'state'
 ATTR_OPTIONS = 'options'
@@ -100,13 +99,14 @@ def setup(bus, statemachine):
 
     casts = {}
 
-    eid_form = ENTITY_ID_FORMAT.format
-
     for host in hosts:
         try:
             cast = pychromecast.PyChromecast(host)
 
-            entity_id = eid_form(util.slugify(cast.device.friendly_name))
+            entity_id = util.ensure_unique_string(
+                ENTITY_ID_FORMAT.format(
+                    util.slugify(cast.device.friendly_name)),
+                casts.keys())
 
             casts[entity_id] = cast
 
@@ -124,7 +124,8 @@ def setup(bus, statemachine):
         status = chromecast.app
 
         state_attr = {ATTR_HOST: chromecast.host,
-                      ATTR_FRIENDLY_NAME: chromecast.device.friendly_name}
+                      components.ATTR_FRIENDLY_NAME:
+                      chromecast.device.friendly_name}
 
         if status and status.app_id != pychromecast.APP_ID['HOME']:
             state = status.app_id

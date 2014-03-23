@@ -14,7 +14,7 @@ import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.components import (group, STATE_ON, STATE_OFF,
                                       SERVICE_TURN_ON, SERVICE_TURN_OFF,
-                                      ATTR_ENTITY_ID)
+                                      ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 
 
 DOMAIN = "light"
@@ -93,30 +93,24 @@ def setup(bus, statemachine, light_control):
 
     def _update_light_state(light_id, light_state):
         """ Update statemachine based on the LightState passed in. """
+        name = light_control.get_name(light_id) or "Unknown Light"
+
         try:
             entity_id = light_to_ent[light_id]
         except KeyError:
             # We have not seen this light before, set it up
 
-            # Get name and create entity id
-            name = light_control.get_name(light_id) or "Unknown Light"
-
+            # Create entity id
             logger.info(u"Found new light {}".format(name))
 
-            entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
-
-            # Ensure unique entity id
-            tries = 1
-            while entity_id in ent_to_light:
-                tries += 1
-
-                entity_id = ENTITY_ID_FORMAT.format(
-                    util.slugify("{} {}".format(name, tries)))
+            entity_id = util.ensure_unique_string(
+                ENTITY_ID_FORMAT.format(util.slugify(name)),
+                ent_to_light.keys())
 
             ent_to_light[entity_id] = light_id
             light_to_ent[light_id] = entity_id
 
-        state_attr = {}
+        state_attr = {ATTR_FRIENDLY_NAME: name}
 
         if light_state.on:
             state = STATE_ON

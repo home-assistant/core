@@ -119,6 +119,20 @@ def convert(value, to_type, default=None):
         return default
 
 
+def ensure_unique_string(preferred_string, current_strings):
+    """ Returns a string that is not present in current_strings.
+        If preferred string exists will append _2, _3, .. """
+    string = preferred_string
+
+    tries = 1
+
+    while preferred_string in current_strings:
+        tries += 1
+        string = "{}_{}".format(preferred_string, tries)
+
+    return string
+
+
 # Reason why I decided to roll my own ThreadPool instead of using
 # multiprocessing.dummy.pool or even better, use multiprocessing.pool and
 # not be hurt by the GIL in the cpython interpreter:
