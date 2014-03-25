@@ -15,6 +15,9 @@ DOMAIN = "downloader"
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 
+ATTR_URL = "url"
+ATTR_SUBDIR = "subdir"
+
 
 # pylint: disable=too-many-branches
 def setup(bus, download_path):
@@ -41,14 +44,22 @@ def setup(bus, download_path):
     def download_file(service):
         """ Starts thread to download file specified in the url. """
 
-        if not 'url' in service.data:
+        if not ATTR_URL in service.data:
             logger.error("Service called but 'url' parameter not specified.")
             return
 
         def do_download():
             """ Downloads the file. """
             try:
-                url = service.data['url']
+                url = service.data[ATTR_URL]
+
+                subdir = service.data.get(ATTR_SUBDIR)
+
+                if subdir:
+                    subdir = util.sanitize_filename(subdir)
+
+                final_path = None
+
                 req = requests.get(url, stream=True)
 
                 if req.status_code == 200:
@@ -71,8 +82,20 @@ def setup(bus, download_path):
                     # Remove stuff to ruin paths
                     filename = util.sanitize_filename(filename)
 
-                    path, ext = os.path.splitext(os.path.join(download_path,
-                                                              filename))
+                    # Do we want to download to subdir, create if needed
+                    if subdir:
+                        subdir_path = os.path.join(download_path, subdir)
+
+                        # Ensure subdir exist
+                        if not os.path.isdir(subdir_path):
+                            os.makedirs(subdir_path)
+
+                        final_path = os.path.join(subdir_path, filename)
+
+                    else:
+                        final_path = os.path.join(download_path, filename)
+
+                    path, ext = os.path.splitext(final_path)
 
                     # If file exist append a number.
                     # We test filename, filename_2..
@@ -81,7 +104,7 @@ def setup(bus, download_path):
                     while os.path.isfile(final_path):
                         tries += 1
 
-                        final_path = path + "_{}".format(tries) + ext
+                        final_path = "{}_{}.{}".format(path, tries, ext)
 
                     logger.info("{} -> {}".format(
                                 url, final_path))
@@ -96,6 +119,10 @@ def setup(bus, download_path):
             except requests.exceptions.ConnectionError:
                 logger.exception("ConnectionError occured for {}".
                                  format(url))
+
+                # Remove file if we started downloading but failed
+                if final_path and os.path.isfile(final_path):
+                    os.remove(final_path)
 
         threading.Thread(target=do_download).start()
 
