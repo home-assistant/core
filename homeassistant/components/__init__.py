@@ -20,7 +20,10 @@ import importlib
 import homeassistant as ha
 import homeassistant.util as util
 
+# String that contains an entity id or a comma seperated list of entity ids
 ATTR_ENTITY_ID = 'entity_id'
+
+# String with a friendly name for the entity
 ATTR_FRIENDLY_NAME = "friendly_name"
 
 STATE_ON = 'on'
@@ -38,7 +41,29 @@ SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
 
-_LOADED_MOD = {}
+_LOADED_COMP = {}
+
+
+def _get_component(component):
+    """ Returns requested component. Imports it if necessary. """
+
+    comps = _LOADED_COMP
+
+    # See if we have the module locally cached, else import it
+    try:
+        return comps[component]
+
+    except KeyError:
+        # If comps[component] does not exist, import module
+        try:
+            comps[component] = importlib.import_module(
+                'homeassistant.components.'+component)
+
+        except ImportError:
+            # If we got a bogus component the input will fail
+            comps[component] = None
+
+        return comps[component]
 
 
 def is_on(statemachine, entity_id=None):
@@ -46,26 +71,10 @@ def is_on(statemachine, entity_id=None):
     If there is no entity id given we will check all. """
     entity_ids = [entity_id] if entity_id else statemachine.entity_ids
 
-    # Save reference locally because those lookups are way faster
-    modules = _LOADED_MOD
-
     for entity_id in entity_ids:
         domain = util.split_entity_id(entity_id)[0]
 
-        # See if we have the module locally cached, else import it
-        # Does this code look chaotic? Yes!
-        try:
-            module = modules[domain]
-
-        except KeyError:
-            # If modules[domain] does not exist, import module
-            try:
-                module = modules[domain] = importlib.import_module(
-                    'homeassistant.components.'+domain)
-
-            except ImportError:
-                # If we got a bogus domain the input will fail
-                module = modules[domain] = None
+        module = _get_component(domain)
 
         try:
             if module.is_on(statemachine, entity_id):
@@ -106,6 +115,45 @@ def turn_off(bus, entity_id=None):
     except ha.ServiceDoesNotExistError:
         # turn_off service does not exist
         pass
+
+
+def extract_entity_ids(statemachine, service):
+    """
+    Helper method to extract a list of entity ids from a service call.
+    Will convert group entity ids to the entity ids it represents.
+    """
+    entity_ids = []
+
+    if service.data and ATTR_ENTITY_ID in service.data:
+        group = _get_component('group')
+
+        # Entity ID attr can be a list or a string
+        service_ent_id = service.data[ATTR_ENTITY_ID]
+        if isinstance(service_ent_id, list):
+            ent_ids = service_ent_id
+        else:
+            ent_ids = [service_ent_id]
+
+        for entity_id in ent_ids:
+            try:
+                # If entity_id points at a group, expand it
+                domain, _ = util.split_entity_id(entity_id)
+
+                if domain == group.DOMAIN:
+                    entity_ids.extend(
+                        ent_id for ent_id
+                        in group.get_entity_ids(statemachine, entity_id)
+                        if ent_id not in entity_ids)
+
+                else:
+                    if entity_id not in entity_ids:
+                        entity_ids.append(entity_id)
+
+            except AttributeError:
+                # Raised by util.split_entity_id if entity_id is not a string
+                pass
+
+    return entity_ids
 
 
 def setup(bus):

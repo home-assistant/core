@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import (group, STATE_ON, STATE_OFF,
+from homeassistant.components import (group, extract_entity_ids,
+                                      STATE_ON, STATE_OFF,
                                       SERVICE_TURN_ON, SERVICE_TURN_OFF,
                                       ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 DOMAIN = 'wemo'
@@ -118,13 +119,11 @@ def setup(bus, statemachine):
 
     def _handle_wemo_service(service):
         """ Handles calls to the WeMo service. """
-        dat = service.data
+        devices = [ent_to_dev[entity_id] for entity_id
+                   in extract_entity_ids(statemachine, service)
+                   if entity_id in ent_to_dev]
 
-        if ATTR_ENTITY_ID in dat:
-            device = ent_to_dev.get(dat[ATTR_ENTITY_ID])
-
-            devices = [device] if device is not None else []
-        else:
+        if not devices:
             devices = ent_to_dev.values()
 
         for device in devices:

@@ -12,7 +12,8 @@ from collections import namedtuple
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import (group, STATE_ON, STATE_OFF,
+from homeassistant.components import (group, extract_entity_ids,
+                                      STATE_ON, STATE_OFF,
                                       SERVICE_TURN_ON, SERVICE_TURN_OFF,
                                       ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 
@@ -157,15 +158,18 @@ def setup(bus, statemachine, light_control):
         # Get and validate data
         dat = service.data
 
-        if ATTR_ENTITY_ID in dat:
-            light_id = ent_to_light.get(dat[ATTR_ENTITY_ID])
-        else:
-            light_id = None
+        # Convert the entity ids to valid light ids
+        light_ids = [ent_to_light[entity_id] for entity_id
+                     in extract_entity_ids(statemachine, service)
+                     if entity_id in ent_to_light]
+
+        if not light_ids:
+            light_ids = ent_to_light.values()
 
         transition = util.dict_get_convert(dat, ATTR_TRANSITION, int, None)
 
         if service.service == SERVICE_TURN_OFF:
-            light_control.turn_light_off(light_id, transition)
+            light_control.turn_light_off(light_ids, transition)
 
         else:
             # Processing extra data for turn light on request
@@ -201,13 +205,14 @@ def setup(bus, statemachine, light_control):
                 except (TypeError, ValueError):
                     # TypeError if color has no len
                     # ValueError if not all values convertable to int
-                    color = None
+                    pass
 
-            light_control.turn_light_on(light_id, transition, bright, color)
+            light_control.turn_light_on(light_ids, transition, bright, color)
 
-        # Update state of lights touched
-        if light_id:
-            update_light_state(light_id)
+        # Update state of lights touched. If there was only 1 light selected
+        # then just update that light else update all
+        if len(light_ids) == 1:
+            update_light_state(light_ids[0])
         else:
             update_lights_state(None, True)
 
@@ -329,11 +334,8 @@ class HueLightControl(object):
 
         return states
 
-    def turn_light_on(self, light_id, transition, brightness, xy_color):
+    def turn_light_on(self, light_ids, transition, brightness, xy_color):
         """ Turn the specified or all lights on. """
-        if light_id is None:
-            light_id = self._lights.keys()
-
         command = {'on': True}
 
         if transition is not None:
@@ -347,13 +349,10 @@ class HueLightControl(object):
         if xy_color:
             command['xy'] = xy_color
 
-        self._bridge.set_light(light_id, command)
+        self._bridge.set_light(light_ids, command)
 
-    def turn_light_off(self, light_id, transition):
+    def turn_light_off(self, light_ids, transition):
         """ Turn the specified or all lights off. """
-        if light_id is None:
-            light_id = self._lights.keys()
-
         command = {'on': False}
 
         if transition is not None:
@@ -361,4 +360,4 @@ class HueLightControl(object):
             # 900 seconds.
             command['transitiontime'] = min(9000, transition * 10)
 
-        self._bridge.set_light(light_id, command)
+        self._bridge.set_light(light_ids, command)

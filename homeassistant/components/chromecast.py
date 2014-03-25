@@ -172,13 +172,14 @@ def setup(bus, statemachine):
 
     def _service_to_entities(service):
         """ Helper method to get entities from service. """
-        entity_id = service.data.get(components.ATTR_ENTITY_ID)
+        entity_ids = components.extract_entity_ids(statemachine, service)
 
-        if entity_id:
-            cast = casts.get(entity_id)
+        if entity_ids:
+            for entity_id in entity_ids:
+                cast = casts.get(entity_id)
 
-            if cast:
-                yield entity_id, cast
+                if cast:
+                    yield entity_id, cast
 
         else:
             for item in casts.items():

@@ -8,17 +8,20 @@ Provides functionality to group devices that can be turned on or off.
 import logging
 
 import homeassistant as ha
-import homeassistant.components as components
+from homeassistant.components import (STATE_ON, STATE_OFF,
+                                      STATE_HOME, STATE_NOT_HOME,
+                                      SERVICE_TURN_ON, SERVICE_TURN_OFF,
+                                      turn_on as comp_turn_on,
+                                      turn_off as comp_turn_off,
+                                      ATTR_ENTITY_ID)
 
 DOMAIN = "group"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-STATE_ATTR_ENTITY_IDS = "entity_ids"
-
 _GROUP_TYPES = {
-    "on_off": (components.STATE_ON, components.STATE_OFF),
-    "home_not_home": (components.STATE_HOME, components.STATE_NOT_HOME)
+    "on_off": (STATE_ON, STATE_OFF),
+    "home_not_home": (STATE_HOME, STATE_NOT_HOME)
 }
 
 
@@ -51,7 +54,7 @@ def get_entity_ids(statemachine, entity_id):
     """ Get the entity ids that make up this group. """
     try:
         return \
-            statemachine.get_state(entity_id).attributes[STATE_ATTR_ENTITY_IDS]
+            statemachine.get_state(entity_id).attributes[ATTR_ENTITY_ID]
     except (AttributeError, KeyError):
         # AttributeError if state did not exist
         # KeyError if key did not exist in attributes
@@ -111,7 +114,7 @@ def setup(bus, statemachine, name, entity_ids):
         return False
 
     group_entity_id = ENTITY_ID_FORMAT.format(name)
-    state_attr = {STATE_ATTR_ENTITY_IDS: entity_ids}
+    state_attr = {ATTR_ENTITY_ID: entity_ids}
 
     # pylint: disable=unused-argument
     def update_group_state(entity_id, old_state, new_state):
@@ -141,28 +144,28 @@ def setup(bus, statemachine, name, entity_ids):
     # group.setup is called to setup each group. Only the first time will we
     # register a turn_on and turn_off method for groups.
 
-    if not bus.has_service(DOMAIN, components.SERVICE_TURN_ON):
+    if not bus.has_service(DOMAIN, SERVICE_TURN_ON):
         def turn_group_on_service(service):
             """ Call components.turn_on for each entity_id from this group. """
             for entity_id in get_entity_ids(statemachine,
                                             service.data.get(
-                                                components.ATTR_ENTITY_ID)):
+                                                ATTR_ENTITY_ID)):
 
-                components.turn_on(bus, entity_id)
+                comp_turn_on(bus, entity_id)
 
-        bus.register_service(DOMAIN, components.SERVICE_TURN_ON,
+        bus.register_service(DOMAIN, SERVICE_TURN_ON,
                              turn_group_on_service)
 
-    if not bus.has_service(DOMAIN, components.SERVICE_TURN_OFF):
+    if not bus.has_service(DOMAIN, SERVICE_TURN_OFF):
         def turn_group_off_service(service):
             """ Call components.turn_off for each entity_id in this group. """
             for entity_id in get_entity_ids(statemachine,
                                             service.data.get(
-                                                components.ATTR_ENTITY_ID)):
+                                                ATTR_ENTITY_ID)):
 
-                components.turn_off(bus, entity_id)
+                comp_turn_off(bus, entity_id)
 
-        bus.register_service(DOMAIN, components.SERVICE_TURN_OFF,
+        bus.register_service(DOMAIN, SERVICE_TURN_OFF,
                              turn_group_off_service)
 
     statemachine.set_state(group_entity_id, group_state, state_attr)
