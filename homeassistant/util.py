@@ -105,15 +105,10 @@ def color_RGB_to_xy(R, G, B):
     return X / (X + Y + Z), Y / (X + Y + Z)
 
 
-def dict_get_convert(dic, key, value_type, default=None):
-    """ Get a value from a dic and ensure it is value_type. """
-    return convert(dic[key], value_type, default) if key in dic else default
-
-
 def convert(value, to_type, default=None):
     """ Converts value to to_type, returns default if fails. """
     try:
-        return to_type(value)
+        return default if value is None else to_type(value)
     except ValueError:
         # If value could not be converted
         return default

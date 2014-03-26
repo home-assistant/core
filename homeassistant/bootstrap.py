@@ -184,10 +184,12 @@ def from_config_file(config_path):
         device_sun_light_trigger = load_module('device_sun_light_trigger')
 
         light_group = get_opt_safe("device_sun_light_trigger", "light_group")
+        light_profile = get_opt_safe("device_sun_light_trigger",
+                                     "light_profile")
 
         add_status("Device Sun Light Trigger",
                    device_sun_light_trigger.setup(bus, statemachine,
-                                                  light_group))
+                                                  light_group, light_profile))
 
     for component, success_init in statusses:
         status = "initialized" if success_init else "Failed to initialize"

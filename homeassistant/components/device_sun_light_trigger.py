@@ -15,12 +15,15 @@ from . import light, sun, device_tracker, group
 
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
-LIGHT_BRIGHTNESS = 164
-LIGHT_XY_COLOR = [0.5119, 0.4147]
+
+# Light profile to be used if none given
+LIGHT_PROFILE = 'relax'
 
 
 # pylint: disable=too-many-branches
-def setup(bus, statemachine, light_group=None):
+def setup(bus, statemachine,
+          light_group=light.GROUP_NAME_ALL_LIGHTS,
+          light_profile=LIGHT_PROFILE):
     """ Triggers to turn lights on or off based on device precense. """
 
     logger = logging.getLogger(__name__)
@@ -29,18 +32,16 @@ def setup(bus, statemachine, light_group=None):
                                                device_tracker.DOMAIN)
 
     if not device_entity_ids:
-        logger.error("LightTrigger:No devices found to track")
+        logger.error("No devices found to track")
 
         return False
-
-    light_group = light_group or light.GROUP_NAME_ALL_LIGHTS
 
     # Get the light IDs from the specified group
     light_ids = util.filter_entity_ids(
         group.get_entity_ids(statemachine, light_group), light.DOMAIN)
 
     if not light_ids:
-        logger.error("LightTrigger:No lights found to turn on ")
+        logger.error("No lights found to turn on ")
 
         return False
 
@@ -68,8 +69,7 @@ def setup(bus, statemachine, light_group=None):
 
                 light.turn_on(bus, light_id,
                               transition=LIGHT_TRANSITION_TIME.seconds,
-                              brightness=LIGHT_BRIGHTNESS,
-                              xy_color=LIGHT_XY_COLOR)
+                              profile=light_profile)
 
         def turn_on(light_id):
             """ Lambda can keep track of function parameters but not local
@@ -121,8 +121,7 @@ def setup(bus, statemachine, light_group=None):
                 # So we skip fetching the entity ids again.
                 for light_id in light_ids:
                     light.turn_on(bus, light_id,
-                                  brightness=LIGHT_BRIGHTNESS,
-                                  xy_color=LIGHT_XY_COLOR)
+                                  profile=light_profile)
 
             # Are we in the time span were we would turn on the lights
             # if someone would be home?

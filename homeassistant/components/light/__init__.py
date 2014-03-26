@@ -3,12 +3,57 @@ homeassistant.components.light
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to interact with lights.
+
+It offers the following services:
+
+TURN_OFF - Turns one or multiple lights off.
+
+Supports following parameters:
+ - transition
+   Integer that represents the time the light should take to transition to
+   the new state.
+ - entity_id
+   String or list of strings that point at entity_ids of lights.
+
+TURN_ON - Turns one or multiple lights on and change attributes.
+
+Supports following parameters:
+ - transition
+   Integer that represents the time the light should take to transition to
+   the new state.
+
+ - entity_id
+   String or list of strings that point at entity_ids of lights.
+
+ - profile
+   String with the name of one of the built-in profiles (relax, energize,
+   concentrate, reading) or one of the custom profiles defined in
+   light_profiles.csv in the current working directory.
+
+   Light profiles define a xy color and a brightness.
+
+   If a profile is given and a brightness or xy color then the profile values
+   will be overwritten.
+
+ - xy_color
+   A list containing two floats representing the xy color you want the light
+   to be.
+
+ - rgb_color
+   A list containing three integers representing the xy color you want the
+   light to be.
+
+ - brightness
+   Integer between 0 and 255 representing how bright you want the light to be.
+
 """
 
 import logging
 import socket
 from datetime import datetime, timedelta
 from collections import namedtuple
+import os
+import csv
 
 import homeassistant as ha
 import homeassistant.util as util
@@ -38,6 +83,11 @@ ATTR_XY_COLOR = "xy_color"
 # int with value 0 .. 255 representing brightness of the light
 ATTR_BRIGHTNESS = "brightness"
 
+# String representing a profile (built-in ones or external defined)
+ATTR_PROFILE = "profile"
+
+LIGHT_PROFILES_FILE = "light_profiles.csv"
+
 
 def is_on(statemachine, entity_id=None):
     """ Returns if the lights are on based on the statemachine. """
@@ -48,12 +98,15 @@ def is_on(statemachine, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(bus, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None):
+            rgb_color=None, xy_color=None, profile=None):
     """ Turns all or specified light on. """
     data = {}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
+
+    if profile:
+        data[ATTR_PROFILE] = profile
 
     if transition is not None:
         data[ATTR_TRANSITION] = transition
@@ -61,10 +114,10 @@ def turn_on(bus, entity_id=None, transition=None, brightness=None,
     if brightness is not None:
         data[ATTR_BRIGHTNESS] = brightness
 
-    if rgb_color is not None:
+    if rgb_color:
         data[ATTR_RGB_COLOR] = rgb_color
 
-    if xy_color is not None:
+    if xy_color:
         data[ATTR_XY_COLOR] = xy_color
 
     bus.call_service(DOMAIN, SERVICE_TURN_ON, data)
@@ -83,7 +136,7 @@ def turn_off(bus, entity_id=None, transition=None):
     bus.call_service(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-# pylint: disable=too-many-branches
+# pylint: disable=too-many-branches, too-many-locals
 def setup(bus, statemachine, light_control):
     """ Exposes light control via statemachine and services. """
 
@@ -149,9 +202,41 @@ def setup(bus, statemachine, light_control):
     # Update light state and discover lights for tracking the group
     update_lights_state(None, True)
 
+    if len(ent_to_light) == 0:
+        logger.error("No lights found")
+        return False
+
     # Track all lights in a group
     group.setup(bus, statemachine,
                 GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
+
+    # Load built-in profiles and custom profiles
+    profile_paths = [os.path.dirname(__file__), os.getcwd()]
+    profiles = {}
+
+    for dir_path in profile_paths:
+        file_path = os.path.join(dir_path, LIGHT_PROFILES_FILE)
+
+        if os.path.isfile(file_path):
+            with open(file_path, 'rb') as inp:
+                reader = csv.reader(inp)
+
+                # Skip the header
+                next(reader, None)
+
+                try:
+                    for profile_id, color_x, color_y, brightness in reader:
+                        profiles[profile_id] = (float(color_x), float(color_y),
+                                                int(brightness))
+
+                except ValueError:
+                    # ValueError if not 4 values per row
+                    # ValueError if convert to float/int failed
+                    logger.error(
+                        "Error parsing light profiles from {}".format(
+                            file_path))
+
+                    return False
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
@@ -166,36 +251,46 @@ def setup(bus, statemachine, light_control):
         if not light_ids:
             light_ids = ent_to_light.values()
 
-        transition = util.dict_get_convert(dat, ATTR_TRANSITION, int, None)
+        transition = util.convert(dat.get(ATTR_TRANSITION), int)
 
         if service.service == SERVICE_TURN_OFF:
             light_control.turn_light_off(light_ids, transition)
 
         else:
             # Processing extra data for turn light on request
-            bright = util.dict_get_convert(dat, ATTR_BRIGHTNESS, int, 164)
 
-            color = None
-            xy_color = dat.get(ATTR_XY_COLOR)
-            rgb_color = dat.get(ATTR_RGB_COLOR)
+            # We process the profile first so that we get the desired
+            # behavior that extra service data attributes overwrite
+            # profile values
+            profile = profiles.get(dat.get(ATTR_PROFILE))
 
-            if xy_color:
+            if profile:
+                color = profile[0:2]
+                bright = profile[2]
+            else:
+                color = None
+                bright = None
+
+            if ATTR_BRIGHTNESS in dat:
+                bright = util.convert(dat.get(ATTR_BRIGHTNESS), int)
+
+            if ATTR_XY_COLOR in dat:
                 try:
                     # xy_color should be a list containing 2 floats
-                    xy_color = [float(val) for val in xy_color]
+                    xy_color = [float(val) for val in dat.get(ATTR_XY_COLOR)]
 
                     if len(xy_color) == 2:
                         color = xy_color
 
                 except (TypeError, ValueError):
-                    # TypeError if xy_color was not iterable
+                    # TypeError if dat[ATTR_XY_COLOR] is not iterable
                     # ValueError if value could not be converted to float
                     pass
 
-            if not color and rgb_color:
+            if ATTR_RGB_COLOR in dat:
                 try:
                     # rgb_color should be a list containing 3 ints
-                    rgb_color = [int(val) for val in rgb_color]
+                    rgb_color = [int(val) for val in dat.get(ATTR_RGB_COLOR)]
 
                     if len(rgb_color) == 3:
                         color = util.color_RGB_to_xy(rgb_color[0],
@@ -203,8 +298,8 @@ def setup(bus, statemachine, light_control):
                                                      rgb_color[2])
 
                 except (TypeError, ValueError):
-                    # TypeError if color has no len
-                    # ValueError if not all values convertable to int
+                    # TypeError if dat[ATTR_RGB_COLOR] is not iterable
+                    # ValueError if not all values can be converted to int
                     pass
 
             light_control.turn_light_on(light_ids, transition, bright, color)
