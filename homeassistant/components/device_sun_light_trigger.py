@@ -117,11 +117,8 @@ def setup(bus, statemachine,
                     "Home coming event for {}. Turning lights on".
                     format(entity))
 
-                # Turn on lights directly instead of calling group.turn_on
-                # So we skip fetching the entity ids again.
-                for light_id in light_ids:
-                    light.turn_on(bus, light_id,
-                                  profile=light_profile)
+                light.turn_on(bus, light_ids,
+                              profile=light_profile)
 
             # Are we in the time span were we would turn on the lights
             # if someone would be home?

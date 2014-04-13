@@ -45,6 +45,13 @@ def is_on(statemachine, entity_id=None):
                for entity_id in entity_ids)
 
 
+def turn_off(bus, entity_id=None):
+    """ Will turn off specified Chromecast or all. """
+    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    bus.call_service(DOMAIN, components.SERVICE_TURN_OFF, data)
+
+
 def volume_up(bus, entity_id=None):
     """ Send the chromecast the command for volume up. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}

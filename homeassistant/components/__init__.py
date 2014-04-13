@@ -14,13 +14,13 @@ format "<DOMAIN>.<OBJECT_ID>".
 Each component should publish services only under its own domain.
 
 """
-
+import itertools as it
 import importlib
 
 import homeassistant as ha
 import homeassistant.util as util
 
-# String that contains an entity id or a comma seperated list of entity ids
+# Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
 
 # String with a friendly name for the entity
@@ -69,7 +69,12 @@ def _get_component(component):
 def is_on(statemachine, entity_id=None):
     """ Loads up the module to call the is_on method.
     If there is no entity id given we will check all. """
-    entity_ids = [entity_id] if entity_id else statemachine.entity_ids
+    if entity_id:
+        group = _get_component('group')
+
+        entity_ids = group.expand_entity_ids([entity_id])
+    else:
+        entity_ids = statemachine.entity_ids
 
     for entity_id in entity_ids:
         domain = util.split_entity_id(entity_id)[0]
@@ -87,34 +92,14 @@ def is_on(statemachine, entity_id=None):
     return False
 
 
-def turn_on(bus, entity_id=None):
+def turn_on(bus, **service_data):
     """ Turns specified entity on if possible. """
-    # If there is no entity_id we do not know which domain to call.
-    if not entity_id:
-        return
-
-    domain = util.split_entity_id(entity_id)[0]
-
-    try:
-        bus.call_service(domain, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
-    except ha.ServiceDoesNotExistError:
-        # turn_on service does not exist
-        pass
+    bus.call_service(ha.DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-def turn_off(bus, entity_id=None):
+def turn_off(bus, **service_data):
     """ Turns specified entity off. """
-    # If there is no entity_id we do not know which domain to call.
-    if not entity_id:
-        return
-
-    domain = util.split_entity_id(entity_id)[0]
-
-    try:
-        bus.call_service(domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
-    except ha.ServiceDoesNotExistError:
-        # turn_off service does not exist
-        pass
+    bus.call_service(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
 
 
 def extract_entity_ids(statemachine, service):
@@ -134,37 +119,44 @@ def extract_entity_ids(statemachine, service):
         else:
             ent_ids = [service_ent_id]
 
-        for entity_id in ent_ids:
-            try:
-                # If entity_id points at a group, expand it
-                domain, _ = util.split_entity_id(entity_id)
-
-                if domain == group.DOMAIN:
-                    entity_ids.extend(
-                        ent_id for ent_id
-                        in group.get_entity_ids(statemachine, entity_id)
-                        if ent_id not in entity_ids)
-
-                else:
-                    if entity_id not in entity_ids:
-                        entity_ids.append(entity_id)
-
-            except AttributeError:
-                # Raised by util.split_entity_id if entity_id is not a string
-                pass
+        entity_ids.extend(
+            ent_id for ent_id
+            in group.expand_entity_ids(statemachine, ent_ids)
+            if ent_id not in entity_ids)
 
     return entity_ids
 
 
-def setup(bus):
+def setup(bus, statemachine):
     """ Setup general services related to homeassistant. """
 
-    bus.register_service(ha.DOMAIN, SERVICE_TURN_OFF,
-                         lambda service:
-                         turn_off(bus, service.data.get(ATTR_ENTITY_ID)))
+    def handle_turn_service(service):
+        """ Method to handle calls to homeassistant.turn_on/off. """
 
-    bus.register_service(ha.DOMAIN, SERVICE_TURN_ON,
-                         lambda service:
-                         turn_on(bus, service.data.get(ATTR_ENTITY_ID)))
+        entity_ids = extract_entity_ids(statemachine, service)
+
+        # Generic turn on/off method requires entity id
+        if not entity_ids:
+            return
+
+        # Group entity_ids by domain. groupby requires sorted data.
+        by_domain = it.groupby(sorted(entity_ids),
+                               lambda item: util.split_entity_id(item)[0])
+
+        for domain, ent_ids in by_domain:
+            # Create a new dict for this call
+            data = dict(service.data)
+
+            # ent_ids is a generator, convert it to a list.
+            data[ATTR_ENTITY_ID] = list(ent_ids)
+
+            try:
+                bus.call_service(domain, service.service, data)
+            except ha.ServiceDoesNotExistError:
+                # turn_on service does not exist
+                pass
+
+    bus.register_service(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
+    bus.register_service(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
 
     return True
