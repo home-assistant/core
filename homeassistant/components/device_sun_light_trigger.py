@@ -51,7 +51,7 @@ def setup(bus, statemachine,
         next_setting = sun.next_setting(statemachine)
 
         if next_setting:
-            return (next_setting - LIGHT_TRANSITION_TIME * len(light_ids))
+            return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
         else:
             return None
 

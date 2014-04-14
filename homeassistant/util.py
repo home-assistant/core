@@ -1,13 +1,18 @@
-""" Helper methods for various modules. """
+"""
+homeassistant.util
+~~~~~~~~~~~~~~~~~~
+
+Helper methods for various modules.
+"""
 import threading
-import Queue
+import queue
 import datetime
 import re
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
 
-DATE_STR_FORMAT = u"%H:%M:%S %d-%m-%Y"
+DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
 
 
 def sanitize_filename(filename):
@@ -59,13 +64,13 @@ def filter_entity_ids(entity_ids, domain_filter=None, strip_domain=False):
 def repr_helper(inp):
     """ Helps creating a more readable string representation of objects. """
     if isinstance(inp, dict):
-        return u", ".join(
-            repr_helper(key)+u"="+repr_helper(item) for key, item
+        return ", ".join(
+            repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
     elif isinstance(inp, datetime.datetime):
         return datetime_to_str(inp)
     else:
-        return unicode(inp)
+        return str(inp)
 
 
 # Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
@@ -146,25 +151,38 @@ class ThreadPool(object):
 
     # pylint: disable=too-few-public-methods
     def __init__(self, worker_count, job_handler):
-        queue = self.queue = Queue.PriorityQueue()
+        work_queue = self.work_queue = queue.PriorityQueue()
         current_jobs = self.current_jobs = []
 
-        for _ in xrange(worker_count):
+        for _ in range(worker_count):
             worker = threading.Thread(target=_threadpool_worker,
-                                      args=(queue, current_jobs, job_handler))
+                                      args=(work_queue, current_jobs,
+                                            job_handler))
             worker.daemon = True
             worker.start()
 
     def add_job(self, priority, job):
         """ Add a job to be sent to the workers. """
-        self.queue.put((priority, job))
+        self.work_queue.put(PriorityQueueItem(priority, job))
 
 
-def _threadpool_worker(queue, current_jobs, job_handler):
+class PriorityQueueItem(object):
+    """ Holds a priority and a value. Used within PriorityQueue. """
+
+    # pylint: disable=too-few-public-methods
+    def __init__(self, priority, item):
+        self.priority = priority
+        self.item = item
+
+    def __lt__(self, other):
+        return self.priority < other.priority
+
+
+def _threadpool_worker(work_queue, current_jobs, job_handler):
     """ Provides the base functionality of a worker for the thread pool. """
     while True:
-        # Get new item from queue
-        job = queue.get()[1]
+        # Get new item from work_queue
+        job = work_queue.get().item
 
         # Add to current running jobs
         job_log = (datetime.datetime.now(), job)
@@ -176,5 +194,5 @@ def _threadpool_worker(queue, current_jobs, job_handler):
         # Remove from current running job
         current_jobs.remove(job_log)
 
-        # Tell queue a task is done
-        queue.task_done()
+        # Tell work_queue a task is done
+        work_queue.task_done()

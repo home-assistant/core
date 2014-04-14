@@ -155,11 +155,11 @@ def setup(bus, statemachine, light_control):
             # We have not seen this light before, set it up
 
             # Create entity id
-            logger.info(u"Found new light {}".format(name))
+            logger.info("Found new light {}".format(name))
 
             entity_id = util.ensure_unique_string(
                 ENTITY_ID_FORMAT.format(util.slugify(name)),
-                ent_to_light.keys())
+                list(ent_to_light.keys()))
 
             ent_to_light[entity_id] = light_id
             light_to_ent[light_id] = entity_id
@@ -218,7 +218,7 @@ def setup(bus, statemachine, light_control):
         file_path = os.path.join(dir_path, LIGHT_PROFILES_FILE)
 
         if os.path.isfile(file_path):
-            with open(file_path, 'rb') as inp:
+            with open(file_path) as inp:
                 reader = csv.reader(inp)
 
                 # Skip the header
@@ -249,7 +249,7 @@ def setup(bus, statemachine, light_control):
                      if entity_id in ent_to_light]
 
         if not light_ids:
-            light_ids = ent_to_light.values()
+            light_ids = list(ent_to_light.values())
 
         transition = util.convert(dat.get(ATTR_TRANSITION), int)
 

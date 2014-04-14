@@ -1,2 +1,1 @@
-python -B -m unittest homeassistant.test
- 
+python3 -B -m unittest homeassistant.test

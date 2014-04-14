@@ -124,7 +124,7 @@ class DeviceTracker(object):
         # Because we do not want to have stuff happening when the device does
         # not show up for 1 scan beacuse of reboot etc
         for device in temp_tracking_devices:
-            if (now - known_dev[device]['last_seen'] > self.error_scanning):
+            if now - known_dev[device]['last_seen'] > self.error_scanning:
 
                 self.statemachine.set_state(known_dev[device]['entity_id'],
                                             components.STATE_NOT_HOME)

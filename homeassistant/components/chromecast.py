@@ -113,7 +113,7 @@ def setup(bus, statemachine):
             entity_id = util.ensure_unique_string(
                 ENTITY_ID_FORMAT.format(
                     util.slugify(cast.device.friendly_name)),
-                casts.keys())
+                list(casts.keys()))
 
             casts[entity_id] = cast
 
@@ -189,8 +189,7 @@ def setup(bus, statemachine):
                     yield entity_id, cast
 
         else:
-            for item in casts.items():
-                yield item
+            yield from casts.items()
 
     def turn_off_service(service):
         """ Service to exit any running app on the specified ChromeCast and
@@ -230,7 +229,7 @@ def setup(bus, statemachine):
             ramp = cast.get_protocol(pychromecast.PROTOCOL_RAMP)
 
             if ramp:
-                ramp.next()
+                next(ramp)
                 update_chromecast_state(entity_id, cast)
 
     def play_youtube_video_service(service, video_id):

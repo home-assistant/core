@@ -12,7 +12,7 @@ HomeAssistantError will be raised.
 import threading
 import logging
 import json
-import urlparse
+import urllib.parse
 
 import requests
 
@@ -34,7 +34,7 @@ def _setup_call_api(host, port, api_password):
         data = data or {}
         data['api_password'] = api_password
 
-        url = urlparse.urljoin(base_url, path)
+        url = urllib.parse.urljoin(base_url, path)
 
         try:
             if method == METHOD_GET:
@@ -61,14 +61,12 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class Bus(ha.Bus):
+class Bus(object):
     """ Drop-in replacement for a normal bus that will forward interaction to
     a remote bus.
     """
 
     def __init__(self, host, api_password, port=None):
-        ha.Bus.__init__(self)
-
         self.logger = logging.getLogger(__name__)
 
         self._call_api = _setup_call_api(host, port, api_password)
@@ -172,6 +170,12 @@ class Bus(ha.Bus):
             self.logger.error("Bus:{}".format(error))
             raise ha.HomeAssistantError(error)
 
+    def has_service(self, domain, service):
+        """ Not implemented for remote bus.
+
+        Will throw NotImplementedError. """
+        raise NotImplementedError
+
     def listen_event(self, event_type, listener):
         """ Not implemented for remote bus.
 
@@ -192,14 +196,12 @@ class Bus(ha.Bus):
         raise NotImplementedError
 
 
-class StateMachine(ha.StateMachine):
+class StateMachine(object):
     """ Drop-in replacement for a normal statemachine that communicates with a
     remote statemachine.
     """
 
     def __init__(self, host, api_password, port=None):
-        ha.StateMachine.__init__(self, None)
-
         self._call_api = _setup_call_api(host, port, api_password)
 
         self.lock = threading.Lock()
@@ -297,3 +299,11 @@ class StateMachine(ha.StateMachine):
             self.logger.exception("StateMachine:Got unexpected result (2)")
             raise ha.HomeAssistantError(
                 "Got unexpected result (2): {}".format(req.text))
+
+    def is_state(self, entity_id, state):
+        """ Returns True if entity exists and is specified state. """
+        try:
+            return self.get_state(entity_id).state == state
+        except AttributeError:
+            # get_state returned None
+            return False

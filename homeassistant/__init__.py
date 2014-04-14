@@ -171,7 +171,7 @@ def create_bus_job_handler(logger):
         except Exception:  # pylint: disable=broad-except
             # Catch any exception our service/event_listener might throw
             # We do not want to crash our ThreadPool
-            logger.exception(u"BusHandler:Exception doing job")
+            logger.exception("BusHandler:Exception doing job")
 
     return job_handler
 
@@ -189,10 +189,10 @@ class ServiceCall(object):
 
     def __repr__(self):
         if self.data:
-            return u"<ServiceCall {}.{}: {}>".format(
+            return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
         else:
-            return u"<ServiceCall {}.{}>".format(self.domain, self.service)
+            return "<ServiceCall {}.{}>".format(self.domain, self.service)
 
 
 # pylint: disable=too-few-public-methods
@@ -207,10 +207,10 @@ class Event(object):
 
     def __repr__(self):
         if self.data:
-            return u"<Event {}: {}>".format(
+            return "<Event {}: {}>".format(
                 self.event_type, util.repr_helper(self.data))
         else:
-            return u"<Event {}>".format(self.event_type)
+            return "<Event {}>".format(self.event_type)
 
 
 class Bus(object):
@@ -235,7 +235,7 @@ class Bus(object):
     def services(self):
         """ Dict with per domain a list of available services. """
         with self.service_lock:
-            return {domain: self._services[domain].keys()
+            return {domain: list(self._services[domain].keys())
                     for domain in self._services}
 
     @property
@@ -268,7 +268,7 @@ class Bus(object):
 
             except KeyError:  # if key domain or service does not exist
                 raise ServiceDoesNotExistError(
-                    u"Service does not exist: {}/{}".format(domain, service))
+                    "Service does not exist: {}/{}".format(domain, service))
 
     def register_service(self, domain, service, service_func):
         """ Register a service. """
@@ -290,7 +290,7 @@ class Bus(object):
 
             event = Event(event_type, event_data)
 
-            self.logger.info(u"Bus:Handling {}".format(event))
+            self.logger.info("Bus:Handling {}".format(event))
 
             if not listeners:
                 return
@@ -363,7 +363,7 @@ class Bus(object):
     def _check_busy(self):
         """ Complain if we have more than twice as many jobs queued as threads
         and if we didn't complain about it recently. """
-        if self.pool.queue.qsize() / self.thread_count >= 2 and \
+        if self.pool.work_queue.qsize() / self.thread_count >= 2 and \
            dt.datetime.now()-self.last_busy_notice > BUS_REPORT_BUSY_TIMEOUT:
 
             self.last_busy_notice = dt.datetime.now()
@@ -371,13 +371,13 @@ class Bus(object):
             log_error = self.logger.error
 
             log_error(
-                u"Bus:All {} threads are busy and {} jobs pending".format(
-                    self.thread_count, self.pool.queue.qsize()))
+                "Bus:All {} threads are busy and {} jobs pending".format(
+                    self.thread_count, self.pool.work_queue.qsize()))
 
             jobs = self.pool.current_jobs
 
             for start, job in jobs:
-                log_error(u"Bus:Current job from {}: {}".format(
+                log_error("Bus:Current job from {}: {}".format(
                     util.datetime_to_str(start), job))
 
 
@@ -436,11 +436,11 @@ class State(object):
 
     def __repr__(self):
         if self.attributes:
-            return u"<state {}:{} @ {}>".format(
+            return "<state {}:{} @ {}>".format(
                 self.state, util.repr_helper(self.attributes),
                 util.datetime_to_str(self.last_changed))
         else:
-            return u"<state {} @ {}>".format(
+            return "<state {} @ {}>".format(
                 self.state, util.datetime_to_str(self.last_changed))
 
 
@@ -456,7 +456,7 @@ class StateMachine(object):
     def entity_ids(self):
         """ List of entitie ids that are being tracked. """
         with self.lock:
-            return self.states.keys()
+            return list(self.states.keys())
 
     def remove_entity(self, entity_id):
         """ Removes a entity from the state machine.
@@ -515,9 +515,9 @@ class StateMachine(object):
     def is_state(self, entity_id, state):
         """ Returns True if entity exists and is specified state. """
         try:
-            return self.get_state(entity_id).state == state
+            return self.states.get(entity_id).state == state
         except AttributeError:
-            # get_state returned None
+            # states.get returned None
             return False
 
 

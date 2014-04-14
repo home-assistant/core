@@ -77,7 +77,7 @@ def setup(bus, statemachine):
             # New device, set it up
             entity_id = util.ensure_unique_string(
                 ENTITY_ID_FORMAT.format(util.slugify(device.name)),
-                ent_to_dev.keys())
+                list(ent_to_dev.keys()))
 
             sno_to_ent[device.serialnumber] = entity_id
             ent_to_dev[entity_id] = device
@@ -115,7 +115,7 @@ def setup(bus, statemachine):
 
     # Track all lights in a group
     group.setup(bus, statemachine,
-                GROUP_NAME_ALL_WEMOS, sno_to_ent.values())
+                GROUP_NAME_ALL_WEMOS, list(sno_to_ent.values()))
 
     def _handle_wemo_service(service):
         """ Handles calls to the WeMo service. """

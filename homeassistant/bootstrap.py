@@ -3,7 +3,7 @@ Provides methods to bootstrap a home assistant instance.
 """
 
 import importlib
-import ConfigParser
+import configparser
 import logging
 
 import homeassistant as ha
@@ -33,7 +33,7 @@ def from_config_file(config_path):
     statusses = []
 
     # Read config
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(config_path)
 
     # Init core
@@ -51,7 +51,7 @@ def from_config_file(config_path):
         """ Failure proof option retriever. """
         try:
             return config.get(section, option)
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             return default
 
     # Device scanner
@@ -83,7 +83,7 @@ def from_config_file(config_path):
                 get_opt('device_tracker.netgear', 'username'),
                 get_opt('device_tracker.netgear', 'password'))
 
-    except ConfigParser.NoOptionError:
+    except configparser.NoOptionError:
         # If one of the options didn't exist
         logger.exception(("Error initializing {}DeviceScanner, "
                           "could not find one of the following config "
@@ -142,7 +142,11 @@ def from_config_file(config_path):
 
         add_status("Light - Hue", light_control.success_init)
 
-        light.setup(bus, statemachine, light_control)
+        if light_control.success_init:
+            light.setup(bus, statemachine, light_control)
+        else:
+            light_control = None
+
     else:
         light_control = None
 

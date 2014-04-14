@@ -1,7 +1,7 @@
 Home Assistant
 ==============
 
-Home Assistant provides a platform for home automation. It does so by having modules that observe and trigger actors to do various tasks.
+Home Assistant is a home automation platform running on Python 3. It provides modules that observe and trigger actors to do various tasks.
 
 It is currently able to do the following things:
  * Track if devices are home by monitoring connected devices to a wireless router (currently supporting modern Netgear routers or routers running Tomato firmware)

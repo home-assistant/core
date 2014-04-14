@@ -72,8 +72,8 @@ import threading
 import logging
 import re
 import os
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from urlparse import urlparse, parse_qs
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 
 import homeassistant as ha
 import homeassistant.util as util
@@ -138,6 +138,7 @@ class HTTPInterface(threading.Thread):
         self.server.serve_forever()
 
 
+# pylint: disable=too-many-public-methods
 class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """
 
@@ -188,7 +189,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers.get('Content-Length', 0))
 
         if content_length:
-            data.update(parse_qs(self.rfile.read(content_length)))
+            data.update(parse_qs(self.rfile.read(
+                content_length).decode("UTF-8")))
 
         try:
             api_password = data['api_password'][0]
@@ -282,7 +284,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 "</form>"
                 "</div>"
-                "</body></html>").format(self.path))
+                "</body></html>").format(self.path).encode("UTF-8"))
 
         return False
 
@@ -290,7 +292,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _handle_get_root(self, path_match, data):
         """ Renders the debug interface. """
 
-        write = lambda txt: self.wfile.write(txt.encode("UTF-8")+"\n")
+        write = lambda txt: self.wfile.write((txt + "\n").encode("UTF-8"))
 
         self.send_response(HTTP_OK)
         self.send_header('Content-type', 'text/html; charset=utf-8')
@@ -335,13 +337,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             state = self.server.statemachine.get_state(entity_id)
 
-            attributes = u"<br>".join(
-                [u"{}: {}".format(attr, state.attributes[attr])
+            attributes = "<br>".join(
+                ["{}: {}".format(attr, state.attributes[attr])
                  for attr in state.attributes])
 
-            write((u"<tr>"
-                   u"<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-                   u"</tr>").format(
+            write(("<tr>"
+                   "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+                   "</tr>").format(
                   entity_id,
                   state.state,
                   attributes,
@@ -686,4 +688,5 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         if data:
-            self.wfile.write(json.dumps(data, indent=4, sort_keys=True))
+            self.wfile.write(
+                json.dumps(data, indent=4, sort_keys=True).encode("UTF-8"))
