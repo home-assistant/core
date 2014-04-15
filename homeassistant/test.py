@@ -109,7 +109,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        self.bus.listen_once_event("test_event_with_data", listener)
+        ha.listen_once_event(self.bus, "test_event_with_data", listener)
 
         requests.post(
             _url(hah.URL_FIRE_EVENT),
@@ -129,7 +129,7 @@ class TestHTTPInterface(unittest.TestCase):
 
         data = req.json()
 
-        self.assertEqual(self.statemachine.entity_ids,
+        self.assertEqual(list(self.statemachine.entity_ids),
                          data['entity_ids'])
 
     def test_api_get_state(self):
@@ -194,7 +194,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.bus.listen_once_event("test.event_no_data", listener)
+        ha.listen_once_event(self.bus, "test.event_no_data", listener)
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test.event_no_data")),
@@ -216,7 +216,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        self.bus.listen_once_event("test_event_with_data", listener)
+        ha.listen_once_event(self.bus, "test_event_with_data", listener)
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event_with_data")),
@@ -237,7 +237,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.bus.listen_once_event("test_event_with_bad_data", listener)
+        ha.listen_once_event(self.bus, "test_event_with_bad_data", listener)
 
         req = requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event")),
@@ -329,7 +329,7 @@ class TestRemote(unittest.TestCase):
     def test_remote_sm_list_state_entities(self):
         """ Test if the debug interface allows us to list state entity ids. """
 
-        self.assertEqual(self.statemachine.entity_ids,
+        self.assertEqual(list(self.statemachine.entity_ids),
                          self.remote_sm.entity_ids)
 
     def test_remote_sm_get_state(self):
@@ -370,7 +370,7 @@ class TestRemote(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.bus.listen_once_event("test_event_no_data", listener)
+        ha.listen_once_event(self.bus, "test_event_no_data", listener)
 
         self.remote_eb.fire_event("test_event_no_data")
 
@@ -389,7 +389,7 @@ class TestRemote(unittest.TestCase):
             if event.data["test"] == 1:
                 test_value.append(1)
 
-        self.bus.listen_once_event("test_event_with_data", listener)
+        ha.listen_once_event(self.bus, "test_event_with_data", listener)
 
         self.remote_eb.fire_event("test_event_with_data", {"test": 1})
 
@@ -444,7 +444,7 @@ class TestRemote(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.bus.listen_once_event(ha.EVENT_STATE_CHANGED, listener)
+        ha.listen_once_event(self.bus, ha.EVENT_STATE_CHANGED, listener)
 
         self.sm_with_remote_eb.set_state("test", "local sm with remote eb")
 

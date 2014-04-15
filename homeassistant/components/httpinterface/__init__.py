@@ -113,12 +113,10 @@ class HTTPInterface(threading.Thread):
 
         self.daemon = True
 
-        if not server_port:
-            server_port = SERVER_PORT
+        server_port = server_port or SERVER_PORT
 
         # If no server host is given, accept all incoming requests
-        if not server_host:
-            server_host = '0.0.0.0'
+        server_host = server_host or '0.0.0.0'
 
         self.server = HTTPServer((server_host, server_port), RequestHandler)
 
@@ -128,8 +126,8 @@ class HTTPInterface(threading.Thread):
         self.server.statemachine = statemachine
         self.server.api_password = api_password
 
-        bus.listen_once_event(ha.EVENT_HOMEASSISTANT_START,
-                              lambda event: self.start())
+        ha.listen_once_event(bus, ha.EVENT_HOMEASSISTANT_START,
+                             lambda event: self.start())
 
     def run(self):
         """ Start the HTTP interface. """
@@ -609,7 +607,8 @@ class RequestHandler(BaseHTTPRequestHandler):
     # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):
         """ Returns the entitie ids which state are being tracked. """
-        self._write_json({'entity_ids': self.server.statemachine.entity_ids})
+        self._write_json(
+            {'entity_ids': list(self.server.statemachine.entity_ids)})
 
     # pylint: disable=unused-argument
     def _handle_get_api_states_entity(self, path_match, data):

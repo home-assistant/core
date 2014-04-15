@@ -265,11 +265,9 @@ def setup(bus, statemachine, light_control):
             profile = profiles.get(dat.get(ATTR_PROFILE))
 
             if profile:
-                color = profile[0:2]
-                bright = profile[2]
+                *color, bright = profile
             else:
-                color = None
-                bright = None
+                color, bright = None, None
 
             if ATTR_BRIGHTNESS in dat:
                 bright = util.convert(dat.get(ATTR_BRIGHTNESS), int)
@@ -277,28 +275,28 @@ def setup(bus, statemachine, light_control):
             if ATTR_XY_COLOR in dat:
                 try:
                     # xy_color should be a list containing 2 floats
-                    xy_color = [float(val) for val in dat.get(ATTR_XY_COLOR)]
+                    xy_color = dat.get(ATTR_XY_COLOR)
 
                     if len(xy_color) == 2:
-                        color = xy_color
+                        color = [float(val) for val in xy_color]
 
                 except (TypeError, ValueError):
-                    # TypeError if dat[ATTR_XY_COLOR] is not iterable
+                    # TypeError if xy_color is not iterable
                     # ValueError if value could not be converted to float
                     pass
 
             if ATTR_RGB_COLOR in dat:
                 try:
                     # rgb_color should be a list containing 3 ints
-                    rgb_color = [int(val) for val in dat.get(ATTR_RGB_COLOR)]
+                    rgb_color = dat.get(ATTR_RGB_COLOR)
 
                     if len(rgb_color) == 3:
-                        color = util.color_RGB_to_xy(rgb_color[0],
-                                                     rgb_color[1],
-                                                     rgb_color[2])
+                        color = util.color_RGB_to_xy(int(rgb_color[0]),
+                                                     int(rgb_color[1]),
+                                                     int(rgb_color[2]))
 
                 except (TypeError, ValueError):
-                    # TypeError if dat[ATTR_RGB_COLOR] is not iterable
+                    # TypeError if rgb_color is not iterable
                     # ValueError if not all values can be converted to int
                     pass
 

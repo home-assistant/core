@@ -33,7 +33,7 @@ def from_config_file(config_path):
     statusses = []
 
     # Read config
-    config = configparser.SafeConfigParser()
+    config = configparser.ConfigParser()
     config.read(config_path)
 
     # Init core

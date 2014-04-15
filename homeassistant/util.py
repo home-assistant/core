@@ -8,6 +8,7 @@ import threading
 import queue
 import datetime
 import re
+import enum
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
@@ -131,6 +132,31 @@ def ensure_unique_string(preferred_string, current_strings):
         string = "{}_{}".format(preferred_string, tries)
 
     return string
+
+
+class OrderedEnum(enum.Enum):
+    """ Taken from Python 3.4.0 docs. """
+    # pylint: disable=no-init
+
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
 
 
 # Reason why I decided to roll my own ThreadPool instead of using

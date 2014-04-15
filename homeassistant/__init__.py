@@ -33,10 +33,6 @@ assert 60 % TIMER_INTERVAL == 0, "60 % TIMER_INTERVAL should be 0!"
 
 BUS_NUM_THREAD = 4
 BUS_REPORT_BUSY_TIMEOUT = dt.timedelta(minutes=1)
-PRIO_SERVICE_DEFAULT = 1
-PRIO_EVENT_STATE = 2
-PRIO_EVENT_TIME = 3
-PRIO_EVENT_DEFAULT = 4
 
 
 def start_home_assistant(bus):
@@ -160,6 +156,32 @@ def track_time_change(bus, action,
     bus.listen_event(EVENT_TIME_CHANGED, time_listener)
 
 
+def listen_once_event(bus, event_type, listener):
+    """ Listen once for event of a specific type.
+
+    To listen to all events specify the constant ``MATCH_ALL``
+    as event_type.
+
+    Note: at the moment it is impossible to remove a one time listener.
+    """
+    @ft.wraps(listener)
+    def onetime_listener(event):
+        """ Removes listener from eventbus and then fires listener. """
+        if not hasattr(onetime_listener, 'run'):
+            # Set variable so that we will never run twice.
+            # Because the event bus might have to wait till a thread comes
+            # available to execute this listener it might occur that the
+            # listener gets lined up twice to be executed.
+            # This will make sure the second time it does nothing.
+            onetime_listener.run = True
+
+            bus.remove_event_listener(event_type, onetime_listener)
+
+            listener(event)
+
+    bus.listen_event(event_type, onetime_listener)
+
+
 def create_bus_job_handler(logger):
     """ Creates a job handler that logs errors to supplied `logger`. """
 
@@ -174,6 +196,26 @@ def create_bus_job_handler(logger):
             logger.exception("BusHandler:Exception doing job")
 
     return job_handler
+
+
+class BusPriority(util.OrderedEnum):
+    """ Provides priorities for bus events. """
+    # pylint: disable=no-init
+
+    SERVICE_DEFAULT = 1
+    EVENT_STATE = 2
+    EVENT_TIME = 3
+    EVENT_DEFAULT = 4
+
+    @staticmethod
+    def from_event_type(event_type):
+        """ Returns a priority based on event type. """
+        if event_type == EVENT_TIME_CHANGED:
+            return BusPriority.EVENT_TIME
+        elif event_type == EVENT_STATE_CHANGED:
+            return BusPriority.EVENT_STATE
+        else:
+            return BusPriority.EVENT_DEFAULT
 
 
 # pylint: disable=too-few-public-methods
@@ -249,10 +291,7 @@ class Bus(object):
 
     def has_service(self, domain, service):
         """ Returns True if specified service exists. """
-        try:
-            return service in self._services[domain]
-        except KeyError:  # if key 'domain' does not exist
-            return False
+        return service in self._services.get(domain, [])
 
     def call_service(self, domain, service, service_data=None):
         """ Calls a service. """
@@ -260,7 +299,7 @@ class Bus(object):
 
         with self.service_lock:
             try:
-                self.pool.add_job(PRIO_SERVICE_DEFAULT,
+                self.pool.add_job(BusPriority.SERVICE_DEFAULT,
                                   (self._services[domain][service],
                                    service_call))
 
@@ -273,10 +312,9 @@ class Bus(object):
     def register_service(self, domain, service, service_func):
         """ Register a service. """
         with self.service_lock:
-            try:
+            if domain in self._services:
                 self._services[domain][service] = service_func
-
-            except KeyError:  # Domain does not exist yet in self._services
+            else:
                 self._services[domain] = {service: service_func}
 
     def fire_event(self, event_type, event_data=None):
@@ -295,15 +333,9 @@ class Bus(object):
             if not listeners:
                 return
 
-            if event_type == EVENT_TIME_CHANGED:
-                prio = PRIO_EVENT_TIME
-            elif event_type == EVENT_STATE_CHANGED:
-                prio = PRIO_EVENT_STATE
-            else:
-                prio = PRIO_EVENT_DEFAULT
-
             for func in listeners:
-                self.pool.add_job(prio, (func, event))
+                self.pool.add_job(BusPriority.from_event_type(event_type),
+                                  (func, event))
 
             self._check_busy()
 
@@ -314,36 +346,10 @@ class Bus(object):
         as event_type.
         """
         with self.event_lock:
-            try:
+            if event_type in self._event_listeners:
                 self._event_listeners[event_type].append(listener)
-
-            except KeyError:  # event_type did not exist
+            else:
                 self._event_listeners[event_type] = [listener]
-
-    def listen_once_event(self, event_type, listener):
-        """ Listen once for event of a specific type.
-
-        To listen to all events specify the constant ``MATCH_ALL``
-        as event_type.
-
-        Note: at the moment it is impossible to remove a one time listener.
-        """
-        @ft.wraps(listener)
-        def onetime_listener(event):
-            """ Removes listener from eventbus and then fires listener. """
-            if not hasattr(onetime_listener, 'run'):
-                # Set variable so that we will never run twice.
-                # Because the event bus might have to wait till a thread comes
-                # available to execute this listener it might occur that the
-                # listener gets lined up twice to be executed.
-                # This will make sure the second time it does nothing.
-                onetime_listener.run = True
-
-                self.remove_event_listener(event_type, onetime_listener)
-
-                listener(event)
-
-        self.listen_event(event_type, onetime_listener)
 
     def remove_event_listener(self, event_type, listener):
         """ Removes a listener of a specific event_type. """
@@ -416,23 +422,26 @@ class State(object):
                 'attributes': self.attributes,
                 'last_changed': util.datetime_to_str(self.last_changed)}
 
-    @staticmethod
-    def from_dict(json_dict):
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.state == other.state and
+                self.attributes == other.attributes)
+
+    @classmethod
+    def from_dict(cls, json_dict):
         """ Static method to create a state from a dict.
         Ensures: state == State.from_json_dict(state.to_json_dict()) """
 
-        try:
-            last_changed = json_dict.get('last_changed')
-
-            if last_changed:
-                last_changed = util.str_to_datetime(last_changed)
-
-            return State(json_dict['entity_id'],
-                         json_dict['state'],
-                         json_dict.get('attributes'),
-                         last_changed)
-        except KeyError:  # if key 'entity_id' or 'state' did not exist
+        if 'entity_id' not in json_dict and 'state' not in json_dict:
             return None
+
+        last_changed = json_dict.get('last_changed')
+
+        if last_changed:
+            last_changed = util.str_to_datetime(last_changed)
+
+        return cls(json_dict['entity_id'], json_dict['state'],
+                   json_dict.get('attributes'), last_changed)
 
     def __repr__(self):
         if self.attributes:
@@ -454,23 +463,27 @@ class StateMachine(object):
 
     @property
     def entity_ids(self):
-        """ List of entitie ids that are being tracked. """
-        with self.lock:
-            return list(self.states.keys())
+        """ List of entity ids that are being tracked. """
+        return self.states.keys()
+
+    def get_state(self, entity_id):
+        """ Returns the state of the specified entity. """
+        state = self.states.get(entity_id)
+
+        # Make a copy so people won't mutate the state
+        return state.copy() if state else None
+
+    def is_state(self, entity_id, state):
+        """ Returns True if entity exists and is specified state. """
+        return (entity_id in self.states and
+                self.states[entity_id].state == state)
 
     def remove_entity(self, entity_id):
         """ Removes a entity from the state machine.
 
         Returns boolean to indicate if a entity was removed. """
         with self.lock:
-            try:
-                del self.states[entity_id]
-
-                return True
-
-            except KeyError:
-                # if entity does not exist
-                return False
+            return self.states.pop(entity_id, None) is not None
 
     def set_state(self, entity_id, new_state, attributes=None):
         """ Set the state of an entity, add entity if it does not exist.
@@ -480,16 +493,9 @@ class StateMachine(object):
         attributes = attributes or {}
 
         with self.lock:
-            # Change state and fire listeners
-            try:
+            if entity_id in self.states:
                 old_state = self.states[entity_id]
 
-            except KeyError:
-                # If state did not exist yet
-                self.states[entity_id] = State(entity_id, new_state,
-                                               attributes)
-
-            else:
                 if old_state.state != new_state or \
                    old_state.attributes != attributes:
 
@@ -501,24 +507,10 @@ class StateMachine(object):
                                          'old_state': old_state,
                                          'new_state': state})
 
-    def get_state(self, entity_id):
-        """ Returns the state of the specified entity. """
-        with self.lock:
-            try:
-                # Make a copy so people won't mutate the state
-                return self.states[entity_id].copy()
-
-            except KeyError:
-                # If entity does not exist
-                return None
-
-    def is_state(self, entity_id, state):
-        """ Returns True if entity exists and is specified state. """
-        try:
-            return self.states.get(entity_id).state == state
-        except AttributeError:
-            # states.get returned None
-            return False
+            else:
+                # If state did not exist yet
+                self.states[entity_id] = State(entity_id, new_state,
+                                               attributes)
 
 
 class Timer(threading.Thread):
@@ -530,8 +522,8 @@ class Timer(threading.Thread):
         self.daemon = True
         self.bus = bus
 
-        bus.listen_once_event(EVENT_HOMEASSISTANT_START,
-                              lambda event: self.start())
+        listen_once_event(bus, EVENT_HOMEASSISTANT_START,
+                          lambda event: self.start())
 
     def run(self):
         """ Start the timer. """

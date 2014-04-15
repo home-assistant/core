@@ -21,10 +21,11 @@ LIGHT_PROFILE = 'relax'
 
 
 # pylint: disable=too-many-branches
-def setup(bus, statemachine,
-          light_group=light.GROUP_NAME_ALL_LIGHTS,
-          light_profile=LIGHT_PROFILE):
+def setup(bus, statemachine, light_group=None, light_profile=None):
     """ Triggers to turn lights on or off based on device precense. """
+
+    light_group = light_group or light.GROUP_NAME_ALL_LIGHTS
+    light_profile = light_profile or LIGHT_PROFILE
 
     logger = logging.getLogger(__name__)
 

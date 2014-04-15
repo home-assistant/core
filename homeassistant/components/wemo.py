@@ -27,6 +27,27 @@ ATTR_TODAY_STANDBY_TIME = "today_standby_time"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
+def is_on(statemachine, entity_id=None):
+    """ Returns if the wemo is on based on the statemachine. """
+    entity_id = entity_id or ENTITY_ID_ALL_WEMOS
+
+    return statemachine.is_state(entity_id, STATE_ON)
+
+
+def turn_on(bus, entity_id=None):
+    """ Turns all or specified wemo on. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+
+    bus.call_service(DOMAIN, SERVICE_TURN_ON, data)
+
+
+def turn_off(bus, entity_id=None):
+    """ Turns all or specified wemo off. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+
+    bus.call_service(DOMAIN, SERVICE_TURN_OFF, data)
+
+
 # pylint: disable=too-many-branches
 def setup(bus, statemachine):
     """ Track states and offer events for WeMo switches. """

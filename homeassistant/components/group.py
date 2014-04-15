@@ -39,13 +39,10 @@ def is_on(statemachine, entity_id):
     if state:
         group_type = _get_group_type(state.state)
 
-        if group_type:
-            # We found group_type, compare to ON-state
-            return state.state == _GROUP_TYPES[group_type][0]
-        else:
-            return False
-    else:
-        return False
+        # If we found a group_type, compare to ON-state
+        return group_type and state.state == _GROUP_TYPES[group_type][0]
+
+    return False
 
 
 def expand_entity_ids(statemachine, entity_ids):

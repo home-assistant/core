@@ -182,12 +182,6 @@ class Bus(object):
         Will throw NotImplementedError. """
         raise NotImplementedError
 
-    def listen_once_event(self, event_type, listener):
-        """ Not implemented for remote bus.
-
-        Will throw NotImplementedError. """
-        raise NotImplementedError
-
     def remove_event_listener(self, event_type, listener):
         """ Not implemented for remote bus.
 
