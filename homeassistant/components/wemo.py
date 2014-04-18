@@ -54,28 +54,20 @@ def setup(bus, statemachine):
     logger = logging.getLogger(__name__)
 
     try:
-        import ouimeaux.environment as wemo_env
-        import ouimeaux.device.switch as wemo_switch
-        import ouimeaux.device.insight as wemo_insight
+        import homeassistant.external.pywemo.pywemo as pywemo
     except ImportError:
-        logger.exception(("Failed to import ouimeaux. "
-                          "Did you maybe not install the 'ouimeaux' "
-                          "dependency?"))
+        pass
 
         return False
 
-    env = wemo_env.Environment()
+    logger.info("Scanning for WeMo devices")
+    devices = pywemo.discover_devices()
 
-    try:
-        env.start()
-    except socket.error:
-        # If the socket is already in use
-        logger.exception("Error starting WeMo environment")
-        return False
+    is_switch = lambda switch: isinstance(switch, pywemo.Switch)
 
-    env.discover(5)
+    switches = [device for device in devices if is_switch(device)]
 
-    if len(env.list_switches()) == 0:
+    if len(switches) == 0:
         logger.error("No WeMo switches found")
         return False
 
@@ -88,7 +80,7 @@ def setup(bus, statemachine):
         """ Update the state of specified WeMo device. """
 
         # We currently only support switches
-        if not isinstance(device, wemo_switch.Switch):
+        if not is_switch(device):
             return
 
         try:
@@ -107,7 +99,7 @@ def setup(bus, statemachine):
 
         state_attr = {ATTR_FRIENDLY_NAME: device.name}
 
-        if isinstance(device, wemo_insight.Insight):
+        if isinstance(device, pywemo.Insight):
             pass
             # Should work but doesn't..
             #state_attr[ATTR_TODAY_KWH] = device.today_kwh
@@ -129,7 +121,7 @@ def setup(bus, statemachine):
             logger.info("Updating WeMo status")
             _update_wemos_state.last_updated = datetime.now()
 
-            for device in env:
+            for device in switches:
                 _update_wemo_state(device)
 
     _update_wemos_state(None, True)
