@@ -388,7 +388,7 @@ class NetgearDeviceScanner(object):
         self.last_results = []
 
         try:
-            import homeassistant.external.pynetgear as pynetgear
+            import homeassistant.external.pynetgear.pynetgear as pynetgear
         except ImportError:
             self.logger.exception(
                 ("Netgear:Failed to import pynetgear. "

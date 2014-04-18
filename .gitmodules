@@ -4,3 +4,6 @@
 [submodule "homeassistant/external/pynetgear"]
 	path = homeassistant/external/pynetgear
 	url = https://github.com/balloob/pynetgear.git
+[submodule "homeassistant/external/pywemo"]
+	path = homeassistant/external/pywemo
+	url = https://github.com/balloob/pywemo.git
