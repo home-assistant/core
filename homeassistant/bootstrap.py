@@ -83,6 +83,16 @@ def from_config_file(config_path):
                 get_opt('device_tracker.netgear', 'username'),
                 get_opt('device_tracker.netgear', 'password'))
 
+        elif has_section('device_tracker.luci'):
+            device_tracker = load_module('device_tracker')
+
+            dev_scan_name = "Luci"
+
+            dev_scan = device_tracker.LuciDeviceScanner(
+                get_opt('device_tracker.luci', 'host'),
+                get_opt('device_tracker.luci', 'username'),
+                get_opt('device_tracker.luci', 'password'))
+
     except configparser.NoOptionError:
         # If one of the options didn't exist
         logger.exception(("Error initializing {}DeviceScanner, "

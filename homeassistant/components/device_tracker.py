@@ -456,3 +456,151 @@ class NetgearDeviceScanner(object):
 
             else:
                 return
+
+class LuciDeviceScanner(object):
+    """ This class queries a wireless router running OpenWrt firmware
+    for connected devices. Adapted from Tomato scanner.
+
+    # opkg install luci-mod-rpc
+    for this to work on the router.
+
+    The API is described here:
+    http://luci.subsignal.org/trac/wiki/Documentation/JsonRpcHowTo
+
+    (Currently, we do only wifi iwscan, and no DHCP lease access.)
+    """
+
+    def __init__(self, host, username, password):
+        self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
+
+        self.logger = logging.getLogger(__name__)
+        self.lock = threading.Lock()
+
+        self.date_updated = None
+        self.last_results = {}
+
+        self.token = self.get_token(host, username, password)
+        self.host = host
+
+        self.mac2name = None
+        self.success_init = self.token
+
+    def get_token(self, host, username, password):
+        data = json.dumps({'method': 'login',
+                           'params': [username, password]})
+        try:
+            r = requests.post('http://{}/cgi-bin/luci/rpc/auth'.format(host), data=data, timeout=3)
+            if r.status_code == 200:
+                token = r.json()['result']
+                self.logger.info('Authenticated')
+                return token
+            elif r.status_code == 401:
+                # Authentication error
+                self.logger.exception(
+                    "Failed to authenticate, "
+                    "please check your username and password")
+                return
+            else:
+                self.logger.error("Invalid response: %s" % r)
+        except requests.exceptions.Timeout:
+            self.logger.exception("Connection to the router timed out")
+        except ValueError:
+            # If json decoder could not parse the response
+            self.logger.exception("Failed to parse response from router")
+
+    def scan_devices(self):
+        """ Scans for new devices and return a
+            list containing found device ids. """
+
+        self._update_info()
+
+        return self.last_results
+
+    def get_device_name(self, device):
+        """ Returns the name of the given device or None if we don't know. """
+
+        with self.lock:
+            if self.mac2name is None:
+                try:
+                    data = json.dumps({'method': 'get_all',
+                                       'params': ['dhcp']})
+
+                    r = requests.post('http://{}/cgi-bin/luci/rpc/uci'.format(self.host), params={'auth': self.token}, data=data, timeout=3)
+
+                    # Calling and parsing the Luci api here. We only need the
+                    # wldev and dhcpd_lease values. For API description see:
+                    # http://paulusschoutsen.nl/
+                    #   blog/2013/10/tomato-api-documentation/
+                    if r.status_code == 200:
+                        self.mac2name = dict(map(lambda x:(x['mac'], x['name']),
+                                                 filter(lambda x:x['.type'] == 'host' and 'mac' in x and 'name' in x,
+                                                        r.json()['result'].values())))
+                        # Passthrough
+                    else:
+                        self.logger.error("Invalid response: %s" % r)
+                        return
+
+                except requests.exceptions.Timeout:
+                    # We get this if we could not connect to the router or
+                    # an invalid http_id was supplied
+                    self.logger.exception(
+                        "Connection to the router timed out")
+                    return
+
+                except ValueError:
+                    # If json decoder could not parse the response
+                    self.logger.exception(
+                        "Failed to parse response from router")
+
+                    return
+            return self.mac2name.get(device, None)
+
+    def _update_info(self):
+        """ Ensures the information from the Luci router is up to date.
+            Returns boolean if scanning successful. """
+        if not self.success_init:
+            return False
+        with self.lock:
+
+            # if date_updated is None or the date is too old we scan for new data
+            if (not self.date_updated or datetime.now() - self.date_updated >
+               MIN_TIME_BETWEEN_SCANS):
+
+                self.logger.info("Checking ARP")
+
+                try:
+                    data = json.dumps({'method': 'net.arptable',
+                                       'params': []})
+
+                    r = requests.post('http://{}/cgi-bin/luci/rpc/sys'.format(self.host), params={'auth': self.token}, data=data, timeout=3)
+
+                    # Calling and parsing the Luci api here. We only need the
+                    # wldev and dhcpd_lease values. For API description see:
+                    # http://paulusschoutsen.nl/
+                    #   blog/2013/10/tomato-api-documentation/
+                    if r.status_code == 200:
+                        self.last_results = list(map(lambda x:x['HW address'], r.json()['result']))
+                        self.date_updated = datetime.now()
+                        return True
+
+                    else:
+                        self.logger.error("Invalid response: %s" % r)
+                        return False
+
+                except requests.exceptions.Timeout:
+                    # We get this if we could not connect to the router or
+                    # an invalid http_id was supplied
+                    self.logger.exception(
+                        "Connection to the router timed out")
+
+                    return False
+
+                except ValueError:
+                    # If json decoder could not parse the response
+                    self.logger.exception(
+                        "Failed to parse response from router")
+
+                    return False
+
+            return True
+
