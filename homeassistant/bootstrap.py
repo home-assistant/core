@@ -54,6 +54,13 @@ def from_config_file(config_path):
         except (configparser.NoSectionError, configparser.NoOptionError):
             return default
 
+    def get_hosts(section):
+        """ Helper method to retrieve hosts from config. """
+        if has_opt(section, "hosts"):
+            return get_opt(section, "hosts").split(",")
+        else:
+            return None
+
     # Device scanner
     dev_scan = None
 
@@ -122,7 +129,9 @@ def from_config_file(config_path):
     if has_section("chromecast"):
         chromecast = load_module('chromecast')
 
-        chromecast_started = chromecast.setup(bus, statemachine)
+        hosts = get_hosts("chromecast")
+
+        chromecast_started = chromecast.setup(bus, statemachine, hosts)
 
         add_status("Chromecast", chromecast_started)
     else:

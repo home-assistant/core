@@ -20,6 +20,8 @@ username=admin
 password=PASSWORD
 
 [chromecast]
+# Optional: hard code the hosts to find chromecasts instead of scanning the network
+# hosts=192.168.1.9,192.168.1.12
 
 [wemo]
 

@@ -88,7 +88,7 @@ def media_prev_track(bus, entity_id=None):
 
 
 # pylint: disable=too-many-locals, too-many-branches
-def setup(bus, statemachine):
+def setup(bus, statemachine, hosts=None):
     """ Listen for chromecast events. """
     logger = logging.getLogger(__name__)
 
@@ -101,8 +101,10 @@ def setup(bus, statemachine):
 
         return False
 
-    logger.info("Scanning for Chromecasts")
-    hosts = pychromecast.discover_chromecasts()
+    # If no hosts given, scan for chromecasts
+    if not hosts:
+        logger.info("Scanning for Chromecasts")
+        hosts = pychromecast.discover_chromecasts()
 
     casts = {}
 
