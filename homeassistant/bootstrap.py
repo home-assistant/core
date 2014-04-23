@@ -134,6 +134,13 @@ def from_config_file(config_path):
 
         add_status("WeMo", wemo.setup(bus, statemachine))
 
+    # Process tracking
+    if has_section("process"):
+        process = load_module('process')
+
+        kwargs = dict(config.items('process'))
+        add_status("process", process.setup(bus, statemachine, **kwargs))
+
     # Light control
     if has_section("light.hue"):
         light = load_module('light')
