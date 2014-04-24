@@ -150,8 +150,8 @@ def from_config_file(config_path, enable_logging=True):
     if has_section("process"):
         process = load_module('process')
 
-        kwargs = dict(config.items('process'))
-        add_status("process", process.setup(bus, statemachine, **kwargs))
+        processes = dict(config.items('process'))
+        add_status("process", process.setup(hass, processes))
 
     # Light control
     if has_section("light.hue"):
