@@ -24,6 +24,8 @@ password=PASSWORD
 # hosts=192.168.1.9,192.168.1.12
 
 [wemo]
+# Optional: hard code the hosts to find WeMos instead of scanning the network
+# hosts=192.168.1.9,192.168.1.12
 
 [downloader]
 download_dir=downloads
@@ -34,8 +36,8 @@ download_dir=downloads
 # Example how you can specify which light profile to use when turning lights on
 # light_profile=relax
 
-# A comma seperated list of states that have to be tracked
-# As a single group
+# A comma seperated list of states that have to be tracked as a single group
+# Grouped states should share the same states (ON/OFF or HOME/NOT_HOME)
 [group]
 living_room=light.Bowl,light.Ceiling,light.TV_back_light
 bedroom=light.Bed_light

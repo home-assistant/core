@@ -28,8 +28,8 @@ ATTR_FRIENDLY_NAME = "friendly_name"
 
 STATE_ON = 'on'
 STATE_OFF = 'off'
-STATE_NOT_HOME = 'not_home'
 STATE_HOME = 'home'
+STATE_NOT_HOME = 'not_home'
 
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
@@ -38,35 +38,25 @@ SERVICE_VOLUME_UP = "volume_up"
 SERVICE_VOLUME_DOWN = "volume_down"
 SERVICE_VOLUME_MUTE = "volume_mute"
 SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
+SERVICE_MEDIA_PLAY = "media_play"
+SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
 
-_LOADED_COMP = {}
-
 
 def _get_component(component):
-    """ Returns requested component. Imports it if necessary. """
+    """ Returns requested component. """
 
-    comps = _LOADED_COMP
-
-    # See if we have the module locally cached, else import it
     try:
-        return comps[component]
+        return importlib.import_module(
+            'homeassistant.components.{}'.format(component))
 
-    except KeyError:
-        # If comps[component] does not exist, import module
-        try:
-            comps[component] = importlib.import_module(
-                'homeassistant.components.'+component)
-
-        except ImportError:
-            # If we got a bogus component the input will fail
-            comps[component] = None
-
-        return comps[component]
+    except ImportError:
+        # If we got a bogus component the input will fail
+        return None
 
 
-def is_on(statemachine, entity_id=None):
+def is_on(hass, entity_id=None):
     """ Loads up the module to call the is_on method.
     If there is no entity id given we will check all. """
     if entity_id:
@@ -74,7 +64,7 @@ def is_on(statemachine, entity_id=None):
 
         entity_ids = group.expand_entity_ids([entity_id])
     else:
-        entity_ids = statemachine.entity_ids
+        entity_ids = hass.states.entity_ids
 
     for entity_id in entity_ids:
         domain = util.split_entity_id(entity_id)[0]
@@ -82,7 +72,7 @@ def is_on(statemachine, entity_id=None):
         module = _get_component(domain)
 
         try:
-            if module.is_on(statemachine, entity_id):
+            if module.is_on(hass, entity_id):
                 return True
 
         except AttributeError:
@@ -92,17 +82,17 @@ def is_on(statemachine, entity_id=None):
     return False
 
 
-def turn_on(bus, **service_data):
+def turn_on(hass, **service_data):
     """ Turns specified entity on if possible. """
-    bus.call_service(ha.DOMAIN, SERVICE_TURN_ON, service_data)
+    hass.call_service(ha.DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-def turn_off(bus, **service_data):
+def turn_off(hass, **service_data):
     """ Turns specified entity off. """
-    bus.call_service(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
+    hass.call_service(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
 
 
-def extract_entity_ids(statemachine, service):
+def extract_entity_ids(hass, service):
     """
     Helper method to extract a list of entity ids from a service call.
     Will convert group entity ids to the entity ids it represents.
@@ -121,19 +111,19 @@ def extract_entity_ids(statemachine, service):
 
         entity_ids.extend(
             ent_id for ent_id
-            in group.expand_entity_ids(statemachine, ent_ids)
+            in group.expand_entity_ids(hass, ent_ids)
             if ent_id not in entity_ids)
 
     return entity_ids
 
 
-def setup(bus, statemachine):
+def setup(hass):
     """ Setup general services related to homeassistant. """
 
     def handle_turn_service(service):
         """ Method to handle calls to homeassistant.turn_on/off. """
 
-        entity_ids = extract_entity_ids(statemachine, service)
+        entity_ids = extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id
         if not entity_ids:
@@ -150,13 +140,9 @@ def setup(bus, statemachine):
             # ent_ids is a generator, convert it to a list.
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
-            try:
-                bus.call_service(domain, service.service, data)
-            except ha.ServiceDoesNotExistError:
-                # turn_on service does not exist
-                pass
+            hass.call_service(domain, service.service, data)
 
-    bus.register_service(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
-    bus.register_service(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
+    hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
+    hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
 
     return True

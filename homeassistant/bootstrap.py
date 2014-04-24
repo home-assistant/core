@@ -1,31 +1,38 @@
 """
 Provides methods to bootstrap a home assistant instance.
+
+Each method will return a tuple (bus, statemachine).
+
+After bootstrapping you can add your own components or
+start by calling homeassistant.start_home_assistant(bus)
 """
 
 import importlib
 import configparser
 import logging
 
-import homeassistant as ha
+import homeassistant
 import homeassistant.components as components
 
 
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
-def from_config_file(config_path):
+def from_config_file(config_path, enable_logging=True):
     """ Starts home assistant with all possible functionality
-        based on a config file. """
+        based on a config file.
+        Will return a tuple (bus, statemachine). """
 
-    # Setup the logging for home assistant.
-    logging.basicConfig(level=logging.INFO)
+    if enable_logging:
+        # Setup the logging for home assistant.
+        logging.basicConfig(level=logging.INFO)
 
-    # Log errors to a file
-    err_handler = logging.FileHandler("home-assistant.log",
-                                      mode='w', delay=True)
-    err_handler.setLevel(logging.ERROR)
-    err_handler.setFormatter(
-        logging.Formatter('%(asctime)s %(name)s: %(message)s',
-                          datefmt='%H:%M %d-%m-%y'))
-    logging.getLogger('').addHandler(err_handler)
+        # Log errors to a file
+        err_handler = logging.FileHandler("home-assistant.log",
+                                          mode='w', delay=True)
+        err_handler.setLevel(logging.ERROR)
+        err_handler.setFormatter(
+            logging.Formatter('%(asctime)s %(name)s: %(message)s',
+                              datefmt='%H:%M %d-%m-%y'))
+        logging.getLogger('').addHandler(err_handler)
 
     # Start the actual bootstrapping
     logger = logging.getLogger(__name__)
@@ -37,8 +44,7 @@ def from_config_file(config_path):
     config.read(config_path)
 
     # Init core
-    bus = ha.Bus()
-    statemachine = ha.StateMachine(bus)
+    hass = homeassistant.HomeAssistant()
 
     has_opt = config.has_option
     get_opt = config.get
@@ -107,7 +113,7 @@ def from_config_file(config_path):
 
     # Device Tracker
     if dev_scan:
-        device_tracker.DeviceTracker(bus, statemachine, dev_scan)
+        device_tracker.DeviceTracker(hass, dev_scan)
 
         add_status("Device Tracker", True)
 
@@ -117,11 +123,10 @@ def from_config_file(config_path):
 
         sun = load_module('sun')
 
-        add_status("Weather - Ephem",
-                   sun.setup(
-                       bus, statemachine,
-                       get_opt("common", "latitude"),
-                       get_opt("common", "longitude")))
+        add_status("Sun",
+                   sun.setup(hass,
+                             get_opt("common", "latitude"),
+                             get_opt("common", "longitude")))
     else:
         sun = None
 
@@ -131,17 +136,15 @@ def from_config_file(config_path):
 
         hosts = get_hosts("chromecast")
 
-        chromecast_started = chromecast.setup(bus, statemachine, hosts)
-
-        add_status("Chromecast", chromecast_started)
-    else:
-        chromecast_started = False
+        add_status("Chromecast", chromecast.setup(hass, hosts))
 
     # WeMo
     if has_section("wemo"):
         wemo = load_module('wemo')
 
-        add_status("WeMo", wemo.setup(bus, statemachine))
+        hosts = get_hosts("wemo")
+
+        add_status("WeMo", wemo.setup(hass, hosts))
 
     # Light control
     if has_section("light.hue"):
@@ -152,7 +155,7 @@ def from_config_file(config_path):
         add_status("Light - Hue", light_control.success_init)
 
         if light_control.success_init:
-            light.setup(bus, statemachine, light_control)
+            light.setup(hass, light_control)
         else:
             light_control = None
 
@@ -163,23 +166,22 @@ def from_config_file(config_path):
         downloader = load_module('downloader')
 
         add_status("Downloader", downloader.setup(
-            bus, get_opt("downloader", "download_dir")))
+            hass, get_opt("downloader", "download_dir")))
 
-    add_status("Core components", components.setup(bus, statemachine))
+    add_status("Core components", components.setup(hass))
 
     if has_section('browser'):
-        add_status("Browser", load_module('browser').setup(bus))
+        add_status("Browser", load_module('browser').setup(hass))
 
     if has_section('keyboard'):
-        add_status("Keyboard", load_module('keyboard').setup(bus))
+        add_status("Keyboard", load_module('keyboard').setup(hass))
 
     # Init HTTP interface
     if has_opt("httpinterface", "api_password"):
         httpinterface = load_module('httpinterface')
 
         httpinterface.HTTPInterface(
-            bus, statemachine,
-            get_opt("httpinterface", "api_password"))
+            hass, get_opt("httpinterface", "api_password"))
 
         add_status("HTTPInterface", True)
 
@@ -189,8 +191,7 @@ def from_config_file(config_path):
 
         for name, entity_ids in config.items("group"):
             add_status("Group - {}".format(name),
-                       group.setup(bus, statemachine, name,
-                                   entity_ids.split(",")))
+                       group.setup(hass, name, entity_ids.split(",")))
 
     # Light trigger
     if light_control and sun:
@@ -201,7 +202,7 @@ def from_config_file(config_path):
                                      "light_profile")
 
         add_status("Device Sun Light Trigger",
-                   device_sun_light_trigger.setup(bus, statemachine,
+                   device_sun_light_trigger.setup(hass,
                                                   light_group, light_profile))
 
     for component, success_init in statusses:
@@ -209,4 +210,4 @@ def from_config_file(config_path):
 
         logger.info("{}: {}".format(component, status))
 
-    ha.start_home_assistant(bus)
+    return hass

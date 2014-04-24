@@ -6,7 +6,6 @@ Provides functionality to interact with Chromecasts.
 """
 import logging
 
-import homeassistant as ha
 import homeassistant.util as util
 import homeassistant.components as components
 
@@ -34,61 +33,74 @@ MEDIA_STATE_PLAYING = 'playing'
 MEDIA_STATE_STOPPED = 'stopped'
 
 
-def is_on(statemachine, entity_id=None):
+def is_on(hass, entity_id=None):
     """ Returns true if specified ChromeCast entity_id is on.
     Will check all chromecasts if no entity_id specified. """
 
-    entity_ids = [entity_id] if entity_id \
-        else util.filter_entity_ids(statemachine.entity_ids, DOMAIN)
+    entity_ids = [entity_id] if entity_id else hass.get_entity_ids(DOMAIN)
 
-    return any(not statemachine.is_state(entity_id, STATE_NO_APP)
+    return any(not hass.states.is_state(entity_id, STATE_NO_APP)
                for entity_id in entity_ids)
 
 
-def turn_off(bus, entity_id=None):
+def turn_off(hass, entity_id=None):
     """ Will turn off specified Chromecast or all. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    bus.call_service(DOMAIN, components.SERVICE_TURN_OFF, data)
+    hass.call_service(DOMAIN, components.SERVICE_TURN_OFF, data)
 
 
-def volume_up(bus, entity_id=None):
+def volume_up(hass, entity_id=None):
     """ Send the chromecast the command for volume up. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    bus.call_service(DOMAIN, components.SERVICE_VOLUME_UP, data)
+    hass.call_service(DOMAIN, components.SERVICE_VOLUME_UP, data)
 
 
-def volume_down(bus, entity_id=None):
+def volume_down(hass, entity_id=None):
     """ Send the chromecast the command for volume down. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    bus.call_service(DOMAIN, components.SERVICE_VOLUME_DOWN, data)
+    hass.call_service(DOMAIN, components.SERVICE_VOLUME_DOWN, data)
 
 
-def media_play_pause(bus, entity_id=None):
+def media_play_pause(hass, entity_id=None):
     """ Send the chromecast the command for play/pause. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    bus.call_service(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE, data)
+    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE, data)
 
 
-def media_next_track(bus, entity_id=None):
+def media_play(hass, entity_id=None):
+    """ Send the chromecast the command for play/pause. """
+    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PLAY, data)
+
+
+def media_pause(hass, entity_id=None):
+    """ Send the chromecast the command for play/pause. """
+    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PAUSE, data)
+
+
+def media_next_track(hass, entity_id=None):
     """ Send the chromecast the command for next track. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    bus.call_service(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK, data)
+    hass.call_service(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK, data)
 
 
-def media_prev_track(bus, entity_id=None):
+def media_prev_track(hass, entity_id=None):
     """ Send the chromecast the command for prev track. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    bus.call_service(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK, data)
+    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK, data)
 
 
 # pylint: disable=too-many-locals, too-many-branches
-def setup(bus, statemachine, hosts=None):
+def setup(hass, hosts=None):
     """ Listen for chromecast events. """
     logger = logging.getLogger(__name__)
 
@@ -170,7 +182,7 @@ def setup(bus, statemachine, hosts=None):
         else:
             state = STATE_NO_APP
 
-        statemachine.set_state(entity_id, state, state_attr)
+        hass.states.set(entity_id, state, state_attr)
 
     def update_chromecast_states(time):  # pylint: disable=unused-argument
         """ Updates all chromecast states. """
@@ -181,7 +193,7 @@ def setup(bus, statemachine, hosts=None):
 
     def _service_to_entities(service):
         """ Helper method to get entities from service. """
-        entity_ids = components.extract_entity_ids(statemachine, service)
+        entity_ids = components.extract_entity_ids(hass, service)
 
         if entity_ids:
             for entity_id in entity_ids:
@@ -225,6 +237,22 @@ def setup(bus, statemachine, hosts=None):
             if ramp:
                 ramp.playpause()
 
+    def media_play_service(service):
+        """ Service to send the chromecast the command for play/pause. """
+        for _, cast in _service_to_entities(service):
+            ramp = cast.get_protocol(pychromecast.PROTOCOL_RAMP)
+
+            if ramp and ramp.state == pychromecast.RAMP_STATE_STOPPED:
+                ramp.playpause()
+
+    def media_pause_service(service):
+        """ Service to send the chromecast the command for play/pause. """
+        for _, cast in _service_to_entities(service):
+            ramp = cast.get_protocol(pychromecast.PROTOCOL_RAMP)
+
+            if ramp and ramp.state == pychromecast.RAMP_STATE_PLAYING:
+                ramp.playpause()
+
     def media_next_track_service(service):
         """ Service to send the chromecast the command for next track. """
         for entity_id, cast in _service_to_entities(service):
@@ -241,35 +269,42 @@ def setup(bus, statemachine, hosts=None):
                 pychromecast.play_youtube_video(video_id, cast.host)
                 update_chromecast_state(entity_id, cast)
 
-    ha.track_time_change(bus, update_chromecast_states)
+    hass.track_time_change(update_chromecast_states)
 
-    bus.register_service(DOMAIN, components.SERVICE_TURN_OFF,
-                         turn_off_service)
+    hass.services.register(DOMAIN, components.SERVICE_TURN_OFF,
+                           turn_off_service)
 
-    bus.register_service(DOMAIN, components.SERVICE_VOLUME_UP,
-                         volume_up_service)
+    hass.services.register(DOMAIN, components.SERVICE_VOLUME_UP,
+                           volume_up_service)
 
-    bus.register_service(DOMAIN, components.SERVICE_VOLUME_DOWN,
-                         volume_down_service)
+    hass.services.register(DOMAIN, components.SERVICE_VOLUME_DOWN,
+                           volume_down_service)
 
-    bus.register_service(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE,
-                         media_play_pause_service)
+    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE,
+                           media_play_pause_service)
 
-    bus.register_service(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK,
-                         media_next_track_service)
+    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PLAY,
+                           media_play_service)
 
-    bus.register_service(DOMAIN, "start_fireplace",
-                         lambda service:
-                         play_youtube_video_service(service, "eyU3bRy2x44"))
+    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PAUSE,
+                           media_pause_service)
 
-    bus.register_service(DOMAIN, "start_epic_sax",
-                         lambda service:
-                         play_youtube_video_service(service, "kxopViU98Xo"))
+    hass.services.register(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK,
+                           media_next_track_service)
 
-    bus.register_service(DOMAIN, SERVICE_YOUTUBE_VIDEO,
-                         lambda service:
-                         play_youtube_video_service(service,
-                                                    service.data.get('video')))
+    hass.services.register(DOMAIN, "start_fireplace",
+                           lambda service:
+                           play_youtube_video_service(service, "eyU3bRy2x44"))
+
+    hass.services.register(DOMAIN, "start_epic_sax",
+                           lambda service:
+                           play_youtube_video_service(service, "kxopViU98Xo"))
+
+    hass.services.register(DOMAIN, SERVICE_YOUTUBE_VIDEO,
+                           lambda service:
+                           play_youtube_video_service(service,
+                                                      service.data.get(
+                                                          'video')))
 
     update_chromecast_states(None)
 

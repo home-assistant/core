@@ -8,8 +8,6 @@ the state of the sun and devices.
 import logging
 from datetime import datetime, timedelta
 
-import homeassistant as ha
-import homeassistant.util as util
 import homeassistant.components as components
 from . import light, sun, device_tracker, group
 
@@ -21,7 +19,7 @@ LIGHT_PROFILE = 'relax'
 
 
 # pylint: disable=too-many-branches
-def setup(bus, statemachine, light_group=None, light_profile=None):
+def setup(hass, light_group=None, light_profile=None):
     """ Triggers to turn lights on or off based on device precense. """
 
     light_group = light_group or light.GROUP_NAME_ALL_LIGHTS
@@ -29,8 +27,7 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
 
     logger = logging.getLogger(__name__)
 
-    device_entity_ids = util.filter_entity_ids(statemachine.entity_ids,
-                                               device_tracker.DOMAIN)
+    device_entity_ids = hass.get_entity_ids(device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("No devices found to track")
@@ -38,8 +35,7 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
         return False
 
     # Get the light IDs from the specified group
-    light_ids = util.filter_entity_ids(
-        group.get_entity_ids(statemachine, light_group), light.DOMAIN)
+    light_ids = group.get_entity_ids(hass, light_group, light.DOMAIN)
 
     if not light_ids:
         logger.error("No lights found to turn on ")
@@ -49,7 +45,7 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
     def calc_time_for_light_when_sunset():
         """ Calculates the time when to start fading lights in when sun sets.
         Returns None if no next_setting data available. """
-        next_setting = sun.next_setting(statemachine)
+        next_setting = sun.next_setting(hass)
 
         if next_setting:
             return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
@@ -65,10 +61,10 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
         def turn_light_on_before_sunset(light_id):
             """ Helper function to turn on lights slowly if there
                 are devices home and the light is not on yet. """
-            if (device_tracker.is_on(statemachine) and
-               not light.is_on(statemachine, light_id)):
+            if (device_tracker.is_on(hass) and
+               not light.is_on(hass, light_id)):
 
-                light.turn_on(bus, light_id,
+                light.turn_on(hass, light_id,
                               transition=LIGHT_TRANSITION_TIME.seconds,
                               profile=light_profile)
 
@@ -82,26 +78,25 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
 
         if start_point:
             for index, light_id in enumerate(light_ids):
-                ha.track_point_in_time(bus, turn_on(light_id),
-                                       (start_point +
-                                        index * LIGHT_TRANSITION_TIME))
+                hass.track_point_in_time(turn_on(light_id),
+                                         (start_point +
+                                          index * LIGHT_TRANSITION_TIME))
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
-    ha.track_state_change(bus, sun.ENTITY_ID,
-                          schedule_light_on_sun_rise,
-                          sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
+    hass.track_state_change(sun.ENTITY_ID, schedule_light_on_sun_rise,
+                            sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
 
     # If the sun is already above horizon
     # schedule the time-based pre-sun set event
-    if sun.is_on(statemachine):
+    if sun.is_on(hass):
         schedule_light_on_sun_rise(None, None, None)
 
     def check_light_on_dev_state_change(entity, old_state, new_state):
         """ Function to handle tracked device state changes. """
-        lights_are_on = group.is_on(statemachine, light_group)
+        lights_are_on = group.is_on(hass, light_group)
 
-        light_needed = not (lights_are_on or sun.is_on(statemachine))
+        light_needed = not (lights_are_on or sun.is_on(hass))
 
         # Specific device came home ?
         if (entity != device_tracker.ENTITY_ID_ALL_DEVICES and
@@ -118,7 +113,7 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
                     "Home coming event for {}. Turning lights on".
                     format(entity))
 
-                light.turn_on(bus, light_ids,
+                light.turn_on(hass, light_ids,
                               profile=light_profile)
 
             # Are we in the time span were we would turn on the lights
@@ -126,14 +121,14 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
             # Check this by seeing if current time is later then the point
             # in time when we would start putting the lights on.
             elif (start_point and
-                  start_point < now < sun.next_setting(statemachine)):
+                  start_point < now < sun.next_setting(hass)):
 
                 # Check for every light if it would be on if someone was home
                 # when the fading in started and turn it on if so
                 for index, light_id in enumerate(light_ids):
 
                     if now > start_point + index * LIGHT_TRANSITION_TIME:
-                        light.turn_on(bus, light_id)
+                        light.turn_on(hass, light_id)
 
                     else:
                         # If this light didn't happen to be turned on yet so
@@ -147,16 +142,17 @@ def setup(bus, statemachine, light_group=None, light_profile=None):
             logger.info(
                 "Everyone has left but there are devices on. Turning them off")
 
-            light.turn_off(bus)
+            light.turn_off(hass)
 
     # Track home coming of each seperate device
     for entity in device_entity_ids:
-        ha.track_state_change(bus, entity, check_light_on_dev_state_change,
-                              components.STATE_NOT_HOME, components.STATE_HOME)
+        hass.track_state_change(entity, check_light_on_dev_state_change,
+                                components.STATE_NOT_HOME,
+                                components.STATE_HOME)
 
     # Track when all devices are gone to shut down lights
-    ha.track_state_change(bus, device_tracker.ENTITY_ID_ALL_DEVICES,
-                          check_light_on_dev_state_change,
-                          components.STATE_HOME, components.STATE_NOT_HOME)
+    hass.track_state_change(device_tracker.ENTITY_ID_ALL_DEVICES,
+                            check_light_on_dev_state_change,
+                            components.STATE_HOME, components.STATE_NOT_HOME)
 
     return True

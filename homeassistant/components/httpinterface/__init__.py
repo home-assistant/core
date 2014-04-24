@@ -107,8 +107,7 @@ class HTTPInterface(threading.Thread):
     """ Provides an HTTP interface for Home Assistant. """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, bus, statemachine, api_password,
-                 server_port=None, server_host=None):
+    def __init__(self, hass, api_password, server_port=None, server_host=None):
         threading.Thread.__init__(self)
 
         self.daemon = True
@@ -122,12 +121,11 @@ class HTTPInterface(threading.Thread):
 
         self.server.flash_message = None
         self.server.logger = logging.getLogger(__name__)
-        self.server.bus = bus
-        self.server.statemachine = statemachine
+        self.server.hass = hass
         self.server.api_password = api_password
 
-        ha.listen_once_event(bus, ha.EVENT_HOMEASSISTANT_START,
-                             lambda event: self.start())
+        hass.listen_once_event(ha.EVENT_HOMEASSISTANT_START,
+                               lambda event: self.start())
 
     def run(self):
         """ Start the HTTP interface. """
@@ -330,10 +328,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                "</tr>").format(self.server.api_password))
 
         for entity_id in \
-            sorted(self.server.statemachine.entity_ids,
+            sorted(self.server.hass.states.entity_ids,
                    key=lambda key: key.lower()):
 
-            state = self.server.statemachine.get_state(entity_id)
+            state = self.server.hass.states.get(entity_id)
 
             attributes = "<br>".join(
                 ["{}: {}".format(attr, state.attributes[attr])
@@ -372,7 +370,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<tr><th>Domain</th><th>Service</th></tr>"))
 
         for domain, services in sorted(
-                self.server.bus.services.items()):
+                self.server.hass.services.services.items()):
             write("<tr><td>{}</td><td>{}</td></tr>".format(
                 domain, ", ".join(services)))
 
@@ -435,7 +433,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<tr><th>Event</th><th>Listeners</th></tr>"))
 
         for event, listener_count in sorted(
-                self.server.bus.event_listeners.items()):
+                self.server.hass.bus.listeners.items()):
             write("<tr><td>{}</td><td>{}</td></tr>".format(
                 event, listener_count))
 
@@ -505,13 +503,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 attributes = None
 
             # Write state
-            self.server.statemachine.set_state(entity_id,
-                                               new_state,
-                                               attributes)
+            self.server.hass.states.set(entity_id, new_state, attributes)
 
             # Return state if json, else redirect to main page
             if self.use_json:
-                state = self.server.statemachine.get_state(entity_id)
+                state = self.server.hass.states.get(entity_id)
 
                 self._write_json(state.as_dict(),
                                  status_code=HTTP_CREATED,
@@ -552,7 +548,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # Happens if key 'event_data' does not exist
                 event_data = None
 
-            self.server.bus.fire_event(event_type, event_data)
+            self.server.hass.bus.fire(event_type, event_data)
 
             self._message("Event {} fired.".format(event_type))
 
@@ -587,13 +583,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # Happens if key 'service_data' does not exist
                 service_data = None
 
-            self.server.bus.call_service(domain, service, service_data)
+            self.server.hass.call_service(domain, service, service_data)
 
             self._message("Service {}/{} called.".format(domain, service))
-
-        except ha.ServiceDoesNotExistError:
-            # If the service does not exist
-            self._message('Service does not exist', HTTP_BAD_REQUEST)
 
         except KeyError:
             # Occurs if domain or service does not exist in data
@@ -608,14 +600,14 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _handle_get_api_states(self, path_match, data):
         """ Returns the entitie ids which state are being tracked. """
         self._write_json(
-            {'entity_ids': list(self.server.statemachine.entity_ids)})
+            {'entity_ids': list(self.server.hass.states.entity_ids)})
 
     # pylint: disable=unused-argument
     def _handle_get_api_states_entity(self, path_match, data):
         """ Returns the state of a specific entity. """
         entity_id = path_match.group('entity_id')
 
-        state = self.server.statemachine.get_state(entity_id)
+        state = self.server.hass.states.get(entity_id)
 
         try:
             self._write_json(state.as_dict())
@@ -625,11 +617,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _handle_get_api_events(self, path_match, data):
         """ Handles getting overview of event listeners. """
-        self._write_json({'event_listeners': self.server.bus.event_listeners})
+        self._write_json({'event_listeners': self.server.hass.bus.listeners})
 
     def _handle_get_api_services(self, path_match, data):
         """ Handles getting overview of services. """
-        self._write_json({'services': self.server.bus.services})
+        self._write_json({'services': self.server.hass.services.services})
 
     def _handle_get_static(self, path_match, data):
         """ Returns a static file. """
