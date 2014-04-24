@@ -7,7 +7,6 @@ Provides functionality to group devices that can be turned on or off.
 
 import logging
 
-import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.components import (STATE_ON, STATE_OFF,
                                       STATE_HOME, STATE_NOT_HOME,
@@ -32,9 +31,9 @@ def _get_group_type(state):
     return None
 
 
-def is_on(statemachine, entity_id):
+def is_on(hass, entity_id):
     """ Returns if the group state is in its ON-state. """
-    state = statemachine.get_state(entity_id)
+    state = hass.states.get(entity_id)
 
     if state:
         group_type = _get_group_type(state.state)
@@ -45,7 +44,7 @@ def is_on(statemachine, entity_id):
     return False
 
 
-def expand_entity_ids(statemachine, entity_ids):
+def expand_entity_ids(hass, entity_ids):
     """ Returns the given list of entity ids and expands group ids into
         the entity ids it represents if found. """
     found_ids = []
@@ -58,7 +57,7 @@ def expand_entity_ids(statemachine, entity_ids):
             if domain == DOMAIN:
                 found_ids.extend(
                     ent_id for ent_id
-                    in get_entity_ids(statemachine, entity_id)
+                    in get_entity_ids(hass, entity_id)
                     if ent_id not in found_ids)
 
             else:
@@ -72,11 +71,17 @@ def expand_entity_ids(statemachine, entity_ids):
     return found_ids
 
 
-def get_entity_ids(statemachine, entity_id):
+def get_entity_ids(hass, entity_id, domain_filter=None):
     """ Get the entity ids that make up this group. """
     try:
-        return \
-            statemachine.get_state(entity_id).attributes[ATTR_ENTITY_ID]
+        entity_ids = hass.states.get(entity_id).attributes[ATTR_ENTITY_ID]
+
+        if domain_filter:
+            return [entity_id for entity_id in entity_ids
+                    if entity_id.startswith(domain_filter)]
+        else:
+            return entity_ids
+
     except (AttributeError, KeyError):
         # AttributeError if state did not exist
         # KeyError if key did not exist in attributes
@@ -84,9 +89,12 @@ def get_entity_ids(statemachine, entity_id):
 
 
 # pylint: disable=too-many-branches, too-many-locals
-def setup(bus, statemachine, name, entity_ids):
+def setup(hass, name, entity_ids):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
+
+    # Convert entity_ids to a list incase it is an iterable
+    entity_ids = list(entity_ids)
 
     logger = logging.getLogger(__name__)
 
@@ -98,7 +106,7 @@ def setup(bus, statemachine, name, entity_ids):
     group_type, group_on, group_off, group_state = None, None, None, None
 
     for entity_id in entity_ids:
-        state = statemachine.get_state(entity_id)
+        state = hass.states.get(entity_id)
 
         # Try to determine group type if we didn't yet
         if not group_type and state:
@@ -143,7 +151,7 @@ def setup(bus, statemachine, name, entity_ids):
         """ Updates the group state based on a state change by a tracked
             entity. """
 
-        cur_group_state = statemachine.get_state(group_entity_id).state
+        cur_group_state = hass.states.get(group_entity_id).state
 
         # if cur_group_state = OFF and new_state = ON: set ON
         # if cur_group_state = ON and new_state = OFF: research
@@ -151,18 +159,18 @@ def setup(bus, statemachine, name, entity_ids):
 
         if cur_group_state == group_off and new_state.state == group_on:
 
-            statemachine.set_state(group_entity_id, group_on, state_attr)
+            hass.states.set(group_entity_id, group_on, state_attr)
 
         elif cur_group_state == group_on and new_state.state == group_off:
 
             # Check if any of the other states is still on
-            if not any([statemachine.is_state(ent_id, group_on)
+            if not any([hass.states.is_state(ent_id, group_on)
                         for ent_id in entity_ids if entity_id != ent_id]):
-                statemachine.set_state(group_entity_id, group_off, state_attr)
+                hass.states.set(group_entity_id, group_off, state_attr)
 
     for entity_id in entity_ids:
-        ha.track_state_change(bus, entity_id, update_group_state)
+        hass.track_state_change(entity_id, update_group_state)
 
-    statemachine.set_state(group_entity_id, group_state, state_attr)
+    hass.states.set(group_entity_id, group_state, state_attr)
 
     return True

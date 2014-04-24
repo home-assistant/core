@@ -20,7 +20,7 @@ ATTR_SUBDIR = "subdir"
 
 
 # pylint: disable=too-many-branches
-def setup(bus, download_path):
+def setup(hass, download_path):
     """ Listens for download events to download files. """
 
     logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def setup(bus, download_path):
     if not os.path.isdir(download_path):
 
         logger.error(
-            ("Download path {} does not exist. File Downloader not active.").
+            "Download path {} does not exist. File Downloader not active.".
             format(download_path))
 
         return False
@@ -126,7 +126,7 @@ def setup(bus, download_path):
 
         threading.Thread(target=do_download).start()
 
-    bus.register_service(DOMAIN, SERVICE_DOWNLOAD_FILE,
-                         download_file)
+    hass.services.register(DOMAIN, SERVICE_DOWNLOAD_FILE,
+                           download_file)
 
     return True

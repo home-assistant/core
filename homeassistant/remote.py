@@ -61,10 +61,8 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class Bus(object):
-    """ Drop-in replacement for a normal bus that will forward interaction to
-    a remote bus.
-    """
+class EventBus(object):
+    """ Allows to interface with a Home Assistant EventBus via the API. """
 
     def __init__(self, host, api_password, port=None):
         self.logger = logging.getLogger(__name__)
@@ -72,32 +70,7 @@ class Bus(object):
         self._call_api = _setup_call_api(host, port, api_password)
 
     @property
-    def services(self):
-        """ List the available services. """
-        try:
-            req = self._call_api(METHOD_GET, hah.URL_API_SERVICES)
-
-            if req.status_code == 200:
-                data = req.json()
-
-                return data['services']
-
-            else:
-                raise ha.HomeAssistantError(
-                    "Got unexpected result (3): {}.".format(req.text))
-
-        except ValueError:  # If req.json() can't parse the json
-            self.logger.exception("Bus:Got unexpected result")
-            raise ha.HomeAssistantError(
-                "Got unexpected result: {}".format(req.text))
-
-        except KeyError:  # If not all expected keys are in the returned JSON
-            self.logger.exception("Bus:Got unexpected result (2)")
-            raise ha.HomeAssistantError(
-                "Got unexpected result (2): {}".format(req.text))
-
-    @property
-    def event_listeners(self):
+    def listeners(self):
         """ List of events that is being listened for. """
         try:
             req = self._call_api(METHOD_GET, hah.URL_API_EVENTS)
@@ -121,37 +94,7 @@ class Bus(object):
             raise ha.HomeAssistantError(
                 "Got unexpected result (2): {}".format(req.text))
 
-    def call_service(self, domain, service, service_data=None):
-        """ Calls a service. """
-
-        if service_data:
-            data = {'service_data': json.dumps(service_data)}
-        else:
-            data = None
-
-        req = self._call_api(METHOD_POST,
-                             hah.URL_API_SERVICES_SERVICE.format(
-                                 domain, service),
-                             data)
-
-        if req.status_code != 200:
-            error = "Error calling service: {} - {}".format(
-                    req.status_code, req.text)
-
-            self.logger.error("Bus:{}".format(error))
-
-            if req.status_code == 400:
-                raise ha.ServiceDoesNotExistError(error)
-            else:
-                raise ha.HomeAssistantError(error)
-
-    def register_service(self, domain, service, service_callback):
-        """ Not implemented for remote bus.
-
-        Will throw NotImplementedError. """
-        raise NotImplementedError
-
-    def fire_event(self, event_type, event_data=None):
+    def fire(self, event_type, event_data=None):
         """ Fire an event. """
 
         if event_data:
@@ -170,30 +113,9 @@ class Bus(object):
             self.logger.error("Bus:{}".format(error))
             raise ha.HomeAssistantError(error)
 
-    def has_service(self, domain, service):
-        """ Not implemented for remote bus.
-
-        Will throw NotImplementedError. """
-        raise NotImplementedError
-
-    def listen_event(self, event_type, listener):
-        """ Not implemented for remote bus.
-
-        Will throw NotImplementedError. """
-        raise NotImplementedError
-
-    def remove_event_listener(self, event_type, listener):
-        """ Not implemented for remote bus.
-
-        Will throw NotImplementedError. """
-
-        raise NotImplementedError
-
 
 class StateMachine(object):
-    """ Drop-in replacement for a normal statemachine that communicates with a
-    remote statemachine.
-    """
+    """ Allows to interface with a Home Assistant StateMachine via the API. """
 
     def __init__(self, host, api_password, port=None):
         self._call_api = _setup_call_api(host, port, api_password)
@@ -222,14 +144,7 @@ class StateMachine(object):
             self.logger.exception("StateMachine:Got unexpected result (2)")
             return []
 
-    def remove_entity(self, entity_id):
-        """ This method is not implemented for remote statemachine.
-
-        Throws NotImplementedError. """
-
-        raise NotImplementedError
-
-    def set_state(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None):
         """ Set the state of a entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state. """
@@ -260,7 +175,7 @@ class StateMachine(object):
         finally:
             self.lock.release()
 
-    def get_state(self, entity_id):
+    def get(self, entity_id):
         """ Returns the state of the specified entity. """
 
         try:
@@ -297,7 +212,61 @@ class StateMachine(object):
     def is_state(self, entity_id, state):
         """ Returns True if entity exists and is specified state. """
         try:
-            return self.get_state(entity_id).state == state
+            return self.get(entity_id).state == state
         except AttributeError:
-            # get_state returned None
+            # get returned None
             return False
+
+
+class ServiceRegistry(object):
+    """ Allows to interface with a Home Assistant ServiceRegistry
+        via the API. """
+
+    def __init__(self, host, api_password, port=None):
+        self.logger = logging.getLogger(__name__)
+
+        self._call_api = _setup_call_api(host, port, api_password)
+
+    @property
+    def services(self):
+        """ List the available services. """
+        try:
+            req = self._call_api(METHOD_GET, hah.URL_API_SERVICES)
+
+            if req.status_code == 200:
+                data = req.json()
+
+                return data['services']
+
+            else:
+                raise ha.HomeAssistantError(
+                    "Got unexpected result (3): {}.".format(req.text))
+
+        except ValueError:  # If req.json() can't parse the json
+            self.logger.exception("ServiceRegistry:Got unexpected result")
+            raise ha.HomeAssistantError(
+                "Got unexpected result: {}".format(req.text))
+
+        except KeyError:  # If not all expected keys are in the returned JSON
+            self.logger.exception("ServiceRegistry:Got unexpected result (2)")
+            raise ha.HomeAssistantError(
+                "Got unexpected result (2): {}".format(req.text))
+
+    def call_service(self, domain, service, service_data=None):
+        """ Calls a service. """
+
+        if service_data:
+            data = {'service_data': json.dumps(service_data)}
+        else:
+            data = None
+
+        req = self._call_api(METHOD_POST,
+                             hah.URL_API_SERVICES_SERVICE.format(
+                                 domain, service),
+                             data)
+
+        if req.status_code != 200:
+            error = "Error calling service: {} - {}".format(
+                    req.status_code, req.text)
+
+            self.logger.error("ServiceRegistry:{}".format(error))

@@ -27,30 +27,28 @@ def _url(path=""):
 
 class HAHelper(object):  # pylint: disable=too-few-public-methods
     """ Helper class to keep track of current running HA instance. """
-    core = None
+    hass = None
 
 
 def ensure_homeassistant_started():
     """ Ensures home assistant is started. """
 
-    if not HAHelper.core:
-        core = {'bus': ha.Bus()}
-        core['statemachine'] = ha.StateMachine(core['bus'])
+    if not HAHelper.hass:
+        hass = ha.HomeAssistant()
 
-        core['bus'].listen_event('test_event', len)
-        core['statemachine'].set_state('test', 'a_state')
+        hass.bus.listen('test_event', len)
+        hass.states.set('test', 'a_state')
 
-        hah.HTTPInterface(core['bus'], core['statemachine'],
-                          API_PASSWORD)
+        hah.HTTPInterface(hass, API_PASSWORD)
 
-        core['bus'].fire_event(ha.EVENT_HOMEASSISTANT_START)
+        hass.bus.fire(ha.EVENT_HOMEASSISTANT_START)
 
         # Give objects time to startup
         time.sleep(1)
 
-        HAHelper.core = core
+        HAHelper.hass = hass
 
-    return HAHelper.core['bus'], HAHelper.core['statemachine']
+    return HAHelper.hass
 
 
 # pylint: disable=too-many-public-methods
@@ -60,7 +58,7 @@ class TestHTTPInterface(unittest.TestCase):
     @classmethod
     def setUpClass(cls):    # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        cls.bus, cls.statemachine = ensure_homeassistant_started()
+        cls.hass = ensure_homeassistant_started()
 
     def test_debug_interface(self):
         """ Test if we can login by comparing not logged in screen to
@@ -89,14 +87,14 @@ class TestHTTPInterface(unittest.TestCase):
 
     def test_debug_change_state(self):
         """ Test if we can change a state from the debug interface. """
-        self.statemachine.set_state("test.test", "not_to_be_set_state")
+        self.hass.states.set("test.test", "not_to_be_set")
 
         requests.post(_url(hah.URL_CHANGE_STATE),
                       data={"entity_id": "test.test",
                             "new_state": "debug_state_change2",
                             "api_password": API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test.test").state,
+        self.assertEqual(self.hass.states.get("test.test").state,
                          "debug_state_change2")
 
     def test_debug_fire_event(self):
@@ -109,7 +107,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        ha.listen_once_event(self.bus, "test_event_with_data", listener)
+        self.hass.listen_once_event("test_event_with_data", listener)
 
         requests.post(
             _url(hah.URL_FIRE_EVENT),
@@ -129,10 +127,10 @@ class TestHTTPInterface(unittest.TestCase):
 
         data = req.json()
 
-        self.assertEqual(list(self.statemachine.entity_ids),
+        self.assertEqual(list(self.hass.states.entity_ids),
                          data['entity_ids'])
 
-    def test_api_get_state(self):
+    def test_api_get(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
             _url(hah.URL_API_STATES_ENTITY.format("test")),
@@ -140,7 +138,7 @@ class TestHTTPInterface(unittest.TestCase):
 
         data = ha.State.from_dict(req.json())
 
-        state = self.statemachine.get_state("test")
+        state = self.hass.states.get("test")
 
         self.assertEqual(data.state, state.state)
         self.assertEqual(data.last_changed, state.last_changed)
@@ -157,13 +155,13 @@ class TestHTTPInterface(unittest.TestCase):
     def test_api_state_change(self):
         """ Test if we can change the state of an entity that exists. """
 
-        self.statemachine.set_state("test.test", "not_to_be_set_state")
+        self.hass.states.set("test.test", "not_to_be_set")
 
         requests.post(_url(hah.URL_API_STATES_ENTITY.format("test.test")),
                       data={"new_state": "debug_state_change2",
                             "api_password": API_PASSWORD})
 
-        self.assertEqual(self.statemachine.get_state("test.test").state,
+        self.assertEqual(self.hass.states.get("test.test").state,
                          "debug_state_change2")
 
     # pylint: disable=invalid-name
@@ -179,8 +177,8 @@ class TestHTTPInterface(unittest.TestCase):
             data={"new_state": new_state,
                   "api_password": API_PASSWORD})
 
-        cur_state = (self.statemachine.
-                     get_state("test_entity_that_does_not_exist").state)
+        cur_state = (self.hass.states.
+                     get("test_entity_that_does_not_exist").state)
 
         self.assertEqual(req.status_code, 201)
         self.assertEqual(cur_state, new_state)
@@ -194,7 +192,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        ha.listen_once_event(self.bus, "test.event_no_data", listener)
+        self.hass.listen_once_event("test.event_no_data", listener)
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test.event_no_data")),
@@ -216,7 +214,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        ha.listen_once_event(self.bus, "test_event_with_data", listener)
+        self.hass.listen_once_event("test_event_with_data", listener)
 
         requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event_with_data")),
@@ -237,7 +235,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        ha.listen_once_event(self.bus, "test_event_with_bad_data", listener)
+        self.hass.listen_once_event("test_event_with_bad_data", listener)
 
         req = requests.post(
             _url(hah.URL_API_EVENTS_EVENT.format("test_event")),
@@ -257,7 +255,7 @@ class TestHTTPInterface(unittest.TestCase):
 
         data = req.json()
 
-        self.assertEqual(data['event_listeners'], self.bus.event_listeners)
+        self.assertEqual(data['event_listeners'], self.hass.bus.listeners)
 
     def test_api_get_services(self):
         """ Test if we can get a dict describing current services. """
@@ -266,7 +264,7 @@ class TestHTTPInterface(unittest.TestCase):
 
         data = req.json()
 
-        self.assertEqual(data['services'], self.bus.services)
+        self.assertEqual(data['services'], self.hass.services.services)
 
     def test_api_call_service_no_data(self):
         """ Test if the API allows us to call a service. """
@@ -276,7 +274,7 @@ class TestHTTPInterface(unittest.TestCase):
             """ Helper method that will verify that our service got called. """
             test_value.append(1)
 
-        self.bus.register_service("test_domain", "test_service", listener)
+        self.hass.services.register("test_domain", "test_service", listener)
 
         requests.post(
             _url(hah.URL_API_SERVICES_SERVICE.format(
@@ -298,7 +296,7 @@ class TestHTTPInterface(unittest.TestCase):
             if "test" in service_call.data:
                 test_value.append(1)
 
-        self.bus.register_service("test_domain", "test_service", listener)
+        self.hass.services.register("test_domain", "test_service", listener)
 
         requests.post(
             _url(hah.URL_API_SERVICES_SERVICE.format(
@@ -318,25 +316,26 @@ class TestRemote(unittest.TestCase):
     @classmethod
     def setUpClass(cls):    # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        cls.bus, cls.statemachine = ensure_homeassistant_started()
+        cls.hass = ensure_homeassistant_started()
 
         cls.remote_sm = remote.StateMachine("127.0.0.1", API_PASSWORD)
-        cls.remote_eb = remote.Bus("127.0.0.1", API_PASSWORD)
+        cls.remote_eb = remote.EventBus("127.0.0.1", API_PASSWORD)
+        cls.remote_sr = remote.ServiceRegistry("127.0.0.1", API_PASSWORD)
         cls.sm_with_remote_eb = ha.StateMachine(cls.remote_eb)
-        cls.sm_with_remote_eb.set_state("test", "a_state")
+        cls.sm_with_remote_eb.set("test", "a_state")
 
     # pylint: disable=invalid-name
     def test_remote_sm_list_state_entities(self):
         """ Test if the debug interface allows us to list state entity ids. """
 
-        self.assertEqual(list(self.statemachine.entity_ids),
+        self.assertEqual(list(self.hass.states.entity_ids),
                          self.remote_sm.entity_ids)
 
-    def test_remote_sm_get_state(self):
+    def test_remote_sm_get(self):
         """ Test if debug interface allows us to get state of an entity. """
-        remote_state = self.remote_sm.get_state("test")
+        remote_state = self.remote_sm.get("test")
 
-        state = self.statemachine.get_state("test")
+        state = self.hass.states.get("test")
 
         self.assertEqual(remote_state.state, state.state)
         self.assertEqual(remote_state.last_changed, state.last_changed)
@@ -344,22 +343,22 @@ class TestRemote(unittest.TestCase):
 
     def test_remote_sm_get_non_existing_state(self):
         """ Test remote state machine to get state of non existing entity. """
-        self.assertEqual(self.remote_sm.get_state("test_does_not_exist"), None)
+        self.assertEqual(self.remote_sm.get("test_does_not_exist"), None)
 
     def test_remote_sm_state_change(self):
         """ Test if we can change the state of an existing entity. """
 
-        self.remote_sm.set_state("test", "set_remotely", {"test": 1})
+        self.remote_sm.set("test", "set_remotely", {"test": 1})
 
-        state = self.statemachine.get_state("test")
+        state = self.hass.states.get("test")
 
         self.assertEqual(state.state, "set_remotely")
         self.assertEqual(state.attributes['test'], 1)
 
     def test_remote_eb_listening_for_same(self):
         """ Test if remote EB correctly reports listener overview. """
-        self.assertEqual(self.bus.event_listeners,
-                         self.remote_eb.event_listeners)
+        self.assertEqual(self.hass.bus.listeners,
+                         self.remote_eb.listeners)
 
    # pylint: disable=invalid-name
     def test_remote_eb_fire_event_with_no_data(self):
@@ -370,9 +369,9 @@ class TestRemote(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        ha.listen_once_event(self.bus, "test_event_no_data", listener)
+        self.hass.listen_once_event("test_event_no_data", listener)
 
-        self.remote_eb.fire_event("test_event_no_data")
+        self.remote_eb.fire("test_event_no_data")
 
         # Allow the event to take place
         time.sleep(1)
@@ -389,9 +388,9 @@ class TestRemote(unittest.TestCase):
             if event.data["test"] == 1:
                 test_value.append(1)
 
-        ha.listen_once_event(self.bus, "test_event_with_data", listener)
+        self.hass.listen_once_event("test_event_with_data", listener)
 
-        self.remote_eb.fire_event("test_event_with_data", {"test": 1})
+        self.remote_eb.fire("test_event_with_data", {"test": 1})
 
         # Allow the event to take place
         time.sleep(1)
@@ -399,7 +398,7 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(len(test_value), 1)
 
    # pylint: disable=invalid-name
-    def test_remote_eb_call_service_with_no_data(self):
+    def test_remote_sr_call_service_with_no_data(self):
         """ Test if the remote bus allows us to fire a service. """
         test_value = []
 
@@ -407,9 +406,9 @@ class TestRemote(unittest.TestCase):
             """ Helper method that will verify our service got called. """
             test_value.append(1)
 
-        self.bus.register_service("test_domain", "test_service", listener)
+        self.hass.services.register("test_domain", "test_service", listener)
 
-        self.remote_eb.call_service("test_domain", "test_service")
+        self.remote_sr.call_service("test_domain", "test_service")
 
         # Allow the service call to take place
         time.sleep(1)
@@ -417,7 +416,7 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(len(test_value), 1)
 
     # pylint: disable=invalid-name
-    def test_remote_eb_call_service_with_data(self):
+    def test_remote_sr_call_service_with_data(self):
         """ Test if the remote bus allows us to fire an event. """
         test_value = []
 
@@ -426,9 +425,9 @@ class TestRemote(unittest.TestCase):
             if service_call.data["test"] == 1:
                 test_value.append(1)
 
-        self.bus.register_service("test_domain", "test_service", listener)
+        self.hass.services.register("test_domain", "test_service", listener)
 
-        self.remote_eb.call_service("test_domain", "test_service", {"test": 1})
+        self.remote_sr.call_service("test_domain", "test_service", {"test": 1})
 
         # Allow the event to take place
         time.sleep(1)
@@ -444,9 +443,9 @@ class TestRemote(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        ha.listen_once_event(self.bus, ha.EVENT_STATE_CHANGED, listener)
+        self.hass.listen_once_event(ha.EVENT_STATE_CHANGED, listener)
 
-        self.sm_with_remote_eb.set_state("test", "local sm with remote eb")
+        self.sm_with_remote_eb.set("test", "local sm with remote eb")
 
         # Allow the event to take place
         time.sleep(1)

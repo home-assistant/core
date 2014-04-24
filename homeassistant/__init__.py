@@ -23,35 +23,176 @@ SERVICE_HOMEASSISTANT_STOP = "stop"
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
+EVENT_CALL_SERVICE = "call_service"
 
+ATTR_NOW = "now"
+ATTR_DOMAIN = "domain"
+ATTR_SERVICE = "service"
+
+# How often time_changed event should fire
 TIMER_INTERVAL = 10  # seconds
 
-# We want to be able to fire every time a minute starts (seconds=0).
-# We want this so other modules can use that to make sure they fire
-# every minute.
-assert 60 % TIMER_INTERVAL == 0, "60 % TIMER_INTERVAL should be 0!"
-
-BUS_NUM_THREAD = 4
-BUS_REPORT_BUSY_TIMEOUT = dt.timedelta(minutes=1)
+# Number of worker threads
+POOL_NUM_THREAD = 4
 
 
-def start_home_assistant(bus):
-    """ Start home assistant. """
-    request_shutdown = threading.Event()
+class HomeAssistant(object):
+    """ Core class to route all communication to right components. """
 
-    bus.register_service(DOMAIN, SERVICE_HOMEASSISTANT_STOP,
-                         lambda service: request_shutdown.set())
+    def __init__(self):
+        self._pool = pool = _create_worker_pool()
 
-    Timer(bus)
+        self.bus = EventBus(pool)
+        self.states = StateMachine(self.bus)
+        self.services = ServiceRegistry(self.bus, pool)
 
-    bus.fire_event(EVENT_HOMEASSISTANT_START)
+    def start(self, non_blocking=False):
+        """ Start home assistant.
+            Set non_blocking to True if you don't want this method to block
+            as long as Home Assistant is running. """
 
-    while not request_shutdown.isSet():
-        try:
-            time.sleep(1)
+        Timer(self)
 
-        except KeyboardInterrupt:
-            break
+        self.bus.fire(EVENT_HOMEASSISTANT_START)
+
+        if non_blocking:
+            return
+
+        request_shutdown = threading.Event()
+
+        self.services.register(DOMAIN, SERVICE_HOMEASSISTANT_STOP,
+                               lambda service: request_shutdown.set())
+
+        while not request_shutdown.isSet():
+            try:
+                time.sleep(1)
+
+            except KeyboardInterrupt:
+                break
+
+    def call_service(self, domain, service, service_data=None):
+        """ Fires event to call specified service. """
+        event_data = service_data or {}
+        event_data[ATTR_DOMAIN] = domain
+        event_data[ATTR_SERVICE] = service
+
+        self.bus.fire(EVENT_CALL_SERVICE, event_data)
+
+    def get_entity_ids(self, domain_filter=None):
+        """ Returns known entity ids. """
+        if domain_filter:
+            return [entity_id for entity_id in self.states.entity_ids
+                    if entity_id.startswith(domain_filter)]
+        else:
+            return self.states.entity_ids
+
+    def track_state_change(self, entity_id, action,
+                           from_state=None, to_state=None):
+        """ Track specific state changes. """
+        from_state = _process_match_param(from_state)
+        to_state = _process_match_param(to_state)
+
+        @ft.wraps(action)
+        def state_listener(event):
+            """ The listener that listens for specific state changes. """
+            if entity_id == event.data['entity_id'] and \
+                    _matcher(event.data['old_state'].state, from_state) and \
+                    _matcher(event.data['new_state'].state, to_state):
+
+                action(event.data['entity_id'],
+                       event.data['old_state'],
+                       event.data['new_state'])
+
+        self.bus.listen(EVENT_STATE_CHANGED, state_listener)
+
+    def track_point_in_time(self, action, point_in_time):
+        """ Adds a listener that fires once after a spefic point in time. """
+
+        @ft.wraps(action)
+        def point_in_time_listener(event):
+            """ Listens for matching time_changed events. """
+            now = event.data[ATTR_NOW]
+
+            if now > point_in_time and \
+               not hasattr(point_in_time_listener, 'run'):
+
+                # Set variable so that we will never run twice.
+                # Because the event bus might have to wait till a thread comes
+                # available to execute this listener it might occur that the
+                # listener gets lined up twice to be executed. This will make
+                # sure the second time it does nothing.
+                point_in_time_listener.run = True
+
+                self.bus.remove_listener(EVENT_TIME_CHANGED,
+                                         point_in_time_listener)
+
+                action(now)
+
+        self.bus.listen(EVENT_TIME_CHANGED, point_in_time_listener)
+
+    # pylint: disable=too-many-arguments
+    def track_time_change(self, action,
+                          year=None, month=None, day=None,
+                          hour=None, minute=None, second=None):
+        """ Adds a listener that will fire if time matches a pattern. """
+
+        # We do not have to wrap the function with time pattern matching logic
+        # if no pattern given
+        if any((val is not None for val in
+                (year, month, day, hour, minute, second))):
+
+            pmp = _process_match_param
+            year, month, day = pmp(year), pmp(month), pmp(day)
+            hour, minute, second = pmp(hour), pmp(minute), pmp(second)
+
+            @ft.wraps(action)
+            def time_listener(event):
+                """ Listens for matching time_changed events. """
+                now = event.data[ATTR_NOW]
+
+                mat = _matcher
+
+                if mat(now.year, year) and \
+                   mat(now.month, month) and \
+                   mat(now.day, day) and \
+                   mat(now.hour, hour) and \
+                   mat(now.minute, minute) and \
+                   mat(now.second, second):
+
+                    action(now)
+
+        else:
+            @ft.wraps(action)
+            def time_listener(event):
+                """ Fires every time event that comes in. """
+                action(event.data[ATTR_NOW])
+
+        self.bus.listen(EVENT_TIME_CHANGED, time_listener)
+
+    def listen_once_event(self, event_type, listener):
+        """ Listen once for event of a specific type.
+
+        To listen to all events specify the constant ``MATCH_ALL``
+        as event_type.
+
+        Note: at the moment it is impossible to remove a one time listener.
+        """
+        @ft.wraps(listener)
+        def onetime_listener(event):
+            """ Removes listener from eventbus and then fires listener. """
+            if not hasattr(onetime_listener, 'run'):
+                # Set variable so that we will never run twice.
+                # Because the event bus might have to wait till a thread comes
+                # available to execute this listener it might occur that the
+                # listener gets lined up twice to be executed.
+                # This will make sure the second time it does nothing.
+                onetime_listener.run = True
+
+                self.bus.remove_listener(event_type, onetime_listener)
+
+                listener(event)
+
+        self.bus.listen(event_type, onetime_listener)
 
 
 def _process_match_param(parameter):
@@ -72,118 +213,31 @@ def _matcher(subject, pattern):
     return MATCH_ALL == pattern or subject in pattern
 
 
-def track_state_change(bus, entity_id, action, from_state=None, to_state=None):
-    """ Helper method to track specific state changes. """
-    from_state = _process_match_param(from_state)
-    to_state = _process_match_param(to_state)
+class JobPriority(util.OrderedEnum):
+    """ Provides priorities for bus events. """
+    # pylint: disable=no-init
 
-    @ft.wraps(action)
-    def state_listener(event):
-        """ State change listener that listens for specific state changes. """
-        if entity_id == event.data['entity_id'] and \
-                _matcher(event.data['old_state'].state, from_state) and \
-                _matcher(event.data['new_state'].state, to_state):
+    EVENT_SERVICE = 1
+    EVENT_STATE = 2
+    EVENT_TIME = 3
+    EVENT_DEFAULT = 4
 
-            action(event.data['entity_id'],
-                   event.data['old_state'],
-                   event.data['new_state'])
-
-    bus.listen_event(EVENT_STATE_CHANGED, state_listener)
-
-
-def track_point_in_time(bus, action, point_in_time):
-    """ Adds a listener that will fire once after a spefic point in time. """
-
-    @ft.wraps(action)
-    def point_in_time_listener(event):
-        """ Listens for matching time_changed events. """
-        now = event.data['now']
-
-        if now > point_in_time and not hasattr(point_in_time_listener, 'run'):
-
-            # Set variable so that we will never run twice.
-            # Because the event bus might have to wait till a thread comes
-            # available to execute this listener it might occur that the
-            # listener gets lined up twice to be executed. This will make sure
-            # the second time it does nothing.
-            point_in_time_listener.run = True
-
-            bus.remove_event_listener(EVENT_TIME_CHANGED,
-                                      point_in_time_listener)
-
-            action(now)
-
-    bus.listen_event(EVENT_TIME_CHANGED, point_in_time_listener)
+    @staticmethod
+    def from_event_type(event_type):
+        """ Returns a priority based on event type. """
+        if event_type == EVENT_TIME_CHANGED:
+            return JobPriority.EVENT_TIME
+        elif event_type == EVENT_STATE_CHANGED:
+            return JobPriority.EVENT_STATE
+        elif event_type == EVENT_CALL_SERVICE:
+            return JobPriority.EVENT_SERVICE
+        else:
+            return JobPriority.EVENT_DEFAULT
 
 
-# pylint: disable=too-many-arguments
-def track_time_change(bus, action,
-                      year=None, month=None, day=None,
-                      hour=None, minute=None, second=None):
-    """ Adds a listener that will fire if time matches a pattern. """
-
-    # We do not have to wrap the function with time pattern matching logic if
-    # no pattern given
-    if any((val is not None for val in
-            (year, month, day, hour, minute, second))):
-
-        pmp = _process_match_param
-        year, month, day = pmp(year), pmp(month), pmp(day)
-        hour, minute, second = pmp(hour), pmp(minute), pmp(second)
-
-        @ft.wraps(action)
-        def time_listener(event):
-            """ Listens for matching time_changed events. """
-            now = event.data['now']
-
-            mat = _matcher
-
-            if mat(now.year, year) and \
-               mat(now.month, month) and \
-               mat(now.day, day) and \
-               mat(now.hour, hour) and \
-               mat(now.minute, minute) and \
-               mat(now.second, second):
-
-                action(now)
-
-    else:
-        @ft.wraps(action)
-        def time_listener(event):
-            """ Fires every time event that comes in. """
-            action(event.data['now'])
-
-    bus.listen_event(EVENT_TIME_CHANGED, time_listener)
-
-
-def listen_once_event(bus, event_type, listener):
-    """ Listen once for event of a specific type.
-
-    To listen to all events specify the constant ``MATCH_ALL``
-    as event_type.
-
-    Note: at the moment it is impossible to remove a one time listener.
-    """
-    @ft.wraps(listener)
-    def onetime_listener(event):
-        """ Removes listener from eventbus and then fires listener. """
-        if not hasattr(onetime_listener, 'run'):
-            # Set variable so that we will never run twice.
-            # Because the event bus might have to wait till a thread comes
-            # available to execute this listener it might occur that the
-            # listener gets lined up twice to be executed.
-            # This will make sure the second time it does nothing.
-            onetime_listener.run = True
-
-            bus.remove_event_listener(event_type, onetime_listener)
-
-            listener(event)
-
-    bus.listen_event(event_type, onetime_listener)
-
-
-def create_bus_job_handler(logger):
-    """ Creates a job handler that logs errors to supplied `logger`. """
+def _create_worker_pool(thread_count=POOL_NUM_THREAD):
+    """ Creates a worker pool to be used. """
+    logger = logging.getLogger(__name__)
 
     def job_handler(job):
         """ Called whenever a job is available to do. """
@@ -195,46 +249,19 @@ def create_bus_job_handler(logger):
             # We do not want to crash our ThreadPool
             logger.exception("BusHandler:Exception doing job")
 
-    return job_handler
+    def busy_callback(current_jobs, pending_jobs_count):
+        """ Callback to be called when the pool queue gets too big. """
+        log_error = logger.error
 
+        log_error(
+            "WorkerPool:All {} threads are busy and {} jobs pending".format(
+                thread_count, pending_jobs_count))
 
-class BusPriority(util.OrderedEnum):
-    """ Provides priorities for bus events. """
-    # pylint: disable=no-init
+        for start, job in current_jobs:
+            log_error("WorkerPool:Current job from {}: {}".format(
+                util.datetime_to_str(start), job))
 
-    SERVICE_DEFAULT = 1
-    EVENT_STATE = 2
-    EVENT_TIME = 3
-    EVENT_DEFAULT = 4
-
-    @staticmethod
-    def from_event_type(event_type):
-        """ Returns a priority based on event type. """
-        if event_type == EVENT_TIME_CHANGED:
-            return BusPriority.EVENT_TIME
-        elif event_type == EVENT_STATE_CHANGED:
-            return BusPriority.EVENT_STATE
-        else:
-            return BusPriority.EVENT_DEFAULT
-
-
-# pylint: disable=too-few-public-methods
-class ServiceCall(object):
-    """ Represents a call to a service. """
-
-    __slots__ = ['domain', 'service', 'data']
-
-    def __init__(self, domain, service, data=None):
-        self.domain = domain
-        self.service = service
-        self.data = data or {}
-
-    def __repr__(self):
-        if self.data:
-            return "<ServiceCall {}.{}: {}>".format(
-                self.domain, self.service, util.repr_helper(self.data))
-        else:
-            return "<ServiceCall {}.{}>".format(self.domain, self.service)
+    return util.ThreadPool(thread_count, job_handler, busy_callback)
 
 
 # pylint: disable=too-few-public-methods
@@ -255,136 +282,72 @@ class Event(object):
             return "<Event {}>".format(self.event_type)
 
 
-class Bus(object):
+class EventBus(object):
     """ Class that allows different components to communicate via services
     and events.
     """
 
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, thread_count=None):
-        self.thread_count = thread_count or BUS_NUM_THREAD
-        self._event_listeners = {}
-        self._services = {}
-        self.logger = logging.getLogger(__name__)
-        self.event_lock = threading.Lock()
-        self.service_lock = threading.Lock()
-        self.last_busy_notice = dt.datetime.now()
-
-        self.pool = util.ThreadPool(self.thread_count,
-                                    create_bus_job_handler(self.logger))
+    def __init__(self, pool=None):
+        self._listeners = {}
+        self._logger = logging.getLogger(__name__)
+        self._lock = threading.Lock()
+        self._pool = pool or _create_worker_pool()
 
     @property
-    def services(self):
-        """ Dict with per domain a list of available services. """
-        with self.service_lock:
-            return {domain: list(self._services[domain].keys())
-                    for domain in self._services}
-
-    @property
-    def event_listeners(self):
+    def listeners(self):
         """ Dict with events that is being listened for and the number
         of listeners.
         """
-        with self.event_lock:
-            return {key: len(self._event_listeners[key])
-                    for key in self._event_listeners}
+        with self._lock:
+            return {key: len(self._listeners[key])
+                    for key in self._listeners}
 
-    def has_service(self, domain, service):
-        """ Returns True if specified service exists. """
-        return service in self._services.get(domain, [])
-
-    def call_service(self, domain, service, service_data=None):
-        """ Calls a service. """
-        service_call = ServiceCall(domain, service, service_data)
-
-        with self.service_lock:
-            try:
-                self.pool.add_job(BusPriority.SERVICE_DEFAULT,
-                                  (self._services[domain][service],
-                                   service_call))
-
-                self._check_busy()
-
-            except KeyError:  # if key domain or service does not exist
-                raise ServiceDoesNotExistError(
-                    "Service does not exist: {}/{}".format(domain, service))
-
-    def register_service(self, domain, service, service_func):
-        """ Register a service. """
-        with self.service_lock:
-            if domain in self._services:
-                self._services[domain][service] = service_func
-            else:
-                self._services[domain] = {service: service_func}
-
-    def fire_event(self, event_type, event_data=None):
+    def fire(self, event_type, event_data=None):
         """ Fire an event. """
-        with self.event_lock:
+        with self._lock:
             # Copy the list of the current listeners because some listeners
             # remove themselves as a listener while being executed which
             # causes the iterator to be confused.
-            get = self._event_listeners.get
+            get = self._listeners.get
             listeners = get(MATCH_ALL, []) + get(event_type, [])
 
             event = Event(event_type, event_data)
 
-            self.logger.info("Bus:Handling {}".format(event))
+            self._logger.info("Bus:Handling {}".format(event))
 
             if not listeners:
                 return
 
             for func in listeners:
-                self.pool.add_job(BusPriority.from_event_type(event_type),
+                self._pool.add_job(JobPriority.from_event_type(event_type),
                                   (func, event))
 
-            self._check_busy()
-
-    def listen_event(self, event_type, listener):
+    def listen(self, event_type, listener):
         """ Listen for all events or events of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
         as event_type.
         """
-        with self.event_lock:
-            if event_type in self._event_listeners:
-                self._event_listeners[event_type].append(listener)
+        with self._lock:
+            if event_type in self._listeners:
+                self._listeners[event_type].append(listener)
             else:
-                self._event_listeners[event_type] = [listener]
+                self._listeners[event_type] = [listener]
 
-    def remove_event_listener(self, event_type, listener):
+    def remove_listener(self, event_type, listener):
         """ Removes a listener of a specific event_type. """
-        with self.event_lock:
+        with self._lock:
             try:
-                self._event_listeners[event_type].remove(listener)
+                self._listeners[event_type].remove(listener)
 
                 # delete event_type list if empty
-                if not self._event_listeners[event_type]:
-                    self._event_listeners.pop(event_type)
+                if not self._listeners[event_type]:
+                    self._listeners.pop(event_type)
 
             except (KeyError, AttributeError):
                 # KeyError is key event_type listener did not exist
                 # AttributeError if listener did not exist within event_type
                 pass
-
-    def _check_busy(self):
-        """ Complain if we have more than twice as many jobs queued as threads
-        and if we didn't complain about it recently. """
-        if self.pool.work_queue.qsize() / self.thread_count >= 2 and \
-           dt.datetime.now()-self.last_busy_notice > BUS_REPORT_BUSY_TIMEOUT:
-
-            self.last_busy_notice = dt.datetime.now()
-
-            log_error = self.logger.error
-
-            log_error(
-                "Bus:All {} threads are busy and {} jobs pending".format(
-                    self.thread_count, self.pool.work_queue.qsize()))
-
-            jobs = self.pool.current_jobs
-
-            for start, job in jobs:
-                log_error("Bus:Current job from {}: {}".format(
-                    util.datetime_to_str(start), job))
 
 
 class State(object):
@@ -422,11 +385,6 @@ class State(object):
                 'attributes': self.attributes,
                 'last_changed': util.datetime_to_str(self.last_changed)}
 
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__ and
-                self.state == other.state and
-                self.attributes == other.attributes)
-
     @classmethod
     def from_dict(cls, json_dict):
         """ Static method to create a state from a dict.
@@ -443,6 +401,11 @@ class State(object):
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed)
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.state == other.state and
+                self.attributes == other.attributes)
+
     def __repr__(self):
         if self.attributes:
             return "<state {}:{} @ {}>".format(
@@ -457,73 +420,141 @@ class StateMachine(object):
     """ Helper class that tracks the state of different entities. """
 
     def __init__(self, bus):
-        self.states = {}
-        self.bus = bus
-        self.lock = threading.Lock()
+        self._states = {}
+        self._bus = bus
+        self._lock = threading.Lock()
 
     @property
     def entity_ids(self):
         """ List of entity ids that are being tracked. """
-        return self.states.keys()
+        return list(self._states.keys())
 
-    def get_state(self, entity_id):
+    def get(self, entity_id):
         """ Returns the state of the specified entity. """
-        state = self.states.get(entity_id)
+        state = self._states.get(entity_id)
 
         # Make a copy so people won't mutate the state
         return state.copy() if state else None
 
     def is_state(self, entity_id, state):
         """ Returns True if entity exists and is specified state. """
-        return (entity_id in self.states and
-                self.states[entity_id].state == state)
+        return (entity_id in self._states and
+                self._states[entity_id].state == state)
 
-    def remove_entity(self, entity_id):
+    def remove(self, entity_id):
         """ Removes a entity from the state machine.
 
         Returns boolean to indicate if a entity was removed. """
-        with self.lock:
-            return self.states.pop(entity_id, None) is not None
+        with self._lock:
+            return self._states.pop(entity_id, None) is not None
 
-    def set_state(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None):
         """ Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state. """
 
         attributes = attributes or {}
 
-        with self.lock:
-            if entity_id in self.states:
-                old_state = self.states[entity_id]
+        with self._lock:
+            if entity_id in self._states:
+                old_state = self._states[entity_id]
 
                 if old_state.state != new_state or \
                    old_state.attributes != attributes:
 
-                    state = self.states[entity_id] = \
+                    state = self._states[entity_id] = \
                         State(entity_id, new_state, attributes)
 
-                    self.bus.fire_event(EVENT_STATE_CHANGED,
-                                        {'entity_id': entity_id,
-                                         'old_state': old_state,
-                                         'new_state': state})
+                    self._bus.fire(EVENT_STATE_CHANGED,
+                                   {'entity_id': entity_id,
+                                    'old_state': old_state,
+                                    'new_state': state})
 
             else:
                 # If state did not exist yet
-                self.states[entity_id] = State(entity_id, new_state,
-                                               attributes)
+                self._states[entity_id] = State(entity_id, new_state,
+                                                attributes)
+
+
+# pylint: disable=too-few-public-methods
+class ServiceCall(object):
+    """ Represents a call to a service. """
+
+    __slots__ = ['domain', 'service', 'data']
+
+    def __init__(self, domain, service, data=None):
+        self.domain = domain
+        self.service = service
+        self.data = data or {}
+
+    def __repr__(self):
+        if self.data:
+            return "<ServiceCall {}.{}: {}>".format(
+                self.domain, self.service, util.repr_helper(self.data))
+        else:
+            return "<ServiceCall {}.{}>".format(self.domain, self.service)
+
+
+class ServiceRegistry(object):
+    """ Offers services over the eventbus. """
+
+    def __init__(self, bus, pool=None):
+        self._services = {}
+        self._lock = threading.Lock()
+        self._pool = pool or _create_worker_pool()
+        bus.listen(EVENT_CALL_SERVICE, self._event_to_service_call)
+
+    @property
+    def services(self):
+        """ Dict with per domain a list of available services. """
+        with self._lock:
+            return {domain: list(self._services[domain].keys())
+                    for domain in self._services}
+
+    def has_service(self, domain, service):
+        """ Returns True if specified service exists. """
+        return service in self._services.get(domain, [])
+
+    def register(self, domain, service, service_func):
+        """ Register a service. """
+        with self._lock:
+            if domain in self._services:
+                self._services[domain][service] = service_func
+            else:
+                self._services[domain] = {service: service_func}
+
+    def _event_to_service_call(self, event):
+        """ Calls a service from an event. """
+        service_data = dict(event.data)
+        domain = service_data.pop(ATTR_DOMAIN, None)
+        service = service_data.pop(ATTR_SERVICE, None)
+
+        with self._lock:
+            if domain in self._services and service in self._services[domain]:
+                service_call = ServiceCall(domain, service, service_data)
+
+                self._pool.add_job(JobPriority.EVENT_SERVICE,
+                                  (self._services[domain][service],
+                                   service_call))
 
 
 class Timer(threading.Thread):
     """ Timer will sent out an event every TIMER_INTERVAL seconds. """
 
-    def __init__(self, bus):
+    def __init__(self, hass, interval=None):
         threading.Thread.__init__(self)
 
         self.daemon = True
-        self.bus = bus
+        self._bus = hass.bus
+        self.interval = interval or TIMER_INTERVAL
 
-        listen_once_event(bus, EVENT_HOMEASSISTANT_START,
-                          lambda event: self.start())
+        # We want to be able to fire every time a minute starts (seconds=0).
+        # We want this so other modules can use that to make sure they fire
+        # every minute.
+        assert 60 % self.interval == 0, "60 % TIMER_INTERVAL should be 0!"
+
+        hass.listen_once_event(EVENT_HOMEASSISTANT_START,
+                               lambda event: self.start())
 
     def run(self):
         """ Start the timer. """
@@ -533,6 +564,7 @@ class Timer(threading.Thread):
         last_fired_on_second = -1
 
         calc_now = dt.datetime.now
+        interval = self.interval
 
         while True:
             now = calc_now()
@@ -540,7 +572,7 @@ class Timer(threading.Thread):
             # First check checks if we are not on a second matching the
             # timer interval. Second check checks if we did not already fire
             # this interval.
-            if now.second % TIMER_INTERVAL or \
+            if now.second % interval or \
                now.second == last_fired_on_second:
 
                 # Sleep till it is the next time that we have to fire an event.
@@ -548,7 +580,7 @@ class Timer(threading.Thread):
                 # If TIMER_INTERVAL is 10 fire at .5, 10.5, 20.5, etc seconds.
                 # This will yield the best results because time.sleep() is not
                 # 100% accurate because of non-realtime OS's
-                slp_seconds = TIMER_INTERVAL - now.second % TIMER_INTERVAL + \
+                slp_seconds = interval - now.second % interval + \
                     .5 - now.microsecond/1000000.0
 
                 time.sleep(slp_seconds)
@@ -557,13 +589,8 @@ class Timer(threading.Thread):
 
             last_fired_on_second = now.second
 
-            self.bus.fire_event(EVENT_TIME_CHANGED,
-                                {'now': now})
+            self._bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
 
 
 class HomeAssistantError(Exception):
     """ General Home Assistant exception occured. """
-
-
-class ServiceDoesNotExistError(HomeAssistantError):
-    """ A service has been referenced that deos not exist. """
