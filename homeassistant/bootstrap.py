@@ -156,6 +156,13 @@ def from_config_file(config_path, enable_logging=True):
 
         add_status("WeMo", wemo.setup(hass, hosts))
 
+    # Process tracking
+    if has_section("process"):
+        process = load_module('process')
+
+        processes = dict(config.items('process'))
+        add_status("process", process.setup(hass, processes))
+
     # Light control
     if has_section("light.hue"):
         light = load_module('light')
