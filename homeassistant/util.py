@@ -52,16 +52,6 @@ def split_entity_id(entity_id):
     return entity_id.split(".", 1)
 
 
-def filter_entity_ids(entity_ids, domain_filter=None, strip_domain=False):
-    """ Filter a list of entities based on domain. Setting strip_domain
-        will only return the object_ids. """
-    return [
-        split_entity_id(entity_id)[1] if strip_domain else entity_id
-        for entity_id in entity_ids if
-        not domain_filter or entity_id.startswith(domain_filter)
-        ]
-
-
 def repr_helper(inp):
     """ Helps creating a more readable string representation of objects. """
     if isinstance(inp, dict):
@@ -78,7 +68,7 @@ def repr_helper(inp):
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
 def color_RGB_to_xy(R, G, B):
-    ''' Convert from RGB color to XY color. '''
+    """ Convert from RGB color to XY color. """
     var_R = (R / 255.)
     var_G = (G / 255.)
     var_B = (B / 255.)
@@ -176,9 +166,17 @@ class ThreadPool(object):
     Will initiate it's workers using worker(queue).start() """
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, worker_count, job_handler):
+    def __init__(self, worker_count, job_handler, busy_callback=None):
+        """
+        worker_count: number of threads to run that handle jobs
+        job_handler: method to be called from worker thread to handle job
+        busy_callback: method to be called when queue gets too big.
+                       Parameters: list_of_current_jobs, number_pending_jobs
+        """
         work_queue = self.work_queue = queue.PriorityQueue()
         current_jobs = self.current_jobs = []
+        self.busy_callback = busy_callback
+        self.busy_warning_limit = worker_count**2
 
         for _ in range(worker_count):
             worker = threading.Thread(target=_threadpool_worker,
@@ -190,6 +188,14 @@ class ThreadPool(object):
     def add_job(self, priority, job):
         """ Add a job to be sent to the workers. """
         self.work_queue.put(PriorityQueueItem(priority, job))
+
+        # check if our queue is getting too big
+        if self.work_queue.qsize() > self.busy_warning_limit:
+
+            # Increase limit we will issue next warning
+            self.busy_warning_limit *= 2
+
+            self.busy_callback(self.current_jobs, self.work_queue.qsize())
 
 
 class PriorityQueueItem(object):

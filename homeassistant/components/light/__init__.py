@@ -55,7 +55,6 @@ from collections import namedtuple
 import os
 import csv
 
-import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.components import (group, extract_entity_ids,
                                       STATE_ON, STATE_OFF,
@@ -89,15 +88,15 @@ ATTR_PROFILE = "profile"
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 
-def is_on(statemachine, entity_id=None):
+def is_on(hass, entity_id=None):
     """ Returns if the lights are on based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
 
-    return statemachine.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, STATE_ON)
 
 
 # pylint: disable=too-many-arguments
-def turn_on(bus, entity_id=None, transition=None, brightness=None,
+def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, profile=None):
     """ Turns all or specified light on. """
     data = {}
@@ -120,10 +119,10 @@ def turn_on(bus, entity_id=None, transition=None, brightness=None,
     if xy_color:
         data[ATTR_XY_COLOR] = xy_color
 
-    bus.call_service(DOMAIN, SERVICE_TURN_ON, data)
+    hass.call_service(DOMAIN, SERVICE_TURN_ON, data)
 
 
-def turn_off(bus, entity_id=None, transition=None):
+def turn_off(hass, entity_id=None, transition=None):
     """ Turns all or specified light off. """
     data = {}
 
@@ -133,11 +132,11 @@ def turn_off(bus, entity_id=None, transition=None):
     if transition is not None:
         data[ATTR_TRANSITION] = transition
 
-    bus.call_service(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.call_service(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 # pylint: disable=too-many-branches, too-many-locals
-def setup(bus, statemachine, light_control):
+def setup(hass, light_control):
     """ Exposes light control via statemachine and services. """
 
     logger = logging.getLogger(__name__)
@@ -178,11 +177,11 @@ def setup(bus, statemachine, light_control):
         else:
             state = STATE_OFF
 
-        statemachine.set_state(entity_id, state, state_attr)
+        hass.states.set(entity_id, state, state_attr)
 
     def update_light_state(light_id):
         """ Update the state of specified light. """
-        _update_light_state(light_id, light_control.get_state(light_id))
+        _update_light_state(light_id, light_control.get(light_id))
 
     # pylint: disable=unused-argument
     def update_lights_state(time, force_reload=False):
@@ -196,7 +195,7 @@ def setup(bus, statemachine, light_control):
             logger.info("Updating light status")
             update_lights_state.last_updated = datetime.now()
 
-            for light_id, light_state in light_control.get_states().items():
+            for light_id, light_state in light_control.gets().items():
                 _update_light_state(light_id, light_state)
 
     # Update light state and discover lights for tracking the group
@@ -207,8 +206,7 @@ def setup(bus, statemachine, light_control):
         return False
 
     # Track all lights in a group
-    group.setup(bus, statemachine,
-                GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
+    group.setup(hass, GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
 
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.dirname(__file__), os.getcwd()]
@@ -245,7 +243,7 @@ def setup(bus, statemachine, light_control):
 
         # Convert the entity ids to valid light ids
         light_ids = [ent_to_light[entity_id] for entity_id
-                     in extract_entity_ids(statemachine, service)
+                     in extract_entity_ids(hass, service)
                      if entity_id in ent_to_light]
 
         if not light_ids:
@@ -310,14 +308,14 @@ def setup(bus, statemachine, light_control):
             update_lights_state(None, True)
 
     # Update light state every 30 seconds
-    ha.track_time_change(bus, update_lights_state, second=[0, 30])
+    hass.track_time_change(update_lights_state, second=[0, 30])
 
     # Listen for light on and light off service calls
-    bus.register_service(DOMAIN, SERVICE_TURN_ON,
-                         handle_light_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON,
+                           handle_light_service)
 
-    bus.register_service(DOMAIN, SERVICE_TURN_OFF,
-                         handle_light_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF,
+                           handle_light_service)
 
     return True
 
@@ -392,7 +390,7 @@ class HueLightControl(object):
 
         return self._lights.get(light_id)
 
-    def get_state(self, light_id):
+    def get(self, light_id):
         """ Return a LightState representing light light_id. """
         try:
             info = self._bridge.get_light(light_id)
@@ -403,7 +401,7 @@ class HueLightControl(object):
             # socket.error when we cannot reach Hue
             return None
 
-    def get_states(self):
+    def gets(self):
         """ Return a dict with id mapped to LightState objects. """
         states = {}
 

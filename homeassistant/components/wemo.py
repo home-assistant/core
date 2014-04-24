@@ -2,10 +2,8 @@
 Component to interface with WeMo devices on the network.
 """
 import logging
-import socket
 from datetime import datetime, timedelta
 
-import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.components import (group, extract_entity_ids,
                                       STATE_ON, STATE_OFF,
@@ -27,36 +25,39 @@ ATTR_TODAY_STANDBY_TIME = "today_standby_time"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-def is_on(statemachine, entity_id=None):
+def is_on(hass, entity_id=None):
     """ Returns if the wemo is on based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_WEMOS
 
-    return statemachine.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, STATE_ON)
 
 
-def turn_on(bus, entity_id=None):
+def turn_on(hass, entity_id=None):
     """ Turns all or specified wemo on. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
 
-    bus.call_service(DOMAIN, SERVICE_TURN_ON, data)
+    hass.call_service(DOMAIN, SERVICE_TURN_ON, data)
 
 
-def turn_off(bus, entity_id=None):
+def turn_off(hass, entity_id=None):
     """ Turns all or specified wemo off. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
 
-    bus.call_service(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.call_service(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 # pylint: disable=too-many-branches
-def setup(bus, statemachine):
+def setup(hass, hosts=None):
     """ Track states and offer events for WeMo switches. """
     logger = logging.getLogger(__name__)
 
     try:
         import homeassistant.external.pywemo.pywemo as pywemo
     except ImportError:
-        pass
+        logger.exception((
+            "Failed to import pywemo. "
+            "Did you maybe not run `git submodule init` "
+            "and `git submodule update`?"))
 
         return False
 
@@ -76,7 +77,7 @@ def setup(bus, statemachine):
     # Dict mapping entity IDs to devices
     ent_to_dev = {}
 
-    def _update_wemo_state(device):
+    def update_wemo_state(device):
         """ Update the state of specified WeMo device. """
 
         # We currently only support switches
@@ -107,33 +108,32 @@ def setup(bus, statemachine):
             #state_attr[ATTR_TODAY_ON_TIME] = device.today_on_time
             #state_attr[ATTR_TODAY_STANDBY_TIME] = device.today_standby_time
 
-        statemachine.set_state(entity_id, state, state_attr)
+        hass.states.set(entity_id, state, state_attr)
 
     # pylint: disable=unused-argument
-    def _update_wemos_state(time, force_reload=False):
+    def update_wemos_state(time, force_reload=False):
         """ Update states of all WeMo devices. """
 
         # First time this method gets called, force_reload should be True
         if (force_reload or
-           datetime.now() - _update_wemos_state.last_updated >
+           datetime.now() - update_wemos_state.last_updated >
            MIN_TIME_BETWEEN_SCANS):
 
             logger.info("Updating WeMo status")
-            _update_wemos_state.last_updated = datetime.now()
+            update_wemos_state.last_updated = datetime.now()
 
             for device in switches:
-                _update_wemo_state(device)
+                update_wemo_state(device)
 
-    _update_wemos_state(None, True)
+    update_wemos_state(None, True)
 
     # Track all lights in a group
-    group.setup(bus, statemachine,
-                GROUP_NAME_ALL_WEMOS, list(sno_to_ent.values()))
+    group.setup(hass, GROUP_NAME_ALL_WEMOS, sno_to_ent.values())
 
-    def _handle_wemo_service(service):
+    def handle_wemo_service(service):
         """ Handles calls to the WeMo service. """
         devices = [ent_to_dev[entity_id] for entity_id
-                   in extract_entity_ids(statemachine, service)
+                   in extract_entity_ids(hass, service)
                    if entity_id in ent_to_dev]
 
         if not devices:
@@ -145,13 +145,13 @@ def setup(bus, statemachine):
             else:
                 device.off()
 
-            _update_wemo_state(device)
+            update_wemo_state(device)
 
     # Update WeMo state every 30 seconds
-    ha.track_time_change(bus, _update_wemos_state, second=[0, 30])
+    hass.track_time_change(update_wemos_state, second=[0, 30])
 
-    bus.register_service(DOMAIN, SERVICE_TURN_OFF, _handle_wemo_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_wemo_service)
 
-    bus.register_service(DOMAIN, SERVICE_TURN_ON, _handle_wemo_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_wemo_service)
 
     return True

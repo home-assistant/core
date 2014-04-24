@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 
 import requests
 
-import homeassistant as ha
 import homeassistant.util as util
 import homeassistant.components as components
 
@@ -41,20 +40,20 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
 
-def is_on(statemachine, entity_id=None):
+def is_on(hass, entity_id=None):
     """ Returns if any or specified device is home. """
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
-    return statemachine.is_state(entity, components.STATE_HOME)
+    return hass.states.is_state(entity, components.STATE_HOME)
 
 
 # pylint: disable=too-many-instance-attributes
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
-    def __init__(self, bus, statemachine, device_scanner, error_scanning=None):
-        self.statemachine = statemachine
-        self.bus = bus
+    def __init__(self, hass, device_scanner, error_scanning=None):
+        self.states = hass.states
+
         self.device_scanner = device_scanner
 
         self.error_scanning = error_scanning or TIME_SPAN_FOR_ERROR_IN_SCANNING
@@ -77,16 +76,15 @@ class DeviceTracker(object):
             """ Triggers update of the device states. """
             self.update_devices()
 
-        ha.track_time_change(bus, update_device_state)
+        hass.track_time_change(update_device_state)
 
-        bus.register_service(DOMAIN,
-                             SERVICE_DEVICE_TRACKER_RELOAD,
-                             lambda service: self._read_known_devices_file())
+        hass.services.register(DOMAIN,
+                               SERVICE_DEVICE_TRACKER_RELOAD,
+                               lambda service: self._read_known_devices_file())
 
         self.update_devices()
 
-        group.setup(bus, statemachine, GROUP_NAME_ALL_DEVICES,
-                    list(self.device_entity_ids))
+        group.setup(hass, GROUP_NAME_ALL_DEVICES, self.device_entity_ids)
 
     @property
     def device_entity_ids(self):
@@ -116,7 +114,7 @@ class DeviceTracker(object):
 
                 known_dev[device]['last_seen'] = now
 
-                self.statemachine.set_state(
+                self.states.set(
                     known_dev[device]['entity_id'], components.STATE_HOME)
 
         # For all devices we did not find, set state to NH
@@ -126,8 +124,8 @@ class DeviceTracker(object):
         for device in temp_tracking_devices:
             if now - known_dev[device]['last_seen'] > self.error_scanning:
 
-                self.statemachine.set_state(known_dev[device]['entity_id'],
-                                            components.STATE_NOT_HOME)
+                self.states.set(known_dev[device]['entity_id'],
+                                components.STATE_NOT_HOME)
 
         # If we come along any unknown devices we will write them to the
         # known devices file but only if we did not encounter an invalid
@@ -234,7 +232,7 @@ class DeviceTracker(object):
                         self.logger.info(
                             "DeviceTracker:Removing entity {}".format(
                                 entity_id))
-                        self.statemachine.remove_entity(entity_id)
+                        self.states.remove(entity_id)
 
                     # File parsed, warnings given if necessary
                     # entities cleaned up, make it available
@@ -392,7 +390,8 @@ class NetgearDeviceScanner(object):
         except ImportError:
             self.logger.exception(
                 ("Netgear:Failed to import pynetgear. "
-                 "Did you maybe not cloned the git submodules?"))
+                 "Did you maybe not run `git submodule init` "
+                 "and `git submodule update`?"))
 
             self.success_init = False
 

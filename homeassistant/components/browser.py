@@ -10,16 +10,16 @@ DOMAIN = "browser"
 SERVICE_BROWSE_URL = "browse_url"
 
 
-def setup(bus):
+def setup(hass):
     """ Listen for browse_url events and open
         the url in the default webbrowser. """
 
     import webbrowser
 
-    bus.register_service(DOMAIN, SERVICE_BROWSE_URL,
-                         lambda service:
-                         webbrowser.open(
-                             service.data.get('url',
-                                              'https://www.google.com')))
+    hass.services.register(DOMAIN, SERVICE_BROWSE_URL,
+                           lambda service:
+                           webbrowser.open(
+                               service.data.get('url',
+                                                'https://www.google.com')))
 
     return True
