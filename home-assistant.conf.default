@@ -41,3 +41,7 @@ download_dir=downloads
 [group]
 living_room=light.Bowl,light.Ceiling,light.TV_back_light
 bedroom=light.Bed_light
+
+[process]
+# items are which processes to look for: <entity_id>=<search string within ps>
+# xbmc=XBMC.App
