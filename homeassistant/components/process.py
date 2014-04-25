@@ -13,39 +13,47 @@
 # Edit time:     19 min
 #
 """
+homeassistant.components.process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Process watcher.
-
-The arguments are <subentityname>=<substring to find in process list>
-
+Provides functionality to watch for specific processes running
+on the host machine.
 """
 
-from homeassistant.components import (STATE_ON, STATE_OFF)
 import os
+
+from homeassistant.components import STATE_ON, STATE_OFF
+import homeassistant.util as util
 
 DOMAIN = 'process'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
 PS_STRING = 'ps awx'
 
 
 def setup(hass, processes):
-    """ Track local processes. """
+    """ Sets up a check if specified processes are running.
+
+        processes: dict mapping entity id to substring to search for
+                   in process list.
+    """
+
+    entities = {ENTITY_ID_FORMAT.format(util.slugify(pname)): pstring
+                for pname, pstring in processes.items()}
 
     # pylint: disable=unused-argument
-    def _update_process_state(time):
-        """ Check ps for currently running processes. """
+    def update_process_states(time):
+        """ Check ps for currently running processes and update states. """
         with os.popen(PS_STRING, 'r') as psfile:
-            lines = list(iter(psfile))
-            for pname, pstring in processes.items():
-                found = False
-                for line in lines:
-                    if pstring in line:
-                        found = True
-                        break
-                entity_id = ENTITY_ID_FORMAT.format(pname)
-                state = found and STATE_ON or STATE_OFF
-                hass.states.set(entity_id, state)
+            lines = list(psfile)
 
-    _update_process_state(None)
-    hass.track_time_change(_update_process_state, second=[0, 30])
+        for entity_id, pstring in entities.items():
+            state = STATE_ON if any(pstring in l for l in lines) else STATE_OFF
+
+            hass.states.set(entity_id, state)
+
+    update_process_states(None)
+
+    hass.track_time_change(update_process_states, second=[0, 30])
+
     return True
