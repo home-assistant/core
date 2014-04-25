@@ -61,8 +61,18 @@ def setup(hass, hosts=None):
 
         return False
 
-    logger.info("Scanning for WeMo devices")
-    devices = pywemo.discover_devices()
+    if hosts:
+        devices = []
+
+        for host in hosts:
+            device = pywemo.device_from_host(host)
+
+            if device:
+                devices.append(device)
+
+    else:
+        logger.info("Scanning for WeMo devices")
+        devices = pywemo.discover_devices()
 
     is_switch = lambda switch: isinstance(switch, pywemo.Switch)
 
