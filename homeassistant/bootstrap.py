@@ -194,13 +194,12 @@ def from_config_file(config_path, enable_logging=True):
         add_status("Keyboard", load_module('keyboard').setup(hass))
 
     # Init HTTP interface
-    if has_opt("httpinterface", "api_password"):
-        httpinterface = load_module('httpinterface')
+    if has_opt("http", "api_password"):
+        http = load_module('http')
 
-        httpinterface.HTTPInterface(
-            hass, get_opt("httpinterface", "api_password"))
+        http.setup(hass, get_opt("http", "api_password"))
 
-        add_status("HTTPInterface", True)
+        add_status("HTTP", True)
 
     # Init groups
     if has_section("group"):

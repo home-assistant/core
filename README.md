@@ -40,138 +40,11 @@ Installation instructions
 
 Done. Start it now by running `python start.py`
 
-Web interface and API
----------------------
-Home Assistent runs a webserver accessible on port 8123. 
-
-  * At http://localhost:8123/ it will provide a debug interface showing the current state of the system and an overview of registered services.
-  * At http://localhost:8123/api/ it provides a password protected API.
-
-A screenshot of the debug interface:
-![screenshot-debug-interface](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-debug-interface.png)
-
-All API calls have to be accompanied by an 'api_password' parameter (as specified in `home-assistant.conf`) and will
-return JSON encoded objects. If successful calls will return status code 200 or 201.
-
-Other status codes that can occur are:
- - 400 (Bad Request)
- - 401 (Unauthorized)
- - 404 (Not Found)
- - 405 (Method not allowed)
-
-The api supports the following actions:
-
-**/api/states - GET**<br>
-Returns a list of entity ids for which a state is available
-
-```json
-{
-    "entity_ids": [
-        "Paulus_Nexus_4", 
-        "weather.sun", 
-        "all_devices"
-    ]
-}
-```
-
-**/api/events - GET**<br>
-Returns a dict with as keys the events and as value the number of listeners.
-
-```json
-{
-    "event_listeners": {
-      "state_changed": 5,
-      "time_changed": 2
-    }  
-}
-```
-
-**/api/services - GET**<br>
-Returns a dict with as keys the domain and as value a list of published services.
-
-```json
-{
-    "services": {
-      "browser": [
-          "browse_url"
-      ],
-      "keyboard": [
-          "volume_up",
-          "volume_down"
-      ]
-    }  
-}
-```
-
-**/api/states/&lt;entity_id>** - GET<br>
-Returns the current state from an entity
-
-```json
-{
-    "attributes": {
-        "next_rising": "07:04:15 29-10-2013", 
-        "next_setting": "18:00:31 29-10-2013"
-    }, 
-    "entity_id": "weather.sun", 
-    "last_changed": "23:24:33 28-10-2013", 
-    "state": "below_horizon"
-}
-```
-
-**/api/states/&lt;entity_id>** - POST<br>
-Updates the current state of an entity. Returns status code 201 if successful with location header of updated resource and the new state in the body.<br>
-parameter: new_state - string<br>
-optional parameter: attributes - JSON encoded object
-
-```json
-{
-    "attributes": {
-        "next_rising": "07:04:15 29-10-2013", 
-        "next_setting": "18:00:31 29-10-2013"
-    }, 
-    "entity_id": "weather.sun", 
-    "last_changed": "23:24:33 28-10-2013", 
-    "state": "below_horizon"
-}
-```
-
-**/api/events/&lt;event_type>** - POST<br>
-Fires an event with event_type<br>
-optional parameter: event_data - JSON encoded object
-
-```json
-{
-    "message": "Event download_file fired."
-}
-```
-
-**/api/services/&lt;domain>/&lt;service>** - POST<br>
-Calls a service within a specific domain.<br>
-optional parameter: service_data - JSON encoded object
-
-```json
-{
-    "message": "Service keyboard/volume_up called."
-}
-```
-
-Android remote control
-----------------------
-
-An app has been built using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) that:
-
- * Provides buttons to control the lights and the chromecast
- * Reports the charging state and battery level of the phone
-
-The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.apk) and [Tasker project XML](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.prj.xml) can be found in [/android-tasker/](https://github.com/balloob/home-assistant/tree/master/android-tasker)
-
-![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-android-tasker.png)
-
 Architecture
 ------------
-The core of Home Assistant exists of two parts; a Bus for calling services and firing events and a State Machine that keeps track of the state of things.
+The core of Home Assistant exists of three parts; an EventBus for firing events, a StateMachine that keeps track of the state of things and a ServiceRegistry to manage services.
 
-![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/architecture.png)
+![home assistant architecture](https://raw.github.com/balloob/home-assistant/master/docs/architecture.png)
 
 For example to control the lights there are two components. One is the device_tracker that polls the wireless router for connected devices and updates the state of the tracked devices in the State Machine to be either 'Home' or 'Not Home'.
 
@@ -238,3 +111,175 @@ Registers service `downloader/download_file` that will download files. File to d
 
 **browser**
 Registers service `browser/browse_url` that opens `url` as specified in event_data in the system default browser.
+
+### Multiple connected instances
+
+Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local events fired and states set to the master instance which will then replicate it to each slave.
+
+Because each slave maintains it's own ServiceRegistry it is possible to have multiple slaves respond to one service call.
+
+![home assistant master-slave architecture](https://raw.github.com/balloob/home-assistant/master/docs/architecture-remote.png)
+
+Web interface and API
+---------------------
+Home Assistent runs a webserver accessible on port 8123. 
+
+  * At http://localhost:8123/ it will provide a debug interface showing the current state of the system and an overview of registered services.
+  * At http://localhost:8123/api/ it provides a password protected API.
+
+A screenshot of the debug interface:
+![screenshot-debug-interface](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-debug-interface.png)
+
+In the package `homeassistant.remote` a Python API on top of the HTTP API can be found.
+
+All API calls have to be accompanied by an 'api_password' parameter (as specified in `home-assistant.conf`) and will
+return JSON encoded objects. If successful calls will return status code 200 or 201.
+
+Other status codes that can occur are:
+ - 400 (Bad Request)
+ - 401 (Unauthorized)
+ - 404 (Not Found)
+ - 405 (Method not allowed)
+
+The api supports the following actions:
+
+**/api/events - GET**<br>
+Returns a dict with as keys the events and as value the number of listeners.
+
+```json
+{
+    "event_listeners": {
+      "state_changed": 5,
+      "time_changed": 2
+    }  
+}
+```
+
+**/api/services - GET**<br>
+Returns a dict with as keys the domain and as value a list of published services.
+
+```json
+{
+    "services": {
+      "browser": [
+          "browse_url"
+      ],
+      "keyboard": [
+          "volume_up",
+          "volume_down"
+      ]
+    }  
+}
+```
+
+**/api/states - GET**<br>
+Returns a dict with as keys the entity_ids and as value the state.
+
+```json
+{
+    "sun.sun": {
+        "attributes": {
+            "next_rising": "07:04:15 29-10-2013", 
+            "next_setting": "18:00:31 29-10-2013"
+        }, 
+        "entity_id": "sun.sun", 
+        "last_changed": "23:24:33 28-10-2013", 
+        "state": "below_horizon"
+    },
+    "process.Dropbox": {
+        "attributes": {}, 
+        "entity_id": "process.Dropbox", 
+        "last_changed": "23:24:33 28-10-2013", 
+        "state": "on"
+    }
+}
+```
+
+**/api/states/&lt;entity_id>** - GET<br>
+Returns the current state from an entity
+
+```json
+{
+    "attributes": {
+        "next_rising": "07:04:15 29-10-2013", 
+        "next_setting": "18:00:31 29-10-2013"
+    }, 
+    "entity_id": "sun.sun", 
+    "last_changed": "23:24:33 28-10-2013", 
+    "state": "below_horizon"
+}
+```
+
+**/api/states/&lt;entity_id>** - POST<br>
+Updates the current state of an entity. Returns status code 201 if successful with location header of updated resource and the new state in the body.<br>
+parameter: new_state - string<br>
+optional parameter: attributes - JSON encoded object
+
+```json
+{
+    "attributes": {
+        "next_rising": "07:04:15 29-10-2013", 
+        "next_setting": "18:00:31 29-10-2013"
+    }, 
+    "entity_id": "weather.sun", 
+    "last_changed": "23:24:33 28-10-2013", 
+    "state": "below_horizon"
+}
+```
+
+**/api/events/&lt;event_type>** - POST<br>
+Fires an event with event_type<br>
+optional parameter: event_data - JSON encoded object
+
+```json
+{
+    "message": "Event download_file fired."
+}
+```
+
+**/api/services/&lt;domain>/&lt;service>** - POST<br>
+Calls a service within a specific domain.<br>
+optional parameter: service_data - JSON encoded object
+
+```json
+{
+    "message": "Service keyboard/volume_up called."
+}
+```
+
+**/api/event_forwarding** - POST<br>
+Setup event forwarding to another Home Assistant instance.<br>
+parameter: host - string<br>
+parameter: api_password - string<br>
+optional parameter: port - int<br>
+
+```json
+{
+    "message": "Event forwarding setup."
+}
+```
+
+**/api/event_forwarding** - DELETE<br>
+Cancel event forwarding to another Home Assistant instance.<br>
+parameter: host - string<br>
+optional parameter: port - int<br>
+
+If your client does not support DELETE HTTP requests you can add an optional attribute _METHOD and set its value to DELETE.
+
+```json
+{
+    "message": "Event forwarding cancelled."
+}
+```
+
+Android remote control
+----------------------
+
+An app has been built using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) that:
+
+ * Provides buttons to control the lights and the chromecast
+ * Reports the charging state and battery level of the phone
+
+The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.apk) and [Tasker project XML](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.prj.xml) can be found in [/android-tasker/](https://github.com/balloob/home-assistant/tree/master/android-tasker)
+
+![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-android-tasker.png)

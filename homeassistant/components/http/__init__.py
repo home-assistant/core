@@ -73,12 +73,12 @@ import logging
 import re
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant as ha
+import homeassistant.remote as rem
 import homeassistant.util as util
-
-SERVER_PORT = 8123
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -92,46 +92,49 @@ HTTP_UNPROCESSABLE_ENTITY = 422
 URL_ROOT = "/"
 URL_CHANGE_STATE = "/change_state"
 URL_FIRE_EVENT = "/fire_event"
-
-URL_API_STATES = "/api/states"
-URL_API_STATES_ENTITY = "/api/states/{}"
-URL_API_EVENTS = "/api/events"
-URL_API_EVENTS_EVENT = "/api/events/{}"
-URL_API_SERVICES = "/api/services"
-URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
+URL_CALL_SERVICE = "/call_service"
 
 URL_STATIC = "/static/{}"
 
 
-class HTTPInterface(threading.Thread):
-    """ Provides an HTTP interface for Home Assistant. """
+def setup(hass, api_password, server_port=None, server_host=None):
+    """ Sets up the HTTP API and debug interface. """
+    server_port = server_port or rem.SERVER_PORT
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, hass, api_password, server_port=None, server_host=None):
-        threading.Thread.__init__(self)
+    # If no server host is given, accept all incoming requests
+    server_host = server_host or '0.0.0.0'
 
-        self.daemon = True
+    server = HomeAssistantHTTPServer((server_host, server_port),
+                                     RequestHandler, hass, api_password)
 
-        server_port = server_port or SERVER_PORT
+    hass.listen_once_event(
+        ha.EVENT_HOMEASSISTANT_START,
+        lambda event:
+        threading.Thread(target=server.start, daemon=True).start())
 
-        # If no server host is given, accept all incoming requests
-        server_host = server_host or '0.0.0.0'
 
-        self.server = HTTPServer((server_host, server_port), RequestHandler)
+class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
+    """ Handle HTTP requests in a threaded fashion. """
 
-        self.server.flash_message = None
-        self.server.logger = logging.getLogger(__name__)
-        self.server.hass = hass
-        self.server.api_password = api_password
+    def __init__(self, server_address, RequestHandlerClass,
+                 hass, api_password):
+        super().__init__(server_address, RequestHandlerClass)
 
-        hass.listen_once_event(ha.EVENT_HOMEASSISTANT_START,
-                               lambda event: self.start())
+        self.hass = hass
+        self.api_password = api_password
+        self.logger = logging.getLogger(__name__)
 
-    def run(self):
-        """ Start the HTTP interface. """
-        self.server.logger.info("Starting")
+        # To store flash messages between sessions
+        self.flash_message = None
 
-        self.server.serve_forever()
+        # We will lazy init this one if needed
+        self.event_forwarder = None
+
+    def start(self):
+        """ Starts the server. """
+        self.logger.info("Starting")
+
+        self.serve_forever()
 
 
 # pylint: disable=too-many-public-methods
@@ -139,13 +142,15 @@ class RequestHandler(BaseHTTPRequestHandler):
     """ Handles incoming HTTP requests """
 
     PATHS = [  # debug interface
-        ('GET', '/', '_handle_get_root'),
-        ('POST', re.compile(r'/change_state'), '_handle_change_state'),
-        ('POST', re.compile(r'/fire_event'), '_handle_fire_event'),
-        ('POST', re.compile(r'/call_service'), '_handle_call_service'),
+        ('GET', URL_ROOT, '_handle_get_root'),
+        # These get compiled as RE because these methods are reused
+        # by other urls that use url parameters
+        ('POST', re.compile(URL_CHANGE_STATE), '_handle_change_state'),
+        ('POST', re.compile(URL_FIRE_EVENT), '_handle_fire_event'),
+        ('POST', re.compile(URL_CALL_SERVICE), '_handle_call_service'),
 
         # /states
-        ('GET', '/api/states', '_handle_get_api_states'),
+        ('GET', rem.URL_API_STATES, '_handle_get_api_states'),
         ('GET',
          re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
          '_handle_get_api_states_entity'),
@@ -154,18 +159,23 @@ class RequestHandler(BaseHTTPRequestHandler):
          '_handle_change_state'),
 
         # /events
-        ('GET', '/api/events', '_handle_get_api_events'),
+        ('GET', rem.URL_API_EVENTS, '_handle_get_api_events'),
         ('POST',
          re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
          '_handle_fire_event'),
 
         # /services
-        ('GET', '/api/services', '_handle_get_api_services'),
+        ('GET', rem.URL_API_SERVICES, '_handle_get_api_services'),
         ('POST',
          re.compile((r'/api/services/'
                      r'(?P<domain>[a-zA-Z\._0-9]+)/'
                      r'(?P<service>[a-zA-Z\._0-9]+)')),
          '_handle_call_service'),
+
+        # /event_forwarding
+        ('POST', rem.URL_API_EVENT_FORWARD, '_handle_post_api_event_forward'),
+        ('DELETE', rem.URL_API_EVENT_FORWARD,
+            '_handle_delete_api_event_forward'),
 
         # Statis files
         ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
@@ -192,6 +202,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             api_password = data['api_password'][0]
         except KeyError:
             api_password = ''
+
+        if '_METHOD' in data:
+            method = data['_METHOD'][0]
 
         if url.path.startswith('/api/'):
             self.use_json = True
@@ -327,11 +340,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<th>Attributes</th><th>Last Changed</th>"
                "</tr>").format(self.server.api_password))
 
-        for entity_id in \
-            sorted(self.server.hass.states.entity_ids,
-                   key=lambda key: key.lower()):
-
-            state = self.server.hass.states.get(entity_id)
+        for entity_id, state in \
+            sorted(self.server.hass.states.all().items(),
+                   key=lambda item: item[0].lower()):
 
             attributes = "<br>".join(
                 ["{}: {}".format(attr, state.attributes[attr])
@@ -512,7 +523,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self._write_json(state.as_dict(),
                                  status_code=HTTP_CREATED,
                                  location=
-                                 URL_API_STATES_ENTITY.format(entity_id))
+                                 rem.URL_API_STATES_ENTITY.format(entity_id))
             else:
                 self._message(
                     "State of {} changed to {}".format(entity_id, new_state))
@@ -534,21 +545,33 @@ class RequestHandler(BaseHTTPRequestHandler):
         This handles the following paths:
         /fire_event
         /api/events/<event_type>
+
+        Events from /api are threated as remote events.
         """
         try:
             try:
                 event_type = path_match.group('event_type')
+                event_origin = ha.EventOrigin.remote
             except IndexError:
                 # If group event_type does not exist in path_match
                 event_type = data['event_type'][0]
+                event_origin = ha.EventOrigin.local
 
-            try:
+            if 'event_data' in data:
                 event_data = json.loads(data['event_data'][0])
-            except KeyError:
-                # Happens if key 'event_data' does not exist
+            else:
                 event_data = None
 
-            self.server.hass.bus.fire(event_type, event_data)
+            # Special case handling for event STATE_CHANGED
+            # We will try to convert state dicts back to State objects
+            if event_type == ha.EVENT_STATE_CHANGED and event_data:
+                for key in ('old_state', 'new_state'):
+                    state = ha.State.from_dict(event_data.get(key))
+
+                    if state:
+                        event_data[key] = state
+
+            self.server.hass.bus.fire(event_type, event_data, event_origin)
 
             self._message("Event {} fired.".format(event_type))
 
@@ -598,9 +621,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):
-        """ Returns the entitie ids which state are being tracked. """
-        self._write_json(
-            {'entity_ids': list(self.server.hass.states.entity_ids)})
+        """ Returns a dict containing all entity ids and their state. """
+        self._write_json(self.server.hass.states.all())
 
     # pylint: disable=unused-argument
     def _handle_get_api_states_entity(self, path_match, data):
@@ -609,10 +631,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         state = self.server.hass.states.get(entity_id)
 
-        try:
-            self._write_json(state.as_dict())
-        except AttributeError:
-            # If state for entity_id does not exist
+        if state:
+            self._write_json(state)
+        else:
             self._message("State does not exist.", HTTP_UNPROCESSABLE_ENTITY)
 
     def _handle_get_api_events(self, path_match, data):
@@ -622,6 +643,60 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _handle_get_api_services(self, path_match, data):
         """ Handles getting overview of services. """
         self._write_json({'services': self.server.hass.services.services})
+
+    def _handle_post_api_event_forward(self, path_match, data):
+        """ Handles adding an event forwarding target. """
+
+        try:
+            host = data['host'][0]
+            api_password = data['api_password'][0]
+
+            port = int(data['port'][0]) if 'port' in data else None
+
+            if self.server.event_forwarder is None:
+                self.server.event_forwarder = \
+                    rem.EventForwarder(self.server.hass)
+
+            api = rem.API(host, api_password, port)
+
+            self.server.event_forwarder.connect(api)
+
+            self._message("Event forwarding setup.")
+
+        except KeyError:
+            # Occurs if domain or service does not exist in data
+            self._message("No host or api_password received.",
+                          HTTP_BAD_REQUEST)
+
+        except ValueError:
+            # Occurs during error parsing port
+            self._message(
+                "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
+
+    def _handle_delete_api_event_forward(self, path_match, data):
+        """ Handles deleting an event forwarding target. """
+
+        try:
+            host = data['host'][0]
+
+            port = int(data['port'][0]) if 'port' in data else None
+
+            if self.server.event_forwarder is not None:
+                api = rem.API(host, None, port)
+
+                self.server.event_forwarder.disconnect(api)
+
+            self._message("Event forwarding cancelled.")
+
+        except KeyError:
+            # Occurs if domain or service does not exist in data
+            self._message("No host or api_password received.",
+                          HTTP_BAD_REQUEST)
+
+        except ValueError:
+            # Occurs during error parsing port
+            self._message(
+                "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
 
     def _handle_get_static(self, path_match, data):
         """ Returns a static file. """
@@ -680,4 +755,5 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if data:
             self.wfile.write(
-                json.dumps(data, indent=4, sort_keys=True).encode("UTF-8"))
+                json.dumps(data, indent=4, sort_keys=True,
+                           cls=rem.JSONEncoder).encode("UTF-8"))

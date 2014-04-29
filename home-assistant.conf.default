@@ -2,7 +2,7 @@
 latitude=32.87336
 longitude=-117.22743
 
-[httpinterface]
+[http]
 api_password=mypass
 
 [light.hue]
