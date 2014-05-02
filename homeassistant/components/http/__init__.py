@@ -17,6 +17,13 @@ Other status codes that can occur are:
 
 The api supports the following actions:
 
+/api - GET
+Returns message if API is up and running.
+Example result:
+{
+  "message": "API running."
+}
+
 /api/states - GET
 Returns a list of entities for which a state is available
 Example result:
@@ -112,6 +119,10 @@ def setup(hass, api_password, server_port=None, server_host=None):
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
 
+    # If no local api set, set one with known information
+    if isinstance(hass, rem.HomeAssistant) and hass.local_api is None:
+        hass.local_api = rem.API(util.get_local_ip(), api_password, server_port)
+
 
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
@@ -148,6 +159,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         ('POST', re.compile(URL_CHANGE_STATE), '_handle_change_state'),
         ('POST', re.compile(URL_FIRE_EVENT), '_handle_fire_event'),
         ('POST', re.compile(URL_CALL_SERVICE), '_handle_call_service'),
+
+        # /api - for validation purposes
+        ('GET', rem.URL_API, '_handle_get_api'),
 
         # /states
         ('GET', rem.URL_API_STATES, '_handle_get_api_states'),
@@ -618,6 +632,11 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Occurs during error parsing json
             self._message(
                 "Invalid JSON for service_data", HTTP_UNPROCESSABLE_ENTITY)
+
+    # pylint: disable=unused-argument
+    def _handle_get_api(self, path_match, data):
+        """ Renders the debug interface. """
+        self._message("API running.")
 
     # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):

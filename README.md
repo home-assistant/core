@@ -120,6 +120,22 @@ Because each slave maintains it's own ServiceRegistry it is possible to have mul
 
 ![home assistant master-slave architecture](https://raw.github.com/balloob/home-assistant/master/docs/architecture-remote.png)
 
+A slave instance can be started with the following code.
+
+```python
+import homeassistant.remote as remote
+import homeassistant.components.http as http
+
+remote_api = remote.API("remote_host_or_ip", "remote_api_password")
+
+hass = remote.HomeAssistant(remote_api)
+
+http.setup(hass, "my_local_api_password")
+
+hass.start()
+hass.block_till_stopped()
+```
+
 Web interface and API
 ---------------------
 Home Assistent runs a webserver accessible on port 8123. 
@@ -142,6 +158,15 @@ Other status codes that can occur are:
  - 405 (Method not allowed)
 
 The api supports the following actions:
+
+**/api - GET**<br>
+Returns message if API is up and running.
+
+```json
+{
+  "message": "API running."
+}
+```
 
 **/api/events - GET**<br>
 Returns a dict with as keys the events and as value the number of listeners.

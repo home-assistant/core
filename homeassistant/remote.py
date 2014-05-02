@@ -12,6 +12,7 @@ HomeAssistantError will be raised.
 import threading
 import logging
 import json
+import enum
 import urllib.parse
 
 import requests
@@ -20,6 +21,7 @@ import homeassistant as ha
 
 SERVER_PORT = 8123
 
+URL_API = "/api/"
 URL_API_STATES = "/api/states"
 URL_API_STATES_ENTITY = "/api/states/{}"
 URL_API_EVENTS = "/api/events"
@@ -32,6 +34,18 @@ METHOD_GET = "get"
 METHOD_POST = "post"
 
 
+class APIStatus(enum.Enum):
+    """ Represents API status. """
+
+    OK = "ok"
+    INVALID_PASSWORD = "invalid_password"
+    CANNOT_CONNECT = "cannot_connect"
+    UNKNOWN = "unknown"
+
+    def __str__(self):
+        return self.value
+
+
 class API(object):
     """ Object to pass around Home Assistant API location and credentials. """
     # pylint: disable=too-few-public-methods
@@ -41,6 +55,13 @@ class API(object):
         self.port = port or SERVER_PORT
         self.api_password = api_password
         self.base_url = "http://{}:{}".format(host, self.port)
+        self.status = None
+
+    def validate_api(self, force_validate=False):
+        if self.status is None or force_validate:
+            self.status = validate_api(self)
+
+        return self.status == APIStatus.OK
 
     def __call__(self, method, path, data=None):
         """ Makes a call to the Home Assistant api. """
@@ -64,9 +85,13 @@ class HomeAssistant(ha.HomeAssistant):
     """ Home Assistant that forwards work. """
     # pylint: disable=super-init-not-called
 
-    def __init__(self, local_api, remote_api):
-        self.local_api = local_api
+    def __init__(self, remote_api, local_api=None):
+        if not remote_api.validate_api():
+            raise ha.HomeAssistantError(
+                "Remote API not valid: {}".format(remote_api.status))
+
         self.remote_api = remote_api
+        self.local_api = local_api
 
         self._pool = pool = ha.create_worker_pool()
 
@@ -75,6 +100,14 @@ class HomeAssistant(ha.HomeAssistant):
         self.states = StateMachine(self.bus, self.remote_api)
 
     def start(self):
+        # If there is no local API setup but we do want to connect with remote
+        # We create a random password and set up a local api
+        if self.local_api is None:
+            import homeassistant.components.http as http
+            import random
+
+            http.setup(self, '%030x'.format(random.randrange(16**30)))
+
         ha.Timer(self)
 
         # Setup that events from remote_api get forwarded to local_api
@@ -199,6 +232,24 @@ class JSONEncoder(json.JSONEncoder):
             return obj.as_dict()
 
         return json.JSONEncoder.default(self, obj)
+
+
+def validate_api(api):
+    """ Makes a call to validate API. """
+    try:
+        req = api(METHOD_GET, URL_API)
+
+        if req.status_code == 200:
+            return APIStatus.OK
+
+        elif req.status_code == 401:
+            return APIStatus.INVALID_PASSWORD
+
+        else:
+            return APIStatus.UNKNOWN
+
+    except ha.HomeAssistantError:
+        return APIStatus.CANNOT_CONNECT
 
 
 def connect_remote_events(from_api, to_api):

@@ -9,6 +9,8 @@ import queue
 import datetime
 import re
 import enum
+import socket
+import os
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
@@ -122,6 +124,23 @@ def ensure_unique_string(preferred_string, current_strings):
         string = "{}_{}".format(preferred_string, tries)
 
     return string
+
+
+# Taken from: http://stackoverflow.com/a/11735897
+def get_local_ip():
+    """ Tries to determine the local IP address of the machine. """
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        # Use Google Public DNS server to determine own IP
+        sock.connect(('8.8.8.8', 80))
+        ip_addr = sock.getsockname()[0]
+        sock.close()
+
+        return ip_addr
+
+    except socket.error:
+        return socket.gethostbyname(socket.gethostname())
 
 
 class OrderedEnum(enum.Enum):
