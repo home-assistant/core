@@ -79,6 +79,7 @@ import threading
 import logging
 import re
 import os
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
@@ -725,8 +726,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if os.path.isfile(path):
             self.send_response(HTTP_OK)
-
-            # TODO: correct header for mime-type and caching
+            self.send_header("Cache-control", "public, max-age=3600")
+            self.send_header("Expires",
+                             self.date_time_string(time.time()+3600))
 
             self.end_headers()
 
