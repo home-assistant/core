@@ -87,6 +87,8 @@ from urllib.parse import urlparse, parse_qs
 import homeassistant as ha
 import homeassistant.remote as rem
 import homeassistant.util as util
+from homeassistant.components import (STATE_ON, STATE_OFF,
+                                      SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -122,7 +124,8 @@ def setup(hass, api_password, server_port=None, server_host=None):
 
     # If no local api set, set one with known information
     if isinstance(hass, rem.HomeAssistant) and hass.local_api is None:
-        hass.local_api = rem.API(util.get_local_ip(), api_password, server_port)
+        hass.local_api = \
+            rem.API(util.get_local_ip(), api_password, server_port)
 
 
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
@@ -328,6 +331,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                "      href='/static/style.css'>"
                "<link rel='icon' href='/static/favicon.ico' "
                "      type='image/x-icon' />"
+               "<script src='http://code.jquery.com/jquery-2.1.1.min.js'>"
+               "      </script>"
+               "<script type='text/javascript' src='/static/script.js'>"
+               "      </script>"
                "</head>"
                "<body>"
                "<div class='container'>"
@@ -363,13 +370,20 @@ class RequestHandler(BaseHTTPRequestHandler):
                 ["{}: {}".format(attr, state.attributes[attr])
                  for attr in state.attributes])
 
-            write(("<tr>"
-                   "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-                   "</tr>").format(
-                  entity_id,
-                  state.state,
-                  attributes,
-                  util.datetime_to_str(state.last_changed)))
+            write("<tr><td>{}</td><td>{}".format(entity_id, state.state))
+
+            if state.state == STATE_ON or state.state == STATE_OFF:
+                if state.state == STATE_ON:
+                    action = SERVICE_TURN_OFF
+                else:
+                    action = SERVICE_TURN_ON
+
+                write((" (<a data-service='homeassistant/{}' "
+                       "data-entity_id='{}' data-service-autofire='1' "
+                       "href='#'>change</a>)").format(action, state.entity_id))
+
+            write("</td><td>{}</td><td>{}</td></tr>".format(
+                  attributes, util.datetime_to_str(state.last_changed)))
 
         # Change state form
         write(("<tr><td><input name='entity_id' class='form-control' "
@@ -397,8 +411,16 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         for domain, services in sorted(
                 self.server.hass.services.services.items()):
-            write("<tr><td>{}</td><td>{}</td></tr>".format(
-                domain, ", ".join(services)))
+            write("<tr><td>{}</td><td>".format(domain))
+
+            for index, service in enumerate(services):
+                if index > 0:
+                    write(", ")
+
+                write("<a href='#' data-service='{0}/{1}'>{1}</a>".format(
+                    domain, service))
+
+            write("</td></tr>")
 
         write(("</table></div></div>"
 
@@ -408,7 +430,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "     Call Service</h2></div>"
                "<div class='panel-body'>"
                "<form method='post' action='/call_service' "
-               "     class='form-horizontal form-fire-event'>"
+               "     class='form-horizontal form-call-service'>"
                "<input type='hidden' name='api_password' value='{}'>"
 
                "<div class='form-group'>"
