@@ -10,7 +10,6 @@ import datetime
 import re
 import enum
 import socket
-import os
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')

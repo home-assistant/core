@@ -34,6 +34,7 @@ METHOD_GET = "get"
 METHOD_POST = "post"
 
 
+# pylint: disable=no-init, invalid-name
 class APIStatus(enum.Enum):
     """ Represents API status. """
 
@@ -58,6 +59,7 @@ class API(object):
         self.status = None
 
     def validate_api(self, force_validate=False):
+        """ Tests if we can communicate with the API. """
         if self.status is None or force_validate:
             self.status = validate_api(self)
 
