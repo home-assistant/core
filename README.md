@@ -1,20 +1,20 @@
 Home Assistant
 ==============
 
-Home Assistant is a home automation platform running on Python 3. It provides modules that observe and trigger actors to do various tasks.
+Home Assistant is a home automation platform running on Python 3. 
 
 It is currently able to do the following things:
- * Track if devices are home by monitoring connected devices to a wireless router (currently supporting modern Netgear routers or routers running Tomato firmware)
+ * Track if devices are home by monitoring connected devices to a wireless router
  * Track and control lights
  * Track and control WeMo switches
  * Track and control Chromecasts
  * Turn on the lights when people get home when the sun is setting or has set
  * Slowly turn on the lights to compensate for light loss when the sun sets and people are home
  * Turn off lights and connected devices when everybody leaves the house
+ * Controllable via a REST API and web interface
  * Download files to the host machine
  * Open a url in the default browser at the host machine
  * Simulate key presses on the host for Play/Pause, Next track, Prev track, Volume up, Volume Down
- * Controllable via a REST API and web interface
  * Support for remoting Home Assistant instances through a Python API
  * Android Tasker project to control Home Assistant from your phone and report charging state.
 
@@ -25,7 +25,8 @@ Current compatible devices:
  * [Philips Hue](http://meethue.com)
  * [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast)
  * Wireless router running [Tomato firmware](http://www.polarcloud.com/tomato)
- * Netgear wireless routers (tested with R6300)
+ * Wireless router running [OpenWrt](https://openwrt.org/)
+ * Netgear wireless routers (tested with R6300v1)
 
 The system is built modular so support for other devices or actions can be implemented easily.
 
