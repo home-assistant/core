@@ -24,10 +24,11 @@ $(function() {
             form.find("#service_data").val("");
         }
 
-        if(el.attr("data-service-autofire")) {
+        // if it has the attirbute autofire we submit the form
+        if(el.is("[data-service-autofire]")) {
             form.submit();
         }
 
         return false;
-    }).css('cursor', 'pointer')
+    })
 })

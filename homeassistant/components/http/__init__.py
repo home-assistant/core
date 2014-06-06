@@ -351,7 +351,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Describe state machine:
         write(("<div class='row'>"
                "<div class='col-xs-12'>"
-               "<div class='panel panel-primary'>"
+               "<div class='states panel panel-primary'>"
                "<div class='panel-heading'><h2 class='panel-title'>"
                "     States</h2></div>"
                "<form method='post' action='/change_state' "
@@ -378,9 +378,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                 else:
                     action = SERVICE_TURN_ON
 
-                write((" (<a data-service='homeassistant/{}' "
-                       "data-entity_id='{}' data-service-autofire='1' "
-                       "href='#'>change</a>)").format(action, state.entity_id))
+                write(("<a class='glyphicon glyphicon-off pull-right' "
+                       "data-service='homeassistant/{}' "
+                       "data-entity_id='{}' data-service-autofire "
+                       "href='#'></a>").format(action, state.entity_id))
 
             write("</td><td>{}</td><td>{}</td></tr>".format(
                   attributes, util.datetime_to_str(state.last_changed)))
@@ -413,12 +414,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.server.hass.services.services.items()):
             write("<tr><td>{}</td><td>".format(domain))
 
-            for index, service in enumerate(services):
-                if index > 0:
-                    write(", ")
-
-                write("<a href='#' data-service='{0}/{1}'>{1}</a>".format(
-                    domain, service))
+            write(", ".join(
+                "<a href='#' data-service='{0}/{1}'>{1}</a>".format(
+                    domain, service) for service in sorted(services)))
 
             write("</td></tr>")
 

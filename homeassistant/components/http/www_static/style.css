@@ -1,5 +1,18 @@
 @import url(//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css);
 
+.states td .glyphicon {
+  margin-top: 3px;
+}
+
+.states td:nth-child(3) {
+  max-width: 550px;
+  word-break: break-word;
+}
+
+.states td:nth-child(4) {
+  white-space: nowrap;
+}
+
 .panel > form, .panel > form > .table {
 	margin-bottom: 0;
 }
@@ -36,8 +49,4 @@
 
 .form-fire-event .form-group:last-child {
 	margin-bottom: 0;
-}
-
-*[data-service] {
-  text-decoration: dashed;
 }
