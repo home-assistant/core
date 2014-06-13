@@ -113,7 +113,8 @@ DOMAIN_ICONS = {
     "light": "glyphicon-hdd",
     "wemo": "glyphicon-hdd",
     "device_tracker": "glyphicon-phone",
-    "chromecast": "glyphicon-picture"
+    "chromecast": "glyphicon-picture",
+    "process": "glyphicon-barcode"
 }
 
 
