@@ -60,7 +60,7 @@ def setup(hass, download_path):
 
                 final_path = None
 
-                req = requests.get(url, stream=True)
+                req = requests.get(url, stream=True, timeout=10)
 
                 if req.status_code == 200:
                     filename = None

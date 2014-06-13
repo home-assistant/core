@@ -74,13 +74,18 @@ class API(object):
 
         try:
             if method == METHOD_GET:
-                return requests.get(url, params=data)
+                return requests.get(url, params=data, timeout=5)
             else:
-                return requests.request(method, url, data=data)
+                return requests.request(method, url, data=data, timeout=5)
 
         except requests.exceptions.ConnectionError:
             logging.getLogger(__name__).exception("Error connecting to server")
             raise ha.HomeAssistantError("Error connecting to server")
+
+        except requests.exceptions.Timeout:
+            error = "Timeout when talking to {}".format(self.host)
+            logging.getLogger(__name__).exception(error)
+            raise ha.HomeAssistantError(error)
 
 
 class HomeAssistant(ha.HomeAssistant):

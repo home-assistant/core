@@ -489,7 +489,7 @@ class LuciDeviceScanner(object):
         """ Perform one JSON RPC operation. """
         data = json.dumps({'method': method, 'params': args})
         try:
-            res = requests.post(url, data=data, **kwargs)
+            res = requests.post(url, data=data, timeout=5, **kwargs)
         except requests.exceptions.Timeout:
             self.logger.exception("Connection to the router timed out")
             return
