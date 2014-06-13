@@ -9,12 +9,12 @@
   padding-right: 0px;
 }
 
-.states td:nth-child(3) {
+.states td:nth-child(4) {
   max-width: 550px;
   word-break: break-word;
 }
 
-.states td:nth-child(4) {
+.states td:nth-child(5) {
   white-space: nowrap;
 }
 
