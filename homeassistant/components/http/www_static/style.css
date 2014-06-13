@@ -4,6 +4,11 @@
   margin-top: 3px;
 }
 
+.states td:nth-child(1) {
+  width: 22px;
+  padding-right: 0px;
+}
+
 .states td:nth-child(3) {
   max-width: 550px;
   word-break: break-word;

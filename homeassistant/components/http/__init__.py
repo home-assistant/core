@@ -106,6 +106,16 @@ URL_CALL_SERVICE = "/call_service"
 
 URL_STATIC = "/static/{}"
 
+DOMAIN_ICONS = {
+    "sun": "glyphicon-asterisk",
+    "group": "glyphicon-th-large",
+    "charging": "glyphicon-flash",
+    "light": "glyphicon-hdd",
+    "wemo": "glyphicon-hdd",
+    "device_tracker": "glyphicon-phone",
+    "chromecast": "glyphicon-picture"
+}
+
 
 def setup(hass, api_password, server_port=None, server_host=None):
     """ Sets up the HTTP API and debug interface. """
@@ -357,7 +367,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<form method='post' action='/change_state' "
                "     class='form-change-state'>"
                "<input type='hidden' name='api_password' value='{}'>"
-               "<table class='table'><tr>"
+               "<table class='table'><tr><th></th>"
                "<th>Entity ID</th><th>State</th>"
                "<th>Attributes</th><th>Last Changed</th>"
                "</tr>").format(self.server.api_password))
@@ -366,11 +376,17 @@ class RequestHandler(BaseHTTPRequestHandler):
             sorted(self.server.hass.states.all().items(),
                    key=lambda item: item[0].lower()):
 
-            attributes = "<br>".join(
-                ["{}: {}".format(attr, state.attributes[attr])
-                 for attr in state.attributes])
+            domain = util.split_entity_id(entity_id)[0]
 
-            write("<tr><td>{}</td><td>{}".format(entity_id, state.state))
+            icon = "<span class='glyphicon {}'></span>".format(
+                DOMAIN_ICONS.get(domain, ""))
+
+            attributes = "<br>".join(
+                "{}: {}".format(attr, val)
+                for attr, val in state.attributes.items())
+
+            write("<tr><td>{}</td><td>{}</td><td>{}".format(
+                icon, entity_id, state.state))
 
             if state.state == STATE_ON or state.state == STATE_OFF:
                 if state.state == STATE_ON:
@@ -387,7 +403,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                   attributes, util.datetime_to_str(state.last_changed)))
 
         # Change state form
-        write(("<tr><td><input name='entity_id' class='form-control' "
+        write(("<tr><td></td><td><input name='entity_id' class='form-control' "
                "  placeholder='Entity ID'></td>"
                "<td><input name='new_state' class='form-control' "
                "  placeholder='New State'></td>"
