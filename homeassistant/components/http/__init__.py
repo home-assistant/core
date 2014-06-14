@@ -122,8 +122,9 @@ DOMAIN_ICONS = {
 
 
 def _get_domain_icon(domain):
+    """ Returns HTML that shows domain icon. """
     return "<span class='glyphicon {}'></span>".format(
-                DOMAIN_ICONS.get(domain, ""))
+        DOMAIN_ICONS.get(domain, ""))
 
 
 def setup(hass, api_password, server_port=None, server_host=None):
