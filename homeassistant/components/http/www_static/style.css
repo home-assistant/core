@@ -1,10 +1,10 @@
 @import url(//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.2/css/bootstrap.min.css);
 
-.states td .glyphicon {
-  margin-top: 3px;
+.states td .glyphicon, .services td .glyphicon {
+  margin-top: 2px;
 }
 
-.states td:nth-child(1) {
+.states td:nth-child(1), .services td:nth-child(1) {
   width: 22px;
   padding-right: 0px;
 }

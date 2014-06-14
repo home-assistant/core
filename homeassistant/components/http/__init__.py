@@ -114,8 +114,16 @@ DOMAIN_ICONS = {
     "wemo": "glyphicon-hdd",
     "device_tracker": "glyphicon-phone",
     "chromecast": "glyphicon-picture",
-    "process": "glyphicon-barcode"
+    "process": "glyphicon-barcode",
+    "browser": "glyphicon-globe",
+    "homeassistant": "glyphicon-home",
+    "downloader": "glyphicon-download-alt"
 }
+
+
+def _get_domain_icon(domain):
+    return "<span class='glyphicon {}'></span>".format(
+                DOMAIN_ICONS.get(domain, ""))
 
 
 def setup(hass, api_password, server_port=None, server_host=None):
@@ -379,15 +387,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             domain = util.split_entity_id(entity_id)[0]
 
-            icon = "<span class='glyphicon {}'></span>".format(
-                DOMAIN_ICONS.get(domain, ""))
-
             attributes = "<br>".join(
                 "{}: {}".format(attr, val)
                 for attr, val in state.attributes.items())
 
             write("<tr><td>{}</td><td>{}</td><td>{}".format(
-                icon, entity_id, state.state))
+                _get_domain_icon(domain), entity_id, state.state))
 
             if state.state == STATE_ON or state.state == STATE_OFF:
                 if state.state == STATE_ON:
@@ -421,15 +426,16 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Describe bus/services:
         write(("<div class='row'>"
                "<div class='col-xs-6'>"
-               "<div class='panel panel-primary'>"
+               "<div class='services panel panel-primary'>"
                "<div class='panel-heading'><h2 class='panel-title'>"
                "     Services</h2></div>"
                "<table class='table'>"
-               "<tr><th>Domain</th><th>Service</th></tr>"))
+               "<tr><th></th><th>Domain</th><th>Service</th></tr>"))
 
         for domain, services in sorted(
                 self.server.hass.services.services.items()):
-            write("<tr><td>{}</td><td>".format(domain))
+            write("<tr><td>{}</td><td>{}</td><td>".format(
+                _get_domain_icon(domain), domain))
 
             write(", ".join(
                 "<a href='#' data-service='{0}/{1}'>{1}</a>".format(
