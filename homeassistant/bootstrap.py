@@ -7,20 +7,146 @@ After bootstrapping you can add your own components or
 start by calling homeassistant.start_home_assistant(bus)
 """
 
-import importlib
 import configparser
 import logging
+from collections import defaultdict
+from itertools import chain
 
 import homeassistant
-import homeassistant.components as components
+import homeassistant.components as core_components
+import homeassistant.components.group as group
 
 
-# pylint: disable=too-many-branches,too-many-locals,too-many-statements
-def from_config_file(config_path, enable_logging=True):
-    """ Starts home assistant with all possible functionality
-        based on a config file.
-        Will return a tuple (bus, statemachine). """
+# pylint: disable=too-many-branches
+def from_config_dict(config, hass=None):
+    """
+    Tries to configure Home Assistant from a config dict.
 
+    Dynamically loads required components and its dependencies.
+    """
+    if hass is None:
+        hass = homeassistant.HomeAssistant()
+
+    logger = logging.getLogger(__name__)
+
+    # Make a copy because we are mutating it.
+    # Convert it to defaultdict so components can always have config dict
+    config = defaultdict(dict, config)
+
+    # List of loaded components
+    components = {}
+
+    # List of components to validate
+    to_validate = []
+
+    # List of validated components
+    validated = []
+
+    # List of components we are going to load
+    to_load = [key for key in config.keys() if key != homeassistant.DOMAIN]
+
+    # Load required components
+    while to_load:
+        domain = to_load.pop()
+
+        component = core_components.get_component(domain, logger)
+
+        # if None it does not exist, error already thrown by get_component
+        if component is not None:
+            components[domain] = component
+
+            # Special treatment for GROUP, we want to load it as late as
+            # possible. We do this by loading it if all other to be loaded
+            # modules depend on it.
+            if component.DOMAIN == group.DOMAIN:
+                pass
+
+            # Components with no dependencies are valid
+            elif not component.DEPENDENCIES:
+                validated.append(domain)
+
+            # If dependencies we'll validate it later
+            else:
+                to_validate.append(domain)
+
+                # Make sure to load all dependencies that are not being loaded
+                for dependency in component.DEPENDENCIES:
+                    if dependency not in chain(components.keys(), to_load):
+                        to_load.append(dependency)
+
+    # Validate dependencies
+    group_added = False
+
+    while to_validate:
+        newly_validated = []
+
+        for domain in to_validate:
+            if all(domain in validated for domain
+                   in components[domain].DEPENDENCIES):
+
+                newly_validated.append(domain)
+
+        # We validated new domains this iteration, add them to validated
+        if newly_validated:
+
+            # Add newly validated domains to validated
+            validated.extend(newly_validated)
+
+            # remove domains from to_validate
+            for domain in newly_validated:
+                to_validate.remove(domain)
+
+            newly_validated.clear()
+
+        # Nothing validated this iteration. Add group dependency and try again.
+        elif not group_added:
+            group_added = True
+            validated.append(group.DOMAIN)
+
+        # Group has already been added and we still can't validate all.
+        # Report missing deps as error and skip loading of these domains
+        else:
+            for domain in to_validate:
+                missing_deps = [dep for dep in components[domain].DEPENDENCIES
+                                if dep not in validated]
+
+                logger.error(
+                    "Could not validate all dependencies for {}: {}".format(
+                        domain, ", ".join(missing_deps)))
+
+            break
+
+    # Setup the components
+    if core_components.setup(hass, config):
+        logger.info("Home Assistant core initialized")
+
+        for domain in validated:
+            component = components[domain]
+
+            try:
+                if component.setup(hass, config):
+                    logger.info("component {} initialized".format(domain))
+                else:
+                    logger.error(
+                        "component {} failed to initialize".format(domain))
+
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(
+                    "Error during setup of component {}".format(domain))
+
+    else:
+        logger.error(("Home Assistant core failed to initialize. "
+                      "Further initialization aborted."))
+
+    return hass
+
+
+def from_config_file(config_path, hass=None, enable_logging=True):
+    """
+    Reads the configuration file and tries to start all the required
+    functionality. Will add functionality to 'hass' parameter if given,
+    instantiates a new Home Assistant object if 'hass' is not given.
+    """
     if enable_logging:
         # Setup the logging for home assistant.
         logging.basicConfig(level=logging.INFO)
@@ -34,196 +160,16 @@ def from_config_file(config_path, enable_logging=True):
                               datefmt='%H:%M %d-%m-%y'))
         logging.getLogger('').addHandler(err_handler)
 
-    # Start the actual bootstrapping
-    logger = logging.getLogger(__name__)
-
-    statusses = []
-
     # Read config
     config = configparser.ConfigParser()
     config.read(config_path)
 
-    # Init core
-    hass = homeassistant.HomeAssistant()
+    config_dict = {}
 
-    has_opt = config.has_option
-    get_opt = config.get
-    has_section = config.has_section
-    add_status = lambda name, result: statusses.append((name, result))
-    load_module = lambda module: importlib.import_module(
-        'homeassistant.components.'+module)
+    for section in config.sections():
+        config_dict[section] = {}
 
-    def get_opt_safe(section, option, default=None):
-        """ Failure proof option retriever. """
-        try:
-            return config.get(section, option)
-        except (configparser.NoSectionError, configparser.NoOptionError):
-            return default
+        for key, val in config.items(section):
+            config_dict[section][key] = val
 
-    def get_hosts(section):
-        """ Helper method to retrieve hosts from config. """
-        if has_opt(section, "hosts"):
-            return get_opt(section, "hosts").split(",")
-        else:
-            return None
-
-    # Device scanner
-    dev_scan = None
-
-    try:
-        # For the error message if not all option fields exist
-        opt_fields = "host, username, password"
-
-        if has_section('device_tracker.tomato'):
-            device_tracker = load_module('device_tracker')
-
-            dev_scan_name = "Tomato"
-            opt_fields += ", http_id"
-
-            dev_scan = device_tracker.TomatoDeviceScanner(
-                get_opt('device_tracker.tomato', 'host'),
-                get_opt('device_tracker.tomato', 'username'),
-                get_opt('device_tracker.tomato', 'password'),
-                get_opt('device_tracker.tomato', 'http_id'))
-
-        elif has_section('device_tracker.netgear'):
-            device_tracker = load_module('device_tracker')
-
-            dev_scan_name = "Netgear"
-
-            dev_scan = device_tracker.NetgearDeviceScanner(
-                get_opt('device_tracker.netgear', 'host'),
-                get_opt('device_tracker.netgear', 'username'),
-                get_opt('device_tracker.netgear', 'password'))
-
-        elif has_section('device_tracker.luci'):
-            device_tracker = load_module('device_tracker')
-
-            dev_scan_name = "Luci"
-
-            dev_scan = device_tracker.LuciDeviceScanner(
-                get_opt('device_tracker.luci', 'host'),
-                get_opt('device_tracker.luci', 'username'),
-                get_opt('device_tracker.luci', 'password'))
-
-    except configparser.NoOptionError:
-        # If one of the options didn't exist
-        logger.exception(("Error initializing {}DeviceScanner, "
-                          "could not find one of the following config "
-                          "options: {}".format(dev_scan_name, opt_fields)))
-
-        add_status("Device Scanner - {}".format(dev_scan_name), False)
-
-    if dev_scan:
-        add_status("Device Scanner - {}".format(dev_scan_name),
-                   dev_scan.success_init)
-
-        if not dev_scan.success_init:
-            dev_scan = None
-
-    # Device Tracker
-    if dev_scan:
-        device_tracker.DeviceTracker(hass, dev_scan)
-
-        add_status("Device Tracker", True)
-
-    # Sun tracker
-    if has_opt("common", "latitude") and \
-       has_opt("common", "longitude"):
-
-        sun = load_module('sun')
-
-        add_status("Sun",
-                   sun.setup(hass,
-                             get_opt("common", "latitude"),
-                             get_opt("common", "longitude")))
-    else:
-        sun = None
-
-    # Chromecast
-    if has_section("chromecast"):
-        chromecast = load_module('chromecast')
-
-        hosts = get_hosts("chromecast")
-
-        add_status("Chromecast", chromecast.setup(hass, hosts))
-
-    # WeMo
-    if has_section("wemo"):
-        wemo = load_module('wemo')
-
-        hosts = get_hosts("wemo")
-
-        add_status("WeMo", wemo.setup(hass, hosts))
-
-    # Process tracking
-    if has_section("process"):
-        process = load_module('process')
-
-        processes = dict(config.items('process'))
-        add_status("process", process.setup(hass, processes))
-
-    # Light control
-    if has_section("light.hue"):
-        light = load_module('light')
-
-        light_control = light.HueLightControl(get_opt_safe("hue", "host"))
-
-        add_status("Light - Hue", light_control.success_init)
-
-        if light_control.success_init:
-            light.setup(hass, light_control)
-        else:
-            light_control = None
-
-    else:
-        light_control = None
-
-    if has_opt("downloader", "download_dir"):
-        downloader = load_module('downloader')
-
-        add_status("Downloader", downloader.setup(
-            hass, get_opt("downloader", "download_dir")))
-
-    add_status("Core components", components.setup(hass))
-
-    if has_section('browser'):
-        add_status("Browser", load_module('browser').setup(hass))
-
-    if has_section('keyboard'):
-        add_status("Keyboard", load_module('keyboard').setup(hass))
-
-    # Init HTTP interface
-    if has_opt("http", "api_password"):
-        http = load_module('http')
-
-        http.setup(hass, get_opt("http", "api_password"))
-
-        add_status("HTTP", True)
-
-    # Init groups
-    if has_section("group"):
-        group = load_module('group')
-
-        for name, entity_ids in config.items("group"):
-            add_status("Group - {}".format(name),
-                       group.setup(hass, name, entity_ids.split(",")))
-
-    # Light trigger
-    if light_control and sun:
-        device_sun_light_trigger = load_module('device_sun_light_trigger')
-
-        light_group = get_opt_safe("device_sun_light_trigger", "light_group")
-        light_profile = get_opt_safe("device_sun_light_trigger",
-                                     "light_profile")
-
-        add_status("Device Sun Light Trigger",
-                   device_sun_light_trigger.setup(hass,
-                                                  light_group, light_profile))
-
-    for component, success_init in statusses:
-        status = "initialized" if success_init else "Failed to initialize"
-
-        logger.info("{}: {}".format(component, status))
-
-    return hass
+    return from_config_dict(config_dict, hass)

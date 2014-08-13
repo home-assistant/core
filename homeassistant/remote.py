@@ -95,7 +95,8 @@ class HomeAssistant(ha.HomeAssistant):
     def __init__(self, remote_api, local_api=None):
         if not remote_api.validate_api():
             raise ha.HomeAssistantError(
-                "Remote API not valid: {}".format(remote_api.status))
+                "Remote API at {}:{} not valid: {}".format(
+                    remote_api.host, remote_api.port, remote_api.status))
 
         self.remote_api = remote_api
         self.local_api = local_api
@@ -113,7 +114,10 @@ class HomeAssistant(ha.HomeAssistant):
             import homeassistant.components.http as http
             import random
 
-            http.setup(self, '%030x'.format(random.randrange(16**30)))
+            # pylint: disable=too-many-format-args
+            random_password = '%030x'.format(random.randrange(16**30))
+
+            http.setup(self, random_password)
 
         ha.Timer(self)
 

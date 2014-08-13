@@ -1,20 +1,15 @@
-[common]
+[homeassistant]
 latitude=32.87336
 longitude=-117.22743
 
 [http]
 api_password=mypass
 
-[light.hue]
-host=192.168.1.2
+[light]
+type=hue
 
-[device_tracker.tomato]
-host=192.168.1.1
-username=admin
-password=PASSWORD
-http_id=aaaaaaaaaaaaaaa
-
-[device_tracker.netgear]
+[device_tracker]
+type=netgear
 host=192.168.1.1
 username=admin
 password=PASSWORD
@@ -38,9 +33,9 @@ download_dir=downloads
 
 # A comma seperated list of states that have to be tracked as a single group
 # Grouped states should share the same states (ON/OFF or HOME/NOT_HOME)
-[group]
-living_room=light.Bowl,light.Ceiling,light.TV_back_light
-bedroom=light.Bed_light
+# [group]
+# living_room=light.Bowl,light.Ceiling,light.TV_back_light
+# bedroom=light.Bed_light
 
 [process]
 # items are which processes to look for: <entity_id>=<search string within ps>

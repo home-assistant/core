@@ -14,12 +14,14 @@ from datetime import datetime, timedelta
 
 import requests
 
+import homeassistant as ha
 import homeassistant.util as util
 import homeassistant.components as components
 
 from homeassistant.components import group
 
 DOMAIN = "device_tracker"
+DEPENDENCIES = []
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
 
@@ -39,6 +41,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 # Filename to save known devices to
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
+CONF_HTTP_ID = "http_id"
+
 
 def is_on(hass, entity_id=None):
     """ Returns if any or specified device is home. """
@@ -47,16 +51,69 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity, components.STATE_HOME)
 
 
+def setup(hass, config):
+    """ Sets up the device tracker. """
+
+    logger = logging.getLogger(__name__)
+
+    # We have flexible requirements for device tracker so
+    # we cannot use util.validate_config
+
+    conf = config[DOMAIN]
+
+    if not ha.CONF_TYPE in conf:
+        logger.error(
+            'Missing required configuration item in {}: {}'.format(
+                DOMAIN, ha.CONF_TYPE))
+
+        return False
+
+    fields = [ha.CONF_HOST, ha.CONF_USERNAME, ha.CONF_PASSWORD]
+
+    router_type = conf[ha.CONF_TYPE]
+
+    if router_type == 'tomato':
+        fields.append(CONF_HTTP_ID)
+
+        scanner = TomatoDeviceScanner
+
+    elif router_type == 'netgear':
+        scanner = NetgearDeviceScanner
+
+    elif router_type == 'luci':
+        scanner = LuciDeviceScanner
+
+    else:
+        logger.error('Found unknown router type {}'.format(router_type))
+
+        return False
+
+    if not util.validate_config(config, {DOMAIN: fields}, logger):
+        return False
+
+    device_scanner = scanner(conf)
+
+    if not device_scanner.success_init:
+        logger.error(
+            "Failed to initialize device scanner for {}".format(router_type))
+
+        return False
+
+    DeviceTracker(hass, device_scanner)
+
+    return True
+
+
 # pylint: disable=too-many-instance-attributes
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
-    def __init__(self, hass, device_scanner, error_scanning=None):
+    def __init__(self, hass, device_scanner):
         self.states = hass.states
 
         self.device_scanner = device_scanner
 
-        self.error_scanning = error_scanning or TIME_SPAN_FOR_ERROR_IN_SCANNING
+        self.error_scanning = TIME_SPAN_FOR_ERROR_IN_SCANNING
 
         self.logger = logging.getLogger(__name__)
 
@@ -84,7 +141,7 @@ class DeviceTracker(object):
 
         self.update_devices()
 
-        group.setup(hass, GROUP_NAME_ALL_DEVICES, self.device_entity_ids)
+        group.setup_group(hass, GROUP_NAME_ALL_DEVICES, self.device_entity_ids)
 
     @property
     def device_entity_ids(self):
@@ -164,8 +221,8 @@ class DeviceTracker(object):
                 except IOError:
                     self.logger.exception((
                         "DeviceTracker:Error updating {}"
-                        "with {} new devices").format(
-                        KNOWN_DEVICES_FILE, len(unknown_devices)))
+                        "with {} new devices").format(KNOWN_DEVICES_FILE,
+                                                      len(unknown_devices)))
 
         self.lock.release()
 
@@ -223,8 +280,8 @@ class DeviceTracker(object):
 
                     # Remove entities that are no longer maintained
                     new_entity_ids = set([known_devices[device]['entity_id']
-                                         for device in known_devices
-                                         if known_devices[device]['track']])
+                                          for device in known_devices
+                                          if known_devices[device]['track']])
 
                     for entity_id in \
                             self.device_entity_ids - new_entity_ids:
@@ -246,8 +303,8 @@ class DeviceTracker(object):
                     self.invalid_known_devices_file = True
                     self.logger.warning((
                         "Invalid {} found. "
-                        "We won't update it with new found devices.").
-                        format(KNOWN_DEVICES_FILE))
+                        "We won't update it with new found devices."
+                        ).format(KNOWN_DEVICES_FILE))
 
                 finally:
                     self.lock.release()
@@ -261,7 +318,10 @@ class TomatoDeviceScanner(object):
     http://paulusschoutsen.nl/blog/2013/10/tomato-api-documentation/
     """
 
-    def __init__(self, host, username, password, http_id):
+    def __init__(self, config):
+        host, http_id = config['host'], config['http_id']
+        username, password = config['username'], config['password']
+
         self.req = requests.Request('POST',
                                     'http://{}/update.cgi'.format(host),
                                     data={'_http_id': http_id,
@@ -309,8 +369,8 @@ class TomatoDeviceScanner(object):
         self.lock.acquire()
 
         # if date_updated is None or the date is too old we scan for new data
-        if (not self.date_updated or datetime.now() - self.date_updated >
-           MIN_TIME_BETWEEN_SCANS):
+        if not self.date_updated or \
+           datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
 
             self.logger.info("Tomato:Scanning")
 
@@ -380,7 +440,10 @@ class TomatoDeviceScanner(object):
 class NetgearDeviceScanner(object):
     """ This class queries a Netgear wireless router using the SOAP-api. """
 
-    def __init__(self, host, username, password):
+    def __init__(self, config):
+        host = config['host']
+        username, password = config['username'], config['password']
+
         self.logger = logging.getLogger(__name__)
         self.date_updated = None
         self.last_results = []
@@ -442,8 +505,8 @@ class NetgearDeviceScanner(object):
         with self.lock:
             # if date_updated is None or the date is too old we scan for
             # new data
-            if (not self.date_updated or datetime.now() - self.date_updated >
-               MIN_TIME_BETWEEN_SCANS):
+            if not self.date_updated or \
+               datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
 
                 self.logger.info("Netgear:Scanning")
 
@@ -470,7 +533,10 @@ class LuciDeviceScanner(object):
     (Currently, we do only wifi iwscan, and no DHCP lease access.)
     """
 
-    def __init__(self, host, username, password):
+    def __init__(self, config):
+        host = config['host']
+        username, password = config['username'], config['password']
+
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
         self.logger = logging.getLogger(__name__)
@@ -554,8 +620,8 @@ class LuciDeviceScanner(object):
         with self.lock:
             # if date_updated is None or the date is too old we scan
             # for new data
-            if (not self.date_updated or datetime.now() - self.date_updated >
-               MIN_TIME_BETWEEN_SCANS):
+            if not self.date_updated or \
+               datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
 
                 self.logger.info("Checking ARP")
 

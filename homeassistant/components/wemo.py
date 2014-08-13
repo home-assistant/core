@@ -4,12 +4,14 @@ Component to interface with WeMo devices on the network.
 import logging
 from datetime import datetime, timedelta
 
+import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.components import (group, extract_entity_ids,
                                       STATE_ON, STATE_OFF,
                                       SERVICE_TURN_ON, SERVICE_TURN_OFF,
                                       ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 DOMAIN = 'wemo'
+DEPENDENCIES = []
 
 GROUP_NAME_ALL_WEMOS = 'all_wemos'
 ENTITY_ID_ALL_WEMOS = group.ENTITY_ID_FORMAT.format(
@@ -47,7 +49,7 @@ def turn_off(hass, entity_id=None):
 
 
 # pylint: disable=too-many-branches
-def setup(hass, hosts=None):
+def setup(hass, config):
     """ Track states and offer events for WeMo switches. """
     logger = logging.getLogger(__name__)
 
@@ -61,10 +63,10 @@ def setup(hass, hosts=None):
 
         return False
 
-    if hosts:
+    if ha.CONF_HOSTS in config[DOMAIN]:
         devices = []
 
-        for host in hosts:
+        for host in config[DOMAIN][ha.CONF_HOSTS].split(","):
             device = pywemo.device_from_host(host)
 
             if device:
@@ -125,9 +127,9 @@ def setup(hass, hosts=None):
         """ Update states of all WeMo devices. """
 
         # First time this method gets called, force_reload should be True
-        if (force_reload or
-           datetime.now() - update_wemos_state.last_updated >
-           MIN_TIME_BETWEEN_SCANS):
+        if force_reload or \
+           datetime.now() - update_wemos_state.last_updated > \
+           MIN_TIME_BETWEEN_SCANS:
 
             logger.info("Updating WeMo status")
             update_wemos_state.last_updated = datetime.now()
@@ -138,7 +140,7 @@ def setup(hass, hosts=None):
     update_wemos_state(None, True)
 
     # Track all lights in a group
-    group.setup(hass, GROUP_NAME_ALL_WEMOS, sno_to_ent.values())
+    group.setup_group(hass, GROUP_NAME_ALL_WEMOS, sno_to_ent.values())
 
     def handle_wemo_service(service):
         """ Handles calls to the WeMo service. """

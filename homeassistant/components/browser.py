@@ -6,11 +6,13 @@ Provides functionality to launch a webbrowser on the host machine.
 """
 
 DOMAIN = "browser"
+DEPENDENCIES = []
 
 SERVICE_BROWSE_URL = "browse_url"
 
 
-def setup(hass):
+# pylint: disable=unused-argument
+def setup(hass, config):
     """ Listen for browse_url events and open
         the url in the default webbrowser. """
 

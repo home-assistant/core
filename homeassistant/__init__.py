@@ -30,6 +30,14 @@ ATTR_NOW = "now"
 ATTR_DOMAIN = "domain"
 ATTR_SERVICE = "service"
 
+CONF_LATITUDE = "latitude"
+CONF_LONGITUDE = "longitude"
+CONF_TYPE = "type"
+CONF_HOST = "host"
+CONF_HOSTS = "hosts"
+CONF_USERNAME = "username"
+CONF_PASSWORD = "password"
+
 # How often time_changed event should fire
 TIMER_INTERVAL = 10  # seconds
 
@@ -334,7 +342,7 @@ class EventBus(object):
 
             for func in listeners:
                 self._pool.add_job(JobPriority.from_event_type(event_type),
-                                  (func, event))
+                                   (func, event))
 
     def listen(self, event_type, listener):
         """ Listen for all events or events of a specific type.
@@ -553,8 +561,8 @@ class ServiceRegistry(object):
                 service_call = ServiceCall(domain, service, service_data)
 
                 self._pool.add_job(JobPriority.EVENT_SERVICE,
-                                  (self._services[domain][service],
-                                   service_call))
+                                   (self._services[domain][service],
+                                    service_call))
 
 
 class Timer(threading.Thread):

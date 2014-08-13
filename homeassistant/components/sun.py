@@ -7,8 +7,11 @@ Provides functionality to keep track of the sun.
 import logging
 from datetime import timedelta
 
+import homeassistant as ha
 import homeassistant.util as util
 
+DEPENDENCIES = []
+DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
 STATE_ABOVE_HORIZON = "above_horizon"
@@ -49,9 +52,15 @@ def next_rising(hass):
         return None
 
 
-def setup(hass, latitude, longitude):
+def setup(hass, config):
     """ Tracks the state of the sun. """
     logger = logging.getLogger(__name__)
+
+    if not util.validate_config(config,
+                                {ha.DOMAIN: [ha.CONF_LATITUDE,
+                                             ha.CONF_LONGITUDE]},
+                                logger):
+        return False
 
     try:
         import ephem
@@ -61,12 +70,15 @@ def setup(hass, latitude, longitude):
 
     sun = ephem.Sun()  # pylint: disable=no-member
 
+    latitude = config[ha.DOMAIN][ha.CONF_LATITUDE]
+    longitude = config[ha.DOMAIN][ha.CONF_LONGITUDE]
+
     def update_sun_state(now):    # pylint: disable=unused-argument
         """ Method to update the current state of the sun and
             set time of next setting and rising. """
         observer = ephem.Observer()
-        observer.lat = latitude
-        observer.long = longitude
+        observer.lat = latitude  # pylint: disable=assigning-non-slot
+        observer.long = longitude  # pylint: disable=assigning-non-slot
 
         next_rising_dt = ephem.localtime(observer.next_rising(sun))
         next_setting_dt = ephem.localtime(observer.next_setting(sun))

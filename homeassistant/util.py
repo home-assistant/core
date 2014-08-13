@@ -167,6 +167,30 @@ class OrderedEnum(enum.Enum):
         return NotImplemented
 
 
+def validate_config(config, items, logger):
+    """
+    Validates if all items are available in the configuration.
+
+    config is the general dictionary with all the configurations.
+    items is a dict with per domain which attributes we require.
+    logger is the logger from the caller to log the errors to.
+
+    Returns True if all required items were found.
+    """
+    errors_found = False
+    for domain in items.keys():
+        errors = [item for item in items[domain] if item not in config[domain]]
+
+        if errors:
+            logger.error(
+                "Missing required configuration items in {}: {}".format(
+                    domain, ", ".join(errors)))
+
+            errors_found = True
+
+    return not errors_found
+
+
 # Reason why I decided to roll my own ThreadPool instead of using
 # multiprocessing.dummy.pool or even better, use multiprocessing.pool and
 # not be hurt by the GIL in the cpython interpreter:

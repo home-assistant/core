@@ -40,7 +40,8 @@ def ensure_homeassistant_started():
         hass.bus.listen('test_event', len)
         hass.states.set('test', 'a_state')
 
-        http.setup(hass, API_PASSWORD)
+        http.setup(hass,
+                   {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD}})
 
         hass.start()
 
@@ -55,12 +56,16 @@ def ensure_homeassistant_started():
 def ensure_slave_started():
     """ Ensure a home assistant slave is started. """
 
+    ensure_homeassistant_started()
+
     if not HAHelper.slave:
         local_api = remote.API("127.0.0.1", API_PASSWORD, 8124)
         remote_api = remote.API("127.0.0.1", API_PASSWORD)
-        slave = remote.HomeAssistant(local_api, remote_api)
+        slave = remote.HomeAssistant(remote_api, local_api)
 
-        http.setup(slave, API_PASSWORD, 8124)
+        http.setup(slave,
+                   {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
+                                  http.CONF_SERVER_PORT: 8124}})
 
         slave.start()
 
@@ -73,7 +78,7 @@ def ensure_slave_started():
 
 
 # pylint: disable=too-many-public-methods
-class TestHTTPInterface(unittest.TestCase):
+class TestHTTP(unittest.TestCase):
     """ Test the HTTP debug interface and API. """
 
     @classmethod

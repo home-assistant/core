@@ -11,19 +11,26 @@ from datetime import datetime, timedelta
 import homeassistant.components as components
 from . import light, sun, device_tracker, group
 
+DOMAIN = "device_sun_light_trigger"
+DEPENDENCIES = ['light', 'device_tracker', 'group', 'sun']
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
 # Light profile to be used if none given
 LIGHT_PROFILE = 'relax'
 
+CONF_LIGHT_PROFILE = 'light_profile'
+CONF_LIGHT_GROUP = 'light_group'
+
 
 # pylint: disable=too-many-branches
-def setup(hass, light_group=None, light_profile=None):
+def setup(hass, config):
     """ Triggers to turn lights on or off based on device precense. """
 
-    light_group = light_group or light.GROUP_NAME_ALL_LIGHTS
-    light_profile = light_profile or LIGHT_PROFILE
+    light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
+                                     light.GROUP_NAME_ALL_LIGHTS)
+
+    light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
 
     logger = logging.getLogger(__name__)
 
@@ -61,8 +68,7 @@ def setup(hass, light_group=None, light_profile=None):
         def turn_light_on_before_sunset(light_id):
             """ Helper function to turn on lights slowly if there
                 are devices home and the light is not on yet. """
-            if (device_tracker.is_on(hass) and
-               not light.is_on(hass, light_id)):
+            if device_tracker.is_on(hass) and not light.is_on(hass, light_id):
 
                 light.turn_on(hass, light_id,
                               transition=LIGHT_TRANSITION_TIME.seconds,
@@ -99,8 +105,8 @@ def setup(hass, light_group=None, light_profile=None):
         light_needed = not (lights_are_on or sun.is_on(hass))
 
         # Specific device came home ?
-        if (entity != device_tracker.ENTITY_ID_ALL_DEVICES and
-           new_state.state == components.STATE_HOME):
+        if entity != device_tracker.ENTITY_ID_ALL_DEVICES and \
+           new_state.state == components.STATE_HOME:
 
             # These variables are needed for the elif check
             now = datetime.now()

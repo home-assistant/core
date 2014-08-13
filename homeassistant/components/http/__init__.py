@@ -89,6 +89,8 @@ import homeassistant.remote as rem
 import homeassistant.util as util
 from homeassistant.components import (STATE_ON, STATE_OFF,
                                       SERVICE_TURN_ON, SERVICE_TURN_OFF)
+DOMAIN = "http"
+DEPENDENCIES = []
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -120,6 +122,10 @@ DOMAIN_ICONS = {
     "downloader": "glyphicon-download-alt"
 }
 
+CONF_API_PASSWORD = "api_password"
+CONF_SERVER_HOST = "server_host"
+CONF_SERVER_PORT = "server_port"
+
 
 def _get_domain_icon(domain):
     """ Returns HTML that shows domain icon. """
@@ -127,12 +133,19 @@ def _get_domain_icon(domain):
         DOMAIN_ICONS.get(domain, ""))
 
 
-def setup(hass, api_password, server_port=None, server_host=None):
+def setup(hass, config):
     """ Sets up the HTTP API and debug interface. """
-    server_port = server_port or rem.SERVER_PORT
+
+    if not util.validate_config(config, {DOMAIN: [CONF_API_PASSWORD]},
+                                logging.getLogger(__name__)):
+        return False
+
+    api_password = config[DOMAIN]['api_password']
 
     # If no server host is given, accept all incoming requests
-    server_host = server_host or '0.0.0.0'
+    server_host = config[DOMAIN].get(CONF_SERVER_HOST, '0.0.0.0')
+
+    server_port = config[DOMAIN].get(CONF_SERVER_PORT, rem.SERVER_PORT)
 
     server = HomeAssistantHTTPServer((server_host, server_port),
                                      RequestHandler, hass, api_password)
@@ -146,6 +159,8 @@ def setup(hass, api_password, server_port=None, server_host=None):
     if isinstance(hass, rem.HomeAssistant) and hass.local_api is None:
         hass.local_api = \
             rem.API(util.get_local_ip(), api_password, server_port)
+
+    return True
 
 
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
@@ -213,7 +228,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         # /event_forwarding
         ('POST', rem.URL_API_EVENT_FORWARD, '_handle_post_api_event_forward'),
         ('DELETE', rem.URL_API_EVENT_FORWARD,
-            '_handle_delete_api_event_forward'),
+         '_handle_delete_api_event_forward'),
 
         # Statis files
         ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
@@ -407,7 +422,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                        "href='#'></a>").format(action, state.entity_id))
 
             write("</td><td>{}</td><td>{}</td></tr>".format(
-                  attributes, util.datetime_to_str(state.last_changed)))
+                attributes, util.datetime_to_str(state.last_changed)))
 
         # Change state form
         write(("<tr><td></td><td><input name='entity_id' class='form-control' "

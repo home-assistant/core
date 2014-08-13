@@ -10,6 +10,7 @@ import homeassistant.util as util
 import homeassistant.components as components
 
 DOMAIN = 'chromecast'
+DEPENDENCIES = []
 
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 
@@ -100,7 +101,7 @@ def media_prev_track(hass, entity_id=None):
 
 
 # pylint: disable=too-many-locals, too-many-branches
-def setup(hass, hosts=None):
+def setup(hass, config):
     """ Listen for chromecast events. """
     logger = logging.getLogger(__name__)
 
@@ -113,8 +114,11 @@ def setup(hass, hosts=None):
 
         return False
 
+    if 'hosts' in config[DOMAIN]:
+        hosts = config[DOMAIN]['hosts'].split(",")
+
     # If no hosts given, scan for chromecasts
-    if not hosts:
+    else:
         logger.info("Scanning for Chromecasts")
         hosts = pychromecast.discover_chromecasts()
 
@@ -131,7 +135,7 @@ def setup(hass, hosts=None):
 
             casts[entity_id] = cast
 
-        except pychromecast.ConnectionError:
+        except pychromecast.ChromecastConnectionError:
             pass
 
     if not casts:

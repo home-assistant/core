@@ -13,6 +13,7 @@ from homeassistant.components import (STATE_ON, STATE_OFF,
                                       ATTR_ENTITY_ID)
 
 DOMAIN = "group"
+DEPENDENCIES = []
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -89,12 +90,20 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 
 # pylint: disable=too-many-branches, too-many-locals
-def setup(hass, name, entity_ids):
+def setup(hass, config):
+    """ Sets up all groups found definded in the configuration. """
+
+    for name, entity_ids in config[DOMAIN].items():
+        entity_ids = entity_ids.split(",")
+
+        setup_group(hass, name, entity_ids)
+
+    return True
+
+
+def setup_group(hass, name, entity_ids):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
-
-    # Convert entity_ids to a list incase it is an iterable
-    entity_ids = list(entity_ids)
 
     logger = logging.getLogger(__name__)
 
@@ -118,9 +127,11 @@ def setup(hass, name, entity_ids):
 
             else:
                 # We did not find a matching group_type
-                errors.append("Found unexpected state '{}'".format(
-                              name, state.state))
+                errors.append(
+                    "Entity {} has ungroupable state '{}'".format(
+                        name, state.state))
 
+                # Stop check all other entity IDs and report as error
                 break
 
         # Check if entity exists
@@ -134,43 +145,48 @@ def setup(hass, name, entity_ids):
                 entity_id, state.state, group_off, group_on))
 
         # Keep track of the group state to init later on
-        elif group_state == group_off and state.state == group_on:
+        elif state.state == group_on:
             group_state = group_on
 
+    if group_type is None and not errors:
+        errors.append('Unable to determine group type for {}'.format(name))
+
     if errors:
-        logger.error("Error setting up state group {}: {}".format(
+        logger.error("Error setting up group {}: {}".format(
             name, ", ".join(errors)))
 
         return False
 
-    group_entity_id = ENTITY_ID_FORMAT.format(name)
-    state_attr = {ATTR_ENTITY_ID: entity_ids}
+    else:
+        group_entity_id = ENTITY_ID_FORMAT.format(name)
+        state_attr = {ATTR_ENTITY_ID: entity_ids}
 
-    # pylint: disable=unused-argument
-    def update_group_state(entity_id, old_state, new_state):
-        """ Updates the group state based on a state change by a tracked
-            entity. """
+        # pylint: disable=unused-argument
+        def update_group_state(entity_id, old_state, new_state):
+            """ Updates the group state based on a state change by
+                a tracked entity. """
 
-        cur_group_state = hass.states.get(group_entity_id).state
+            cur_gr_state = hass.states.get(group_entity_id).state
 
-        # if cur_group_state = OFF and new_state = ON: set ON
-        # if cur_group_state = ON and new_state = OFF: research
-        # else: ignore
+            # if cur_gr_state = OFF and new_state = ON: set ON
+            # if cur_gr_state = ON and new_state = OFF: research
+            # else: ignore
 
-        if cur_group_state == group_off and new_state.state == group_on:
+            if cur_gr_state == group_off and new_state.state == group_on:
 
-            hass.states.set(group_entity_id, group_on, state_attr)
+                hass.states.set(group_entity_id, group_on, state_attr)
 
-        elif cur_group_state == group_on and new_state.state == group_off:
+            elif cur_gr_state == group_on and new_state.state == group_off:
 
-            # Check if any of the other states is still on
-            if not any([hass.states.is_state(ent_id, group_on)
-                        for ent_id in entity_ids if entity_id != ent_id]):
-                hass.states.set(group_entity_id, group_off, state_attr)
+                # Check if any of the other states is still on
+                if not any([hass.states.is_state(ent_id, group_on)
+                            for ent_id in entity_ids
+                            if entity_id != ent_id]):
+                    hass.states.set(group_entity_id, group_off, state_attr)
 
-    for entity_id in entity_ids:
-        hass.track_state_change(entity_id, update_group_state)
+        for entity_id in entity_ids:
+            hass.track_state_change(entity_id, update_group_state)
 
-    hass.states.set(group_entity_id, group_state, state_attr)
+        hass.states.set(group_entity_id, group_state, state_attr)
 
-    return True
+        return True

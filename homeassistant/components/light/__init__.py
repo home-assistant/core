@@ -55,6 +55,7 @@ from collections import namedtuple
 import os
 import csv
 
+import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.components import (group, extract_entity_ids,
                                       STATE_ON, STATE_OFF,
@@ -63,6 +64,7 @@ from homeassistant.components import (group, extract_entity_ids,
 
 
 DOMAIN = "light"
+DEPENDENCIES = []
 
 GROUP_NAME_ALL_LIGHTS = 'all_lights'
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format(
@@ -136,10 +138,25 @@ def turn_off(hass, entity_id=None, transition=None):
 
 
 # pylint: disable=too-many-branches, too-many-locals
-def setup(hass, light_control):
+def setup(hass, config):
     """ Exposes light control via statemachine and services. """
 
     logger = logging.getLogger(__name__)
+
+    if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, logger):
+        return False
+
+    light_type = config[DOMAIN][ha.CONF_TYPE]
+
+    if light_type == 'hue':
+        light_init = HueLightControl
+
+    else:
+        logger.error("Found unknown light type: {}".format(light_type))
+
+        return False
+
+    light_control = light_init(config[DOMAIN])
 
     ent_to_light = {}
     light_to_ent = {}
@@ -188,9 +205,9 @@ def setup(hass, light_control):
         """ Update the state of all the lights. """
 
         # First time this method gets called, force_reload should be True
-        if (force_reload or
-           datetime.now() - update_lights_state.last_updated >
-           MIN_TIME_BETWEEN_SCANS):
+        if force_reload or \
+           datetime.now() - update_lights_state.last_updated > \
+           MIN_TIME_BETWEEN_SCANS:
 
             logger.info("Updating light status")
             update_lights_state.last_updated = datetime.now()
@@ -206,7 +223,7 @@ def setup(hass, light_control):
         return False
 
     # Track all lights in a group
-    group.setup(hass, GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
+    group.setup_group(hass, GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
 
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.dirname(__file__), os.getcwd()]
@@ -336,8 +353,10 @@ def _hue_to_light_state(info):
 class HueLightControl(object):
     """ Class to interface with the Hue light system. """
 
-    def __init__(self, host=None):
+    def __init__(self, config):
         logger = logging.getLogger(__name__)
+
+        host = config.get(ha.CONF_HOST, None)
 
         try:
             import phue

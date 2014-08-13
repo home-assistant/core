@@ -26,12 +26,13 @@ from homeassistant.components import STATE_ON, STATE_OFF
 import homeassistant.util as util
 
 DOMAIN = 'process'
+DEPENDENCIES = []
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 PS_STRING = 'ps awx'
 
 
-def setup(hass, processes):
+def setup(hass, config):
     """ Sets up a check if specified processes are running.
 
         processes: dict mapping entity id to substring to search for
@@ -39,7 +40,7 @@ def setup(hass, processes):
     """
 
     entities = {ENTITY_ID_FORMAT.format(util.slugify(pname)): pstring
-                for pname, pstring in processes.items()}
+                for pname, pstring in config[DOMAIN].items()}
 
     # pylint: disable=unused-argument
     def update_process_states(time):

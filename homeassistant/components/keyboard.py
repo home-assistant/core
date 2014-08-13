@@ -9,6 +9,7 @@ import logging
 import homeassistant.components as components
 
 DOMAIN = "keyboard"
+DEPENDENCIES = []
 
 
 def volume_up(hass):
@@ -41,13 +42,14 @@ def media_prev_track(hass):
     hass.call_service(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK)
 
 
-def setup(hass):
+# pylint: disable=unused-argument
+def setup(hass, config):
     """ Listen for keyboard events. """
     try:
         import pykeyboard
     except ImportError:
         logging.getLogger(__name__).exception(
-            "MediaButtons: Error while importing dependency PyUserInput.")
+            "Error while importing dependency PyUserInput.")
 
         return False
 

@@ -12,15 +12,18 @@ import threading
 import homeassistant.util as util
 
 DOMAIN = "downloader"
+DEPENDENCIES = []
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 
 ATTR_URL = "url"
 ATTR_SUBDIR = "subdir"
 
+CONF_DOWNLOAD_DIR = 'download_dir'
+
 
 # pylint: disable=too-many-branches
-def setup(hass, download_path):
+def setup(hass, config):
     """ Listens for download events to download files. """
 
     logger = logging.getLogger(__name__)
@@ -32,6 +35,11 @@ def setup(hass, download_path):
                           "Did you maybe not execute 'pip install requests'?"))
 
         return False
+
+    if not util.validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
+        return False
+
+    download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
 
     if not os.path.isdir(download_path):
 
@@ -106,8 +114,7 @@ def setup(hass, download_path):
 
                         final_path = "{}_{}.{}".format(path, tries, ext)
 
-                    logger.info("{} -> {}".format(
-                                url, final_path))
+                    logger.info("{} -> {}".format(url, final_path))
 
                     with open(final_path, 'wb') as fil:
                         for chunk in req.iter_content(1024):
