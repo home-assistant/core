@@ -107,6 +107,9 @@ def setup_group(hass, name, entity_ids):
 
     logger = logging.getLogger(__name__)
 
+    # In case an iterable is passed in
+    entity_ids = list(entity_ids)
+
     # Loop over the given entities to:
     #  - determine which group type this is (on_off, device_home)
     #  - if all states exist and have valid states
