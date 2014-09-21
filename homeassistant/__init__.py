@@ -6,6 +6,8 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
+import sys
+import os
 import time
 import logging
 import threading
@@ -54,6 +56,25 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
+
+        self._config_dir = os.getcwd()
+
+    @property
+    def config_dir(self):
+        """ Return value of config dir. """
+        return self._config_dir
+
+    @config_dir.setter
+    def config_dir(self, value):
+        """ Update value of config dir and ensures it's in Python path. """
+        self._config_dir = value
+
+        # Ensure we can load components from the config dir
+        sys.path.append(value)
+
+    def get_config_path(self, sub_path):
+        """ Returns path to the file within the config dir. """
+        return os.path.join(self._config_dir, sub_path)
 
     def start(self):
         """ Start home assistant. """

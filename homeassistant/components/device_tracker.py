@@ -119,6 +119,8 @@ class DeviceTracker(object):
 
         self.lock = threading.Lock()
 
+        self.path_known_devices_file = hass.get_config_path(KNOWN_DEVICES_FILE)
+
         # Dictionary to keep track of known devices and devices we track
         self.known_devices = {}
 
@@ -189,19 +191,21 @@ class DeviceTracker(object):
         # known devices file
         if not self.invalid_known_devices_file:
 
+            known_dev_path = self.path_known_devices_file
+
             unknown_devices = [device for device in found_devices
                                if device not in known_dev]
 
             if unknown_devices:
                 try:
                     # If file does not exist we will write the header too
-                    is_new_file = not os.path.isfile(KNOWN_DEVICES_FILE)
+                    is_new_file = not os.path.isfile(known_dev_path)
 
-                    with open(KNOWN_DEVICES_FILE, 'a') as outp:
+                    with open(known_dev_path, 'a') as outp:
                         self.logger.info((
                             "DeviceTracker:Found {} new devices,"
                             " updating {}").format(len(unknown_devices),
-                                                   KNOWN_DEVICES_FILE))
+                                                   known_dev_path))
 
                         writer = csv.writer(outp)
 
@@ -221,7 +225,7 @@ class DeviceTracker(object):
                 except IOError:
                     self.logger.exception((
                         "DeviceTracker:Error updating {}"
-                        "with {} new devices").format(KNOWN_DEVICES_FILE,
+                        "with {} new devices").format(known_dev_path,
                                                       len(unknown_devices)))
 
         self.lock.release()
@@ -230,12 +234,12 @@ class DeviceTracker(object):
         """ Parse and process the known devices file. """
 
         # Read known devices if file exists
-        if os.path.isfile(KNOWN_DEVICES_FILE):
+        if os.path.isfile(self.path_known_devices_file):
             self.lock.acquire()
 
             known_devices = {}
 
-            with open(KNOWN_DEVICES_FILE) as inp:
+            with open(self.path_known_devices_file) as inp:
                 default_last_seen = datetime(1990, 1, 1)
 
                 # Temp variable to keep track of which entity ids we use
@@ -276,7 +280,7 @@ class DeviceTracker(object):
                     if not known_devices:
                         self.logger.warning(
                             "No devices to track. Please update {}.".format(
-                                KNOWN_DEVICES_FILE))
+                                self.path_known_devices_file))
 
                     # Remove entities that are no longer maintained
                     new_entity_ids = set([known_devices[device]['entity_id']
@@ -297,14 +301,14 @@ class DeviceTracker(object):
 
                     self.logger.info(
                         "DeviceTracker:Loaded devices from {}".format(
-                            KNOWN_DEVICES_FILE))
+                            self.path_known_devices_file))
 
                 except KeyError:
                     self.invalid_known_devices_file = True
                     self.logger.warning((
-                        "Invalid {} found. "
+                        "Invalid known devices file: {}. "
                         "We won't update it with new found devices."
-                        ).format(KNOWN_DEVICES_FILE))
+                        ).format(self.path_known_devices_file))
 
                 finally:
                     self.lock.release()

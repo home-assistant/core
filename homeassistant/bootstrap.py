@@ -7,6 +7,7 @@ After bootstrapping you can add your own components or
 start by calling homeassistant.start_home_assistant(bus)
 """
 
+import os
 import configparser
 import logging
 from collections import defaultdict
@@ -147,13 +148,20 @@ def from_config_file(config_path, hass=None, enable_logging=True):
     functionality. Will add functionality to 'hass' parameter if given,
     instantiates a new Home Assistant object if 'hass' is not given.
     """
+    if hass is None:
+        hass = homeassistant.HomeAssistant()
+
+        # Set config dir to directory holding config file
+        hass.config_dir = os.path.dirname(config_path)
+
     if enable_logging:
         # Setup the logging for home assistant.
         logging.basicConfig(level=logging.INFO)
 
         # Log errors to a file
-        err_handler = logging.FileHandler("home-assistant.log",
-                                          mode='w', delay=True)
+        err_handler = logging.FileHandler(
+            hass.get_config_path("home-assistant.log"), mode='w', delay=True)
+
         err_handler.setLevel(logging.ERROR)
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',

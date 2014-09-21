@@ -1,6 +1,10 @@
-home-assistant.log
-home-assistant.conf
-known_devices.csv
+config/*
+!config/home-assistant.conf.default
+
+# There is not a better solution afaik..
+!config/custom_components
+config/custom_components/*
+!config/custom_components/example.py
 
 # Hide sublime text stuff
 *.sublime-project

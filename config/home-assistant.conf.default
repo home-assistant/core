@@ -40,3 +40,9 @@ download_dir=downloads
 [process]
 # items are which processes to look for: <entity_id>=<search string within ps>
 # xbmc=XBMC.App
+
+[example]
+
+[browser]
+
+[keyboard]

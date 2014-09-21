@@ -3,6 +3,6 @@
 import homeassistant
 import homeassistant.bootstrap
 
-hass = homeassistant.bootstrap.from_config_file("home-assistant.conf")
+hass = homeassistant.bootstrap.from_config_file("config/home-assistant.conf")
 hass.start()
 hass.block_till_stopped()

@@ -30,16 +30,50 @@ Current compatible devices:
 
 The system is built modular so support for other devices or actions can be implemented easily.
 
-Installation instructions
--------------------------
-* The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support and [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support. Install these using `pip install pyephem requests phue pychromecast`.
+Installation instructions / Quick-start guide
+---------------------------------------------
+* The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the built-in components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support and [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support. Install these using `pip3 install pyephem requests phue pychromecast`.
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
-* Copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
-  * For Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
-* If you want to use Hue, setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS` from the commandline and follow the instructions.
+* In the config directory, copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
+  * For routers running Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
+* If you want to use Hue, setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS --config-file-path phue.conf` from the commandline inside your config directory and follow the instructions.
 * While running the script it will create and maintain a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script or call the service `device_tracker/reload_devices_csv`.
 
-Done. Start it now by running `python start.py`
+Done. Start it now by running `python3 start.py`
+
+Customizing Home Assistant
+----------------------------
+Home Assistant can be extended by components. Components can listen or trigger events and offer services. Components are written in Python and can do all the goodness that Python has to offer.
+
+By default Home Assistant offers a bunch of built-in components but it is easy to built your own. An example component can be found in [`/config/custom_components/example.py`](https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py)
+
+*Note:* Home Assistant will use the directory that contains your config file as the directory that holds your customizations. The included file `start.py` points this at the `/config` folder but this can be anywhere on the filesystem.
+
+A component can be loaded by referring to its name inside the config file. When loading a component Home Assistant will check the following paths:
+ * &lt;config file directory>/custom_components/&lt;component name>
+ * homeassistant/components/&lt;component name> (built-in components)
+
+Upon loading of a component a quick validation check will be done and only valid components will be loaded. Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup.
+
+*Warning:* You can override a built-in component by offering a component with the same name in your custom_components folder. This is not recommended and may lead to unexpected behavior!
+
+A component is setup by passing in the Home Assistant object and a dict containing the configuration. The keys of the config-dict are components and the value is another dict with configuration attributes.
+
+If your configuration file containes the following lines:
+```
+[example]
+host=paulusschoutsen.nl
+```
+Then in the setup-method you will be able to refer to `config[example][host]` to get the value `paulusschoutsen.nl`.
+
+Docker
+------
+
+A Docker image is available for Home Assistant. It will work with your current config directory and will always run the latest Home Assistant version. You can start it like this:
+
+```
+docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro -p 8123:8123 balloob/home-assistant
+```
 
 Architecture
 ------------

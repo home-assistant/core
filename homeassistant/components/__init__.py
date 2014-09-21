@@ -44,20 +44,48 @@ SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
 
+_COMPONENT_CACHE = {}
 
-def get_component(component, logger=None):
+
+def get_component(comp_name, logger=None):
+    """ Tries to load specified component.
+        Looks in config dir first, then built-in components.
+        Only returns it if also found to be valid. """
+
+    if comp_name in _COMPONENT_CACHE:
+        return _COMPONENT_CACHE[comp_name]
+
+    # First config dir, then built-in
+    potential_paths = ['custom_components.{}'.format(comp_name),
+                       'homeassistant.components.{}'.format(comp_name)]
+
+    for path in potential_paths:
+        comp = _get_component(path, logger)
+
+        if comp is not None:
+            if logger is not None:
+                logger.info("Loaded component {} from {}".format(
+                    comp_name, path))
+
+            _COMPONENT_CACHE[comp_name] = comp
+
+            return comp
+
+    # We did not find a component
+    if logger is not None:
+        logger.error(
+            "Failed to find component {}".format(comp_name))
+
+    return None
+
+
+def _get_component(module, logger):
     """ Tries to load specified component.
         Only returns it if also found to be valid."""
-
     try:
-        comp = importlib.import_module(
-            'homeassistant.components.{}'.format(component))
+        comp = importlib.import_module(module)
 
     except ImportError:
-        if logger:
-            logger.error(
-                "Failed to find component {}".format(component))
-
         return None
 
     # Validation if component has required methods and attributes
@@ -75,7 +103,7 @@ def get_component(component, logger=None):
     if errors:
         if logger:
             logger.error("Found invalid component {}: {}".format(
-                component, ", ".join(errors)))
+                module, ", ".join(errors)))
 
         return None
 

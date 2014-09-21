@@ -87,6 +87,7 @@ ATTR_BRIGHTNESS = "brightness"
 # String representing a profile (built-in ones or external defined)
 ATTR_PROFILE = "profile"
 
+PHUE_CONFIG_FILE = "phue.conf"
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 
@@ -156,7 +157,7 @@ def setup(hass, config):
 
         return False
 
-    light_control = light_init(config[DOMAIN])
+    light_control = light_init(hass, config[DOMAIN])
 
     ent_to_light = {}
     light_to_ent = {}
@@ -226,14 +227,15 @@ def setup(hass, config):
     group.setup_group(hass, GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
 
     # Load built-in profiles and custom profiles
-    profile_paths = [os.path.dirname(__file__), os.getcwd()]
+    profile_paths = [os.path.join(os.path.dirname(__file__),
+                                  LIGHT_PROFILES_FILE),
+                     hass.get_config_path(LIGHT_PROFILES_FILE)]
     profiles = {}
 
-    for dir_path in profile_paths:
-        file_path = os.path.join(dir_path, LIGHT_PROFILES_FILE)
+    for profile_path in profile_paths:
 
-        if os.path.isfile(file_path):
-            with open(file_path) as inp:
+        if os.path.isfile(profile_path):
+            with open(profile_path) as inp:
                 reader = csv.reader(inp)
 
                 # Skip the header
@@ -249,7 +251,7 @@ def setup(hass, config):
                     # ValueError if convert to float/int failed
                     logger.error(
                         "Error parsing light profiles from {}".format(
-                            file_path))
+                            profile_path))
 
                     return False
 
@@ -353,7 +355,7 @@ def _hue_to_light_state(info):
 class HueLightControl(object):
     """ Class to interface with the Hue light system. """
 
-    def __init__(self, config):
+    def __init__(self, hass, config):
         logger = logging.getLogger(__name__)
 
         host = config.get(ha.CONF_HOST, None)
@@ -369,7 +371,9 @@ class HueLightControl(object):
             return
 
         try:
-            self._bridge = phue.Bridge(host)
+            self._bridge = phue.Bridge(host,
+                                       config_file_path=hass.get_config_path(
+                                           PHUE_CONFIG_FILE))
         except socket.error:  # Error connecting using Phue
             logger.exception((
                 "HueLightControl:Error while connecting to the bridge. "
