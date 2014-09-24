@@ -334,5 +334,7 @@ If your client does not support DELETE HTTP requests you can add an optional att
 Related projects
 ----------------
 [HA API client in Ruby](https://github.com/balloob/home-assistant-ruby)
+
 [HA API client for Tasker for Android](https://github.com/balloob/home-assistant-android-tasker)
+
 [HA Docker image](https://github.com/balloob/docker-home-assistant)
