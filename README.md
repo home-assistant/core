@@ -16,7 +16,6 @@ It is currently able to do the following things:
  * Open a url in the default browser at the host machine
  * Simulate key presses on the host for Play/Pause, Next track, Prev track, Volume up, Volume Down
  * Support for remoting Home Assistant instances through a Python API
- * Android Tasker project to control Home Assistant from your phone and report charging state.
 
 ![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/states.png)
 
@@ -34,12 +33,12 @@ Installation instructions / Quick-start guide
 ---------------------------------------------
 * The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the built-in components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support and [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support. Install these using `pip3 install pyephem requests phue pychromecast`.
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
-* In the config directory, copy home-assistant.conf.default to home-assistant.conf and adjust the config values to match your setup.
+* In the config directory, copy `home-assistant.conf.default` to `home-assistant.conf` and adjust the config values to match your setup.
   * For routers running Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
 * If you want to use Hue, setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS --config-file-path phue.conf` from the commandline inside your config directory and follow the instructions.
 * While running the script it will create and maintain a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script or call the service `device_tracker/reload_devices_csv`.
 
-Done. Start it now by running `python3 start.py`
+Done. Start it now by running `python3 start.py` and point your browser at http://localhost:8123 .
 
 Customizing Home Assistant
 ----------------------------
@@ -332,14 +331,8 @@ If your client does not support DELETE HTTP requests you can add an optional att
 }
 ```
 
-Android remote control
-----------------------
-
-An app has been built using [Tasker for Android](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) that:
-
- * Provides buttons to control the lights and the chromecast
- * Reports the charging state and battery level of the phone
-
-The [APK](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.apk) and [Tasker project XML](https://raw.github.com/balloob/home-assistant/master/android-tasker/Home_Assistant.prj.xml) can be found in [/android-tasker/](https://github.com/balloob/home-assistant/tree/master/android-tasker)
-
-![screenshot-android-tasker.jpg](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-android-tasker.png)
+Related projects
+----------------
+[HA API client in Ruby](https://github.com/balloob/home-assistant-ruby)
+[HA API client for Tasker for Android](https://github.com/balloob/home-assistant-android-tasker)
+[HA Docker image](https://github.com/balloob/docker-home-assistant)
