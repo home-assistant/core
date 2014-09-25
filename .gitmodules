@@ -1,6 +1,3 @@
-[submodule "homeassistant/external/pychromecast"]
-	path = homeassistant/external/pychromecast
-	url = https://github.com/balloob/pychromecast.git
 [submodule "homeassistant/external/pynetgear"]
 	path = homeassistant/external/pynetgear
 	url = https://github.com/balloob/pynetgear.git
