@@ -33,7 +33,7 @@ Installation instructions / Quick-start guide
 ---------------------------------------------
 * The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the built-in components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support and [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support. Install these using `pip3 install -r requirements.txt`.
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
-* In the config directory, copy `home-assistant.conf.default` to `home-assistant.conf` and adjust the config values to match your setup.
+* In the config directory, copy `home-assistant.conf.example` to `home-assistant.conf` and adjust the config values to match your setup.
   * For routers running Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
 * If you want to use Hue, setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS --config-file-path phue.conf` from the commandline inside your config directory and follow the instructions.
 * While running the script it will create and maintain a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script or call the service `device_tracker/reload_devices_csv`.

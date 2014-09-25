@@ -65,7 +65,7 @@ def setup(hass, config):
     try:
         import ephem
     except ImportError:
-        logger.exception("TrackSun:Error while importing dependency ephem.")
+        logger.exception("Error while importing dependency ephem.")
         return False
 
     sun = ephem.Sun()  # pylint: disable=no-member
@@ -92,8 +92,8 @@ def setup(hass, config):
             next_change = next_rising_dt
 
         logger.info(
-            "Sun:{}. Next change: {}".format(new_state,
-                                             next_change.strftime("%H:%M")))
+            "{}. Next change: {}".format(new_state,
+                                         next_change.strftime("%H:%M")))
 
         state_attributes = {
             STATE_ATTR_NEXT_RISING: util.datetime_to_str(next_rising_dt),

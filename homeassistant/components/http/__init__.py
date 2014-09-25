@@ -172,6 +172,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         self.hass = hass
         self.api_password = api_password
+        self.server_address = server_address
         self.logger = logging.getLogger(__name__)
 
         # To store flash messages between sessions
@@ -182,7 +183,9 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     def start(self):
         """ Starts the server. """
-        self.logger.info("Starting")
+        self.logger.info(
+            "Web interface starting at http://{}:{}".format(
+                *self.server_address))
 
         self.serve_forever()
 
@@ -365,9 +368,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<head><title>Home Assistant</title>"
                "<link rel='stylesheet' type='text/css' "
                "      href='/static/style.css'>"
-                "<link rel='shortcut icon' href='/static/favicon.ico' />"
-                "<link rel='icon' type='image/png' "
-                "     href='/static/favicon-192x192.png' sizes='192x192'>"
+               "<link rel='shortcut icon' href='/static/favicon.ico' />"
+               "<link rel='icon' type='image/png' "
+               "     href='/static/favicon-192x192.png' sizes='192x192'>"
                "<script src='http://code.jquery.com/jquery-2.1.1.min.js'>"
                "      </script>"
                "<script type='text/javascript' src='/static/script.js'>"
