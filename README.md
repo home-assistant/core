@@ -31,7 +31,7 @@ The system is built modular so support for other devices or actions can be imple
 
 Installation instructions / Quick-start guide
 ---------------------------------------------
-* The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the built-in components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support and [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support. Install these using `pip3 install pyephem requests phue pychromecast`.
+* The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the built-in components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support and [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support. Install these using `pip3 install -r requirements.txt`.
 * Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
 * In the config directory, copy `home-assistant.conf.default` to `home-assistant.conf` and adjust the config values to match your setup.
   * For routers running Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
