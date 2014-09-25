@@ -2,3 +2,4 @@ requests>=2.0
 phue>=0.7
 pychromecast>=0.5
 pyephem>=3.7
+pyuserinput>=0.1.9
