@@ -1,6 +1,6 @@
 # Home Assistant
 
-Home Assistant is a home automation platform running on Python 3. The goal of Home Assistant is to be able to track and control all devices at home and offer a platform that allows to connect devices.
+Home Assistant is a home automation platform running on Python 3. The goal of Home Assistant is to be able to track and control all devices at home and offer a platform for automating control.
 
 It offers the following functionality through built-in components:
 
@@ -107,7 +107,7 @@ After a component is loaded the bootstrapper will call its setup method `setup(h
 
 | Parameter | Description |
 | --------- | ----------- |
-| hass | The Home Assistant object. Call its methods to track time, register services or listen for events. [Overview of available methods](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L100) |
+| hass | The Home Assistant object. Call its methods to track time, register services or listen for events. [Overview of available methods.](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L100) |
 | config | A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with configuration attributes. |
 
 **Example on using the configuration parameter**<br>
