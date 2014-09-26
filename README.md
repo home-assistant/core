@@ -1,82 +1,129 @@
-Home Assistant
-==============
+# Home Assistant
 
-Home Assistant is a home automation platform running on Python 3. 
+Home Assistant is a home automation platform running on Python 3. The goal of Home Assistant is to be able to track and control all devices at home and offer a platform that allows to connect devices.
 
-It is currently able to do the following things:
- * Track if devices are home by monitoring connected devices to a wireless router
- * Track and control lights
- * Track and control WeMo switches
- * Track and control Chromecasts
- * Turn on the lights when people get home when the sun is setting or has set
- * Slowly turn on the lights to compensate for light loss when the sun sets and people are home
- * Turn off lights and connected devices when everybody leaves the house
- * Controllable via a REST API and web interface
- * Download files to the host machine
- * Open a url in the default browser at the host machine
- * Simulate key presses on the host for Play/Pause, Next track, Prev track, Volume up, Volume Down
- * Support for remoting Home Assistant instances through a Python API
+It offers the following functionality through built-in components:
+
+ * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com))
+ * Track and control [Philips Hue](http://meethue.com) lights
+ * Track and control [WeMo switches](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/)
+ * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast)
+ * Track running services by monitoring `ps` output
+ * Turn on the lights when people get home after sun set
+ * Turn on lights slowly during sun set to compensate for light loss
+ * Turn off all lights and devices when everybody leaves the house
+ * Offers web interface to monitor and control Home Assistant
+ * Offers a [REST API](#API) for easy integration with other projects ([see related projects for Android and Ruby support](#related_projects))
+ * [Ability to have multiple instances of Home Assistant work together](#connected_instances)
+
+Home Assistant also includes functionality for controlling HTPCs:
+
+ * Simulate key presses for Play/Pause, Next track, Prev track, Volume up, Volume Down
+ * Download files
+ * Open URLs in the default browser
 
 ![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/states.png)
 
-Current compatible devices:
- * [WeMo switches](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/)
- * [Philips Hue](http://meethue.com)
- * [Google Chromecast](http://www.google.com/intl/en/chrome/devices/chromecast)
- * Wireless router running [Tomato firmware](http://www.polarcloud.com/tomato)
- * Wireless router running [OpenWrt](https://openwrt.org/)
- * Netgear wireless routers (tested with R6300v1)
+The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](#architecture) and the [section on customizing](#customizing).
 
-The system is built modular so support for other devices or actions can be implemented easily.
+## Installation instructions / Quick-start guide
 
-Installation instructions / Quick-start guide
----------------------------------------------
-* The core depends on [PyEphem](http://rhodesmill.org/pyephem/) and [Requests](http://python-requests.org). Depending on the built-in components you would like to use you will need [PHue](https://github.com/studioimaginaire/phue) for Philips Hue support and [PyChromecast](https://github.com/balloob/pychromecast) for Chromecast support. Install these using `pip3 install -r requirements.txt`.
-* Clone the repository and pull in the submodules `git clone --recursive https://github.com/balloob/home-assistant.git`
-* In the config directory, copy `home-assistant.conf.example` to `home-assistant.conf` and adjust the config values to match your setup.
-  * For routers running Tomato you will have to not only setup your host, username and password but also a http_id. The http_id can be retrieved by going to the admin console of your router, view the source of any of the pages and search for `http_id`.
-* If you want to use Hue, setup PHue by running `python -m phue --host HUE_BRIDGE_IP_ADDRESS --config-file-path phue.conf` from the commandline inside your config directory and follow the instructions.
-* While running the script it will create and maintain a file called `known_devices.csv` which will contain the detected devices. Adjust the track variable for the devices you want the script to act on and restart the script or call the service `device_tracker/reload_devices_csv`.
+Run the following code to get up and running with the minimum setup:
 
-Done. Start it now by running `python3 start.py` and point your browser at http://localhost:8123 .
+```python
+git clone --recursive https://github.com/balloob/home-assistant.git
+cd home-assistant
+pip3 install -r requirements.txt
 
-Customizing Home Assistant
-----------------------------
-Home Assistant can be extended by components. Components can listen or trigger events and offer services. Components are written in Python and can do all the goodness that Python has to offer.
+python3 start.py
+```
 
-By default Home Assistant offers a bunch of built-in components but it is easy to built your own. An example component can be found in [`/config/custom_components/example.py`](https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py)
+This will start the Home Assistant server and its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123). The default password is 'password'.
 
-*Note:* Home Assistant will use the directory that contains your config file as the directory that holds your customizations. The included file `start.py` points this at the `/config` folder but this can be anywhere on the filesystem.
+If you're using Docker, you can use
 
-A component can be loaded by referring to its name inside the config file. When loading a component Home Assistant will check the following paths:
+```bash
+docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro -p 8123:8123 balloob/home-assistant
+```
+
+After you got the bare minimum running it is time to enable some components and get started. An example configuration file has been provided in [/config/home-assistant.conf.example](https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example).
+
+### Philips Hue
+To get Philips Hue working you will have to connect Home Assistant to the Hue bridge. 
+
+Run the following command from your config dir and follow the instructions:
+
+```bash
+python -m phue --host HUE_BRIDGE_IP_ADDRESS --config-file-path phue.conf
+```
+
+After that add the following lines to your `home-assistant.conf`:
+
+```
+[light]
+type=hue
+```
+
+### Wireless router
+
+Your wireless router is used to track which devices are connected. Three different types of wireless routers are currently supported: tomato, netgear and luci (OpenWRT). To get started add the following lines to your `home-assistant.conf` (example for Netgear):
+
+```
+[device_tracker]
+type=netgear
+host=192.168.1.1
+username=admin
+password=MY_PASSWORD
+```
+
+*Note on tomato:* Tomato requires an extra config variable called `http_id`. The value can be obtained by logging in to the Tomato admin interface and search for `http_id` in the page source code.
+
+*Note on luci:* before the Luci scanner can be used you have to install the luci RPC package on OpenWRT: `opkg install luci-mod-rpc`.
+
+Once tracking the `device_tracker` component will maintain a file in your config dir called `known_devices.csv`. Edit this file to adjust which devices have to be tracked.
+
+<a name='customizing'></a>
+## Further customizing Home Assistant
+
+Home Assistant can be extended by components. Components can listen for- or trigger events and offer services. Components are written in Python and can do all the goodness that Python has to offer.
+
+Home Assistant offers [built-in components](#components) but it is easy to built your own. An example component can be found in [`/config/custom_components/example.py`](https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py).
+
+*Note:* Home Assistant will use the directory that contains your config file as the directory that holds your customizations. The included file `start.py` points this at the `/config` folder but this can be placed anywhere on the filesystem.
+
+A component will be loaded on start if a section (ie. `[light]`) for it exists in the config file or a module that depends on the component is loaded. When loading a component Home Assistant will check the following paths:
+
  * &lt;config file directory>/custom_components/&lt;component name>
  * homeassistant/components/&lt;component name> (built-in components)
 
-Upon loading of a component a quick validation check will be done and only valid components will be loaded. Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup.
+A component will be validated upon loading. It will only successfully 
+Upon loading of a component it will be validated to see if the required fields (`DOMAIN`, `DEPENDENCIES`) and required method ( `setup(hass, config)` ) are available.
+
+Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if loading and setup of your component went well.
 
 *Warning:* You can override a built-in component by offering a component with the same name in your custom_components folder. This is not recommended and may lead to unexpected behavior!
 
-A component is setup by passing in the Home Assistant object and a dict containing the configuration. The keys of the config-dict are components and the value is another dict with configuration attributes.
+After a component is loaded the bootstrapper will call its setup method `setup(hass, config)`:
 
+| Parameter | Description |
+| --------- | ----------- |
+| hass | The Home Assistant object. Call its methods to track time, register services or listen for events. [Overview of available methods](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L100) |
+| config | A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with configuration attributes. |
+
+**Example on using the configuration parameter**<br>
 If your configuration file containes the following lines:
+
 ```
 [example]
 host=paulusschoutsen.nl
 ```
-Then in the setup-method you will be able to refer to `config[example][host]` to get the value `paulusschoutsen.nl`.
 
-Docker
-------
+Then in the setup-method of your component you will be able to refer to `config[example][host]` to get the value `paulusschoutsen.nl`.
 
-A Docker image is available for Home Assistant. It will work with your current config directory and will always run the latest Home Assistant version. You can start it like this:
+<a name="architecture"></a>
+## Architecture
 
-```
-docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro -p 8123:8123 balloob/home-assistant
-```
-
-Architecture
-------------
-The core of Home Assistant exists of three parts; an EventBus for firing events, a StateMachine that keeps track of the state of things and a ServiceRegistry to manage services.
+The core of Home Assistant exists of three parts; an Event Bus for firing events, a State Machine that keeps track of the state of things and a Service Registry to manage services.
 
 ![home assistant architecture](https://raw.github.com/balloob/home-assistant/master/docs/architecture.png)
 
@@ -98,45 +145,58 @@ When a state is changed a state_changed event is fired for which the device_sun_
 
 By using the Bus as a central communication hub between components it is easy to replace components or add functionality. For example if you would want to change the way devices are detected you only have to write a component that updates the device states in the State Machine.
 
+<a name='components'></a>
 ### Components
 
 **sun**
 Tracks the state of the sun and when the next sun rising and setting will occur.
-Depends on: latitude and longitude
+Depends on: config variables common/latitude and common/longitude
 Action: maintains state of `weather.sun` including attributes `next_rising` and `next_setting`
 
 **device_tracker**
 Keeps track of which devices are currently home.
-Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `known_devices.csv`. 
+Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `config/known_devices.csv`. 
 
-**Light**
-Keeps track which lights are turned on and can control the lights.
+**light**
+Keeps track which lights are turned on and can control the lights. It has [4 built-in light profiles](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/light/light_profiles.csv) which you're able to extend by putting a light_profiles.csv file in your config dir.
 
-**WeMo**
-Keeps track which WeMo switches are in the network and allows you to control them.
+Registers services `light/turn_on` and `light/turn_off` to turn a or all lights on or off.
+
+Optional service data:
+  - `entity_id` - only act on specific light. Else targets all.
+  - `transition_seconds` - seconds to take to swithc to new state.
+  - `profile` - which light profile to use.
+  - `xy_color` - two comma seperated floats that represent the color in XY
+  - `rgb_color` - three comma seperated integers that represent the color in RGB
+  - `brightness` - integer between 0 and 255 for how bright the color should be
+
+**wemo**
+Keeps track which WeMo switches are in the network, their state and allows you to control them.
+
+Registers services `wemo/turn_on` and `wemo/turn_off` to turn a or all wemo switches on or off.
+
+Optional service data:
+ - `entity_id` - only act on specific WeMo switch. Else targets all.
 
 **device_sun_light_trigger**
 Turns lights on or off using a light control component based on state of the sun and devices that are home.
-Depends on: light control, track_sun, DeviceTracker
-Action: 
+Depends on: light control, track_sun, device_tracker
+Action:
+
  * Turns lights off when all devices leave home. 
  * Turns lights on when a device is home while sun is setting. 
  * Turns lights on when a device gets home after sun set.
 
-Registers services `light_control/turn_light_on` and `light_control/turn_light_off` to turn a or all lights on or off.
-
-Optional service data:
-  - `light_id` - only act on specific light. Else targets all.
-  - `transition_seconds` - seconds to take to swithc to new state.
-
 **chromecast**
+Registers 7 services to control playback on a Chromecast: `turn_off`, `volume_up`, `volume_down`, `media_play_pause`, `media_play`, `media_pause`, `media_next_track`.
+
 Registers three services to start playing YouTube video's on the ChromeCast.
 
 Service `chromecast/play_youtube_video` starts playing the specified video on the YouTube app on the ChromeCast. Specify video using `video` in service_data.
 
 Service `chromecast/start_fireplace` will start a YouTube movie simulating a fireplace and the `chromecast/start_epic_sax` service will start playing Epic Sax Guy 10h version.
 
-**media_buttons**
+**keyboard**
 Registers services that will simulate key presses on the keyboard. It currently offers the following Buttons as a Service (BaaS): `keyboard/volume_up`, `keyboard/volume_down` and `keyboard/media_play_pause`
 This actor depends on: PyUserInput
 
@@ -146,44 +206,19 @@ Registers service `downloader/download_file` that will download files. File to d
 **browser**
 Registers service `browser/browse_url` that opens `url` as specified in event_data in the system default browser.
 
-### Multiple connected instances
+<a name='API'></a>
+## Rest API
 
-Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local events fired and states set to the master instance which will then replicate it to each slave.
-
-Because each slave maintains it's own ServiceRegistry it is possible to have multiple slaves respond to one service call.
-
-![home assistant master-slave architecture](https://raw.github.com/balloob/home-assistant/master/docs/architecture-remote.png)
-
-A slave instance can be started with the following code.
-
-```python
-import homeassistant.remote as remote
-import homeassistant.components.http as http
-
-remote_api = remote.API("remote_host_or_ip", "remote_api_password")
-
-hass = remote.HomeAssistant(remote_api)
-
-http.setup(hass, "my_local_api_password")
-
-hass.start()
-hass.block_till_stopped()
-```
-
-Web interface and API
----------------------
 Home Assistent runs a webserver accessible on port 8123. 
 
   * At http://localhost:8123/ it will provide a debug interface showing the current state of the system and an overview of registered services.
   * At http://localhost:8123/api/ it provides a password protected API.
 
-A screenshot of the debug interface:
 ![screenshot-debug-interface](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-debug-interface.png)
 
 In the package `homeassistant.remote` a Python API on top of the HTTP API can be found.
 
-All API calls have to be accompanied by an 'api_password' parameter (as specified in `home-assistant.conf`) and will
-return JSON encoded objects. If successful calls will return status code 200 or 201.
+All API calls have to be accompanied by an 'api_password' parameter (as specified in `home-assistant.conf`) and will return JSON encoded objects. If successful calls will return status code 200 or 201.
 
 Other status codes that can occur are:
  - 400 (Bad Request)
@@ -331,10 +366,33 @@ If your client does not support DELETE HTTP requests you can add an optional att
 }
 ```
 
-Related projects
-----------------
-[HA API client in Ruby](https://github.com/balloob/home-assistant-ruby)
+<a name='connected_instances'></a>
+## Connect multiple instances of Home Assistant
 
-[HA API client for Tasker for Android](https://github.com/balloob/home-assistant-android-tasker)
+Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local events fired and states set to the master instance which will then replicate it to each slave.
 
-[HA Docker image](https://github.com/balloob/docker-home-assistant)
+Because each slave maintains its own ServiceRegistry it is possible to have multiple slaves respond to one service call.
+
+![home assistant master-slave architecture](https://raw.github.com/balloob/home-assistant/master/docs/architecture-remote.png)
+
+A slave instance can be started with the following code and has the same support for components as a master-instance.
+
+```python
+import homeassistant.remote as remote
+import homeassistant.components.http as http
+
+remote_api = remote.API("remote_host_or_ip", "remote_api_password")
+
+hass = remote.HomeAssistant(remote_api)
+
+http.setup(hass, "my_local_api_password")
+
+hass.start()
+hass.block_till_stopped()
+```
+
+<a name="related_projects"></a>
+## Related projects
+
+[Home Assistant API client in Ruby](https://github.com/balloob/home-assistant-ruby)<br>
+[Home Assistant API client for Tasker for Android](https://github.com/balloob/home-assistant-android-tasker)

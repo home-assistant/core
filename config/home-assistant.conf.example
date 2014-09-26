@@ -1,4 +1,5 @@
 [homeassistant]
+# Location required to calculate the time the sun rises and sets
 latitude=32.87336
 longitude=-117.22743
 
@@ -9,37 +10,42 @@ api_password=mypass
 type=hue
 
 [device_tracker]
+# The following types are available: netgear, tomato, luci
 type=netgear
 host=192.168.1.1
 username=admin
 password=PASSWORD
+# http_id is needed for Tomato routers only
+# http_id=ABCDEFGHH
 
 [chromecast]
-# Optional: hard code the hosts to find chromecasts instead of scanning the network
+# Optional: hard code the hosts (comma seperated) to find chromecasts
+# instead of scanning the network
 # hosts=192.168.1.9,192.168.1.12
 
 [wemo]
-# Optional: hard code the hosts to find WeMos instead of scanning the network
+# Optional: hard code the hosts (comma seperated) to find WeMos
+# instead of scanning the network
 # hosts=192.168.1.9,192.168.1.12
 
 [downloader]
 download_dir=downloads
 
 [device_sun_light_trigger]
-# Example how you can specify a specific group that has to be turned on
-# light_group=group.living_room
-# Example how you can specify which light profile to use when turning lights on
-# light_profile=relax
+# Optional: specify a specific light/group of lights that has to be turned on
+light_group=group.living_room
+# Optional: specify which light profile to use when turning lights on
+light_profile=relax
 
 # A comma seperated list of states that have to be tracked as a single group
-# Grouped states should share the same states (ON/OFF or HOME/NOT_HOME)
-# [group]
-# living_room=light.Bowl,light.Ceiling,light.TV_back_light
-# bedroom=light.Bed_light
+# Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
+[group]
+living_room=light.Bowl,light.Ceiling,light.TV_back_light
+children=device_tracker.child_1,device_tracker.child_2
 
 [process]
 # items are which processes to look for: <entity_id>=<search string within ps>
-# xbmc=XBMC.App
+xbmc=XBMC.App
 
 [example]
 
