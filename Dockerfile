@@ -1,7 +1,8 @@
 FROM python:3-onbuild
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
-RUN git clone https://github.com/studioimaginaire/phue.git
+# Temporary fix while waiting for new version of phue to be released
+RUN curl https://raw.githubusercontent.com/studioimaginaire/phue/master/phue.py -o phue.py
 
 VOLUME /config
 
