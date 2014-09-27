@@ -36,6 +36,8 @@ download_dir=downloads
 light_group=group.living_room
 # Optional: specify which light profile to use when turning lights on
 light_profile=relax
+# Optional: disable lights being turned off when everybody leaves the house
+# disable_turn_off=1
 
 # A comma seperated list of states that have to be tracked as a single group
 # Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)

@@ -27,6 +27,8 @@ CONF_LIGHT_GROUP = 'light_group'
 def setup(hass, config):
     """ Triggers to turn lights on or off based on device precense. """
 
+    disable_turn_off = 'disable_turn_off' in config[DOMAIN]
+
     light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
                                      light.GROUP_NAME_ALL_LIGHTS)
 
@@ -143,10 +145,11 @@ def setup(hass, config):
 
         # Did all devices leave the house?
         elif (entity == device_tracker.ENTITY_ID_ALL_DEVICES and
-              new_state.state == components.STATE_NOT_HOME and lights_are_on):
+              new_state.state == components.STATE_NOT_HOME and lights_are_on
+              and not disable_turn_off):
 
             logger.info(
-                "Everyone has left but there are devices on. Turning them off")
+                "Everyone has left but there are lights on. Turning them off")
 
             light.turn_off(hass)
 
