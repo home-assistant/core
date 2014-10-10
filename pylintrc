@@ -1,0 +1,7 @@
+[MASTER]
+ignore=external
+
+disable=locally-disabled
+
+[EXCEPTIONS]
+overgeneral-exceptions=Exception,HomeAssistantError
