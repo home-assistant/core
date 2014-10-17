@@ -475,9 +475,8 @@ class StateMachine(object):
         return list(self._states.keys())
 
     def all(self):
-        """ Returns a dict mapping all entity_ids to their state. """
-        return {entity_id: state.copy() for entity_id, state
-                in self._states.items()}
+        """ Returns a list of all states. """
+        return [state.copy() for state in self._states.values()]
 
     def get(self, entity_id):
         """ Returns the state of the specified entity. """

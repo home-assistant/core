@@ -21,6 +21,8 @@ import homeassistant as ha
 
 SERVER_PORT = 8123
 
+AUTH_HEADER = "HA-access"
+
 URL_API = "/api/"
 URL_API_STATES = "/api/states"
 URL_API_STATES_ENTITY = "/api/states/{}"
@@ -57,6 +59,7 @@ class API(object):
         self.api_password = api_password
         self.base_url = "http://{}:{}".format(host, self.port)
         self.status = None
+        self._headers = {AUTH_HEADER: api_password}
 
     def validate_api(self, force_validate=False):
         """ Tests if we can communicate with the API. """
@@ -67,16 +70,18 @@ class API(object):
 
     def __call__(self, method, path, data=None):
         """ Makes a call to the Home Assistant api. """
-        data = data or {}
-        data['api_password'] = self.api_password
+        if data is not None:
+            data = json.dumps(data, cls=JSONEncoder)
 
         url = urllib.parse.urljoin(self.base_url, path)
 
         try:
             if method == METHOD_GET:
-                return requests.get(url, params=data, timeout=5)
+                return requests.get(
+                    url, params=data, timeout=5, headers=self._headers)
             else:
-                return requests.request(method, url, data=data, timeout=5)
+                return requests.request(
+                    method, url, data=data, timeout=5, headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             logging.getLogger(__name__).exception("Error connecting to server")
@@ -226,7 +231,8 @@ class StateMachine(ha.StateMachine):
 
     def mirror(self):
         """ Discards current data and mirrors the remote state machine. """
-        self._states = get_states(self._api, self.logger)
+        self._states = {state.entity_id: state for state
+                        in get_states(self._api, self.logger)}
 
     def _state_changed_listener(self, event):
         """ Listens for state changed events and applies them. """
@@ -297,11 +303,10 @@ def get_event_listeners(api, logger=None):
     try:
         req = api(METHOD_GET, URL_API_EVENTS)
 
-        return req.json()['event_listeners'] if req.status_code == 200 else {}
+        return req.json() if req.status_code == 200 else {}
 
-    except (ha.HomeAssistantError, ValueError, KeyError):
+    except (ha.HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the json
-        # KeyError if 'event_listeners' not found in parsed json
         if logger:
             logger.exception("Bus:Got unexpected result")
 
@@ -312,7 +317,7 @@ def fire_event(api, event_type, event_data=None, logger=None):
     """ Fire an event at remote API. """
 
     if event_data:
-        data = {'event_data': json.dumps(event_data, cls=JSONEncoder)}
+        data = {'event_data': event_data}
     else:
         data = None
 
@@ -355,20 +360,11 @@ def get_states(api, logger=None):
         req = api(METHOD_GET,
                   URL_API_STATES)
 
-        json_result = req.json()
-        states = {}
-
-        for entity_id, state_dict in json_result.items():
-            state = ha.State.from_dict(state_dict)
-
-            if state:
-                states[entity_id] = state
-
-        return states
+        return [ha.State.from_dict(item) for
+                item in req.json()]
 
     except (ha.HomeAssistantError, ValueError, AttributeError):
         # ValueError if req.json() can't parse the json
-        # AttributeError if parsed JSON was not a dict
         if logger:
             logger.exception("Error getting state")
 
@@ -380,8 +376,8 @@ def set_state(api, entity_id, new_state, attributes=None, logger=None):
 
     attributes = attributes or {}
 
-    data = {'new_state': new_state,
-            'attributes': json.dumps(attributes)}
+    data = {'state': new_state,
+            'attributes': attributes}
 
     try:
         req = api(METHOD_POST,
@@ -410,11 +406,10 @@ def get_services(api, logger=None):
     try:
         req = api(METHOD_GET, URL_API_SERVICES)
 
-        return req.json()['services'] if req.status_code == 200 else {}
+        return req.json() if req.status_code == 200 else {}
 
-    except (ha.HomeAssistantError, ValueError, KeyError):
+    except (ha.HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the json
-        # KeyError if not all expected keys are in the returned JSON
         if logger:
             logger.exception("ServiceRegistry:Got unexpected result")
 

@@ -8,6 +8,7 @@ Provides tests to verify that Home Assistant modules do what they should do.
 
 import unittest
 import time
+import json
 
 import requests
 
@@ -18,6 +19,8 @@ import homeassistant.components.http as http
 API_PASSWORD = "test1234"
 
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(remote.SERVER_PORT)
+
+HA_HEADERS = {remote.AUTH_HEADER: API_PASSWORD}
 
 
 def _url(path=""):
@@ -37,7 +40,7 @@ def ensure_homeassistant_started():
     if not HAHelper.hass:
         hass = ha.HomeAssistant()
 
-        hass.bus.listen('test_event', len)
+        hass.bus.listen('test_event', lambda _: _)
         hass.states.set('test', 'a_state')
 
         http.setup(hass,
@@ -90,8 +93,7 @@ class TestHTTP(unittest.TestCase):
         """ Test if we can login by comparing not logged in screen to
             logged in screen. """
 
-        with_pw = requests.get(
-            _url("/?api_password={}".format(API_PASSWORD)))
+        with_pw = requests.get(_url(), headers=HA_HEADERS)
 
         without_pw = requests.get(_url())
 
@@ -107,62 +109,24 @@ class TestHTTP(unittest.TestCase):
 
         req = requests.get(
             _url(remote.URL_API_STATES_ENTITY.format("test")),
-            params={"api_password": "not the password"})
+            headers={remote.AUTH_HEADER: 'wrongpassword'})
 
         self.assertEqual(req.status_code, 401)
-
-    def test_debug_change_state(self):
-        """ Test if we can change a state from the debug interface. """
-        self.hass.states.set("test.test", "not_to_be_set")
-
-        requests.post(_url(http.URL_CHANGE_STATE),
-                      data={"entity_id": "test.test",
-                            "new_state": "debug_state_change2",
-                            "api_password": API_PASSWORD})
-
-        self.assertEqual(self.hass.states.get("test.test").state,
-                         "debug_state_change2")
-
-    def test_debug_fire_event(self):
-        """ Test if we can fire an event from the debug interface. """
-        test_value = []
-
-        def listener(event):   # pylint: disable=unused-argument
-            """ Helper method that will verify that our event got called and
-                that test if our data came through. """
-            if "test" in event.data:
-                test_value.append(1)
-
-        self.hass.listen_once_event("test_event_with_data", listener)
-
-        requests.post(
-            _url(http.URL_FIRE_EVENT),
-            data={"event_type": "test_event_with_data",
-                  "event_data": '{"test": 1}',
-                  "api_password": API_PASSWORD})
-
-        # Allow the event to take place
-        time.sleep(1)
-
-        self.assertEqual(len(test_value), 1)
 
     def test_api_list_state_entities(self):
         """ Test if the debug interface allows us to list state entities. """
         req = requests.get(_url(remote.URL_API_STATES),
-                           data={"api_password": API_PASSWORD})
+                           headers=HA_HEADERS)
 
-        remote_data = req.json()
+        remote_data = [ha.State.from_dict(item) for item in req.json()]
 
-        local_data = {entity_id: state.as_dict() for entity_id, state
-                      in self.hass.states.all().items()}
-
-        self.assertEqual(local_data, remote_data)
+        self.assertEqual(self.hass.states.all(), remote_data)
 
     def test_api_get(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
             _url(remote.URL_API_STATES_ENTITY.format("test")),
-            data={"api_password": API_PASSWORD})
+            headers=HA_HEADERS)
 
         data = ha.State.from_dict(req.json())
 
@@ -176,9 +140,9 @@ class TestHTTP(unittest.TestCase):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
             _url(remote.URL_API_STATES_ENTITY.format("does_not_exist")),
-            params={"api_password": API_PASSWORD})
+            headers=HA_HEADERS)
 
-        self.assertEqual(req.status_code, 422)
+        self.assertEqual(req.status_code, 404)
 
     def test_api_state_change(self):
         """ Test if we can change the state of an entity that exists. """
@@ -186,8 +150,8 @@ class TestHTTP(unittest.TestCase):
         self.hass.states.set("test.test", "not_to_be_set")
 
         requests.post(_url(remote.URL_API_STATES_ENTITY.format("test.test")),
-                      data={"new_state": "debug_state_change2",
-                            "api_password": API_PASSWORD})
+                      data=json.dumps({"state": "debug_state_change2",
+                                       "api_password": API_PASSWORD}))
 
         self.assertEqual(self.hass.states.get("test.test").state,
                          "debug_state_change2")
@@ -202,8 +166,8 @@ class TestHTTP(unittest.TestCase):
         req = requests.post(
             _url(remote.URL_API_STATES_ENTITY.format(
                 "test_entity_that_does_not_exist")),
-            data={"new_state": new_state,
-                  "api_password": API_PASSWORD})
+            data=json.dumps({"state": new_state,
+                             "api_password": API_PASSWORD}))
 
         cur_state = (self.hass.states.
                      get("test_entity_that_does_not_exist").state)
@@ -224,7 +188,7 @@ class TestHTTP(unittest.TestCase):
 
         requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test.event_no_data")),
-            data={"api_password": API_PASSWORD})
+            headers=HA_HEADERS)
 
         # Allow the event to take place
         time.sleep(1)
@@ -246,8 +210,8 @@ class TestHTTP(unittest.TestCase):
 
         requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test_event_with_data")),
-            data={"event_data": '{"test": 1}',
-                  "api_password": API_PASSWORD})
+            data=json.dumps({"event_data": {"test": 1}}),
+            headers=HA_HEADERS)
 
         # Allow the event to take place
         time.sleep(1)
@@ -267,8 +231,8 @@ class TestHTTP(unittest.TestCase):
 
         req = requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test_event")),
-            data={"event_data": 'not json',
-                  "api_password": API_PASSWORD})
+            data=json.dumps({"event_data": 'not an object'}),
+            headers=HA_HEADERS)
 
         # It shouldn't but if it fires, allow the event to take place
         time.sleep(1)
@@ -279,20 +243,16 @@ class TestHTTP(unittest.TestCase):
     def test_api_get_event_listeners(self):
         """ Test if we can get the list of events being listened for. """
         req = requests.get(_url(remote.URL_API_EVENTS),
-                           params={"api_password": API_PASSWORD})
+                           headers=HA_HEADERS)
 
-        data = req.json()
-
-        self.assertEqual(data['event_listeners'], self.hass.bus.listeners)
+        self.assertEqual(req.json(), self.hass.bus.listeners)
 
     def test_api_get_services(self):
         """ Test if we can get a dict describing current services. """
         req = requests.get(_url(remote.URL_API_SERVICES),
-                           params={"api_password": API_PASSWORD})
+                           headers=HA_HEADERS)
 
-        data = req.json()
-
-        self.assertEqual(data['services'], self.hass.services.services)
+        self.assertEqual(req.json(), self.hass.services.services)
 
     def test_api_call_service_no_data(self):
         """ Test if the API allows us to call a service. """
@@ -307,7 +267,7 @@ class TestHTTP(unittest.TestCase):
         requests.post(
             _url(remote.URL_API_SERVICES_SERVICE.format(
                 "test_domain", "test_service")),
-            data={"api_password": API_PASSWORD})
+            headers=HA_HEADERS)
 
         # Allow the event to take place
         time.sleep(1)
@@ -329,8 +289,8 @@ class TestHTTP(unittest.TestCase):
         requests.post(
             _url(remote.URL_API_SERVICES_SERVICE.format(
                 "test_domain", "test_service")),
-            data={"service_data": '{"test": 1}',
-                  "api_password": API_PASSWORD})
+            data=json.dumps({"service_data": {"test": 1}}),
+            headers=HA_HEADERS)
 
         # Allow the event to take place
         time.sleep(1)
