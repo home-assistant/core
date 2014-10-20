@@ -263,7 +263,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             api_password = data['api_password']
 
         if '_METHOD' in data:
-            method = data['_METHOD']
+            method = data.pop('_METHOD')
 
         if url.path.startswith('/api/'):
             self.use_json = True
@@ -382,10 +382,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<link rel='shortcut icon' href='/static/favicon.ico' />"
                "<link rel='icon' type='image/png' "
                "     href='/static/favicon-192x192.png' sizes='192x192'>"
-               "<script src='http://code.jquery.com/jquery-2.1.1.min.js'>"
-               "      </script>"
-               "<script type='text/javascript' src='/static/script.js'>"
-               "      </script>"
+               "<script data-main='static/javascripts/app'"
+                     "src='/static/javascripts/require.js'></script>"
                "</head>"
                "<body>"
                "<div class='container'>"
@@ -684,13 +682,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         domain = path_match.group('domain')
         service = path_match.group('service')
-        service_data = data.get('service_data')
 
-        if service_data is not None and not isinstance(service_data, dict):
-            self._message("service_data should be an object",
-                          HTTP_UNPROCESSABLE_ENTITY)
-
-        self.server.hass.call_service(domain, service, service_data)
+        self.server.hass.call_service(domain, service, data)
 
         self._message("Service {}/{} called.".format(domain, service))
 
@@ -749,7 +742,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _handle_get_static(self, path_match, data):
         """ Returns a static file. """
-        req_file = util.sanitize_filename(path_match.group('file'))
+        # req_file = util.sanitize_filename(path_match.group('file'))
+        # TODO make safe
+        req_file = path_match.group('file')
 
         path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
 

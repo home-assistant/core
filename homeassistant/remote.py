@@ -418,8 +418,16 @@ def get_services(api, logger=None):
 
 def call_service(api, domain, service, service_data=None, logger=None):
     """ Calls a service at the remote API. """
-    event_data = service_data or {}
-    event_data[ha.ATTR_DOMAIN] = domain
-    event_data[ha.ATTR_SERVICE] = service
+    try:
+        req = api(METHOD_POST,
+                  URL_API_SERVICES_SERVICE.format(domain, service),
+                  service_data)
 
-    fire_event(api, ha.EVENT_CALL_SERVICE, event_data, logger)
+        if req.status_code != 200 and logger:
+            logger.error(
+                "Error calling service: {} - {}".format(
+                    req.status_code, req.text))
+
+    except ha.HomeAssistantError:
+        if logger:
+            logger.exception("Error setting state to server")

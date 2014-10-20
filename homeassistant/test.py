@@ -289,7 +289,7 @@ class TestHTTP(unittest.TestCase):
         requests.post(
             _url(remote.URL_API_SERVICES_SERVICE.format(
                 "test_domain", "test_service")),
-            data=json.dumps({"service_data": {"test": 1}}),
+            data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
 
         # Allow the event to take place
