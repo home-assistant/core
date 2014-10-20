@@ -245,14 +245,25 @@ class TestHTTP(unittest.TestCase):
         req = requests.get(_url(remote.URL_API_EVENTS),
                            headers=HA_HEADERS)
 
-        self.assertEqual(req.json(), self.hass.bus.listeners)
+        local = self.hass.bus.listeners
+
+        for event in req.json():
+            self.assertEqual(event["listener_count"],
+                             local.pop(event["event"]))
+
+        self.assertEqual(len(local), 0)
 
     def test_api_get_services(self):
         """ Test if we can get a dict describing current services. """
         req = requests.get(_url(remote.URL_API_SERVICES),
                            headers=HA_HEADERS)
 
-        self.assertEqual(req.json(), self.hass.services.services)
+        local_services = self.hass.services.services
+
+        for serv_domain in req.json():
+            local = local_services.pop(serv_domain["domain"])
+
+            self.assertEqual(serv_domain["services"], local)
 
     def test_api_call_service_no_data(self):
         """ Test if the API allows us to call a service. """
@@ -310,9 +321,13 @@ class TestRemoteMethods(unittest.TestCase):
 
     def test_get_event_listeners(self):
         """ Test Python API get_event_listeners. """
+        local = self.hass.bus.listeners
 
-        self.assertEqual(
-            remote.get_event_listeners(self.api), self.hass.bus.listeners)
+        for event in remote.get_event_listeners(self.api):
+            self.assertEqual(event["listener_count"],
+                             local.pop(event["event"]))
+
+        self.assertEqual(len(local), 0)
 
     def test_fire_event(self):
         """ Test Python API fire_event. """
@@ -360,8 +375,12 @@ class TestRemoteMethods(unittest.TestCase):
     def test_get_services(self):
         """ Test Python API get_services. """
 
-        self.assertEqual(
-            remote.get_services(self.api), self.hass.services.services)
+        local_services = self.hass.services.services
+
+        for serv_domain in remote.get_services(self.api):
+            local = local_services.pop(serv_domain["domain"])
+
+            self.assertEqual(serv_domain["services"], local)
 
     def test_call_service(self):
         """ Test Python API call_service. """
@@ -392,7 +411,9 @@ class TestRemoteClasses(unittest.TestCase):
 
     def test_statemachine_init(self):
         """ Tests if remote.StateMachine copies all states on init. """
-        self.assertEqual(self.hass.states.all(), self.slave.states.all())
+        for state in self.hass.states.all():
+            self.assertEqual(
+                self.slave.states.get(state.entity_id), state)
 
     def test_statemachine_set(self):
         """ Tests if setting the state on a slave is recorded. """

@@ -402,7 +402,10 @@ def is_state(api, entity_id, state, logger=None):
 
 
 def get_services(api, logger=None):
-    """ Returns a dict with per domain the available services at API. """
+    """
+    Returns a list of dicts. Each dict has a string "domain" and
+    a list of strings "services".
+    """
     try:
         req = api(METHOD_GET, URL_API_SERVICES)
 

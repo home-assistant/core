@@ -241,25 +241,37 @@ Returns message if API is up and running.
 Returns a dict with as keys the events and as value the number of listeners.
 
 ```json
-{
-    "state_changed": 5,
-    "time_changed": 2
-}
+[
+    {
+      "event": "state_changed",
+      "listener_count": 5
+    },
+    {
+      "event": "time_changed",
+      "listener_count": 2
+    }
+]
 ```
 
 **/api/services - GET**<br>
 Returns a dict with as keys the domain and as value a list of published services.
 
 ```json
-{
-    "browser": [
+[
+    {
+      "domain": "browser",
+      "services": [
         "browse_url"
-    ],
-    "keyboard": [
+      ]
+    },
+    {
+      "domain": "keyboard",
+      "services": [
         "volume_up",
         "volume_down"
-    ]
-}
+      ]
+    }
+]
 ```
 
 **/api/states - GET**<br>
