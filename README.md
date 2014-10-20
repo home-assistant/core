@@ -242,10 +242,8 @@ Returns a dict with as keys the events and as value the number of listeners.
 
 ```json
 {
-    "event_listeners": {
-      "state_changed": 5,
-      "time_changed": 2
-    }  
+    "state_changed": 5,
+    "time_changed": 2
 }
 ```
 
@@ -254,15 +252,13 @@ Returns a dict with as keys the domain and as value a list of published services
 
 ```json
 {
-    "services": {
-      "browser": [
-          "browse_url"
-      ],
-      "keyboard": [
-          "volume_up",
-          "volume_down"
-      ]
-    }  
+    "browser": [
+        "browse_url"
+    ],
+    "keyboard": [
+        "volume_up",
+        "volume_down"
+    ]
 }
 ```
 
@@ -270,8 +266,8 @@ Returns a dict with as keys the domain and as value a list of published services
 Returns a dict with as keys the entity_ids and as value the state.
 
 ```json
-{
-    "sun.sun": {
+[
+    {
         "attributes": {
             "next_rising": "07:04:15 29-10-2013", 
             "next_setting": "18:00:31 29-10-2013"
@@ -280,13 +276,13 @@ Returns a dict with as keys the entity_ids and as value the state.
         "last_changed": "23:24:33 28-10-2013", 
         "state": "below_horizon"
     },
-    "process.Dropbox": {
+    {
         "attributes": {}, 
         "entity_id": "process.Dropbox", 
         "last_changed": "23:24:33 28-10-2013", 
         "state": "on"
     }
-}
+]
 ```
 
 **/api/states/&lt;entity_id>** - GET<br>
