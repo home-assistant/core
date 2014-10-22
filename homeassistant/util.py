@@ -12,6 +12,7 @@ import enum
 import socket
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
+RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
 
 DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
@@ -20,6 +21,11 @@ DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
 def sanitize_filename(filename):
     """ Sanitizes a filename by removing .. / and \\. """
     return RE_SANITIZE_FILENAME.sub("", filename)
+
+
+def sanitize_path(path):
+    """ Sanitizes a path by removing .. / and \\. """
+    return RE_SANITIZE_PATH.sub("", path)
 
 
 def slugify(text):

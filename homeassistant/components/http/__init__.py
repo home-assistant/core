@@ -383,7 +383,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<link rel='icon' type='image/png' "
                "     href='/static/favicon-192x192.png' sizes='192x192'>"
                "<script data-main='static/javascripts/app'"
-                     "src='/static/javascripts/require.js'></script>"
+               "src='/static/javascripts/require.js'></script>"
                "</head>"
                "<body>"
                "<div class='container'>"
@@ -637,9 +637,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _handle_get_api_events(self, path_match, data):
         """ Handles getting overview of event listeners. """
-        self._write_json(self.server.hass.bus.listeners)
+        self._write_json([{"event": key, "listener_count": value}
+                          for key, value
+                          in self.server.hass.bus.listeners.items()])
 
-    def _handle_api_post_events_event(self, path_match, data):
+    def _handle_api_post_events_event(self, path_match, event_data):
         """ Handles firing of an event.
 
         This handles the following paths:
@@ -648,7 +650,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         Events from /api are threated as remote events.
         """
         event_type = path_match.group('event_type')
-        event_data = data.get('event_data')
 
         if event_data is not None and not isinstance(event_data, dict):
             self._message("event_data should be an object",
@@ -671,7 +672,10 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _handle_get_api_services(self, path_match, data):
         """ Handles getting overview of services. """
-        self._write_json(self.server.hass.services.services)
+        self._write_json(
+            [{"domain": key, "services": value}
+             for key, value
+             in self.server.hass.services.services.items()])
 
     # pylint: disable=invalid-name
     def _handle_post_api_services_domain_service(self, path_match, data):
@@ -742,9 +746,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _handle_get_static(self, path_match, data):
         """ Returns a static file. """
-        # req_file = util.sanitize_filename(path_match.group('file'))
-        # TODO make safe
-        req_file = path_match.group('file')
+        req_file = util.sanitize_path(path_match.group('file'))
 
         path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
 

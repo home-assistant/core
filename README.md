@@ -331,7 +331,7 @@ optional parameter: attributes - JSON encoded object
 
 **/api/events/&lt;event_type>** - POST<br>
 Fires an event with event_type<br>
-optional parameter: event_data - JSON encoded object
+optional body: JSON encoded object that represents event_data
 
 ```json
 {
@@ -341,7 +341,7 @@ optional parameter: event_data - JSON encoded object
 
 **/api/services/&lt;domain>/&lt;service>** - POST<br>
 Calls a service within a specific domain.<br>
-optional parameter: service_data - JSON encoded object
+optional body: JSON encoded object that represents service_data
 
 ```json
 {
