@@ -117,6 +117,10 @@ def from_config_dict(config, hass=None):
 
             break
 
+    # Make sure we load groups if not in list yet.
+    if not group_added:
+        validated.append(group.DOMAIN)
+
     # Setup the components
     if core_components.setup(hass, config):
         logger.info("Home Assistant core initialized")
