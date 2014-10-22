@@ -89,10 +89,8 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
         return []
 
 
-# pylint: disable=too-many-branches, too-many-locals
 def setup(hass, config):
     """ Sets up all groups found definded in the configuration. """
-
     for name, entity_ids in config[DOMAIN].items():
         entity_ids = entity_ids.split(",")
 
@@ -100,7 +98,7 @@ def setup(hass, config):
 
     return True
 
-
+# pylint: disable=too-many-branches
 def setup_group(hass, name, entity_ids):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
