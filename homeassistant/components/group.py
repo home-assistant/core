@@ -98,6 +98,7 @@ def setup(hass, config):
 
     return True
 
+
 # pylint: disable=too-many-branches
 def setup_group(hass, name, entity_ids):
     """ Sets up a group state that is the combined state of
