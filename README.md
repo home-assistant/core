@@ -28,12 +28,16 @@ The system is built modular so support for other devices or actions can be imple
 
 ## Installation instructions / Quick-start guide
 
+Running Home Assistant requires that node.js and python3 are installed. (Node.js is required for installing dependencies and concatenating the frontend)
+
 Run the following code to get up and running with the minimum setup:
 
 ```python
 git clone --recursive https://github.com/balloob/home-assistant.git
 cd home-assistant
 pip3 install -r requirements.txt
+npm install bower vulcanize
+./build_polymer
 
 python3 start.py
 ```
