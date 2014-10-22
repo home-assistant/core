@@ -1,0 +1,270 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/core-ajax/core-ajax.html">
+<link rel="import" href="bower_components/paper-toast/paper-toast.html">
+
+<link rel="import" href="event-fire-dialog.html">
+<link rel="import" href="service-call-dialog.html">
+<link rel="import" href="state-set-dialog.html">
+
+<polymer-element name="home-assistant-api" attributes="auth">
+  <template>
+    <style>
+    core-ajax {
+      display: none;
+    }
+    </style>
+
+    <paper-toast id="toast" role="alert" text=""></paper-toast>
+    <event-fire-dialog id="eventDialog" api={{api}}></event-fire-dialog>
+    <service-call-dialog id="serviceDialog" api={{api}}></service-call-dialog>
+    <state-set-dialog id="stateDialog" api={{api}}></state-set-dialog>
+
+    <core-ajax id="statesAjax"
+      auto
+      method="GET"
+      url="/api/states"
+      headers='{"HA-access": "{{auth}}"}'
+      on-core-response="{{statesLoaded}}"
+      handleAs="json">
+    </core-ajax>
+
+    <core-ajax id="eventsAjax"
+      auto
+      method="GET"
+      url="/api/events"
+      headers='{"HA-access": "{{auth}}"}'
+      on-core-response="{{eventsLoaded}}"
+      handleAs="json">
+    </core-ajax>
+
+    <core-ajax id="servicesAjax"
+      auto
+      method="GET"
+      url="/api/services"
+      headers='{"HA-access": "{{auth}}"}'
+      on-core-response="{{servicesLoaded}}"
+      handleAs="json">
+    </core-ajax>
+
+  </template>
+  <script>
+  Polymer({
+    auth: "",
+    states: [],
+    services: {},
+    events: {},
+    stateUpdateTimeout: null,
+
+    created: function() {
+      this.api = this;
+
+      // so we can pass these methods safely as callbacks
+      this.turn_on = this.turn_on.bind(this);
+      this.turn_off = this.turn_off.bind(this);
+    },
+
+    _laterFetchStates: function() {
+      if(this.stateUpdateTimeout) {
+        clearTimeout(this.stateUpdateTimeout);
+      }
+
+      // update states in 60 seconds
+      this.stateUpdateTimeout = setTimeout(this.fetchStates.bind(this), 60000);
+    },
+
+    _sortStates: function(states) {
+      return states.sort(function(one, two) {
+        if (one.entity_id > two.entity_id) {
+          return 1;
+        } else if (one.entity_id < two.entity_id) {
+          return -1;
+        } else {
+          return 0;
+        }
+      })
+    },
+
+    statesLoaded: function() {
+      // Make a copy of the loaded data
+      this.states = this._sortStates(this.$.statesAjax.response.slice(0));
+
+      this.fire('states-updated')
+
+      this._laterFetchStates();
+    },
+
+    eventsLoaded: function() {
+      // Make a copy of the loaded data
+      this.events = this.$.eventsAjax.response;
+
+      this.fire('events-updated')
+    },
+
+    servicesLoaded: function() {
+      // Make a copy of the loaded data
+      this.services = this.$.servicesAjax.response;
+
+      this.fire('services-updated')
+    },
+
+    _pushNewState: function(new_state) {
+      var state;
+      var stateFound = false;
+
+      for(var i = 0; i < this.states.length; i++) {
+        if(this.states[i].entity_id == new_state.entity_id) {
+          state = this.states[i];
+          state.attributes = new_state.attributes;
+          state.last_changed = new_state.last_changed;
+          state.state = new_state.state;
+
+          stateFound = true;
+          break;
+        }
+      }
+
+      if(!stateFound) {
+        this.states.push(new_state);
+        this._sortStates(this.states);
+      }
+    },
+
+    fetchState: function(entity_id) {
+      var successStateUpdate = function(new_state) {
+        this._pushNewState(new_state);
+      }
+
+      this.call_api("GET", "states/" + entity_id, null, successStateUpdate.bind(this));
+    },
+
+    fetchStates: function() {
+      this.$.statesAjax.go();
+    },
+
+    getState: function(entityId) {
+      for(var i = 0; i < this.states.length; i++) {
+        if(this.states[i].entity_id == entityId) {
+          return this.states[i];
+        }
+      }
+    },
+
+    turn_on: function(entity_id) {
+      this.call_service("homeassistant", "turn_on", {entity_id: entity_id});
+    },
+
+    turn_off: function(entity_id) {
+      this.call_service("homeassistant", "turn_off", {entity_id: entity_id})
+    },
+
+    set_state: function(entity_id, state, attributes) {
+      var payload = {state: state}
+
+      if(attributes) {
+        payload.attributes = attributes;
+      }
+
+      var successToast = function(new_state) {
+        this.showToast("State of "+entity_id+" successful set to "+state+".");
+        this._pushNewState(new_state);
+      }
+
+      this.call_api("POST", "states/" + entity_id,
+                    payload, successToast.bind(this));
+    },
+
+    call_service: function(domain, service, parameters) {
+      var successToast = function() {
+        this.showToast("Service "+domain+"/"+service+" successful called.");
+      }
+
+      this.call_api("POST", "services/" + domain + "/" + service,
+                    parameters, successToast.bind(this));
+    },
+
+    fire_event: function(eventType, eventData) {
+      eventData = eventData ? JSON.parse(eventData) : "";
+
+      var successToast = function() {
+        this.showToast("Event "+eventType+" successful fired.");
+      }
+
+      this.call_api("POST", "events/" + eventType,
+                    eventData, successToast.bind(this));
+    },
+
+    call_api: function(method, path, parameters, callback) {
+      var req = new XMLHttpRequest();
+      req.open(method, "/api/" + path, true)
+      req.setRequestHeader("HA-access", this.auth);
+
+      req.onreadystatechange = function() {
+
+        if(req.readyState == 4 && req.status > 199 && req.status < 300) {
+
+          if(callback) {
+            callback(JSON.parse(req.responseText))
+          }
+          // if we targetted an entity id, update state after 2 seconds
+          if(parameters && parameters.entity_id) {
+            var updateCallback;
+
+            // if a string, update just that entity, otherwise update all
+            if(typeof(parameters.entity_id) == "string") {
+              updateCallback = function() {
+                this.fetchState(parameters.entity_id);
+              }
+
+            } else {
+              updateCallback = this.fetchStates();
+            }
+
+            setTimeout(updateCallback.bind(this), 2000);
+          }
+        }
+      }.bind(this)
+
+      if(parameters) {
+        req.send(JSON.stringify(parameters))
+      } else {
+        req.send()
+      }
+    },
+
+    showEditStateDialog: function(entityId) {
+      var state = this.getState(entityId);
+
+      this.showSetStateDialog(entityId, state.state, state.attributes)
+    },
+
+    showSetStateDialog: function(entityId, state, stateAttributes) {
+      entityId = entityId || "";
+      state = state || "";
+      stateAttributes = stateAttributes || null;
+
+      this.$.stateDialog.show(entityId, state, stateAttributes);
+    },
+
+    showFireEventDialog: function(eventType, eventData) {
+      eventType = eventType || "";
+      eventData = eventData || "";
+
+      this.$.eventDialog.show(eventType, eventData)
+    },
+
+    showCallServiceDialog: function(domain, service, serviceData) {
+      domain = domain || "";
+      service = service || "";
+      serviceData = serviceData || "";
+
+      this.$.serviceDialog.show(domain, service, serviceData);
+    },
+
+    showToast: function(message) {
+      this.$.toast.text = message;
+      this.$.toast.show();
+    }
+
+  });
+  </script>
+</polymer-element>

@@ -1,0 +1,84 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog-transition.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="entity-list.html">
+
+<polymer-element name="state-set-dialog" attributes="api">
+  <template>
+    <style>
+    paper-input:first-child {
+      padding-top: 0;
+    }
+
+    .stateContainer {
+      margin-left: 30px;
+    }
+    </style>
+
+  <paper-dialog id="dialog" heading="Set State" transition="paper-dialog-transition-center" backdrop="true">
+    <div layout horizontal>
+      <div>
+        <paper-input id="inputEntityID" label="Entity ID" floatingLabel="true" autofocus required></paper-input>
+        <paper-input id="inputState" label="State" floatingLabel="true" required></paper-input>
+        <paper-input id="inputData" label="State attributes (JSON, optional)" floatingLabel="true" multiline></paper-input>
+      </div>
+      <div class='stateContainer'>
+        <b>Current entities:</b>
+        <entity-list api={{api}} cbEntityClicked={{entitySelected}}></entity-list>
+      </div>
+    </div>
+    <paper-button dismissive>Cancel</paper-button>
+    <paper-button affirmative on-click={{clickSetState}}>Set State</paper-button>
+  </paper-dialog>
+
+  </template>
+  <script>
+  Polymer({
+    ready: function() {
+      // to ensure callback methods work..
+      this.entitySelected = this.entitySelected.bind(this)
+    },
+
+    show: function(entityId, state, stateData) {
+      this.setEntityId(entityId);
+      this.setState(state);
+      this.setStateData(stateData);
+
+      this.$.dialog.toggle();
+    },
+
+    setEntityId: function(entityId) {
+      this.$.inputEntityID.value = entityId;      
+    },
+
+    setState: function(state) {
+      this.$.inputState.value = state;      
+    },
+
+    setStateData: function(stateData) {
+      var value = stateData ? JSON.stringify(stateData, null, '  ') : "";
+
+      this.$.inputData.value = value;
+    },
+
+    entitySelected: function(entityId) {
+      this.setEntityId(entityId);
+
+      var state = this.api.getState(entityId);
+      this.setState(state.state);
+      this.setStateData(state.attributes);
+    },
+
+    clickSetState: function() {
+      this.api.set_state(
+        this.$.inputEntityID.value,
+        this.$.inputState.value,
+        JSON.parse(this.$.inputData.value)
+        )
+    }
+  });
+  </script>
+</polymer-element>

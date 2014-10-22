@@ -1,0 +1,139 @@
+<script src="bower_components/moment/moment.js"></script>
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/core-tooltip/core-tooltip.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+
+<polymer-element name="state-card"
+  attributes="entity state last_changed state_attr cb_turn_on, cb_turn_off cb_edit">
+  <template>
+    <style>
+    :host {
+      position: relative;
+      background-color: white;
+      padding: 20px 20px 50px 20px;
+      width: 100%;
+      font-weight: 300;
+      border-radius: 2px;
+    }
+
+    .header {
+      text-transform: capitalize;
+      
+      font-size: 1.5rem;
+    }
+
+    .subheader {
+      margin-top: -5px;
+      color: darkgrey;
+    }
+
+    .content {
+      margin-top: 10px;
+    }
+
+    .actions {
+      position: absolute;
+      bottom: 10px;
+      left: 20px;
+      right: 20px;
+
+      text-align: right;
+    }
+
+    paper-button.toggle {
+      color: #03a9f4;
+    }
+
+    </style>
+
+    <div class="header" horizontal justified layout>
+      <span class="entity_id">{{entity_id | makeReadable}}</span>
+      <span class='state'>{{state | makeReadable}}</span>
+    </div>
+
+    <div class="subheader" horizontal justified layout>
+      <span class="domain">{{domain}}</span>
+      <core-tooltip label="{{last_changed}}" position="bottom">
+        <span class="last_changed_from_now">{{last_changed_from_now}}</span>
+      </core-tooltip>
+    </div>
+    
+
+    <div class="content">
+      <template repeat="{{key in objectKeys(state_attr)}}">
+        <div>{{key | makeReadable}}: {{state_attr[key]}}</div>
+      </template>
+    </div>
+
+    <div class="actions">
+      <paper-button class='edit' on-click="{{editClicked}}">EDIT</paper-button>
+
+      <template if="{{state == 'on'}}">
+        <paper-button class="toggle" on-click="{{turn_off}}">TURN OFF</paper-button>
+      </template>
+      <template if="{{state == 'off'}}">
+        <paper-button class="toggle" on-click="{{turn_on}}">TURN ON</paper-button>
+      </template>
+    </div>
+
+  </template>
+  <script>
+  Polymer({
+    // attributes
+    entity: "",
+    state: "",
+    last_changed: "never",
+    state_attr: {},
+    cb_turn_on: null,
+    cb_turn_off: null,
+    cb_edit: null,
+
+    // computed
+    domain: "",
+    entity_id: "",
+
+    entityChanged: function(oldVal, newVal) {
+      var parts = newVal.split(".")
+
+      if(parts.length == 1) {
+        this.domain = ""
+        this.entity_id = parts[0]
+      } else {
+        this.domain = parts[0]
+        this.entity_id = parts.slice(1).join('.')
+      }
+    },
+
+    last_changedChanged: function(oldVal, newVal) {
+      this.last_changed_from_now = moment(this.last_changed, "HH:mm:ss DD-MM-YYYY").fromNow()
+    },
+
+    turn_on: function() {
+      if(this.cb_turn_on) {
+        this.cb_turn_on(this.entity);
+      }
+    },
+
+    turn_off: function() {
+      if(this.cb_turn_off) {
+        this.cb_turn_off(this.entity);
+      }
+    },
+
+    editClicked: function() {
+      if(this.cb_edit) {
+        this.cb_edit(this.entity);
+      }
+    },
+
+    // used as filter
+    makeReadable: function(value) {
+      return value.replace("_", " ")
+    },
+
+    objectKeys: function(obj) {
+      return obj ? Object.keys(obj) : [];
+    }
+  });
+  </script>
+</polymer-element>

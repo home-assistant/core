@@ -1,0 +1,69 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog-transition.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="services-list.html">
+
+<polymer-element name="service-call-dialog" attributes="api">
+  <template>
+    <style>
+    paper-input:first-child {
+      padding-top: 0;
+    }
+
+    .serviceContainer {
+      margin-left: 30px;
+    }
+    </style>
+
+  <paper-dialog id="dialog" heading="Call Service" transition="paper-dialog-transition-bottom" backdrop="true">
+    <div layout horizontal>
+      <div>
+        <paper-input id="inputDomain" label="Domain" floatingLabel="true" autofocus required></paper-input>
+        <paper-input id="inputService" label="Service" floatingLabel="true" required></paper-input>
+        <paper-input id="inputData" label="Service Data (JSON, optional)" floatingLabel="true" multiline></paper-input>
+      </div>
+      <div class='serviceContainer'>
+        <b>Available services:</b>
+        <services-list api={{api}} cbServiceClicked={{serviceSelected}}></event-list>        
+      </div>
+    </div>
+    <paper-button dismissive>Cancel</paper-button>
+    <paper-button affirmative on-click={{clickCallService}}>Call Service</paper-button>
+  </paper-dialog>
+
+  </template>
+  <script>
+  Polymer({
+    ready: function() {
+      // to ensure callback methods work..
+      this.serviceSelected = this.serviceSelected.bind(this)
+    },
+
+    show: function(domain, service, serviceData) {
+      this.setService(domain, service);
+      this.$.inputData.value = serviceData;
+      this.$.dialog.toggle();
+    },
+
+    setService: function(domain, service) {
+      this.$.inputDomain.value = domain;
+      this.$.inputService.value = service;
+    },
+
+    serviceSelected: function(domain, service) {
+      this.setService(domain, service);
+    },
+
+    clickCallService: function() {
+      this.api.call_service(
+        this.$.inputDomain.value,
+        this.$.inputService.value,
+        this.$.inputData.value
+        )
+    }
+  });
+  </script>
+</polymer-element>

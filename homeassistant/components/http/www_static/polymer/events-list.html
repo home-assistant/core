@@ -1,0 +1,58 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<polymer-element name="events-list" attributes="api cbEventClicked">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+
+    .eventContainer {
+      font-size: 1rem;
+    }
+
+    </style>
+
+    <template if={{cbEventClicked}}>
+      <style>
+      a {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      </style>
+    </template>
+
+    <div>
+      <template repeat="{{event in events}}">
+        <div class='eventContainer'>
+          <a on-click={{handleClick}}>{{event.event}}</a>
+          ({{event.listener_count}} listeners)
+        </div>
+      </template>
+
+    </div>
+  </template>
+  <script>
+  Polymer({
+    cbEventClicked: null,
+    events: [],
+
+    domReady: function() {
+      this.events = this.api.events
+
+      this.api.addEventListener('events-updated', this.eventsUpdated.bind(this))
+    },
+
+    eventsUpdated: function() {
+      this.events = this.api.events;
+    },
+
+    handleClick: function(ev) {
+      if(this.cbEventClicked) {
+        this.cbEventClicked(ev.path[0].innerHTML);
+      }
+    },
+
+  });
+  </script>
+</polymer-element>

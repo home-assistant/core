@@ -1,0 +1,79 @@
+<link rel="import" href="bower_components/font-roboto/roboto.html">
+<link rel="import" href="bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="bower_components/core-icon-button/core-icon-button.html">
+<link rel="import" href="bower_components/paper-fab/paper-fab.html">
+
+<link rel="import" href="home-assistant-api.html">
+<link rel="import" href="states-cards.html">
+
+<polymer-element name="home-assistant-main" attributes="auth">
+  <template>
+    <style type="text/css">
+
+      :host {
+        font-family: 'RobotoDraft', sans-serif;
+      }
+
+      core-header-panel {
+        height: 100%;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      core-toolbar {
+        background: #03a9f4;
+        font-size: 1.5rem;
+        color: white;
+      }
+
+      paper-fab {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+      }
+
+    </style>
+
+    <home-assistant-api auth="{{auth}}" id="api"></home-assistant-api>
+
+    <core-header-panel layout>
+
+      <core-toolbar>
+        <div flex>
+          Home Assistant
+        </div>
+        <core-icon-button icon="developer-mode-tv" on-click="{{handleEventClick}}"></core-icon-button>
+        <core-icon-button icon="settings-remote" on-click="{{handleServiceClick}}"></core-icon-button>
+      </core-toolbar>
+
+      <div class="content" flex>
+        <states-cards api="{{api}}"></states-cards>
+        <paper-fab icon="add" on-click={{handleAddStateClick}}></paper-fab>
+      </div>
+
+    </core-header-panel>
+
+  </template>
+  <script>
+  Polymer({
+
+    ready: function() {
+      this.api = this.$.api;
+    },
+
+    handleEventClick: function() {
+      this.api.showFireEventDialog();
+    },
+
+    handleServiceClick: function() {
+      this.api.showCallServiceDialog();
+    },
+
+    handleAddStateClick: function() {
+      this.api.showSetStateDialog();
+    }
+
+  });
+  </script>  
+</polymer-element>

@@ -1,0 +1,30 @@
+{
+  "name": "Home Assistant",
+  "version": "0.1.0",
+  "authors": [
+    "Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
+  ],
+  "main": "index.htm",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#~0.4.2",
+    "font-roboto": "Polymer/font-roboto#~0.4.2",
+    "core-header-panel": "Polymer/core-header-panel#~0.4.2",
+    "core-toolbar": "Polymer/core-toolbar#~0.4.2",
+    "core-icon-button": "Polymer/core-icon-button#~0.4.2",
+    "paper-fab": "Polymer/paper-fab#~0.4.2",
+    "core-ajax": "Polymer/core-ajax#~0.4.2",
+    "paper-toast": "Polymer/paper-toast#~0.4.2",
+    "paper-dialog": "Polymer/paper-dialog#~0.4.2",
+    "paper-button": "Polymer/paper-button#~0.4.2",
+    "core-tooltip": "Polymer/core-tooltip#~0.4.2"
+  }
+}

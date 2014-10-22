@@ -1,0 +1,55 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<polymer-element name="entity-list" attributes="api cbEntityClicked">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+
+    .entityContainer {
+      font-size: 1rem;
+    }
+    </style>
+
+    <template if={{cbEntityClicked}}>
+      <style>
+      a {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      </style>
+    </template>
+
+    <div>
+      <template repeat="{{state in states}}">
+        <div class='eventContainer'>
+          <a on-click={{handleClick}}>{{state.entity_id}}</a>
+        </div>
+      </template>
+
+    </div>
+  </template>
+  <script>
+  Polymer({
+    cbEventClicked: null,
+    states: [],
+
+    domReady: function() {
+      this.api.addEventListener('states-updated', this.statesUpdated.bind(this))
+      this.statesUpdated()
+    },
+
+    statesUpdated: function() {
+      this.states = this.api.states;
+    },
+
+    handleClick: function(ev) {
+      if(this.cbEntityClicked) {
+        this.cbEntityClicked(ev.path[0].innerHTML);
+      }
+    },
+
+  });
+  </script>
+</polymer-element>

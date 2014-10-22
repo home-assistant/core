@@ -1,0 +1,64 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="state-card.html">
+
+<polymer-element name="states-cards" attributes="api">
+  <template>
+    <style>
+    :host {
+      display: block;
+      width: 100%;
+    }
+
+    state-card, state-add-card {
+      display: inline-block;
+      width: 350px;
+      margin: 10px 0 0 10px;      
+    }
+
+    state-add-card {
+      cursor: pointer;
+    }
+
+    </style>
+
+    <div horizontal layout wrap>
+
+      <template repeat="{{state in states}}">
+        <state-card
+          entity="{{state.entity_id}}"
+          state="{{state.state}}"
+          last_changed="{{state.last_changed}}"
+          state_attr="{{state.attributes}}"
+          cb_turn_on="{{api.turn_on}}"
+          cb_turn_off="{{api.turn_off}}"
+          cb_edit={{editCallback}}>
+        </state-card>
+      </template>
+
+    </div>
+  </template>
+  <script>
+  Polymer({
+    states: [],
+
+    ready: function() {
+      this.editCallback = this.editCallback.bind(this);
+    },
+
+    domReady: function() {
+      this.states = this.api.states
+
+      this.api.addEventListener('states-updated', this.statesUpdated.bind(this))
+    },
+
+    statesUpdated: function() {
+      this.states = this.api.states;
+    },
+
+    editCallback: function(entityId) {
+      this.api.showEditStateDialog(entityId);
+    },
+
+  });
+  </script>
+</polymer-element>

@@ -1,0 +1,74 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/core-menu/core-menu.html">
+<link rel="import" href="bower_components/core-menu/core-submenu.html">
+<link rel="import" href="bower_components/core-item/core-item.html">
+
+<polymer-element name="services-list" attributes="api cbServiceClicked">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+
+    core-menu {
+      margin-top: 0;
+      font-size: 1rem;
+    }
+
+    a {
+      display: block;
+    }
+    </style>
+
+    <template if={{cbServiceClicked}}>
+      <style>
+      a {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      </style>
+    </template>
+
+    <div>
+      <core-menu selected="0">
+      
+        <template repeat="{{serv in services}}">
+          <core-submenu icon="settings" label="{{serv.domain}}">
+            <template repeat="{{service in serv.services}}">
+              <a on-click={{serviceClicked}} data-domain={{serv.domain}}>{{service}}</a>
+            </template>
+          </core-submenu>
+        </template>
+        
+      </core-menu>
+
+    </div>
+  </template>
+  <script>
+  Polymer({
+    services: [],
+    cbServiceClicked: null,
+
+    domReady: function() {
+      this.services = this.api.services
+
+      this.api.addEventListener('services-updated', this.servicesUpdated.bind(this))
+    },
+
+    servicesUpdated: function() {
+      this.services = this.api.services;
+    },
+
+    serviceClicked: function(ev) {
+      if(this.cbServiceClicked) {
+        var target = ev.path[0];
+        var domain = target.getAttributeNode("data-domain").value;
+        var service = target.innerHTML;
+
+        this.cbServiceClicked(domain, service);
+      }
+    }
+
+  });
+  </script>
+</polymer-element>
