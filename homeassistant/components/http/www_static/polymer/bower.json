@@ -25,6 +25,10 @@
     "paper-toast": "Polymer/paper-toast#~0.4.2",
     "paper-dialog": "Polymer/paper-dialog#~0.4.2",
     "paper-button": "Polymer/paper-button#~0.4.2",
-    "core-tooltip": "Polymer/core-tooltip#~0.4.2"
+    "core-tooltip": "Polymer/core-tooltip#~0.4.2",
+    "moment": "~2.8.3",
+    "paper-input": "Polymer/paper-input#~0.4.2",
+    "core-menu": "Polymer/core-menu#~0.4.2",
+    "core-item": "Polymer/core-item#~0.4.2"
   }
 }

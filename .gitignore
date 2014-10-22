@@ -1,6 +1,7 @@
 config/*
 !config/home-assistant.conf.default
 homeassistant/components/http/www_static/polymer/bower_components/*
+homeassistant/components/http/www_static/polymer/build.htm
 
 # There is not a better solution afaik..
 !config/custom_components

@@ -190,6 +190,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     PATHS = [  # debug interface
         ('GET', URL_ROOT, '_handle_get_root'),
+        ('POST', URL_ROOT, '_handle_get_root'),
 
         # /api - for validation purposes
         ('GET', rem.URL_API, '_handle_get_api'),
@@ -236,6 +237,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
 
+        if url.path.startswith('/api/'):
+            self.use_json = True
+
         # Read query input
         data = parse_qs(url.query)
 
@@ -248,14 +252,19 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if content_length:
             body_content = self.rfile.read(content_length).decode("UTF-8")
-            try:
-                data.update(json.loads(body_content))
-            except ValueError:
-                self.server.logger.exception(
-                    "Exception parsing JSON: {}".format(body_content))
 
-                self.send_response(HTTP_UNPROCESSABLE_ENTITY)
-                return
+            if self.use_json:
+                try:
+                    data.update(json.loads(body_content))
+                except ValueError:
+                    self.server.logger.exception(
+                        "Exception parsing JSON: {}".format(body_content))
+
+                    self.send_response(HTTP_UNPROCESSABLE_ENTITY)
+                    return
+            else:
+                data.update({key: value[-1] for key, value in
+                             parse_qs(body_content).items()})
 
         api_password = self.headers.get(rem.AUTH_HEADER)
 
@@ -264,9 +273,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
-
-        if url.path.startswith('/api/'):
-            self.use_json = True
 
         # Var to keep track if we found a path that matched a handler but
         # the method was different
@@ -342,22 +348,19 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.wfile.write((
                 "<html>"
                 "<head><title>Home Assistant</title>"
-                "<link rel='stylesheet' type='text/css' "
-                "     href='/static/style.css'>"
                 "<link rel='shortcut icon' href='/static/favicon.ico' />"
                 "<link rel='icon' type='image/png' "
                 "     href='/static/favicon-192x192.png' sizes='192x192'>"
                 "</head>"
                 "<body>"
-                "<div class='container'>"
-                "<form class='form-signin' action='{}' method='GET'>"
+                "<div>"
+                "<form class='form-signin' action='{}' method='POST'>"
 
-                "<input type='text' class='form-control' name='api_password' "
+                "<input type='text' name='api_password' "
                 "    placeholder='API Password for Home Assistant' "
                 "    required autofocus>"
 
-                "<button class='btn btn-lg btn-primary btn-block' "
-                "    type='submit'>Enter</button>"
+                "<button type='submit'>Enter</button>"
 
                 "</form>"
                 "</div>"
@@ -375,208 +378,23 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
 
+        # TODO let's be able to switch this based on env
+        app_url = "build.htm" if False else "home-assistant-main.html"
+
         write(("<html>"
                "<head><title>Home Assistant</title>"
-               "<link rel='stylesheet' type='text/css' "
-               "      href='/static/style.css'>"
                "<link rel='shortcut icon' href='/static/favicon.ico' />"
                "<link rel='icon' type='image/png' "
                "     href='/static/favicon-192x192.png' sizes='192x192'>"
-               "<script data-main='static/javascripts/app'"
-               "src='/static/javascripts/require.js'></script>"
+               "<script"
+               "     src='/static/polymer/bower_components/"
+               "platform/platform.js'></script>"
+               "<link rel='import' href='/static/polymer/{}' />"
                "</head>"
-               "<body>"
-               "<div class='container'>"
-               "<div class='page-header'><h1>Home Assistant</h1></div>"))
-
-        # Flash message support
-        if self.server.flash_message:
-            write(("<div class='row'><div class='col-xs-12'>"
-                   "<div class='alert alert-success'>"
-                   "{}</div></div></div>").format(self.server.flash_message))
-
-            self.server.flash_message = None
-
-        # Describe state machine:
-        write(("<div class='row'>"
-               "<div class='col-xs-12'>"
-               "<div class='states panel panel-primary'>"
-               "<div class='panel-heading'><h2 class='panel-title'>"
-               "     States</h2></div>"
-               "<form method='post' action='/change_state' "
-               "     class='form-change-state'>"
-               "<input type='hidden' name='api_password' value='{}'>"
-               "<table class='table'><tr><th></th>"
-               "<th>Entity ID</th><th>State</th>"
-               "<th>Attributes</th><th>Last Changed</th>"
-               "</tr>").format(self.server.api_password))
-
-        for state in \
-            sorted(self.server.hass.states.all(),
-                   key=lambda item: item.entity_id.lower()):
-
-            domain = util.split_entity_id(state.entity_id)[0]
-
-            attributes = "<br>".join(
-                "{}: {}".format(attr, val)
-                for attr, val in state.attributes.items())
-
-            write("<tr><td>{}</td><td>{}</td><td>{}".format(
-                _get_domain_icon(domain), state.entity_id, state.state))
-
-            if state.state == STATE_ON or state.state == STATE_OFF:
-                if state.state == STATE_ON:
-                    action = SERVICE_TURN_OFF
-                else:
-                    action = SERVICE_TURN_ON
-
-                write(("<a class='glyphicon glyphicon-off pull-right' "
-                       "data-service='homeassistant/{}' "
-                       "data-entity_id='{}' data-service-autofire "
-                       "href='#'></a>").format(action, state.entity_id))
-
-            write("</td><td>{}</td><td>{}</td></tr>".format(
-                attributes, util.datetime_to_str(state.last_changed)))
-
-        # Change state form
-        write(("<tr><td></td><td><input name='entity_id' class='form-control' "
-               "  placeholder='Entity ID'></td>"
-               "<td><input name='new_state' class='form-control' "
-               "  placeholder='New State'></td>"
-               "<td><textarea rows='3' name='attributes' class='form-control' "
-               "  placeholder='State Attributes (JSON, optional)'>"
-               "</textarea></td>"
-               "<td><button type='submit' class='btn btn-default'>"
-               "Set State</button></td></tr>"
-
-               "</table></form></div>"
-
-               "</div></div>"))
-
-        # Describe bus/services:
-        write(("<div class='row'>"
-               "<div class='col-xs-6'>"
-               "<div class='services panel panel-primary'>"
-               "<div class='panel-heading'><h2 class='panel-title'>"
-               "     Services</h2></div>"
-               "<table class='table'>"
-               "<tr><th></th><th>Domain</th><th>Service</th></tr>"))
-
-        for domain, services in sorted(
-                self.server.hass.services.services.items()):
-            write("<tr><td>{}</td><td>{}</td><td>".format(
-                _get_domain_icon(domain), domain))
-
-            write(", ".join(
-                "<a href='#' data-service='{0}/{1}'>{1}</a>".format(
-                    domain, service) for service in sorted(services)))
-
-            write("</td></tr>")
-
-        write(("</table></div></div>"
-
-               "<div class='col-xs-6'>"
-               "<div class='panel panel-primary'>"
-               "<div class='panel-heading'><h2 class='panel-title'>"
-               "     Call Service</h2></div>"
-               "<div class='panel-body'>"
-               "<form method='post' action='/call_service' "
-               "     class='form-horizontal form-call-service'>"
-               "<input type='hidden' name='api_password' value='{}'>"
-
-               "<div class='form-group'>"
-               "  <label for='domain' class='col-xs-3 control-label'>"
-               "     Domain</label>"
-               "  <div class='col-xs-9'>"
-               "     <input type='text' class='form-control' id='domain'"
-               "       name='domain' placeholder='Service Domain'>"
-               "  </div>"
-               "</div>"
-
-               "<div class='form-group'>"
-               "  <label for='service' class='col-xs-3 control-label'>"
-               "     Service</label>"
-               "  <div class='col-xs-9'>"
-               "    <input type='text' class='form-control' id='service'"
-               "      name='service' placeholder='Service name'>"
-               "  </div>"
-               "</div>"
-
-               "<div class='form-group'>"
-               "  <label for='service_data' class='col-xs-3 control-label'>"
-               "    Service data</label>"
-               "  <div class='col-xs-9'>"
-               "    <textarea rows='3' class='form-control' id='service_data'"
-               "      name='service_data' placeholder='Service Data "
-               "(JSON, optional)'></textarea>"
-               "  </div>"
-               "</div>"
-
-               "<div class='form-group'>"
-               "  <div class='col-xs-offset-3 col-xs-9'>"
-               "    <button type='submit' class='btn btn-default'>"
-               "    Call Service</button>"
-               "  </div>"
-               "</div>"
-               "</form>"
-               "</div></div></div>"
-               "</div>").format(self.server.api_password))
-
-        # Describe bus/events:
-        write(("<div class='row'>"
-               "<div class='col-xs-6'>"
-               "<div class='panel panel-primary'>"
-               "<div class='panel-heading'><h2 class='panel-title'>"
-               "     Events</h2></div>"
-               "<table class='table'>"
-               "<tr><th>Event</th><th>Listeners</th></tr>"))
-
-        for event, listener_count in sorted(
-                self.server.hass.bus.listeners.items()):
-            write("<tr><td>{}</td><td>{}</td></tr>".format(
-                event, listener_count))
-
-        write(("</table></div></div>"
-
-               "<div class='col-xs-6'>"
-               "<div class='panel panel-primary'>"
-               "<div class='panel-heading'><h2 class='panel-title'>"
-               "     Fire Event</h2></div>"
-               "<div class='panel-body'>"
-               "<form method='post' action='/fire_event' "
-               "     class='form-horizontal form-fire-event'>"
-               "<input type='hidden' name='api_password' value='{}'>"
-
-               "<div class='form-group'>"
-               "  <label for='event_type' class='col-xs-3 control-label'>"
-               "     Event type</label>"
-               "  <div class='col-xs-9'>"
-               "     <input type='text' class='form-control' id='event_type'"
-               "      name='event_type' placeholder='Event Type'>"
-               "  </div>"
-               "</div>"
-
-               "<div class='form-group'>"
-               "  <label for='event_data' class='col-xs-3 control-label'>"
-               "     Event data</label>"
-               "  <div class='col-xs-9'>"
-               "     <textarea rows='3' class='form-control' id='event_data'"
-               "      name='event_data' placeholder='Event Data "
-               "(JSON, optional)'></textarea>"
-               "  </div>"
-               "</div>"
-
-               "<div class='form-group'>"
-               "   <div class='col-xs-offset-3 col-xs-9'>"
-               "     <button type='submit' class='btn btn-default'>"
-               "     Fire Event</button>"
-               "   </div>"
-               "</div>"
-               "</form>"
-               "</div></div></div>"
-               "</div>").format(self.server.api_password))
-
-        write("</div></body></html>")
+               "<body unresolved fullbleed"
+               "     style='background-color: #E5E5E5'>"
+               "<home-assistant-main auth='{}'></home-assistant-main>"
+               "</body></html>").format(app_url, self.server.api_password))
 
     # pylint: disable=unused-argument
     def _handle_get_api(self, path_match, data):
