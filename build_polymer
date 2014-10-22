@@ -1,0 +1,3 @@
+cd homeassistant/components/http/www_static/polymer
+bower install
+vulcanize -o build.htm home-assistant-main.html
