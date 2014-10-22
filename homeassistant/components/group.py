@@ -91,7 +91,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 def setup(hass, config):
     """ Sets up all groups found definded in the configuration. """
-    for name, entity_ids in config[DOMAIN].items():
+    for name, entity_ids in config.get(DOMAIN, {}).items():
         entity_ids = entity_ids.split(",")
 
         setup_group(hass, name, entity_ids)
