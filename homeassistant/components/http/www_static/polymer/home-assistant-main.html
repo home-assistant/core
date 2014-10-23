@@ -43,6 +43,7 @@
         <div flex>
           Home Assistant
         </div>
+        <core-icon-button icon="refresh" on-click="{{handleRefreshClick}}"></core-icon-button>
         <core-icon-button icon="developer-mode-tv" on-click="{{handleEventClick}}"></core-icon-button>
         <core-icon-button icon="settings-remote" on-click="{{handleServiceClick}}"></core-icon-button>
       </core-toolbar>
@@ -60,6 +61,10 @@
 
     ready: function() {
       this.api = this.$.api;
+    },
+
+    handleRefreshClick: function() {
+      this.api.fetchStates();
     },
 
     handleEventClick: function() {
