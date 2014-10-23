@@ -16,6 +16,13 @@
     .stateContainer {
       margin-left: 30px;
     }
+
+    @media all and (max-width: 620px) {
+      .stateContainer {
+        display: none;
+      }
+    }
+
     </style>
 
   <paper-dialog id="dialog" heading="Set State" transition="paper-dialog-transition-center" backdrop="true">
@@ -77,7 +84,7 @@
         this.$.inputEntityID.value,
         this.$.inputState.value,
         JSON.parse(this.$.inputData.value)
-        )
+        );
     }
   });
   </script>
