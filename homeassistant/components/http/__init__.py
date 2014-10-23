@@ -383,6 +383,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         write(("<html>"
                "<head><title>Home Assistant</title>"
+               "<meta name='mobile-web-app-capable' content='yes'>"
                "<link rel='shortcut icon' href='/static/favicon.ico' />"
                "<link rel='icon' type='image/png' "
                "     href='/static/favicon-192x192.png' sizes='192x192'>"
