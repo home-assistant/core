@@ -10,15 +10,16 @@
     :host {
       position: relative;
       background-color: white;
-      padding: 20px 20px 50px 20px;
+      padding: 20px 20px 55px 20px;
       width: 100%;
-      font-weight: 300;
       border-radius: 2px;
     }
 
     .header {
       text-transform: capitalize;
       
+      font-weight: 300;
+
       font-size: 1.5rem;
     }
 
@@ -27,8 +28,22 @@
       color: darkgrey;
     }
 
-    .content {
+    .state-attributes {
       margin-top: 10px;
+      font-size: 1rem;
+    }
+
+    .state-attributes .key {
+      white-space: nowrap;
+      width: 85px;
+      float: left;
+      clear: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .state-attributes .value {
+      margin-left: 95px;
     }
 
     .actions {
@@ -47,7 +62,10 @@
     </style>
 
     <div class="header" horizontal justified layout>
-      <span class="entity_id">{{entity_id | makeReadable}}</span>
+      <span class="entity_id">
+        <template if="{{state_attr['friendly_name']}}">{{state_attr['friendly_name']}}</template>
+        <template if="{{!state_attr['friendly_name']}}">{{entity_id | makeReadable}}</template>
+      </span>
       <span class='state'>{{state | makeReadable}}</span>
     </div>
 
@@ -59,9 +77,12 @@
     </div>
     
 
-    <div class="content">
+    <div class="state-attributes">
       <template repeat="{{key in objectKeys(state_attr)}}">
-        <div>{{key | makeReadable}}: {{state_attr[key]}}</div>
+        <template if="{{key != 'friendly_name'}}">
+          <div class='key'>{{key | makeReadable}}</div>
+          <div class='value'>{{state_attr[key] | makeReadable}}</div>
+        </template>
       </template>
     </div>
 
@@ -128,7 +149,15 @@
 
     // used as filter
     makeReadable: function(value) {
-      return value.replace("_", " ")
+      if(typeof value == "string") {
+        return value.replace(/_/g, " ");
+
+      } else if(Array.isArray(value)) {
+        return value.join(", ");
+
+      } else {
+        return value;
+      }
     },
 
     objectKeys: function(obj) {
