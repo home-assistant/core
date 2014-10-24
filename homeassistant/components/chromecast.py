@@ -17,7 +17,6 @@ SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 STATE_NO_APP = 'no_app'
 
-ATTR_HOST = 'host'
 ATTR_STATE = 'state'
 ATTR_OPTIONS = 'options'
 ATTR_MEDIA_STATE = 'media_state'
@@ -148,8 +147,7 @@ def setup(hass, config):
 
         status = chromecast.app
 
-        state_attr = {ATTR_HOST: chromecast.host,
-                      components.ATTR_FRIENDLY_NAME:
+        state_attr = {components.ATTR_FRIENDLY_NAME:
                       chromecast.device.friendly_name}
 
         if status and status.app_id != pychromecast.APP_ID['HOME']:
