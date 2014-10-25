@@ -23,7 +23,7 @@
       auto
       method="GET"
       url="/api/states"
-      headers='{"HA-access": "{{auth}}"}'
+      headers="{{ha_headers}}"
       on-core-response="{{statesLoaded}}"
       handleAs="json">
     </core-ajax>
@@ -32,7 +32,7 @@
       auto
       method="GET"
       url="/api/events"
-      headers='{"HA-access": "{{auth}}"}'
+      headers="{{ha_headers}}"
       on-core-response="{{eventsLoaded}}"
       handleAs="json">
     </core-ajax>
@@ -41,7 +41,7 @@
       auto
       method="GET"
       url="/api/services"
-      headers='{"HA-access": "{{auth}}"}'
+      headers="{{ha_headers}}"
       on-core-response="{{servicesLoaded}}"
       handleAs="json">
     </core-ajax>
@@ -49,11 +49,15 @@
   </template>
   <script>
   Polymer({
-    auth: "",
+    auth: "not-set",
     states: [],
     services: {},
     events: {},
     stateUpdateTimeout: null,
+
+    computed: {
+      ha_headers: '{"HA-access": auth}'
+    },
 
     created: function() {
       this.api = this;
@@ -225,9 +229,9 @@
       }.bind(this)
 
       if(parameters) {
-        req.send(JSON.stringify(parameters))
+        req.send(JSON.stringify(parameters));
       } else {
-        req.send()
+        req.send();
       }
     },
 
@@ -249,7 +253,7 @@
       eventType = eventType || "";
       eventData = eventData || "";
 
-      this.$.eventDialog.show(eventType, eventData)
+      this.$.eventDialog.show(eventType, eventData);
     },
 
     showCallServiceDialog: function(domain, service, serviceData) {

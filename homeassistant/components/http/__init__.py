@@ -119,6 +119,7 @@ DOMAIN_ICONS = {
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
+CONF_DEVELOPMENT = "development"
 
 
 def _get_domain_icon(domain):
@@ -141,8 +142,11 @@ def setup(hass, config):
 
     server_port = config[DOMAIN].get(CONF_SERVER_PORT, rem.SERVER_PORT)
 
+    development = config[DOMAIN].get(CONF_DEVELOPMENT, "") == "1"
+
     server = HomeAssistantHTTPServer((server_host, server_port),
-                                     RequestHandler, hass, api_password)
+                                     RequestHandler, hass, api_password,
+                                     development)
 
     hass.listen_once_event(
         ha.EVENT_HOMEASSISTANT_START,
@@ -161,12 +165,13 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
 
     def __init__(self, server_address, RequestHandlerClass,
-                 hass, api_password):
+                 hass, api_password, development=False):
         super().__init__(server_address, RequestHandlerClass)
 
+        self.server_address = server_address
         self.hass = hass
         self.api_password = api_password
-        self.server_address = server_address
+        self.development = development
         self.logger = logging.getLogger(__name__)
 
         # To store flash messages between sessions
@@ -174,6 +179,10 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         # We will lazy init this one if needed
         self.event_forwarder = None
+
+        if development:
+            self.logger.info("running frontend in development mode")
+        
 
     def start(self):
         """ Starts the server. """
@@ -378,8 +387,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
 
-        # TODO let's be able to switch this based on env
-        app_url = "build.htm" if False else "home-assistant-main.html"
+        if self.server.development:
+            app_url = "polymer/home-assistant-main.html"
+        else:
+            app_url = "frontend.html"
 
         write(("<html>"
                "<head><title>Home Assistant</title>"
@@ -390,7 +401,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "<script"
                "     src='/static/polymer/bower_components/"
                "platform/platform.js'></script>"
-               "<link rel='import' href='/static/polymer/{}' />"
+               "<link rel='import' href='/static/{}' />"
                "<meta name='viewport' content='width=device-width, "
                "      user-scalable=no, initial-scale=1.0, "
                "      minimum-scale=1.0, maximum-scale=1.0' />"

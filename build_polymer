@@ -1,3 +1,5 @@
+# To build the frontend, you need node, bower and vulcanize
+# npm install -g bower vulcanize
 cd homeassistant/components/http/www_static/polymer
 bower install
-vulcanize -o build.htm home-assistant-main.html
+vulcanize -o ../frontend.html home-assistant-main.html
