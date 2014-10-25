@@ -164,6 +164,7 @@ def setup(hass, config):
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
 
+    # pylint: disable=too-many-arguments
     def __init__(self, server_address, RequestHandlerClass,
                  hass, api_password, development=False):
         super().__init__(server_address, RequestHandlerClass)
@@ -182,7 +183,6 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         if development:
             self.logger.info("running frontend in development mode")
-        
 
     def start(self):
         """ Starts the server. """
@@ -405,8 +405,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "      user-scalable=no, initial-scale=1.0, "
                "      minimum-scale=1.0, maximum-scale=1.0' />"
                "</head>"
-               "<body unresolved fullbleed"
-               "     style='background-color: #E5E5E5'>"
+               "<body>"
                "<home-assistant-main auth='{}'></home-assistant-main>"
                "</body></html>").format(app_url, self.server.api_password))
 

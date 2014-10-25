@@ -18,7 +18,7 @@ import homeassistant.components as core_components
 import homeassistant.components.group as group
 
 
-# pylint: disable=too-many-branches
+# pylint: disable=too-many-branches, too-many-statements
 def from_config_dict(config, hass=None):
     """
     Tries to configure Home Assistant from a config dict.
