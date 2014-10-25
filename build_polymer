@@ -2,4 +2,5 @@
 # npm install -g bower vulcanize
 cd homeassistant/components/http/www_static/polymer
 bower install
-vulcanize -o ../frontend.html home-assistant-main.html
+vulcanize -o ../frontend.html --inline home-assistant-main.html
+cp bower_components/platform/platform.js ../polymer_platform.js
