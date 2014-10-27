@@ -77,7 +77,8 @@ import logging
 import re
 import os
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import gzip
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
@@ -86,6 +87,8 @@ import homeassistant.remote as rem
 import homeassistant.util as util
 from homeassistant.components import (STATE_ON, STATE_OFF,
                                       SERVICE_TURN_ON, SERVICE_TURN_OFF)
+from . import frontend
+
 DOMAIN = "http"
 DEPENDENCIES = []
 
@@ -102,30 +105,10 @@ URL_ROOT = "/"
 
 URL_STATIC = "/static/{}"
 
-DOMAIN_ICONS = {
-    "sun": "glyphicon-asterisk",
-    "group": "glyphicon-th-large",
-    "charging": "glyphicon-flash",
-    "light": "glyphicon-hdd",
-    "wemo": "glyphicon-hdd",
-    "device_tracker": "glyphicon-phone",
-    "chromecast": "glyphicon-picture",
-    "process": "glyphicon-barcode",
-    "browser": "glyphicon-globe",
-    "homeassistant": "glyphicon-home",
-    "downloader": "glyphicon-download-alt"
-}
-
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
-
-
-def _get_domain_icon(domain):
-    """ Returns HTML that shows domain icon. """
-    return "<span class='glyphicon {}'></span>".format(
-        DOMAIN_ICONS.get(domain, ""))
 
 
 def setup(hass, config):
@@ -194,8 +177,15 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
 
 # pylint: disable=too-many-public-methods
-class RequestHandler(BaseHTTPRequestHandler):
-    """ Handles incoming HTTP requests """
+class RequestHandler(SimpleHTTPRequestHandler):
+    """
+    Handles incoming HTTP requests
+
+    We extend from SimpleHTTPRequestHandler instead of Base so we
+    can use the guess content type methods.
+    """
+
+    server_version = "HomeAssistant/1.0"
 
     PATHS = [  # debug interface
         ('GET', URL_ROOT, '_handle_get_root'),
@@ -323,6 +313,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(HTTP_NOT_FOUND)
 
+    def do_HEAD(self):  # pylint: disable=invalid-name
+        """ HEAD request handler. """
+        self._handle_request('HEAD')
+
     def do_GET(self):  # pylint: disable=invalid-name
         """ GET request handler. """
         self._handle_request('GET')
@@ -390,7 +384,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if self.server.development:
             app_url = "polymer/home-assistant-main.html"
         else:
-            app_url = "frontend.html"
+            app_url = "frontend-{}.html".format(frontend.VERSION)
 
         write(("<html>"
                "<head><title>Home Assistant</title>"
@@ -405,7 +399,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                "      user-scalable=no, initial-scale=1.0, "
                "      minimum-scale=1.0, maximum-scale=1.0' />"
                "</head>"
-               "<body>"
+               "<body fullbleed>"
                "<home-assistant-main auth='{}'></home-assistant-main>"
                "</body></html>").format(app_url, self.server.api_password))
 
@@ -579,27 +573,60 @@ class RequestHandler(BaseHTTPRequestHandler):
         """ Returns a static file. """
         req_file = util.sanitize_path(path_match.group('file'))
 
+        # Strip md5 hash out of frontend filename
+        if re.match(r'^frontend-[A-Za-z0-9]{32}\.html$', req_file):
+            req_file = "frontend.html"
+
         path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
 
-        if os.path.isfile(path):
+        inp = None
+
+        try:
+            inp = open(path, 'rb')
+
+            do_gzip = 'gzip' in self.headers.get('accept-encoding', '')
+
             self.send_response(HTTP_OK)
-            self.send_header("Cache-control", "public, max-age=3600")
-            self.send_header("Expires",
-                             self.date_time_string(time.time()+3600))
+
+            ctype = self.guess_type(path)
+            self.send_header("Content-Type", ctype)
+
+            # Add cache if not development
+            if not self.server.development:
+                # 1 year in seconds
+                cache_time = 365 * 86400
+
+                self.send_header(
+                    "Cache-Control", "public, max-age={}".format(cache_time))
+                self.send_header(
+                    "Expires", self.date_time_string(time.time()+cache_time))
+
+            if do_gzip:
+                gzip_data = gzip.compress(inp.read())
+
+                self.send_header("Content-Encoding", "gzip")
+                self.send_header("Vary", "Accept-Encoding")
+                self.send_header("Content-Length", str(len(gzip_data)))
+
+            else:
+                fs = os.fstat(inp.fileno())
+                self.send_header("Content-Length", str(fs[6]))
 
             self.end_headers()
 
-            with open(path, 'rb') as inp:
-                data = inp.read(1024)
+            if do_gzip:
+                self.wfile.write(gzip_data)
 
-                while data:
-                    self.wfile.write(data)
+            else:
+                self.copyfile(inp, self.wfile)
 
-                    data = inp.read(1024)
-
-        else:
+        except IOError:
             self.send_response(HTTP_NOT_FOUND)
             self.end_headers()
+
+        finally:
+            if inp:
+                inp.close()
 
     def _message(self, message, status_code=HTTP_OK):
         """ Helper method to return a message to the caller. """
