@@ -22,7 +22,7 @@ Home Assistant also includes functionality for controlling HTPCs:
  * Download files
  * Open URLs in the default browser
 
-![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/states.png)
+![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/screenshots.png)
 
 The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](#architecture) and the [section on customizing](#customizing).
 
@@ -213,14 +213,12 @@ Registers service `browser/browse_url` that opens `url` as specified in event_da
 
 Home Assistent runs a webserver accessible on port 8123. 
 
-  * At http://localhost:8123/ it will provide a debug interface showing the current state of the system and an overview of registered services.
+  * At http://127.0.0.1:8123/ it will provide an interface allowing you to control Home Assistant.
   * At http://localhost:8123/api/ it provides a password protected API.
-
-![screenshot-debug-interface](https://raw.github.com/balloob/home-assistant/master/docs/screenshot-debug-interface.png)
 
 In the package `homeassistant.remote` a Python API on top of the HTTP API can be found.
 
-All API calls have to be accompanied by an 'api_password' parameter (as specified in `home-assistant.conf`) and will return JSON encoded objects. If successful calls will return status code 200 or 201.
+All API calls have to be accompanied by the header "HA-Access" with as value the api password (as specified in `home-assistant.conf`). The API returns only JSON encoded objects. Successful calls will return status code 200 or 201.
 
 Other status codes that can occur are:
  - 400 (Bad Request)
