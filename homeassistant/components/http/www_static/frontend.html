@@ -674,8 +674,8 @@ mode: cover
 
 </script>
 </polymer-element>
-</div>
-<div hidden><!--
+
+<!--
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -869,8 +869,8 @@ polyfill-next-selector { content: ':host .indent'; }
 
 </template>
 <script>Polymer('core-toolbar');</script></polymer-element>
-</div>
-<div hidden><!--
+
+<!--
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -2076,8 +2076,8 @@ core-icon {
   </script>
 
 </polymer-element>
-</div>
-<div hidden><!--
+
+<!--
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -3267,9 +3267,9 @@ root if there is one. This implies:
 
   </script>
 </polymer-element>
-</div>
 
-<div hidden>
+
+
 <!--
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
@@ -9375,8 +9375,8 @@ core-item {
   });
   </script>
 </polymer-element>
-</div>
-<div hidden>
+
+
 <script>//! moment.js
 //! version : 2.8.3
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
@@ -12762,7 +12762,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
   </script>
 </polymer-element>
-</div>
+
 
 <polymer-element name="home-assistant-main" attributes="auth" assetpath="polymer/">
   <template>
@@ -12841,6 +12841,101 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     handleAddStateClick: function() {
       this.api.showSetStateDialog();
     }
+
+  });
+  </script>  
+</polymer-element>
+</div>
+<div hidden>undefined</div>
+<div hidden>undefined</div>
+
+<polymer-element name="splash-login" attributes="auth" assetpath="polymer/">
+  <template>
+    <style type="text/css">
+
+      :host {
+        font-family: 'RobotoDraft', sans-serif;
+        height: 100%;
+        overflow: auto;
+      }
+
+      .login paper-button {
+        margin-left: 242px;
+      }
+
+      .login .interact {
+        height: 110px;
+      }
+
+    </style>
+
+    <template if="{{state == 'no_auth'}}">
+      <div layout="" horizontal="" center="" fit="" class="login">
+        <div layout="" vertical="" center="" flex="">
+          <img src="/static/favicon-192x192.png">
+          <h1>Home Assistant</h1>
+
+          <div class="interact" layout="" vertical="">
+            <div id="loginform">
+              <paper-input id="passwordInput" label="Password" type="password" value="{{auth}}"></paper-input>
+              <paper-button on-click="{{validatePassword}}">Log In</paper-button>
+            </div>
+
+            <div id="validateMessage" hidden>Validating password...</div>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template if="{{state == 'valid_auth'}}">
+      <home-assistant-main auth="{{auth}}"></home-assistant-main>
+    </template>
+
+  </template>
+  <script>
+  Polymer('splash-login',{
+
+    // can be no_auth, test_auth, valid_auth
+    state: "no_auth",
+    auth: "",
+
+    ready: function() {
+    },
+
+    domReady: function() {
+      if(this.auth) {
+        this.validatePassword();
+      }
+    },
+
+    validatePassword: function() {
+      this.$.passwordInput.commit();
+      this.$.loginform.setAttribute('hidden', null)
+      this.$.validateMessage.removeAttribute('hidden')
+
+      var req = new XMLHttpRequest();
+      req.open("GET", "/api/", true);
+      req.setRequestHeader("HA-access", this.auth);
+
+      req.onreadystatechange = function() {
+        if(req.readyState == 4) {
+          if(req.status == 200) {
+            this.state = 'valid_auth'
+          } else {
+            this.auth = "";
+
+            this.$.passwordInput.error = "Invalid Password";
+            this.$.passwordInput.required = 1;
+
+            this.$.loginform.removeAttribute('hidden');
+            this.$.validateMessage.setAttribute('hidden', null);
+
+            this.state = 'no_auth'
+          }
+        }
+      }.bind(this)
+
+      req.send();
+    },
 
   });
   </script>  

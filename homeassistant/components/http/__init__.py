@@ -301,10 +301,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # Did we find a handler for the incoming request?
         if handle_request_method:
 
-            # Do not enforce api password for static files
-            if handle_request_method == self._handle_get_static or \
-               self._verify_api_password(api_password):
+            # For API calls we need a valid password
+            if self.use_json and api_password != self.server.api_password:
+                self._message(
+                    "API password missing or incorrect.", HTTP_UNAUTHORIZED)
 
+            else:
                 handle_request_method(path_match, data)
 
         elif path_matched_but_not_method:
@@ -333,44 +335,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ DELETE request handler. """
         self._handle_request('DELETE')
 
-    def _verify_api_password(self, api_password):
-        """ Helper method to verify the API password
-            and take action if incorrect. """
-        if api_password == self.server.api_password:
-            return True
-
-        elif self.use_json:
-            self._message(
-                "API password missing or incorrect.", HTTP_UNAUTHORIZED)
-
-        else:
-            self.send_response(HTTP_OK)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-
-            self.wfile.write((
-                "<html>"
-                "<head><title>Home Assistant</title>"
-                "<link rel='shortcut icon' href='/static/favicon.ico' />"
-                "<link rel='icon' type='image/png' "
-                "     href='/static/favicon-192x192.png' sizes='192x192'>"
-                "</head>"
-                "<body>"
-                "<div>"
-                "<form class='form-signin' action='{}' method='POST'>"
-
-                "<input type='text' name='api_password' "
-                "    placeholder='API Password for Home Assistant' "
-                "    required autofocus>"
-
-                "<button type='submit'>Enter</button>"
-
-                "</form>"
-                "</div>"
-                "</body></html>").format(self.path).encode("UTF-8"))
-
-        return False
-
     # pylint: disable=unused-argument
     def _handle_get_root(self, path_match, data):
         """ Renders the debug interface. """
@@ -382,7 +346,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
         if self.server.development:
-            app_url = "polymer/home-assistant-main.html"
+            app_url = "polymer/splash-login.html"
         else:
             app_url = "frontend-{}.html".format(frontend.VERSION)
 
@@ -400,8 +364,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
                "      minimum-scale=1.0, maximum-scale=1.0' />"
                "</head>"
                "<body fullbleed>"
-               "<home-assistant-main auth='{}'></home-assistant-main>"
-               "</body></html>").format(app_url, self.server.api_password))
+               "<splash-login auth='{}'></splash-login>"
+               "</body></html>").format(app_url, data.get('api_password', '')))
 
     # pylint: disable=unused-argument
     def _handle_get_api(self, path_match, data):
