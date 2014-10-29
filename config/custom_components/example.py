@@ -9,8 +9,10 @@ Bare minimum what is needed for a component to be valid.
 DOMAIN = "example"
 
 # List of component names (string) your component depends upon
-# If you are setting up a group but not using a group for anything, don't depend on group
+# If you are setting up a group but not using a group for anything,
+# don't depend on group
 DEPENDENCIES = []
+
 
 # pylint: disable=unused-argument
 def setup(hass, config):

@@ -224,7 +224,8 @@ def setup(hass, config):
         return False
 
     # Track all lights in a group
-    group.setup_group(hass, GROUP_NAME_ALL_LIGHTS, light_to_ent.values())
+    group.setup_group(
+        hass, GROUP_NAME_ALL_LIGHTS, light_to_ent.values(), False)
 
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),

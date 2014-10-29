@@ -1,7 +1,7 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="state-card.html">
 
-<polymer-element name="states-cards" attributes="api">
+<polymer-element name="states-cards" attributes="api filter">
   <template>
     <style>
     :host {
@@ -22,6 +22,17 @@
     </style>
 
     <div horizontal layout wrap>
+      <template if="{{filter != null}}">
+        <state-card
+          entity="{{filter_state.entity_id}}"
+          state="{{filter_state.state}}"
+          last_changed="{{filter_state.last_changed}}"
+          state_attr="{{filter_state.attributes}}"
+          cb_turn_on="{{api.turn_on}}"
+          cb_turn_off="{{api.turn_off}}"
+          cb_edit={{editCallback}}>
+        </state-card>
+      </template>
 
       <template repeat="{{state in states}}">
         <state-card
@@ -39,7 +50,15 @@
   </template>
   <script>
   Polymer({
+    raw_states: [],
     states: [],
+    filter: null,
+    filter_state: null,
+    filter_substates: null,
+
+    filterChanged: function(oldVal, newVal) {
+      this.refilterStates();
+    },
 
     ready: function() {
       this.editCallback = this.editCallback.bind(this);
@@ -52,7 +71,24 @@
     },
 
     statesUpdated: function() {
-      this.states = this.api.states;
+      this.raw_states = this.api.states;
+
+      this.refilterStates();
+    },
+
+    refilterStates: function() {
+      if(this.filter == null) {
+        this.filter_state = null;
+        this.states = this.raw_states;
+      } else {
+        this.filter_state = this.api.getState(this.filter);
+
+        var map_states = function(entity_id) {
+          return this.api.getState(entity_id);
+        }.bind(this)
+
+        this.states = this.filter_state.attributes.entity_id.map(map_states)
+      }
     },
 
     editCallback: function(entityId) {

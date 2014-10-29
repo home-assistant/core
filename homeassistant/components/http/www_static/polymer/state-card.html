@@ -2,104 +2,106 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/core-tooltip/core-tooltip.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<link rel="import" href="state-badge.html">
 
 <polymer-element name="state-card"
   attributes="entity state last_changed state_attr cb_turn_on, cb_turn_off cb_edit">
   <template>
     <style>
     :host {
+      background-color: #fff;
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+      /* transition */
+      -webkit-transition: all 0.30s ease-out;
+      transition: all 0.30s ease-out;
+
       position: relative;
       background-color: white;
-      padding: 20px 20px 55px 20px;
+      padding: 15px;
       width: 100%;
-      border-radius: 2px;
     }
 
-    .header {
-      text-transform: capitalize;
-      
-      font-weight: 300;
+    state-badge {
+      float: left;
+    }
 
+    .name, .state.text {
+      text-transform: capitalize;  
+      font-weight: 300;
       font-size: 1.5rem;
     }
 
-    .header .state {
+    .state {
       text-align: right;
     }
 
-    .subheader {
-      margin-top: -5px;
+    .info {
+      margin-left: 60px;
+    }
+
+    .time-ago {
       color: darkgrey;
+      margin-top: -2px;
     }
 
-    .state-attributes {
-      margin-top: 10px;
-      font-size: 1rem;
+    /* the splash while enabling */
+    paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
+      color: #0091ea;
     }
 
-    .state-attributes .key {
-      white-space: nowrap;
-      width: 85px;
-      float: left;
-      clear: left;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    /* filling of circle when checked */
+    paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
+      background-color: #0091ea;
     }
 
-    .state-attributes .value {
-      margin-left: 95px;
-    }
-
-    .actions {
-      position: absolute;
-      bottom: 10px;
-      left: 20px;
-      right: 20px;
-
-      text-align: right;
-    }
-
-    paper-button.toggle {
-      color: #03a9f4;
-    }
-
+    /* line when checked */
+    paper-toggle-button::shadow #toggleBar[checked] {
+      background-color: #0091ea;
+    }    
     </style>
 
-    <div class="header" horizontal justified layout>
-      <span class="entity_id">
-        <template if="{{state_attr['friendly_name']}}">{{state_attr['friendly_name']}}</template>
-        <template if="{{!state_attr['friendly_name']}}">{{entity_id | makeReadable}}</template>
-      </span>
-      <span class='state'>{{state | makeReadable}}</span>
-    </div>
+    <div horizontal justified layout>
+      
+      <div class="entity">
+        <state-badge 
+          domain="{{domain}}"
+          state="{{state}}"
+          on-click="{{editClicked}}">
+        </state-badge>
 
-    <div class="subheader" horizontal justified layout>
-      <span class="domain">{{domain}}</span>
-      <core-tooltip label="{{last_changed}}" position="bottom">
-        <span class="last_changed_from_now">{{last_changed_from_now}}</span>
-      </core-tooltip>
-    </div>
-    
+        <div class='info'>
+          <div class='name'>
+            <template if="{{state_attr['friendly_name']}}">{{state_attr['friendly_name']}}</template>
+            <template if="{{!state_attr['friendly_name']}}">{{entity_id | makeReadable}}</template>
+          </div>
 
-    <div class="state-attributes">
-      <template repeat="{{key in objectKeys(state_attr)}}">
-        <template if="{{key != 'friendly_name'}}">
-          <div class='key'>{{key | makeReadable}}</div>
-          <div class='value'>{{state_attr[key] | makeReadable}}</div>
-        </template>
+          <div class="time-ago">
+            <core-tooltip label="{{last_changed}}" position="bottom">
+              {{last_changed_from_now}}
+            </core-tooltip>
+          </div>
+          
+        </div>
+      </div>
+
+      <template if="{{state == 'on' || state == 'off'}}">
+        <div class='state toggle' self-center flex>
+          <paper-toggle-button
+            id="toggleButton"
+            on-change="{{toggle}}">
+          </paper-toggle-button>
+        </div>
       </template>
-    </div>
-
-    <div class="actions">
-      <paper-button class='edit' on-click="{{editClicked}}">EDIT</paper-button>
-
-      <template if="{{state == 'on'}}">
-        <paper-button class="toggle" on-click="{{turn_off}}">TURN OFF</paper-button>
+      <template if="{{state != 'on' && state != 'off'}}">
+        <div class='state text'>
+          {{state | makeReadable}}
+        </div>
       </template>
-      <template if="{{state == 'off'}}">
-        <paper-button class="toggle" on-click="{{turn_on}}">TURN ON</paper-button>
-      </template>
-    </div>
+      
+    </div>    
 
   </template>
   <script>
@@ -117,6 +119,12 @@
     domain: "",
     entity_id: "",
 
+    stateChanged: function() {
+      if(this.$.toggleButton) {
+        this.$.toggleButton.checked = this.state == 'on';
+      }
+    },
+
     entityChanged: function(oldVal, newVal) {
       var parts = newVal.split(".")
 
@@ -131,6 +139,14 @@
 
     last_changedChanged: function(oldVal, newVal) {
       this.last_changed_from_now = moment(this.last_changed, "HH:mm:ss DD-MM-YYYY").fromNow()
+    },
+
+    toggle: function(ev) {
+      if(this.$.toggleButton.checked) {
+        this.turn_on();
+      } else {
+        this.turn_off();
+      }
     },
 
     turn_on: function() {
@@ -162,10 +178,6 @@
       } else {
         return value;
       }
-    },
-
-    objectKeys: function(obj) {
-      return obj ? Object.keys(obj) : [];
     }
   });
   </script>

@@ -139,8 +139,8 @@ def setup(hass, config):
 
     update_wemos_state(None, True)
 
-    # Track all lights in a group
-    group.setup_group(hass, GROUP_NAME_ALL_WEMOS, sno_to_ent.values())
+    # Track all wemos in a group
+    group.setup_group(hass, GROUP_NAME_ALL_WEMOS, sno_to_ent.values(), False)
 
     def handle_wemo_service(service):
         """ Handles calls to the WeMo service. """

@@ -1,0 +1,34 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<link rel="import" href="domain-icon.html">
+
+<polymer-element name="state-badge" attributes="domain state">
+  <template>
+    <style>
+    :host {
+      display: inline-block;
+      width: 45px;
+      background-color: #4fc3f7;
+      color: white;
+      border-radius: 23px;
+    }
+    div {
+      height: 45px;
+      text-align: center;
+    }
+
+    domain-icon {
+      margin: 0 auto;
+    }
+    </style>
+
+    <div horizontal layout center>
+      <domain-icon domain="{{domain}}"></domain-icon>
+    </div>
+
+  </template>
+  <script>
+  Polymer({
+  });
+  </script>
+</polymer-element>

@@ -3268,6 +3268,970 @@ root if there is one. This implies:
   </script>
 </polymer-element>
 
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`paper-tabs` is a `core-selector` styled to look like tabs. Tabs make it easy to 
+explore and switch between different views or functional aspects of an app, or 
+to browse categorized data sets.
+
+Use `selected` property to get or set the selected tab.
+
+Example:
+
+    <paper-tabs selected="0">
+      <paper-tab>TAB 1</paper-tab>
+      <paper-tab>TAB 2</paper-tab>
+      <paper-tab>TAB 3</paper-tab>
+    </paper-tabs>
+
+See <a href="#paper-tab">paper-tab</a> for more information about 
+`paper-tab`.
+
+Styling tabs:
+
+To change the sliding bar color:
+
+    paper-tabs.pink::shadow #selectionBar {
+      background-color: #ff4081;
+    }
+
+@group Paper Elements
+@element paper-tabs
+@extends core-selector
+@homepage github.io
+-->
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+@group Polymer Core Elements
+
+`<core-selector>` is used to manage a list of elements that can be selected.
+
+The attribute `selected` indicates which item element is being selected.
+The attribute `multi` indicates if multiple items can be selected at once.
+Tapping on the item element would fire `core-activate` event. Use
+`core-select` event to listen for selection changes.
+
+Example:
+
+    <core-selector selected="0">
+      <div>Item 1</div>
+      <div>Item 2</div>
+      <div>Item 3</div>
+    </core-selector>
+
+`<core-selector>` is not styled. Use the `core-selected` CSS class to style the selected element.
+
+    <style>
+      .item.core-selected {
+        background: #eee;
+      }
+    </style>
+    ...
+    <core-selector>
+      <div class="item">Item 1</div>
+      <div class="item">Item 2</div>
+      <div class="item">Item 3</div>
+    </core-selector>
+
+@element core-selector
+@status stable
+@homepage github.io
+-->
+
+<!--
+Fired when an item's selection state is changed. This event is fired both
+when an item is selected or deselected. The `isSelected` detail property
+contains the selection state.
+
+@event core-select
+@param {Object} detail
+  @param {boolean} detail.isSelected true for selection and false for deselection
+  @param {Object} detail.item the item element
+-->
+<!--
+Fired when an item element is tapped.
+
+@event core-activate
+@param {Object} detail
+  @param {Object} detail.item the item element
+-->
+
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!--
+@group Polymer Core Elements
+
+The `<core-selection>` element is used to manage selection state. It has no
+visual appearance and is typically used in conjunction with another element.
+For example, [core-selector](#core-selector)
+use a `<core-selection>` to manage selection.
+
+To mark an item as selected, call the `select(item)` method on 
+`<core-selection>`. The item itself is an argument to this method.
+
+The `<core-selection>`element manages selection state for any given set of
+items. When an item is selected, the `core-select` event is fired.
+
+The attribute `multi` indicates if multiple items can be selected at once.
+  
+Example:
+ 
+    <polymer-element name="selection-example">
+       <template>
+         <style>
+           polyfill-next-selector { content: ':host > .selected'; }
+           ::content > .selected {
+             font-weight: bold;
+             font-style: italic;
+           }
+         </style>
+         <ul on-tap="{{itemTapAction}}">
+           <content></content>
+         </ul>
+         <core-selection id="selection" multi
+                         on-core-select="{{selectAction}}"></core-selection>
+       </template>
+       <script>
+         Polymer('selection-example', {
+           itemTapAction: function(e, detail, sender) {
+             this.$.selection.select(e.target);
+           },
+           selectAction: function(e, detail, sender) {
+             detail.item.classList.toggle('selected', detail.isSelected);
+           }
+         });
+       </script>
+    </polymer-element>
+
+    <selection-example>
+      <li>Red</li>
+      <li>Green</li>
+      <li>Blue</li>
+    </selection-example>
+ 
+@element core-selection
+-->
+
+<!--
+Fired when an item's selection state is changed. This event is fired both
+when an item is selected or deselected. The `isSelected` detail property
+contains the selection state.
+
+@event core-select
+@param {Object} detail
+  @param {boolean} detail.isSelected true for selection and false for de-selection
+  @param {Object} detail.item the item element
+-->
+
+
+<polymer-element name="core-selection" attributes="multi" hidden assetpath="polymer/bower_components/core-selection/">
+  <script>
+    Polymer('core-selection', {
+      /**
+       * If true, multiple selections are allowed.
+       *
+       * @attribute multi
+       * @type boolean
+       * @default false
+       */
+      multi: false,
+      ready: function() {
+        this.clear();
+      },
+      clear: function() {
+        this.selection = [];
+      },
+      /**
+       * Retrieves the selected item(s).
+       * @method getSelection
+       * @returns Returns the selected item(s). If the multi property is true,
+       * getSelection will return an array, otherwise it will return 
+       * the selected item or undefined if there is no selection.
+      */
+      getSelection: function() {
+        return this.multi ? this.selection : this.selection[0];
+      },
+      /**
+       * Indicates if a given item is selected.
+       * @method isSelected
+       * @param {any} item The item whose selection state should be checked.
+       * @returns Returns true if `item` is selected.
+      */
+      isSelected: function(item) {
+        return this.selection.indexOf(item) >= 0;
+      },
+      setItemSelected: function(item, isSelected) {
+        if (item !== undefined && item !== null) {
+          if (isSelected) {
+            this.selection.push(item);
+          } else {
+            var i = this.selection.indexOf(item);
+            if (i >= 0) {
+              this.selection.splice(i, 1);
+            }
+          }
+          this.fire("core-select", {isSelected: isSelected, item: item});
+        }
+      },
+      /**
+       * Set the selection state for a given `item`. If the multi property
+       * is true, then the selected state of `item` will be toggled; otherwise
+       * the `item` will be selected.
+       * @method select
+       * @param {any} item: The item to select.
+      */
+      select: function(item) {
+        if (this.multi) {
+          this.toggle(item);
+        } else if (this.getSelection() !== item) {
+          this.setItemSelected(this.getSelection(), false);
+          this.setItemSelected(item, true);
+        }
+      },
+      /**
+       * Toggles the selection state for `item`.
+       * @method toggle
+       * @param {any} item: The item to toggle.
+      */
+      toggle: function(item) {
+        this.setItemSelected(item, !this.isSelected(item));
+      }
+    });
+  </script>
+</polymer-element>
+
+
+<polymer-element name="core-selector" attributes="selected multi valueattr selectedClass selectedProperty selectedAttribute selectedItem selectedModel selectedIndex notap excludedLocalNames target itemsSelector activateEvent" assetpath="polymer/bower_components/core-selector/">
+
+  <template>
+    <core-selection id="selection" multi="{{multi}}" on-core-select="{{selectionSelect}}"></core-selection>
+    <content id="items" select="*"></content>
+  </template>
+
+  <script>
+
+    Polymer('core-selector', {
+
+      /**
+       * Gets or sets the selected element.  Default to use the index
+       * of the item element.
+       *
+       * If you want a specific attribute value of the element to be
+       * used instead of index, set "valueattr" to that attribute name.
+       *
+       * Example:
+       *
+       *     <core-selector valueattr="label" selected="foo">
+       *       <div label="foo"></div>
+       *       <div label="bar"></div>
+       *       <div label="zot"></div>
+       *     </core-selector>
+       *
+       * In multi-selection this should be an array of values.
+       *
+       * Example:
+       *
+       *     <core-selector id="selector" valueattr="label" multi>
+       *       <div label="foo"></div>
+       *       <div label="bar"></div>
+       *       <div label="zot"></div>
+       *     </core-selector>
+       *
+       *     this.$.selector.selected = ['foo', 'zot'];
+       *
+       * @attribute selected
+       * @type Object
+       * @default null
+       */
+      selected: null,
+
+      /**
+       * If true, multiple selections are allowed.
+       *
+       * @attribute multi
+       * @type boolean
+       * @default false
+       */
+      multi: false,
+
+      /**
+       * Specifies the attribute to be used for "selected" attribute.
+       *
+       * @attribute valueattr
+       * @type string
+       * @default 'name'
+       */
+      valueattr: 'name',
+
+      /**
+       * Specifies the CSS class to be used to add to the selected element.
+       * 
+       * @attribute selectedClass
+       * @type string
+       * @default 'core-selected'
+       */
+      selectedClass: 'core-selected',
+
+      /**
+       * Specifies the property to be used to set on the selected element
+       * to indicate its active state.
+       *
+       * @attribute selectedProperty
+       * @type string
+       * @default ''
+       */
+      selectedProperty: '',
+
+      /**
+       * Specifies the attribute to set on the selected element to indicate
+       * its active state.
+       *
+       * @attribute selectedAttribute
+       * @type string
+       * @default 'active'
+       */
+      selectedAttribute: 'active',
+
+      /**
+       * Returns the currently selected element. In multi-selection this returns
+       * an array of selected elements.
+       * Note that you should not use this to set the selection. Instead use
+       * `selected`.
+       * 
+       * @attribute selectedItem
+       * @type Object
+       * @default null
+       */
+      selectedItem: null,
+
+      /**
+       * In single selection, this returns the model associated with the
+       * selected element.
+       * Note that you should not use this to set the selection. Instead use 
+       * `selected`.
+       * 
+       * @attribute selectedModel
+       * @type Object
+       * @default null
+       */
+      selectedModel: null,
+
+      /**
+       * In single selection, this returns the selected index.
+       * Note that you should not use this to set the selection. Instead use
+       * `selected`.
+       *
+       * @attribute selectedIndex
+       * @type number
+       * @default -1
+       */
+      selectedIndex: -1,
+
+      /**
+       * Nodes with local name that are in the list will not be included 
+       * in the selection items.  In the following example, `items` returns four
+       * `core-item`'s and doesn't include `h3` and `hr`.
+       *
+       *     <core-selector excludedLocalNames="h3 hr">
+       *       <h3>Header</h3>
+       *       <core-item>Item1</core-item>
+       *       <core-item>Item2</core-item>
+       *       <hr>
+       *       <core-item>Item3</core-item>
+       *       <core-item>Item4</core-item>
+       *     </core-selector>
+       *
+       * @attribute excludedLocalNames
+       * @type string
+       * @default ''
+       */
+      excludedLocalNames: '',
+
+      /**
+       * The target element that contains items.  If this is not set 
+       * core-selector is the container.
+       * 
+       * @attribute target
+       * @type Object
+       * @default null
+       */
+      target: null,
+
+      /**
+       * This can be used to query nodes from the target node to be used for 
+       * selection items.  Note this only works if `target` is set
+       * and is not `core-selector` itself.
+       *
+       * Example:
+       *
+       *     <core-selector target="{{$.myForm}}" itemsSelector="input[type=radio]"></core-selector>
+       *     <form id="myForm">
+       *       <label><input type="radio" name="color" value="red"> Red</label> <br>
+       *       <label><input type="radio" name="color" value="green"> Green</label> <br>
+       *       <label><input type="radio" name="color" value="blue"> Blue</label> <br>
+       *       <p>color = {{color}}</p>
+       *     </form>
+       * 
+       * @attribute itemsSelector
+       * @type string
+       * @default ''
+       */
+      itemsSelector: '',
+
+      /**
+       * The event that would be fired from the item element to indicate
+       * it is being selected.
+       *
+       * @attribute activateEvent
+       * @type string
+       * @default 'tap'
+       */
+      activateEvent: 'tap',
+
+      /**
+       * Set this to true to disallow changing the selection via the
+       * `activateEvent`.
+       *
+       * @attribute notap
+       * @type boolean
+       * @default false
+       */
+      notap: false,
+
+      defaultExcludedLocalNames: 'template',
+
+      ready: function() {
+        this.activateListener = this.activateHandler.bind(this);
+        this.itemFilter = this.filterItem.bind(this);
+        this.excludedLocalNamesChanged();
+        this.observer = new MutationObserver(this.updateSelected.bind(this));
+        if (!this.target) {
+          this.target = this;
+        }
+      },
+
+      /**
+       * Returns an array of all items.
+       *
+       * @property items
+       */
+      get items() {
+        if (!this.target) {
+          return [];
+        }
+        var nodes = this.target !== this ? (this.itemsSelector ? 
+            this.target.querySelectorAll(this.itemsSelector) : 
+                this.target.children) : this.$.items.getDistributedNodes();
+        return Array.prototype.filter.call(nodes, this.itemFilter);
+      },
+
+      filterItem: function(node) {
+        return !this._excludedNames[node.localName];
+      },
+
+      excludedLocalNamesChanged: function() {
+        this._excludedNames = {};
+        var s = this.defaultExcludedLocalNames;
+        if (this.excludedLocalNames) {
+          s += ' ' + this.excludedLocalNames;
+        }
+        s.split(/\s+/g).forEach(function(n) {
+          this._excludedNames[n] = 1;
+        }, this);
+      },
+
+      targetChanged: function(old) {
+        if (old) {
+          this.removeListener(old);
+          this.observer.disconnect();
+          this.clearSelection();
+        }
+        if (this.target) {
+          this.addListener(this.target);
+          this.observer.observe(this.target, {childList: true});
+          this.updateSelected();
+        }
+      },
+
+      addListener: function(node) {
+        Polymer.addEventListener(node, this.activateEvent, this.activateListener);
+      },
+
+      removeListener: function(node) {
+        Polymer.removeEventListener(node, this.activateEvent, this.activateListener);
+      },
+
+      /**
+       * Returns the selected item(s). If the `multi` property is true,
+       * this will return an array, otherwise it will return 
+       * the selected item or undefined if there is no selection.
+       */
+      get selection() {
+        return this.$.selection.getSelection();
+      },
+
+      selectedChanged: function() {
+        this.updateSelected();
+      },
+
+      updateSelected: function() {
+        this.validateSelected();
+        if (this.multi) {
+          this.clearSelection();
+          this.selected && this.selected.forEach(function(s) {
+            this.valueToSelection(s);
+          }, this);
+        } else {
+          this.valueToSelection(this.selected);
+        }
+      },
+
+      validateSelected: function() {
+        // convert to an array for multi-selection
+        if (this.multi && !Array.isArray(this.selected) && 
+            this.selected !== null && this.selected !== undefined) {
+          this.selected = [this.selected];
+        }
+      },
+
+      clearSelection: function() {
+        if (this.multi) {
+          this.selection.slice().forEach(function(s) {
+            this.$.selection.setItemSelected(s, false);
+          }, this);
+        } else {
+          this.$.selection.setItemSelected(this.selection, false);
+        }
+        this.selectedItem = null;
+        this.$.selection.clear();
+      },
+
+      valueToSelection: function(value) {
+        var item = (value === null || value === undefined) ? 
+            null : this.items[this.valueToIndex(value)];
+        this.$.selection.select(item);
+      },
+
+      updateSelectedItem: function() {
+        this.selectedItem = this.selection;
+      },
+
+      selectedItemChanged: function() {
+        if (this.selectedItem) {
+          var t = this.selectedItem.templateInstance;
+          this.selectedModel = t ? t.model : undefined;
+        } else {
+          this.selectedModel = null;
+        }
+        this.selectedIndex = this.selectedItem ? 
+            parseInt(this.valueToIndex(this.selected)) : -1;
+      },
+
+      valueToIndex: function(value) {
+        // find an item with value == value and return it's index
+        for (var i=0, items=this.items, c; (c=items[i]); i++) {
+          if (this.valueForNode(c) == value) {
+            return i;
+          }
+        }
+        // if no item found, the value itself is probably the index
+        return value;
+      },
+
+      valueForNode: function(node) {
+        return node[this.valueattr] || node.getAttribute(this.valueattr);
+      },
+
+      // events fired from <core-selection> object
+      selectionSelect: function(e, detail) {
+        this.updateSelectedItem();
+        if (detail.item) {
+          this.applySelection(detail.item, detail.isSelected);
+        }
+      },
+
+      applySelection: function(item, isSelected) {
+        if (this.selectedClass) {
+          item.classList.toggle(this.selectedClass, isSelected);
+        }
+        if (this.selectedProperty) {
+          item[this.selectedProperty] = isSelected;
+        }
+        if (this.selectedAttribute && item.setAttribute) {
+          if (isSelected) {
+            item.setAttribute(this.selectedAttribute, '');
+          } else {
+            item.removeAttribute(this.selectedAttribute);
+          }
+        }
+      },
+
+      // event fired from host
+      activateHandler: function(e) {
+        if (!this.notap) {
+          var i = this.findDistributedTarget(e.target, this.items);
+          if (i >= 0) {
+            var item = this.items[i];
+            var s = this.valueForNode(item) || i;
+            if (this.multi) {
+              if (this.selected) {
+                this.addRemoveSelected(s);
+              } else {
+                this.selected = [s];
+              }
+            } else {
+              this.selected = s;
+            }
+            this.asyncFire('core-activate', {item: item});
+          }
+        }
+      },
+
+      addRemoveSelected: function(value) {
+        var i = this.selected.indexOf(value);
+        if (i >= 0) {
+          this.selected.splice(i, 1);
+        } else {
+          this.selected.push(value);
+        }
+        this.valueToSelection(value);
+      },
+
+      findDistributedTarget: function(target, nodes) {
+        // find first ancestor of target (including itself) that
+        // is in nodes, if any
+        while (target && target != this) {
+          var i = Array.prototype.indexOf.call(nodes, target);
+          if (i >= 0) {
+            return i;
+          }
+          target = target.parentNode;
+        }
+      },
+      
+      selectIndex: function(index) {
+        var item = this.items[index];
+        if (item) {
+          this.selected = this.valueForNode(item) || index;
+          return item;
+        }
+      },
+      
+      /**
+       * Selects the previous item.  This should be used in single selection only.
+       *
+       * @method selectPrevious
+       * @param {boolean} wrap if true and it is already at the first item, wrap to the end
+       * @returns the previous item or undefined if there is none
+       */
+      selectPrevious: function(wrap) {
+        var i = wrap && !this.selectedIndex ? this.items.length - 1 : this.selectedIndex - 1;
+        return this.selectIndex(i);
+      },
+      
+      /**
+       * Selects the next item.  This should be used in single selection only.
+       *
+       * @method selectNext
+       * @param {boolean} wrap if true and it is already at the last item, wrap to the front
+       * @returns the next item or undefined if there is none
+       */
+      selectNext: function(wrap) {
+        var i = wrap && this.selectedIndex >= this.items.length - 1 ? 0 : this.selectedIndex + 1;
+        return this.selectIndex(i);
+      }
+      
+    });
+  </script>
+</polymer-element>
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`paper-tab` is styled to look like a tab.  It should be used in conjunction with
+`paper-tabs`.
+
+Example:
+
+    <paper-tabs selected="0">
+      <paper-tab>TAB 1</paper-tab>
+      <paper-tab>TAB 2</paper-tab>
+      <paper-tab>TAB 3</paper-tab>
+    </paper-tabs>
+    
+Styling tab:
+
+To change the ink color:
+
+    .pink paper-tab::shadow #ink {
+      color: #ff4081;
+    }
+
+@group Paper Elements
+@element paper-tab
+@homepage github.io
+-->
+
+
+
+<polymer-element name="paper-tab" attributes="noink" role="tab" assetpath="polymer/bower_components/paper-tabs/">
+<template>
+
+  <style>/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+#tabContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.tab-content {
+  transition: opacity .1s cubic-bezier(0.4, 0.0, 1, 1), color .1s cubic-bezier(0.4, 0.0, 1, 1);
+  cursor: default;
+  pointer-events: none;
+}
+
+:host(:not(.core-selected)) .tab-content {
+  opacity: 0.6;
+}
+
+#ink {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  color: #ffff8d;
+}
+
+:host[noink] #ink {
+  pointer-events: none;
+}
+
+:host-context(paper-tabs[noink]) #ink {
+  pointer-events: none;
+}
+</style>
+  
+  <div id="tabContainer" center-justified="" center="" horizontal="" layout="">
+  
+    <div class="tab-content"><content></content></div>
+    <paper-ripple id="ink" initialopacity="0.95" opacitydecayvelocity="0.98"></paper-ripple>
+    
+  </div>
+  
+</template>
+<script>
+
+  Polymer('paper-tab', {
+    
+    /**
+     * If true, ink ripple effect is disabled.
+     *
+     * @attribute noink
+     * @type boolean
+     * @default false
+     */
+    noink: false
+    
+  });
+  
+</script>
+</polymer-element>
+
+
+<polymer-element name="paper-tabs" extends="core-selector" attributes="noink nobar" role="tablist" assetpath="polymer/bower_components/paper-tabs/">
+<template>
+
+  <style>/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: block;
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  height: 48px;
+  overflow: hidden;
+}
+
+#tabsContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  white-space: nowrap;
+}
+
+#selectionBar {
+  position: absolute;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  background-color: #ffff8d;
+  transition: width, left;
+}
+
+#selectionBar[hidden] {
+  display: hidden;
+}
+
+#selectionBar.expand {
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+#selectionBar.contract {
+  transition-duration: 0.18s;
+  transition-timing-function: cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+
+polyfill-next-selector { content: '#tabsContainer > *:not(#selectionBar)'; }
+::content > * {
+  -ms-flex: 1;
+  -webkit-flex: 1;
+  flex: 1;
+}
+</style>
+  
+  <div id="tabsContainer" horizontal="" layout="">
+  
+    <shadow></shadow>
+    <div id="selectionBar" hidden?="{{nobar}}" on-transitionend="{{barTransitionEnd}}"></div>
+    
+  </div>
+    
+</template>
+<script>
+
+  Polymer('paper-tabs', {
+    
+    /**
+     * If true, ink effect is disabled.
+     *
+     * @attribute noink
+     * @type boolean
+     * @default false
+     */
+    noink: false,
+    
+    /**
+     * If true, the bottom bar to indicate the selected tab will not be shown.
+     *
+     * @attribute nobar
+     * @type boolean
+     * @default false
+     */
+    nobar: false,
+    
+    activateEvent: 'down',
+    
+    nostretch: false,
+    
+    selectedIndexChanged: function(old) {
+      var s = this.$.selectionBar.style;
+      
+      if (!this.selectedItem) {
+        s.width = 0;
+        s.left = 0;
+        return;
+      } 
+      
+      var w = 100 / this.items.length;
+      
+      if (this.nostretch || old === null || old === -1) {
+        s.width = w + '%';
+        s.left = this.selectedIndex * w + '%';
+        return;
+      }
+      
+      var m = 5;
+      this.$.selectionBar.classList.add('expand');
+      if (old < this.selectedIndex) {
+        s.width = w + w * (this.selectedIndex - old) - m + '%';
+        this._transitionCounter = 1;
+      } else {
+        s.width = w + w * (old - this.selectedIndex) - m + '%';
+        s.left = this.selectedIndex * w + m + '%';
+        this._transitionCounter = 2;
+      }
+    },
+    
+    barTransitionEnd: function(e) {
+      this._transitionCounter--;
+      var cl = this.$.selectionBar.classList;
+      if (cl.contains('expand') && !this._transitionCounter) {
+        cl.remove('expand');
+        cl.add('contract');
+        var s = this.$.selectionBar.style;
+        var w = 100 / this.items.length;
+        s.width = w + '%';
+        s.left = this.selectedIndex * w + '%';
+      } else if (cl.contains('contract')) {
+        cl.remove('contract');
+      }
+    }
+    
+  });
+  
+</script>
+</polymer-element>
+
+
 
 
 <!--
@@ -7582,665 +8546,6 @@ The `core-select` event signals selection change.
 @extends core-selector
 -->
 
-<!--
-Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
-<!--
-@group Polymer Core Elements
-
-`<core-selector>` is used to manage a list of elements that can be selected.
-
-The attribute `selected` indicates which item element is being selected.
-The attribute `multi` indicates if multiple items can be selected at once.
-Tapping on the item element would fire `core-activate` event. Use
-`core-select` event to listen for selection changes.
-
-Example:
-
-    <core-selector selected="0">
-      <div>Item 1</div>
-      <div>Item 2</div>
-      <div>Item 3</div>
-    </core-selector>
-
-`<core-selector>` is not styled. Use the `core-selected` CSS class to style the selected element.
-
-    <style>
-      .item.core-selected {
-        background: #eee;
-      }
-    </style>
-    ...
-    <core-selector>
-      <div class="item">Item 1</div>
-      <div class="item">Item 2</div>
-      <div class="item">Item 3</div>
-    </core-selector>
-
-@element core-selector
-@status stable
-@homepage github.io
--->
-
-<!--
-Fired when an item's selection state is changed. This event is fired both
-when an item is selected or deselected. The `isSelected` detail property
-contains the selection state.
-
-@event core-select
-@param {Object} detail
-  @param {boolean} detail.isSelected true for selection and false for deselection
-  @param {Object} detail.item the item element
--->
-<!--
-Fired when an item element is tapped.
-
-@event core-activate
-@param {Object} detail
-  @param {Object} detail.item the item element
--->
-
-
-<!--
-Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-<!--
-@group Polymer Core Elements
-
-The `<core-selection>` element is used to manage selection state. It has no
-visual appearance and is typically used in conjunction with another element.
-For example, [core-selector](#core-selector)
-use a `<core-selection>` to manage selection.
-
-To mark an item as selected, call the `select(item)` method on 
-`<core-selection>`. The item itself is an argument to this method.
-
-The `<core-selection>`element manages selection state for any given set of
-items. When an item is selected, the `core-select` event is fired.
-
-The attribute `multi` indicates if multiple items can be selected at once.
-  
-Example:
- 
-    <polymer-element name="selection-example">
-       <template>
-         <style>
-           polyfill-next-selector { content: ':host > .selected'; }
-           ::content > .selected {
-             font-weight: bold;
-             font-style: italic;
-           }
-         </style>
-         <ul on-tap="{{itemTapAction}}">
-           <content></content>
-         </ul>
-         <core-selection id="selection" multi
-                         on-core-select="{{selectAction}}"></core-selection>
-       </template>
-       <script>
-         Polymer('selection-example', {
-           itemTapAction: function(e, detail, sender) {
-             this.$.selection.select(e.target);
-           },
-           selectAction: function(e, detail, sender) {
-             detail.item.classList.toggle('selected', detail.isSelected);
-           }
-         });
-       </script>
-    </polymer-element>
-
-    <selection-example>
-      <li>Red</li>
-      <li>Green</li>
-      <li>Blue</li>
-    </selection-example>
- 
-@element core-selection
--->
-
-<!--
-Fired when an item's selection state is changed. This event is fired both
-when an item is selected or deselected. The `isSelected` detail property
-contains the selection state.
-
-@event core-select
-@param {Object} detail
-  @param {boolean} detail.isSelected true for selection and false for de-selection
-  @param {Object} detail.item the item element
--->
-
-
-<polymer-element name="core-selection" attributes="multi" hidden assetpath="polymer/bower_components/core-selection/">
-  <script>
-    Polymer('core-selection', {
-      /**
-       * If true, multiple selections are allowed.
-       *
-       * @attribute multi
-       * @type boolean
-       * @default false
-       */
-      multi: false,
-      ready: function() {
-        this.clear();
-      },
-      clear: function() {
-        this.selection = [];
-      },
-      /**
-       * Retrieves the selected item(s).
-       * @method getSelection
-       * @returns Returns the selected item(s). If the multi property is true,
-       * getSelection will return an array, otherwise it will return 
-       * the selected item or undefined if there is no selection.
-      */
-      getSelection: function() {
-        return this.multi ? this.selection : this.selection[0];
-      },
-      /**
-       * Indicates if a given item is selected.
-       * @method isSelected
-       * @param {any} item The item whose selection state should be checked.
-       * @returns Returns true if `item` is selected.
-      */
-      isSelected: function(item) {
-        return this.selection.indexOf(item) >= 0;
-      },
-      setItemSelected: function(item, isSelected) {
-        if (item !== undefined && item !== null) {
-          if (isSelected) {
-            this.selection.push(item);
-          } else {
-            var i = this.selection.indexOf(item);
-            if (i >= 0) {
-              this.selection.splice(i, 1);
-            }
-          }
-          this.fire("core-select", {isSelected: isSelected, item: item});
-        }
-      },
-      /**
-       * Set the selection state for a given `item`. If the multi property
-       * is true, then the selected state of `item` will be toggled; otherwise
-       * the `item` will be selected.
-       * @method select
-       * @param {any} item: The item to select.
-      */
-      select: function(item) {
-        if (this.multi) {
-          this.toggle(item);
-        } else if (this.getSelection() !== item) {
-          this.setItemSelected(this.getSelection(), false);
-          this.setItemSelected(item, true);
-        }
-      },
-      /**
-       * Toggles the selection state for `item`.
-       * @method toggle
-       * @param {any} item: The item to toggle.
-      */
-      toggle: function(item) {
-        this.setItemSelected(item, !this.isSelected(item));
-      }
-    });
-  </script>
-</polymer-element>
-
-
-<polymer-element name="core-selector" attributes="selected multi valueattr selectedClass selectedProperty selectedAttribute selectedItem selectedModel selectedIndex notap excludedLocalNames target itemsSelector activateEvent" assetpath="polymer/bower_components/core-selector/">
-
-  <template>
-    <core-selection id="selection" multi="{{multi}}" on-core-select="{{selectionSelect}}"></core-selection>
-    <content id="items" select="*"></content>
-  </template>
-
-  <script>
-
-    Polymer('core-selector', {
-
-      /**
-       * Gets or sets the selected element.  Default to use the index
-       * of the item element.
-       *
-       * If you want a specific attribute value of the element to be
-       * used instead of index, set "valueattr" to that attribute name.
-       *
-       * Example:
-       *
-       *     <core-selector valueattr="label" selected="foo">
-       *       <div label="foo"></div>
-       *       <div label="bar"></div>
-       *       <div label="zot"></div>
-       *     </core-selector>
-       *
-       * In multi-selection this should be an array of values.
-       *
-       * Example:
-       *
-       *     <core-selector id="selector" valueattr="label" multi>
-       *       <div label="foo"></div>
-       *       <div label="bar"></div>
-       *       <div label="zot"></div>
-       *     </core-selector>
-       *
-       *     this.$.selector.selected = ['foo', 'zot'];
-       *
-       * @attribute selected
-       * @type Object
-       * @default null
-       */
-      selected: null,
-
-      /**
-       * If true, multiple selections are allowed.
-       *
-       * @attribute multi
-       * @type boolean
-       * @default false
-       */
-      multi: false,
-
-      /**
-       * Specifies the attribute to be used for "selected" attribute.
-       *
-       * @attribute valueattr
-       * @type string
-       * @default 'name'
-       */
-      valueattr: 'name',
-
-      /**
-       * Specifies the CSS class to be used to add to the selected element.
-       * 
-       * @attribute selectedClass
-       * @type string
-       * @default 'core-selected'
-       */
-      selectedClass: 'core-selected',
-
-      /**
-       * Specifies the property to be used to set on the selected element
-       * to indicate its active state.
-       *
-       * @attribute selectedProperty
-       * @type string
-       * @default ''
-       */
-      selectedProperty: '',
-
-      /**
-       * Specifies the attribute to set on the selected element to indicate
-       * its active state.
-       *
-       * @attribute selectedAttribute
-       * @type string
-       * @default 'active'
-       */
-      selectedAttribute: 'active',
-
-      /**
-       * Returns the currently selected element. In multi-selection this returns
-       * an array of selected elements.
-       * Note that you should not use this to set the selection. Instead use
-       * `selected`.
-       * 
-       * @attribute selectedItem
-       * @type Object
-       * @default null
-       */
-      selectedItem: null,
-
-      /**
-       * In single selection, this returns the model associated with the
-       * selected element.
-       * Note that you should not use this to set the selection. Instead use 
-       * `selected`.
-       * 
-       * @attribute selectedModel
-       * @type Object
-       * @default null
-       */
-      selectedModel: null,
-
-      /**
-       * In single selection, this returns the selected index.
-       * Note that you should not use this to set the selection. Instead use
-       * `selected`.
-       *
-       * @attribute selectedIndex
-       * @type number
-       * @default -1
-       */
-      selectedIndex: -1,
-
-      /**
-       * Nodes with local name that are in the list will not be included 
-       * in the selection items.  In the following example, `items` returns four
-       * `core-item`'s and doesn't include `h3` and `hr`.
-       *
-       *     <core-selector excludedLocalNames="h3 hr">
-       *       <h3>Header</h3>
-       *       <core-item>Item1</core-item>
-       *       <core-item>Item2</core-item>
-       *       <hr>
-       *       <core-item>Item3</core-item>
-       *       <core-item>Item4</core-item>
-       *     </core-selector>
-       *
-       * @attribute excludedLocalNames
-       * @type string
-       * @default ''
-       */
-      excludedLocalNames: '',
-
-      /**
-       * The target element that contains items.  If this is not set 
-       * core-selector is the container.
-       * 
-       * @attribute target
-       * @type Object
-       * @default null
-       */
-      target: null,
-
-      /**
-       * This can be used to query nodes from the target node to be used for 
-       * selection items.  Note this only works if `target` is set
-       * and is not `core-selector` itself.
-       *
-       * Example:
-       *
-       *     <core-selector target="{{$.myForm}}" itemsSelector="input[type=radio]"></core-selector>
-       *     <form id="myForm">
-       *       <label><input type="radio" name="color" value="red"> Red</label> <br>
-       *       <label><input type="radio" name="color" value="green"> Green</label> <br>
-       *       <label><input type="radio" name="color" value="blue"> Blue</label> <br>
-       *       <p>color = {{color}}</p>
-       *     </form>
-       * 
-       * @attribute itemsSelector
-       * @type string
-       * @default ''
-       */
-      itemsSelector: '',
-
-      /**
-       * The event that would be fired from the item element to indicate
-       * it is being selected.
-       *
-       * @attribute activateEvent
-       * @type string
-       * @default 'tap'
-       */
-      activateEvent: 'tap',
-
-      /**
-       * Set this to true to disallow changing the selection via the
-       * `activateEvent`.
-       *
-       * @attribute notap
-       * @type boolean
-       * @default false
-       */
-      notap: false,
-
-      defaultExcludedLocalNames: 'template',
-
-      ready: function() {
-        this.activateListener = this.activateHandler.bind(this);
-        this.itemFilter = this.filterItem.bind(this);
-        this.excludedLocalNamesChanged();
-        this.observer = new MutationObserver(this.updateSelected.bind(this));
-        if (!this.target) {
-          this.target = this;
-        }
-      },
-
-      /**
-       * Returns an array of all items.
-       *
-       * @property items
-       */
-      get items() {
-        if (!this.target) {
-          return [];
-        }
-        var nodes = this.target !== this ? (this.itemsSelector ? 
-            this.target.querySelectorAll(this.itemsSelector) : 
-                this.target.children) : this.$.items.getDistributedNodes();
-        return Array.prototype.filter.call(nodes, this.itemFilter);
-      },
-
-      filterItem: function(node) {
-        return !this._excludedNames[node.localName];
-      },
-
-      excludedLocalNamesChanged: function() {
-        this._excludedNames = {};
-        var s = this.defaultExcludedLocalNames;
-        if (this.excludedLocalNames) {
-          s += ' ' + this.excludedLocalNames;
-        }
-        s.split(/\s+/g).forEach(function(n) {
-          this._excludedNames[n] = 1;
-        }, this);
-      },
-
-      targetChanged: function(old) {
-        if (old) {
-          this.removeListener(old);
-          this.observer.disconnect();
-          this.clearSelection();
-        }
-        if (this.target) {
-          this.addListener(this.target);
-          this.observer.observe(this.target, {childList: true});
-          this.updateSelected();
-        }
-      },
-
-      addListener: function(node) {
-        Polymer.addEventListener(node, this.activateEvent, this.activateListener);
-      },
-
-      removeListener: function(node) {
-        Polymer.removeEventListener(node, this.activateEvent, this.activateListener);
-      },
-
-      /**
-       * Returns the selected item(s). If the `multi` property is true,
-       * this will return an array, otherwise it will return 
-       * the selected item or undefined if there is no selection.
-       */
-      get selection() {
-        return this.$.selection.getSelection();
-      },
-
-      selectedChanged: function() {
-        this.updateSelected();
-      },
-
-      updateSelected: function() {
-        this.validateSelected();
-        if (this.multi) {
-          this.clearSelection();
-          this.selected && this.selected.forEach(function(s) {
-            this.valueToSelection(s);
-          }, this);
-        } else {
-          this.valueToSelection(this.selected);
-        }
-      },
-
-      validateSelected: function() {
-        // convert to an array for multi-selection
-        if (this.multi && !Array.isArray(this.selected) && 
-            this.selected !== null && this.selected !== undefined) {
-          this.selected = [this.selected];
-        }
-      },
-
-      clearSelection: function() {
-        if (this.multi) {
-          this.selection.slice().forEach(function(s) {
-            this.$.selection.setItemSelected(s, false);
-          }, this);
-        } else {
-          this.$.selection.setItemSelected(this.selection, false);
-        }
-        this.selectedItem = null;
-        this.$.selection.clear();
-      },
-
-      valueToSelection: function(value) {
-        var item = (value === null || value === undefined) ? 
-            null : this.items[this.valueToIndex(value)];
-        this.$.selection.select(item);
-      },
-
-      updateSelectedItem: function() {
-        this.selectedItem = this.selection;
-      },
-
-      selectedItemChanged: function() {
-        if (this.selectedItem) {
-          var t = this.selectedItem.templateInstance;
-          this.selectedModel = t ? t.model : undefined;
-        } else {
-          this.selectedModel = null;
-        }
-        this.selectedIndex = this.selectedItem ? 
-            parseInt(this.valueToIndex(this.selected)) : -1;
-      },
-
-      valueToIndex: function(value) {
-        // find an item with value == value and return it's index
-        for (var i=0, items=this.items, c; (c=items[i]); i++) {
-          if (this.valueForNode(c) == value) {
-            return i;
-          }
-        }
-        // if no item found, the value itself is probably the index
-        return value;
-      },
-
-      valueForNode: function(node) {
-        return node[this.valueattr] || node.getAttribute(this.valueattr);
-      },
-
-      // events fired from <core-selection> object
-      selectionSelect: function(e, detail) {
-        this.updateSelectedItem();
-        if (detail.item) {
-          this.applySelection(detail.item, detail.isSelected);
-        }
-      },
-
-      applySelection: function(item, isSelected) {
-        if (this.selectedClass) {
-          item.classList.toggle(this.selectedClass, isSelected);
-        }
-        if (this.selectedProperty) {
-          item[this.selectedProperty] = isSelected;
-        }
-        if (this.selectedAttribute && item.setAttribute) {
-          if (isSelected) {
-            item.setAttribute(this.selectedAttribute, '');
-          } else {
-            item.removeAttribute(this.selectedAttribute);
-          }
-        }
-      },
-
-      // event fired from host
-      activateHandler: function(e) {
-        if (!this.notap) {
-          var i = this.findDistributedTarget(e.target, this.items);
-          if (i >= 0) {
-            var item = this.items[i];
-            var s = this.valueForNode(item) || i;
-            if (this.multi) {
-              if (this.selected) {
-                this.addRemoveSelected(s);
-              } else {
-                this.selected = [s];
-              }
-            } else {
-              this.selected = s;
-            }
-            this.asyncFire('core-activate', {item: item});
-          }
-        }
-      },
-
-      addRemoveSelected: function(value) {
-        var i = this.selected.indexOf(value);
-        if (i >= 0) {
-          this.selected.splice(i, 1);
-        } else {
-          this.selected.push(value);
-        }
-        this.valueToSelection(value);
-      },
-
-      findDistributedTarget: function(target, nodes) {
-        // find first ancestor of target (including itself) that
-        // is in nodes, if any
-        while (target && target != this) {
-          var i = Array.prototype.indexOf.call(nodes, target);
-          if (i >= 0) {
-            return i;
-          }
-          target = target.parentNode;
-        }
-      },
-      
-      selectIndex: function(index) {
-        var item = this.items[index];
-        if (item) {
-          this.selected = this.valueForNode(item) || index;
-          return item;
-        }
-      },
-      
-      /**
-       * Selects the previous item.  This should be used in single selection only.
-       *
-       * @method selectPrevious
-       * @param {boolean} wrap if true and it is already at the first item, wrap to the end
-       * @returns the previous item or undefined if there is none
-       */
-      selectPrevious: function(wrap) {
-        var i = wrap && !this.selectedIndex ? this.items.length - 1 : this.selectedIndex - 1;
-        return this.selectIndex(i);
-      },
-      
-      /**
-       * Selects the next item.  This should be used in single selection only.
-       *
-       * @method selectNext
-       * @param {boolean} wrap if true and it is already at the last item, wrap to the front
-       * @returns the next item or undefined if there is none
-       */
-      selectNext: function(wrap) {
-        var i = wrap && this.selectedIndex >= this.items.length - 1 ? 0 : this.selectedIndex + 1;
-        return this.selectIndex(i);
-      }
-      
-    });
-  </script>
-</polymer-element>
 
 
 <polymer-element name="core-menu" extends="core-selector" assetpath="polymer/bower_components/core-menu/">
@@ -9254,6 +9559,12 @@ core-item {
           return this.states[i];
         }
       }
+    },
+
+    getCustomGroups: function() {
+      return this.states.filter(function(state) {
+        return state.entity_id.lastIndexOf("group.") == 0;
+      })     
     },
 
     turn_on: function(entity_id) {
@@ -12539,103 +12850,1293 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </polymer-element>
 
 
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`paper-toggle-button` provides a ON/OFF switch that user can toggle the state
+by tapping or by dragging the swtich.
+
+Example:
+
+    <paper-toggle-button></paper-toggle-button>
+
+Styling toggle button:
+
+To change the ink color for checked state:
+
+    paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
+      color: #4285f4;
+    }
+    
+To change the radio checked color:
+    
+    paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
+      background-color: #4285f4;
+    }
+    
+To change the bar color for checked state:
+
+    paper-toggle-button::shadow #toggleBar[checked] {
+      background-color: #4285f4;
+    }
+    
+To change the ink color for unchecked state:
+
+    paper-toggle-button::shadow paper-radio-button::shadow #ink {
+      color: #b5b5b5;
+    }
+    
+To change the radio unchecked color:
+    
+    paper-toggle-button::shadow paper-radio-button::shadow #offRadio {
+      border-color: #b5b5b5;
+    }
+
+To change the bar color for unchecked state:
+
+    paper-toggle-button::shadow #toggleBar {
+      background-color: red;
+    }
+
+@group Paper Elements
+@element paper-toggle-button
+@homepage github.io
+-->
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`paper-radio-button` is a button that can be either checked or unchecked.
+User can tap the radio button to check it.  But it cannot be unchecked by
+tapping once checked.
+
+Use `paper-radio-group` to group a set of radio buttons.  When radio buttons
+are inside a radio group, only one radio button in the group can be checked.
+
+Example:
+
+    <paper-radio-button></paper-radio-button>
+    
+Styling radio button:
+
+To change the ink color for checked state:
+
+    paper-radio-button::shadow #ink[checked] {
+      color: #4285f4;
+    }
+    
+To change the radio checked color:
+    
+    paper-radio-button::shadow #onRadio {
+      background-color: #4285f4;
+    }
+    
+To change the ink color for unchecked state:
+
+    paper-radio-button::shadow #ink {
+      color: #b5b5b5;
+    }
+    
+To change the radio unchecked color:
+    
+    paper-radio-button::shadow #offRadio {
+      border-color: #b5b5b5;
+    }
+
+@group Paper Elements
+@element paper-radio-button
+@homepage github.io
+-->
+
+
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`core-a11y-keys` provides a normalized interface for processing keyboard commands that pertain to [WAI-ARIA best
+practices](http://www.w3.org/TR/wai-aria-practices/#kbd_general_binding). The element takes care of browser differences
+with respect to Keyboard events and uses an expressive syntax to filter key presses.
+
+Use the `keys` attribute to express what combination of keys will trigger the event to fire.
+
+Use the `target` attribute to set up event handlers on a specific node.
+The `keys-pressed` event will fire when one of the key combinations set with the `keys` attribute is pressed.
+
+Example:
+
+This element will call `arrowHandler` on all arrow keys:
+
+    <core-a11y-keys target="{{}}" keys="up down left right" on-keys-pressed="{{arrowHandler}}"></core-a11y-keys>
+
+Keys Syntax:
+
+The `keys` attribute can accepts a space seprated, `+` concatenated set of modifier keys and some common keyboard keys.
+
+The common keys are `a-z`, `0-9` (top row and number pad), `*` (shift 8 and number pad), `F1-F12`, `Page Up`, `Page
+Down`, `Left Arrow`, `Right Arrow`, `Down Arrow`, `Up Arrow`, `Home`, `End`, `Escape`, `Space`, `Tab`, and `Enter` keys.
+
+The modifier keys are `Shift`, `Control`, and `Alt`.
+
+All keys are expected to be lowercase and shortened:
+`Left Arrow` is `left`, `Page Down` is `pagedown`, `Control` is `ctrl`, `F1` is `f1`, `Escape` is `esc` etc.
+
+Keys Syntax Example:
+
+Given the `keys` attribute value "ctrl+shift+f7 up pagedown esc space alt+m", the `<core-a11y-keys>` element will send
+the `keys-pressed` event if any of the follow key combos are pressed: Control and Shift and F7 keys, Up Arrow key, Page
+Down key, Escape key, Space key, Alt and M key.
+
+Slider Example:
+
+The following is an example of the set of keys that fulfil the WAI-ARIA "slider" role [best
+practices](http://www.w3.org/TR/wai-aria-practices/#slider):
+
+    <core-a11y-keys target="{{}}" keys="left pagedown down" on-keys-pressed="{{decrement}}"></core-a11y-keys>
+    <core-a11y-keys target="{{}}" keys="right pageup up" on-keys-pressed="{{increment}}"></core-a11y-keys>
+    <core-a11y-keys target="{{}}" keys="home" on-keys-pressed="{{setMin}}"></core-a11y-keys>
+    <core-a11y-keys target="{{}}" keys="end" on-keys-pressed="{{setMax}}"></core-a11y-keys>
+
+The `increment` function will move the slider a set amount toward the maximum value.
+The `decrement` function will move the slider a set amount toward the minimum value.
+The `setMin` function will move the slider to the minimum value.
+The `setMax` function will move the slider to the maximum value.
+
+Keys Syntax Grammar:
+
+[EBNF](http://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_Form) Grammar of the `keys` attribute.
+
+    modifier = "shift" | "ctrl" | "alt";
+    ascii = ? /[a-z0-9]/ ? ;
+    fnkey = ? f1 through f12 ? ;
+    arrow = "up" | "down" | "left" | "right" ;
+    key = "tab" | "esc" | "space" | "*" | "pageup" | "pagedown" | "home" | "end" | arrow | ascii | fnkey ;
+    keycombo = { modifier, "+" }, key ;
+    keys = keycombo, { " ", keycombo } ;
+
+@group Core Elements
+@element core-a11y-keys
+@homepage github.io
+-->
+
+
+
+<style shim-shadowdom="">
+  html /deep/ core-a11y-keys {
+    display: none;
+  }
+</style>
+
+<polymer-element name="core-a11y-keys" assetpath="polymer/bower_components/core-a11y-keys/">
+<script>
+  (function() {
+    /*
+     * Chrome uses an older version of DOM Level 3 Keyboard Events
+     *
+     * Most keys are labeled as text, but some are Unicode codepoints.
+     * Values taken from: http://www.w3.org/TR/2007/WD-DOM-Level-3-Events-20071221/keyset.html#KeySet-Set
+     */
+    var KEY_IDENTIFIER = {
+      'U+0009': 'tab',
+      'U+001B': 'esc',
+      'U+0020': 'space',
+      'U+002A': '*',
+      'U+0030': '0',
+      'U+0031': '1',
+      'U+0032': '2',
+      'U+0033': '3',
+      'U+0034': '4',
+      'U+0035': '5',
+      'U+0036': '6',
+      'U+0037': '7',
+      'U+0038': '8',
+      'U+0039': '9',
+      'U+0041': 'a',
+      'U+0042': 'b',
+      'U+0043': 'c',
+      'U+0044': 'd',
+      'U+0045': 'e',
+      'U+0046': 'f',
+      'U+0047': 'g',
+      'U+0048': 'h',
+      'U+0049': 'i',
+      'U+004A': 'j',
+      'U+004B': 'k',
+      'U+004C': 'l',
+      'U+004D': 'm',
+      'U+004E': 'n',
+      'U+004F': 'o',
+      'U+0050': 'p',
+      'U+0051': 'q',
+      'U+0052': 'r',
+      'U+0053': 's',
+      'U+0054': 't',
+      'U+0055': 'u',
+      'U+0056': 'v',
+      'U+0057': 'w',
+      'U+0058': 'x',
+      'U+0059': 'y',
+      'U+005A': 'z',
+      'U+007F': 'del'
+    };
+
+    /*
+     * Special table for KeyboardEvent.keyCode.
+     * KeyboardEvent.keyIdentifier is better, and KeyBoardEvent.key is even better than that
+     *
+     * Values from: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent.keyCode#Value_of_keyCode
+     */
+    var KEY_CODE = {
+      13: 'enter',
+      27: 'esc',
+      33: 'pageup',
+      34: 'pagedown',
+      35: 'end',
+      36: 'home',
+      32: 'space',
+      37: 'left',
+      38: 'up',
+      39: 'right',
+      40: 'down',
+      46: 'del',
+      106: '*'
+    };
+
+    /*
+     * KeyboardEvent.key is mostly represented by printable character made by the keyboard, with unprintable keys labeled
+     * nicely.
+     *
+     * However, on OS X, Alt+char can make a Unicode character that follows an Apple-specific mapping. In this case, we
+     * fall back to .keyCode.
+     */
+    var KEY_CHAR = /[a-z0-9*]/;
+
+    function transformKey(key) {
+      var validKey = '';
+      if (key) {
+        var lKey = key.toLowerCase();
+        if (lKey.length == 1) {
+          if (KEY_CHAR.test(lKey)) {
+            validKey = lKey;
+          }
+        } else if (lKey == 'multiply') {
+          // numpad '*' can map to Multiply on IE/Windows
+          validKey = '*';
+        } else {
+          validKey = lKey;
+        }
+      }
+      return validKey;
+    }
+
+    var IDENT_CHAR = /U\+/;
+    function transformKeyIdentifier(keyIdent) {
+      var validKey = '';
+      if (keyIdent) {
+        if (IDENT_CHAR.test(keyIdent)) {
+          validKey = KEY_IDENTIFIER[keyIdent];
+        } else {
+          validKey = keyIdent.toLowerCase();
+        }
+      }
+      return validKey;
+    }
+
+    function transformKeyCode(keyCode) {
+      var validKey = '';
+      if (Number(keyCode)) {
+        if (keyCode >= 65 && keyCode <= 90) {
+          // ascii a-z
+          // lowercase is 32 offset from uppercase
+          validKey = String.fromCharCode(32 + keyCode);
+        } else if (keyCode >= 112 && keyCode <= 123) {
+          // function keys f1-f12
+          validKey = 'f' + (keyCode - 112);
+        } else if (keyCode >= 48 && keyCode <= 57) {
+          // top 0-9 keys
+          validKey = String(48 - keyCode);
+        } else if (keyCode >= 96 && keyCode <= 105) {
+          // num pad 0-9
+          validKey = String(96 - keyCode);
+        } else {
+          validKey = KEY_CODE[keyCode];
+        }
+      }
+      return validKey;
+    }
+
+    function keyboardEventToKey(ev) {
+      // fall back from .key, to .keyIdentifier, and then to .keyCode
+      var normalizedKey = transformKey(ev.key) || transformKeyIdentifier(ev.keyIdentifier) || transformKeyCode(ev.keyCode) || '';
+      return {
+        shift: ev.shiftKey,
+        ctrl: ev.ctrlKey,
+        meta: ev.metaKey,
+        alt: ev.altKey,
+        key: normalizedKey
+      };
+    }
+
+    /*
+     * Input: ctrl+shift+f7 => {ctrl: true, shift: true, key: 'f7'}
+     * ctrl/space => {ctrl: true} || {key: space}
+     */
+    function stringToKey(keyCombo) {
+      var keys = keyCombo.split('+');
+      var keyObj = Object.create(null);
+      keys.forEach(function(key) {
+        if (key == 'shift') {
+          keyObj.shift = true;
+        } else if (key == 'ctrl') {
+          keyObj.ctrl = true;
+        } else if (key == 'alt') {
+          keyObj.alt = true;
+        } else {
+          keyObj.key = key;
+        }
+      });
+      return keyObj;
+    }
+
+    function keyMatches(a, b) {
+      return Boolean(a.alt) == Boolean(b.alt) && Boolean(a.ctrl) == Boolean(b.ctrl) && Boolean(a.shift) == Boolean(b.shift) && a.key === b.key;
+    }
+
+    /**
+     * Fired when a keycombo in `keys` is pressed.
+     *
+     * @event keys-pressed
+     */
+    function processKeys(ev) {
+      var current = keyboardEventToKey(ev);
+      for (var i = 0, dk; i < this._desiredKeys.length; i++) {
+        dk = this._desiredKeys[i];
+        if (keyMatches(dk, current)) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          this.fire('keys-pressed', current, this, false);
+          break;
+        }
+      }
+    }
+
+    function listen(node, handler) {
+      if (node && node.addEventListener) {
+        node.addEventListener('keydown', handler);
+      }
+    }
+
+    function unlisten(node, handler) {
+      if (node && node.removeEventListener) {
+        node.removeEventListener('keydown', handler);
+      }
+    }
+
+    Polymer('core-a11y-keys', {
+      created: function() {
+        this._keyHandler = processKeys.bind(this);
+      },
+      attached: function() {
+        listen(this.target, this._keyHandler);
+      },
+      detached: function() {
+        unlisten(this.target, this._keyHandler);
+      },
+      publish: {
+        /**
+         * The set of key combinations to listen for.
+         *
+         * @attribute keys
+         * @type string (keys syntax)
+         * @default ''
+         */
+        keys: '',
+        /**
+         * The node that will fire keyboard events.
+         *
+         * @attribute target
+         * @type Node
+         * @default null
+         */
+        target: null
+      },
+      keysChanged: function() {
+        // * can have multiple mappings: shift+8, * on numpad or Multiply on numpad
+        var normalized = this.keys.replace('*', '* shift+*');
+        this._desiredKeys = normalized.toLowerCase().split(' ').map(stringToKey);
+      },
+      targetChanged: function(oldTarget) {
+        unlisten(oldTarget, this._keyHandler);
+        listen(this.target, this._keyHandler);
+      }
+    });
+  })();
+</script>
+</polymer-element>
+
+
+<polymer-element name="paper-radio-button" role="radio" tabindex="0" aria-checked="false" assetpath="polymer/bower_components/paper-radio-button/">
+<template>
+
+  <style>/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+:host(:focus) {
+  outline: none;
+}
+
+#radioContainer {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+#radioContainer.labeled {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#ink {
+  position: absolute;
+  top: -16px;
+  left: -16px;
+  width: 48px;
+  height: 48px;
+  color: #5a5a5a;
+}
+
+#ink[checked] {
+  color: #0f9d58;
+}
+
+#offRadio {
+  position: absolute;
+  top: 0px;
+  left: 0px; 
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: solid 2px;
+  border-color: #5a5a5a;
+}
+
+#onRadio {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #0f9d58;
+  -webkit-transform: scale(0);
+  transform: scale(0);
+  transition: -webkit-transform ease 0.28s;
+  transition: transform ease 0.28s;
+}
+
+#onRadio.fill {
+  -webkit-transform: scale(1.1);
+  transform: scale(1.1);
+}
+
+#radioLabel {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+  white-space: normal;
+  pointer-events: none;
+}
+
+#radioLabel[hidden] {
+  display: none;
+}
+
+/* disabled state */
+:host([disabled]) {
+  pointer-events: none;
+}
+
+:host([disabled]) #onRadio {
+  display: none;
+}
+
+:host([disabled]) #offRadio {
+  opacity: 0.33;
+  border-color: #5a5a5a;
+}
+
+:host([disabled][checked]) #offRadio {
+  opacity: 0.33;
+  background-color: #5a5a5a;
+}
+</style>
+
+  <core-a11y-keys target="{{}}" keys="space" on-keys-pressed="{{tap}}"></core-a11y-keys>
+  
+  <div id="radioContainer" class="{{ {labeled: label} | tokenList }}">
+  
+    <div id="offRadio"></div>
+    <div id="onRadio"></div>
+    
+    <paper-ripple id="ink" class="circle recenteringTouch" checked?="{{!checked}}"></paper-ripple>
+    
+  </div>
+  
+  <div id="radioLabel" aria-hidden="true" hidden?="{{!label}}">{{label}}<content></content></div>
+  
+</template>
+<script>
+
+  Polymer('paper-radio-button', {
+    
+    /**
+     * Fired when the checked state changes due to user interaction.
+     *
+     * @event change
+     */
+     
+    /**
+     * Fired when the checked state changes.
+     *
+     * @event core-change
+     */
+    
+    publish: {
+      /**
+       * Gets or sets the state, `true` is checked and `false` is unchecked.
+       *
+       * @attribute checked
+       * @type boolean
+       * @default false
+       */
+      checked: {value: false, reflect: true},
+      
+      /**
+       * The label for the radio button.
+       *
+       * @attribute label
+       * @type string
+       * @default ''
+       */
+      label: '',
+      
+      /**
+       * Normally the user cannot uncheck the radio button by tapping once
+       * checked.  Setting this property to `true` makes the radio button
+       * toggleable from checked to unchecked.
+       *
+       * @attribute toggles
+       * @type boolean
+       * @default false
+       */
+      toggles: false,
+      
+      /**
+       * If true, the user cannot interact with this element.
+       *
+       * @attribute disabled
+       * @type boolean
+       * @default false
+       */
+      disabled: {value: false, reflect: true}
+    },
+    
+    eventDelegates: {
+      tap: 'tap'
+    },
+    
+    tap: function() {
+      var old = this.checked;
+      this.toggle();
+      if (this.checked !== old) {
+        this.fire('change');
+      }
+    },
+    
+    toggle: function() {
+      this.checked = !this.toggles || !this.checked;
+    },
+    
+    checkedChanged: function() {
+      this.$.onRadio.classList.toggle('fill', this.checked);
+      this.setAttribute('aria-checked', this.checked ? 'true': 'false');
+      this.fire('core-change');
+    },
+    
+    labelChanged: function() {
+      this.setAttribute('aria-label', this.label);
+    }
+    
+  });
+  
+</script>
+</polymer-element>
+
+
+<polymer-element name="paper-toggle-button" attributes="checked" role="button" aria-pressed="false" tabindex="0" assetpath="polymer/bower_components/paper-toggle-button/">
+<template>
+
+  <style>/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: inline-block;
+}
+
+:host(:focus) {
+  outline: none;
+}
+
+#toggleContainer {
+  position: relative;
+  width: 64px;
+  height: 16px;
+}
+
+#toggleBar {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  height: 1px;
+  width: 32px;
+  background-color: #5a5a5a;
+  pointer-events: none;
+}
+
+#toggleBar[checked] {
+  background-color: #0f9d58;
+}
+
+#toggleContainer[checked] #checkedBar {
+  width: 100%;
+}
+
+#toggleRadio {
+  position: absolute;
+  left: 0;
+  padding: 8px 48px 8px 0;
+  margin: -8px -48px -8px 0;
+  transition: -webkit-transform linear .08s;
+  transition: transform linear .08s;
+}
+
+#toggleRadio[checked] {
+  -webkit-transform: translate(48px, 0);
+  transform: translate(48px, 0);
+  padding: 8px 0 8px 48px;
+  margin: -8px 0 -8px -48px;
+}
+
+#toggleRadio.dragging {
+  -webkit-transition: none;
+  transition: none;
+}</style>
+
+  <div id="toggleContainer">
+  
+    <div id="toggleBar" checked?="{{checked}}"></div>
+  
+    <paper-radio-button id="toggleRadio" toggles="" checked="{{checked}}" on-change="{{changeAction}}" on-core-change="{{stopPropagation}}" on-trackstart="{{trackStart}}" on-trackx="{{trackx}}" on-trackend="{{trackEnd}}"></paper-radio-button>
+    
+  </div>
+
+</template>
+<script>
+
+  Polymer('paper-toggle-button', {
+    
+    /**
+     * Fired when the checked state changes due to user interaction.
+     *
+     * @event change
+     */
+     
+    /**
+     * Fired when the checked state changes.
+     *
+     * @event core-change
+     */
+
+    /**
+     * Gets or sets the state, `true` is checked and `false` is unchecked.
+     *
+     * @attribute checked
+     * @type boolean
+     * @default false
+     */
+    checked: false,
+
+    trackStart: function(e) {
+      this._w = this.$.toggleBar.offsetLeft + this.$.toggleBar.offsetWidth;
+      e.preventTap();
+    },
+
+    trackx: function(e) {
+      this._x = Math.min(this._w, 
+          Math.max(0, this.checked ? this._w + e.dx : e.dx));
+      this.$.toggleRadio.classList.add('dragging');
+      var s =  this.$.toggleRadio.style;
+      s.webkitTransform = s.transform = 'translate3d(' + this._x + 'px,0,0)';
+    },
+
+    trackEnd: function() {
+      var s =  this.$.toggleRadio.style;
+      s.transform = s.webkitTransform = '';
+      this.$.toggleRadio.classList.remove('dragging');
+      var old = this.checked;
+      this.checked = Math.abs(this._x) > this._w / 2;
+      if (this.checked !== old) {
+        this.fire('change');
+      }
+    },
+    
+    checkedChanged: function() {
+      this.setAttribute('aria-pressed', Boolean(this.checked));
+      this.fire('core-change');
+    },
+    
+    changeAction: function(e) {
+      e.stopPropagation();
+      this.fire('change');
+    },
+    
+    stopPropagation: function(e) {
+      e.stopPropagation();
+    }
+
+  });
+
+</script>
+</polymer-element>
+
+
+
+
+
+
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+
+
+<core-iconset-svg id="device" iconsize="24">
+<svg><defs>
+<g id="access-alarm"><path d="M22,5.7l-4.6-3.9l-1.3,1.5l4.6,3.9L22,5.7z M7.9,3.4L6.6,1.9L2,5.7l1.3,1.5L7.9,3.4z M12.5,8H11v6l4.7,2.9l0.8-1.2l-4-2.4V8z M12,4c-5,0-9,4-9,9c0,5,4,9,9,9c5,0,9-4,9-9C21,8,17,4,12,4z M12,20c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7C19,16.9,15.9,20,12,20z"/></g>
+<g id="access-alarms"><path d="M22,5.7l-4.6-3.9l-1.3,1.5l4.6,3.9L22,5.7z M7.9,3.4L6.6,1.9L2,5.7l1.3,1.5L7.9,3.4z M12.5,8H11v6l4.7,2.9l0.8-1.2l-4-2.4V8z M12,4c-5,0-9,4-9,9c0,5,4,9,9,9s9-4,9-9C21,8,17,4,12,4z M12,20c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7C19,16.9,15.9,20,12,20z"/></g>
+<g id="access-time"><path fill-opacity="0.9" d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8c4.4,0,8,3.6,8,8S16.4,20,12,20z"/><polygon fill-opacity="0.9" points="12.5,7 11,7 11,13 16.2,16.2 17,14.9 12.5,12.2 "/></g>
+<g id="add-alarm"><path d="M7.9,3.4L6.6,1.9L2,5.7l1.3,1.5L7.9,3.4z M22,5.7l-4.6-3.9l-1.3,1.5l4.6,3.9L22,5.7z M12,4c-5,0-9,4-9,9c0,5,4,9,9,9c5,0,9-4,9-9C21,8,17,4,12,4z M12,20c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7C19,16.9,15.9,20,12,20z M13,9h-2v3H8v2h3v3h2v-3h3v-2h-3V9z"/></g>
+<g id="airplanemode-off"><path d="M13,9V3.5C13,2.7,12.3,2,11.5,2C10.7,2,10,2.7,10,3.5v3.7l7.8,7.8l3.2,1v-2L13,9z M3,5.3l5,5L2,14v2l8-2.5V19l-2,1.5V22l3.5-1l3.5,1v-1.5L13,19v-3.7l5.7,5.7l1.3-1.3L4.3,4L3,5.3z"/></g>
+<g id="airplanemode-on"><path d="M21,16v-2l-8-5V3.5C13,2.7,12.3,2,11.5,2C10.7,2,10,2.7,10,3.5V9l-8,5v2l8-2.5V19l-2,1.5V22l3.5-1l3.5,1v-1.5L13,19v-5.5L21,16z"/></g>
+<g id="bluetooth"><path d="M17.7,7.7L12,2h-1v7.6L6.4,5L5,6.4l5.6,5.6L5,17.6L6.4,19l4.6-4.6V22h1l5.7-5.7L13.4,12L17.7,7.7z M13,5.8l1.9,1.9L13,9.6V5.8z M14.9,16.3L13,18.2v-3.8L14.9,16.3z"/></g>
+<g id="bluetooth-connected"><path d="M7,12l-2-2l-2,2l2,2L7,12z M17.7,7.7L12,2h-1v7.6L6.4,5L5,6.4l5.6,5.6L5,17.6L6.4,19l4.6-4.6V22h1l5.7-5.7L13.4,12L17.7,7.7z M13,5.8l1.9,1.9L13,9.6V5.8z M14.9,16.3L13,18.2v-3.8L14.9,16.3z M19,10l-2,2l2,2l2-2L19,10z"/></g>
+<g id="bluetooth-disabled"><path d="M13,5.8l1.9,1.9l-1.6,1.6l1.4,1.4l3-3L12,2h-1v5l2,2V5.8z M5.4,4L4,5.4l6.6,6.6L5,17.6L6.4,19l4.6-4.6V22h1l4.3-4.3l2.3,2.3l1.4-1.4L5.4,4z M13,18.2v-3.8l1.9,1.9L13,18.2z"/></g>
+<g id="bluetooth-searching"><path d="M14.2,12l2.3,2.3c0.3-0.7,0.4-1.5,0.4-2.3c0-0.8-0.2-1.6-0.4-2.3L14.2,12z M19.5,6.7L18.3,8c0.6,1.2,1,2.6,1,4s-0.4,2.8-1,4l1.2,1.2c1-1.5,1.5-3.4,1.5-5.3C21,10,20.5,8.2,19.5,6.7z M15.7,7.7L10,2H9v7.6L4.4,5L3,6.4L8.6,12L3,17.6L4.4,19L9,14.4V22h1l5.7-5.7L11.4,12L15.7,7.7z M11,5.8l1.9,1.9L11,9.6V5.8z M12.9,16.3L11,18.2v-3.8L12.9,16.3z"/></g>
+<g id="brightness-auto"><path d="M10.9,12.6h2.3L12,9L10.9,12.6z M20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20v-4.7l3.3-3.3L20,8.7z M14.3,16l-0.7-2h-3.2l-0.7,2H7.8L11,7h2l3.2,9H14.3z"/></g>
+<g id="brightness-high"><path d="M20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20v-4.7l3.3-3.3L20,8.7z M12,18c-3.3,0-6-2.7-6-6s2.7-6,6-6c3.3,0,6,2.7,6,6S15.3,18,12,18z M12,8c-2.2,0-4,1.8-4,4c0,2.2,1.8,4,4,4s4-1.8,4-4C16,9.8,14.2,8,12,8z"/></g>
+<g id="brightness-low"><path d="M20,15.3l3.3-3.3L20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20V15.3z M12,18c-3.3,0-6-2.7-6-6s2.7-6,6-6c3.3,0,6,2.7,6,6S15.3,18,12,18z"/></g>
+<g id="brightness-medium"><path d="M20,15.3l3.3-3.3L20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20V15.3z M12,18V6c3.3,0,6,2.7,6,6S15.3,18,12,18z"/></g>
+<g id="data-usage"><path d="M13,2.1v3c3.4,0.5,6,3.4,6,6.9c0,0.9-0.2,1.7-0.5,2.5l2.6,1.5c0.6-1.2,0.9-2.6,0.9-4.1C22,6.8,18.1,2.6,13,2.1z M12,19c-3.9,0-7-3.1-7-7c0-3.5,2.6-6.4,6-6.9v-3C5.9,2.5,2,6.8,2,12c0,5.5,4.5,10,10,10c3.3,0,6.2-1.6,8.1-4.1l-2.6-1.5C16.2,18,14.2,19,12,19z"/></g>
+<g id="developer-mode"><path d="M7,5h10v2h2V3c0-1.1-0.9-2-2-2L7,1C5.9,1,5,1.9,5,3v4h2V5z M15.4,16.6L20,12l-4.6-4.6L14,8.8l3.2,3.2L14,15.2L15.4,16.6z M10,15.2L6.8,12L10,8.8L8.6,7.4L4,12l4.6,4.6L10,15.2z M17,19H7v-2H5v4c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2v-4h-2V19z"/></g>
+<g id="event-note"><path d="M17,10H7v2h10V10z M13,14H7v2h6V14z M16,1v2H8V1H6v2H5C3.9,3,3,3.9,3,5l0,14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5c0-1.1-0.9-2-2-2h-1V1H16z M19,19H5V8h14V19z"/></g>
+<g id="gps-fixed"><path d="M12,8c-2.2,0-4,1.8-4,4c0,2.2,1.8,4,4,4s4-1.8,4-4C16,9.8,14.2,8,12,8z M20.9,11c-0.5-4.2-3.8-7.5-7.9-7.9V1h-2v2.1C6.8,3.5,3.5,6.8,3.1,11H1v2h2.1c0.5,4.2,3.8,7.5,7.9,7.9V23h2v-2.1c4.2-0.5,7.5-3.8,7.9-7.9H23v-2H20.9z M12,19c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7s7,3.1,7,7C19,15.9,15.9,19,12,19z"/></g>
+<g id="gps-not-fixed"><path d="M20.9,11c-0.5-4.2-3.8-7.5-7.9-7.9V1h-2v2.1C6.8,3.5,3.5,6.8,3.1,11H1v2h2.1c0.5,4.2,3.8,7.5,7.9,7.9V23h2v-2.1c4.2-0.5,7.5-3.8,7.9-7.9H23v-2H20.9z M12,19c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7s7,3.1,7,7C19,15.9,15.9,19,12,19z"/></g>
+<g id="gps-off"><path d="M20.9,11c-0.5-4.2-3.8-7.5-7.9-7.9V1h-2v2.1C9.9,3.2,8.8,3.5,7.8,4l1.5,1.5C10.2,5.2,11.1,5,12,5c3.9,0,7,3.1,7,7c0,0.9-0.2,1.8-0.5,2.7l1.5,1.5c0.5-1,0.8-2,1-3.2H23v-2H20.9z M3,4.3l2,2C4,7.6,3.3,9.2,3.1,11H1v2h2.1c0.5,4.2,3.8,7.5,7.9,7.9V23h2v-2.1c1.8-0.2,3.4-0.9,4.7-2l2,2l1.3-1.3L4.3,3L3,4.3z M16.3,17.5C15.1,18.5,13.6,19,12,19c-3.9,0-7-3.1-7-7c0-1.6,0.5-3.1,1.5-4.3L16.3,17.5z"/></g>
+<g id="location-disabled"><path d="M20.9,11c-0.5-4.2-3.8-7.5-7.9-7.9V1h-2v2.1C9.9,3.2,8.8,3.5,7.8,4l1.5,1.5C10.2,5.2,11.1,5,12,5c3.9,0,7,3.1,7,7c0,0.9-0.2,1.8-0.5,2.7l1.5,1.5c0.5-1,0.8-2,1-3.2H23v-2H20.9z M3,4.3l2,2C4,7.6,3.3,9.2,3.1,11H1v2h2.1c0.5,4.2,3.8,7.5,7.9,7.9V23h2v-2.1c1.8-0.2,3.4-0.9,4.7-2l2,2l1.3-1.3L4.3,3L3,4.3z M16.3,17.5C15.1,18.5,13.6,19,12,19c-3.9,0-7-3.1-7-7c0-1.6,0.5-3.1,1.5-4.3L16.3,17.5z"/></g>
+<g id="location-searching"><path d="M20.9,11c-0.5-4.2-3.8-7.5-7.9-7.9V1h-2v2.1C6.8,3.5,3.5,6.8,3.1,11H1v2h2.1c0.5,4.2,3.8,7.5,7.9,7.9V23h2v-2.1c4.2-0.5,7.5-3.8,7.9-7.9H23v-2H20.9z M12,19c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7C19,15.9,15.9,19,12,19z"/></g>
+<g id="network-cell"><path d="M2,22h20V2L2,22z M20,20h-3.3v-9.8L20,6.8V20z"/></g>
+<g id="network-wifi"><path d="M12,2C7.5,2,3.3,3.5,0,6l12,16L24,6C20.7,3.5,16.5,2,12,2z M12,7.3C9.4,7.3,7,8,4.9,9.2l-2-2.7C5.6,4.9,8.7,4,12,4c3.3,0,6.4,0.9,9.1,2.5l-2,2.7C17,8,14.6,7.3,12,7.3z"/></g>
+<g id="nfc"><path d="M20,2H4C2.9,2,2,2.9,2,4v16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M20,20H4V4h16V20z M18,6h-5c-1.1,0-2,0.9-2,2v2.3c-0.6,0.3-1,1-1,1.7c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2c0-0.7-0.4-1.4-1-1.7V8h3v8H8V8h2V6H8H6v12h12V6z"/></g>
+<g id="now-wallpaper"><path d="M4,4h7V2H4C2.9,2,2,2.9,2,4v7h2V4z M10,13l-4,5h12l-3-4l-2,2.7L10,13z M17,8.5C17,7.7,16.3,7,15.5,7S14,7.7,14,8.5s0.7,1.5,1.5,1.5S17,9.3,17,8.5z M20,2h-7v2h7v7h2V4C22,2.9,21.1,2,20,2z M20,20h-7v2h7c1.1,0,2-0.9,2-2v-7h-2V20z M4,13H2v7c0,1.1,0.9,2,2,2h7v-2H4V13z"/></g>
+<g id="now-widgets"><path d="M13,13v8h8v-8h-4.3H13z M3,21h8v-8H3V21z M3,3v8h8V7.3V3H3z M16.7,1.7L11,7.3l5.7,5.7l5.7-5.7L16.7,1.7z"/></g>
+<g id="screen-lock-landscape"><path d="M21,5H3C1.9,5,1,5.9,1,7v10c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V7C23,5.9,22.1,5,21,5z M19,17H5V7h14V17z"/></g>
+<g id="screen-lock-portrait"><path d="M17,1H7C5.9,1,5,1.9,5,3v18c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C19,1.9,18.1,1,17,1z M17,19H7V5h10V19z"/></g>
+<g id="screen-lock-rotation"><path d="M23.3,12.8l-2.6-2.6l-1.4,1.4l2.2,2.2l-5.7,5.7L4.5,8.2l5.7-5.7l2.1,2.1l1.4-1.4l-2.4-2.4c-0.6-0.6-1.5-0.6-2.1,0L2.7,7.1c-0.6,0.6-0.6,1.5,0,2.1l12,12c0.6,0.6,1.5,0.6,2.1,0l6.4-6.4C23.8,14.3,23.8,13.4,23.3,12.8z M8.5,20.5c-3.3-1.5-5.6-4.7-6-8.5H1c0.5,6.2,5.7,11,11.9,11c0.2,0,0.4,0,0.7,0l-3.8-3.8L8.5,20.5z M16,9h5c0.6,0,1-0.4,1-1V4c0-0.6-0.4-1-1-1V2.5C21,1.1,19.9,0,18.5,0C17.1,0,16,1.1,16,2.5V3c-0.6,0-1,0.4-1,1v4C15,8.6,15.4,9,16,9z M16.8,2.5c0-0.9,0.8-1.7,1.7-1.7c0.9,0,1.7,0.8,1.7,1.7V3h-3.4V2.5z"/></g>
+<g id="screen-rotation"><path d="M16.5,2.5c3.3,1.5,5.6,4.7,6,8.5h1.5C23.4,4.8,18.3,0,12,0c-0.2,0-0.4,0-0.7,0l3.8,3.8L16.5,2.5z M10.2,1.7c-0.6-0.6-1.5-0.6-2.1,0L1.7,8.1c-0.6,0.6-0.6,1.5,0,2.1l12,12c0.6,0.6,1.5,0.6,2.1,0l6.4-6.4c0.6-0.6,0.6-1.5,0-2.1L10.2,1.7z M14.8,21.2l-12-12l6.4-6.4l12,12L14.8,21.2z M7.5,21.5c-3.3-1.5-5.6-4.7-6-8.5H0.1C0.6,19.2,5.7,24,12,24c0.2,0,0.4,0,0.7,0l-3.8-3.8L7.5,21.5z"/></g>
+<g id="sd-storage"><path d="M18,2h-8L4,8l0,12c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V4C20,2.9,19.1,2,18,2z M12,8h-2V4h2V8z M15,8h-2V4h2V8z M18,8h-2V4h2V8z"/></g>
+<g id="signal-cellular-1-bar"><path d="M2,22h20V2L2,22z M20,20h-8.7v-4.5L20,6.8V20z"/></g>
+<g id="signal-cellular-2-bar"><path d="M2,22h20V2L2,22z M20,20h-6v-7.2l6-6V20z"/></g>
+<g id="signal-cellular-3-bar"><path d="M2,22h20V2L2,22z M20,20h-3.3v-9.8L20,6.8V20z"/></g>
+<g id="signal-cellular-4-bar"><polygon points="2,22 22,22 22,2 "/></g>
+<g id="signal-wifi-1-bar"><path d="M12,2C7.5,2,3.3,3.5,0,6l12,16L24,6C20.7,3.5,16.5,2,12,2z M12,13.3c-1.2,0-2.4,0.3-3.5,0.7L2.9,6.5C5.6,4.9,8.7,4,12,4c3.3,0,6.4,0.9,9.1,2.5l-5.7,7.6C14.4,13.6,13.2,13.3,12,13.3z"/></g>
+<g id="signal-wifi-2-bar"><path d="M12,2C7.5,2,3.3,3.5,0,6l12,16L24,6C20.7,3.5,16.5,2,12,2z M12,10c-2,0-3.8,0.5-5.5,1.3L2.9,6.5C5.6,4.9,8.7,4,12,4c3.3,0,6.4,0.9,9.1,2.5l-3.6,4.9C15.8,10.5,14,10,12,10z"/></g>
+<g id="signal-wifi-3-bar"><path d="M12,2C7.5,2,3.3,3.5,0,6l12,16L24,6C20.7,3.5,16.5,2,12,2z M12,7.3C9.4,7.3,7,8,4.9,9.2l-2-2.7C5.6,4.9,8.7,4,12,4c3.3,0,6.4,0.9,9.1,2.5l-2,2.7C17,8,14.6,7.3,12,7.3z"/></g>
+<g id="signal-wifi-4-bar"><path d="M12,2C7.5,2,3.3,3.5,0,6l12,16L24,6C20.7,3.5,16.5,2,12,2z"/></g>
+<g id="storage"><path d="M2,19h20v-4H2V19z M4,16h2v2H4V16z M2,5v4h20V5H2z M6,8H4V6h2V8z M2,14h20v-4H2V14z M4,11h2v2H4V11z"/></g>
+<g id="timer"><path d="M15,1H9v2h6V1z M11,14h2V8h-2V14z M19,7.4L20.5,6C20,5.5,19.5,5,19,4.6L17.6,6c-1.5-1.2-3.5-2-5.6-2c-5,0-9,4-9,9c0,5,4,9,9,9s9-4,9-9C21,10.9,20.3,8.9,19,7.4z M12,20c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7C19,16.9,15.9,20,12,20z"/></g>
+<g id="usb"><path d="M15,7v4h1v2h-3V5h2l-3-4L9,5h2v8H8v-2.1C8.7,10.6,9.2,9.8,9.2,9c0-1.2-1-2.2-2.2-2.2c-1.2,0-2.2,1-2.2,2.2c0,0.8,0.5,1.6,1.2,1.9V13c0,1.1,0.9,2,2,2h3v3.1c-0.7,0.4-1.2,1.1-1.2,1.9c0,1.2,1,2.2,2.2,2.2c1.2,0,2.2-1,2.2-2.2c0-0.9-0.5-1.6-1.2-1.9V15h3c1.1,0,2-0.9,2-2v-2h1V7H15z"/></g>
+<g id="wifi-tethering"><path d="M12,11c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2C14,11.9,13.1,11,12,11z M18,13c0-3.3-2.7-6-6-6c-3.3,0-6,2.7-6,6c0,2.2,1.2,4.1,3,5.2l1-1.7c-1.2-0.7-2-2-2-3.4c0-2.2,1.8-4,4-4s4,1.8,4,4c0,1.5-0.8,2.8-2,3.4l1,1.7C16.8,17.1,18,15.2,18,13z M12,3C6.5,3,2,7.5,2,13c0,3.7,2,6.9,5,8.6l1-1.7c-2.4-1.4-4-4-4-6.9c0-4.4,3.6-8,8-8s8,3.6,8,8c0,3-1.6,5.5-4,6.9l1,1.7c3-1.7,5-5,5-8.6C22,7.5,17.5,3,12,3z"/></g>
+</defs></svg>
+</core-iconset-svg>
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+
+
+<core-iconset-svg id="social" iconsize="24">
+<svg><defs>
+<g id="cake"><path d="M12,7c1.1,0,2-0.9,2-2c0-0.4-0.1-0.7-0.3-1L12,1l-1.7,3C10.1,4.3,10,4.6,10,5C10,6.1,10.9,7,12,7z M21,21v-4c0-1.1-0.9-2-2-2h-1v-3c0-1.1-0.9-2-2-2h-3V8h-2v2H8c-1.1,0-2,0.9-2,2v3H5c-1.1,0-2,0.9-2,2v4H1v2h22v-2H21z"/></g>
+<g id="circles"><path d="M16.7,15c-0.8,2.3-3,4-5.7,4c-3.3,0-6-2.7-6-6c0-2.6,1.7-4.8,4-5.7C9,7.2,9,7.1,9,7c0-1,0.2-2,0.5-2.9C5.3,4.8,2,8.5,2,13c0,5,4,9,9,9c4.5,0,8.2-3.3,8.9-7.5C19,14.8,18,15,17,15C16.9,15,16.8,15,16.7,15z"/><path d="M17,1c-3.3,0-6,2.7-6,6s2.7,6,6,6c3.3,0,6-2.7,6-6S20.3,1,17,1z M17,10c-1.7,0-3-1.3-3-3s1.3-3,3-3c1.7,0,3,1.3,3,3S18.7,10,17,10z"/></g>
+<g id="circles-add"><path d="M12,2C6.5,2,2,6.5,2,12c0,5.5,4.5,10,10,10s10-4.5,10-10C22,6.5,17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8c4.4,0,8,3.6,8,8S16.4,20,12,20z"/><path d="M13,11V8h-2v3H8v2h3v3h2v-3h3v-2H13z"/></g>
+<g id="circles-extended"><path d="M12,10c2.2,0,4-1.8,4-4c0-2.2-1.8-4-4-4C9.8,2,8,3.8,8,6C8,8.2,9.8,10,12,10z M12,4c1.1,0,2,0.9,2,2c0,1.1-0.9,2-2,2c-1.1,0-2-0.9-2-2C10,4.9,10.9,4,12,4z M6,13c-2.2,0-4,1.8-4,4c0,2.2,1.8,4,4,4c2.2,0,4-1.8,4-4C10,14.8,8.2,13,6,13z M6,19c-1.1,0-2-0.9-2-2c0-1.1,0.9-2,2-2c1.1,0,2,0.9,2,2C8,18.1,7.1,19,6,19z M12,11.1c-1,0-1.9,0.9-1.9,1.9s0.9,1.9,1.9,1.9c1,0,1.9-0.9,1.9-1.9S13,11.1,12,11.1z M18,13c-2.2,0-4,1.8-4,4c0,2.2,1.8,4,4,4c2.2,0,4-1.8,4-4C22,14.8,20.2,13,18,13z M18,19c-1.1,0-2-0.9-2-2c0-1.1,0.9-2,2-2c1.1,0,2,0.9,2,2C20,18.1,19.1,19,18,19z"/></g>
+<g id="communities"><path d="M9,12c-1.1,0-2,0.9-2,2s0.9,2,2,2c1.1,0,2-0.9,2-2S10.1,12,9,12z M14,9c0-1.1-0.9-2-2-2c-1.1,0-2,0.9-2,2s0.9,2,2,2C13.1,11,14,10.1,14,9z M12,2C6.5,2,2,6.5,2,12c0,5.5,4.5,10,10,10c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8c0-4.4,3.6-8,8-8c4.4,0,8,3.6,8,8C20,16.4,16.4,20,12,20z M15,12c-1.1,0-2,0.9-2,2s0.9,2,2,2c1.1,0,2-0.9,2-2S16.1,12,15,12z"/></g>
+<g id="domain"><path d="M12,7V3H2v18h20V7H12z M6,19H4v-2h2V19z M6,15H4v-2h2V15z M6,11H4V9h2V11z M6,7H4V5h2V7z M10,19H8v-2h2V19z M10,15H8v-2h2V15z M10,11H8V9h2V11z M10,7H8V5h2V7z M20,19h-8v-2h2v-2h-2v-2h2v-2h-2V9h8V19z M18,11h-2v2h2V11z M18,15h-2v2h2V15z"/></g>
+<g id="group"><path d="M16,11c1.7,0,3-1.3,3-3c0-1.7-1.3-3-3-3c-1.7,0-3,1.3-3,3C13,9.7,14.3,11,16,11z M8,11c1.7,0,3-1.3,3-3c0-1.7-1.3-3-3-3C6.3,5,5,6.3,5,8C5,9.7,6.3,11,8,11z M8,13c-2.3,0-7,1.2-7,3.5V19h14v-2.5C15,14.2,10.3,13,8,13z M16,13c-0.3,0-0.6,0-1,0.1c1.2,0.8,2,2,2,3.4V19h6v-2.5C23,14.2,18.3,13,16,13z"/></g>
+<g id="group-add"><path d="M8,10H5V7H3v3H0v2h3v3h2v-3h3V10z M18,11c1.7,0,3-1.3,3-3c0-1.7-1.3-3-3-3c-0.3,0-0.6,0.1-0.9,0.1C17.7,6,18,6.9,18,8s-0.3,2-0.9,2.9C17.4,10.9,17.7,11,18,11z M13,11c1.7,0,3-1.3,3-3c0-1.7-1.3-3-3-3c-1.7,0-3,1.3-3,3C10,9.7,11.3,11,13,11z M19.6,13.2c0.8,0.7,1.4,1.7,1.4,2.8v2h3v-2C24,14.5,21.6,13.5,19.6,13.2z M13,13c-2,0-6,1-6,3v2h12v-2C19,14,15,13,13,13z"/></g>
+<g id="location-city"><path d="M15,11V5l-3-3L9,5v2H3v14h18V11H15z M7,19H5v-2h2V19z M7,15H5v-2h2V15z M7,11H5V9h2V11z M13,19h-2v-2h2V19z M13,15h-2v-2h2V15z M13,11h-2V9h2V11z M13,7h-2V5h2V7z M19,19h-2v-2h2V19z M19,15h-2v-2h2V15z"/></g>
+<g id="mood"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8c4.4,0,8,3.6,8,8S16.4,20,12,20z M15.5,11c0.8,0,1.5-0.7,1.5-1.5S16.3,8,15.5,8S14,8.7,14,9.5S14.7,11,15.5,11z M8.5,11c0.8,0,1.5-0.7,1.5-1.5S9.3,8,8.5,8S7,8.7,7,9.5S7.7,11,8.5,11z M12,17.5c2.3,0,4.3-1.5,5.1-3.5H6.9C7.7,16,9.7,17.5,12,17.5z"/></g>
+<g id="notifications"><path d="M11.5,22c1.1,0,2-0.9,2-2h-4C9.5,21.1,10.4,22,11.5,22z M18,16v-5.5c0-3.1-2.1-5.6-5-6.3V3.5C13,2.7,12.3,2,11.5,2C10.7,2,10,2.7,10,3.5v0.7c-2.9,0.7-5,3.2-5,6.3V16l-2,2v1h17v-1L18,16z"/></g>
+<g id="notifications-none"><path d="M11.5,22c1.1,0,2-0.9,2-2h-4C9.5,21.1,10.4,22,11.5,22z M18,16v-5.5c0-3.1-2.1-5.6-5-6.3V3.5C13,2.7,12.3,2,11.5,2C10.7,2,10,2.7,10,3.5v0.7c-2.9,0.7-5,3.2-5,6.3V16l-2,2v1h17v-1L18,16z M16,17H7v-6.5C7,8,9,6,11.5,6C14,6,16,8,16,10.5V17z"/></g>
+<g id="notifications-off"><path d="M11.5,22c1.1,0,2-0.9,2-2h-4C9.5,21.1,10.4,22,11.5,22z M18,10.5c0-3.1-2.1-5.6-5-6.3V3.5C13,2.7,12.3,2,11.5,2C10.7,2,10,2.7,10,3.5v0.7C9.5,4.3,9,4.5,8.6,4.7l9.4,9.4V10.5z M17.7,19l2,2l1.3-1.3L4.3,3L3,4.3l2.9,2.9C5.3,8.2,5,9.3,5,10.5V16l-2,2v1H17.7z"/></g>
+<g id="notifications-on"><path d="M6.6,3.6L5.2,2.2C2.8,4,1.2,6.8,1,10h2C3.2,7.3,4.5,5,6.6,3.6z M20,10h2c-0.2-3.2-1.7-6-4.1-7.8l-1.4,1.4C18.5,5,19.8,7.3,20,10z M18,10.5c0-3.1-2.1-5.6-5-6.3V3.5C13,2.7,12.3,2,11.5,2C10.7,2,10,2.7,10,3.5v0.7c-2.9,0.7-5,3.2-5,6.3V16l-2,2v1h17v-1l-2-2V10.5z M11.5,22c0.1,0,0.3,0,0.4,0c0.7-0.1,1.2-0.6,1.4-1.2c0.1-0.2,0.2-0.5,0.2-0.8h-4C9.5,21.1,10.4,22,11.5,22z"/></g>
+<g id="notifications-paused"><path d="M11.5,22c1.1,0,2-0.9,2-2h-4C9.5,21.1,10.4,22,11.5,22z M18,16v-5.5c0-3.1-2.1-5.6-5-6.3V3.5C13,2.7,12.3,2,11.5,2C10.7,2,10,2.7,10,3.5v0.7c-2.9,0.7-5,3.2-5,6.3V16l-2,2v1h17v-1L18,16z M14,9.8l-2.8,3.4H14V15H9v-1.8l2.8-3.4H9V8h5V9.8z"/></g>
+<g id="pages"><path d="M3,5v6h5L7,7l4,1V3H5C3.9,3,3,3.9,3,5z M8,13H3v6c0,1.1,0.9,2,2,2h6v-5l-4,1L8,13z M17,17l-4-1v5h6c1.1,0,2-0.9,2-2v-6l-5,0L17,17z M19,3h-6v5l4-1l-1,4h5V5C21,3.9,20.1,3,19,3z"/></g>
+<g id="party-mode"><path d="M20,4h-3.2L15,2H9L7.2,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M12,7c1.6,0,3.1,0.8,4,2h-4c-1.7,0-3,1.3-3,3c0,0.4,0.1,0.7,0.2,1H7.1C7,12.7,7,12.3,7,12C7,9.2,9.2,7,12,7z M12,17c-1.6,0-3.1-0.8-4-2h4c1.7,0,3-1.3,3-3c0-0.4-0.1-0.7-0.2-1h2.1c0.1,0.3,0.1,0.7,0.1,1C17,14.8,14.8,17,12,17z"/></g>
+<g id="people"><path d="M16,11c1.7,0,3-1.3,3-3c0-1.7-1.3-3-3-3c-1.7,0-3,1.3-3,3C13,9.7,14.3,11,16,11z M8,11c1.7,0,3-1.3,3-3c0-1.7-1.3-3-3-3C6.3,5,5,6.3,5,8C5,9.7,6.3,11,8,11z M8,13c-2.3,0-7,1.2-7,3.5V19h14v-2.5C15,14.2,10.3,13,8,13z M16,13c-0.3,0-0.6,0-1,0.1c1.2,0.8,2,2,2,3.4V19h6v-2.5C23,14.2,18.3,13,16,13z"/></g>
+<g id="person"><path d="M12,12c2.2,0,4-1.8,4-4c0-2.2-1.8-4-4-4C9.8,4,8,5.8,8,8C8,10.2,9.8,12,12,12z M12,14c-2.7,0-8,1.3-8,4v2h16v-2C20,15.3,14.7,14,12,14z"/></g>
+<g id="person-add"><path d="M15,12c2.2,0,4-1.8,4-4c0-2.2-1.8-4-4-4c-2.2,0-4,1.8-4,4C11,10.2,12.8,12,15,12z M6,10V7H4v3H1v2h3v3h2v-3h3v-2H6z M15,14c-2.7,0-8,1.3-8,4v2h16v-2C23,15.3,17.7,14,15,14z"/></g>
+<g id="person-outline"><path d="M12,5.9c1.2,0,2.1,0.9,2.1,2.1s-0.9,2.1-2.1,2.1S9.9,9.2,9.9,8S10.8,5.9,12,5.9 M12,14.9c3,0,6.1,1.5,6.1,2.1v1.1H5.9V17C5.9,16.4,9,14.9,12,14.9 M12,4C9.8,4,8,5.8,8,8c0,2.2,1.8,4,4,4c2.2,0,4-1.8,4-4C16,5.8,14.2,4,12,4L12,4z M12,13c-2.7,0-8,1.3-8,4v3h16v-3C20,14.3,14.7,13,12,13L12,13z"/></g>
+<g id="plus-one"><polygon points="10,8 8,8 8,12 4,12 4,14 8,14 8,18 10,18 10,14 14,14 14,12 10,12 "/></g>
+<g id="poll"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,17H7v-7h2V17z M13,17h-2V7h2V17z M17,17h-2v-4h2V17z"/></g>
+<g id="post-blogger"><path d="M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M16,9v1c0,0.6,0.4,1,1,1c0.6,0,1,0.4,1,1v3c0,1.7-1.3,3-3,3H9c-1.7,0-3-1.3-3-3V8c0-1.7,1.3-3,3-3h4c1.7,0,3,1.3,3,3V9z M10,10h2.6c0.6,0,1-0.4,1-1c0-0.6-0.4-1-1-1H10C9.4,8,9,8.4,9,9C9,9.6,9.4,10,10,10z M14,13h-4c-0.6,0-1,0.4-1,1c0,0.6,0.4,1,1,1h4c0.6,0,1-0.4,1-1C15,13.4,14.6,13,14,13z"/></g>
+<g id="post-facebook"><path d="M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M19,4v3h-2c-0.6,0-1,0.4-1,1v2h3v3h-3v7h-3v-7h-2v-3h2V7.5C13,5.6,14.6,4,16.5,4H19z"/></g>
+<g id="post-github"><path d="M7.2 6.6h-.1c-.5 1.4-.2 2.3-.1 2.6-.6.7-1 1.6-1 2.6 0 3.8 2.4 4.6 4.6 4.9-.2 0-.6.2-.8.8-.4.2-1.8.7-2.6-.7 0 0-.5-.8-1.3-.9 0 0-.8 0-.1.5 0 0 .6.3.9 1.3 0 0 .5 1.7 3 1.1v3.1h5v-3.5c0-1-.4-1.5-.8-1.8 2.2-.2 4.6-1 4.6-4.8 0-1.1-.4-2-1-2.6.1-.3.4-1.2-.1-2.6 0 0-.8-.3-2.7 1-.8-.2-1.6-.3-2.5-.3-.8 0-1.7.1-2.5.3-1.4-1-2.2-1-2.6-1zm12.8 15.4h-16c-1.1 0-2-.9-2-2v-16c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2z"/></g>
+<g id="post-gplus"><path d="M11.2,8.9c0-1-0.6-3-2.1-3c-0.6,0-1.3,0.4-1.3,1.7c0,1.2,0.6,2.9,2,2.9C9.8,10.5,11.2,10.4,11.2,8.9z M10.6,13.8c-0.1,0-0.2,0-0.3,0h0c-0.3,0-1.2,0.1-1.8,0.3C7.8,14.3,7,14.8,7,15.8c0,1.1,1,2.2,3,2.2c1.5,0,2.4-1,2.4-2C12.4,15.3,11.9,14.8,10.6,13.8z M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M9.1,19.2c-2.8,0-4.1-1.6-4.1-3c0-0.5,0.1-1.6,1.5-2.4c0.8-0.5,1.8-0.8,3.1-0.9c-0.2-0.2-0.3-0.5-0.3-1c0-0.2,0-0.3,0.1-0.5H9c-2,0-3.2-1.5-3.2-3c0-1.7,1.3-3.6,4.1-3.6h4.2l-0.3,0.3l-0.7,0.7L13,5.9h-0.7c0.4,0.4,0.9,1.1,0.9,2.2c0,1.4-0.7,2.1-1.6,2.7c-0.2,0.1-0.4,0.4-0.4,0.7c0,0.3,0.2,0.5,0.4,0.6c0.1,0.1,0.3,0.2,0.5,0.3c0.8,0.6,1.9,1.3,1.9,2.9C14,17.1,12.7,19.2,9.1,19.2z M19,12h-2v2h-1v-2h-2v-1h2V9h1v2h2V12z"/></g>
+<g id="post-instagram"><path d="M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M12,8c2.2,0,4,1.8,4,4s-1.8,4-4,4c-2.2,0-4-1.8-4-4S9.8,8,12,8z M4.5,20C4.2,20,4,19.8,4,19.5V11h2.1C6,11.3,6,11.7,6,12c0,3.3,2.7,6,6,6c3.3,0,6-2.7,6-6c0-0.3,0-0.7-0.1-1H20v8.5c0,0.3-0.2,0.5-0.5,0.5H4.5z M20,6.5C20,6.8,19.8,7,19.5,7h-2C17.2,7,17,6.8,17,6.5v-2C17,4.2,17.2,4,17.5,4h2C19.8,4,20,4.2,20,4.5V6.5z"/></g>
+<g id="post-linkedin"><path d="M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M8,19H5v-9h3V19z M6.5,8.3c-1,0-1.8-0.8-1.8-1.8s0.8-1.8,1.8-1.8s1.8,0.8,1.8,1.8S7.5,8.3,6.5,8.3z M19,19h-3v-5.3c0-0.8-0.7-1.5-1.5-1.5c-0.8,0-1.5,0.7-1.5,1.5V19h-3v-9h3v1.2c0.5-0.8,1.6-1.4,2.5-1.4c1.9,0,3.5,1.6,3.5,3.5V19z"/></g>
+<g id="post-pinterest"><path d="M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M13,16.2c-0.8,0-1.6-0.3-2.1-0.9l-1,3.2l-0.1,0.2l0,0c-0.2,0.3-0.5,0.5-0.9,0.5c-0.6,0-1.1-0.5-1.1-1.1c0-0.1,0-0.1,0-0.1l0,0l0.1-0.2l1.8-5.6c0,0-0.2-0.6-0.2-1.5c0-1.7,0.9-2.2,1.7-2.2c0.7,0,1.4,0.3,1.4,1.3c0,1.3-0.9,2-0.9,3c0,0.7,0.6,1.3,1.3,1.3c2.3,0,3.2-1.8,3.2-3.4c0-2.2-1.9-4-4.2-4c-2.3,0-4.2,1.8-4.2,4c0,0.7,0.2,1.3,0.5,1.9c0.1,0.2,0.1,0.3,0.1,0.5c0,0.6-0.4,1-1,1c-0.4,0-0.7-0.2-0.9-0.5c-0.5-0.9-0.8-1.9-0.8-3c0-3.3,2.8-6,6.2-6c3.4,0,6.2,2.7,6.2,6C18.2,13.4,16.6,16.2,13,16.2z"/></g>
+<g id="post-tumblr"><path d="M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M16,11h-3c0,0,0,3.8,0,3.9c0,0.7,0.1,1.1,1.1,1.1c0.9,0,1.9,0,1.9,0v3c0,0-1,0.1-2.1,0.1c-2.6,0-3.9-1.6-3.9-3.4c0-1.2,0-4.7,0-4.7H8V8.2c2.4-0.2,2.6-2,2.8-3.2H13v3h3V11z"/></g>
+<g id="post-twitter"><path d="M20,2H4C2.9,2,2,2.9,2,4l0,16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M17.7,9.3c-0.1,4.6-3,7.8-7.4,8c-1.8,0.1-3.1-0.5-4.3-1.2c1.3,0.2,3-0.3,3.9-1.1c-1.3-0.1-2.1-0.8-2.5-1.9c0.4,0.1,0.8,0,1.1,0c-1.2-0.4-2-1.1-2.1-2.7c0.3,0.2,0.7,0.3,1.1,0.3c-0.9-0.5-1.5-2.4-0.8-3.6c1.3,1.4,2.9,2.6,5.5,2.8c-0.7-2.8,3.1-4.3,4.6-2.4c0.7-0.1,1.2-0.4,1.7-0.6c-0.2,0.7-0.6,1.1-1.1,1.5c0.5-0.1,1-0.2,1.4-0.4C18.7,8.5,18.2,8.9,17.7,9.3z"/></g>
+<g id="public"><path d="M12,2C6.5,2,2,6.5,2,12c0,5.5,4.5,10,10,10c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z M11,19.9c-3.9-0.5-7-3.9-7-7.9c0-0.6,0.1-1.2,0.2-1.8L9,15v1c0,1.1,0.9,2,2,2V19.9z M17.9,17.4c-0.3-0.8-1-1.4-1.9-1.4h-1v-3c0-0.6-0.4-1-1-1H8v-2h2c0.6,0,1-0.4,1-1V7h2c1.1,0,2-0.9,2-2V4.6c2.9,1.2,5,4.1,5,7.4C20,14.1,19.2,16,17.9,17.4z"/></g>
+<g id="school"><path d="M5,13.2v4l7,3.8l7-3.8v-4L12,17L5,13.2z M12,3L1,9l11,6l9-4.9V17h2V9L12,3z"/></g>
+<g id="share"><path d="M21,11l-7-7v4C7,9,4,14,3,19c2.5-3.5,6-5.1,11-5.1V18L21,11z"/></g>
+<g id="share-alt"><path d="M18,16.1c-0.8,0-1.5,0.3-2,0.8l-7.1-4.2C9,12.5,9,12.2,9,12s0-0.5-0.1-0.7L16,7.2C16.5,7.7,17.2,8,18,8c1.7,0,3-1.3,3-3s-1.3-3-3-3s-3,1.3-3,3c0,0.2,0,0.5,0.1,0.7L8,9.8C7.5,9.3,6.8,9,6,9c-1.7,0-2.9,1.2-2.9,2.9c0,1.7,1.3,3,3,3c0.8,0,1.5-0.3,2-0.8l7.1,4.2c-0.1,0.3-0.1,0.5-0.1,0.7c0,1.6,1.3,2.9,2.9,2.9s2.9-1.3,2.9-2.9S19.6,16.1,18,16.1z"/></g>
+<g id="whatshot"><path d="M13.5,0.7c0,0,0.7,2.6,0.7,4.8c0,2.1-1.4,3.7-3.4,3.7c-2.1,0-3.6-1.7-3.6-3.7l0-0.4C5.2,7.5,4,10.6,4,14c0,4.4,3.6,8,8,8c4.4,0,8-3.6,8-8C20,8.6,17.4,3.8,13.5,0.7z M11.7,19c-1.8,0-3.2-1.4-3.2-3.1c0-1.6,1-2.8,2.8-3.1c1.8-0.4,3.6-1.2,4.6-2.6c0.4,1.3,0.6,2.6,0.6,4C16.5,16.8,14.4,19,11.7,19z"/></g>
+</defs></svg>
+</core-iconset-svg>
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+
+
+<core-iconset-svg id="image" iconsize="24">
+<svg><defs>
+<g id="add-to-photos"><path d="M4,6H2v14c0,1.1,0.9,2,2,2h14v-2H4V6z M20,2H8C6.9,2,6,2.9,6,4v12c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M19,11h-4v4h-2v-4H9V9h4V5h2v4h4V11z"/></g>
+<g id="adjust"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S16.4,20,12,20z M15,12c0,1.7-1.3,3-3,3s-3-1.3-3-3s1.3-3,3-3S15,10.3,15,12z"/></g>
+<g id="aspect-ratio"><path d="M16,10h-2v2h2V10z M16,14h-2v2h2V14z M8,10H6v2h2V10z M12,10h-2v2h2V10z M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,18L4,18V6h16V18z"/></g>
+<g id="assistant-photo"><polygon points="14.4,6 14,4 5,4 5,21 7,21 7,14 12.6,14 13,16 20,16 20,6 "/></g>
+<g id="auto-awesome"><path d="M19,9l1.2-2.8L23,5l-2.8-1.2L19,1l-1.2,2.8L15,5l2.8,1.2L19,9z M11.5,9.5L9,4L6.5,9.5L1,12l5.5,2.5L9,20l2.5-5.5L17,12L11.5,9.5z M19,15l-1.2,2.7L15,19l2.8,1.2L19,23l1.2-2.8L23,19l-2.8-1.2L19,15z"/></g>
+<g id="auto-awesome-mix"><path d="M3,5v14c0,1.1,0.9,2,2,2h6V3H5C3.9,3,3,3.9,3,5z M19,3h-6v8h8V5C21,3.9,20.1,3,19,3z M13,21h6c1.1,0,2-0.9,2-2v-6h-8V21z"/></g>
+<g id="auto-awesome-motion"><path d="M14,2H4C2.9,2,2,2.9,2,4v10h2V4h10V2z M18,6H8C6.9,6,6,6.9,6,8v10h2V8h10V6z M20,10h-8c-1.1,0-2,0.9-2,2v8c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2v-8C22,10.9,21.1,10,20,10z"/></g>
+<g id="auto-fix"><polygon points="7.5,5.6 10,7 8.6,4.5 10,2 7.5,3.4 5,2 6.4,4.5 5,7 "/></g>
+<g id="auto-fix-high"><polygon points="7.5,5.6 10,7 8.6,4.5 10,2 7.5,3.4 5,2 6.4,4.5 5,7 "/></g>
+<g id="auto-fix-normal"><polygon points="22,2 19.5,3.4 17,2 18.4,4.5 17,7 19.5,5.6 22,7 20.6,4.5 "/></g>
+<g id="auto-fix-off"><path d="M23,1l-2.5,1.4L18,1l1.4,2.5L18,6l2.5-1.4L23,6l-1.4-2.5L23,1z M14.7,7.2l2.1,2.1l-2.4,2.4l0.8,0.8l2.6-2.6c0.4-0.4,0.4-1,0-1.4l-2.3-2.3c-0.4-0.4-1-0.4-1.4,0l-2.6,2.6l0.8,0.8L14.7,7.2z M13.9,13.9l-3.8-3.8h0L3.3,3.3L2,4.5l6.9,6.9L2.3,18c-0.4,0.4-0.4,1,0,1.4l2.3,2.3c0.4,0.4,1,0.4,1.4,0l6.6-6.6l6.9,6.9l1.3-1.3L13.9,13.9L13.9,13.9z"/></g>
+<g id="auto-stories"><path d="M18,1l-5,4v16l5-3.9V1z M1,7v12c0,1.1,0.9,2,2,2h8V5H3C1.9,5,1,5.9,1,7z M21,5h-1v13.1l-0.8,0.6l-3,2.3H21c1.1,0,2-0.9,2-2V7C23,5.9,22.1,5,21,5z"/></g>
+<g id="blur-circular"><path d="M10,9c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S10.6,9,10,9z M10,13c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S10.6,13,10,13z M7,9.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S7.3,9.5,7,9.5z M10,16.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S10.3,16.5,10,16.5z M7,13.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S7.3,13.5,7,13.5z M10,7.5c0.3,0,0.5-0.2,0.5-0.5S10.3,6.5,10,6.5S9.5,6.7,9.5,7S9.7,7.5,10,7.5z M14,9c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S14.6,9,14,9z M14,7.5c0.3,0,0.5-0.2,0.5-0.5S14.3,6.5,14,6.5S13.5,6.7,13.5,7S13.7,7.5,14,7.5z M17,13.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S17.3,13.5,17,13.5z M17,9.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S17.3,9.5,17,9.5z M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S16.4,20,12,20z M14,16.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S14.3,16.5,14,16.5z M14,13c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S14.6,13,14,13z"/></g>
+<g id="blur-linear"><path d="M5,17.5c0.8,0,1.5-0.7,1.5-1.5S5.8,14.5,5,14.5S3.5,15.2,3.5,16S4.2,17.5,5,17.5z M9,13c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S8.4,13,9,13z M9,9c0.6,0,1-0.4,1-1S9.6,7,9,7S8,7.4,8,8S8.4,9,9,9z M3,21h18v-2H3V21z M5,9.5c0.8,0,1.5-0.7,1.5-1.5S5.8,6.5,5,6.5S3.5,7.2,3.5,8S4.2,9.5,5,9.5z M5,13.5c0.8,0,1.5-0.7,1.5-1.5S5.8,10.5,5,10.5S3.5,11.2,3.5,12S4.2,13.5,5,13.5z M9,17c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S8.4,17,9,17z M17,16.5c0.3,0,0.5-0.2,0.5-0.5s-0.2-0.5-0.5-0.5s-0.5,0.2-0.5,0.5S16.7,16.5,17,16.5z M3,3v2h18V3H3z M17,8.5c0.3,0,0.5-0.2,0.5-0.5c0-0.3-0.2-0.5-0.5-0.5S16.5,7.7,16.5,8C16.5,8.3,16.7,8.5,17,8.5z M17,12.5c0.3,0,0.5-0.2,0.5-0.5s-0.2-0.5-0.5-0.5s-0.5,0.2-0.5,0.5S16.7,12.5,17,12.5z M13,9c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S12.4,9,13,9z M13,13c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S12.4,13,13,13z M13,17c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S12.4,17,13,17z"/></g>
+<g id="blur-off"><path d="M14,7c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S13.4,7,14,7z M13.8,11.5c0.1,0,0.1,0,0.2,0c0.8,0,1.5-0.7,1.5-1.5S14.8,8.5,14,8.5s-1.5,0.7-1.5,1.5c0,0.1,0,0.1,0,0.2C12.6,10.9,13.1,11.4,13.8,11.5z M14,3.5c0.3,0,0.5-0.2,0.5-0.5S14.3,2.5,14,2.5S13.5,2.7,13.5,3S13.7,3.5,14,3.5z M10,3.5c0.3,0,0.5-0.2,0.5-0.5S10.3,2.5,10,2.5S9.5,2.7,9.5,3S9.7,3.5,10,3.5z M21,10.5c0.3,0,0.5-0.2,0.5-0.5S21.3,9.5,21,9.5s-0.5,0.2-0.5,0.5S20.7,10.5,21,10.5z M10,7c0.6,0,1-0.4,1-1s-0.4-1-1-1S9,5.4,9,6S9.4,7,10,7z M18,15c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S17.4,15,18,15z M18,11c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S17.4,11,18,11z M18,7c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S17.4,7,18,7z M14,20.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S14.3,20.5,14,20.5z M2.5,5.3l3.8,3.8C6.2,9,6.1,9,6,9c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1c0-0.1,0-0.2-0.1-0.3l2.8,2.8C9,12.6,8.5,13.3,8.5,14c0,0.8,0.7,1.5,1.5,1.5c0.7,0,1.4-0.5,1.5-1.3l2.8,2.8C14.2,17,14.1,17,14,17c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1c0-0.1,0-0.2-0.1-0.3l3.8,3.8l1.3-1.3L3.8,4L2.5,5.3z M10,17c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S10.6,17,10,17z M21,13.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S21.3,13.5,21,13.5z M6,13c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S6.6,13,6,13z M3,9.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S3.3,9.5,3,9.5z M10,20.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S10.3,20.5,10,20.5z M6,17c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S6.6,17,6,17z M3,13.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S3.3,13.5,3,13.5z"/></g>
+<g id="blur-on"><path d="M6,13c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S6.6,13,6,13z M6,17c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S6.6,17,6,17z M6,9c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S6.6,9,6,9z M3,9.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S3.3,9.5,3,9.5z M6,5C5.4,5,5,5.4,5,6s0.4,1,1,1s1-0.4,1-1S6.6,5,6,5z M21,10.5c0.3,0,0.5-0.2,0.5-0.5S21.3,9.5,21,9.5s-0.5,0.2-0.5,0.5S20.7,10.5,21,10.5z M14,7c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S13.4,7,14,7z M14,3.5c0.3,0,0.5-0.2,0.5-0.5S14.3,2.5,14,2.5S13.5,2.7,13.5,3S13.7,3.5,14,3.5z M3,13.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S3.3,13.5,3,13.5z M10,20.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S10.3,20.5,10,20.5z M10,3.5c0.3,0,0.5-0.2,0.5-0.5S10.3,2.5,10,2.5S9.5,2.7,9.5,3S9.7,3.5,10,3.5z M10,7c0.6,0,1-0.4,1-1s-0.4-1-1-1S9,5.4,9,6S9.4,7,10,7z M10,12.5c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5s1.5-0.7,1.5-1.5S10.8,12.5,10,12.5z M18,13c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S18.6,13,18,13z M18,17c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S18.6,17,18,17z M18,9c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S18.6,9,18,9z M18,5c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S18.6,5,18,5z M21,13.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S21.3,13.5,21,13.5z M14,17c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S14.6,17,14,17z M14,20.5c-0.3,0-0.5,0.2-0.5,0.5s0.2,0.5,0.5,0.5s0.5-0.2,0.5-0.5S14.3,20.5,14,20.5z M10,8.5c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5s1.5-0.7,1.5-1.5S10.8,8.5,10,8.5z M10,17c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S10.6,17,10,17z M14,12.5c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5s1.5-0.7,1.5-1.5S14.8,12.5,14,12.5z M14,8.5c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5s1.5-0.7,1.5-1.5S14.8,8.5,14,8.5z"/></g>
+<g id="brightness-1"><circle cx="12" cy="12" r="10"/></g>
+<g id="brightness-2"><path d="M10,2C8.2,2,6.5,2.5,5,3.3c3,1.7,5,5,5,8.7s-2,6.9-5,8.7c1.5,0.9,3.2,1.3,5,1.3c5.5,0,10-4.5,10-10S15.5,2,10,2z"/></g>
+<g id="brightness-3"><path d="M9,2C8,2,6.9,2.2,6,2.5c4.1,1.3,7,5.1,7,9.5s-2.9,8.3-7,9.5C6.9,21.8,8,22,9,22c5.5,0,10-4.5,10-10S14.5,2,9,2z"/></g>
+<g id="brightness-4"><path d="M20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20v-4.7l3.3-3.3L20,8.7z M12,18c-0.9,0-1.7-0.2-2.5-0.6c2.1-0.9,3.5-3,3.5-5.4s-1.4-4.5-3.5-5.4C10.3,6.2,11.1,6,12,6c3.3,0,6,2.7,6,6S15.3,18,12,18z"/></g>
+<g id="brightness-5"><path d="M20,15.3l3.3-3.3L20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20V15.3z M12,18c-3.3,0-6-2.7-6-6s2.7-6,6-6c3.3,0,6,2.7,6,6S15.3,18,12,18z"/></g>
+<g id="brightness-6"><path d="M20,15.3l3.3-3.3L20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20V15.3z M12,18V6c3.3,0,6,2.7,6,6S15.3,18,12,18z"/></g>
+<g id="brightness-7"><path d="M20,8.7V4h-4.7L12,0.7L8.7,4H4v4.7L0.7,12L4,15.3V20h4.7l3.3,3.3l3.3-3.3H20v-4.7l3.3-3.3L20,8.7z M12,18c-3.3,0-6-2.7-6-6s2.7-6,6-6c3.3,0,6,2.7,6,6S15.3,18,12,18z M12,8c-2.2,0-4,1.8-4,4c0,2.2,1.8,4,4,4s4-1.8,4-4C16,9.8,14.2,8,12,8z"/></g>
+<g id="brush"><path d="M7,14c-1.7,0-3,1.3-3,3c0,1.3-1.2,2-2,2c0.9,1.2,2.5,2,4,2c2.2,0,4-1.8,4-4C10,15.3,8.7,14,7,14z M20.7,4.6l-1.3-1.3c-0.4-0.4-1-0.4-1.4,0l-9,9l2.8,2.8l9-9C21.1,5.7,21.1,5,20.7,4.6z"/></g>
+<g id="camera"><path d="M9.4,10.5l4.8-8.3C13.5,2.1,12.7,2,12,2C9.6,2,7.4,2.8,5.7,4.3l3.7,6.3L9.4,10.5z M21.5,9c-0.9-2.9-3.1-5.3-6-6.3L11.9,9H21.5z M21.8,10h-7.5l0.3,0.5l4.8,8.3C21,17,22,14.6,22,12C22,11.3,21.9,10.6,21.8,10z M8.5,12L4.6,5.2C3,7,2,9.4,2,12c0,0.7,0.1,1.4,0.2,2h7.5L8.5,12z M2.5,15c0.9,2.9,3.1,5.3,6,6.3l3.7-6.3H2.5z M13.7,15l-3.9,6.8c0.7,0.2,1.4,0.2,2.2,0.2c2.4,0,4.6-0.8,6.3-2.3l-3.7-6.3L13.7,15z"/></g>
+<g id="camera-alt"><circle cx="12" cy="12" r="3.2"/><path d="M9,2L7.2,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6c0-1.1-0.9-2-2-2h-3.2L15,2H9z M12,17c-2.8,0-5-2.2-5-5s2.2-5,5-5s5,2.2,5,5S14.8,17,12,17z"/></g>
+<g id="camera-front"><path d="M12,12c1.7,0,3-1.3,3-3s-1.3-3-3-3c-1.7,0-3,1.3-3,3S10.3,12,12,12z M18,0H6C4.9,0,4,0.9,4,2v20c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V2C20,0.9,19.1,0,18,0z M11,1h2v2h-2V1z M13,22v-2H9v-2h4v-2l3,3L13,22z M18,17c0-2-4-3-6-3c-2,0-6,1-6,3V4h12V17z"/></g>
+<g id="camera-rear"><path d="M18,0H6C4.9,0,4,0.9,4,2v20c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V2C20,0.9,19.1,0,18,0z M12,2c1.1,0,2,0.9,2,2s-0.9,2-2,2s-2-0.9-2-2S10.9,2,12,2z M13,22v-2H9v-2h4v-2l3,3L13,22z"/></g>
+<g id="camera-roll"><path d="M14,5c0-1.1-0.9-2-2-2h-1V2c0-0.6-0.4-1-1-1H6C5.4,1,5,1.4,5,2v1H4C2.9,3,2,3.9,2,5v15c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2h8V5H14z M12,18h-2v-2h2V18z M12,9h-2V7h2V9z M16,18h-2v-2h2V18z M16,9h-2V7h2V9z M20,18h-2v-2h2V18z M20,9h-2V7h2V9z"/></g>
+<g id="center-focus-strong"><path d="M12,8c-2.2,0-4,1.8-4,4s1.8,4,4,4s4-1.8,4-4S14.2,8,12,8z M5,15H3v4c0,1.1,0.9,2,2,2h4v-2H5V15z M5,5h4V3H5C3.9,3,3,3.9,3,5v4h2V5z M19,3h-4v2h4v4h2V5C21,3.9,20.1,3,19,3z M19,19h-4v2h4c1.1,0,2-0.9,2-2v-4h-2V19z"/></g>
+<g id="center-focus-weak"><path d="M5,15H3v4c0,1.1,0.9,2,2,2h4v-2H5V15z M5,5h4V3H5C3.9,3,3,3.9,3,5v4h2V5z M19,3h-4v2h4v4h2V5C21,3.9,20.1,3,19,3z M19,19h-4v2h4c1.1,0,2-0.9,2-2v-4h-2V19z M12,8c-2.2,0-4,1.8-4,4s1.8,4,4,4s4-1.8,4-4S14.2,8,12,8z M12,14c-1.1,0-2-0.9-2-2s0.9-2,2-2s2,0.9,2,2S13.1,14,12,14z"/></g>
+<g id="collections"><path d="M22,16V4c0-1.1-0.9-2-2-2H8C6.9,2,6,2.9,6,4v12c0,1.1,0.9,2,2,2h12C21.1,18,22,17.1,22,16z M11,12l2,2.7l3-3.7l4,5H8L11,12z M2,6v14c0,1.1,0.9,2,2,2h14v-2H4V6H2z"/></g>
+<g id="colorize"><path d="M20.7,5.6l-2.3-2.3c-0.4-0.4-1-0.4-1.4,0l-3.1,3.1l-1.9-1.9l-1.4,1.4l1.4,1.4L3,16.3V21h4.8l8.9-8.9l1.4,1.4l1.4-1.4l-1.9-1.9L20.7,7C21.1,6.7,21.1,6,20.7,5.6z M6.9,19L5,17.1L13.1,9l1.9,1.9L6.9,19z"/></g>
+<g id="color-lens"><path d="M12,3c-5,0-9,4-9,9s4,9,9,9c0.8,0,1.5-0.7,1.5-1.5c0-0.4-0.1-0.7-0.4-1c-0.2-0.3-0.4-0.6-0.4-1c0-0.8,0.7-1.5,1.5-1.5H16c2.8,0,5-2.2,5-5C21,6.6,17,3,12,3z M6.5,12C5.7,12,5,11.3,5,10.5S5.7,9,6.5,9C7.3,9,8,9.7,8,10.5S7.3,12,6.5,12z M9.5,8C8.7,8,8,7.3,8,6.5S8.7,5,9.5,5C10.3,5,11,5.7,11,6.5S10.3,8,9.5,8z M14.5,8C13.7,8,13,7.3,13,6.5S13.7,5,14.5,5C15.3,5,16,5.7,16,6.5S15.3,8,14.5,8z M17.5,12c-0.8,0-1.5-0.7-1.5-1.5S16.7,9,17.5,9c0.8,0,1.5,0.7,1.5,1.5S18.3,12,17.5,12z"/></g>
+<g id="compare"><path d="M10,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h5v2h2V1h-2V3z M10,18H5l5-6V18z M19,3h-5v2h5v13l-5-6v9h5c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z"/></g>
+<g id="control-point"><path d="M13,7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S16.4,20,12,20z"/></g>
+<g id="control-point-duplicate"><polygon points="16,8 14,8 14,11 11,11 11,13 14,13 14,16 16,16 16,13 19,13 19,11 16,11 "/></g>
+<g id="crop-16-9"><path d="M19,6H5C3.9,6,3,6.9,3,8v8c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V8C21,6.9,20.1,6,19,6z M19,16H5V8h14V16z"/></g>
+<g id="crop"><path d="M17,15h2V7c0-1.1-0.9-2-2-2H9v2h8V15z M7,17V1H5v4H1v2h4v10c0,1.1,0.9,2,2,2h10v4h2v-4h4v-2H7z"/></g>
+<g id="crop-3-2"><path d="M19,4H5C3.9,4,3,4.9,3,6v12c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V6C21,4.9,20.1,4,19,4z M19,18H5V6h14V18z"/></g>
+<g id="crop-5-4"><path d="M19,5H5C3.9,5,3,5.9,3,7v10c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V7C21,5.9,20.1,5,19,5z M19,17H5V7h14V17z"/></g>
+<g id="crop-7-5"><path d="M19,7H5C3.9,7,3,7.9,3,9v6c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V9C21,7.9,20.1,7,19,7z M19,15H5V9h14V15z"/></g>
+<g id="crop-din"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M19,19H5V5h14V19z"/></g>
+<g id="crop-free"><path d="M3,5v4h2V5h4V3H5C3.9,3,3,3.9,3,5z M5,15H3v4c0,1.1,0.9,2,2,2h4v-2H5V15z M19,19h-4v2h4c1.1,0,2-0.9,2-2v-4h-2V19z M19,3h-4v2h4v4h2V5C21,3.9,20.1,3,19,3z"/></g>
+<g id="crop-landscape"><path d="M19,5H5C3.9,5,3,5.9,3,7v10c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V7C21,5.9,20.1,5,19,5z M19,17H5V7h14V17z"/></g>
+<g id="crop-original"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M19,19H5V5h14V19z M14,12.3l-2.8,3.5l-2-2.4L6.5,17h11L14,12.3z"/></g>
+<g id="crop-portrait"><path d="M17,3H7C5.9,3,5,3.9,5,5v14c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V5C19,3.9,18.1,3,17,3z M17,19H7V5h10V19z"/></g>
+<g id="crop-square"><path d="M18,4H6C4.9,4,4,4.9,4,6v12c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V6C20,4.9,19.1,4,18,4z M18,18H6V6h12V18z"/></g>
+<g id="dehaze"><path d="M2,15.5v2c6.7-4.4,13.3,4.4,20,0v-2C15.3,19.9,8.7,11.1,2,15.5z M2,10.5v2c6.7-4.4,13.3,4.4,20,0v-2C15.3,14.9,8.7,6.1,2,10.5z M2,5.5v2c6.7-4.4,13.3,4.4,20,0v-2C15.3,9.9,8.7,1.1,2,5.5z"/></g>
+<g id="details"><path d="M3,4l9,16l9-16H3z M6.4,6h11.2L12,16L6.4,6z"/></g>
+<g id="edit"><path d="M3,17.3V21h3.8L17.8,9.9l-3.8-3.8L3,17.3z M20.7,7c0.4-0.4,0.4-1,0-1.4l-2.3-2.3c-0.4-0.4-1-0.4-1.4,0l-1.8,1.8l3.7,3.8L20.7,7z"/></g>
+<g id="exposure"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M5.5,7.5h2v-2H9v2h2V9H9v2H7.5V9h-2V7.5z M19,19L5,19L19,5V19z M17,17v-1.5h-5V17H17z"/></g>
+<g id="exposure-minus-1"><path d="M4,11v2h8v-2H4z M19,18h-2V7.4l-3,1V6.7L18.7,5H19V18z"/></g>
+<g id="exposure-minus-2"><path d="M15,16.3l2.9-3.1c0.4-0.4,0.7-0.8,1-1.2c0.3-0.4,0.6-0.8,0.8-1.2c0.2-0.4,0.4-0.8,0.5-1.2c0.1-0.4,0.2-0.8,0.2-1.2c0-0.5-0.1-1-0.3-1.5S19.8,6.3,19.4,6c-0.3-0.3-0.8-0.5-1.3-0.7C17.7,5.1,17.1,5,16.5,5c-0.7,0-1.3,0.1-1.8,0.3c-0.5,0.2-1,0.5-1.4,0.9c-0.4,0.4-0.7,0.8-0.8,1.3c-0.2,0.5-0.3,1-0.3,1.5h2.1c0-0.3,0-0.6,0.1-0.9c0.1-0.3,0.2-0.5,0.4-0.7C15,7.2,15.2,7,15.5,6.9c0.3-0.1,0.6-0.2,1-0.2c0.3,0,0.6,0.1,0.8,0.2c0.2,0.1,0.4,0.2,0.6,0.4c0.2,0.2,0.3,0.4,0.4,0.6c0.1,0.2,0.1,0.5,0.1,0.8c0,0.2,0,0.4-0.1,0.7c-0.1,0.2-0.2,0.5-0.3,0.7c-0.1,0.2-0.3,0.5-0.6,0.8c-0.2,0.3-0.5,0.6-0.9,1l-4.2,4.6V18H21v-1.7H15z M2,11v2h8v-2H2z"/></g>
+<g id="exposure-plus-1"><path d="M10,7H8v4H4v2h4v4h2v-4h4v-2h-4V7z M20,18h-2V7.4l-3,1V6.7L19.7,5H20V18z"/></g>
+<g id="exposure-plus-2"><path d="M16,16.3l2.9-3.1c0.4-0.4,0.7-0.8,1-1.2c0.3-0.4,0.6-0.8,0.8-1.2c0.2-0.4,0.4-0.8,0.5-1.2c0.1-0.4,0.2-0.8,0.2-1.2c0-0.5-0.1-1-0.3-1.5S20.8,6.3,20.4,6c-0.3-0.3-0.8-0.5-1.3-0.7C18.7,5.1,18.1,5,17.5,5c-0.7,0-1.3,0.1-1.8,0.3c-0.5,0.2-1,0.5-1.4,0.9c-0.4,0.4-0.7,0.8-0.8,1.3c-0.2,0.5-0.3,1-0.3,1.5h2.1c0-0.3,0-0.6,0.1-0.9c0.1-0.3,0.2-0.5,0.4-0.7C16,7.2,16.2,7,16.5,6.9c0.3-0.1,0.6-0.2,1-0.2c0.3,0,0.6,0.1,0.8,0.2c0.2,0.1,0.4,0.2,0.6,0.4c0.2,0.2,0.3,0.4,0.4,0.6c0.1,0.2,0.1,0.5,0.1,0.8c0,0.2,0,0.4-0.1,0.7c-0.1,0.2-0.2,0.5-0.3,0.7c-0.1,0.2-0.3,0.5-0.6,0.8c-0.2,0.3-0.5,0.6-0.9,1l-4.2,4.6V18H22v-1.7H16z M8,7H6v4H2v2h4v4h2v-4h4v-2H8V7z"/></g>
+<g id="exposure-zero"><path d="M16.1,12.5c0,1-0.1,1.9-0.3,2.6c-0.2,0.7-0.5,1.3-0.8,1.7c-0.4,0.4-0.8,0.8-1.3,1S12.6,18,12,18c-0.6,0-1.2-0.1-1.7-0.3s-0.9-0.5-1.3-1c-0.4-0.4-0.6-1-0.8-1.7c-0.2-0.7-0.3-1.5-0.3-2.6v-2c0-1,0.1-1.9,0.3-2.5C8.4,7.2,8.6,6.7,9,6.2c0.4-0.4,0.8-0.7,1.3-0.9C10.8,5.1,11.4,5,12,5c0.6,0,1.2,0.1,1.7,0.3c0.5,0.2,0.9,0.5,1.3,0.9c0.4,0.4,0.6,1,0.8,1.7c0.2,0.7,0.3,1.5,0.3,2.5V12.5z M14,10.1c0-0.6,0-1.2-0.1-1.6c-0.1-0.4-0.2-0.8-0.4-1.1S13.1,7,12.9,6.9c-0.3-0.1-0.5-0.2-0.9-0.2c-0.3,0-0.6,0.1-0.9,0.2c-0.3,0.1-0.5,0.3-0.6,0.6s-0.3,0.6-0.4,1.1C10,9,10,9.5,10,10.1v2.7c0,0.6,0,1.2,0.1,1.6s0.2,0.8,0.4,1.1s0.4,0.5,0.6,0.6s0.5,0.2,0.9,0.2c0.3,0,0.6-0.1,0.9-0.2c0.2-0.1,0.5-0.3,0.6-0.6c0.2-0.3,0.3-0.6,0.4-1.1c0.1-0.4,0.1-1,0.1-1.6V10.1z"/></g>
+<g id="filter-1"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M14,15h2V5h-4v2h2V15z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z"/></g>
+<g id="filter-2"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z M17,13h-4v-2h2c1.1,0,2-0.9,2-2V7c0-1.1-0.9-2-2-2h-4v2h4v2h-2c-1.1,0-2,0.9-2,2v4h6V13z"/></g>
+<g id="filter"><path d="M16,10.3l-2.8,3.5l-2-2.4L8.5,15h11L16,10.3z M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z"/></g>
+<g id="filter-3"><path d="M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M17,13v-1.5c0-0.8-0.7-1.5-1.5-1.5c0.8,0,1.5-0.7,1.5-1.5V7c0-1.1-0.9-2-2-2h-4v2h4v2h-2v2h2v2h-4v2h4C16.1,15,17,14.1,17,13z"/></g>
+<g id="filter-4"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M15,15h2V5h-2v4h-2V5h-2v6h4V15z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z"/></g>
+<g id="filter-5"><path d="M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M17,13v-2c0-1.1-0.9-2-2-2h-2V7h4V5h-6v6h4v2h-4v2h4C16.1,15,17,14.1,17,13z"/></g>
+<g id="filter-6"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z M13,15h2c1.1,0,2-0.9,2-2v-2c0-1.1-0.9-2-2-2h-2V7h4V5h-4c-1.1,0-2,0.9-2,2v6C11,14.1,11.9,15,13,15z M13,11h2v2h-2V11z"/></g>
+<g id="filter-7"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z M13,15l4-8V5h-6v2h4l-4,8H13z"/></g>
+<g id="filter-8"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z M13,15h2c1.1,0,2-0.9,2-2v-1.5c0-0.8-0.7-1.5-1.5-1.5c0.8,0,1.5-0.7,1.5-1.5V7c0-1.1-0.9-2-2-2h-2c-1.1,0-2,0.9-2,2v1.5c0,0.8,0.7,1.5,1.5,1.5c-0.8,0-1.5,0.7-1.5,1.5V13C11,14.1,11.9,15,13,15z M13,7h2v2h-2V7z M13,11h2v2h-2V11z"/></g>
+<g id="filter-9"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z"/><path d="M15,5h-2c-1.1,0-2,0.9-2,2v2c0,1.1,0.9,2,2,2h2v2h-4v2h4c1.1,0,2-0.9,2-2V7C17,5.9,16.1,5,15,5z M15,9h-2V7h2V9z"/></g>
+<g id="filter-9-plus"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M14,12V8c0-1.1-0.9-2-2-2h-1C9.9,6,9,6.9,9,8v1c0,1.1,0.9,2,2,2h1v1H9v2h3C13.1,14,14,13.1,14,12z M11,9V8h1v1H11z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,9h-2V7h-2v2h-2v2h2v2h2v-2h2v6H7V3h14V9z"/></g>
+<g id="filter-b-and-w"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M19,19l-7-8v8H5l7-8V5h7V19z"/></g>
+<g id="filter-center-focus"><path d="M5,15H3v4c0,1.1,0.9,2,2,2h4v-2H5V15z M5,5h4V3H5C3.9,3,3,3.9,3,5v4h2V5z M19,3h-4v2h4v4h2V5C21,3.9,20.1,3,19,3z M19,19h-4v2h4c1.1,0,2-0.9,2-2v-4h-2V19z M12,9c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3S13.7,9,12,9z"/></g>
+<g id="filter-drama"><path d="M19.4,10c-0.7-3.4-3.7-6-7.4-6C9.1,4,6.6,5.6,5.4,8C2.3,8.4,0,10.9,0,14c0,3.3,2.7,6,6,6h13c2.8,0,5-2.2,5-5C24,12.4,21.9,10.2,19.4,10z M19,18H6c-2.2,0-4-1.8-4-4s1.8-4,4-4c2.2,0,4,1.8,4,4h2c0-2.8-1.9-5.1-4.4-5.8C8.6,6.9,10.2,6,12,6c3,0,5.5,2.5,5.5,5.5V12H19c1.7,0,3,1.3,3,3S20.7,18,19,18z"/></g>
+<g id="filter-frames"><path d="M20,4h-4l-4-4L8,4H4C2.9,4,2,4.9,2,6v14c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,20H4V6h4.5L12,2.5L15.5,6H20V20z M18,8H6v10h12"/></g>
+<g id="filter-hdr"><path d="M14,6l-3.8,5l2.8,3.8L11.5,16C9.8,13.7,7,10,7,10l-6,8h22L14,6z"/></g>
+<g id="filter-none"><path d="M3,5H1v16c0,1.1,0.9,2,2,2h16v-2H3V5z M21,1H7C5.9,1,5,1.9,5,3v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V3C23,1.9,22.1,1,21,1z M21,17H7V3h14V17z"/></g>
+<g id="filter-retrolux"><path d="M13,16.4L19,7l-7-7L5,7l6,9.4v0.1C10.4,16.2,9.7,16,9,16c-2.2,0-4,1.8-4,4s1.8,4,4,4c1.8,0,3.4-1.3,3.9-3l3,3l1.4-1.4L13,18.3V16.4z M11,20c0,1.1-0.9,2-2,2s-2-0.9-2-2s0.9-2,2-2c0.5,0,1,0.2,1.4,0.6l0.6,0.6V20z"/></g>
+<g id="filter-tilt-shift"><path d="M11,4.1v-2C9,2.3,7.2,3,5.7,4.3l1.4,1.4C8.2,4.8,9.5,4.3,11,4.1z M18.3,4.3C16.8,3,15,2.3,13,2.1v2c1.5,0.2,2.8,0.8,3.9,1.6L18.3,4.3z M19.9,11h2c-0.2-2-1-3.8-2.2-5.3l-1.4,1.4C19.2,8.2,19.7,9.5,19.9,11z M5.7,7.1L4.3,5.7C3,7.2,2.3,9,2.1,11h2C4.3,9.5,4.8,8.2,5.7,7.1z M4.1,13h-2c0.2,2,1,3.8,2.2,5.3l1.4-1.4C4.8,15.8,4.3,14.5,4.1,13z M15,12c0-1.7-1.3-3-3-3s-3,1.3-3,3s1.3,3,3,3S15,13.7,15,12z M18.3,16.9l1.4,1.4c1.2-1.5,2-3.3,2.2-5.3h-2C19.7,14.5,19.2,15.8,18.3,16.9z M13,19.9v2c2-0.2,3.8-1,5.3-2.2l-1.4-1.4C15.8,19.2,14.5,19.7,13,19.9z M5.7,19.7c1.5,1.2,3.3,2,5.3,2.2v-2c-1.5-0.2-2.8-0.8-3.9-1.6L5.7,19.7z"/></g>
+<g id="filter-vintage"><path d="M18.7,12.4c-0.3-0.2-0.6-0.3-0.9-0.4c0.3-0.1,0.6-0.2,0.9-0.4c1.9-1.1,3-3.1,3-5.2c-1.8-1-4.1-1.1-6,0c-0.3,0.2-0.5,0.3-0.8,0.5C15,6.6,15,6.3,15,6c0-2.2-1.2-4.2-3-5.2c-1.8,1-3,3-3,5.2c0,0.3,0,0.6,0.1,0.9C8.8,6.7,8.6,6.6,8.3,6.4c-1.9-1.1-4.2-1-6,0c0,2.1,1.1,4.1,3,5.2c0.3,0.2,0.6,0.3,0.9,0.4c-0.3,0.1-0.6,0.2-0.9,0.4c-1.9,1.1-3,3.1-3,5.2c1.8,1,4.1,1.1,6,0c0.3-0.2,0.5-0.3,0.8-0.5C9,17.4,9,17.7,9,18c0,2.2,1.2,4.2,3,5.2c1.8-1,3-3,3-5.2c0-0.3,0-0.6-0.1-0.9c0.2,0.2,0.5,0.4,0.8,0.5c1.9,1.1,4.2,1,6,0C21.7,15.5,20.6,13.5,18.7,12.4z M12,16c-2.2,0-4-1.8-4-4s1.8-4,4-4c2.2,0,4,1.8,4,4S14.2,16,12,16z"/></g>
+<g id="flare"><path d="M7,11H1v2h6V11z M9.2,7.8L7.1,5.6L5.6,7.1l2.1,2.1L9.2,7.8z M13,1h-2v6h2V1z M18.4,7.1l-1.4-1.4l-2.1,2.1l1.4,1.4L18.4,7.1z M17,11v2h6v-2H17z M12,9c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3S13.7,9,12,9z M14.8,16.2l2.1,2.1l1.4-1.4l-2.1-2.1L14.8,16.2z M5.6,16.9l1.4,1.4l2.1-2.1l-1.4-1.4L5.6,16.9z M11,23h2v-6h-2V23z"/></g>
+<g id="flash-auto"><path d="M3,2v12h3v9l7-12H9l4-9H3z M19,2h-2l-3.2,9h1.9l0.7-2h3.2l0.7,2h1.9L19,2z M16.9,7.6L18,4l1.1,3.6H16.9z"/></g>
+<g id="flash-off"><path d="M3.3,3L2,4.3l5,5V13h3v9l3.6-6.1l4.1,4.1l1.3-1.3L3.3,3z M17,10h-4l4-8H7v2.2l8.5,8.5L17,10z"/></g>
+<g id="flash-on"><polygon points="7,2 7,13 10,13 10,22 17,10 13,10 17,2 "/></g>
+<g id="flip"><path d="M15,21h2v-2h-2V21z M19,9h2V7h-2V9z M3,5v14c0,1.1,0.9,2,2,2h4v-2H5V5h4V3H5C3.9,3,3,3.9,3,5z M19,3v2h2C21,3.9,20.1,3,19,3z M11,23h2V1h-2V23z M19,17h2v-2h-2V17z M15,5h2V3h-2V5z M19,13h2v-2h-2V13z M19,21c1.1,0,2-0.9,2-2h-2V21z"/></g>
+<g id="gradient"><rect x="11" y="9" width="2" height="2"/><rect x="9" y="11" width="2" height="2"/><rect x="13" y="11" width="2" height="2"/><rect x="15" y="9" width="2" height="2"/><rect x="7" y="9" width="2" height="2"/><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,18H7v-2h2V18z M13,18h-2v-2h2V18z M17,18h-2v-2h2V18z M19,11h-2v2h2v2h-2v-2h-2v2h-2v-2h-2v2H9v-2H7v2H5v-2h2v-2H5V5h14V11z"/></g>
+<g id="grain"><path d="M10,12c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2s2-0.9,2-2C12,12.9,11.1,12,10,12z M6,8c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2s2-0.9,2-2C8,8.9,7.1,8,6,8z M6,16c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2s2-0.9,2-2C8,16.9,7.1,16,6,16z M18,8c1.1,0,2-0.9,2-2c0-1.1-0.9-2-2-2s-2,0.9-2,2C16,7.1,16.9,8,18,8z M14,16c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2s2-0.9,2-2C16,16.9,15.1,16,14,16z M18,12c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2s2-0.9,2-2C20,12.9,19.1,12,18,12z M14,8c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2s2-0.9,2-2C16,8.9,15.1,8,14,8z M10,4C8.9,4,8,4.9,8,6c0,1.1,0.9,2,2,2s2-0.9,2-2C12,4.9,11.1,4,10,4z"/></g>
+<g id="grid-off"><path d="M8,4v1.5l2,2V4h4v4h-3.5l2,2H14v1.5l2,2V10h4v4h-3.5l2,2H20v1.5l2,2V4c0-1.1-0.9-2-2-2H4.5l2,2H8z M16,4h4v4h-4V4z M21.4,21.4L21.4,21.4L20,20L4,4L2.6,2.6L1.3,1.3L0,2.5l2,2V20c0,1.1,0.9,2,2,2h15.5l2,2l1.3-1.3L21.4,21.4z M10,12.5l1.5,1.5H10V12.5z M4,6.5L5.5,8H4V6.5z M8,20l-4,0v-4h4V20z M8,14H4v-4h3.5L8,10.5V14z M14,20l-4,0v-4h3.5l0.5,0.5V20z M16,20v-1.5l1.5,1.5L16,20z"/></g>
+<g id="grid-on"><path d="M20,2H4C2.9,2,2,2.9,2,4v16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M8,20l-4,0v-4h4V20z M8,14H4v-4h4V14z M8,8H4V4h4V8z M14,20l-4,0v-4h4V20z M14,14h-4v-4h4V14z M14,8h-4V4h4V8z M20,20l-4,0v-4h4V20z M20,14h-4v-4h4V14z M20,8h-4V4h4V8z"/></g>
+<g id="hdr-off"><path d="M20.7,11.8c0.2-0.2,0.3-0.6,0.3-1c0-0.2,0-0.4-0.1-0.6c0-0.2-0.1-0.3-0.2-0.4s-0.2-0.2-0.3-0.3c-0.1-0.1-0.3-0.1-0.5-0.1h-1.1v2.7h1.1C20.3,12.2,20.5,12.1,20.7,11.8z"/><path d="M11.6,15.5c0.3,0,0.8,0,1-0.1c0.2-0.1,0.4-0.2,0.5-0.4c0,0,0,0,0,0l-2.3-2.3v2.9H11.6z"/><path d="M15.3,11.8c0-0.6-0.1-1.1-0.3-1.6c-0.2-0.5-0.4-0.9-0.7-1.2c-0.3-0.3-0.7-0.6-1.1-0.7S12.4,8,11.8,8h-0.5l4,4V11.8z M2.5,4.3L6.2,8h-1v3.6H2.8V8H1v9h1.8v-3.9h2.4V17H7V8.8l2,2V17h2.6c0.5,0,1.2-0.1,1.6-0.3c0.4-0.2,0.7-0.4,1-0.7l4.9,4.9l1.3-1.3L3.8,3L2.5,4.3z M10.8,12.6l2.3,2.3c0,0,0,0,0,0c-0.1,0.2-0.3,0.3-0.5,0.4c-0.2,0.1-0.7,0.1-1,0.1h-0.8V12.6z M21.5,13.2c0.2-0.1,0.4-0.2,0.5-0.4c0.2-0.2,0.3-0.3,0.4-0.5c0.1-0.2,0.2-0.4,0.3-0.7c0.1-0.3,0.1-0.6,0.1-0.9c0-0.4-0.1-0.8-0.2-1.2c-0.1-0.3-0.3-0.6-0.6-0.8s-0.5-0.4-0.9-0.5C20.7,8.1,20.3,8,19.9,8H17v5.7l1.8,1.8v-1.8h0.9l1.4,3.3H23v-0.1L21.5,13.2z M20.7,11.8c-0.2,0.2-0.5,0.4-0.8,0.4h-1.1V9.5H20c0.2,0,0.3,0,0.5,0.1c0.1,0.1,0.2,0.2,0.3,0.3s0.1,0.3,0.2,0.4c0,0.2,0.1,0.4,0.1,0.6C21,11.3,20.9,11.6,20.7,11.8z"/></g>
+<g id="hdr-on"><path d="M5.2,11.6H2.8V8H1v9h1.8v-3.9h2.4V17H7V8H5.2V11.6z M14.3,9c-0.3-0.3-0.7-0.6-1.1-0.7S12.4,8,11.8,8H9v9h2.6c0.5,0,1.2-0.1,1.6-0.3c0.4-0.2,0.8-0.4,1.1-0.7c0.3-0.3,0.5-0.7,0.7-1.2c0.2-0.5,0.2-1,0.2-1.6v-1.4c0-0.6-0.1-1.1-0.3-1.6C14.9,9.7,14.6,9.3,14.3,9z M13.5,13.2c0,0.4,0,0.8-0.1,1c-0.1,0.3-0.1,0.5-0.3,0.7s-0.3,0.3-0.5,0.4c-0.2,0.1-0.7,0.1-1,0.1h-0.8v-6h1c0.3,0,0.6,0,0.8,0.1c0.2,0.1,0.4,0.2,0.5,0.4c0.1,0.2,0.2,0.4,0.3,0.7c0.1,0.3,0.1,0.6,0.1,1.1V13.2z M21.5,13.2c0.2-0.1,0.4-0.2,0.5-0.4c0.2-0.2,0.3-0.3,0.4-0.5c0.1-0.2,0.2-0.4,0.3-0.7c0.1-0.3,0.1-0.6,0.1-0.9c0-0.4-0.1-0.8-0.2-1.2c-0.1-0.3-0.3-0.6-0.6-0.8s-0.5-0.4-0.9-0.5C20.7,8.1,20.3,8,19.9,8H17v9h1.8v-3.3h0.9l1.4,3.3H23v-0.1L21.5,13.2z M20.7,11.8c-0.2,0.2-0.5,0.4-0.8,0.4h-1.1V9.5H20c0.2,0,0.3,0,0.5,0.1c0.1,0.1,0.2,0.2,0.3,0.3s0.1,0.3,0.2,0.4c0,0.2,0.1,0.4,0.1,0.6C21,11.3,20.9,11.6,20.7,11.8z"/></g>
+<g id="hdr-plus-off"><path d="M16.5,16h0.1v-0.1l-1.2-2.9c0.2-0.1,0.3-0.2,0.4-0.3c0.1-0.1,0.2-0.3,0.3-0.4c0.1-0.2,0.2-0.3,0.2-0.5c0-0.2,0.1-0.4,0.1-0.7c0-0.3-0.1-0.7-0.2-0.9c-0.1-0.3-0.2-0.5-0.4-0.7c-0.2-0.2-0.4-0.3-0.7-0.4C14.9,9,14.6,9,14.3,9H12v2.5L16.5,16z M13.4,10.2h0.9c0.1,0,0.3,0,0.4,0.1c0.1,0,0.2,0.1,0.3,0.2c0.1,0.1,0.1,0.2,0.1,0.3c0,0.1,0,0.3,0,0.4c0,0.3-0.1,0.6-0.2,0.8c-0.1,0.2-0.4,0.3-0.6,0.3h-0.9V10.2z M12,14l-1-1l-1.4-1.4l-1.4-1.4L2.3,4.3L1,5.5L4.5,9H3.6v2.8H1.4V9H0v7h1.4v-3h2.2v3H5V9.5l1.1,1.1V16h2c0.4,0,0.9-0.1,1.3-0.2c0.3-0.1,0.6-0.3,0.9-0.6c0.1-0.1,0.1-0.2,0.2-0.2l5,5l1.3-1.3l-3.3-3.3L12,14z M9.3,14.4c-0.1,0.1-0.2,0.2-0.4,0.3c-0.2,0.1-0.5,0.1-0.8,0.1H7.5v-2.8l2,2C9.4,14.2,9.4,14.3,9.3,14.4z M21,12.5v-2h-1.5v2h-2V14h2v2H21v-2h2v-1.5H21z"/></g>
+<g id="hdr-plus-on"><path d="M15.9,12.8c0.1-0.1,0.2-0.3,0.3-0.4c0.1-0.2,0.2-0.3,0.2-0.5c0-0.2,0.1-0.4,0.1-0.7c0-0.3-0.1-0.7-0.2-0.9c-0.1-0.3-0.2-0.5-0.4-0.7c-0.2-0.2-0.4-0.3-0.7-0.4C14.9,9,14.6,9,14.3,9H12v7h1.4v-2.6h0.7l1.1,2.6h1.5v-0.1l-1.2-2.9C15.6,13,15.8,12.9,15.9,12.8z M14.9,12c-0.1,0.2-0.4,0.3-0.6,0.3h-0.9v-2.1h0.9c0.1,0,0.3,0,0.4,0.1c0.1,0,0.2,0.1,0.3,0.2c0.1,0.1,0.1,0.2,0.1,0.3c0,0.1,0,0.3,0,0.4C15.1,11.5,15,11.8,14.9,12z M21,12.5v-2h-1.5v2h-2V14h2v2H21v-2h2v-1.5H21z M3.6,11.8H1.4V9H0v7h1.4v-3h2.2v3H5V9H3.6V11.8z M10.3,9.8C10,9.5,9.7,9.3,9.4,9.2S8.7,9,8.3,9H6.1v7h2c0.4,0,0.9-0.1,1.3-0.2c0.3-0.1,0.6-0.3,0.9-0.6c0.2-0.3,0.4-0.6,0.5-0.9c0.1-0.4,0.2-0.8,0.2-1.3V12c0-0.5-0.1-0.9-0.2-1.3S10.5,10,10.3,9.8z M9.6,13c0,0.3,0,0.6-0.1,0.8c0,0.2-0.1,0.4-0.2,0.6c-0.1,0.1-0.2,0.2-0.4,0.3c-0.2,0.1-0.5,0.1-0.8,0.1H7.5v-4.6h0.8c0.2,0,0.4,0,0.6,0.1c0.2,0.1,0.3,0.2,0.4,0.3c0.1,0.1,0.2,0.3,0.2,0.5c0,0.2,0.1,0.5,0.1,0.8V13z"/></g>
+<g id="hdr-strong"><path d="M17,6c-3.3,0-6,2.7-6,6s2.7,6,6,6s6-2.7,6-6S20.3,6,17,6z"/><path d="M5,8c-2.2,0-4,1.8-4,4s1.8,4,4,4s4-1.8,4-4S7.2,8,5,8z M5,14c-1.1,0-2-0.9-2-2s0.9-2,2-2s2,0.9,2,2S6.1,14,5,14z"/></g>
+<g id="hdr-weak"><path d="M5,8c-2.2,0-4,1.8-4,4s1.8,4,4,4s4-1.8,4-4S7.2,8,5,8z M17,6c-3.3,0-6,2.7-6,6s2.7,6,6,6s6-2.7,6-6S20.3,6,17,6z M17,16c-2.2,0-4-1.8-4-4s1.8-4,4-4c2.2,0,4,1.8,4,4S19.2,16,17,16z"/></g>
+<g id="healing"><path d="M17.7,12l4-4c0.4-0.4,0.4-1,0-1.4l-4.3-4.3c-0.4-0.4-1-0.4-1.4,0l-4,4l-4-4C7.8,2.1,7.5,2,7.3,2S6.8,2.1,6.6,2.3L2.3,6.6C1.9,7,1.9,7.7,2.3,8l4,4l-4,4c-0.4,0.4-0.4,1,0,1.4l4.3,4.3c0.4,0.4,1,0.4,1.4,0l4-4l4,4c0.2,0.2,0.5,0.3,0.7,0.3c0.3,0,0.5-0.1,0.7-0.3l4.3-4.3c0.4-0.4,0.4-1,0-1.4L17.7,12z M12,9c0.6,0,1,0.4,1,1s-0.4,1-1,1c-0.6,0-1-0.4-1-1S11.4,9,12,9z M7.3,11L3.7,7.3l3.6-3.6l3.6,3.6L7.3,11z M10,13c-0.6,0-1-0.4-1-1s0.4-1,1-1c0.6,0,1,0.4,1,1S10.6,13,10,13z M12,15c-0.6,0-1-0.4-1-1s0.4-1,1-1c0.6,0,1,0.4,1,1S12.6,15,12,15z M14,11c0.6,0,1,0.4,1,1s-0.4,1-1,1c-0.6,0-1-0.4-1-1S13.4,11,14,11z M16.7,20.3L13,16.7l3.6-3.6l3.6,3.6L16.7,20.3z"/></g>
+<g id="image"><path d="M21,19V5c0-1.1-0.9-2-2-2H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14C20.1,21,21,20.1,21,19z M8.5,13.5l2.5,3l3.5-4.5l4.5,6H5L8.5,13.5z"/></g>
+<g id="iso"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M5.5,7.5h2v-2H9v2h2V9H9v2H7.5V9h-2V7.5z M19,19L5,19L19,5V19z M17,17v-1.5h-5V17H17z"/></g>
+<g id="landscape"><path d="M14,6l-3.8,5l2.9,3.8L11.5,16C9.8,13.8,7,10,7,10l-6,8h22L14,6z"/></g>
+<g id="movie-creation"><path d="M18,4l2,4h-3l-2-4h-2l2,4h-3l-2-4H8l2,4H7L5,4H4C2.9,4,2,4.9,2,6l0,12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4H18z"/></g>
+<g id="palette"><path d="M12,3c-5,0-9,4-9,9s4,9,9,9c0.8,0,1.5-0.7,1.5-1.5c0-0.4-0.1-0.7-0.4-1c-0.2-0.3-0.4-0.6-0.4-1c0-0.8,0.7-1.5,1.5-1.5H16c2.8,0,5-2.2,5-5C21,6.6,17,3,12,3z M6.5,12C5.7,12,5,11.3,5,10.5S5.7,9,6.5,9C7.3,9,8,9.7,8,10.5S7.3,12,6.5,12z M9.5,8C8.7,8,8,7.3,8,6.5S8.7,5,9.5,5C10.3,5,11,5.7,11,6.5S10.3,8,9.5,8z M14.5,8C13.7,8,13,7.3,13,6.5S13.7,5,14.5,5C15.3,5,16,5.7,16,6.5S15.3,8,14.5,8z M17.5,12c-0.8,0-1.5-0.7-1.5-1.5S16.7,9,17.5,9c0.8,0,1.5,0.7,1.5,1.5S18.3,12,17.5,12z"/></g>
+<g id="panorama"><polygon points="21,13.5 21,13.5 21,13.5 "/></g>
+<g id="panorama-fisheye"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S16.4,20,12,20z"/></g>
+<g id="panorama-horizontal"><path d="M20,6.5v10.9c-2.6-0.8-5.3-1.2-8-1.2c-2.7,0-5.4,0.4-8,1.2V6.5c2.6,0.8,5.3,1.2,8,1.2C14.7,7.7,17.4,7.3,20,6.5 M21.4,4c-0.1,0-0.2,0-0.3,0.1c-2.9,1.1-6,1.6-9.1,1.6S5.8,5.2,2.9,4.1C2.8,4,2.7,4,2.6,4C2.2,4,2,4.2,2,4.6v14.7C2,19.8,2.2,20,2.6,20c0.1,0,0.2,0,0.3-0.1c2.9-1.1,6-1.6,9.1-1.6s6.2,0.5,9.1,1.6c0.1,0,0.2,0.1,0.3,0.1c0.3,0,0.6-0.2,0.6-0.6V4.6C22,4.2,21.8,4,21.4,4L21.4,4z"/></g>
+<g id="panorama-vertical"><path d="M19.9,21.1c-1.1-2.9-1.6-6-1.6-9.1s0.5-6.2,1.6-9.1C20,2.8,20,2.7,20,2.6C20,2.2,19.8,2,19.4,2H4.6C4.2,2,4,2.2,4,2.6c0,0.1,0,0.2,0.1,0.3c1.1,2.9,1.6,6,1.6,9.1s-0.5,6.2-1.6,9.1C4,21.2,4,21.3,4,21.4C4,21.8,4.2,22,4.6,22h14.7c0.4,0,0.6-0.2,0.6-0.6C20,21.3,20,21.2,19.9,21.1z M6.5,20c0.8-2.6,1.2-5.3,1.2-8c0-2.7-0.4-5.4-1.2-8h10.9c-0.8,2.6-1.2,5.3-1.2,8c0,2.7,0.4,5.4,1.2,8H6.5z"/></g>
+<g id="panorama-wide-angle"><path d="M12,6c2.4,0,4.7,0.2,7.3,0.6C19.8,8.4,20,10.2,20,12s-0.2,3.6-0.7,5.4C16.7,17.8,14.4,18,12,18s-4.7-0.2-7.3-0.6C4.2,15.6,4,13.8,4,12s0.2-3.6,0.7-5.4C7.3,6.2,9.6,6,12,6 M12,4C9.3,4,6.8,4.2,4,4.7L3.1,4.9L2.9,5.8C2.3,7.9,2,9.9,2,12s0.3,4.1,0.9,6.2l0.3,0.9L4,19.3c2.7,0.5,5.2,0.7,8,0.7s5.2-0.2,8-0.7l0.9-0.2l0.3-0.9c0.6-2.1,0.9-4.1,0.9-6.2s-0.3-4.1-0.9-6.2l-0.3-0.9L20,4.7C17.2,4.2,14.7,4,12,4L12,4z"/></g>
+<g id="photo"><path d="M21,19V5c0-1.1-0.9-2-2-2H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14C20.1,21,21,20.1,21,19z M8.5,13.5l2.5,3l3.5-4.5l4.5,6H5L8.5,13.5z"/></g>
+<g id="photo-album"><path d="M18,2H6C4.9,2,4,2.9,4,4v16c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V4C20,2.9,19.1,2,18,2z M6,4h5v8l-2.5-1.5L6,12V4z M6,19l3-3.9l2.1,2.6l3-3.9L18,19H6z"/></g>
+<g id="photo-library"><path d="M22,16V4c0-1.1-0.9-2-2-2H8C6.9,2,6,2.9,6,4v12c0,1.1,0.9,2,2,2h12C21.1,18,22,17.1,22,16z M11,12l2,2.7l3-3.7l4,5H8L11,12z M2,6v14c0,1.1,0.9,2,2,2h14v-2H4V6H2z"/></g>
+<g id="photosphere"><path d="M22.1,7.6C20.4,3.7,16.5,1,12,1S3.6,3.7,1.9,7.6C1.3,7.9,0.6,8.2,0,8.5v7c0.6,0.3,1.3,0.6,1.9,0.9C3.6,20.3,7.5,23,12,23s8.4-2.7,10.1-6.6c0.7-0.3,1.3-0.6,1.9-0.9v-7C23.4,8.2,22.7,7.9,22.1,7.6z M19.9,6.8c-1.2-0.4-2.5-0.7-3.8-0.9c-0.4-1.1-0.8-2.1-1.3-2.9C16.9,3.6,18.7,5,19.9,6.8z M12,2.5c0.8,0,1.8,1.1,2.5,3.1c-0.8-0.1-1.7-0.1-2.5-0.1s-1.7,0.1-2.5,0.1C10.2,3.6,11.2,2.5,12,2.5z M9.2,2.9c-0.5,0.8-1,1.8-1.3,2.9C6.6,6.1,5.3,6.4,4.1,6.8C5.3,5,7.1,3.6,9.2,2.9z M4.1,17.2c1.2,0.4,2.5,0.7,3.8,0.9c0.4,1.1,0.8,2.1,1.3,2.9C7.1,20.4,5.3,19,4.1,17.2z M12,21.5c-0.8,0-1.8-1.1-2.5-3.1c0.8,0.1,1.7,0.1,2.5,0.1s1.7-0.1,2.5-0.1C13.8,20.4,12.8,21.5,12,21.5z M14.8,21.1c0.5-0.8,1-1.8,1.3-2.9c1.3-0.2,2.5-0.5,3.8-0.9C18.7,19,16.9,20.4,14.8,21.1z M22.5,14.6l-0.3,0.1c-1.1,0.5-2.2,0.9-3.4,1.3L15,11.6L12,15l-4-5l-4.4,5.5C3,15.2,2.4,15,1.8,14.7l-0.3-0.1V9.4l0.3-0.1c6.4-3,14-3,20.4,0l0.3,0.1V14.6z"/></g>
+<g id="portrait"><path d="M12,12.2c1.2,0,2.2-1,2.2-2.2c0-1.2-1-2.2-2.2-2.2c-1.2,0-2.2,1-2.2,2.2C9.8,11.2,10.8,12.2,12,12.2z M16.5,16.2c0-1.5-3-2.2-4.5-2.2s-4.5,0.8-4.5,2.2V17h9V16.2z M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M19,19L5,19V5h14V19z"/></g>
+<g id="slideshow"><path d="M10,8v8l5-4L10,8z M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M19,19L5,19V5h14V19z"/></g>
+<g id="switch-camera"><path d="M20,4h-3.2L15,2H9L7.2,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M15,15.5V13H9v2.5L5.5,12L9,8.5V11h6V8.5l3.5,3.5L15,15.5z"/></g>
+<g id="switch-video"><path d="M18,9.5V6c0-0.6-0.4-1-1-1H3C2.4,5,2,5.4,2,6v12c0,0.6,0.4,1,1,1h14c0.6,0,1-0.4,1-1v-3.5l4,4v-13L18,9.5z M13,15.5V13H7v2.5L3.5,12L7,8.5V11h6V8.5l3.5,3.5L13,15.5z"/></g>
+<g id="tag-faces"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8c4.4,0,8,3.6,8,8S16.4,20,12,20z M15.5,11c0.8,0,1.5-0.7,1.5-1.5S16.3,8,15.5,8C14.7,8,14,8.7,14,9.5S14.7,11,15.5,11z M8.5,11c0.8,0,1.5-0.7,1.5-1.5S9.3,8,8.5,8C7.7,8,7,8.7,7,9.5S7.7,11,8.5,11z M12,17.5c2.3,0,4.3-1.5,5.1-3.5H6.9C7.7,16,9.7,17.5,12,17.5z"/></g>
+<g id="timelapse"><path d="M16.2,7.8C15.1,6.6,13.5,6,12,6v6l-4.2,4.2c2.3,2.3,6.1,2.3,8.5,0C18.6,13.9,18.6,10.1,16.2,7.8z M12,2C6.5,2,2,6.5,2,12c0,5.5,4.5,10,10,10c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8c0-4.4,3.6-8,8-8c4.4,0,8,3.6,8,8C20,16.4,16.4,20,12,20z"/></g>
+<g id="timer-10"><path d="M0,7.7v1.7l3-1V18h2V6H4.7L0,7.7z M23.8,14.4c-0.1-0.3-0.4-0.5-0.6-0.7c-0.3-0.2-0.6-0.4-1-0.5s-0.8-0.3-1.4-0.4c-0.3-0.1-0.6-0.2-0.9-0.2c-0.2-0.1-0.4-0.2-0.5-0.3c-0.1-0.1-0.2-0.2-0.3-0.3C19,11.8,19,11.7,19,11.6s0-0.3,0.1-0.4c0.1-0.1,0.1-0.2,0.3-0.3c0.1-0.1,0.3-0.2,0.5-0.2c0.2-0.1,0.4-0.1,0.6-0.1c0.3,0,0.5,0,0.7,0.1c0.2,0.1,0.3,0.2,0.5,0.3c0.1,0.1,0.2,0.3,0.3,0.4c0.1,0.2,0.1,0.3,0.1,0.5h1.9c0-0.4-0.1-0.8-0.2-1.1S23.3,10,23,9.8s-0.7-0.4-1.1-0.6C21.5,9.1,21,9,20.5,9c-0.5,0-1,0.1-1.4,0.2c-0.4,0.1-0.8,0.3-1.1,0.6c-0.3,0.2-0.5,0.5-0.7,0.8c-0.2,0.3-0.2,0.7-0.2,1c0,0.4,0.1,0.7,0.2,1c0.2,0.3,0.4,0.5,0.6,0.7c0.3,0.2,0.6,0.4,1,0.5c0.4,0.1,0.8,0.3,1.3,0.4c0.4,0.1,0.7,0.2,1,0.3c0.2,0.1,0.4,0.2,0.6,0.3S22,15,22,15.1c0,0.1,0.1,0.2,0.1,0.4c0,0.3-0.1,0.6-0.4,0.8c-0.3,0.2-0.7,0.3-1.2,0.3c-0.2,0-0.4,0-0.6-0.1c-0.2-0.1-0.4-0.1-0.6-0.2S19,16,18.9,15.8c-0.1-0.2-0.2-0.4-0.2-0.7h-1.9c0,0.4,0.1,0.7,0.2,1.1c0.2,0.3,0.4,0.7,0.7,0.9c0.3,0.3,0.7,0.5,1.2,0.7s1,0.3,1.6,0.3c0.5,0,1-0.1,1.4-0.2c0.4-0.1,0.8-0.3,1.1-0.5c0.3-0.2,0.5-0.5,0.7-0.8s0.2-0.7,0.2-1.1C24,15,23.9,14.6,23.8,14.4z M13.8,7c-0.3-0.4-0.7-0.7-1.2-0.9c-0.5-0.2-1-0.3-1.6-0.3c-0.6,0-1.1,0.1-1.6,0.3C8.9,6.3,8.5,6.6,8.2,7C7.8,7.5,7.6,8,7.4,8.6C7.2,9.3,7.1,10.1,7.1,11v1.9c0,0.9,0.1,1.7,0.3,2.4c0.2,0.7,0.5,1.2,0.8,1.6c0.3,0.4,0.8,0.7,1.2,0.9s1,0.3,1.6,0.3c0.6,0,1.1-0.1,1.6-0.3c0.5-0.2,0.9-0.5,1.2-0.9c0.3-0.4,0.6-0.9,0.8-1.6c0.2-0.7,0.3-1.5,0.3-2.4V11c0-0.9-0.1-1.7-0.3-2.4C14.4,8,14.2,7.5,13.8,7z M12.9,13.2c0,0.6,0,1.1-0.1,1.5c-0.1,0.4-0.2,0.8-0.4,1c-0.2,0.3-0.4,0.5-0.6,0.6c-0.2,0.1-0.5,0.2-0.8,0.2c-0.3,0-0.6-0.1-0.8-0.2C10,16.2,9.8,16,9.6,15.8c-0.2-0.3-0.3-0.6-0.4-1c-0.1-0.4-0.1-0.9-0.1-1.5v-2.5c0-0.6,0-1.1,0.1-1.5c0.1-0.4,0.2-0.7,0.4-1C9.7,8,9.9,7.8,10.2,7.7c0.2-0.1,0.5-0.2,0.8-0.2c0.3,0,0.6,0.1,0.8,0.2C12,7.8,12.2,8,12.4,8.2c0.2,0.3,0.3,0.6,0.4,1c0.1,0.4,0.1,0.9,0.1,1.5V13.2z"/></g>
+<g id="timer"><path d="M15,1H9v2h6V1z M11,14h2V8h-2V14z M19,7.4L20.5,6C20,5.5,19.5,5,19,4.5L17.6,6c-1.5-1.2-3.5-2-5.6-2c-5,0-9,4-9,9c0,5,4,9,9,9s9-4,9-9C21,10.9,20.3,8.9,19,7.4z M12,20c-3.9,0-7-3.1-7-7c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7C19,16.9,15.9,20,12,20z"/></g>
+<g id="timer-3"><path d="M11.6,13c-0.2-0.2-0.4-0.5-0.6-0.7c-0.3-0.2-0.6-0.4-0.9-0.5c0.3-0.1,0.6-0.3,0.8-0.5c0.2-0.2,0.4-0.4,0.6-0.6c0.2-0.2,0.3-0.5,0.3-0.7c0.1-0.2,0.1-0.5,0.1-0.7c0-0.6-0.1-1-0.3-1.5c-0.2-0.4-0.4-0.8-0.8-1.1c-0.3-0.3-0.7-0.5-1.2-0.6C9.2,6,8.7,5.9,8.1,5.9C7.5,5.9,7,6,6.6,6.1S5.7,6.5,5.4,6.8C5,7.1,4.8,7.5,4.6,7.9C4.4,8.3,4.3,8.7,4.3,9.2h2c0-0.3,0-0.5,0.1-0.7c0.1-0.2,0.2-0.4,0.4-0.5C7,7.8,7.2,7.7,7.4,7.6c0.2-0.1,0.5-0.1,0.7-0.1c0.6,0,1.1,0.2,1.4,0.5c0.3,0.3,0.4,0.8,0.4,1.3c0,0.3,0,0.5-0.1,0.7c-0.1,0.2-0.2,0.4-0.4,0.6C9.2,10.7,9,10.9,8.8,11c-0.2,0.1-0.5,0.1-0.9,0.1H6.7v1.6h1.2c0.3,0,0.6,0,0.9,0.1c0.3,0.1,0.5,0.2,0.7,0.4c0.2,0.2,0.3,0.4,0.4,0.6c0.1,0.2,0.2,0.5,0.2,0.9c0,0.6-0.2,1.1-0.5,1.4c-0.4,0.3-0.8,0.5-1.5,0.5c-0.3,0-0.6,0-0.8-0.1c-0.2-0.1-0.4-0.2-0.6-0.4c-0.2-0.2-0.3-0.3-0.4-0.6c-0.1-0.2-0.1-0.5-0.1-0.7h-2c0,0.5,0.1,1,0.3,1.5c0.2,0.4,0.5,0.8,0.9,1c0.4,0.3,0.8,0.5,1.2,0.6s1,0.2,1.5,0.2c0.6,0,1.1-0.1,1.6-0.2c0.5-0.2,0.9-0.4,1.3-0.7c0.4-0.3,0.6-0.7,0.8-1.1c0.2-0.4,0.3-0.9,0.3-1.5c0-0.3,0-0.6-0.1-0.9C11.9,13.5,11.8,13.2,11.6,13z M20.9,14.4c-0.1-0.3-0.4-0.5-0.6-0.7s-0.6-0.4-1-0.5c-0.4-0.1-0.8-0.3-1.4-0.4c-0.3-0.1-0.6-0.2-0.9-0.2c-0.2-0.1-0.4-0.2-0.5-0.3c-0.1-0.1-0.2-0.2-0.3-0.3c-0.1-0.1-0.1-0.2-0.1-0.4s0-0.3,0.1-0.4c0.1-0.1,0.1-0.2,0.3-0.3c0.1-0.1,0.3-0.2,0.5-0.2c0.2-0.1,0.4-0.1,0.6-0.1c0.3,0,0.5,0,0.7,0.1c0.2,0.1,0.3,0.2,0.5,0.3c0.1,0.1,0.2,0.3,0.3,0.4c0.1,0.2,0.1,0.3,0.1,0.5H21c0-0.4-0.1-0.8-0.2-1.1c-0.2-0.3-0.4-0.6-0.7-0.9S19.4,9.4,19,9.2C18.6,9.1,18.1,9,17.6,9c-0.5,0-1,0.1-1.4,0.2c-0.4,0.1-0.8,0.3-1.1,0.6s-0.5,0.5-0.7,0.8c-0.2,0.3-0.2,0.7-0.2,1c0,0.4,0.1,0.7,0.2,1c0.2,0.3,0.4,0.5,0.6,0.7c0.3,0.2,0.6,0.4,1,0.5c0.4,0.1,0.8,0.3,1.3,0.4c0.4,0.1,0.7,0.2,1,0.3c0.2,0.1,0.4,0.2,0.6,0.3s0.2,0.2,0.3,0.3c0,0.1,0.1,0.2,0.1,0.4c0,0.3-0.1,0.6-0.4,0.8c-0.3,0.2-0.7,0.3-1.2,0.3c-0.2,0-0.4,0-0.6-0.1c-0.2-0.1-0.4-0.1-0.6-0.2c-0.2-0.1-0.3-0.3-0.4-0.4c-0.1-0.2-0.2-0.4-0.2-0.7h-1.9c0,0.4,0.1,0.7,0.2,1.1c0.2,0.3,0.4,0.7,0.7,0.9c0.3,0.3,0.7,0.5,1.2,0.7s1,0.3,1.6,0.3c0.5,0,1-0.1,1.4-0.2c0.4-0.1,0.8-0.3,1.1-0.5c0.3-0.2,0.5-0.5,0.7-0.8c0.2-0.3,0.2-0.7,0.2-1.1C21.1,15,21,14.6,20.9,14.4z"/></g>
+<g id="timer-auto"><path d="M12,4C9.8,4,8,5.8,8,8c0,2.2,1.8,4,4,4c2.2,0,4-1.8,4-4C16,5.8,14.2,4,12,4L12,4z M12,14c-2.7,0-8,1.3-8,4v2h16v-2C20,15.3,14.7,14,12,14L12,14z"/></g>
+<g id="timer-off"><path d="M19,4.5L17.6,6c-1.5-1.2-3.5-2-5.6-2C10.2,4,8.5,4.5,7,5.5l1.5,1.5C9.5,6.3,10.7,6,12,6c3.9,0,7,3.1,7,7c0,1.3-0.3,2.5-0.9,3.5l1.5,1.5c0.9-1.4,1.5-3.1,1.5-4.9c0-2.1-0.7-4.1-2-5.6L20.5,6L19,4.5z M15,1H9v2h6V1z M11,9.4l2,2V8h-2V9.4z M3,4L1.7,5.3L4.5,8C3.6,9.5,3,11.2,3,13c0,5,4,9,9,9c1.8,0,3.6-0.6,5-1.5l2.5,2.5l1.3-1.3L13,14L3,4z M12,20c-3.9,0-7-3.1-7-7c0-1.3,0.4-2.5,1-3.5l9.6,9.6C14.5,19.6,13.3,20,12,20z"/></g>
+<g id="unknown-1"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M5.5,7.5h2v-2H9v2h2V9H9v2H7.5V9h-2V7.5z M19,19L5,19L19,5V19z M17,17v-1.5h-5V17H17z"/></g>
+<g id="unknown-2"><path d="M12,16h5v-1.5h-5V16z M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z M6,8h2V6h1.5v2h2v1.5h-2v2H8v-2H6V8z M12,20c-2.2,0-4.2-0.9-5.7-2.3L17.7,6.3C19.1,7.8,20,9.8,20,12C20,16.4,16.4,20,12,20z"/></g>
+<g id="unknown-3"><path d="M13,8h-2v3H8v2h3v3h2v-3h3v-2h-3V8z M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8c0-4.4,3.6-8,8-8c4.4,0,8,3.6,8,8C20,16.4,16.4,20,12,20z"/></g>
+<g id="unknown-4"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8c0-4.4,3.6-8,8-8c4.4,0,8,3.6,8,8C20,16.4,16.4,20,12,20z M8,13h8v-2H8V13z"/></g>
+<g id="unknown-5"><path d="M12,10H4v2h8V10z M12,2L12,2l0,2c4.4,0,8,3.6,8,8c0,4.4-3.6,8-8,8c-2.2,0-4.2-0.9-5.7-2.3l-1.4,1.4C6.7,20.9,9.2,22,12,22c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z"/></g>
+<g id="unknown-6"><path d="M16,10h-2v2h2V10z M16,14h-2v2h2V14z M8,10H6v2h2V10z M12,10h-2v2h2V10z M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,18L4,18V6h16V18z"/></g>
+<g id="unknown-7"><path d="M14,16h5v-5h3l-5.5-5.5L11,11h3V16z M11,20h11v-2H11V20z M5.5,7l-3.2,9h1.9l0.7-2h3.2l0.7,2h1.9L7.5,7H5.5z M5.4,12.6L6.5,9l1.1,3.6H5.4z"/></g>
+<g id="warning"><path d="M1,21h22L12,2L1,21z M13,18h-2v-2h2V18z M13,14h-2v-4h2V14z"/></g>
+<g id="wb-auto"><path d="M6.9,12.6h2.3L8,9L6.9,12.6z M22,7l-1.2,6.3L19.3,7h-1.6l-1.5,6.3L15,7h-0.8C12.8,5.2,10.5,4,8,4c-4.4,0-8,3.6-8,8s3.6,8,8,8c3.1,0,5.8-1.8,7.2-4.4l0.1,0.4H17l1.5-6.1L20,16h1.8l2-9H22z M10.3,16l-0.7-2H6.4l-0.7,2H3.8L7,7h2l3.2,9H10.3z"/></g>
+<g id="wb-cloudy"><path d="M19.4,10c-0.7-3.4-3.7-6-7.4-6C9.1,4,6.6,5.6,5.4,8C2.3,8.4,0,10.9,0,14c0,3.3,2.7,6,6,6h13c2.8,0,5-2.2,5-5C24,12.4,21.9,10.2,19.4,10z"/></g>
+<g id="wb-incandescent"><path d="M3.5,18.5L5,20l1.8-1.8l-1.4-1.4L3.5,18.5z M11,22.4c0.3,0,2,0,2,0v-2.9h-2V22.4z M4,10.5H1v2h3V10.5z M15,6.3V1.5H9v4.8c-1.8,1-3,3-3,5.2c0,3.3,2.7,6,6,6s6-2.7,6-6C18,9.3,16.8,7.3,15,6.3z M20,10.5v2h3v-2H20z M17.2,18.2L19,20l1.4-1.4l-1.8-1.8L17.2,18.2z"/></g>
+<g id="wb-irradescent"><path d="M5,14.5h14v-6H5V14.5z M11,0.6v2.9h2V0.6H11z M19,3l-1.8,1.8l1.4,1.4l1.8-1.8L19,3z M13,22.4v-2.9h-2v2.9C11.3,22.5,13,22.4,13,22.4z M20.5,18.5l-1.8-1.8l-1.4,1.4L19,20L20.5,18.5z M3.5,4.5l1.8,1.8l1.4-1.4L5,3L3.5,4.5z M5,20l1.8-1.8l-1.4-1.4l-1.8,1.8L5,20z"/></g>
+<g id="wb-sunny"><path d="M6.8,4.8L5,3L3.5,4.5l1.8,1.8L6.8,4.8z M4,10.5H1v2h3V10.5z M13,0.6h-2v2.9h2V0.6z M20.5,4.5L19,3l-1.8,1.8l1.4,1.4L20.5,4.5z M17.2,18.2L19,20l1.4-1.4l-1.8-1.8L17.2,18.2z M20,10.5v2h3v-2H20z M12,5.5c-3.3,0-6,2.7-6,6s2.7,6,6,6s6-2.7,6-6S15.3,5.5,12,5.5z M11,22.4c0.3,0,2,0,2,0v-2.9h-2V22.4z M3.5,18.5L5,20l1.8-1.8l-1.4-1.4L3.5,18.5z"/></g>
+</defs></svg>
+</core-iconset-svg>
+
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+
+
+<core-iconset-svg id="hardware" iconsize="24">
+<svg><defs>
+<g id="cast"><path d="M21,3H3C1.9,3,1,3.9,1,5v3h2V5h18v14h-7v2h7c1.1,0,2-0.9,2-2V5C23,3.9,22.1,3,21,3z M1,18v3h3C4,19.3,2.7,18,1,18z M1,14v2c2.8,0,5,2.2,5,5h2C8,17.1,4.9,14,1,14z M1,10v2c5,0,9,4,9,9h2C12,14.9,7.1,10,1,10z"/></g>
+<g id="cast-connected"><path d="M1,18v3h3C4,19.3,2.7,18,1,18z M1,14v2c2.8,0,5,2.2,5,5h2C8,17.1,4.9,14,1,14z M19,7H5v1.6c4,1.3,7.1,4.4,8.4,8.4H19V7z M1,10v2c5,0,9,4,9,9h2C12,14.9,7.1,10,1,10z M21,3H3C1.9,3,1,3.9,1,5v3h2V5h18v14h-7v2h7c1.1,0,2-0.9,2-2V5C23,3.9,22.1,3,21,3z"/></g>
+<g id="chromecast"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,10-4.5,10-10S17.5,2,12,2z M12,4c3,0,5.5,1.6,6.9,4H12c-1.9,0-3.6,1.4-3.9,3.2L5.7,7.1C7.2,5.2,9.4,4,12,4z M15,12c0,1.7-1.3,3-3,3c-1.7,0-3-1.3-3-3c0-1.7,1.3-3,3-3C13.7,9,15,10.3,15,12z M4,12c0-1.5,0.4-2.8,1.1-4l3.5,6l0,0c0.7,1.2,2,2,3.4,2c0.5,0,0.9-0.1,1.3-0.2l-2.4,4.1C7,19.4,4,16,4,12z M12,20l3.5-6l0,0c0.3-0.6,0.6-1.3,0.6-2c0-1.2-0.5-2.3-1.4-3h4.8c0.4,0.9,0.6,1.9,0.6,3C20,16.4,16.4,20,12,20z"/></g>
+<g id="desktop-mac"><path d="M21,2H3C1.9,2,1,2.9,1,4v12c0,1.1,0.9,2,2,2h7l-2,3v1h8v-1l-2-3h7c1.1,0,2-0.9,2-2V4C23,2.9,22.1,2,21,2z M21,14H3V4h18V14z"/></g>
+<g id="desktop-windows"><path d="M21,2H3C1.9,2,1,2.9,1,4v12c0,1.1,0.9,2,2,2h7v2H8v2h8v-2h-2v-2h7c1.1,0,2-0.9,2-2V4C23,2.9,22.1,2,21,2z M21,16H3V4h18V16z"/></g>
+<g id="dock"><path d="M8,23h8v-2H8V23z M16,1L8,1C6.9,1,6,1.9,6,3v14c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2V3C18,1.9,17.1,1,16,1z M16,15H8V5h8V15z"/></g>
+<g id="gamepad"><path d="M15,7.5V2H9v5.5l3,3L15,7.5z M7.5,9H2v6h5.5l3-3L7.5,9z M9,16.5V22h6v-5.5l-3-3L9,16.5z M16.5,9l-3,3l3,3H22V9H16.5z"/></g>
+<g id="glass"><path d="M13,11v2.5h5.9c-0.6,3.5-3.4,6-6.9,6c-4.1,0-7.5-3.4-7.5-7.5S7.9,4.5,12,4.5c2.1,0,3.9,0.9,5.2,2.3l1.8-1.8C17.2,3.2,14.8,2,12,2C6.5,2,2,6.5,2,12s4.5,10,10,10c5.5,0,9.5-4.5,9.5-10v-1H13z"/></g>
+<g id="headset"><path d="M12,1c-5,0-9,4-9,9v7c0,1.7,1.3,3,3,3h3v-8H5v-2c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7v2h-4v8h3c1.7,0,3-1.3,3-3v-7C21,5,17,1,12,1z"/></g>
+<g id="headset-mic"><path d="M12,1c-5,0-9,4-9,9v7c0,1.7,1.3,3,3,3h3v-8H5v-2c0-3.9,3.1-7,7-7c3.9,0,7,3.1,7,7v2h-4v8h4v1h-7v2h6c1.7,0,3-1.3,3-3V10C21,5,17,1,12,1z"/></g>
+<g id="keyboard"><path d="M20,5H4C2.9,5,2,5.9,2,7l0,10c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V7C22,5.9,21.1,5,20,5z M11,8h2v2h-2V8z M11,11h2v2h-2V11z M8,8h2v2H8V8z M8,11h2v2H8V11z M7,13H5v-2h2V13z M7,10H5V8h2V10z M16,17H8v-2h8V17z M16,13h-2v-2h2V13z M16,10h-2V8h2V10z M19,13h-2v-2h2V13z M19,10h-2V8h2V10z"/></g>
+<g id="keyboard-alt"><path d="M15.5,10c0.8,0,1.5-0.7,1.5-1.5S16.3,7,15.5,7S14,7.7,14,8.5S14.7,10,15.5,10z M8.5,10C9.3,10,10,9.3,10,8.5S9.3,7,8.5,7C7.7,7,7,7.7,7,8.5S7.7,10,8.5,10z M12,17c2.6,0,4.8-1.7,5.7-4H6.3C7.2,15.3,9.4,17,12,17z M12,1C6.5,1,2,5.5,2,11c0,5.5,4.5,10,10,10c5.5,0,10-4.5,10-10C22,5.5,17.5,1,12,1z M12,19c-4.4,0-8-3.6-8-8s3.6-8,8-8c4.4,0,8,3.6,8,8S16.4,19,12,19z"/></g>
+<g id="keyboard-arrow-down"><polygon points="7.4,7.8 12,12.4 16.6,7.8 18,9.2 12,15.2 6,9.2 "/></g>
+<g id="keyboard-arrow-left"><polygon points="15.4,16.1 10.8,11.5 15.4,6.9 14,5.5 8,11.5 14,17.5 "/></g>
+<g id="keyboard-arrow-right"><polygon points="8.6,16.3 13.2,11.8 8.6,7.2 10,5.8 16,11.8 10,17.8 "/></g>
+<g id="keyboard-arrow-up"><polygon points="7.4,15.4 12,10.8 16.6,15.4 18,14 12,8 6,14 "/></g>
+<g id="keyboard-backspace"><polygon points="21,11 6.8,11 10.4,7.4 9,6 3,12 9,18 10.4,16.6 6.8,13 21,13 "/></g>
+<g id="keyboard-capslock"><path d="M12,8.4l4.6,4.6l1.4-1.4l-6-6l-6,6L7.4,13L12,8.4z M6,18h12v-2H6V18z"/></g>
+<g id="keyboard-control"><path d="M6,10c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2C8,10.9,7.1,10,6,10z M18,10c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2C20,10.9,19.1,10,18,10z M12,10c-1.1,0-2,0.9-2,2c0,1.1,0.9,2,2,2c1.1,0,2-0.9,2-2C14,10.9,13.1,10,12,10z"/></g>
+<g id="keyboard-hide"><path d="M20,3H4C2.9,3,2,3.9,2,5l0,10c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V5C22,3.9,21.1,3,20,3z M11,6h2v2h-2V6z M11,9h2v2h-2V9z M8,6h2v2H8V6z M8,9h2v2H8V9z M7,11H5V9h2V11z M7,8H5V6h2V8z M16,15H8v-2h8V15z M16,11h-2V9h2V11z M16,8h-2V6h2V8z M19,11h-2V9h2V11z M19,8h-2V6h2V8z M12,23l4-4H8L12,23z"/></g>
+<g id="keyboard-return"><polygon points="19,7 19,11 5.8,11 9.4,7.4 8,6 2,12 8,18 9.4,16.6 5.8,13 21,13 21,7 "/></g>
+<g id="keyboard-tab"><path d="M11.6,7.4l3.6,3.6H1v2h14.2l-3.6,3.6L13,18l6-6l-6-6L11.6,7.4z M20,6v12h2V6H20z"/></g>
+<g id="keyboard-voice"><path d="M12,15c1.7,0,3-1.3,3-3l0-6c0-1.7-1.3-3-3-3c-1.7,0-3,1.3-3,3v6C9,13.7,10.3,15,12,15z M17.3,12c0,3-2.5,5.1-5.3,5.1c-2.8,0-5.3-2.1-5.3-5.1H5c0,3.4,2.7,6.2,6,6.7V22h2v-3.3c3.3-0.5,6-3.3,6-6.7H17.3z"/></g>
+<g id="laptop"><path d="M20,18c1.1,0,2-0.9,2-2l0-10c0-1.1-0.9-2-2-2H4C2.9,4,2,4.9,2,6v10c0,1.1,0.9,2,2,2H0v2h24v-2H20z M4,6h16v10H4V6z"/></g>
+<g id="laptop-chromebook"><path d="M22,18V3H2v15H0v2h24v-2H22z M14,18h-4v-1h4V18z M20,15H4V5h16V15z"/></g>
+<g id="laptop-mac"><path d="M20,18c1.1,0,2-0.9,2-2l0-11c0-1.1-0.9-2-2-2H4C2.9,3,2,3.9,2,5v11c0,1.1,0.9,2,2,2H0c0,1.1,0.9,2,2,2h20c1.1,0,2-0.9,2-2H20z M4,5h16v11H4V5z M12,19c-0.6,0-1-0.4-1-1s0.4-1,1-1c0.6,0,1,0.4,1,1S12.6,19,12,19z"/></g>
+<g id="laptop-windows"><path d="M20,18v-1c1.1,0,2-0.9,2-2l0-10c0-1.1-0.9-2-2-2H4C2.9,3,2,3.9,2,5v10c0,1.1,0.9,2,2,2v1H0v2h24v-2H20z M4,5h16v10H4V5z"/></g>
+<g id="memory"><path d="M15,9H9v6h6V9z M13,13h-2v-2h2V13z M21,11V9h-2V7c0-1.1-0.9-2-2-2h-2V3h-2v2h-2V3H9v2H7C5.9,5,5,5.9,5,7v2H3v2h2v2H3v2h2v2c0,1.1,0.9,2,2,2h2v2h2v-2h2v2h2v-2h2c1.1,0,2-0.9,2-2v-2h2v-2h-2v-2H21z M17,17H7V7h10V17z"/></g>
+<g id="mouse"><path d="M13,1.1V9h7C20,4.9,16.9,1.6,13,1.1z M4,15c0,4.4,3.6,8,8,8c4.4,0,8-3.6,8-8v-4H4V15z M11,1.1C7.1,1.6,4,4.9,4,9h7V1.1z"/></g>
+<g id="nest-protect"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M12,18c-3.3,0-6-2.7-6-6s2.7-6,6-6c3.3,0,6,2.7,6,6S15.3,18,12,18z"/><circle cx="12" cy="12" r="4"/></g>
+<g id="nest-thermostat"><path d="M12,2C6.5,2,2,6.5,2,12c0,5.5,4.5,10,10,10c5.5,0,10-4.5,10-10C22,6.5,17.5,2,12,2z M12,5c1.6,0,3,0.5,4.2,1.4L14,8.6C13.4,8.2,12.7,8,12,8c-2.2,0-4,1.8-4,4c0,1.1,0.4,2.1,1.2,2.8l-2.1,2.1C5.8,15.7,5,13.9,5,12C5,8.1,8.1,5,12,5z M16.9,16.9l-2.1-2.1c0.7-0.7,1.2-1.7,1.2-2.8c0-0.7-0.2-1.4-0.6-2l2.2-2.2C18.5,9,19,10.4,19,12C19,13.9,18.2,15.7,16.9,16.9z"/></g>
+<g id="phone-android"><path d="M16,1H8C6.3,1,5,2.3,5,4v16c0,1.7,1.3,3,3,3h8c1.7,0,3-1.3,3-3V4C19,2.3,17.7,1,16,1z M14,21h-4v-1h4V21z M17.2,18H6.8V4h10.5V18z"/></g>
+<g id="phone-iphone"><path d="M15.5,1h-8C6.1,1,5,2.1,5,3.5v17C5,21.9,6.1,23,7.5,23h8c1.4,0,2.5-1.1,2.5-2.5v-17C18,2.1,16.9,1,15.5,1z M11.5,22c-0.8,0-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5c0.8,0,1.5,0.7,1.5,1.5S12.3,22,11.5,22z M16,18H7V4h9V18z"/></g>
+<g id="phonelink"><path d="M4,6h18V4H4C2.9,4,2,4.9,2,6v11H0v3h14v-3H4V6z M23,8h-6c-0.5,0-1,0.5-1,1v10c0,0.5,0.5,1,1,1h6c0.5,0,1-0.5,1-1V9C24,8.5,23.5,8,23,8z M22,17h-4v-7h4V17z"/></g>
+<g id="phonelink-off"><path d="M22,6V4H6.8l2,2H22z M1.9,1.6L0.6,2.9l1.8,1.8C2.2,5.1,2,5.5,2,6v11H0v3h17.7l2.4,2.4l1.3-1.3L3.9,3.6L1.9,1.6z M4,6.3L14.7,17H4V6.3z M23,8h-6c-0.5,0-1,0.5-1,1v4.2l2,2V10h4v7h-2.2l3,3H23c0.5,0,1-0.5,1-1V9C24,8.5,23.5,8,23,8z"/></g>
+<g id="security"><path d="M12,1L3,5v6c0,5.6,3.8,10.7,9,12c5.2-1.3,9-6.4,9-12V5L12,1z M12,12h7c-0.5,4.1-3.3,7.8-7,8.9V12l-7,0V6.3l7-3.1V12z"/></g>
+<g id="smartphone"><path d="M17,1L7,1C5.9,1,5,1.9,5,3v18c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C19,1.9,18.1,1,17,1z M17,19H7V5h10V19z"/></g>
+<g id="speaker"><path d="M17,2H7C5.9,2,5,2.9,5,4v16c0,1.1,0.9,2,2,2l10,0c1.1,0,2-0.9,2-2V4C19,2.9,18.1,2,17,2z M12,4c1.1,0,2,0.9,2,2s-0.9,2-2,2c-1.1,0-2-0.9-2-2S10.9,4,12,4z M12,20c-2.8,0-5-2.2-5-5s2.2-5,5-5c2.8,0,5,2.2,5,5S14.8,20,12,20z M12,12c-1.7,0-3,1.3-3,3c0,1.7,1.3,3,3,3c1.7,0,3-1.3,3-3C15,13.3,13.7,12,12,12z"/></g>
+<g id="tablet"><path d="M21,4H3C1.9,4,1,4.9,1,6v12c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2l0-12C23,4.9,22.1,4,21,4z M19,18H5V6h14V18z"/></g>
+<g id="tablet-android"><path d="M18,0H6C4.3,0,3,1.3,3,3v18c0,1.7,1.3,3,3,3h12c1.7,0,3-1.3,3-3V3C21,1.3,19.7,0,18,0z M14,22h-4v-1h4V22z M19.2,19H4.8V3h14.5V19z"/></g>
+<g id="tablet-mac"><path d="M18.5,0h-14C3.1,0,2,1.1,2,2.5v19C2,22.9,3.1,24,4.5,24h14c1.4,0,2.5-1.1,2.5-2.5v-19C21,1.1,19.9,0,18.5,0z M11.5,23c-0.8,0-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5c0.8,0,1.5,0.7,1.5,1.5S12.3,23,11.5,23z M19,19H4V3h15V19z"/></g>
+<g id="tv"><path d="M21,3H3C1.9,3,1,3.9,1,5v12c0,1.1,0.9,2,2,2h5v2h8v-2h5c1.1,0,2-0.9,2-2l0-12C23,3.9,22.1,3,21,3z M21,17H3V5h18V17z"/></g>
+<g id="watch"><path d="M20,12c0-2.5-1.2-4.8-3-6.3L16,0H8L7,5.7C5.2,7.2,4,9.5,4,12s1.2,4.8,3,6.3L8,24h8l1-5.7C18.8,16.8,20,14.5,20,12z M6,12c0-3.3,2.7-6,6-6c3.3,0,6,2.7,6,6s-2.7,6-6,6C8.7,18,6,15.3,6,12z"/></g>
+</defs></svg>
+</core-iconset-svg>
+
+
+<polymer-element name="domain-icon" attributes="domain" assetpath="polymer/">
+  <template>
+    <core-icon icon="{{icon(domain)}}"></core-icon>
+  </template>
+  <script>
+  Polymer('domain-icon',{
+
+    icon: function() {
+      switch(this.domain) {
+        case "group":
+          return "social:communities";
+
+        case "device_tracker":
+          return "social:person";
+
+        case "wemo":
+          return "settings-input-svideo";
+
+        case "chromecast":
+          // hardware:cast-connected
+          return "hardware:cast";
+
+        case "process":
+          return "hardware:memory"
+
+        case "sun":
+          return "device:brightness-low"
+
+        case "light":
+          return "image:wb-incandescent"
+
+        default:
+          return "bookmark-outline";
+      }
+    }
+
+  });
+  </script>
+</polymer-element>
+
+
+<polymer-element name="state-badge" attributes="domain state" assetpath="polymer/">
+  <template>
+    <style>
+    :host {
+      display: inline-block;
+      width: 45px;
+      background-color: #4fc3f7;
+      color: white;
+      border-radius: 23px;
+    }
+    div {
+      height: 45px;
+      text-align: center;
+    }
+
+    domain-icon {
+      margin: 0 auto;
+    }
+    </style>
+
+    <div horizontal="" layout="" center="">
+      <domain-icon domain="{{domain}}"></domain-icon>
+    </div>
+
+  </template>
+  <script>
+  Polymer('state-badge',{
+  });
+  </script>
+</polymer-element>
+
 
 <polymer-element name="state-card" attributes="entity state last_changed state_attr cb_turn_on, cb_turn_off cb_edit" assetpath="polymer/">
   <template>
     <style>
     :host {
+      background-color: #fff;
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+      /* transition */
+      -webkit-transition: all 0.30s ease-out;
+      transition: all 0.30s ease-out;
+
       position: relative;
       background-color: white;
-      padding: 20px 20px 55px 20px;
+      padding: 15px;
       width: 100%;
-      border-radius: 2px;
     }
 
-    .header {
-      text-transform: capitalize;
-      
-      font-weight: 300;
+    state-badge {
+      float: left;
+    }
 
+    .name, .state.text {
+      text-transform: capitalize;  
+      font-weight: 300;
       font-size: 1.5rem;
     }
 
-    .header .state {
+    .state {
       text-align: right;
     }
 
-    .subheader {
-      margin-top: -5px;
+    .info {
+      margin-left: 60px;
+    }
+
+    .time-ago {
       color: darkgrey;
+      margin-top: -2px;
     }
 
-    .state-attributes {
-      margin-top: 10px;
-      font-size: 1rem;
+    /* the splash while enabling */
+    paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
+      color: #0091ea;
     }
 
-    .state-attributes .key {
-      white-space: nowrap;
-      width: 85px;
-      float: left;
-      clear: left;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    /* filling of circle when checked */
+    paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
+      background-color: #0091ea;
     }
 
-    .state-attributes .value {
-      margin-left: 95px;
-    }
-
-    .actions {
-      position: absolute;
-      bottom: 10px;
-      left: 20px;
-      right: 20px;
-
-      text-align: right;
-    }
-
-    paper-button.toggle {
-      color: #03a9f4;
-    }
-
+    /* line when checked */
+    paper-toggle-button::shadow #toggleBar[checked] {
+      background-color: #0091ea;
+    }    
     </style>
 
-    <div class="header" horizontal="" justified="" layout="">
-      <span class="entity_id">
-        <template if="{{state_attr['friendly_name']}}">{{state_attr['friendly_name']}}</template>
-        <template if="{{!state_attr['friendly_name']}}">{{entity_id | makeReadable}}</template>
-      </span>
-      <span class="state">{{state | makeReadable}}</span>
-    </div>
+    <div horizontal="" justified="" layout="">
+      
+      <div class="entity">
+        <state-badge domain="{{domain}}" state="{{state}}" on-click="{{editClicked}}">
+        </state-badge>
 
-    <div class="subheader" horizontal="" justified="" layout="">
-      <span class="domain">{{domain}}</span>
-      <core-tooltip label="{{last_changed}}" position="bottom">
-        <span class="last_changed_from_now">{{last_changed_from_now}}</span>
-      </core-tooltip>
-    </div>
-    
+        <div class="info">
+          <div class="name">
+            <template if="{{state_attr['friendly_name']}}">{{state_attr['friendly_name']}}</template>
+            <template if="{{!state_attr['friendly_name']}}">{{entity_id | makeReadable}}</template>
+          </div>
 
-    <div class="state-attributes">
-      <template repeat="{{key in objectKeys(state_attr)}}">
-        <template if="{{key != 'friendly_name'}}">
-          <div class="key">{{key | makeReadable}}</div>
-          <div class="value">{{state_attr[key] | makeReadable}}</div>
-        </template>
+          <div class="time-ago">
+            <core-tooltip label="{{last_changed}}" position="bottom">
+              {{last_changed_from_now}}
+            </core-tooltip>
+          </div>
+          
+        </div>
+      </div>
+
+      <template if="{{state == 'on' || state == 'off'}}">
+        <div class="state toggle" self-center="" flex="">
+          <paper-toggle-button id="toggleButton" on-change="{{toggle}}">
+          </paper-toggle-button>
+        </div>
       </template>
-    </div>
-
-    <div class="actions">
-      <paper-button class="edit" on-click="{{editClicked}}">EDIT</paper-button>
-
-      <template if="{{state == 'on'}}">
-        <paper-button class="toggle" on-click="{{turn_off}}">TURN OFF</paper-button>
+      <template if="{{state != 'on' && state != 'off'}}">
+        <div class="state text">
+          {{state | makeReadable}}
+        </div>
       </template>
-      <template if="{{state == 'off'}}">
-        <paper-button class="toggle" on-click="{{turn_on}}">TURN ON</paper-button>
-      </template>
-    </div>
+      
+    </div>    
 
   </template>
   <script>
@@ -12653,6 +14154,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     domain: "",
     entity_id: "",
 
+    stateChanged: function() {
+      if(this.$.toggleButton) {
+        this.$.toggleButton.checked = this.state == 'on';
+      }
+    },
+
     entityChanged: function(oldVal, newVal) {
       var parts = newVal.split(".")
 
@@ -12667,6 +14174,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     last_changedChanged: function(oldVal, newVal) {
       this.last_changed_from_now = moment(this.last_changed, "HH:mm:ss DD-MM-YYYY").fromNow()
+    },
+
+    toggle: function(ev) {
+      if(this.$.toggleButton.checked) {
+        this.turn_on();
+      } else {
+        this.turn_off();
+      }
     },
 
     turn_on: function() {
@@ -12698,17 +14213,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       } else {
         return value;
       }
-    },
-
-    objectKeys: function(obj) {
-      return obj ? Object.keys(obj) : [];
     }
   });
   </script>
 </polymer-element>
 
 
-<polymer-element name="states-cards" attributes="api" assetpath="polymer/">
+<polymer-element name="states-cards" attributes="api filter" assetpath="polymer/">
   <template>
     <style>
     :host {
@@ -12729,6 +14240,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <div horizontal="" layout="" wrap="">
+      <template if="{{filter != null}}">
+        <state-card entity="{{filter_state.entity_id}}" state="{{filter_state.state}}" last_changed="{{filter_state.last_changed}}" state_attr="{{filter_state.attributes}}" cb_turn_on="{{api.turn_on}}" cb_turn_off="{{api.turn_off}}" cb_edit="{{editCallback}}">
+        </state-card>
+      </template>
 
       <template repeat="{{state in states}}">
         <state-card entity="{{state.entity_id}}" state="{{state.state}}" last_changed="{{state.last_changed}}" state_attr="{{state.attributes}}" cb_turn_on="{{api.turn_on}}" cb_turn_off="{{api.turn_off}}" cb_edit="{{editCallback}}">
@@ -12739,7 +14254,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
   <script>
   Polymer('states-cards',{
+    raw_states: [],
     states: [],
+    filter: null,
+    filter_state: null,
+    filter_substates: null,
+
+    filterChanged: function(oldVal, newVal) {
+      this.refilterStates();
+    },
 
     ready: function() {
       this.editCallback = this.editCallback.bind(this);
@@ -12752,7 +14275,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     statesUpdated: function() {
-      this.states = this.api.states;
+      this.raw_states = this.api.states;
+
+      this.refilterStates();
+    },
+
+    refilterStates: function() {
+      if(this.filter == null) {
+        this.filter_state = null;
+        this.states = this.raw_states;
+      } else {
+        this.filter_state = this.api.getState(this.filter);
+
+        var map_states = function(entity_id) {
+          return this.api.getState(entity_id);
+        }.bind(this)
+
+        this.states = this.filter_state.attributes.entity_id.map(map_states)
+      }
     },
 
     editCallback: function(entityId) {
@@ -12783,6 +14323,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         background: #03a9f4;
         font-size: 1.4rem;
         color: white;
+        height: 95px;
       }
 
       .content {
@@ -12809,10 +14350,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <core-icon-button icon="refresh" on-click="{{handleRefreshClick}}"></core-icon-button>
         <core-icon-button icon="developer-mode-tv" on-click="{{handleEventClick}}"></core-icon-button>
         <core-icon-button icon="settings-remote" on-click="{{handleServiceClick}}"></core-icon-button>
+
+        <div class="bottom fit" horizontal="" layout="">
+            <paper-tabs id="tabsHolder" noink="" flex="" selected="0" on-core-select="{{tabClicked}}">
+            
+              <paper-tab>ALL</paper-tab>
+
+              <template repeat="{{state in api.states}}">
+                <template if="{{isCustomGroup(state)}}">
+                  <paper-tab data-entity="{{state.entity_id}}">{{state.entity_id | groupName}}</paper-tab>
+                </template>
+              </template>
+                
+            </paper-tabs>
+        </div>
       </core-toolbar>
 
       <div class="content" flex="">
-        <states-cards api="{{api}}"></states-cards>
+        <states-cards api="{{api}}" filter="{{selectedTab}}"></states-cards>
         <paper-fab icon="add" on-click="{{handleAddStateClick}}"></paper-fab>
       </div>
 
@@ -12821,9 +14376,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
   <script>
   Polymer('home-assistant-main',{
+    selectedTab: null,
 
     ready: function() {
       this.api = this.$.api;
+    },
+
+    isCustomGroup: function(state) {
+      return (state.entity_id.lastIndexOf('group.') == 0 &&
+              !state.attributes.auto);
+    },
+
+    groupName: function(entity_id) {
+      return entity_id.substring(6).toUpperCase().replace(/_/g, " ");
+    },
+
+    tabClicked: function(ev) {
+      if(ev.detail.isSelected) {
+        // will be null for ALL tab
+        this.selectedTab = ev.detail.item.getAttribute('data-entity');
+      }
     },
 
     handleRefreshClick: function() {

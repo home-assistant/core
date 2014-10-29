@@ -153,6 +153,12 @@
       }
     },
 
+    getCustomGroups: function() {
+      return this.states.filter(function(state) {
+        return state.entity_id.lastIndexOf("group.") == 0;
+      })     
+    },
+
     turn_on: function(entity_id) {
       this.call_service("homeassistant", "turn_on", {entity_id: entity_id});
     },

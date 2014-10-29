@@ -29,6 +29,9 @@
     "moment": "~2.8.3",
     "paper-input": "Polymer/paper-input#~0.4.2",
     "core-menu": "Polymer/core-menu#~0.4.2",
-    "core-item": "Polymer/core-item#~0.4.2"
+    "core-item": "Polymer/core-item#~0.4.2",
+    "core-icons": "polymer/core-icons#~0.4.2",
+    "paper-toggle-button": "polymer/paper-toggle-button#~0.4.2",
+    "paper-tabs": "polymer/paper-tabs#~0.4.2"
   }
 }

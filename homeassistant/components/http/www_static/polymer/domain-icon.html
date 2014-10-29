@@ -1,0 +1,47 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<link rel="import" href="bower_components/core-icon/core-icon.html">
+<link rel="import" href="bower_components/core-icons/device-icons.html">
+<link rel="import" href="bower_components/core-icons/social-icons.html">
+<link rel="import" href="bower_components/core-icons/image-icons.html">
+<link rel="import" href="bower_components/core-icons/hardware-icons.html">
+
+<polymer-element name="domain-icon" attributes="domain">
+  <template>
+    <core-icon icon="{{icon(domain)}}"></core-icon>
+  </template>
+  <script>
+  Polymer({
+
+    icon: function() {
+      switch(this.domain) {
+        case "group":
+          return "social:communities";
+
+        case "device_tracker":
+          return "social:person";
+
+        case "wemo":
+          return "settings-input-svideo";
+
+        case "chromecast":
+          // hardware:cast-connected
+          return "hardware:cast";
+
+        case "process":
+          return "hardware:memory"
+
+        case "sun":
+          return "device:brightness-low"
+
+        case "light":
+          return "image:wb-incandescent"
+
+        default:
+          return "bookmark-outline";
+      }
+    }
+
+  });
+  </script>
+</polymer-element>

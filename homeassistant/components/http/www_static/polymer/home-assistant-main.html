@@ -2,6 +2,8 @@
 <link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
 <link rel="import" href="bower_components/core-icon-button/core-icon-button.html">
 <link rel="import" href="bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="bower_components/paper-tabs/paper-tab.html">
 
 <link rel="import" href="home-assistant-api.html">
 <link rel="import" href="states-cards.html">
@@ -25,6 +27,7 @@
         background: #03a9f4;
         font-size: 1.4rem;
         color: white;
+        height: 95px;
       }
 
       .content {
@@ -51,10 +54,25 @@
         <core-icon-button icon="refresh" on-click="{{handleRefreshClick}}"></core-icon-button>
         <core-icon-button icon="developer-mode-tv" on-click="{{handleEventClick}}"></core-icon-button>
         <core-icon-button icon="settings-remote" on-click="{{handleServiceClick}}"></core-icon-button>
+
+        <div class="bottom fit" horizontal layout>
+            <paper-tabs id="tabsHolder" noink flex
+                        selected="0" on-core-select="{{tabClicked}}">
+            
+              <paper-tab>ALL</paper-tab>
+
+              <template repeat="{{state in api.states}}">
+                <template if="{{isCustomGroup(state)}}">
+                  <paper-tab data-entity="{{state.entity_id}}">{{state.entity_id | groupName}}</paper-tab>
+                </template>
+              </template>
+                
+            </paper-tabs>
+        </div>
       </core-toolbar>
 
       <div class="content" flex>
-        <states-cards api="{{api}}"></states-cards>
+        <states-cards api="{{api}}" filter="{{selectedTab}}"></states-cards>
         <paper-fab icon="add" on-click={{handleAddStateClick}}></paper-fab>
       </div>
 
@@ -63,9 +81,26 @@
   </template>
   <script>
   Polymer({
+    selectedTab: null,
 
     ready: function() {
       this.api = this.$.api;
+    },
+
+    isCustomGroup: function(state) {
+      return (state.entity_id.lastIndexOf('group.') == 0 &&
+              !state.attributes.auto);
+    },
+
+    groupName: function(entity_id) {
+      return entity_id.substring(6).toUpperCase().replace(/_/g, " ");
+    },
+
+    tabClicked: function(ev) {
+      if(ev.detail.isSelected) {
+        // will be null for ALL tab
+        this.selectedTab = ev.detail.item.getAttribute('data-entity');
+      }
     },
 
     handleRefreshClick: function() {

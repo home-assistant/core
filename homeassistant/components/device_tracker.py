@@ -143,7 +143,8 @@ class DeviceTracker(object):
 
         self.update_devices()
 
-        group.setup_group(hass, GROUP_NAME_ALL_DEVICES, self.device_entity_ids)
+        group.setup_group(
+            hass, GROUP_NAME_ALL_DEVICES, self.device_entity_ids, False)
 
     @property
     def device_entity_ids(self):

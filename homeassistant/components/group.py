@@ -17,6 +17,8 @@ DEPENDENCIES = []
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
+ATTR_AUTO = "auto"
+
 _GROUP_TYPES = {
     "on_off": (STATE_ON, STATE_OFF),
     "home_not_home": (STATE_HOME, STATE_NOT_HOME)
@@ -100,7 +102,7 @@ def setup(hass, config):
 
 
 # pylint: disable=too-many-branches
-def setup_group(hass, name, entity_ids):
+def setup_group(hass, name, entity_ids, user_defined=True):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
 
@@ -161,7 +163,7 @@ def setup_group(hass, name, entity_ids):
 
     else:
         group_entity_id = ENTITY_ID_FORMAT.format(name)
-        state_attr = {ATTR_ENTITY_ID: entity_ids}
+        state_attr = {ATTR_ENTITY_ID: entity_ids, ATTR_AUTO: not user_defined}
 
         # pylint: disable=unused-argument
         def update_group_state(entity_id, old_state, new_state):
