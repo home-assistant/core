@@ -10300,7 +10300,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <template if="{{!state_unknown}}">
         <template if="{{state == 'on' || state == 'off'}}">
           <div class="state toggle" self-center="" flex="">
-            <paper-toggle-button id="toggleButton" on-change="{{toggle}}">
+            <paper-toggle-button checked="{{toggleChecked}}">
             </paper-toggle-button>
           </div>
         </template>
@@ -10329,17 +10329,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     cb_turn_off: null,
     cb_edit: null,
     state_unknown: false,
+    toggleChecked: -1,
 
     // computed
     domain: "",
     entity_id: "",
 
+    toggleCheckedChanged: function(oldVal, newVal) {
+      // to filter out init
+      if(oldVal === -1) {
+        return;
+      }
+
+      if(newVal && this.state == "off") {
+        this.turn_on();
+      } else if(!newVal && this.state == "on") {
+        this.turn_off();
+      }
+    },
+
     stateChanged: function(oldVal, newVal) {
       this.state_unknown = newVal == null;
-
-      if(this.$.toggleButton) {
-        this.$.toggleButton.checked = this.state == 'on';
-      }
+      this.toggleChecked = newVal == "on"
     },
 
     entityChanged: function(oldVal, newVal) {
@@ -10358,29 +10369,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       this.last_changed_from_now = moment(this.last_changed, "HH:mm:ss DD-MM-YYYY").fromNow()
     },
 
-    toggle: function(ev) {
-      if(this.state == "off") {
-        this.turn_on();
-      } else {
-        this.turn_off();
-      }
-
-      // unset state while we wait for an update
-      var delayUnsetSate = function() {
-        this.state = null;
-      }
-      setTimeout(delayUnsetSate.bind(this), 500);
-    },
-
     turn_on: function() {
       if(this.cb_turn_on) {
         this.cb_turn_on(this.entity);
+
+        // unset state while we wait for an update
+        var delayUnsetSate = function() {
+          this.state = null;
+        }
+        setTimeout(delayUnsetSate.bind(this), 500);      
       }
     },
 
     turn_off: function() {
       if(this.cb_turn_off) {
         this.cb_turn_off(this.entity);
+
+        // unset state while we wait for an update
+        var delayUnsetSate = function() {
+          this.state = null;
+        }
+        setTimeout(delayUnsetSate.bind(this), 500);      
       }
     },
 
@@ -10440,7 +10449,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     raw_states: [],
     states: [],
     filter: null,
-    filter_state: null,
     filter_substates: null,
 
     filterChanged: function(oldVal, newVal) {
