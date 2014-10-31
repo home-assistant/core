@@ -10335,7 +10335,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     entity_id: "",
 
     stateChanged: function(oldVal, newVal) {
-      this.state_unknown = newVal == "";
+      this.state_unknown = newVal == null;
 
       if(this.$.toggleButton) {
         this.$.toggleButton.checked = this.state == 'on';
@@ -10359,14 +10359,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     toggle: function(ev) {
-      if(this.$.toggleButton.checked) {
+      if(this.state == "off") {
         this.turn_on();
       } else {
         this.turn_off();
       }
 
+      // unset state while we wait for an update
       var delayUnsetSate = function() {
-        this.state = "";
+        this.state = null;
       }
       setTimeout(delayUnsetSate.bind(this), 500);
     },
@@ -10427,11 +10428,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <div horizontal="" layout="" wrap="">
-      <template if="{{filter != null}}">
-        <state-card entity="{{filter_state.entity_id}}" state="{{filter_state.state}}" last_changed="{{filter_state.last_changed}}" state_attr="{{filter_state.attributes}}" cb_turn_on="{{api.turn_on}}" cb_turn_off="{{api.turn_off}}" cb_edit="{{editCallback}}">
-        </state-card>
-      </template>
-
       <template repeat="{{state in states}}">
         <state-card entity="{{state.entity_id}}" state="{{state.state}}" last_changed="{{state.last_changed}}" state_attr="{{state.attributes}}" cb_turn_on="{{api.turn_on}}" cb_turn_off="{{api.turn_off}}" cb_edit="{{editCallback}}">
         </state-card>
@@ -10471,16 +10467,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     refilterStates: function() {
       if(this.filter == null) {
-        this.filter_state = null;
         this.states = this.raw_states;
+
       } else {
-        this.filter_state = this.api.getState(this.filter);
+        var filter_state = this.api.getState(this.filter);
 
         var map_states = function(entity_id) {
           return this.api.getState(entity_id);
         }.bind(this)
 
-        this.states = this.filter_state.attributes.entity_id.map(map_states)
+        // take the parent state and append it's children
+        this.states = [filter_state].concat(
+          filter_state.attributes.entity_id.map(map_states))
       }
     },
 
@@ -10602,467 +10600,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </polymer-element>
 </div>
 <div hidden>
-<!--
-Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
-<!--
-@group Polymer Core Elements
-
-The `core-ajax` element exposes `XMLHttpRequest` functionality.
-
-    <core-ajax
-        auto
-        url="http://gdata.youtube.com/feeds/api/videos/"
-        params='{"alt":"json", "q":"chrome"}'
-        handleAs="json"
-        on-core-response="{{handleResponse}}"></core-ajax>
-
-With `auto` set to `true`, the element performs a request whenever
-its `url` or `params` properties are changed.
-
-Note: The `params` attribute must be double quoted JSON.
-
-You can trigger a request explicitly by calling `go` on the
-element.
-
-@element core-ajax
-@status beta
-@homepage github.io
--->
-<!--
-Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-<!--
-/**
- * @group Polymer Core Elements
- *
- * core-xhr can be used to perform XMLHttpRequests.
- *
- *     <core-xhr id="xhr"></core-xhr>
- *     ...
- *     this.$.xhr.request({url: url, params: params, callback: callback});
- *
- * @element core-xhr
- */
--->
-
-
-
-<polymer-element name="core-xhr" hidden assetpath="polymer/bower_components/core-ajax/">
-
-  <script>
-
-    Polymer('core-xhr', {
-
-      /**
-       * Sends a HTTP request to the server and returns the XHR object.
-       *
-       * @method request
-       * @param {Object} inOptions
-       *    @param {String} inOptions.url The url to which the request is sent.
-       *    @param {String} inOptions.method The HTTP method to use, default is GET.
-       *    @param {boolean} inOptions.sync By default, all requests are sent asynchronously. To send synchronous requests, set to true.
-       *    @param {Object} inOptions.params Data to be sent to the server.
-       *    @param {Object} inOptions.body The content for the request body for POST method.
-       *    @param {Object} inOptions.headers HTTP request headers.
-       *    @param {String} inOptions.responseType The response type. Default is 'text'.
-       *    @param {boolean} inOptions.withCredentials Whether or not to send credentials on the request. Default is false.
-       *    @param {Object} inOptions.callback Called when request is completed.
-       * @returns {Object} XHR object.
-       */
-      request: function(options) {
-        var xhr = new XMLHttpRequest();
-        var url = options.url;
-        var method = options.method || 'GET';
-        var async = !options.sync;
-        //
-        var params = this.toQueryString(options.params);
-        if (params && method == 'GET') {
-          url += (url.indexOf('?') > 0 ? '&' : '?') + params;
-        }
-        var xhrParams = this.isBodyMethod(method) ? (options.body || params) : null;
-        //
-        xhr.open(method, url, async);
-        if (options.responseType) {
-          xhr.responseType = options.responseType;
-        }
-        if (options.withCredentials) {
-          xhr.withCredentials = true;
-        }
-        this.makeReadyStateHandler(xhr, options.callback);
-        this.setRequestHeaders(xhr, options.headers);
-        xhr.send(xhrParams);
-        if (!async) {
-          xhr.onreadystatechange(xhr);
-        }
-        return xhr;
-      },
-    
-      toQueryString: function(params) {
-        var r = [];
-        for (var n in params) {
-          var v = params[n];
-          n = encodeURIComponent(n);
-          r.push(v == null ? n : (n + '=' + encodeURIComponent(v)));
-        }
-        return r.join('&');
-      },
-
-      isBodyMethod: function(method) {
-        return this.bodyMethods[(method || '').toUpperCase()];
-      },
-      
-      bodyMethods: {
-        POST: 1,
-        PUT: 1,
-        DELETE: 1
-      },
-
-      makeReadyStateHandler: function(xhr, callback) {
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState == 4) {
-            callback && callback.call(null, xhr.response, xhr);
-          }
-        };
-      },
-
-      setRequestHeaders: function(xhr, headers) {
-        if (headers) {
-          for (var name in headers) {
-            xhr.setRequestHeader(name, headers[name]);
-          }
-        }
-      }
-
-    });
-
-  </script>
-  
-</polymer-element>
-
-<polymer-element name="core-ajax" hidden attributes="url handleAs auto params response error method headers body contentType withCredentials" assetpath="polymer/bower_components/core-ajax/">
-<script>
-
-  Polymer('core-ajax', {
-    /**
-     * Fired when a response is received.
-     *
-     * @event core-response
-     */
-
-    /**
-     * Fired when an error is received.
-     *
-     * @event core-error
-     */
-
-    /**
-     * Fired whenever a response or an error is received.
-     *
-     * @event core-complete
-     */
-
-    /**
-     * The URL target of the request.
-     *
-     * @attribute url
-     * @type string
-     * @default ''
-     */
-    url: '',
-
-    /**
-     * Specifies what data to store in the `response` property, and
-     * to deliver as `event.response` in `response` events.
-     *
-     * One of:
-     *
-     *    `text`: uses `XHR.responseText`.
-     *
-     *    `xml`: uses `XHR.responseXML`.
-     *
-     *    `json`: uses `XHR.responseText` parsed as JSON.
-     *
-     *    `arraybuffer`: uses `XHR.response`.
-     *
-     *    `blob`: uses `XHR.response`.
-     *
-     *    `document`: uses `XHR.response`.
-     *
-     * @attribute handleAs
-     * @type string
-     * @default 'text'
-     */
-    handleAs: '',
-
-    /**
-     * If true, automatically performs an Ajax request when either `url` or `params` changes.
-     *
-     * @attribute auto
-     * @type boolean
-     * @default false
-     */
-    auto: false,
-
-    /**
-     * Parameters to send to the specified URL, as JSON.
-     *
-     * @attribute params
-     * @type string (JSON)
-     * @default ''
-     */
-    params: '',
-
-    /**
-     * The response for the most recently made request, or null if it hasn't
-     * completed yet or the request resulted in error.
-     *
-     * @attribute response
-     * @type Object
-     * @default null
-     */
-    response: null,
-
-    /**
-     * The error for the most recently made request, or null if it hasn't
-     * completed yet or the request resulted in success.
-     *
-     * @attribute error
-     * @type Object
-     * @default null
-     */
-    error: null,
-
-    /**
-     * The HTTP method to use such as 'GET', 'POST', 'PUT', or 'DELETE'.
-     * Default is 'GET'.
-     *
-     * @attribute method
-     * @type string
-     * @default ''
-     */
-    method: '',
-
-    /**
-     * HTTP request headers to send.
-     *
-     * Example:
-     *
-     *     <core-ajax
-     *         auto
-     *         url="http://somesite.com"
-     *         headers='{"X-Requested-With": "XMLHttpRequest"}'
-     *         handleAs="json"
-     *         on-core-response="{{handleResponse}}"></core-ajax>
-     *
-     * @attribute headers
-     * @type Object
-     * @default null
-     */
-    headers: null,
-
-    /**
-     * Optional raw body content to send when method === "POST".
-     *
-     * Example:
-     *
-     *     <core-ajax method="POST" auto url="http://somesite.com"
-     *         body='{"foo":1, "bar":2}'>
-     *     </core-ajax>
-     *
-     * @attribute body
-     * @type Object
-     * @default null
-     */
-    body: null,
-
-    /**
-     * Content type to use when sending data.
-     *
-     * @attribute contentType
-     * @type string
-     * @default 'application/x-www-form-urlencoded'
-     */
-    contentType: 'application/x-www-form-urlencoded',
-
-    /**
-     * Set the withCredentials flag on the request.
-     *
-     * @attribute withCredentials
-     * @type boolean
-     * @default false
-     */
-    withCredentials: false,
-
-    /**
-     * Additional properties to send to core-xhr.
-     *
-     * Can be set to an object containing default properties
-     * to send as arguments to the `core-xhr.request()` method
-     * which implements the low-level communication.
-     *
-     * @property xhrArgs
-     * @type Object
-     * @default null
-     */
-    xhrArgs: null,
-
-    ready: function() {
-      this.xhr = document.createElement('core-xhr');
-    },
-
-    receive: function(response, xhr) {
-      if (this.isSuccess(xhr)) {
-        this.processResponse(xhr);
-      } else {
-        this.processError(xhr);
-      }
-      this.complete(xhr);
-    },
-
-    isSuccess: function(xhr) {
-      var status = xhr.status || 0;
-      return !status || (status >= 200 && status < 300);
-    },
-
-    processResponse: function(xhr) {
-      var response = this.evalResponse(xhr);
-      if (xhr === this.activeRequest) {
-        this.response = response;
-      }
-      this.fire('core-response', {response: response, xhr: xhr});
-    },
-
-    processError: function(xhr) {
-      var response = xhr.status + ': ' + xhr.responseText;
-      if (xhr === this.activeRequest) {
-        this.error = response;
-      }
-      this.fire('core-error', {response: response, xhr: xhr});
-    },
-
-    complete: function(xhr) {
-      this.fire('core-complete', {response: xhr.status, xhr: xhr});
-    },
-
-    evalResponse: function(xhr) {
-      return this[(this.handleAs || 'text') + 'Handler'](xhr);
-    },
-
-    xmlHandler: function(xhr) {
-      return xhr.responseXML;
-    },
-
-    textHandler: function(xhr) {
-      return xhr.responseText;
-    },
-
-    jsonHandler: function(xhr) {
-      var r = xhr.responseText;
-      try {
-        return JSON.parse(r);
-      } catch (x) {
-        console.warn('core-ajax caught an exception trying to parse response as JSON:');
-        console.warn('url:', this.url);
-        console.warn(x);
-        return r;
-      }
-    },
-
-    documentHandler: function(xhr) {
-      return xhr.response;
-    },
-
-    blobHandler: function(xhr) {
-      return xhr.response;
-    },
-
-    arraybufferHandler: function(xhr) {
-      return xhr.response;
-    },
-
-    urlChanged: function() {
-      if (!this.handleAs) {
-        var ext = String(this.url).split('.').pop();
-        switch (ext) {
-          case 'json':
-            this.handleAs = 'json';
-            break;
-        }
-      }
-      this.autoGo();
-    },
-
-    paramsChanged: function() {
-      this.autoGo();
-    },
-
-    autoChanged: function() {
-      this.autoGo();
-    },
-
-    // TODO(sorvell): multiple side-effects could call autoGo
-    // during one micro-task, use a job to have only one action
-    // occur
-    autoGo: function() {
-      if (this.auto) {
-        this.goJob = this.job(this.goJob, this.go, 0);
-      }
-    },
-
-    /**
-     * Performs an Ajax request to the specified URL.
-     *
-     * @method go
-     */
-    go: function() {
-      var args = this.xhrArgs || {};
-      // TODO(sjmiles): we may want XHR to default to POST if body is set
-      args.body = this.body || args.body;
-      args.params = this.params || args.params;
-      if (args.params && typeof(args.params) == 'string') {
-        args.params = JSON.parse(args.params);
-      }
-      args.headers = this.headers || args.headers || {};
-      if (args.headers && typeof(args.headers) == 'string') {
-        args.headers = JSON.parse(args.headers);
-      }
-      var hasContentType = Object.keys(args.headers).some(function (header) {
-        return header.toLowerCase() === 'content-type';
-      });
-      if (!hasContentType && this.contentType) {
-        args.headers['Content-Type'] = this.contentType;
-      }
-      if (this.handleAs === 'arraybuffer' || this.handleAs === 'blob' ||
-          this.handleAs === 'document') {
-        args.responseType = this.handleAs;
-      }
-      args.withCredentials = this.withCredentials;
-      args.callback = this.receive.bind(this);
-      args.url = this.url;
-      args.method = this.method;
-
-      this.response = this.error = null;
-      this.activeRequest = args.url && this.xhr.request(args);
-      return this.activeRequest;
-    }
-
-  });
-
-</script>
-</polymer-element>
-
 <!--
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
@@ -14186,26 +13723,10 @@ core-item {
 
 <polymer-element name="home-assistant-api" attributes="auth" assetpath="polymer/">
   <template>
-    <style>
-    core-ajax {
-      display: none;
-    }
-    </style>
-
     <paper-toast id="toast" role="alert" text=""></paper-toast>
     <event-fire-dialog id="eventDialog" api="{{api}}"></event-fire-dialog>
     <service-call-dialog id="serviceDialog" api="{{api}}"></service-call-dialog>
     <state-set-dialog id="stateDialog" api="{{api}}"></state-set-dialog>
-
-    <core-ajax id="statesAjax" method="GET" url="/api/states" headers="{{ha_headers}}" on-core-response="{{statesLoaded}}" handleas="json">
-    </core-ajax>
-
-    <core-ajax id="eventsAjax" method="GET" url="/api/events" headers="{{ha_headers}}" on-core-response="{{eventsLoaded}}" handleas="json">
-    </core-ajax>
-
-    <core-ajax id="servicesAjax" method="GET" url="/api/services" headers="{{ha_headers}}" on-core-response="{{servicesLoaded}}" handleas="json">
-    </core-ajax>
-
   </template>
   <script>
   Polymer('home-assistant-api',{

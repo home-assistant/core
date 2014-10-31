@@ -1,5 +1,4 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/core-ajax/core-ajax.html">
 <link rel="import" href="bower_components/paper-toast/paper-toast.html">
 
 <link rel="import" href="event-fire-dialog.html">
@@ -8,41 +7,10 @@
 
 <polymer-element name="home-assistant-api" attributes="auth">
   <template>
-    <style>
-    core-ajax {
-      display: none;
-    }
-    </style>
-
     <paper-toast id="toast" role="alert" text=""></paper-toast>
     <event-fire-dialog id="eventDialog" api={{api}}></event-fire-dialog>
     <service-call-dialog id="serviceDialog" api={{api}}></service-call-dialog>
     <state-set-dialog id="stateDialog" api={{api}}></state-set-dialog>
-
-    <core-ajax id="statesAjax"
-      method="GET"
-      url="/api/states"
-      headers="{{ha_headers}}"
-      on-core-response="{{statesLoaded}}"
-      handleAs="json">
-    </core-ajax>
-
-    <core-ajax id="eventsAjax"
-      method="GET"
-      url="/api/events"
-      headers="{{ha_headers}}"
-      on-core-response="{{eventsLoaded}}"
-      handleAs="json">
-    </core-ajax>
-
-    <core-ajax id="servicesAjax"
-      method="GET"
-      url="/api/services"
-      headers="{{ha_headers}}"
-      on-core-response="{{servicesLoaded}}"
-      handleAs="json">
-    </core-ajax>
-
   </template>
   <script>
   Polymer({

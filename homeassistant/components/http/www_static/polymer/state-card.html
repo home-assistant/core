@@ -135,7 +135,7 @@
     entity_id: "",
 
     stateChanged: function(oldVal, newVal) {
-      this.state_unknown = newVal == "";
+      this.state_unknown = newVal == null;
 
       if(this.$.toggleButton) {
         this.$.toggleButton.checked = this.state == 'on';
@@ -159,14 +159,15 @@
     },
 
     toggle: function(ev) {
-      if(this.$.toggleButton.checked) {
+      if(this.state == "off") {
         this.turn_on();
       } else {
         this.turn_off();
       }
 
+      // unset state while we wait for an update
       var delayUnsetSate = function() {
-        this.state = "";
+        this.state = null;
       }
       setTimeout(delayUnsetSate.bind(this), 500);
     },
