@@ -15,7 +15,7 @@ DEPENDENCIES = []
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-STATE_NO_APP = 'no_app'
+STATE_NO_APP = 'idle'
 
 ATTR_STATE = 'state'
 ATTR_OPTIONS = 'options'

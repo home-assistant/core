@@ -25,7 +25,7 @@ DEPENDENCIES = []
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
 
-GROUP_NAME_ALL_DEVICES = 'all_tracked_devices'
+GROUP_NAME_ALL_DEVICES = 'all_devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format(
     GROUP_NAME_ALL_DEVICES)
 
