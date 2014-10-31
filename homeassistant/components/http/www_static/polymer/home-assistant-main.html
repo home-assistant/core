@@ -5,10 +5,9 @@
 <link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="bower_components/paper-tabs/paper-tab.html">
 
-<link rel="import" href="home-assistant-api.html">
 <link rel="import" href="states-cards.html">
 
-<polymer-element name="home-assistant-main" attributes="auth">
+<polymer-element name="home-assistant-main" attributes="api">
   <template>
     <style type="text/css">
 
@@ -42,7 +41,6 @@
 
     </style>
 
-    <home-assistant-api auth="{{auth}}" id="api"></home-assistant-api>
 
     <core-header-panel unresolved fullbleed>
 
@@ -81,10 +79,6 @@
   <script>
   Polymer({
     selectedTab: null,
-
-    ready: function() {
-      this.api = this.$.api;
-    },
 
     isCustomGroup: function(state) {
       return (state.entity_id.lastIndexOf('group.') == 0 &&

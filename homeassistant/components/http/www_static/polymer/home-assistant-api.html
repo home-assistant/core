@@ -20,7 +20,6 @@
     <state-set-dialog id="stateDialog" api={{api}}></state-set-dialog>
 
     <core-ajax id="statesAjax"
-      auto
       method="GET"
       url="/api/states"
       headers="{{ha_headers}}"
@@ -29,7 +28,6 @@
     </core-ajax>
 
     <core-ajax id="eventsAjax"
-      auto
       method="GET"
       url="/api/events"
       headers="{{ha_headers}}"
@@ -38,7 +36,6 @@
     </core-ajax>
 
     <core-ajax id="servicesAjax"
-      auto
       method="GET"
       url="/api/services"
       headers="{{ha_headers}}"
@@ -67,6 +64,22 @@
       this.turn_off = this.turn_off.bind(this);
     },
 
+    // local methods
+    getState: function(entityId) {
+      for(var i = 0; i < this.states.length; i++) {
+        if(this.states[i].entity_id == entityId) {
+          return this.states[i];
+        }
+      }
+    },
+
+    getCustomGroups: function() {
+      return this.states.filter(function(state) {
+        return (state.entity_id.lastIndexOf("group.") == 0 &&
+                !state.attributes.auto);
+      })     
+    },
+
     _laterFetchStates: function() {
       if(this.stateUpdateTimeout) {
         clearTimeout(this.stateUpdateTimeout);
@@ -86,29 +99,6 @@
           return 0;
         }
       })
-    },
-
-    statesLoaded: function() {
-      // Make a copy of the loaded data
-      this.states = this._sortStates(this.$.statesAjax.response.slice(0));
-
-      this.fire('states-updated')
-
-      this._laterFetchStates();
-    },
-
-    eventsLoaded: function() {
-      // Make a copy of the loaded data
-      this.events = this.$.eventsAjax.response;
-
-      this.fire('events-updated')
-    },
-
-    servicesLoaded: function() {
-      // Make a copy of the loaded data
-      this.services = this.$.servicesAjax.response;
-
-      this.fire('services-updated')
     },
 
     _pushNewState: function(new_state) {
@@ -131,32 +121,54 @@
         this.states.push(new_state);
         this._sortStates(this.states);
       }
+
+      this.fire('states-updated')
     },
 
-    fetchState: function(entity_id) {
+    // call api methods
+    fetchState: function(entityId) {
       var successStateUpdate = function(new_state) {
         this._pushNewState(new_state);
       }
 
-      this.call_api("GET", "states/" + entity_id, null, successStateUpdate.bind(this));
+      this.call_api("GET", "states/" + entityId, null, successStateUpdate.bind(this));
     },
 
-    fetchStates: function() {
-      this.$.statesAjax.go();
-    },
+    fetchStates: function(onSuccess, onError) {
+      var successStatesUpdate = function(newStates) {
+        this.states = this._sortStates(newStates);
 
-    getState: function(entityId) {
-      for(var i = 0; i < this.states.length; i++) {
-        if(this.states[i].entity_id == entityId) {
-          return this.states[i];
+        this.fire('states-updated')
+
+        this._laterFetchStates();
+
+        if(onSuccess) {
+          onSuccess(newStates);
         }
       }
+
+      this.call_api("GET", "states", null, successStatesUpdate.bind(this), onError);
     },
 
-    getCustomGroups: function() {
-      return this.states.filter(function(state) {
-        return state.entity_id.lastIndexOf("group.") == 0;
-      })     
+    fetchEvents: function() {
+      var successEventsUpdated = function(events) {
+        this.events = events;
+
+        this.fire('events-updated')
+      }
+
+      this.call_api("GET", "events", null, successEventsUpdated.bind(this));
+    },
+
+    fetchServices: function() {
+      var successServicesUpdated = function(services) {
+        this.services = services;
+
+        this.fire('services-updated')
+      }
+
+      this.call_api("GET", "services", null,
+        successServicesUpdated.bind(this));
     },
 
     turn_on: function(entity_id) {
@@ -186,6 +198,22 @@
     call_service: function(domain, service, parameters) {
       var successToast = function() {
         this.showToast("Service "+domain+"/"+service+" successful called.");
+
+        // if we call a service on an entity_id, update the state
+        if(parameters && parameters.entity_id) {
+          var update_func;
+
+          // if entity_id is a string, update 1 state, else all.
+          if(typeof(parameters.entity_id === "string")) {
+            update_func = function() {
+              this.fetchState(parameters.entity_id);
+            }
+          } else {
+            update_func = this.fetchStates
+          }
+
+          setTimeout(update_func.bind(this), 1000);
+        }
       }
 
       this.call_api("POST", "services/" + domain + "/" + service,
@@ -203,34 +231,26 @@
                     eventData, successToast.bind(this));
     },
 
-    call_api: function(method, path, parameters, callback) {
+    call_api: function(method, path, parameters, onSuccess, onError) {
       var req = new XMLHttpRequest();
       req.open(method, "/api/" + path, true)
       req.setRequestHeader("HA-access", this.auth);
 
       req.onreadystatechange = function() {
 
-        if(req.readyState == 4 && req.status > 199 && req.status < 300) {
-
-          if(callback) {
-            callback(JSON.parse(req.responseText))
-          }
-          // if we targetted an entity id, update state after 2 seconds
-          if(parameters && parameters.entity_id) {
-            var updateCallback;
-
-            // if a string, update just that entity, otherwise update all
-            if(typeof(parameters.entity_id) == "string") {
-              updateCallback = function() {
-                this.fetchState(parameters.entity_id);
-              }
-
-            } else {
-              updateCallback = this.fetchStates();
+        if(req.readyState == 4) {
+          if(req.status > 199 && req.status < 300) {
+            if(onSuccess) {
+              onSuccess(JSON.parse(req.responseText));
             }
-
-            setTimeout(updateCallback.bind(this), 2000);
+          } else {
+            if(onError) {
+              var data = req.responseText ? JSON.parse(req.responseText) : {};
+              onError(data);
+            }
           }
+
+
         }
       }.bind(this)
 
@@ -241,6 +261,7 @@
       }
     },
 
+    // show dialogs
     showEditStateDialog: function(entityId) {
       var state = this.getState(entityId);
 

@@ -26,6 +26,12 @@
 
     state-badge {
       float: left;
+      cursor: pointer;
+      transition: background-color .2s;
+    }
+
+    state-badge:hover {
+      background-color: #039be5;
     }
 
     .name, .state.text {
@@ -54,12 +60,14 @@
 
     /* filling of circle when checked */
     paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
-      background-color: #0091ea;
+      background-color: #039be5;
+      transition: background-color .2s;
     }
 
     /* line when checked */
     paper-toggle-button::shadow #toggleBar[checked] {
-      background-color: #0091ea;
+      background-color: #039be5;
+      transition: background-color .2s;
     }    
     </style>
 
@@ -87,20 +95,26 @@
         </div>
       </div>
 
-      <template if="{{state == 'on' || state == 'off'}}">
-        <div class='state toggle' self-center flex>
-          <paper-toggle-button
-            id="toggleButton"
-            on-change="{{toggle}}">
-          </paper-toggle-button>
-        </div>
+      <template if="{{!state_unknown}}">
+        <template if="{{state == 'on' || state == 'off'}}">
+          <div class='state toggle' self-center flex>
+            <paper-toggle-button
+              id="toggleButton"
+              on-change="{{toggle}}">
+            </paper-toggle-button>
+          </div>
+        </template>
+        <template if="{{state != 'on' && state != 'off'}}">
+          <div class='state text'>
+            {{state | makeReadable}}
+          </div>
+        </template>
       </template>
-      <template if="{{state != 'on' && state != 'off'}}">
-        <div class='state text'>
-          {{state | makeReadable}}
-        </div>
+
+      <template if="{{state_unknown}}">
+        <div class="state" self-center flex>Updating..</div>
       </template>
-      
+
     </div>    
 
   </template>
@@ -114,12 +128,15 @@
     cb_turn_on: null,
     cb_turn_off: null,
     cb_edit: null,
+    state_unknown: false,
 
     // computed
     domain: "",
     entity_id: "",
 
-    stateChanged: function() {
+    stateChanged: function(oldVal, newVal) {
+      this.state_unknown = newVal == "";
+
       if(this.$.toggleButton) {
         this.$.toggleButton.checked = this.state == 'on';
       }
@@ -147,6 +164,11 @@
       } else {
         this.turn_off();
       }
+
+      var delayUnsetSate = function() {
+        this.state = "";
+      }
+      setTimeout(delayUnsetSate.bind(this), 500);
     },
 
     turn_on: function() {

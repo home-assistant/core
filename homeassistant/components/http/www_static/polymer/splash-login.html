@@ -1,7 +1,9 @@
 <link rel="import" href="bower_components/font-roboto/roboto.html">
-<link rel="import" href="home-assistant-main.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="home-assistant-main.html">
+<link rel="import" href="home-assistant-api.html">
 
 <polymer-element name="splash-login" attributes="auth">
   <template>
@@ -23,6 +25,8 @@
 
     </style>
 
+    <home-assistant-api auth="{{auth}}" id="api"></home-assistant-api>
+
     <template if="{{state == 'no_auth'}}">
       <div layout horizontal center fit class='login'>
         <div layout vertical center flex>
@@ -31,7 +35,10 @@
 
           <div class='interact' layout vertical>
             <div id='loginform'>
-              <paper-input id="passwordInput" label="Password" type="password" value="{{auth}}"></paper-input>
+              <paper-input
+                id="passwordInput" label="Password" type="password"
+                value="{{auth}}" on-keyup="{{passwordKeyup}}" autofocus>
+              </paper-input>
               <paper-button on-click={{validatePassword}}>Log In</paper-button>
             </div>
 
@@ -41,18 +48,19 @@
       </div>
     </template>
     <template if="{{state == 'valid_auth'}}">
-      <home-assistant-main auth="{{auth}}"></home-assistant-main>
+      <home-assistant-main api="{{api}}"></home-assistant-main>
     </template>
 
   </template>
   <script>
   Polymer({
 
-    // can be no_auth, test_auth, valid_auth
+    // can be no_auth, valid_auth
     state: "no_auth",
     auth: "",
 
     ready: function() {
+      this.api = this.$.api;
     },
 
     domReady: function() {
@@ -61,35 +69,39 @@
       }
     },
 
+    passwordKeyup: function(ev) {
+      if(ev.keyCode == 13) {
+        this.validatePassword();
+      }
+    },
+
     validatePassword: function() {
       this.$.passwordInput.commit();
-      this.$.loginform.setAttribute('hidden', null)
-      this.$.validateMessage.removeAttribute('hidden')
+      this.$.loginform.setAttribute('hidden', null);
+      this.$.validateMessage.removeAttribute('hidden');
 
-      var req = new XMLHttpRequest();
-      req.open("GET", "/api/", true);
-      req.setRequestHeader("HA-access", this.auth);
+      var passwordValid = function(result) {
+        this.api.fetchServices();
+        this.api.fetchEvents();
 
-      req.onreadystatechange = function() {
-        if(req.readyState == 4) {
-          if(req.status == 200) {
-            this.state = 'valid_auth'
-          } else {
-            this.auth = "";
+        this.state = "valid_auth";
+      }
 
-            this.$.passwordInput.error = "Invalid Password";
-            this.$.passwordInput.required = 1;
-
-            this.$.loginform.removeAttribute('hidden');
-            this.$.validateMessage.setAttribute('hidden', null);
-
-            this.state = 'no_auth'
-          }
+      var passwordInvalid = function(result) {
+        if(result && result.message) {
+          this.$.passwordInput.error = result.message;
+        } else {
+          this.$.passwordInput.error = "Unexpected result from API";
         }
-      }.bind(this)
+        this.auth = null;
+        this.$.passwordInput.setAttribute('required', true);
+        this.$.loginform.removeAttribute('hidden');
+        this.$.validateMessage.setAttribute('hidden', null);
+        this.$.passwordInput.focus();
+      }
 
-      req.send();
-    },
+      this.api.fetchStates(passwordValid.bind(this), passwordInvalid.bind(this));
+    }
 
   });
   </script>  

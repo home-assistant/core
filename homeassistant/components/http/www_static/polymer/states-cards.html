@@ -65,9 +65,11 @@
     },
 
     domReady: function() {
-      this.states = this.api.states
+      this.raw_states = this.api.states
 
       this.api.addEventListener('states-updated', this.statesUpdated.bind(this))
+
+      this.refilterStates();
     },
 
     statesUpdated: function() {
