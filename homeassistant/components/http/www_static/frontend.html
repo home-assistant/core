@@ -10239,6 +10239,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       background-color: #039be5;
     }
 
+    state-badge[data-state=on][data-domain=light] {
+      color: #fff176;
+    }
+
     .name, .state.text {
       text-transform: capitalize;  
       font-weight: 300;
@@ -10266,20 +10270,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     /* filling of circle when checked */
     paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
       background-color: #039be5;
-      transition: background-color .2s;
     }
 
     /* line when checked */
     paper-toggle-button::shadow #toggleBar[checked] {
       background-color: #039be5;
-      transition: background-color .2s;
     }    
     </style>
 
     <div horizontal="" justified="" layout="">
       
       <div class="entity">
-        <state-badge domain="{{domain}}" state="{{state}}" on-click="{{editClicked}}">
+        <state-badge domain="{{domain}}" state="{{state}}" data-domain="{{domain}}" data-state="{{state}}" on-click="{{editClicked}}">
         </state-badge>
 
         <div class="info">
@@ -13897,8 +13899,13 @@ core-item {
 
           // if entity_id is a string, update 1 state, else all.
           if(typeof(parameters.entity_id === "string")) {
-            update_func = function() {
-              this.fetchState(parameters.entity_id);
+            // if it is a group, fetch all
+            if(parameters.entity_id.slice(0,6) == "group.") {
+              update_func = this.fetchStates
+            } else {
+              update_func = function() {
+                this.fetchState(parameters.entity_id);
+              }
             }
           } else {
             update_func = this.fetchStates

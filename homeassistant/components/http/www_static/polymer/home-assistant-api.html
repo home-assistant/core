@@ -173,8 +173,13 @@
 
           // if entity_id is a string, update 1 state, else all.
           if(typeof(parameters.entity_id === "string")) {
-            update_func = function() {
-              this.fetchState(parameters.entity_id);
+            // if it is a group, fetch all
+            if(parameters.entity_id.slice(0,6) == "group.") {
+              update_func = this.fetchStates
+            } else {
+              update_func = function() {
+                this.fetchState(parameters.entity_id);
+              }
             }
           } else {
             update_func = this.fetchStates
