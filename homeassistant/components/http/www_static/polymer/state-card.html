@@ -34,6 +34,10 @@
       background-color: #039be5;
     }
 
+    state-badge[data-state=on][data-domain=light] {
+      color: #fff176;
+    }
+
     .name, .state.text {
       text-transform: capitalize;  
       font-weight: 300;
@@ -61,13 +65,11 @@
     /* filling of circle when checked */
     paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
       background-color: #039be5;
-      transition: background-color .2s;
     }
 
     /* line when checked */
     paper-toggle-button::shadow #toggleBar[checked] {
       background-color: #039be5;
-      transition: background-color .2s;
     }    
     </style>
 
@@ -77,6 +79,8 @@
         <state-badge 
           domain="{{domain}}"
           state="{{state}}"
+          data-domain="{{domain}}"
+          data-state="{{state}}"
           on-click="{{editClicked}}">
         </state-badge>
 
