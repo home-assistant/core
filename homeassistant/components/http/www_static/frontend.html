@@ -17942,12 +17942,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <div class="info">
           <div class="name">
-            <template if="{{state_attr['friendly_name']}}">
-              {{state_attr['friendly_name']}}
-            </template>
-            <template if="{{!state_attr['friendly_name']}}">
-              {{stateObj.entityDisplay}}
-            </template>
+            {{stateObj.entityDisplay}}
           </div>
 
           <div class="time-ago">
@@ -17960,13 +17955,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </div>
 
       <template if="{{!stateUnknown}}">
-        <template if="{{stateObj.state == 'on' || stateObj.state == 'off'}}">
+        <template if="{{stateObj.canToggle}}">
           <div class="state toggle" self-center="" flex="">
             <paper-toggle-button checked="{{toggleChecked}}">
             </paper-toggle-button>
           </div>
         </template>
-        <template if="{{stateObj.state != 'on' && stateObj.state != 'off'}}">
+        <template if="{{!stateObj.canToggle}}">
           <div class="state text">{{stateObj.stateDisplay}}</div>
         </template>
       </template>
@@ -20124,8 +20119,14 @@ core-item {
       var parts = state.entity_id.split(".");
       state.domain = parts[0];
       state.entity = parts[1];
-      state.entityDisplay = state.entity.replace(/_/g, " ");
       state.stateDisplay = state.state.replace(/_/g, " ");
+      state.canToggle = state.state == "on" || state.state == "off"
+
+      if(state.attributes.friendly_name) {
+        state.entityDisplay = state.attributes.friendly_name;
+      } else {
+        state.entityDisplay = state.entity.replace(/_/g, " ");
+      }
     },
 
     // call api methods
