@@ -98,8 +98,14 @@
       var parts = state.entity_id.split(".");
       state.domain = parts[0];
       state.entity = parts[1];
-      state.entityDisplay = state.entity.replace(/_/g, " ");
       state.stateDisplay = state.state.replace(/_/g, " ");
+      state.canToggle = state.state == "on" || state.state == "off"
+
+      if(state.attributes.friendly_name) {
+        state.entityDisplay = state.attributes.friendly_name;
+      } else {
+        state.entityDisplay = state.entity.replace(/_/g, " ");
+      }
     },
 
     // call api methods

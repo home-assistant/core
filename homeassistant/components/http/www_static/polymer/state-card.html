@@ -88,12 +88,7 @@
 
         <div class='info'>
           <div class='name'>
-            <template if="{{state_attr['friendly_name']}}">
-              {{state_attr['friendly_name']}}
-            </template>
-            <template if="{{!state_attr['friendly_name']}}">
-              {{stateObj.entityDisplay}}
-            </template>
+            {{stateObj.entityDisplay}}
           </div>
 
           <div class="time-ago">
@@ -106,13 +101,13 @@
       </div>
 
       <template if="{{!stateUnknown}}">
-        <template if="{{stateObj.state == 'on' || stateObj.state == 'off'}}">
+        <template if="{{stateObj.canToggle}}">
           <div class='state toggle' self-center flex>
             <paper-toggle-button checked="{{toggleChecked}}">
             </paper-toggle-button>
           </div>
         </template>
-        <template if="{{stateObj.state != 'on' && stateObj.state != 'off'}}">
+        <template if="{{!stateObj.canToggle}}">
           <div class='state text'>{{stateObj.stateDisplay}}</div>
         </template>
       </template>
