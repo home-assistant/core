@@ -24,10 +24,7 @@
     <div horizontal layout wrap>
       <template repeat="{{state in states}}">
         <state-card
-          entity="{{state.entity_id}}"
-          state="{{state.state}}"
-          last_changed="{{state.last_changed}}"
-          state_attr="{{state.attributes}}"
+          stateObj="{{state}}"
           cb_turn_on="{{api.turn_on}}"
           cb_turn_off="{{api.turn_off}}"
           cb_edit={{editCallback}}>

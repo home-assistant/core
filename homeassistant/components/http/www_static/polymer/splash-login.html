@@ -64,8 +64,17 @@
     },
 
     domReady: function() {
+      document.getElementById('init').remove();
+
       if(this.auth) {
         this.validatePassword();
+      }
+    },
+
+    authChanged: function(oldVal, newVal) {
+      // log out functionality
+      if(newVal == "" && this.state == "valid_auth") {
+        this.state = "no_auth";
       }
     },
 

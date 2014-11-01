@@ -2,7 +2,7 @@
 
 <link rel="import" href="domain-icon.html">
 
-<polymer-element name="state-badge" attributes="domain state">
+<polymer-element name="state-badge" attributes="stateObj" noscript>
   <template>
     <style>
     :host {
@@ -12,6 +12,7 @@
       color: white;
       border-radius: 23px;
     }
+
     div {
       height: 45px;
       text-align: center;
@@ -23,12 +24,9 @@
     </style>
 
     <div horizontal layout center>
-      <domain-icon domain="{{domain}}"></domain-icon>
+      <domain-icon domain="{{stateObj.domain}}" state="{{stateObj.state}}">
+      </domain-icon>
     </div>
 
   </template>
-  <script>
-  Polymer({
-  });
-  </script>
 </polymer-element>

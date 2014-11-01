@@ -3,6 +3,8 @@
 <link rel="import" href="bower_components/core-menu/core-submenu.html">
 <link rel="import" href="bower_components/core-item/core-item.html">
 
+<link rel="import" href="domain-icon.html">
+
 <polymer-element name="services-list" attributes="api cbServiceClicked">
   <template>
     <style>
@@ -22,7 +24,7 @@
 
     <template if={{cbServiceClicked}}>
       <style>
-      a {
+      a, core-submenu {
         text-decoration: underline;
         cursor: pointer;
       }
@@ -33,7 +35,7 @@
       <core-menu selected="0">
       
         <template repeat="{{serv in services}}">
-          <core-submenu icon="settings" label="{{serv.domain}}">
+          <core-submenu icon="{{serv.domain | getIcon}}" label="{{serv.domain}}">
             <template repeat="{{service in serv.services}}">
               <a on-click={{serviceClicked}} data-domain={{serv.domain}}>{{service}}</a>
             </template>
@@ -53,6 +55,10 @@
       this.services = this.api.services
 
       this.api.addEventListener('services-updated', this.servicesUpdated.bind(this))
+    },
+
+    getIcon: function(domain) {
+      return (new DomainIcon).icon(domain);
     },
 
     servicesUpdated: function() {

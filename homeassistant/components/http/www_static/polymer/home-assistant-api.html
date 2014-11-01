@@ -58,7 +58,7 @@
     },
 
     _sortStates: function(states) {
-      return states.sort(function(one, two) {
+      states.sort(function(one, two) {
         if (one.entity_id > two.entity_id) {
           return 1;
         } else if (one.entity_id < two.entity_id) {
@@ -86,11 +86,20 @@
       }
 
       if(!stateFound) {
+        this._enhanceState(state);
         this.states.push(new_state);
         this._sortStates(this.states);
       }
 
       this.fire('states-updated')
+    },
+
+    _enhanceState: function(state) {
+      var parts = state.entity_id.split(".");
+      state.domain = parts[0];
+      state.entity = parts[1];
+      state.entityDisplay = state.entity.replace(/_/g, " ");
+      state.stateDisplay = state.state.replace(/_/g, " ");
     },
 
     // call api methods
@@ -104,7 +113,9 @@
 
     fetchStates: function(onSuccess, onError) {
       var successStatesUpdate = function(newStates) {
-        this.states = this._sortStates(newStates);
+        this._sortStates(newStates);
+        newStates.map(this._enhanceState);
+        this.states = newStates;
 
         this.fire('states-updated')
 
@@ -155,7 +166,7 @@
       }
 
       var successToast = function(new_state) {
-        this.showToast("State of "+entity_id+" successful set to "+state+".");
+        this.showToast("State of "+entity_id+" set to "+state+".");
         this._pushNewState(new_state);
       }
 
@@ -165,7 +176,13 @@
 
     call_service: function(domain, service, parameters) {
       var successToast = function() {
-        this.showToast("Service "+domain+"/"+service+" successful called.");
+        if(service == "turn_on" && parameters.entity_id) {
+          this.showToast("Turned on " + parameters.entity_id + '.');
+        } else if(service == "turn_off") {
+          this.showToast("Turned off " + parameters.entity_id + '.');
+        } else {
+          this.showToast("Service "+domain+"/"+service+" called.");  
+        }
 
         // if we call a service on an entity_id, update the state
         if(parameters && parameters.entity_id) {
@@ -197,7 +214,7 @@
       eventData = eventData ? JSON.parse(eventData) : "";
 
       var successToast = function() {
-        this.showToast("Event "+eventType+" successful fired.");
+        this.showToast("Event "+eventType+" fired.");
       }
 
       this.call_api("POST", "events/" + eventType,
@@ -267,6 +284,10 @@
     showToast: function(message) {
       this.$.toast.text = message;
       this.$.toast.show();
+    },
+
+    logOut: function() {
+      this.auth = "";
     }
 
   });

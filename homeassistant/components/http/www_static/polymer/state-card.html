@@ -7,7 +7,7 @@
 <link rel="import" href="state-badge.html">
 
 <polymer-element name="state-card"
-  attributes="entity state last_changed state_attr cb_turn_on, cb_turn_off cb_edit">
+                 attributes="stateObj cb_turn_on, cb_turn_off cb_edit">
   <template>
     <style>
     :host {
@@ -79,44 +79,45 @@
       
       <div class="entity">
         <state-badge
-          id="badge" 
-          domain="{{domain}}"
-          state="{{state}}"
-          data-domain="{{domain}}"
-          data-state="{{state}}"
+          id="badge"
+          stateObj="{{stateObj}}"
+          data-domain="{{stateObj.domain}}"
+          data-state="{{stateObj.state}}"
           on-click="{{editClicked}}">
         </state-badge>
 
         <div class='info'>
           <div class='name'>
-            <template if="{{state_attr['friendly_name']}}">{{state_attr['friendly_name']}}</template>
-            <template if="{{!state_attr['friendly_name']}}">{{entity_id | makeReadable}}</template>
+            <template if="{{state_attr['friendly_name']}}">
+              {{state_attr['friendly_name']}}
+            </template>
+            <template if="{{!state_attr['friendly_name']}}">
+              {{stateObj.entityDisplay}}
+            </template>
           </div>
 
           <div class="time-ago">
             <core-tooltip label="{{last_changed}}" position="bottom">
-              {{last_changed_from_now}}
+              {{lastChangedFromNow}}
             </core-tooltip>
           </div>
           
         </div>
       </div>
 
-      <template if="{{!state_unknown}}">
-        <template if="{{state == 'on' || state == 'off'}}">
+      <template if="{{!stateUnknown}}">
+        <template if="{{stateObj.state == 'on' || stateObj.state == 'off'}}">
           <div class='state toggle' self-center flex>
             <paper-toggle-button checked="{{toggleChecked}}">
             </paper-toggle-button>
           </div>
         </template>
-        <template if="{{state != 'on' && state != 'off'}}">
-          <div class='state text'>
-            {{state | makeReadable}}
-          </div>
+        <template if="{{stateObj.state != 'on' && stateObj.state != 'off'}}">
+          <div class='state text'>{{stateObj.stateDisplay}}</div>
         </template>
       </template>
 
-      <template if="{{state_unknown}}">
+      <template if="{{stateUnknown}}">
         <div class="state" self-center flex>Updating..</div>
       </template>
 
@@ -126,28 +127,20 @@
   <script>
   Polymer({
     // attributes
-    entity: "",
-    state: "",
-    last_changed: "never",
-    state_attr: {},
+    stateObj: {},
+
     cb_turn_on: null,
     cb_turn_off: null,
     cb_edit: null,
-    state_unknown: false,
+    stateUnknown: false,
     toggleChecked: -1,
 
     computed: {
-      domain: "entity | parseDomain",
-      entity_id: "entity | parseEntityId",
-      last_changed_from_now: "last_changed | parseLastChangedFromNow"
+      lastChangedFromNow: "stateObj.last_changed | parseLastChangedFromNow",
     },
 
-    parseDomain: function(entity) {
-      return entity.split('.')[0];
-    },
-
-    parseEntityId: function(entity) {
-      return entity.split('.')[1];
+    observe: {
+      'stateObj.state': 'stateChanged'
     },
 
     parseLastChangedFromNow: function(lastChanged) {
@@ -160,24 +153,26 @@
         return;
       }
 
-      if(newVal && this.state == "off") {
+      if(newVal && this.stateObj.state == "off") {
         this.turn_on();
-      } else if(!newVal && this.state == "on") {
+      } else if(!newVal && this.stateObj.state == "on") {
         this.turn_off();
       }
     },
 
     stateChanged: function(oldVal, newVal) {
-      this.state_unknown = newVal == null;
+      this.stateUnknown = newVal == null;
       this.toggleChecked = newVal == "on"
 
-      // for domain light, set color of icon to light color if available
-      if(this.domain == "light" && newVal == "on" &&
-         this.state_attr.brightness && this.state_attr.xy_color) {
+      var state = this.stateObj;
 
-        var rgb = this.xyBriToRgb(this.state_attr.xy_color[0],
-                                  this.state_attr.xy_color[1],
-                                  this.state_attr.brightness);
+      // for domain light, set color of icon to light color if available
+      if(state.domain == "light" && newVal == "on" &&
+         state.attributes.brightness && state.attributes.xy_color) {
+
+        var rgb = this.xyBriToRgb(state.attributes.xy_color[0],
+                                  state.attributes.xy_color[1],
+                                  state.attributes.brightness);
         this.$.badge.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
       } else {
         this.$.badge.style.color = null;
@@ -186,11 +181,11 @@
 
     turn_on: function() {
       if(this.cb_turn_on) {
-        this.cb_turn_on(this.entity);
+        this.cb_turn_on(this.stateObj.entity_id);
 
         // unset state while we wait for an update
         var delayUnsetSate = function() {
-          this.state = null;
+          this.stateObj.state = null;
         }
         setTimeout(delayUnsetSate.bind(this), 500);      
       }
@@ -198,11 +193,11 @@
 
     turn_off: function() {
       if(this.cb_turn_off) {
-        this.cb_turn_off(this.entity);
+        this.cb_turn_off(this.stateObj.entity_id);
 
         // unset state while we wait for an update
         var delayUnsetSate = function() {
-          this.state = null;
+          this.stateObj.state = null;
         }
         setTimeout(delayUnsetSate.bind(this), 500);      
       }
@@ -210,20 +205,7 @@
 
     editClicked: function() {
       if(this.cb_edit) {
-        this.cb_edit(this.entity);
-      }
-    },
-
-    // used as filter
-    makeReadable: function(value) {
-      if(typeof value == "string") {
-        return value.replace(/_/g, " ");
-
-      } else if(Array.isArray(value)) {
-        return value.join(", ");
-
-      } else {
-        return value;
+        this.cb_edit(this.stateObj.entity_id);
       }
     },
 

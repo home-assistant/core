@@ -356,14 +356,15 @@ class RequestHandler(SimpleHTTPRequestHandler):
                "<link rel='shortcut icon' href='/static/favicon.ico' />"
                "<link rel='icon' type='image/png' "
                "     href='/static/favicon-192x192.png' sizes='192x192'>"
-               "<script"
-               "     src='/static/polymer_platform.js'></script>"
-               "<link rel='import' href='/static/{}' />"
                "<meta name='viewport' content='width=device-width, "
                "      user-scalable=no, initial-scale=1.0, "
                "      minimum-scale=1.0, maximum-scale=1.0' />"
                "</head>"
                "<body fullbleed>"
+               "<h3 id='init' align='center'>Initializing Home Assistant</h3>"
+               "<script"
+               "     src='/static/polymer_platform.js'></script>"
+               "<link rel='import' href='/static/{}' />"
                "<splash-login auth='{}'></splash-login>"
                "</body></html>").format(app_url, data.get('api_password', '')))
 

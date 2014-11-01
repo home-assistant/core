@@ -6,15 +6,19 @@
 <link rel="import" href="bower_components/core-icons/image-icons.html">
 <link rel="import" href="bower_components/core-icons/hardware-icons.html">
 
-<polymer-element name="domain-icon" attributes="domain">
+<polymer-element name="domain-icon"
+  attributes="domain state" constructor="DomainIcon">
   <template>
-    <core-icon icon="{{icon(domain)}}"></core-icon>
+    <core-icon icon="{{icon(domain, state)}}"></core-icon>
   </template>
   <script>
   Polymer({
 
-    icon: function() {
-      switch(this.domain) {
+    icon: function(domain, state) {
+      switch(domain) {
+        case "homeassistant":
+          return "home";
+
         case "group":
           return "social:communities";
 
@@ -25,8 +29,11 @@
           return "settings-input-svideo";
 
         case "chromecast":
-          // hardware:cast-connected
-          return "hardware:cast";
+          if(state && state != "idle") {
+            return "hardware:cast-connected";
+          } else {
+            return "hardware:cast";
+          }
 
         case "process":
           return "hardware:memory"
