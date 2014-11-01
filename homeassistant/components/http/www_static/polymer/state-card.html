@@ -27,13 +27,14 @@
     state-badge {
       float: left;
       cursor: pointer;
-      transition: background-color .2s;
+      transition: background-color .2s ease-in-out, color .5s ease-in-out;
     }
 
     state-badge:hover {
       background-color: #039be5;
     }
 
+    /* Color the icon if light or sun is on */
     state-badge[data-domain=light][data-state=on],
     state-badge[data-domain=sun][data-state=above_horizon] {
       color: #fff176;
@@ -77,7 +78,8 @@
     <div horizontal justified layout>
       
       <div class="entity">
-        <state-badge 
+        <state-badge
+          id="badge" 
           domain="{{domain}}"
           state="{{state}}"
           data-domain="{{domain}}"
@@ -134,9 +136,23 @@
     state_unknown: false,
     toggleChecked: -1,
 
-    // computed
-    domain: "",
-    entity_id: "",
+    computed: {
+      domain: "entity | parseDomain",
+      entity_id: "entity | parseEntityId",
+      last_changed_from_now: "last_changed | parseLastChangedFromNow"
+    },
+
+    parseDomain: function(entity) {
+      return entity.split('.')[0];
+    },
+
+    parseEntityId: function(entity) {
+      return entity.split('.')[1];
+    },
+
+    parseLastChangedFromNow: function(lastChanged) {
+      return moment(lastChanged, "HH:mm:ss DD-MM-YYYY").fromNow()
+    },
 
     toggleCheckedChanged: function(oldVal, newVal) {
       // to filter out init
@@ -154,22 +170,18 @@
     stateChanged: function(oldVal, newVal) {
       this.state_unknown = newVal == null;
       this.toggleChecked = newVal == "on"
-    },
 
-    entityChanged: function(oldVal, newVal) {
-      var parts = newVal.split(".")
+      // for domain light, set color of icon to light color if available
+      if(this.domain == "light" && newVal == "on" &&
+         this.state_attr.brightness && this.state_attr.xy_color) {
 
-      if(parts.length == 1) {
-        this.domain = ""
-        this.entity_id = parts[0]
+        var rgb = this.xyBriToRgb(this.state_attr.xy_color[0],
+                                  this.state_attr.xy_color[1],
+                                  this.state_attr.brightness);
+        this.$.badge.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
       } else {
-        this.domain = parts[0]
-        this.entity_id = parts.slice(1).join('.')
+        this.$.badge.style.color = null;
       }
-    },
-
-    last_changedChanged: function(oldVal, newVal) {
-      this.last_changed_from_now = moment(this.last_changed, "HH:mm:ss DD-MM-YYYY").fromNow()
     },
 
     turn_on: function() {
@@ -213,6 +225,28 @@
       } else {
         return value;
       }
+    },
+
+    // from http://stackoverflow.com/questions/22894498/philips-hue-convert-xy-from-api-to-hex-or-rgb
+    xyBriToRgb: function (x, y, bri) {
+      z = 1.0 - x - y;
+      Y = bri / 255.0; // Brightness of lamp
+      X = (Y / y) * x;
+      Z = (Y / y) * z;
+      r = X * 1.612 - Y * 0.203 - Z * 0.302;
+      g = -X * 0.509 + Y * 1.412 + Z * 0.066;
+      b = X * 0.026 - Y * 0.072 + Z * 0.962;
+      r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
+      g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
+      b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
+      maxValue = Math.max(r,g,b);
+      r /= maxValue;
+      g /= maxValue;
+      b /= maxValue;
+      r = r * 255;   if (r < 0) { r = 255 };
+      g = g * 255;   if (g < 0) { g = 255 };
+      b = b * 255;   if (b < 0) { b = 255 };
+      return [r, g, b]
     }
   });
   </script>
