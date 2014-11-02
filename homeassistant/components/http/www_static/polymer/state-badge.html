@@ -2,15 +2,17 @@
 
 <link rel="import" href="domain-icon.html">
 
-<polymer-element name="state-badge" attributes="stateObj" noscript>
+<polymer-element name="state-badge" attributes="stateObj">
   <template>
     <style>
     :host {
+      position: relative;
       display: inline-block;
       width: 45px;
       background-color: #4fc3f7;
       color: white;
-      border-radius: 23px;
+      border-radius: 50%;
+      transition: all .3s ease-in-out;
     }
 
     div {
@@ -18,15 +20,75 @@
       text-align: center;
     }
 
+    #picture {
+      border-radius: 50%;
+    }
+
     domain-icon {
       margin: 0 auto;
+    }
+
+    /* Color the icon if light or sun is on */
+    domain-icon[data-domain=light][data-state=on],
+    domain-icon[data-domain=sun][data-state=above_horizon] {
+      color: #fff176;
     }
     </style>
 
     <div horizontal layout center>
-      <domain-icon domain="{{stateObj.domain}}" state="{{stateObj.state}}">
+      <domain-icon id="icon"
+        domain="{{stateObj.domain}}" state="{{stateObj.state}}">
       </domain-icon>
+      <div fit id="picture"
+        style="{{'background-image: url('+stateObj.attributes.entity_picture+')'}}"></div>
     </div>
 
   </template>
+  <script>
+  Polymer({
+    observe: {
+      'stateObj.state': 'stateChanged',
+      'stateObj.attributes.entity_picture': 'entityPictureChanged'
+    },
+
+    stateChanged: function(oldVal, newVal) {
+      var state = this.stateObj;
+
+      // for domain light, set color of icon to light color if available
+      if(state.domain == "light" && newVal == "on" &&
+         state.attributes.brightness && state.attributes.xy_color) {
+
+        var rgb = this.xyBriToRgb(state.attributes.xy_color[0],
+                                  state.attributes.xy_color[1],
+                                  state.attributes.brightness);
+        this.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
+      } else {
+        this.style.color = 'white';
+      }
+    },
+
+    // from http://stackoverflow.com/questions/22894498/philips-hue-convert-xy-from-api-to-hex-or-rgb
+    xyBriToRgb: function (x, y, bri) {
+      z = 1.0 - x - y;
+      Y = bri / 255.0; // Brightness of lamp
+      X = (Y / y) * x;
+      Z = (Y / y) * z;
+      r = X * 1.612 - Y * 0.203 - Z * 0.302;
+      g = -X * 0.509 + Y * 1.412 + Z * 0.066;
+      b = X * 0.026 - Y * 0.072 + Z * 0.962;
+      r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
+      g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
+      b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
+      maxValue = Math.max(r,g,b);
+      r /= maxValue;
+      g /= maxValue;
+      b /= maxValue;
+      r = r * 255;   if (r < 0) { r = 255 };
+      g = g * 255;   if (g < 0) { g = 255 };
+      b = b * 255;   if (b < 0) { b = 255 };
+      return [r, g, b]
+    }
+
+  });
+  </script>
 </polymer-element>

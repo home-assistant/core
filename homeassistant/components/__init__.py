@@ -27,6 +27,9 @@ ATTR_ENTITY_ID = 'entity_id'
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME = "friendly_name"
 
+# A picture to represent entity
+ATTR_ENTITY_PICTURE = "entity_picture"
+
 STATE_ON = 'on'
 STATE_OFF = 'off'
 STATE_HOME = 'home'

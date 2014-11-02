@@ -17780,11 +17780,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <template>
     <style>
     :host {
+      position: relative;
       display: inline-block;
       width: 45px;
       background-color: #4fc3f7;
       color: white;
-      border-radius: 23px;
+      border-radius: 50%;
+      transition: all .3s ease-in-out;
     }
 
     div {
@@ -17792,18 +17794,76 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       text-align: center;
     }
 
+    #picture {
+      border-radius: 50%;
+    }
+
     domain-icon {
       margin: 0 auto;
+    }
+
+    /* Color the icon if light or sun is on */
+    domain-icon[data-domain=light][data-state=on],
+    domain-icon[data-domain=sun][data-state=above_horizon] {
+      color: #fff176;
     }
     </style>
 
     <div horizontal="" layout="" center="">
-      <domain-icon domain="{{stateObj.domain}}" state="{{stateObj.state}}">
+      <domain-icon id="icon" domain="{{stateObj.domain}}" state="{{stateObj.state}}">
       </domain-icon>
+      <div fit="" id="picture" style="{{'background-image: url('+stateObj.attributes.entity_picture+')'}}"></div>
     </div>
 
   </template>
-<script>Polymer('state-badge');</script></polymer-element>
+  <script>
+  Polymer('state-badge',{
+    observe: {
+      'stateObj.state': 'stateChanged',
+      'stateObj.attributes.entity_picture': 'entityPictureChanged'
+    },
+
+    stateChanged: function(oldVal, newVal) {
+      var state = this.stateObj;
+
+      // for domain light, set color of icon to light color if available
+      if(state.domain == "light" && newVal == "on" &&
+         state.attributes.brightness && state.attributes.xy_color) {
+
+        var rgb = this.xyBriToRgb(state.attributes.xy_color[0],
+                                  state.attributes.xy_color[1],
+                                  state.attributes.brightness);
+        this.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
+      } else {
+        this.style.color = 'white';
+      }
+    },
+
+    // from http://stackoverflow.com/questions/22894498/philips-hue-convert-xy-from-api-to-hex-or-rgb
+    xyBriToRgb: function (x, y, bri) {
+      z = 1.0 - x - y;
+      Y = bri / 255.0; // Brightness of lamp
+      X = (Y / y) * x;
+      Z = (Y / y) * z;
+      r = X * 1.612 - Y * 0.203 - Z * 0.302;
+      g = -X * 0.509 + Y * 1.412 + Z * 0.066;
+      b = X * 0.026 - Y * 0.072 + Z * 0.962;
+      r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
+      g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
+      b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
+      maxValue = Math.max(r,g,b);
+      r /= maxValue;
+      g /= maxValue;
+      b /= maxValue;
+      r = r * 255;   if (r < 0) { r = 255 };
+      g = g * 255;   if (g < 0) { g = 255 };
+      b = b * 255;   if (b < 0) { b = 255 };
+      return [r, g, b]
+    }
+
+  });
+  </script>
+</polymer-element>
 
 
 <polymer-element name="state-card" attributes="stateObj cb_turn_on, cb_turn_off cb_edit" assetpath="polymer/">
@@ -17826,17 +17886,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     state-badge {
       float: left;
       cursor: pointer;
-      transition: background-color .2s ease-in-out, color .5s ease-in-out;
     }
 
     state-badge:hover {
       background-color: #039be5;
-    }
-
-    /* Color the icon if light or sun is on */
-    state-badge[data-domain=light][data-state=on],
-    state-badge[data-domain=sun][data-state=above_horizon] {
-      color: #fff176;
     }
 
     .name, .state.text {
@@ -17877,7 +17930,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div horizontal="" justified="" layout="">
       
       <div class="entity">
-        <state-badge id="badge" stateobj="{{stateObj}}" data-domain="{{stateObj.domain}}" data-state="{{stateObj.state}}" on-click="{{editClicked}}">
+        <state-badge stateobj="{{stateObj}}" on-click="{{editClicked}}">
         </state-badge>
 
         <div class="info">
@@ -17952,20 +18005,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     stateChanged: function(oldVal, newVal) {
       this.stateUnknown = newVal == null;
       this.toggleChecked = newVal == "on"
-
-      var state = this.stateObj;
-
-      // for domain light, set color of icon to light color if available
-      if(state.domain == "light" && newVal == "on" &&
-         state.attributes.brightness && state.attributes.xy_color) {
-
-        var rgb = this.xyBriToRgb(state.attributes.xy_color[0],
-                                  state.attributes.xy_color[1],
-                                  state.attributes.brightness);
-        this.$.badge.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
-      } else {
-        this.$.badge.style.color = null;
-      }
     },
 
     turn_on: function() {
@@ -17998,27 +18037,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     },
 
-    // from http://stackoverflow.com/questions/22894498/philips-hue-convert-xy-from-api-to-hex-or-rgb
-    xyBriToRgb: function (x, y, bri) {
-      z = 1.0 - x - y;
-      Y = bri / 255.0; // Brightness of lamp
-      X = (Y / y) * x;
-      Z = (Y / y) * z;
-      r = X * 1.612 - Y * 0.203 - Z * 0.302;
-      g = -X * 0.509 + Y * 1.412 + Z * 0.066;
-      b = X * 0.026 - Y * 0.072 + Z * 0.962;
-      r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
-      g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
-      b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
-      maxValue = Math.max(r,g,b);
-      r /= maxValue;
-      g /= maxValue;
-      b /= maxValue;
-      r = r * 255;   if (r < 0) { r = 255 };
-      g = g * 255;   if (g < 0) { g = 255 };
-      b = b * 255;   if (b < 0) { b = 255 };
-      return [r, g, b]
-    }
   });
   </script>
 </polymer-element>
@@ -18198,7 +18216,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     handleRefreshClick: function() {
-      this.api.fetchStates();
+      this.api.fetchAll();
     },
 
     handleEventClick: function() {
@@ -19977,11 +19995,55 @@ core-item {
     <state-set-dialog id="stateDialog" api="{{api}}"></state-set-dialog>
   </template>
   <script>
+
+  State = function(json, api) {
+      this.api = api;
+
+      this.attributes = json.attributes;
+
+      this.entity_id = json.entity_id;
+      var parts = json.entity_id.split(".");
+      this.domain = parts[0];
+      this.entity = parts[1];
+
+      if(this.attributes.friendly_name) {
+        this.entityDisplay = this.attributes.friendly_name;
+      } else {
+        this.entityDisplay = this.entity.replace(/_/g, " ");
+      }
+
+      this.state = json.state;
+      this.last_changed = json.last_changed;
+  };
+
+  Object.defineProperties(State.prototype, {
+    "stateDisplay": {
+      get: function() {
+        return this.state.replace(/_/g, " ");
+      }
+    },
+
+    "isCustomGroup": {
+      get: function() {
+        return this.domain == "group" && !this.attributes.auto;
+      }
+    },
+
+    "canToggle": {
+      get: function() {
+        // groups that have the on/off state or if there is a turn_on service
+        return ((this.domain == 'group' &&
+                 (this.state == 'on' || this.state == 'off')) ||
+                this.api.hasService(this.domain, 'turn_on'));
+      }
+    }
+  });
+
   Polymer('home-assistant-api',{
     auth: "not-set",
     states: [],
-    services: {},
-    events: {},
+    services: [],
+    events: [],
     stateUpdateTimeout: null,
 
     computed: {
@@ -19998,11 +20060,19 @@ core-item {
 
     // local methods
     getState: function(entityId) {
-      for(var i = 0; i < this.states.length; i++) {
-        if(this.states[i].entity_id == entityId) {
-          return this.states[i];
-        }
-      }
+      var found = this.states.filter(function(state) {
+        return state.entity_id == entityId;
+      }, this);
+
+      return found.length > 0 ? found[0] : null;
+    },
+
+    hasService: function(domain, service) {
+      var found = this.services.filter(function(serv) {
+        return serv.domain == domain && serv.services.indexOf(service) !== -1;
+      }, this);
+
+      return found.length > 0;
     },
 
     _laterFetchStates: function() {
@@ -20043,30 +20113,20 @@ core-item {
       }
 
       if(!stateFound) {
-        this._enhanceState(state);
-        this.states.push(new_state);
+        this.states.push(new State(new_state, this));
         this._sortStates(this.states);
       }
 
       this.fire('states-updated')
     },
 
-    _enhanceState: function(state) {
-      var parts = state.entity_id.split(".");
-      state.domain = parts[0];
-      state.entity = parts[1];
-      state.stateDisplay = state.state.replace(/_/g, " ");
-      state.canToggle = state.state == "on" || state.state == "off";
-      state.isCustomGroup = state.domain == "group" && !state.attributes.auto;
-
-      if(state.attributes.friendly_name) {
-        state.entityDisplay = state.attributes.friendly_name;
-      } else {
-        state.entityDisplay = state.entity.replace(/_/g, " ");
-      }
+    // call api methods
+    fetchAll: function() {
+      this.fetchStates();
+      this.fetchServices();
+      this.fetchEvents();
     },
 
-    // call api methods
     fetchState: function(entityId) {
       var successStateUpdate = function(new_state) {
         this._pushNewState(new_state);
@@ -20078,40 +20138,52 @@ core-item {
     fetchStates: function(onSuccess, onError) {
       var successStatesUpdate = function(newStates) {
         this._sortStates(newStates);
-        newStates.map(this._enhanceState);
-        this.states = newStates;
+
+        this.states = newStates.map(function(json) {
+          return new State(json, this);
+        }.bind(this));
 
         this.fire('states-updated')
 
         this._laterFetchStates();
 
         if(onSuccess) {
-          onSuccess(newStates);
+          onSuccess(this.states);
         }
       }
 
-      this.call_api("GET", "states", null, successStatesUpdate.bind(this), onError);
+      this.call_api(
+        "GET", "states", null, successStatesUpdate.bind(this), onError);
     },
 
-    fetchEvents: function() {
+    fetchEvents: function(onSuccess, onError) {
       var successEventsUpdated = function(events) {
-        this.events = events;
+        this.events = this.events;
 
         this.fire('events-updated')
+
+        if(onSuccess) {
+          onSuccess(events);
+        }
       }
 
-      this.call_api("GET", "events", null, successEventsUpdated.bind(this));
+      this.call_api(
+        "GET", "events", null, successEventsUpdated.bind(this), onError);
     },
 
-    fetchServices: function() {
+    fetchServices: function(onSuccess, onError) {
       var successServicesUpdated = function(services) {
         this.services = services;
 
         this.fire('services-updated')
+
+        if(onSuccess) {
+          onSuccess(this.services);
+        }
       }
 
-      this.call_api("GET", "services", null,
-        successServicesUpdated.bind(this));
+      this.call_api(
+        "GET", "services", null, successServicesUpdated.bind(this), onError);
     },
 
     turn_on: function(entity_id) {
@@ -20327,6 +20399,7 @@ core-item {
       // log out functionality
       if(newVal == "" && this.state == "valid_auth") {
         this.state = "no_auth";
+        this.$.validateMessage.innerHTML = "Validating password...";
       }
     },
 
@@ -20342,10 +20415,12 @@ core-item {
       this.$.validateMessage.removeAttribute('hidden');
 
       var passwordValid = function(result) {
-        this.api.fetchServices();
+        this.$.validateMessage.innerHTML = "Loading data...";
         this.api.fetchEvents();
 
-        this.state = "valid_auth";
+        this.api.fetchStates(function() {
+          this.state = "valid_auth";
+        }.bind(this));
       }
 
       var passwordInvalid = function(result) {
@@ -20361,7 +20436,7 @@ core-item {
         this.$.passwordInput.focus();
       }
 
-      this.api.fetchStates(passwordValid.bind(this), passwordInvalid.bind(this));
+      this.api.fetchServices(passwordValid.bind(this), passwordInvalid.bind(this));
     }
 
   });

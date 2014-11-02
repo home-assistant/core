@@ -9,8 +9,8 @@ import random
 import homeassistant as ha
 import homeassistant.components.group as group
 from homeassistant.components import (SERVICE_TURN_ON, SERVICE_TURN_OFF,
-                                      STATE_ON, STATE_OFF, get_component,
-                                      extract_entity_ids)
+                                      STATE_ON, STATE_OFF, ATTR_ENTITY_PICTURE,
+                                      get_component, extract_entity_ids)
 from homeassistant.components.light import (ATTR_XY_COLOR, ATTR_BRIGHTNESS,
                                             GROUP_NAME_ALL_LIGHTS)
 from homeassistant.util import split_entity_id
@@ -92,8 +92,13 @@ def setup(hass, config):
     hass.states.set("process.XBMC", STATE_ON)
 
     # Setup device tracker
-    hass.states.set("device_tracker.Paulus", "home")
-    hass.states.set("device_tracker.Anne_Therese", "not_home")
+    hass.states.set("device_tracker.Paulus", "home",
+                    {ATTR_ENTITY_PICTURE:
+                     "http://graph.facebook.com/schoutsen/picture"})
+    hass.states.set("device_tracker.Anne_Therese", "not_home",
+                    {ATTR_ENTITY_PICTURE:
+                     "http://graph.facebook.com/anne.t.frederiksen/picture"})
+
     hass.states.set("group.all_devices", "home",
                     {
                         "auto": True,

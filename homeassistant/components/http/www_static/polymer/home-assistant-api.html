@@ -49,7 +49,10 @@
 
     "canToggle": {
       get: function() {
-        return this.api.hasService(this.domain, 'turn_on');
+        // groups that have the on/off state or if there is a turn_on service
+        return ((this.domain == 'group' &&
+                 (this.state == 'on' || this.state == 'off')) ||
+                this.api.hasService(this.domain, 'turn_on'));
       }
     }
   });

@@ -61,7 +61,7 @@ def setup(hass, config):
 
     conf = config[DOMAIN]
 
-    if not ha.CONF_TYPE in conf:
+    if ha.CONF_TYPE not in conf:
         logger.error(
             'Missing required configuration item in {}: {}'.format(
                 DOMAIN, ha.CONF_TYPE))
@@ -175,7 +175,8 @@ class DeviceTracker(object):
                 known_dev[device]['last_seen'] = now
 
                 self.states.set(
-                    known_dev[device]['entity_id'], components.STATE_HOME)
+                    known_dev[device]['entity_id'], components.STATE_HOME,
+                    known_dev[device]['default_state_attr'])
 
         # For all devices we did not find, set state to NH
         # But only if they have been gone for longer then the error time span
@@ -185,7 +186,8 @@ class DeviceTracker(object):
             if now - known_dev[device]['last_seen'] > self.error_scanning:
 
                 self.states.set(known_dev[device]['entity_id'],
-                                components.STATE_NOT_HOME)
+                                components.STATE_NOT_HOME,
+                                known_dev[device]['default_state_attr'])
 
         # If we come along any unknown devices we will write them to the
         # known devices file but only if we did not encounter an invalid
@@ -211,7 +213,8 @@ class DeviceTracker(object):
                         writer = csv.writer(outp)
 
                         if is_new_file:
-                            writer.writerow(("device", "name", "track"))
+                            writer.writerow((
+                                "device", "name", "track", "picture"))
 
                         for device in unknown_devices:
                             # See if the device scanner knows the name
@@ -219,9 +222,10 @@ class DeviceTracker(object):
                             name = (self.device_scanner.get_device_name(device)
                                     or "unknown_device")
 
-                            writer.writerow((device, name, 0))
+                            writer.writerow((device, name, 0, ""))
                             known_dev[device] = {'name': name,
-                                                 'track': False}
+                                                 'track': False,
+                                                 'picture': ""}
 
                 except IOError:
                     self.logger.exception((
@@ -253,6 +257,13 @@ class DeviceTracker(object):
 
                         row['track'] = True if row['track'] == '1' else False
 
+                        if row['picture']:
+                            row['default_state_attr'] = {
+                                components.ATTR_ENTITY_PICTURE: row['picture']}
+
+                        else:
+                            row['default_state_attr'] = None
+
                         # If we track this device setup tracking variables
                         if row['track']:
                             row['last_seen'] = default_last_seen
@@ -275,6 +286,8 @@ class DeviceTracker(object):
 
                             row['entity_id'] = entity_id
                             used_entity_ids.append(entity_id)
+
+                            row['picture'] = row['picture']
 
                         known_devices[device] = row
 
