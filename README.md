@@ -28,7 +28,7 @@ The system is built modular so support for other devices or actions can be imple
 
 ## Installation instructions / Quick-start guide
 
-Running Home Assistant requires that python3 is installed.
+Running Home Assistant requires that python3 and the packages pyephem and requests are installed.
 
 Run the following code to get up and running with the minimum setup:
 
@@ -40,7 +40,7 @@ pip3 install -r requirements.txt
 python3 start.py
 ```
 
-This will start the Home Assistant server and its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123). The default password is 'password'.
+This will start the Home Assistant server and create an initial configuration file in `config/home-assistant.conf` that is setup for demo mode. It will launch its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123). The default password is 'password'.
 
 If you're using Docker, you can use
 
@@ -48,7 +48,7 @@ If you're using Docker, you can use
 docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro -p 8123:8123 balloob/home-assistant
 ```
 
-After you got the bare minimum running it is time to enable some components and get started. An example configuration file has been provided in [/config/home-assistant.conf.example](https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example).
+After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in [/config/home-assistant.conf.example](https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example).
 
 ### Philips Hue
 To get Philips Hue working you will have to connect Home Assistant to the Hue bridge. 

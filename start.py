@@ -16,7 +16,8 @@ else:
 if not os.path.isfile(config_path):
     with open(config_path, 'w') as conf:
         conf.write("[http]\n")
-        conf.write("api_password=password\n")
+        conf.write("api_password=password\n\n")
+        conf.write("[demo]\n")
 
 hass = homeassistant.bootstrap.from_config_file(config_path)
 hass.start()
