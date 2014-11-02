@@ -75,6 +75,7 @@
       // log out functionality
       if(newVal == "" && this.state == "valid_auth") {
         this.state = "no_auth";
+        this.$.validateMessage.innerHTML = "Validating password...";
       }
     },
 
@@ -90,10 +91,12 @@
       this.$.validateMessage.removeAttribute('hidden');
 
       var passwordValid = function(result) {
-        this.api.fetchServices();
+        this.$.validateMessage.innerHTML = "Loading data...";
         this.api.fetchEvents();
 
-        this.state = "valid_auth";
+        this.api.fetchStates(function() {
+          this.state = "valid_auth";
+        }.bind(this));
       }
 
       var passwordInvalid = function(result) {
@@ -109,7 +112,7 @@
         this.$.passwordInput.focus();
       }
 
-      this.api.fetchStates(passwordValid.bind(this), passwordInvalid.bind(this));
+      this.api.fetchServices(passwordValid.bind(this), passwordInvalid.bind(this));
     }
 
   });

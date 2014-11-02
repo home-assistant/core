@@ -13,11 +13,52 @@
     <state-set-dialog id="stateDialog" api={{api}}></state-set-dialog>
   </template>
   <script>
+
+  State = function(json, api) {
+      this.api = api;
+
+      this.attributes = json.attributes;
+
+      this.entity_id = json.entity_id;
+      var parts = json.entity_id.split(".");
+      this.domain = parts[0];
+      this.entity = parts[1];
+
+      if(this.attributes.friendly_name) {
+        this.entityDisplay = this.attributes.friendly_name;
+      } else {
+        this.entityDisplay = this.entity.replace(/_/g, " ");
+      }
+
+      this.state = json.state;
+      this.last_changed = json.last_changed;
+  };
+
+  Object.defineProperties(State.prototype, {
+    "stateDisplay": {
+      get: function() {
+        return this.state.replace(/_/g, " ");
+      }
+    },
+
+    "isCustomGroup": {
+      get: function() {
+        return this.domain == "group" && !this.attributes.auto;
+      }
+    },
+
+    "canToggle": {
+      get: function() {
+        return this.api.hasService(this.domain, 'turn_on');
+      }
+    }
+  });
+
   Polymer({
     auth: "not-set",
     states: [],
-    services: {},
-    events: {},
+    services: [],
+    events: [],
     stateUpdateTimeout: null,
 
     computed: {
@@ -34,11 +75,19 @@
 
     // local methods
     getState: function(entityId) {
-      for(var i = 0; i < this.states.length; i++) {
-        if(this.states[i].entity_id == entityId) {
-          return this.states[i];
-        }
-      }
+      var found = this.states.filter(function(state) {
+        return state.entity_id == entityId;
+      }, this);
+
+      return found.length > 0 ? found[0] : null;
+    },
+
+    hasService: function(domain, service) {
+      var found = this.services.filter(function(serv) {
+        return serv.domain == domain && serv.services.indexOf(service) !== -1;
+      }, this);
+
+      return found.length > 0;
     },
 
     _laterFetchStates: function() {
@@ -79,30 +128,20 @@
       }
 
       if(!stateFound) {
-        this._enhanceState(state);
-        this.states.push(new_state);
+        this.states.push(new State(new_state, this));
         this._sortStates(this.states);
       }
 
       this.fire('states-updated')
     },
 
-    _enhanceState: function(state) {
-      var parts = state.entity_id.split(".");
-      state.domain = parts[0];
-      state.entity = parts[1];
-      state.stateDisplay = state.state.replace(/_/g, " ");
-      state.canToggle = state.state == "on" || state.state == "off";
-      state.isCustomGroup = state.domain == "group" && !state.attributes.auto;
-
-      if(state.attributes.friendly_name) {
-        state.entityDisplay = state.attributes.friendly_name;
-      } else {
-        state.entityDisplay = state.entity.replace(/_/g, " ");
-      }
+    // call api methods
+    fetchAll: function() {
+      this.fetchStates();
+      this.fetchServices();
+      this.fetchEvents();
     },
 
-    // call api methods
     fetchState: function(entityId) {
       var successStateUpdate = function(new_state) {
         this._pushNewState(new_state);
@@ -114,40 +153,52 @@
     fetchStates: function(onSuccess, onError) {
       var successStatesUpdate = function(newStates) {
         this._sortStates(newStates);
-        newStates.map(this._enhanceState);
-        this.states = newStates;
+
+        this.states = newStates.map(function(json) {
+          return new State(json, this);
+        }.bind(this));
 
         this.fire('states-updated')
 
         this._laterFetchStates();
 
         if(onSuccess) {
-          onSuccess(newStates);
+          onSuccess(this.states);
         }
       }
 
-      this.call_api("GET", "states", null, successStatesUpdate.bind(this), onError);
+      this.call_api(
+        "GET", "states", null, successStatesUpdate.bind(this), onError);
     },
 
-    fetchEvents: function() {
+    fetchEvents: function(onSuccess, onError) {
       var successEventsUpdated = function(events) {
-        this.events = events;
+        this.events = this.events;
 
         this.fire('events-updated')
+
+        if(onSuccess) {
+          onSuccess(events);
+        }
       }
 
-      this.call_api("GET", "events", null, successEventsUpdated.bind(this));
+      this.call_api(
+        "GET", "events", null, successEventsUpdated.bind(this), onError);
     },
 
-    fetchServices: function() {
+    fetchServices: function(onSuccess, onError) {
       var successServicesUpdated = function(services) {
         this.services = services;
 
         this.fire('services-updated')
+
+        if(onSuccess) {
+          onSuccess(this.services);
+        }
       }
 
-      this.call_api("GET", "services", null,
-        successServicesUpdated.bind(this));
+      this.call_api(
+        "GET", "services", null, successServicesUpdated.bind(this), onError);
     },
 
     turn_on: function(entity_id) {
