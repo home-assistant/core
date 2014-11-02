@@ -68,7 +68,7 @@
               <paper-tab>ALL</paper-tab>
 
               <template repeat="{{state in api.states}}">
-                <template if="{{state.domain == 'group' && !state.attributes.auto}}">
+                <template if="{{state.isCustomGroup}}">
                   <paper-tab data-entity="{{state.entity_id}}">
                     {{state.entityDisplay}}
                   </paper-tab>

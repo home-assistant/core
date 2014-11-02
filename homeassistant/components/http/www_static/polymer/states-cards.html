@@ -64,7 +64,10 @@
 
     refilterStates: function() {
       if(this.filter == null) {
-        this.states = this.raw_states;
+        // all states except groups
+        this.states = this.raw_states.filter(function(state) {
+          return state.domain != 'group'
+        });
 
       } else {
         var filter_state = this.api.getState(this.filter);
