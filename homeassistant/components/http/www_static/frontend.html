@@ -18032,14 +18032,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       width: 100%;
     }
 
-    state-card, state-add-card {
+    state-card {
       display: inline-block;
-      width: 350px;
-      margin: 10px 0 0 10px;      
     }
 
-    state-add-card {
-      cursor: pointer;
+    @media all and (min-width: 764px) {
+      :host {
+        padding-bottom: 8px;
+      }
+
+      state-card {
+        width: calc(50% - 42px);
+        margin: 8px 0 0 8px;        
+      }
     }
 
     </style>
@@ -18133,11 +18138,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       paper-tab {
         text-transform: uppercase;
-      }
-
-      .content {
-        padding-bottom: 10px;
-        padding-right: 10px;
       }
 
     </style>
