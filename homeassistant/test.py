@@ -89,16 +89,6 @@ class TestHTTP(unittest.TestCase):
         """ things to be run when tests are started. """
         cls.hass = ensure_homeassistant_started()
 
-    def test_debug_interface(self):
-        """ Test if we can login by comparing not logged in screen to
-            logged in screen. """
-
-        with_pw = requests.get(_url(), headers=HA_HEADERS)
-
-        without_pw = requests.get(_url())
-
-        self.assertNotEqual(without_pw.text, with_pw.text)
-
     def test_api_password(self):
         """ Test if we get access denied if we omit or provide
             a wrong api password. """
@@ -210,7 +200,7 @@ class TestHTTP(unittest.TestCase):
 
         requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test_event_with_data")),
-            data=json.dumps({"event_data": {"test": 1}}),
+            data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
 
         # Allow the event to take place
@@ -231,7 +221,7 @@ class TestHTTP(unittest.TestCase):
 
         req = requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test_event")),
-            data=json.dumps({"event_data": 'not an object'}),
+            data=json.dumps('not an object'),
             headers=HA_HEADERS)
 
         # It shouldn't but if it fires, allow the event to take place

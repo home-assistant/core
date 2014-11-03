@@ -313,13 +313,8 @@ def get_event_listeners(api, logger=None):
         return {}
 
 
-def fire_event(api, event_type, event_data=None, logger=None):
+def fire_event(api, event_type, data=None, logger=None):
     """ Fire an event at remote API. """
-
-    if event_data:
-        data = {'event_data': event_data}
-    else:
-        data = None
 
     try:
         req = api(METHOD_POST, URL_API_EVENTS_EVENT.format(event_type), data)

@@ -259,7 +259,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     self.server.logger.exception(
                         "Exception parsing JSON: {}".format(body_content))
 
-                    self.send_response(HTTP_UNPROCESSABLE_ENTITY)
+                    self._message(
+                        "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                     return
             else:
                 data.update({key: value[-1] for key, value in
