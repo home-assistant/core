@@ -17873,13 +17873,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       background-color: #fff;
       border-radius: 2px;
       box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
-      /* transition */
-      -webkit-transition: all 0.30s ease-out;
       transition: all 0.30s ease-out;
 
       position: relative;
       background-color: white;
-      padding: 15px;
+      padding: 16px;
       width: 100%;
     }
 
@@ -17939,7 +17937,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </div>
 
           <div class="time-ago">
-            <core-tooltip label="{{last_changed}}" position="bottom">
+            <core-tooltip label="{{stateObj.last_changed}}" position="bottom">
               {{lastChangedFromNow}}
             </core-tooltip>
           </div>
