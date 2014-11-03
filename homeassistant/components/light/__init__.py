@@ -362,7 +362,7 @@ class HueLightControl(object):
         host = config.get(ha.CONF_HOST, None)
 
         try:
-            import phue
+            import homeassistant.external.phue.phue as phue
         except ImportError:
             logger.exception(
                 "HueLightControl:Error while importing dependency phue.")
