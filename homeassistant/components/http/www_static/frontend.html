@@ -17812,7 +17812,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div horizontal="" layout="" center="">
       <domain-icon id="icon" domain="{{stateObj.domain}}" state="{{stateObj.state}}">
       </domain-icon>
-      <div fit="" id="picture" style="{{'background-image: url('+stateObj.attributes.entity_picture+')'}}"></div>
+      <div fit="" id="picture"></div>
     </div>
 
   </template>
@@ -17836,6 +17836,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
       } else {
         this.style.color = 'white';
+      }
+    },
+
+    entityPictureChanged: function(oldVal, newVal) {
+      if(newVal) {
+        this.$.picture.style.backgroundImage = 'url(' + newVal + ')';
+      } else {
+        this.$.picture.style.backgroundImage = null;
       }
     },
 
