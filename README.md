@@ -37,7 +37,7 @@ git clone --recursive https://github.com/balloob/home-assistant.git
 cd home-assistant
 pip3 install -r requirements.txt
 
-python3 start.py
+python3 -m homeassistant
 ```
 
 This will start the Home Assistant server and create an initial configuration file in `config/home-assistant.conf` that is setup for demo mode. It will launch its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123). The default password is 'password'.

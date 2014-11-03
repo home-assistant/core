@@ -5,4 +5,4 @@ VOLUME /config
 
 EXPOSE 8123
 
-CMD [ "python", "./start.py", "--docker" ]
+CMD [ "python", "-m", "homeassistant", "--docker" ]
