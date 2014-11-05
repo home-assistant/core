@@ -37,7 +37,8 @@
 
     <div horizontal layout center>
       <domain-icon id="icon"
-        domain="{{stateObj.domain}}" state="{{stateObj.state}}">
+        domain="{{stateObj.domain}}" data-domain="{{stateObj.domain}}"
+        state="{{stateObj.state}}" data-state="{{stateObj.state}}">
       </domain-icon>
       <div fit id="picture"></div>
     </div>
@@ -46,26 +47,35 @@
   <script>
   Polymer({
     observe: {
-      'stateObj.state': 'stateChanged',
+      'stateObj.state': 'updateIconColor',
+      'stateObj.attributes.brightness': 'updateIconColor',
+      'stateObj.attributes.xy_color[0]': 'updateIconColor',
+      'stateObj.attributes.xy_color[1]': 'updateIconColor',
       'stateObj.attributes.entity_picture': 'entityPictureChanged'
     },
 
-    stateChanged: function(oldVal, newVal) {
+    /**
+     * Called when an attribute changes that influences the color of the icon.
+     */
+    updateIconColor: function(oldVal, newVal) {
       var state = this.stateObj;
 
       // for domain light, set color of icon to light color if available
-      if(state.domain == "light" && newVal == "on" &&
+      if(state.domain == "light" && state.state == "on" &&
          state.attributes.brightness && state.attributes.xy_color) {
 
         var rgb = this.xyBriToRgb(state.attributes.xy_color[0],
                                   state.attributes.xy_color[1],
                                   state.attributes.brightness);
-        this.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
+        this.$.icon.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
       } else {
-        this.style.color = 'white';
+        this.$.icon.style.color = null;
       }
     },
 
+    /**
+     * Called when the attribute for entity_picture has changed.
+     */
     entityPictureChanged: function(oldVal, newVal) {
       if(newVal) {
         this.$.picture.style.backgroundImage = 'url(' + newVal + ')';
