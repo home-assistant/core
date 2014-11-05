@@ -12,6 +12,7 @@ import time
 import logging
 import threading
 import enum
+import re
 import datetime as dt
 import functools as ft
 
@@ -45,6 +46,9 @@ TIMER_INTERVAL = 10  # seconds
 
 # Number of worker threads
 POOL_NUM_THREAD = 4
+
+# Pattern for validating entity IDs (format: <domain>.<entity>)
+ENTITY_ID_PATTERN = re.compile(r"^(?P<domain>\w+)\.(?P<entity>\w+)$")
 
 
 class HomeAssistant(object):
@@ -399,6 +403,11 @@ class State(object):
     __slots__ = ['entity_id', 'state', 'attributes', 'last_changed']
 
     def __init__(self, entity_id, state, attributes=None, last_changed=None):
+        if not ENTITY_ID_PATTERN.match(entity_id):
+            raise InvalidEntityFormatError((
+                "Invalid entity id encountered: {}. "
+                "Format should be <domain>.<entity>").format(entity_id))
+
         self.entity_id = entity_id
         self.state = state
         self.attributes = attributes or {}
@@ -641,3 +650,7 @@ class Timer(threading.Thread):
 
 class HomeAssistantError(Exception):
     """ General Home Assistant exception occured. """
+
+
+class InvalidEntityFormatError(HomeAssistantError):
+    """ When an invalid formatted entity is encountered. """
