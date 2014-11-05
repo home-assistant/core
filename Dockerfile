@@ -5,4 +5,4 @@ VOLUME /config
 
 EXPOSE 8123
 
-CMD [ "python", "-m", "homeassistant", "--docker" ]
+CMD [ "python", "-m", "homeassistant", "--config", "/config" ]

@@ -2,6 +2,7 @@
 
 import sys
 import os
+import argparse
 
 try:
     from homeassistant import bootstrap
@@ -16,37 +17,46 @@ except ImportError:
     from homeassistant import bootstrap
 
 
-ARG_RUN_TESTS = "--run-tests"
-ARG_DOCKER = '--docker'
-
-
 def main():
     """ Starts Home Assistant. Will create demo config if no config found. """
+    tasks = ['serve', 'test']
 
-    # Do we want to run the tests?
-    if ARG_RUN_TESTS in sys.argv:
-        sys.argv.remove(ARG_RUN_TESTS)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-c', '--config',
+        metavar='path_to_config_dir',
+        default="config",
+        help="Directory that contains the Home Assistant configuration")
+
+    parser.add_argument(
+        '-t', '--task',
+        default=tasks[0],
+        choices=tasks,
+        help="Task to execute. Defaults to serve.")
+
+    args = parser.parse_args()
+
+    if args.task == tasks[1]:
+        # unittest does not like our command line arguments, remove them
+        sys.argv[1:] = []
 
         import unittest
 
         unittest.main(module='homeassistant.test')
 
-    # Within Docker we load the config from a different path
-    if ARG_DOCKER in sys.argv:
-        config_path = '/config/home-assistant.conf'
     else:
-        config_path = 'config/home-assistant.conf'
+        config_path = os.path.join(args.config, 'home-assistant.conf')
 
-    # Ensure a config file exists to make first time usage easier
-    if not os.path.isfile(config_path):
-        with open(config_path, 'w') as conf:
-            conf.write("[http]\n")
-            conf.write("api_password=password\n\n")
-            conf.write("[demo]\n")
+        # Ensure a config file exists to make first time usage easier
+        if not os.path.isfile(config_path):
+            with open(config_path, 'w') as conf:
+                conf.write("[http]\n")
+                conf.write("api_password=password\n\n")
+                conf.write("[demo]\n")
 
-    hass = bootstrap.from_config_file(config_path)
-    hass.start()
-    hass.block_till_stopped()
+        hass = bootstrap.from_config_file(config_path)
+        hass.start()
+        hass.block_till_stopped()
 
 if __name__ == "__main__":
     main()
