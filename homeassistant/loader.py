@@ -20,11 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def prepare(hass):
     """ Prepares the loading of components. """
-    # Ensure we can load custom components from the config dir
-    sys.path.append(hass.config_dir)
-
-    # pylint: disable=import-error
-    import custom_components
+    # Load the built-in components
     import homeassistant.components as components
 
     AVAILABLE_COMPONENTS.clear()
@@ -33,9 +29,23 @@ def prepare(hass):
         item[1] for item in
         pkgutil.iter_modules(components.__path__, 'homeassistant.components.'))
 
-    AVAILABLE_COMPONENTS.extend(
-        item[1] for item in
-        pkgutil.iter_modules(custom_components.__path__, 'custom_components.'))
+    # Look for available custom components
+
+    # Ensure we can load custom components from the config dir
+    sys.path.append(hass.config_dir)
+
+    try:
+        # pylint: disable=import-error
+        import custom_components
+
+        AVAILABLE_COMPONENTS.extend(
+            item[1] for item in
+            pkgutil.iter_modules(
+                custom_components.__path__, 'custom_components.'))
+
+    except ImportError:
+        # No folder custom_components exist in the config directory
+        pass
 
 
 def get_component(comp_name):
