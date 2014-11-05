@@ -41,7 +41,7 @@ def ensure_homeassistant_started():
         hass = ha.HomeAssistant()
 
         hass.bus.listen('test_event', lambda _: _)
-        hass.states.set('test', 'a_state')
+        hass.states.set('test.test', 'a_state')
 
         http.setup(hass,
                    {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD}})
@@ -112,15 +112,15 @@ class TestHTTP(unittest.TestCase):
 
         self.assertEqual(self.hass.states.all(), remote_data)
 
-    def test_api_get(self):
+    def test_api_get_state(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
-            _url(remote.URL_API_STATES_ENTITY.format("test")),
+            _url(remote.URL_API_STATES_ENTITY.format("test.test")),
             headers=HA_HEADERS)
 
         data = ha.State.from_dict(req.json())
 
-        state = self.hass.states.get("test")
+        state = self.hass.states.get("test.test")
 
         self.assertEqual(data.state, state.state)
         self.assertEqual(data.last_changed, state.last_changed)
@@ -155,12 +155,12 @@ class TestHTTP(unittest.TestCase):
 
         req = requests.post(
             _url(remote.URL_API_STATES_ENTITY.format(
-                "test_entity_that_does_not_exist")),
+                "test_entity.that_does_not_exist")),
             data=json.dumps({"state": new_state,
                              "api_password": API_PASSWORD}))
 
         cur_state = (self.hass.states.
-                     get("test_entity_that_does_not_exist").state)
+                     get("test_entity.that_does_not_exist").state)
 
         self.assertEqual(req.status_code, 201)
         self.assertEqual(cur_state, new_state)
@@ -340,7 +340,8 @@ class TestRemoteMethods(unittest.TestCase):
         """ Test Python API get_state. """
 
         self.assertEqual(
-            remote.get_state(self.api, 'test'), self.hass.states.get('test'))
+            remote.get_state(self.api, 'test.test'),
+            self.hass.states.get('test.test'))
 
     def test_get_states(self):
         """ Test Python API get_state_entity_ids. """
@@ -350,17 +351,16 @@ class TestRemoteMethods(unittest.TestCase):
 
     def test_set_state(self):
         """ Test Python API set_state. """
-        remote.set_state(self.api, 'test', 'set_test')
+        remote.set_state(self.api, 'test.test', 'set_test')
 
-        self.assertEqual(self.hass.states.get('test').state, 'set_test')
+        self.assertEqual(self.hass.states.get('test.test').state, 'set_test')
 
     def test_is_state(self):
         """ Test Python API is_state. """
 
-        self.assertEqual(
-            remote.is_state(self.api, 'test',
-                            self.hass.states.get('test').state),
-            True)
+        self.assertTrue(
+            remote.is_state(self.api, 'test.test',
+                            self.hass.states.get('test.test').state))
 
     def test_get_services(self):
         """ Test Python API get_services. """
@@ -407,12 +407,12 @@ class TestRemoteClasses(unittest.TestCase):
 
     def test_statemachine_set(self):
         """ Tests if setting the state on a slave is recorded. """
-        self.slave.states.set("test", "remote.statemachine test")
+        self.slave.states.set("remote.test", "remote.statemachine test")
 
         # Allow interaction between 2 instances
         time.sleep(1)
 
-        self.assertEqual(self.slave.states.get("test").state,
+        self.assertEqual(self.slave.states.get("remote.test").state,
                          "remote.statemachine test")
 
     def test_eventbus_fire(self):
