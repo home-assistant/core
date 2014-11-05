@@ -87,18 +87,19 @@ Once tracking the `device_tracker` component will maintain a file in your config
 <a name='customizing'></a>
 ## Further customizing Home Assistant
 
+If you run into issues while developing your component, reach out to the [Home Assistant developer community](https://groups.google.com/forum/#!forum/home-assistant-dev).
+
 Home Assistant can be extended by components. Components can listen for- or trigger events and offer services. Components are written in Python and can do all the goodness that Python has to offer.
 
 Home Assistant offers [built-in components](#components) but it is easy to built your own. An example component can be found in [`/config/custom_components/example.py`](https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py).
 
-*Note:* Home Assistant will use the directory that contains your config file as the directory that holds your customizations. The included file `start.py` points this at the `/config` folder but this can be placed anywhere on the filesystem.
+*Note:* Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the `./config` folder but this can be placed anywhere on the filesystem.
 
 A component will be loaded on start if a section (ie. `[light]`) for it exists in the config file or a module that depends on the component is loaded. When loading a component Home Assistant will check the following paths:
 
- * &lt;config file directory>/custom_components/&lt;component name>
- * homeassistant/components/&lt;component name> (built-in components)
+ * &lt;config file directory>/custom_components/&lt;component name>.py
+ * homeassistant/components/&lt;component name>.py (built-in components)
 
-A component will be validated upon loading. It will only successfully 
 Upon loading of a component it will be validated to see if the required fields (`DOMAIN`, `DEPENDENCIES`) and required method ( `setup(hass, config)` ) are available.
 
 Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if loading and setup of your component went well.
@@ -109,8 +110,17 @@ After a component is loaded the bootstrapper will call its setup method `setup(h
 
 | Parameter | Description |
 | --------- | ----------- |
-| hass | The Home Assistant object. Call its methods to track time, register services or listen for events. [Overview of available methods.](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L100) |
+| hass | The Home Assistant object. Call its methods to track time, register services or listen for events. [Overview of available methods.](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L54) |
 | config | A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with configuration attributes. |
+
+**Tips on using the Home Assistant object parameter**<br>
+The Home Assistant object contains three objects to help you interact with the system.
+
+| Object | Description |
+| ------ | ----------- |
+| hass.states | This is the StateMachine. The StateMachine allows you to see which states are available and set/test states for specified entities. [See API](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L460). |
+| hass.events | This is the EventBus. The EventBus allows you to listen and trigger events. [See API](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L319). |
+| hass.services | This is the ServiceRegistry. The ServiceRegistry allows you to register services. [See API](https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L541). |
 
 **Example on using the configuration parameter**<br>
 If your configuration file containes the following lines:
