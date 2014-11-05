@@ -20,6 +20,7 @@ import importlib
 
 import homeassistant as ha
 import homeassistant.util as util
+from homeassistant.loader import get_component
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
@@ -47,80 +48,14 @@ SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
 
-_COMPONENT_CACHE = {}
-
-
-def get_component(comp_name, logger=None):
-    """ Tries to load specified component.
-        Looks in config dir first, then built-in components.
-        Only returns it if also found to be valid. """
-
-    if comp_name in _COMPONENT_CACHE:
-        return _COMPONENT_CACHE[comp_name]
-
-    # First config dir, then built-in
-    potential_paths = ['custom_components.{}'.format(comp_name),
-                       'homeassistant.components.{}'.format(comp_name)]
-
-    for path in potential_paths:
-        comp = _get_component(path, logger)
-
-        if comp is not None:
-            if logger is not None:
-                logger.info("Loaded component {} from {}".format(
-                    comp_name, path))
-
-            _COMPONENT_CACHE[comp_name] = comp
-
-            return comp
-
-    # We did not find a component
-    if logger is not None:
-        logger.error(
-            "Failed to find component {}".format(comp_name))
-
-    return None
-
-
-def _get_component(module, logger):
-    """ Tries to load specified component.
-        Only returns it if also found to be valid."""
-    try:
-        comp = importlib.import_module(module)
-
-    except ImportError:
-        return None
-
-    # Validation if component has required methods and attributes
-    errors = []
-
-    if not hasattr(comp, 'DOMAIN'):
-        errors.append("Missing DOMAIN attribute")
-
-    if not hasattr(comp, 'DEPENDENCIES'):
-        errors.append("Missing DEPENDENCIES attribute")
-
-    if not hasattr(comp, 'setup'):
-        errors.append("Missing setup method")
-
-    if errors:
-        if logger:
-            logger.error("Found invalid component {}: {}".format(
-                module, ", ".join(errors)))
-
-        return None
-
-    else:
-        return comp
+__LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
     """ Loads up the module to call the is_on method.
     If there is no entity id given we will check all. """
-    logger = logging.getLogger(__name__)
-
     if entity_id:
-        group = get_component('group', logger)
+        group = get_component('group')
 
         entity_ids = group.expand_entity_ids([entity_id])
     else:
@@ -129,7 +64,7 @@ def is_on(hass, entity_id=None):
     for entity_id in entity_ids:
         domain = util.split_entity_id(entity_id)[0]
 
-        module = get_component(domain, logger)
+        module = get_component(domain)
 
         try:
             if module.is_on(hass, entity_id):

@@ -1,4 +1,6 @@
 """
+homeassistant.bootstrap
+~~~~~~~~~~~~~~~~~~~~~~~
 Provides methods to bootstrap a home assistant instance.
 
 Each method will return a tuple (bus, statemachine).
@@ -14,6 +16,7 @@ from collections import defaultdict
 from itertools import chain
 
 import homeassistant
+import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
 
@@ -46,11 +49,13 @@ def from_config_dict(config, hass=None):
     # List of components we are going to load
     to_load = [key for key in config.keys() if key != homeassistant.DOMAIN]
 
+    loader.prepare(hass)
+
     # Load required components
     while to_load:
         domain = to_load.pop()
 
-        component = core_components.get_component(domain, logger)
+        component = loader.get_component(domain)
 
         # if None it does not exist, error already thrown by get_component
         if component is not None:
@@ -123,7 +128,7 @@ def from_config_dict(config, hass=None):
 
         if group.DOMAIN not in components:
             components[group.DOMAIN] = \
-                core_components.get_component(group.DOMAIN, logger)
+                loader.get_component(group.DOMAIN)
 
     # Setup the components
     if core_components.setup(hass, config):

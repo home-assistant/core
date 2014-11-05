@@ -7,10 +7,10 @@ Sets up a demo environment that mimics interaction with devices
 import random
 
 import homeassistant as ha
-import homeassistant.components.group as group
+import homeassistant.loader as loader
 from homeassistant.components import (SERVICE_TURN_ON, SERVICE_TURN_OFF,
                                       STATE_ON, STATE_OFF, ATTR_ENTITY_PICTURE,
-                                      get_component, extract_entity_ids)
+                                      extract_entity_ids)
 from homeassistant.components.light import (ATTR_XY_COLOR, ATTR_BRIGHTNESS,
                                             GROUP_NAME_ALL_LIGHTS)
 from homeassistant.util import split_entity_id
@@ -22,6 +22,7 @@ DEPENDENCIES = []
 
 def setup(hass, config):
     """ Setup a demo environment. """
+    group = loader.get_component('group')
 
     if config[DOMAIN].get('hide_demo_state') != '1':
         hass.states.set('a.Demo_Mode', 'Enabled')
@@ -57,7 +58,7 @@ def setup(hass, config):
     if ha.CONF_LONGITUDE not in config[ha.DOMAIN]:
         config[ha.DOMAIN][ha.CONF_LONGITUDE] = '-117.22743'
 
-    get_component('sun').setup(hass, config)
+    loader.get_component('sun').setup(hass, config)
 
     # Setup fake lights
     lights = ['light.Bowl', 'light.Ceiling', 'light.TV_Back_light',
