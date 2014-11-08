@@ -106,8 +106,6 @@ def setup_group(hass, name, entity_ids, user_defined=True):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
 
-    logger = logging.getLogger(__name__)
-
     # In case an iterable is passed in
     entity_ids = list(entity_ids)
 
@@ -145,7 +143,7 @@ def setup_group(hass, name, entity_ids, user_defined=True):
         # Check if entity is valid state
         elif state.state != group_off and state.state != group_on:
 
-            errors.append("State of {} is {} (expected: {}, {})".format(
+            errors.append("State of {} is {} (expected: {} or {})".format(
                 entity_id, state.state, group_off, group_on))
 
         # Keep track of the group state to init later on
@@ -156,8 +154,8 @@ def setup_group(hass, name, entity_ids, user_defined=True):
         errors.append('Unable to determine group type for {}'.format(name))
 
     if errors:
-        logger.error("Error setting up group {}: {}".format(
-            name, ", ".join(errors)))
+        logging.getLogger(__name__).error(
+            "Error setting up group %s: %s", name, ", ".join(errors))
 
         return False
 

@@ -118,11 +118,9 @@ def setup(hass, config):
             if light_needed:
 
                 logger.info(
-                    "Home coming event for {}. Turning lights on".
-                    format(entity))
+                    "Home coming event for %s. Turning lights on", entity)
 
-                light.turn_on(hass, light_ids,
-                              profile=light_profile)
+                light.turn_on(hass, light_ids, profile=light_profile)
 
             # Are we in the time span were we would turn on the lights
             # if someone would be home?

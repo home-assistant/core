@@ -153,7 +153,7 @@ def setup(hass, config):
         light_init = HueLightControl
 
     else:
-        logger.error("Found unknown light type: {}".format(light_type))
+        logger.error("Unknown light type specified: %s", light_type)
 
         return False
 
@@ -172,7 +172,7 @@ def setup(hass, config):
             # We have not seen this light before, set it up
 
             # Create entity id
-            logger.info("Found new light {}".format(name))
+            logger.info("Found new light %s", name)
 
             entity_id = util.ensure_unique_string(
                 ENTITY_ID_FORMAT.format(util.slugify(name)),
@@ -251,8 +251,7 @@ def setup(hass, config):
                     # ValueError if not 4 values per row
                     # ValueError if convert to float/int failed
                     logger.error(
-                        "Error parsing light profiles from {}".format(
-                            profile_path))
+                        "Error parsing light profiles from %s", profile_path)
 
                     return False
 
@@ -357,15 +356,16 @@ class HueLightControl(object):
     """ Class to interface with the Hue light system. """
 
     def __init__(self, hass, config):
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger("{}.{}".format(__name__, "HueLightControl"))
 
         host = config.get(ha.CONF_HOST, None)
 
         try:
+            # Pylint does not play nice if not every folders has an __init__.py
+            # pylint: disable=no-name-in-module, import-error
             import homeassistant.external.phue.phue as phue
         except ImportError:
-            logger.exception(
-                "HueLightControl:Error while importing dependency phue.")
+            logger.exception("Error while importing dependency phue.")
 
             self.success_init = False
 
@@ -377,8 +377,8 @@ class HueLightControl(object):
                                            PHUE_CONFIG_FILE))
         except socket.error:  # Error connecting using Phue
             logger.exception((
-                "HueLightControl:Error while connecting to the bridge. "
-                "Is phue registered?"))
+                "Error while connecting to the bridge. "
+                "Did you follow the instructions to set it up?"))
 
             self.success_init = False
 
@@ -389,7 +389,7 @@ class HueLightControl(object):
         self._update_lights()
 
         if len(self._lights) == 0:
-            logger.error("HueLightControl:Could not find any lights. ")
+            logger.error("Could not find any lights. ")
 
             self.success_init = False
         else:
@@ -409,7 +409,7 @@ class HueLightControl(object):
 
     def get_name(self, light_id):
         """ Return name for specified light_id or None if no name known. """
-        if not light_id in self._lights:
+        if light_id not in self._lights:
             self._update_lights()
 
         return self._lights.get(light_id)

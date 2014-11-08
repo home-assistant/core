@@ -117,8 +117,8 @@ def from_config_dict(config, hass=None):
                                 if dep not in validated]
 
                 logger.error(
-                    "Could not validate all dependencies for {}: {}".format(
-                        domain, ", ".join(missing_deps)))
+                    "Could not validate all dependencies for %s: %s",
+                    domain, ", ".join(missing_deps))
 
             break
 
@@ -139,14 +139,12 @@ def from_config_dict(config, hass=None):
 
             try:
                 if component.setup(hass, config):
-                    logger.info("component {} initialized".format(domain))
+                    logger.info("component %s initialized", domain)
                 else:
-                    logger.error(
-                        "component {} failed to initialize".format(domain))
+                    logger.error("component %s failed to initialize", domain)
 
             except Exception:  # pylint: disable=broad-except
-                logger.exception(
-                    "Error during setup of component {}".format(domain))
+                logger.exception("Error during setup of component %s", domain)
 
     else:
         logger.error(("Home Assistant core failed to initialize. "
@@ -175,6 +173,8 @@ def from_config_file(config_path, hass=None, enable_logging=True):
         err_log_path = hass.get_config_path("home-assistant.log")
         err_path_exists = os.path.isfile(err_log_path)
 
+        # Check if we can write to the error log if it exists or that
+        # we can create files in the containgin directory if not.
         if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
            (not err_path_exists and os.access(hass.config_dir, os.W_OK)):
 
@@ -189,8 +189,7 @@ def from_config_file(config_path, hass=None, enable_logging=True):
 
         else:
             logging.getLogger(__name__).error(
-                "Unable to setup error log {} (access denied)".format(
-                    err_log_path))
+                "Unable to setup error log %s (access denied)", err_log_path)
 
     # Read config
     config = configparser.ConfigParser()

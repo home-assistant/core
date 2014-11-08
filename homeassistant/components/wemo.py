@@ -54,6 +54,8 @@ def setup(hass, config):
     logger = logging.getLogger(__name__)
 
     try:
+        # Pylint does not play nice if not every folders has an __init__.py
+        # pylint: disable=no-name-in-module, import-error
         import homeassistant.external.pywemo.pywemo as pywemo
     except ImportError:
         logger.exception((

@@ -35,6 +35,8 @@ URL_API_EVENT_FORWARD = "/api/event_forwarding"
 METHOD_GET = "get"
 METHOD_POST = "post"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 # pylint: disable=no-init, invalid-name
 class APIStatus(enum.Enum):
@@ -84,12 +86,12 @@ class API(object):
                     method, url, data=data, timeout=5, headers=self._headers)
 
         except requests.exceptions.ConnectionError:
-            logging.getLogger(__name__).exception("Error connecting to server")
+            _LOGGER.exception("Error connecting to server")
             raise ha.HomeAssistantError("Error connecting to server")
 
         except requests.exceptions.Timeout:
             error = "Timeout when talking to {}".format(self.host)
-            logging.getLogger(__name__).exception(error)
+            _LOGGER.exception(error)
             raise ha.HomeAssistantError(error)
 
 
@@ -159,7 +161,6 @@ class EventForwarder(object):
     def __init__(self, hass, restrict_origin=None):
         self.hass = hass
         self.restrict_origin = restrict_origin
-        self.logger = logging.getLogger(__name__)
 
         # We use a tuple (host, port) as key to ensure
         # that we do not forward to the same host twice
@@ -205,7 +206,7 @@ class EventForwarder(object):
                 return
 
             for api in self._targets.values():
-                fire_event(api, event.event_type, event.data, self.logger)
+                fire_event(api, event.event_type, event.data)
 
 
 class StateMachine(ha.StateMachine):
@@ -216,8 +217,6 @@ class StateMachine(ha.StateMachine):
 
     def __init__(self, bus, api):
         super().__init__(None)
-
-        self.logger = logging.getLogger(__name__)
 
         self._api = api
 
@@ -232,7 +231,7 @@ class StateMachine(ha.StateMachine):
     def mirror(self):
         """ Discards current data and mirrors the remote state machine. """
         self._states = {state.entity_id: state for state
-                        in get_states(self._api, self.logger)}
+                        in get_states(self._api)}
 
     def _state_changed_listener(self, event):
         """ Listens for state changed events and applies them. """
@@ -298,7 +297,7 @@ def disconnect_remote_events(from_api, to_api):
         pass
 
 
-def get_event_listeners(api, logger=None):
+def get_event_listeners(api):
     """ List of events that is being listened for. """
     try:
         req = api(METHOD_GET, URL_API_EVENTS)
@@ -307,28 +306,26 @@ def get_event_listeners(api, logger=None):
 
     except (ha.HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the json
-        if logger:
-            logger.exception("Bus:Got unexpected result")
+        _LOGGER.exception("Unexpected result retrieving event listeners")
 
         return {}
 
 
-def fire_event(api, event_type, data=None, logger=None):
+def fire_event(api, event_type, data=None):
     """ Fire an event at remote API. """
 
     try:
         req = api(METHOD_POST, URL_API_EVENTS_EVENT.format(event_type), data)
 
-        if req.status_code != 200 and logger:
-            logger.error(
-                "Error firing event: {} - {}".format(
-                    req.status_code, req.text))
+        if req.status_code != 200:
+            _LOGGER.error("Error firing event: %d - %d",
+                          req.status_code, req.text)
 
     except ha.HomeAssistantError:
         pass
 
 
-def get_state(api, entity_id, logger=None):
+def get_state(api, entity_id):
     """ Queries given API for state of entity_id. """
 
     try:
@@ -342,13 +339,12 @@ def get_state(api, entity_id, logger=None):
 
     except (ha.HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the json
-        if logger:
-            logger.exception("Error getting state")
+        _LOGGER.exception("Error fetching state")
 
         return None
 
 
-def get_states(api, logger=None):
+def get_states(api):
     """ Queries given API for all states. """
 
     try:
@@ -360,13 +356,12 @@ def get_states(api, logger=None):
 
     except (ha.HomeAssistantError, ValueError, AttributeError):
         # ValueError if req.json() can't parse the json
-        if logger:
-            logger.exception("Error getting state")
+        _LOGGER.exception("Error fetching states")
 
         return {}
 
 
-def set_state(api, entity_id, new_state, attributes=None, logger=None):
+def set_state(api, entity_id, new_state, attributes=None):
     """ Tells API to update state for entity_id. """
 
     attributes = attributes or {}
@@ -379,24 +374,22 @@ def set_state(api, entity_id, new_state, attributes=None, logger=None):
                   URL_API_STATES_ENTITY.format(entity_id),
                   data)
 
-        if req.status_code != 201 and logger:
-            logger.error(
-                "Error changing state: {} - {}".format(
-                    req.status_code, req.text))
+        if req.status_code != 201:
+            _LOGGER.error("Error changing state: %d - %s",
+                          req.status_code, req.text)
 
     except ha.HomeAssistantError:
-        if logger:
-            logger.exception("Error setting state to server")
+        _LOGGER.exception("Error setting state")
 
 
-def is_state(api, entity_id, state, logger=None):
+def is_state(api, entity_id, state):
     """ Queries API to see if entity_id is specified state. """
-    cur_state = get_state(api, entity_id, logger)
+    cur_state = get_state(api, entity_id)
 
     return cur_state and cur_state.state == state
 
 
-def get_services(api, logger=None):
+def get_services(api):
     """
     Returns a list of dicts. Each dict has a string "domain" and
     a list of strings "services".
@@ -408,24 +401,21 @@ def get_services(api, logger=None):
 
     except (ha.HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the json
-        if logger:
-            logger.exception("ServiceRegistry:Got unexpected result")
+        _LOGGER.exception("Got unexpected services result")
 
         return {}
 
 
-def call_service(api, domain, service, service_data=None, logger=None):
+def call_service(api, domain, service, service_data=None):
     """ Calls a service at the remote API. """
     try:
         req = api(METHOD_POST,
                   URL_API_SERVICES_SERVICE.format(domain, service),
                   service_data)
 
-        if req.status_code != 200 and logger:
-            logger.error(
-                "Error calling service: {} - {}".format(
-                    req.status_code, req.text))
+        if req.status_code != 200:
+            _LOGGER.error("Error calling service: %d - %s",
+                          req.status_code, req.text)
 
     except ha.HomeAssistantError:
-        if logger:
-            logger.exception("Error setting state to server")
+        _LOGGER.exception("Error calling service")

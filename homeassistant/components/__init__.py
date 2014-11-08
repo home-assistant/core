@@ -48,7 +48,7 @@ SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
 
-__LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
@@ -72,7 +72,8 @@ def is_on(hass, entity_id=None):
 
         except AttributeError:
             # module is None or method is_on does not exist
-            pass
+            _LOGGER.exception("Failed to call %s.is_on for %s",
+                              module, entity_id)
 
     return False
 
@@ -123,6 +124,9 @@ def setup(hass, config):
 
         # Generic turn on/off method requires entity id
         if not entity_ids:
+            _LOGGER.error(
+                "homeassistant/%s cannot be called without entity_id",
+                service.service)
             return
 
         # Group entity_ids by domain. groupby requires sorted data.

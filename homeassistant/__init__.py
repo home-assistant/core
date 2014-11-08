@@ -50,6 +50,8 @@ POOL_NUM_THREAD = 4
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(?P<domain>\w+)\.(?P<entity>\w+)$")
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class HomeAssistant(object):
     """ Core class to route all communication to right components. """
@@ -256,7 +258,6 @@ class JobPriority(util.OrderedEnum):
 
 def create_worker_pool(thread_count=POOL_NUM_THREAD):
     """ Creates a worker pool to be used. """
-    logger = logging.getLogger(__name__)
 
     def job_handler(job):
         """ Called whenever a job is available to do. """
@@ -266,19 +267,18 @@ def create_worker_pool(thread_count=POOL_NUM_THREAD):
         except Exception:  # pylint: disable=broad-except
             # Catch any exception our service/event_listener might throw
             # We do not want to crash our ThreadPool
-            logger.exception("BusHandler:Exception doing job")
+            _LOGGER.exception("BusHandler:Exception doing job")
 
     def busy_callback(current_jobs, pending_jobs_count):
         """ Callback to be called when the pool queue gets too big. """
-        log_error = logger.error
 
-        log_error(
-            "WorkerPool:All {} threads are busy and {} jobs pending".format(
-                thread_count, pending_jobs_count))
+        _LOGGER.error(
+            "WorkerPool:All %d threads are busy and %d jobs pending",
+            thread_count, pending_jobs_count)
 
         for start, job in current_jobs:
-            log_error("WorkerPool:Current job from {}: {}".format(
-                util.datetime_to_str(start), job))
+            _LOGGER.error("WorkerPool:Current job from %s: %s",
+                          util.datetime_to_str(start), job)
 
     return util.ThreadPool(thread_count, job_handler, busy_callback)
 
@@ -323,7 +323,6 @@ class EventBus(object):
 
     def __init__(self, pool=None):
         self._listeners = {}
-        self._logger = logging.getLogger(__name__)
         self._lock = threading.Lock()
         self._pool = pool or create_worker_pool()
 
@@ -347,7 +346,7 @@ class EventBus(object):
 
             event = Event(event_type, event_data, origin)
 
-            self._logger.info("Bus:Handling {}".format(event))
+            _LOGGER.info("Bus:Handling %s", event)
 
             if not listeners:
                 return
@@ -602,7 +601,7 @@ class Timer(threading.Thread):
     def run(self):
         """ Start the timer. """
 
-        logging.getLogger(__name__).info("Timer:starting")
+        _LOGGER.info("Timer:starting")
 
         last_fired_on_second = -1
 

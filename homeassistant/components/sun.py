@@ -91,9 +91,8 @@ def setup(hass, config):
             new_state = STATE_BELOW_HORIZON
             next_change = next_rising_dt
 
-        logger.info(
-            "{}. Next change: {}".format(new_state,
-                                         next_change.strftime("%H:%M")))
+        logger.info("%s. Next change: %s",
+                    new_state, next_change.strftime("%H:%M"))
 
         state_attributes = {
             STATE_ATTR_NEXT_RISING: util.datetime_to_str(next_rising_dt),

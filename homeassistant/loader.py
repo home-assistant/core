@@ -63,7 +63,7 @@ def get_component(comp_name):
                        if path in AVAILABLE_COMPONENTS]
 
     if not potential_paths:
-        _LOGGER.error("Failed to find component {}".format(comp_name))
+        _LOGGER.error("Failed to find component %s", comp_name)
 
         return None
 
@@ -71,15 +71,14 @@ def get_component(comp_name):
         comp = _get_component(path)
 
         if comp is not None:
-            _LOGGER.info("Loaded component {} from {}".format(
-                comp_name, path))
+            _LOGGER.info("Loaded component %s from %s", comp_name, path)
 
             _COMPONENT_CACHE[comp_name] = comp
 
             return comp
 
     # We did find components but were unable to load them
-    _LOGGER.error("Unable to load component {}".format(comp_name))
+    _LOGGER.error("Unable to load component %s", comp_name)
 
     return None
 
@@ -91,8 +90,8 @@ def _get_component(module):
         comp = importlib.import_module(module)
 
     except ImportError:
-        _LOGGER.exception(("Error loading {}. Make sure all "
-                           "dependencies are installed").format(module))
+        _LOGGER.exception(("Error loading %s. Make sure all "
+                           "dependencies are installed"), module)
 
         return None
 
@@ -109,8 +108,8 @@ def _get_component(module):
         errors.append("missing setup method")
 
     if errors:
-        _LOGGER.error("Found invalid component {}: {}".format(
-            module, ", ".join(errors)))
+        _LOGGER.error("Found invalid component %s: %s",
+                      module, ", ".join(errors))
 
         return None
 

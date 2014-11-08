@@ -110,12 +110,14 @@ CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass, config):
     """ Sets up the HTTP API and debug interface. """
 
     if not util.validate_config(config, {DOMAIN: [CONF_API_PASSWORD]},
-                                logging.getLogger(__name__)):
+                                _LOGGER):
         return False
 
     api_password = config[DOMAIN]['api_password']
@@ -156,22 +158,17 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.hass = hass
         self.api_password = api_password
         self.development = development
-        self.logger = logging.getLogger(__name__)
-
-        # To store flash messages between sessions
-        self.flash_message = None
 
         # We will lazy init this one if needed
         self.event_forwarder = None
 
         if development:
-            self.logger.info("running frontend in development mode")
+            _LOGGER.info("running frontend in development mode")
 
     def start(self):
         """ Starts the server. """
-        self.logger.info(
-            "Web interface starting at http://{}:{}".format(
-                *self.server_address))
+        _LOGGER.info(
+            "Starting web interface at http://%s:%d", *self.server_address)
 
         self.serve_forever()
 
@@ -256,8 +253,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 try:
                     data.update(json.loads(body_content))
                 except ValueError:
-                    self.server.logger.exception(
-                        "Exception parsing JSON: {}".format(body_content))
+                    _LOGGER.exception("Exception parsing JSON: %s",
+                                      body_content)
 
                     self._message(
                         "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
@@ -598,9 +595,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Helper method to return a message to the caller. """
         if self.use_json:
             self._write_json({'message': message}, status_code=status_code)
-        elif status_code == HTTP_OK:
-            self.server.flash_message = message
-            self._redirect('/')
         else:
             self.send_error(status_code, message)
 

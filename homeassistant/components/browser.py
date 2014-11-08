@@ -21,7 +21,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_BROWSE_URL,
                            lambda service:
                            webbrowser.open(
-                               service.data.get('url',
-                                                'https://www.google.com')))
+                               service.data.get(
+                                   'url', 'https://www.google.com')))
 
     return True

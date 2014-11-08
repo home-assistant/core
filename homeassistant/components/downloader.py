@@ -44,15 +44,15 @@ def setup(hass, config):
     if not os.path.isdir(download_path):
 
         logger.error(
-            "Download path {} does not exist. File Downloader not active.".
-            format(download_path))
+            "Download path %s does not exist. File Downloader not active.",
+            download_path)
 
         return False
 
     def download_file(service):
         """ Starts thread to download file specified in the url. """
 
-        if not ATTR_URL in service.data:
+        if ATTR_URL not in service.data:
             logger.error("Service called but 'url' parameter not specified.")
             return
 
@@ -114,18 +114,16 @@ def setup(hass, config):
 
                         final_path = "{}_{}.{}".format(path, tries, ext)
 
-                    logger.info("{} -> {}".format(url, final_path))
+                    logger.info("%s -> %s", url, final_path)
 
                     with open(final_path, 'wb') as fil:
                         for chunk in req.iter_content(1024):
                             fil.write(chunk)
 
-                    logger.info("Downloading of {} done".format(
-                        url))
+                    logger.info("Downloading of %s done", url)
 
             except requests.exceptions.ConnectionError:
-                logger.exception("ConnectionError occured for {}".
-                                 format(url))
+                logger.exception("ConnectionError occured for %s", url)
 
                 # Remove file if we started downloading but failed
                 if final_path and os.path.isfile(final_path):

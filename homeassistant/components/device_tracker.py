@@ -43,6 +43,8 @@ KNOWN_DEVICES_FILE = "known_devices.csv"
 
 CONF_HTTP_ID = "http_id"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def is_on(hass, entity_id=None):
     """ Returns if any or specified device is home. """
@@ -54,17 +56,15 @@ def is_on(hass, entity_id=None):
 def setup(hass, config):
     """ Sets up the device tracker. """
 
-    logger = logging.getLogger(__name__)
-
     # We have flexible requirements for device tracker so
     # we cannot use util.validate_config
 
     conf = config[DOMAIN]
 
     if ha.CONF_TYPE not in conf:
-        logger.error(
-            'Missing required configuration item in {}: {}'.format(
-                DOMAIN, ha.CONF_TYPE))
+        _LOGGER.error(
+            'Missing required configuration item in %s: %s',
+            DOMAIN, ha.CONF_TYPE)
 
         return False
 
@@ -84,18 +84,18 @@ def setup(hass, config):
         scanner = LuciDeviceScanner
 
     else:
-        logger.error('Found unknown router type {}'.format(router_type))
+        _LOGGER.error('Found unknown router type %s', router_type)
 
         return False
 
-    if not util.validate_config(config, {DOMAIN: fields}, logger):
+    if not util.validate_config(config, {DOMAIN: fields}, _LOGGER):
         return False
 
     device_scanner = scanner(conf)
 
     if not device_scanner.success_init:
-        logger.error(
-            "Failed to initialize device scanner for {}".format(router_type))
+        _LOGGER.error("Failed to initialize device scanner for %s",
+                      router_type)
 
         return False
 
@@ -114,8 +114,6 @@ class DeviceTracker(object):
         self.device_scanner = device_scanner
 
         self.error_scanning = TIME_SPAN_FOR_ERROR_IN_SCANNING
-
-        self.logger = logging.getLogger(__name__)
 
         self.lock = threading.Lock()
 
@@ -205,8 +203,8 @@ class DeviceTracker(object):
                     is_new_file = not os.path.isfile(known_dev_path)
 
                     with open(known_dev_path, 'a') as outp:
-                        self.logger.info((
-                            "DeviceTracker:Found {} new devices,"
+                        _LOGGER.info((
+                            "Found {} new devices,"
                             " updating {}").format(len(unknown_devices),
                                                    known_dev_path))
 
@@ -228,8 +226,8 @@ class DeviceTracker(object):
                                                  'picture': ""}
 
                 except IOError:
-                    self.logger.exception((
-                        "DeviceTracker:Error updating {}"
+                    _LOGGER.exception((
+                        "Error updating {}"
                         "with {} new devices").format(known_dev_path,
                                                       len(unknown_devices)))
 
@@ -292,9 +290,9 @@ class DeviceTracker(object):
                         known_devices[device] = row
 
                     if not known_devices:
-                        self.logger.warning(
-                            "No devices to track. Please update {}.".format(
-                                self.path_known_devices_file))
+                        _LOGGER.warning(
+                            "No devices to track. Please update %s.",
+                            self.path_known_devices_file)
 
                     # Remove entities that are no longer maintained
                     new_entity_ids = set([known_devices[device]['entity_id']
@@ -304,25 +302,22 @@ class DeviceTracker(object):
                     for entity_id in \
                             self.device_entity_ids - new_entity_ids:
 
-                        self.logger.info(
-                            "DeviceTracker:Removing entity {}".format(
-                                entity_id))
+                        _LOGGER.info("Removing entity %s", entity_id)
                         self.states.remove(entity_id)
 
                     # File parsed, warnings given if necessary
                     # entities cleaned up, make it available
                     self.known_devices = known_devices
 
-                    self.logger.info(
-                        "DeviceTracker:Loaded devices from {}".format(
-                            self.path_known_devices_file))
+                    _LOGGER.info("Loaded devices from %s",
+                                 self.path_known_devices_file)
 
                 except KeyError:
                     self.invalid_known_devices_file = True
-                    self.logger.warning((
-                        "Invalid known devices file: {}. "
-                        "We won't update it with new found devices."
-                        ).format(self.path_known_devices_file))
+                    _LOGGER.warning(
+                        ("Invalid known devices file: %s. "
+                         "We won't update it with new found devices."),
+                        self.path_known_devices_file)
 
                 finally:
                     self.lock.release()
@@ -349,7 +344,7 @@ class TomatoDeviceScanner(object):
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("{}.{}".format(__name__, "Tomato"))
         self.lock = threading.Lock()
 
         self.date_updated = None
@@ -390,7 +385,7 @@ class TomatoDeviceScanner(object):
         if not self.date_updated or \
            datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
 
-            self.logger.info("Tomato:Scanning")
+            self.logger.info("Scanning")
 
             try:
                 response = requests.Session().send(self.req, timeout=3)
@@ -415,7 +410,7 @@ class TomatoDeviceScanner(object):
                 elif response.status_code == 401:
                     # Authentication error
                     self.logger.exception((
-                        "Tomato:Failed to authenticate, "
+                        "Failed to authenticate, "
                         "please check your username and password"))
 
                     return False
@@ -424,7 +419,7 @@ class TomatoDeviceScanner(object):
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied
                 self.logger.exception((
-                    "Tomato:Failed to connect to the router"
+                    "Failed to connect to the router"
                     " or invalid http_id supplied"))
 
                 return False
@@ -433,14 +428,14 @@ class TomatoDeviceScanner(object):
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied
                 self.logger.exception(
-                    "Tomato:Connection to the router timed out")
+                    "Connection to the router timed out")
 
                 return False
 
             except ValueError:
                 # If json decoder could not parse the response
                 self.logger.exception(
-                    "Tomato:Failed to parse response from router")
+                    "Failed to parse response from router")
 
                 return False
 
@@ -462,15 +457,17 @@ class NetgearDeviceScanner(object):
         host = config['host']
         username, password = config['username'], config['password']
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("{}.{}".format(__name__, "Netgear"))
         self.date_updated = None
         self.last_results = []
 
         try:
+            # Pylint does not play nice if not every folders has an __init__.py
+            # pylint: disable=no-name-in-module, import-error
             import homeassistant.external.pynetgear.pynetgear as pynetgear
         except ImportError:
             self.logger.exception(
-                ("Netgear:Failed to import pynetgear. "
+                ("Failed to import pynetgear. "
                  "Did you maybe not run `git submodule init` "
                  "and `git submodule update`?"))
 
@@ -481,7 +478,7 @@ class NetgearDeviceScanner(object):
         self._api = pynetgear.Netgear(host, username, password)
         self.lock = threading.Lock()
 
-        self.logger.info("Netgear:Logging in")
+        self.logger.info("Logging in")
         if self._api.login():
             self.success_init = True
             self._update_info()
@@ -526,7 +523,7 @@ class NetgearDeviceScanner(object):
             if not self.date_updated or \
                datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
 
-                self.logger.info("Netgear:Scanning")
+                self.logger.info("Scanning")
 
                 self.last_results = self._api.get_attached_devices()
 
@@ -557,7 +554,7 @@ class LuciDeviceScanner(object):
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("{}.{}".format(__name__, "Luci"))
         self.lock = threading.Lock()
 
         self.date_updated = None
@@ -596,7 +593,7 @@ class LuciDeviceScanner(object):
                 "please check your username and password")
             return
         else:
-            self.logger.error("Invalid response from luci: {}".format(res))
+            self.logger.error("Invalid response from luci: %s", res)
 
     def get_token(self, host, username, password):
         """ Get authentication token for the given host+username+password """
