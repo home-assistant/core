@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import importlib
 
 try:
     from homeassistant import bootstrap
@@ -45,14 +46,43 @@ def main():
         unittest.main(module='homeassistant.test')
 
     else:
-        config_path = os.path.join(args.config, 'home-assistant.conf')
+        # Validate that all core dependencies are installed
+        import_fail = False
+
+        for module in ['requests']:
+            try:
+                importlib.import_module(module)
+            except ImportError:
+                import_fail = True
+                print(
+                    'Fatal Error: Unable to find dependency {}'.format(module))
+
+        if import_fail:
+            print(("Install dependencies by running: "
+                   "pip3 install -r requirements.txt"))
+            exit()
+
+        # Test if configuration directory exists
+        config_dir = os.path.join(os.getcwd(), args.config)
+
+        if not os.path.isdir(config_dir):
+            print(('Fatal Error: Unable to find specified configuration '
+                   'directory {} ').format(config_dir))
+            sys.exit()
+
+        config_path = os.path.join(config_dir, 'home-assistant.conf')
 
         # Ensure a config file exists to make first time usage easier
         if not os.path.isfile(config_path):
-            with open(config_path, 'w') as conf:
-                conf.write("[http]\n")
-                conf.write("api_password=password\n\n")
-                conf.write("[demo]\n")
+            try:
+                with open(config_path, 'w') as conf:
+                    conf.write("[http]\n")
+                    conf.write("api_password=password\n\n")
+                    conf.write("[demo]\n")
+            except IOError:
+                print(('Fatal Error: No configuration file found and unable '
+                       'to write a default one to {}').format(config_path))
+                sys.exit()
 
         hass = bootstrap.from_config_file(config_path)
         hass.start()

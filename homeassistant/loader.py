@@ -91,7 +91,8 @@ def _get_component(module):
         comp = importlib.import_module(module)
 
     except ImportError:
-        _LOGGER.exception("Error loading {}".format(module))
+        _LOGGER.exception(("Error loading {}. Make sure all "
+                           "dependencies are installed").format(module))
 
         return None
 
