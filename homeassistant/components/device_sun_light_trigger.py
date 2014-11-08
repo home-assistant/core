@@ -151,11 +151,9 @@ def setup(hass, config):
 
             light.turn_off(hass)
 
-    # Track home coming of each seperate device
-    for entity in device_entity_ids:
-        hass.track_state_change(entity, check_light_on_dev_state_change,
-                                components.STATE_NOT_HOME,
-                                components.STATE_HOME)
+    # Track home coming of each device
+    hass.track_state_change(device_entity_ids, check_light_on_dev_state_change,
+                            components.STATE_NOT_HOME, components.STATE_HOME)
 
     # Track when all devices are gone to shut down lights
     hass.track_state_change(device_tracker.ENTITY_ID_ALL_DEVICES,

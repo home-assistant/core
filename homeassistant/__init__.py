@@ -106,16 +106,20 @@ class HomeAssistant(object):
         else:
             return self.states.entity_ids
 
-    def track_state_change(self, entity_id, action,
+    def track_state_change(self, entity_ids, action,
                            from_state=None, to_state=None):
         """ Track specific state changes. """
         from_state = _process_match_param(from_state)
         to_state = _process_match_param(to_state)
 
+        # Ensure it is a list with entity ids we want to match on
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+
         @ft.wraps(action)
         def state_listener(event):
             """ The listener that listens for specific state changes. """
-            if entity_id == event.data['entity_id'] and \
+            if event.data['entity_id'] in entity_ids and \
                     'old_state' in event.data and \
                     _matcher(event.data['old_state'].state, from_state) and \
                     _matcher(event.data['new_state'].state, to_state):
