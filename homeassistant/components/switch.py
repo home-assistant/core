@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import (group, extract_entity_ids,
-                                      STATE_ON, STATE_OFF,
-                                      SERVICE_TURN_ON, SERVICE_TURN_OFF,
-                                      ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
+from homeassistant.components import (
+    ToggleDevice, group, extract_entity_ids, STATE_ON,
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
+
 DOMAIN = 'switch'
 DEPENDENCIES = []
 
@@ -143,48 +143,6 @@ def setup(hass, config):
     return True
 
 
-class Switch(object):
-    """ ABC for Switches within Home Assistant. """
-    # pylint: disable=no-self-use
-
-    entity_id = None
-
-    def get_name(self):
-        """ Returns the name of the switch if any. """
-        return None
-
-    def turn_on(self, dimming=100):
-        """
-        Turns the switch on.
-        Dimming is a number between 0-100 and specifies how much switch has
-        to be dimmed. There is no guarantee that the switch supports dimming.
-        """
-        pass
-
-    def turn_off(self):
-        """ Turns the switch off. """
-        pass
-
-    def is_on(self):
-        """ True if switch is on. """
-        return False
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return None
-
-    def update_ha_state(self, hass):
-        """ Updates Home Assistant with its current state. """
-        if self.entity_id is None:
-            raise ha.NoEntitySpecifiedError(
-                "No entity specified for switch {}".format(self.get_name()))
-
-        state = STATE_ON if self.is_on() else STATE_OFF
-
-        return hass.states.set(self.entity_id, state,
-                               self.get_state_attributes())
-
-
 def get_wemo_switches(config):
     """ Find and return WeMo switches. """
 
@@ -213,7 +171,7 @@ def get_wemo_switches(config):
             if isinstance(switch, pywemo.Switch)]
 
 
-class WemoSwitch(Switch):
+class WemoSwitch(ToggleDevice):
     """ represents a WeMo switch within home assistant. """
     def __init__(self, wemo):
         self.wemo = wemo
@@ -223,7 +181,7 @@ class WemoSwitch(Switch):
         """ Returns the name of the switch if any. """
         return self.wemo.name
 
-    def turn_on(self, dimming=100):
+    def turn_on(self, **kwargs):
         """ Turns the switch on. """
         self.wemo.on()
 

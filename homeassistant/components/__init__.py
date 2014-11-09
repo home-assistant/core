@@ -116,6 +116,54 @@ def extract_entity_ids(hass, service):
     return entity_ids
 
 
+class ToggleDevice(object):
+    """ ABC for devices that can be turned on and off. """
+    # pylint: disable=no-self-use
+
+    entity_id = None
+
+    def get_name(self):
+        """ Returns the name of the device if any. """
+        return None
+
+    def turn_on(self, **kwargs):
+        """ Turn the device on. """
+        pass
+
+    def turn_off(self, **kwargs):
+        """ Turn the device off. """
+        pass
+
+    def is_on(self):
+        """ True if device is on. """
+        return False
+
+    def get_state_attributes(self):
+        """ Returns optional state attributes. """
+        return None
+
+    def update(self):
+        """ Retrieve latest state from the real device. """
+        pass
+
+    def update_ha_state(self, hass, force_refresh=False):
+        """
+        Updates Home Assistant with current state of device.
+        If force_refresh == True will update device before setting state.
+        """
+        if self.entity_id is None:
+            raise ha.NoEntitySpecifiedError(
+                "No entity specified for device {}".format(self.get_name()))
+
+        if force_refresh:
+            self.update()
+
+        state = STATE_ON if self.is_on() else STATE_OFF
+
+        return hass.states.set(self.entity_id, state,
+                               self.get_state_attributes())
+
+
 # pylint: disable=unused-argument
 def setup(hass, config):
     """ Setup general services related to homeassistant. """

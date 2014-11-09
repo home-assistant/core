@@ -57,10 +57,9 @@ import csv
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import (group, extract_entity_ids,
-                                      STATE_ON, STATE_OFF,
-                                      SERVICE_TURN_ON, SERVICE_TURN_OFF,
-                                      ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
+from homeassistant.components import (
+    ToggleDevice, group, extract_entity_ids, STATE_ON,
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 
 
 DOMAIN = "light"
@@ -89,6 +88,8 @@ ATTR_PROFILE = "profile"
 
 PHUE_CONFIG_FILE = "phue.conf"
 LIGHT_PROFILES_FILE = "light_profiles.csv"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
@@ -142,90 +143,42 @@ def turn_off(hass, entity_id=None, transition=None):
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
 
-    logger = logging.getLogger(__name__)
-
-    if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, logger):
+    if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, _LOGGER):
         return False
 
     light_type = config[DOMAIN][ha.CONF_TYPE]
 
     if light_type == 'hue':
-        light_init = HueLightControl
+        light_init = get_hue_lights
 
     else:
-        logger.error("Unknown light type specified: %s", light_type)
+        _LOGGER.error("Unknown light type specified: %s", light_type)
 
         return False
 
-    light_control = light_init(hass, config[DOMAIN])
+    lights = light_init(hass, config[DOMAIN])
+
+    if len(lights) == 0:
+        _LOGGER.error("No lights found")
+        return False
 
     ent_to_light = {}
-    light_to_ent = {}
 
-    def _update_light_state(light_id, light_state):
-        """ Update statemachine based on the LightState passed in. """
-        name = light_control.get_name(light_id) or "Unknown Light"
+    no_name_count = 1
 
-        try:
-            entity_id = light_to_ent[light_id]
-        except KeyError:
-            # We have not seen this light before, set it up
+    for light in lights:
+        name = light.get_name()
 
-            # Create entity id
-            logger.info("Found new light %s", name)
+        if name is None:
+            name = "Light #{}".format(no_name_count)
+            no_name_count += 1
 
-            entity_id = util.ensure_unique_string(
-                ENTITY_ID_FORMAT.format(util.slugify(name)),
-                list(ent_to_light.keys()))
+        entity_id = util.ensure_unique_string(
+            ENTITY_ID_FORMAT.format(util.slugify(name)),
+            list(ent_to_light.keys()))
 
-            ent_to_light[entity_id] = light_id
-            light_to_ent[light_id] = entity_id
-
-        state_attr = {ATTR_FRIENDLY_NAME: name}
-
-        if light_state.on:
-            state = STATE_ON
-
-            if light_state.brightness:
-                state_attr[ATTR_BRIGHTNESS] = light_state.brightness
-
-            if light_state.color:
-                state_attr[ATTR_XY_COLOR] = light_state.color
-
-        else:
-            state = STATE_OFF
-
-        hass.states.set(entity_id, state, state_attr)
-
-    def update_light_state(light_id):
-        """ Update the state of specified light. """
-        _update_light_state(light_id, light_control.get(light_id))
-
-    # pylint: disable=unused-argument
-    def update_lights_state(time, force_reload=False):
-        """ Update the state of all the lights. """
-
-        # First time this method gets called, force_reload should be True
-        if force_reload or \
-           datetime.now() - update_lights_state.last_updated > \
-           MIN_TIME_BETWEEN_SCANS:
-
-            logger.info("Updating light status")
-            update_lights_state.last_updated = datetime.now()
-
-            for light_id, light_state in light_control.gets().items():
-                _update_light_state(light_id, light_state)
-
-    # Update light state and discover lights for tracking the group
-    update_lights_state(None, True)
-
-    if len(ent_to_light) == 0:
-        logger.error("No lights found")
-        return False
-
-    # Track all lights in a group
-    group.setup_group(
-        hass, GROUP_NAME_ALL_LIGHTS, light_to_ent.values(), False)
+        light.entity_id = entity_id
+        ent_to_light[entity_id] = light
 
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),
@@ -250,10 +203,22 @@ def setup(hass, config):
                 except ValueError:
                     # ValueError if not 4 values per row
                     # ValueError if convert to float/int failed
-                    logger.error(
+                    _LOGGER.error(
                         "Error parsing light profiles from %s", profile_path)
 
                     return False
+
+    # pylint: disable=unused-argument
+    def update_lights_state(now):
+        """ Update the states of all the lights. """
+        for light in lights:
+            light.update_ha_state(hass)
+
+    update_lights_state(None)
+
+    # Track all lights in a group
+    group.setup_group(
+        hass, GROUP_NAME_ALL_LIGHTS, ent_to_light.keys(), False)
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
@@ -261,17 +226,18 @@ def setup(hass, config):
         dat = service.data
 
         # Convert the entity ids to valid light ids
-        light_ids = [ent_to_light[entity_id] for entity_id
-                     in extract_entity_ids(hass, service)
-                     if entity_id in ent_to_light]
+        lights = [ent_to_light[entity_id] for entity_id
+                  in extract_entity_ids(hass, service)
+                  if entity_id in ent_to_light]
 
-        if not light_ids:
-            light_ids = list(ent_to_light.values())
+        if not lights:
+            lights = list(ent_to_light.values())
 
         transition = util.convert(dat.get(ATTR_TRANSITION), int)
 
         if service.service == SERVICE_TURN_OFF:
-            light_control.turn_light_off(light_ids, transition)
+            for light in lights:
+                light.turn_off(transition=transition)
 
         else:
             # Processing extra data for turn light on request
@@ -317,14 +283,12 @@ def setup(hass, config):
                     # ValueError if not all values can be converted to int
                     pass
 
-            light_control.turn_light_on(light_ids, transition, bright, color)
+            for light in lights:
+                light.turn_on(transition=transition, brightness=bright,
+                              xy_color=color)
 
-        # Update state of lights touched. If there was only 1 light selected
-        # then just update that light else update all
-        if len(light_ids) == 1:
-            update_light_state(light_ids[0])
-        else:
-            update_lights_state(None, True)
+        for light in lights:
+            light.update_ha_state(hass, True)
 
     # Update light state every 30 seconds
     hass.track_time_change(update_lights_state, second=[0, 30])
@@ -339,140 +303,134 @@ def setup(hass, config):
     return True
 
 
-LightState = namedtuple("LightState", ['on', 'brightness', 'color'])
+def get_hue_lights(hass, config):
+    """ Gets the Hue lights. """
+    host = config.get(ha.CONF_HOST, None)
 
-
-def _hue_to_light_state(info):
-    """ Helper method to convert a Hue state to a LightState. """
     try:
-        return LightState(info['state']['reachable'] and info['state']['on'],
-                          info['state']['bri'], info['state']['xy'])
-    except KeyError:
-        # KeyError if one of the keys didn't exist
-        return None
+        # Pylint does not play nice if not every folders has an __init__.py
+        # pylint: disable=no-name-in-module, import-error
+        import homeassistant.external.phue.phue as phue
+    except ImportError:
+        _LOGGER.exception("Hue:Error while importing dependency phue.")
 
+        return []
 
-class HueLightControl(object):
-    """ Class to interface with the Hue light system. """
+    try:
+        bridge = phue.Bridge(
+            host, config_file_path=hass.get_config_path(PHUE_CONFIG_FILE))
+    except socket.error:  # Error connecting using Phue
+        _LOGGER.exception((
+            "Hue:Error while connecting to the bridge. "
+            "Did you follow the instructions to set it up?"))
 
-    def __init__(self, hass, config):
-        logger = logging.getLogger("{}.{}".format(__name__, "HueLightControl"))
+        return []
 
-        host = config.get(ha.CONF_HOST, None)
+    lights = {}
 
-        try:
-            # Pylint does not play nice if not every folders has an __init__.py
-            # pylint: disable=no-name-in-module, import-error
-            import homeassistant.external.phue.phue as phue
-        except ImportError:
-            logger.exception("Error while importing dependency phue.")
-
-            self.success_init = False
-
-            return
+    def update_lights(force_reload=False):
+        """ Updates the light states. """
+        now = datetime.now()
 
         try:
-            self._bridge = phue.Bridge(host,
-                                       config_file_path=hass.get_config_path(
-                                           PHUE_CONFIG_FILE))
-        except socket.error:  # Error connecting using Phue
-            logger.exception((
-                "Error while connecting to the bridge. "
-                "Did you follow the instructions to set it up?"))
+            time_scans = now - update_lights.last_updated
 
-            self.success_init = False
-
-            return
-
-        # Dict mapping light_id to name
-        self._lights = {}
-        self._update_lights()
-
-        if len(self._lights) == 0:
-            logger.error("Could not find any lights. ")
-
-            self.success_init = False
-        else:
-            self.success_init = True
-
-    def _update_lights(self):
-        """ Helper method to update the known names from Hue. """
-        try:
-            self._lights = {int(item[0]): item[1]['name'] for item
-                            in self._bridge.get_light().items()}
-
-        except (socket.error, KeyError):
-            # socket.error because sometimes we cannot reach Hue
-            # KeyError if we got unexpected data
-            # We don't do anything, keep old values
+            # force_reload == True, return if updated in last second
+            # force_reload == False, return if last update was less then
+            # MIN_TIME_BETWEEN_SCANS ago
+            if force_reload and time_scans.seconds < 1 or \
+               not force_reload and time_scans < MIN_TIME_BETWEEN_SCANS:
+                return
+        except AttributeError:
+            # First time we run last_updated is not set, continue as usual
             pass
 
-    def get_name(self, light_id):
-        """ Return name for specified light_id or None if no name known. """
-        if light_id not in self._lights:
-            self._update_lights()
-
-        return self._lights.get(light_id)
-
-    def get(self, light_id):
-        """ Return a LightState representing light light_id. """
-        try:
-            info = self._bridge.get_light(light_id)
-
-            return _hue_to_light_state(info)
-
-        except socket.error:
-            # socket.error when we cannot reach Hue
-            return None
-
-    def gets(self):
-        """ Return a dict with id mapped to LightState objects. """
-        states = {}
+        update_lights.last_updated = now
 
         try:
-            api = self._bridge.get_api()
-
+            api = bridge.get_api()
         except socket.error:
             # socket.error when we cannot reach Hue
-            return states
+            _LOGGER.exception("Hue:Cannot reach the bridge")
+            return
 
         api_states = api.get('lights')
 
         if not isinstance(api_states, dict):
-            return states
+            _LOGGER.error("Hue:Got unexpected result from Hue API")
+            return
 
         for light_id, info in api_states.items():
-            state = _hue_to_light_state(info)
+            if light_id not in lights:
+                lights[light_id] = HueLight(int(light_id), info,
+                                            bridge, update_lights)
+            else:
+                lights[light_id].info = info
 
-            if state:
-                states[int(light_id)] = state
+    update_lights()
 
-        return states
+    return list(lights.values())
 
-    def turn_light_on(self, light_ids, transition, brightness, xy_color):
+
+class HueLight(ToggleDevice):
+    """ Represents a Hue light """
+
+    def __init__(self, light_id, info, bridge, update_lights):
+        self.light_id = light_id
+        self.info = info
+        self.bridge = bridge
+        self.update_lights = update_lights
+
+    def get_name(self):
+        """ Get the mame of the Hue light. """
+        return self.info['name']
+
+    def turn_on(self, **kwargs):
         """ Turn the specified or all lights on. """
         command = {'on': True}
 
-        if transition is not None:
+        if kwargs.get('transition') is not None:
             # Transition time is in 1/10th seconds and cannot exceed
             # 900 seconds.
-            command['transitiontime'] = min(9000, transition * 10)
+            command['transitiontime'] = min(9000, kwargs['transition'] * 10)
 
-        if brightness is not None:
-            command['bri'] = brightness
+        if kwargs.get('brightness') is not None:
+            command['bri'] = kwargs['brightness']
 
-        if xy_color:
-            command['xy'] = xy_color
+        if kwargs.get('xy_color') is not None:
+            command['xy'] = kwargs['xy_color']
 
-        self._bridge.set_light(light_ids, command)
+        self.bridge.set_light(self.light_id, command)
 
-    def turn_light_off(self, light_ids, transition):
+    def turn_off(self, **kwargs):
         """ Turn the specified or all lights off. """
         command = {'on': False}
 
-        if transition is not None:
+        if kwargs.get('transition') is not None:
             # Transition time is in 1/10th seconds and cannot exceed
             # 900 seconds.
-            command['transitiontime'] = min(9000, transition * 10)
+            command['transitiontime'] = min(9000, kwargs['transition'] * 10)
 
-        self._bridge.set_light(light_ids, command)
+        self.bridge.set_light(self.light_id, command)
+
+    def is_on(self):
+        """ True if device is on. """
+        self.update_lights()
+
+        return self.info['state']['reachable'] and self.info['state']['on']
+
+    def get_state_attributes(self):
+        """ Returns optional state attributes. """
+        attr = {
+            ATTR_FRIENDLY_NAME: self.get_name()
+        }
+
+        if self.is_on():
+            attr[ATTR_BRIGHTNESS] = self.info['state']['bri']
+            attr[ATTR_XY_COLOR] = self.info['state']['xy']
+
+        return attr
+
+    def update(self):
+        """ Synchronize state with bridge. """
+        self.update_lights(True)
