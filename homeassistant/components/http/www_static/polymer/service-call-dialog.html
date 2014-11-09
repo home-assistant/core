@@ -68,7 +68,7 @@
       this.api.call_service(
         this.$.inputDomain.value,
         this.$.inputService.value,
-        this.$.inputData.value
+        JSON.parse(this.$.inputData.value)
         )
     }
   });

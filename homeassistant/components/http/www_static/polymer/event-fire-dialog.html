@@ -70,7 +70,7 @@
     clickFireEvent: function() {
       this.api.fire_event(
         this.$.inputType.value,
-        this.$.inputData.value
+        JSON.parse(this.$.inputData.value)
         )
     }
   });

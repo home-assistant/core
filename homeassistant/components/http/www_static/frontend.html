@@ -19139,7 +19139,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     clickFireEvent: function() {
       this.api.fire_event(
         this.$.inputType.value,
-        this.$.inputData.value
+        JSON.parse(this.$.inputData.value)
         )
     }
   });
@@ -19861,7 +19861,7 @@ core-item {
       this.api.call_service(
         this.$.inputDomain.value,
         this.$.inputService.value,
-        this.$.inputData.value
+        JSON.parse(this.$.inputData.value)
         )
     }
   });
@@ -20281,8 +20281,6 @@ core-item {
     },
 
     fire_event: function(eventType, eventData) {
-      eventData = eventData ? JSON.parse(eventData) : "";
-
       var successToast = function() {
         this.showToast("Event "+eventType+" fired.");
       }
