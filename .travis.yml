@@ -1,0 +1,5 @@
+language: python
+python:
+    - "3.4"
+script:
+  python -m homeassistant -t test
