@@ -37,7 +37,12 @@
   Object.defineProperties(State.prototype, {
     "stateDisplay": {
       get: function() {
-        return this.state.replace(/_/g, " ");
+        var state = this.state.replace(/_/g, " ");
+        if(this.attributes.unit_of_measurement) {
+          return state + " " + this.attributes.unit_of_measurement;
+        } else {
+          return state;
+        }
       }
     },
 

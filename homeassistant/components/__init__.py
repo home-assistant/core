@@ -31,6 +31,9 @@ ATTR_FRIENDLY_NAME = "friendly_name"
 # A picture to represent entity
 ATTR_ENTITY_PICTURE = "entity_picture"
 
+# The unit of measurement if applicable
+ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+
 STATE_ON = 'on'
 STATE_OFF = 'off'
 STATE_HOME = 'home'
