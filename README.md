@@ -182,13 +182,13 @@ Optional service data:
   - `rgb_color` - three comma seperated integers that represent the color in RGB
   - `brightness` - integer between 0 and 255 for how bright the color should be
 
-**wemo**
-Keeps track which WeMo switches are in the network, their state and allows you to control them.
+**switch**
+Keeps track which switches are in the network, their state and allows you to control them.
 
-Registers services `wemo/turn_on` and `wemo/turn_off` to turn a or all wemo switches on or off.
+Registers services `switch/turn_on` and `switch/turn_off` to turn a or all switches on or off.
 
 Optional service data:
- - `entity_id` - only act on specific WeMo switch. Else targets all.
+ - `entity_id` - only act on specific switch. Else targets all.
 
 **device_sun_light_trigger**
 Turns lights on or off using a light control component based on state of the sun and devices that are home.

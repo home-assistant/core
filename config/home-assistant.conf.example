@@ -23,9 +23,9 @@ password=PASSWORD
 # instead of scanning the network
 # hosts=192.168.1.9,192.168.1.12
 
-[wemo]
-# Optional: hard code the hosts (comma seperated) to find WeMos
-# instead of scanning the network
+[switch]
+type=wemo
+# Optional: hard code the hosts (comma seperated) to avoid scanning the network
 # hosts=192.168.1.9,192.168.1.12
 
 [downloader]

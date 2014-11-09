@@ -74,20 +74,20 @@ def setup(hass, config):
 
     group.setup_group(hass, GROUP_NAME_ALL_LIGHTS, lights, False)
 
-    # Setup Wemo
-    wemos = ['wemo.AC', 'wemo.Christmas_Lights']
+    # Setup switch
+    switches = ['switch.AC', 'switch.Christmas_Lights']
 
-    hass.services.register('wemo', SERVICE_TURN_ON, mock_turn_on)
-    hass.services.register('wemo', SERVICE_TURN_OFF, mock_turn_off)
+    hass.services.register('switch', SERVICE_TURN_ON, mock_turn_on)
+    hass.services.register('switch', SERVICE_TURN_OFF, mock_turn_off)
 
-    mock_turn_on(ha.ServiceCall('wemo', SERVICE_TURN_ON,
-                                {'entity_id': wemos[0:1]}))
-    mock_turn_off(ha.ServiceCall('wemo', SERVICE_TURN_OFF,
-                                 {'entity_id': wemos[1:]}))
+    mock_turn_on(ha.ServiceCall('switch', SERVICE_TURN_ON,
+                                {'entity_id': switches[0:1]}))
+    mock_turn_off(ha.ServiceCall('switch', SERVICE_TURN_OFF,
+                                 {'entity_id': switches[1:]}))
 
     # Setup room groups
-    group.setup_group(hass, 'living_room', lights[0:3] + wemos[0:1])
-    group.setup_group(hass, 'bedroom', [lights[3]] + wemos[1:])
+    group.setup_group(hass, 'living_room', lights[0:3] + switches[0:1])
+    group.setup_group(hass, 'bedroom', [lights[3]] + switches[1:])
 
     # Setup process
     hass.states.set("process.XBMC", STATE_ON)
