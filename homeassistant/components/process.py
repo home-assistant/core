@@ -1,23 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# -*- Python -*-
-#
-# $Id: process.py $
-#
-# Author: Markus Stenberg <fingon@iki.fi>
-#
-# Copyright (c) 2014 Markus Stenberg
-#
-# Created:       Wed Apr 23 23:33:26 2014 mstenber
-# Last modified: Thu Apr 24 17:13:04 2014 mstenber
-# Edit time:     19 min
-#
 """
 homeassistant.components.process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to watch for specific processes running
 on the host machine.
+
+Author: Markus Stenberg <fingon@iki.fi>
 """
 
 import os
