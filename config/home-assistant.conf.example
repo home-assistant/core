@@ -5,6 +5,8 @@ longitude=-117.22743
 
 [http]
 api_password=mypass
+# Set to 1 to load each Polymer component separately
+# development=1
 
 [light]
 type=hue
