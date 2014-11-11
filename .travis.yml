@@ -1,5 +1,10 @@
 language: python
 python:
-    - "3.4"
+  - "3.4"
+install:
+  - pip install -r requirements.txt
+  - pip install pep8
 script:
-  python -m homeassistant -t test
+  - pep8 homeassistant --exclude bower_components,external
+  - python -m homeassistant -t test
+
