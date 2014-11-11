@@ -415,10 +415,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             status_code = HTTP_CREATED if is_new_state else HTTP_OK
 
-            self._write_json(state.as_dict(),
-                             status_code=status_code,
-                             location=
-                             rem.URL_API_STATES_ENTITY.format(entity_id))
+            self._write_json(
+                state.as_dict(),
+                status_code=status_code,
+                location=rem.URL_API_STATES_ENTITY.format(entity_id))
         else:
             self._message(
                 "State of {} changed to {}".format(entity_id, new_state))
