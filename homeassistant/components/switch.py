@@ -171,6 +171,22 @@ def get_wemo_switches(config):
             if isinstance(switch, pywemo.Switch)]
 
 
+# pylint: disable=unused-argument
+def get_tellstick_switches(config):
+    """ Find and return Tellstick switches. """
+    try:
+        import tellcore.telldus as telldus
+    except ImportError:
+        _LOGGER.exception(
+            "Failed to import tellcore")
+        return []
+
+    core = telldus.TelldusCore()
+    switches = core.devices()
+
+    return [TellstickSwitch(switch) for switch in switches]
+
+
 class WemoSwitch(ToggleDevice):
     """ represents a WeMo switch within home assistant. """
     def __init__(self, wemo):
@@ -192,6 +208,45 @@ class WemoSwitch(ToggleDevice):
     def is_on(self):
         """ True if switch is on. """
         return self.wemo.get_state(True)
+
+    def get_state_attributes(self):
+        """ Returns optional state attributes. """
+        return self.state_attr
+
+
+class TellstickSwitch(ToggleDevice):
+    """ represents a Tellstick switch within home assistant. """
+    def __init__(self, tellstick):
+        self.tellstick = tellstick
+        self.state_attr = {ATTR_FRIENDLY_NAME: tellstick.name}
+
+    def get_name(self):
+        """ Returns the name of the switch if any. """
+        return self.tellstick.name
+
+    # pylint: disable=unused-argument
+    def turn_on(self, dimming=None):
+        """ Turns the switch on. """
+        self.tellstick.turn_on()
+
+    def turn_off(self):
+        """ Turns the switch off. """
+        self.tellstick.turn_off()
+
+    def is_on(self):
+        """ True if switch is on. """
+        try:
+            import tellcore.constants as tellcore_constants
+        except ImportError:
+            _LOGGER.exception(
+                "Failed to import tellcore")
+            return False
+
+        last_sent_command_mask = tellcore_constants.TELLSTICK_TURNON | \
+            tellcore_constants.TELLSTICK_TURNOFF
+
+        return self.tellstick.last_sent_command(last_sent_command_mask) == \
+            tellcore_constants.TELLSTICK_TURNON
 
     def get_state_attributes(self):
         """ Returns optional state attributes. """

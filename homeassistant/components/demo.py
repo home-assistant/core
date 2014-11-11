@@ -113,4 +113,16 @@ def setup(hass, config):
     hass.states.set("chromecast.Living_Rm", "Netflix",
                     {'friendly_name': 'Living Room'})
 
+    # Setup tellstick sensors
+    hass.states.set("tellstick_sensor.Outside_temperature", "15.6",
+                    {
+                        'friendly_name': 'Outside temperature',
+                        'unit_of_measurement': '°C'
+                    })
+    hass.states.set("tellstick_sensor.Outside_humidity", "54",
+                    {
+                        'friendly_name': 'Outside humidity',
+                        'unit_of_measurement': '°C'
+                    })
+
     return True
