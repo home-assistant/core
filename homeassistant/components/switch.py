@@ -65,6 +65,9 @@ def setup(hass, config):
     if switch_type == 'wemo':
         switch_init = get_wemo_switches
 
+    elif switch_type == 'tellstick':
+        switch_init = get_tellstick_switches
+
     else:
         logger.error("Unknown switch type specified: %s", switch_type)
 
@@ -225,7 +228,7 @@ class TellstickSwitch(ToggleDevice):
         return self.tellstick.name
 
     # pylint: disable=unused-argument
-    def turn_on(self, dimming=None):
+    def turn_on(self, **kwargs):
         """ Turns the switch on. """
         self.tellstick.turn_on()
 
@@ -235,6 +238,7 @@ class TellstickSwitch(ToggleDevice):
 
     def is_on(self):
         """ True if switch is on. """
+
         try:
             import tellcore.constants as tellcore_constants
         except ImportError:

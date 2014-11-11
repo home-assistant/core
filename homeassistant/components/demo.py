@@ -122,7 +122,7 @@ def setup(hass, config):
     hass.states.set("tellstick_sensor.Outside_humidity", "54",
                     {
                         'friendly_name': 'Outside humidity',
-                        'unit_of_measurement': '°C'
+                        'unit_of_measurement': '%'
                     })
 
     return True
