@@ -9,6 +9,7 @@ It offers the following functionality through built-in components:
  * Track and control [WeMo switches](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/)
  * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast)
  * Track running services by monitoring `ps` output
+ * Track and control [Tellstick devices and sensors](http://www.telldus.se/products/tellstick)
  * Turn on the lights when people get home after sun set
  * Turn on lights slowly during sun set to compensate for light loss
  * Turn off all lights and devices when everybody leaves the house
@@ -51,7 +52,7 @@ docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -
 After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in [/config/home-assistant.conf.example](https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example).
 
 ### Philips Hue
-To get Philips Hue working you will have to connect Home Assistant to the Hue bridge. 
+To get Philips Hue working you will have to connect Home Assistant to the Hue bridge.
 
 Run the following command from your config dir and follow the instructions:
 
@@ -146,11 +147,11 @@ When a state is changed a state_changed event is fired for which the device_sun_
     In the event that the state of device 'Paulus Nexus 5' changes to the 'Home' state:
       If the sun has set and the lights are not on:
         Turn on the lights
-    
+
     In the event that the combined state of all tracked devices changes to 'Not Home':
       If the lights are on:
         Turn off the lights
-        
+
     In the event of the sun setting:
       If the lights are off and the combined state of all tracked device equals 'Home':
         Turn on the lights
@@ -167,7 +168,7 @@ Action: maintains state of `weather.sun` including attributes `next_rising` and 
 
 **device_tracker**
 Keeps track of which devices are currently home.
-Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `config/known_devices.csv`. 
+Action: sets the state per device and maintains a combined state called `all_devices`. Keeps track of known devices in the file `config/known_devices.csv`.
 
 **light**
 Keeps track which lights are turned on and can control the lights. It has [4 built-in light profiles](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/light/light_profiles.csv) which you're able to extend by putting a light_profiles.csv file in your config dir.
@@ -195,8 +196,8 @@ Turns lights on or off using a light control component based on state of the sun
 Depends on: light control, track_sun, device_tracker
 Action:
 
- * Turns lights off when all devices leave home. 
- * Turns lights on when a device is home while sun is setting. 
+ * Turns lights off when all devices leave home.
+ * Turns lights on when a device is home while sun is setting.
  * Turns lights on when a device gets home after sun set.
 
 **chromecast**
@@ -218,10 +219,13 @@ Registers service `downloader/download_file` that will download files. File to d
 **browser**
 Registers service `browser/browse_url` that opens `url` as specified in event_data in the system default browser.
 
+**tellstick_sensor**
+Shows the values of that sensors that is connected to your Tellstick.
+
 <a name='API'></a>
 ## Rest API
 
-Home Assistent runs a webserver accessible on port 8123. 
+Home Assistent runs a webserver accessible on port 8123.
 
   * At http://127.0.0.1:8123/ it will provide an interface allowing you to control Home Assistant.
   * At http://localhost:8123/api/ it provides a password protected API.
@@ -291,17 +295,17 @@ Returns a dict with as keys the entity_ids and as value the state.
 [
     {
         "attributes": {
-            "next_rising": "07:04:15 29-10-2013", 
+            "next_rising": "07:04:15 29-10-2013",
             "next_setting": "18:00:31 29-10-2013"
-        }, 
-        "entity_id": "sun.sun", 
-        "last_changed": "23:24:33 28-10-2013", 
+        },
+        "entity_id": "sun.sun",
+        "last_changed": "23:24:33 28-10-2013",
         "state": "below_horizon"
     },
     {
-        "attributes": {}, 
-        "entity_id": "process.Dropbox", 
-        "last_changed": "23:24:33 28-10-2013", 
+        "attributes": {},
+        "entity_id": "process.Dropbox",
+        "last_changed": "23:24:33 28-10-2013",
         "state": "on"
     }
 ]
@@ -313,11 +317,11 @@ Returns the current state from an entity
 ```json
 {
     "attributes": {
-        "next_rising": "07:04:15 29-10-2013", 
+        "next_rising": "07:04:15 29-10-2013",
         "next_setting": "18:00:31 29-10-2013"
-    }, 
-    "entity_id": "sun.sun", 
-    "last_changed": "23:24:33 28-10-2013", 
+    },
+    "entity_id": "sun.sun",
+    "last_changed": "23:24:33 28-10-2013",
     "state": "below_horizon"
 }
 ```
@@ -330,11 +334,11 @@ optional parameter: attributes - JSON encoded object
 ```json
 {
     "attributes": {
-        "next_rising": "07:04:15 29-10-2013", 
+        "next_rising": "07:04:15 29-10-2013",
         "next_setting": "18:00:31 29-10-2013"
-    }, 
-    "entity_id": "weather.sun", 
-    "last_changed": "23:24:33 28-10-2013", 
+    },
+    "entity_id": "weather.sun",
+    "last_changed": "23:24:33 28-10-2013",
     "state": "below_horizon"
 }
 ```
