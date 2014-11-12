@@ -3,8 +3,8 @@ python:
   - "3.4"
 install:
   - pip install -r requirements.txt
-  - pip install pep8
+  - pip install pep8 pylint
 script:
   - pep8 homeassistant --exclude bower_components,external
+  - pylint homeassistant
   - python -m homeassistant -t test
-

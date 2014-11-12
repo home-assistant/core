@@ -1,7 +1,12 @@
 [MASTER]
 ignore=external
+reports=no
 
-disable=locally-disabled,duplicate-code
+# Reasons disabled:
+# locally-disabled - it spams too much
+# duplicate-code - unavoidable
+# cyclic-import - doesn't test if both import on load
+disable=locally-disabled,duplicate-code,cyclic-import
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError
