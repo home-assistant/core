@@ -8,8 +8,9 @@ from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
+from homeassistant.loader import get_component
 from homeassistant.components import (
-    ToggleDevice, group, extract_entity_ids, STATE_ON,
+    group, extract_entity_ids, STATE_ON,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 
 DOMAIN = 'switch'
@@ -62,18 +63,14 @@ def setup(hass, config):
 
     switch_type = config[DOMAIN][ha.CONF_TYPE]
 
-    if switch_type == 'wemo':
-        switch_init = get_wemo_switches
+    switch_init = get_component('switch.{}'.format(switch_type))
 
-    elif switch_type == 'tellstick':
-        switch_init = get_tellstick_switches
-
-    else:
-        logger.error("Unknown switch type specified: %s", switch_type)
+    if switch_init is None:
+        logger.error("Error loading switch component %s", switch_type)
 
         return False
 
-    switches = switch_init(config[DOMAIN])
+    switches = switch_init.get_switches(hass, config[DOMAIN])
 
     if len(switches) == 0:
         logger.error("No switches found")
@@ -144,114 +141,3 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_switch_service)
 
     return True
-
-
-def get_wemo_switches(config):
-    """ Find and return WeMo switches. """
-
-    try:
-        # Pylint does not play nice if not every folders has an __init__.py
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.external.pywemo.pywemo as pywemo
-    except ImportError:
-        _LOGGER.exception((
-            "Wemo:Failed to import pywemo. "
-            "Did you maybe not run `git submodule init` "
-            "and `git submodule update`?"))
-
-        return []
-
-    if ha.CONF_HOSTS in config:
-        switches = (pywemo.device_from_host(host) for host
-                    in config[ha.CONF_HOSTS].split(","))
-
-    else:
-        _LOGGER.info("Scanning for WeMo devices")
-        switches = pywemo.discover_devices()
-
-    # Filter out the switches and wrap in WemoSwitch object
-    return [WemoSwitch(switch) for switch in switches
-            if isinstance(switch, pywemo.Switch)]
-
-
-# pylint: disable=unused-argument
-def get_tellstick_switches(config):
-    """ Find and return Tellstick switches. """
-    try:
-        import tellcore.telldus as telldus
-    except ImportError:
-        _LOGGER.exception(
-            "Failed to import tellcore")
-        return []
-
-    core = telldus.TelldusCore()
-    switches = core.devices()
-
-    return [TellstickSwitch(switch) for switch in switches]
-
-
-class WemoSwitch(ToggleDevice):
-    """ represents a WeMo switch within home assistant. """
-    def __init__(self, wemo):
-        self.wemo = wemo
-        self.state_attr = {ATTR_FRIENDLY_NAME: wemo.name}
-
-    def get_name(self):
-        """ Returns the name of the switch if any. """
-        return self.wemo.name
-
-    def turn_on(self, **kwargs):
-        """ Turns the switch on. """
-        self.wemo.on()
-
-    def turn_off(self):
-        """ Turns the switch off. """
-        self.wemo.off()
-
-    def is_on(self):
-        """ True if switch is on. """
-        return self.wemo.get_state(True)
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr
-
-
-class TellstickSwitch(ToggleDevice):
-    """ represents a Tellstick switch within home assistant. """
-    def __init__(self, tellstick):
-        self.tellstick = tellstick
-        self.state_attr = {ATTR_FRIENDLY_NAME: tellstick.name}
-
-    def get_name(self):
-        """ Returns the name of the switch if any. """
-        return self.tellstick.name
-
-    # pylint: disable=unused-argument
-    def turn_on(self, **kwargs):
-        """ Turns the switch on. """
-        self.tellstick.turn_on()
-
-    def turn_off(self):
-        """ Turns the switch off. """
-        self.tellstick.turn_off()
-
-    def is_on(self):
-        """ True if switch is on. """
-
-        try:
-            import tellcore.constants as tellcore_constants
-        except ImportError:
-            _LOGGER.exception(
-                "Failed to import tellcore")
-            return False
-
-        last_sent_command_mask = tellcore_constants.TELLSTICK_TURNON | \
-            tellcore_constants.TELLSTICK_TURNOFF
-
-        return self.tellstick.last_sent_command(last_sent_command_mask) == \
-            tellcore_constants.TELLSTICK_TURNON
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr

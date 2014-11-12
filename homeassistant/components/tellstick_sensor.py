@@ -65,20 +65,26 @@ def setup(hass, config):
 
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE:
-            DatatypeDescription('temperature',
-                                config[DOMAIN]['temperature_scale']),
+        DatatypeDescription(
+            'temperature', config[DOMAIN]['temperature_scale']),
+
         tellcore_constants.TELLSTICK_HUMIDITY:
-            DatatypeDescription('humidity', ' %'),
+        DatatypeDescription('humidity', ' %'),
+
         tellcore_constants.TELLSTICK_RAINRATE:
-            DatatypeDescription('rain rate', ''),
+        DatatypeDescription('rain rate', ''),
+
         tellcore_constants.TELLSTICK_RAINTOTAL:
-            DatatypeDescription('rain total', ''),
+        DatatypeDescription('rain total', ''),
+
         tellcore_constants.TELLSTICK_WINDDIRECTION:
-            DatatypeDescription('wind direction', ''),
+        DatatypeDescription('wind direction', ''),
+
         tellcore_constants.TELLSTICK_WINDAVERAGE:
-            DatatypeDescription('wind average', ''),
+        DatatypeDescription('wind average', ''),
+
         tellcore_constants.TELLSTICK_WINDGUST:
-            DatatypeDescription('wind gust', '')
+        DatatypeDescription('wind gust', '')
     }
 
     def update_sensor_value_state(sensor_name, sensor_value):
@@ -95,8 +101,7 @@ def setup(hass, config):
 
         state_attr = {
             ATTR_FRIENDLY_NAME: sensor_value_name,
-            ATTR_UNIT_OF_MEASUREMENT:
-                sensor_value_description.unit
+            ATTR_UNIT_OF_MEASUREMENT: sensor_value_description.unit
         }
 
         hass.states.set(entity_id, state, state_attr)

@@ -1,7 +1,7 @@
 [MASTER]
 ignore=external
 
-disable=locally-disabled
+disable=locally-disabled,duplicate-code
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError

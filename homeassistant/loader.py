@@ -56,62 +56,37 @@ def get_component(comp_name):
     if comp_name in _COMPONENT_CACHE:
         return _COMPONENT_CACHE[comp_name]
 
+    # If we ie. try to load custom_components.switch.wemo but the parent
+    # custom_components.switch does not exist, importing it will trigger
+    # an exception because it will try to import the parent.
+    # Because of this behavior, we will approach loading sub components
+    # with caution: only load it if we can verify that the parent exists.
+
     # First check config dir, then built-in
-    potential_paths = [path for path in
-                       ['custom_components.{}'.format(comp_name),
-                        'homeassistant.components.{}'.format(comp_name)]
-                       if path in AVAILABLE_COMPONENTS]
-
-    if not potential_paths:
-        _LOGGER.error("Failed to find component %s", comp_name)
-
-        return None
+    potential_paths = ['custom_components.{}'.format(comp_name),
+                       'homeassistant.components.{}'.format(comp_name)]
 
     for path in potential_paths:
-        comp = _get_component(path)
+        # Validate here that root component exists
+        # If path contains a '.' we are specifying a sub-component
+        # Using rsplit we get the parent component from sub-component
+        root_comp = path.rsplit(".", 1)[0] if '.' in comp_name else path
 
-        if comp is not None:
-            _LOGGER.info("Loaded component %s from %s", comp_name, path)
+        if root_comp not in AVAILABLE_COMPONENTS:
+            continue
 
-            _COMPONENT_CACHE[comp_name] = comp
+        try:
+            _COMPONENT_CACHE[comp_name] = importlib.import_module(path)
 
-            return comp
+            _LOGGER.info("Loaded %s from %s", comp_name, path)
+
+            return _COMPONENT_CACHE[comp_name]
+        except ImportError:
+            _LOGGER.exception(
+                ("Error loading %s. Make sure all "
+                 "dependencies are installed"), path)
 
     # We did find components but were unable to load them
     _LOGGER.error("Unable to load component %s", comp_name)
 
     return None
-
-
-def _get_component(module):
-    """ Tries to load specified component.
-        Only returns it if also found to be valid."""
-    try:
-        comp = importlib.import_module(module)
-
-    except ImportError:
-        _LOGGER.exception(("Error loading %s. Make sure all "
-                           "dependencies are installed"), module)
-
-        return None
-
-    # Validation if component has required methods and attributes
-    errors = []
-
-    if not hasattr(comp, 'DOMAIN'):
-        errors.append("missing DOMAIN attribute")
-
-    if not hasattr(comp, 'DEPENDENCIES'):
-        errors.append("missing DEPENDENCIES attribute")
-
-    if not hasattr(comp, 'setup'):
-        errors.append("missing setup method")
-
-    if errors:
-        _LOGGER.error("Found invalid component %s: %s",
-                      module, ", ".join(errors))
-
-        return None
-
-    else:
-        return comp
