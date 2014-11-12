@@ -1,6 +1,8 @@
 <link rel="import" href="bower_components/font-roboto/roboto.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
-<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="bower_components/core-input/core-input.html">
+<link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
 
 <link rel="import" href="home-assistant-main.html">
 <link rel="import" href="home-assistant-api.html">
@@ -10,9 +12,13 @@
     <style type="text/css">
 
       :host {
-        font-family: 'RobotoDraft', sans-serif;
+        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
         height: 100%;
         overflow: auto;
+      }
+
+      paper-input {
+        display: block;
       }
 
       .login paper-button {
@@ -20,7 +26,15 @@
       }
 
       .login .interact {
-        height: 110px;
+        height: 125px;
+      }
+
+      #validateBox {
+        text-align: center;
+      }
+
+      #validateMessage {
+        margin-top: 10px;
       }
 
     </style>
@@ -35,14 +49,17 @@
 
           <div class='interact' layout vertical>
             <div id='loginform'>
-              <paper-input
-                id="passwordInput" label="Password" type="password"
-                value="{{auth}}" on-keyup="{{passwordKeyup}}" autofocus>
-              </paper-input>
+              <paper-input-decorator label="Password" id="passwordDecorator">
+                <input is="core-input" type="password" id="passwordInput"
+                       value="{{auth}}" on-keyup="{{passwordKeyup}}" autofocus>
+              </paper-input-decorator>
               <paper-button on-click={{validatePassword}}>Log In</paper-button>
             </div>
 
-            <div id="validateMessage" hidden>Validating password...</div>
+            <div id="validateBox" hidden>
+              <paper-spinner active="true"></paper-spinner><br />
+              <div id="validateMessage">Validating password...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -82,13 +99,15 @@
     passwordKeyup: function(ev) {
       if(ev.keyCode == 13) {
         this.validatePassword();
+      } else {
+        this.$.passwordDecorator.isInvalid = false;
       }
     },
 
     validatePassword: function() {
-      this.$.passwordInput.commit();
+      a = this.$.passwordInput;
       this.$.loginform.setAttribute('hidden', null);
-      this.$.validateMessage.removeAttribute('hidden');
+      this.$.validateBox.removeAttribute('hidden');
 
       var passwordValid = function(result) {
         this.$.validateMessage.innerHTML = "Loading data...";
@@ -101,14 +120,14 @@
 
       var passwordInvalid = function(result) {
         if(result && result.message) {
-          this.$.passwordInput.error = result.message;
+          this.$.passwordDecorator.error = result.message;
         } else {
-          this.$.passwordInput.error = "Unexpected result from API";
+          this.$.passwordDecorator.error = "Unexpected result from API";
         }
         this.auth = null;
-        this.$.passwordInput.setAttribute('required', true);
+        this.$.passwordDecorator.isInvalid = true;
         this.$.loginform.removeAttribute('hidden');
-        this.$.validateMessage.setAttribute('hidden', null);
+        this.$.validateBox.setAttribute('hidden', null);
         this.$.passwordInput.focus();
       }
 

@@ -1,14 +1,25 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="bower_components/paper-dialog/paper-dialog-transition.html">
+<link rel="import" href="bower_components/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="bower_components/paper-input/paper-autogrow-textarea.html">
 
 <link rel="import" href="events-list.html">
 
 <polymer-element name="event-fire-dialog" attributes="api">
   <template>
+
+  <paper-action-dialog id="dialog" heading="Fire Event" transition="core-transition-bottom" backdrop>
     <style>
+    :host {
+        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+    }
+
+    paper-input {
+      display: block;
+    }
+
     paper-input:first-child {
       padding-top: 0;
     }
@@ -22,14 +33,21 @@
         display: none;
       }
     }
-
     </style>
 
-  <paper-dialog id="dialog" heading="Fire Event" transition="paper-dialog-transition-bottom" backdrop="true">
     <div layout horizontal>
       <div>
         <paper-input id="inputType" label="Event Type" floatingLabel="true" autofocus required></paper-input>
-        <paper-input id="inputData" label="Event Data (JSON, optional)" floatingLabel="true" multiline></paper-input>
+        <paper-input-decorator
+          label="Event Data (JSON, optional)"
+          floatingLabel="true">
+          <!--
+          <paper-autogrow-textarea id="inputDataWrapper">
+            <textarea id="inputData"></textarea>
+          </paper-autogrow-textarea>
+          -->
+          <textarea id="inputData" rows="5"></textarea>
+        </paper-input-decorator>
       </div>
       <div class='eventContainer'>
         <b>Available events:</b>
@@ -60,7 +78,8 @@
     },
 
     setEventData: function(eventData) {
-      this.$.inputData.value = eventData;      
+      this.$.inputData.value = eventData;
+      // this.$.inputDataWrapper.update();
     },
 
     eventSelected: function(eventType) {
@@ -68,10 +87,15 @@
     },
 
     clickFireEvent: function() {
-      this.api.fire_event(
-        this.$.inputType.value,
-        JSON.parse(this.$.inputData.value)
-        )
+      var data;
+
+      if(this.$.inputData.value != "") {
+        data = JSON.parse(this.$.inputData.value);
+      } else {
+        data = {};
+      }
+
+      this.api.fire_event(this.$.inputType.value, data);
     }
   });
   </script>

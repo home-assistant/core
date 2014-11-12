@@ -181,7 +181,7 @@
 
     fetchEvents: function(onSuccess, onError) {
       var successEventsUpdated = function(events) {
-        this.events = this.events;
+        this.events = events;
 
         this.fire('events-updated')
 
@@ -234,10 +234,12 @@
     },
 
     call_service: function(domain, service, parameters) {
+      parameters = parameters || {};
+
       var successToast = function() {
         if(service == "turn_on" && parameters.entity_id) {
           this.showToast("Turned on " + parameters.entity_id + '.');
-        } else if(service == "turn_off") {
+        } else if(service == "turn_off" && parameters.entity_id) {
           this.showToast("Turned off " + parameters.entity_id + '.');
         } else {
           this.showToast("Service "+domain+"/"+service+" called.");  
@@ -270,6 +272,8 @@
     },
 
     fire_event: function(eventType, eventData) {
+      eventData = eventData || {};
+
       var successToast = function() {
         this.showToast("Event "+eventType+" fired.");
       }

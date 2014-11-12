@@ -362,7 +362,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                "<body fullbleed>"
                "<h3 id='init' align='center'>Initializing Home Assistant</h3>"
                "<script"
-               "     src='/static/polymer_platform.js'></script>"
+               "     src='/static/webcomponents.min.js'></script>"
                "<link rel='import' href='/static/{}' />"
                "<splash-login auth='{}'></splash-login>"
                "</body></html>").format(app_url, data.get('api_password', '')))

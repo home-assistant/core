@@ -1,14 +1,26 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="bower_components/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="bower_components/paper-dialog/paper-dialog-transition.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="bower_components/paper-input/paper-autogrow-textarea.html">
 
 <link rel="import" href="services-list.html">
 
 <polymer-element name="service-call-dialog" attributes="api">
   <template>
+
+  <paper-action-dialog id="dialog" heading="Call Service" transition="core-transition-bottom" backdrop="true">
     <style>
+    :host {
+        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+    }
+
+    paper-input {
+      display: block;
+    }
+
     paper-input:first-child {
       padding-top: 0;
     }
@@ -22,15 +34,22 @@
         display: none;
       }
     }
-
     </style>
 
-  <paper-dialog id="dialog" heading="Call Service" transition="paper-dialog-transition-bottom" backdrop="true">
     <div layout horizontal>
       <div>
         <paper-input id="inputDomain" label="Domain" floatingLabel="true" autofocus required></paper-input>
         <paper-input id="inputService" label="Service" floatingLabel="true" required></paper-input>
-        <paper-input id="inputData" label="Service Data (JSON, optional)" floatingLabel="true" multiline></paper-input>
+        <paper-input-decorator
+          label="Service Data (JSON, optional)"
+          floatingLabel="true">
+          <!--
+          <paper-autogrow-textarea id="inputDataWrapper">
+            <textarea id="inputData"></textarea>
+          </paper-autogrow-textarea>
+          -->
+          <textarea id="inputData" rows="5"></textarea>
+        </paper-input-decorator>
       </div>
       <div class='serviceContainer'>
         <b>Available services:</b>
@@ -39,7 +58,7 @@
     </div>
     <paper-button dismissive>Cancel</paper-button>
     <paper-button affirmative on-click={{clickCallService}}>Call Service</paper-button>
-  </paper-dialog>
+  </paper-action-dialog>
 
   </template>
   <script>
@@ -52,6 +71,7 @@
     show: function(domain, service, serviceData) {
       this.setService(domain, service);
       this.$.inputData.value = serviceData;
+      // this.$.inputDataWrapper.update();
       this.$.dialog.toggle();
     },
 
@@ -65,11 +85,16 @@
     },
 
     clickCallService: function() {
+      var data;
+
+      if(this.$.inputData.value != "") {
+        data = JSON.parse(this.$.inputData.value);
+      }
+
       this.api.call_service(
         this.$.inputDomain.value,
         this.$.inputService.value,
-        JSON.parse(this.$.inputData.value)
-        )
+        data);
     }
   });
   </script>

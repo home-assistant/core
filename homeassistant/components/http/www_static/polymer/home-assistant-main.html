@@ -1,20 +1,18 @@
 <link rel="import" href="bower_components/core-header-panel/core-header-panel.html">
 <link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
-<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="bower_components/paper-item/paper-item.html">
-<link rel="import" href="bower_components/paper-menu-button/paper-menu-button.html">
 <link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="bower_components/paper-dropdown/paper-dropdown.html">
+<link rel="import" href="bower_components/core-menu/core-menu.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
 
 <link rel="import" href="states-cards.html">
 
 <polymer-element name="home-assistant-main" attributes="api">
   <template>
     <style type="text/css">
-
-      :host {
-        font-family: 'RobotoDraft', sans-serif;
-      }
 
       core-header-panel {
         height: 100%;
@@ -33,6 +31,16 @@
         text-transform: uppercase;
       }
 
+      .dropdown {
+        border-radius: 3px;        
+      }
+
+      .menu {
+        margin: 0;
+        padding: 8px 0;
+        color: black;
+      }
+
     </style>
 
     <core-header-panel fullbleed>
@@ -44,16 +52,22 @@
         <paper-icon-button icon="refresh" on-click="{{handleRefreshClick}}"></paper-icon-button>
         <paper-icon-button icon="settings-remote"
           on-click="{{handleServiceClick}}"></paper-icon-button>
-        <paper-menu-button icon="more-vert" halign="right">
-          <paper-item label="Set State">
-            <a on-click={{handleAddStateClick}}></a>
-          </paper-item>
-          <paper-item label="Trigger Event">
-            <a on-click={{handleEventClick}}></a>
-          </paper-item>
-          <paper-item label="Log Out">
-            <a on-click={{handleLogOutClick}}></a>
-          </paper-item>
+
+        <paper-menu-button>
+          <paper-icon-button icon="more-vert" noink></paper-icon-button>
+          <paper-dropdown class="dropdown" halign="right" duration="200">
+            <core-menu class="menu">
+              <paper-item label="Set State">
+                <a on-click={{handleAddStateClick}}></a>
+              </paper-item>
+              <paper-item label="Trigger Event">
+                <a on-click={{handleEventClick}}></a>
+              </paper-item>
+              <paper-item label="Log Out">
+                <a on-click={{handleLogOutClick}}></a>
+              </paper-item>
+            </core-menu>
+          </paper-dropdown>
         </paper-menu-button>
 
         <div class="bottom fit" horizontal layout>
