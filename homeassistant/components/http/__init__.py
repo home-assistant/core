@@ -348,7 +348,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         else:
             app_url = "frontend-{}.html".format(frontend.VERSION)
 
-        write(("<html>"
+        write(("<!doctype html>"
+               "<html>"
                "<head><title>Home Assistant</title>"
                "<meta name='mobile-web-app-capable' content='yes'>"
                "<link rel='shortcut icon' href='/static/favicon.ico' />"

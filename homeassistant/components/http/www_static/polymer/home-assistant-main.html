@@ -12,18 +12,15 @@
 
 <polymer-element name="home-assistant-main" attributes="api">
   <template>
-    <style type="text/css">
+    <style>
 
       core-header-panel {
-        height: 100%;
-        overflow: auto;
         -webkit-overflow-scrolling: touch;
         background-color: #E5E5E5;
       }
 
       core-toolbar {
         background: #03a9f4;
-        font-size: 1.3rem;
         color: white;
       }
 
@@ -42,15 +39,18 @@
       }
 
       paper-item {
-        height: 45px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
       }
 
+      paper-item a {
+        text-decoration: none;
+      }
+
     </style>
 
-    <core-header-panel fullbleed>
+    <core-header-panel fit>
 
       <core-toolbar class='medium-tall'>
         <div flex>Home Assistant</div>
