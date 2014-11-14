@@ -4,15 +4,11 @@
   "authors": [
     "Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
   ],
-  "main": "index.htm",
+  "main": "splash-login.html",
   "license": "MIT",
   "private": true,
   "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
+    "bower_components"
   ],
   "dependencies": {
     "webcomponentsjs": "Polymer/webcomponentsjs#~0.5.1",

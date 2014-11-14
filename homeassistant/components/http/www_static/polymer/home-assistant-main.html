@@ -31,14 +31,21 @@
         text-transform: uppercase;
       }
 
-      .dropdown {
+      paper-dropdown {
         border-radius: 3px;        
       }
 
-      .menu {
+      paper-dropdown .menu {
         margin: 0;
         padding: 8px 0;
         color: black;
+      }
+
+      paper-item {
+        height: 45px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
     </style>
@@ -46,25 +53,24 @@
     <core-header-panel fullbleed>
 
       <core-toolbar class='medium-tall'>
-        <div flex>
-          Home Assistant
-        </div>
-        <paper-icon-button icon="refresh" on-click="{{handleRefreshClick}}"></paper-icon-button>
+        <div flex>Home Assistant</div>
+        <paper-icon-button icon="refresh"
+          on-click="{{handleRefreshClick}}"></paper-icon-button>
         <paper-icon-button icon="settings-remote"
           on-click="{{handleServiceClick}}"></paper-icon-button>
 
         <paper-menu-button>
           <paper-icon-button icon="more-vert" noink></paper-icon-button>
-          <paper-dropdown class="dropdown" halign="right" duration="200">
+          <paper-dropdown halign="right" duration="200" class="dropdown">
             <core-menu class="menu">
-              <paper-item label="Set State">
-                <a on-click={{handleAddStateClick}}></a>
+              <paper-item>
+                <a on-click={{handleAddStateClick}}>Set State</a>
               </paper-item>
-              <paper-item label="Trigger Event">
-                <a on-click={{handleEventClick}}></a>
+              <paper-item>
+                <a on-click={{handleEventClick}}>Trigger Event</a>
               </paper-item>
-              <paper-item label="Log Out">
-                <a on-click={{handleLogOutClick}}></a>
+              <paper-item>
+                <a on-click={{handleLogOutClick}}>Log Out</a>
               </paper-item>
             </core-menu>
           </paper-dropdown>

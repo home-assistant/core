@@ -29,11 +29,11 @@
         height: 125px;
       }
 
-      #validateBox {
+      #validatebox {
         text-align: center;
       }
 
-      #validateMessage {
+      #validatemessage {
         margin-top: 10px;
       }
 
@@ -56,9 +56,9 @@
               <paper-button on-click={{validatePassword}}>Log In</paper-button>
             </div>
 
-            <div id="validateBox" hidden>
+            <div id="validatebox" hidden>
               <paper-spinner active="true"></paper-spinner><br />
-              <div id="validateMessage">Validating password...</div>
+              <div id="validatemessage">Validating password...</div>
             </div>
           </div>
         </div>
@@ -92,7 +92,7 @@
       // log out functionality
       if(newVal == "" && this.state == "valid_auth") {
         this.state = "no_auth";
-        this.$.validateMessage.innerHTML = "Validating password...";
+        this.$.validatemessage.innerHTML = "Validating password...";
       }
     },
 
@@ -106,10 +106,10 @@
 
     validatePassword: function() {
       this.$.loginform.setAttribute('hidden', null);
-      this.$.validateBox.removeAttribute('hidden');
+      this.$.validatebox.removeAttribute('hidden');
 
       var passwordValid = function(result) {
-        this.$.validateMessage.innerHTML = "Loading data...";
+        this.$.validatemessage.innerHTML = "Loading data...";
         this.api.fetchEvents();
 
         this.api.fetchStates(function() {
@@ -126,7 +126,7 @@
         this.auth = null;
         this.$.passwordDecorator.isInvalid = true;
         this.$.loginform.removeAttribute('hidden');
-        this.$.validateBox.setAttribute('hidden', null);
+        this.$.validatebox.setAttribute('hidden', null);
         this.$.passwordInput.focus();
       }
 

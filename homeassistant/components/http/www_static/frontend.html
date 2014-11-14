@@ -8280,14 +8280,2743 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <!--
-    @license
-    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-    Code distributed by Google as part of the polymer project is also
-    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ Copyright 2014 Google Inc. All rights reserved.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+ limitations under the License.
 -->
+
+<!-- WARNING: This file is DEPRECATED, for development purposes use
+              web-animations*.dev.html instead or depend on 
+              web-animations*.min.js in the web-animations-js
+              repository -->
+
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+var WEB_ANIMATIONS_TESTING = false;
+var webAnimationsTesting = null;
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+var webAnimationsShared = {};
+var webAnimationsMinifill = {};
+var webAnimationsMaxifill = {};
+
+if (!WEB_ANIMATIONS_TESTING)
+  var webAnimationsTesting = null;
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, testing) {
+
+  var fills = 'backwards|forwards|both'.split('|');
+  var directions = 'reverse|alternate|alternate-reverse'.split('|');
+
+  function makeTiming(timingInput, forGroup) {
+    var timing = {
+      delay: 0,
+      endDelay: 0,
+      fill: forGroup ? 'both' : 'none',
+      iterationStart: 0,
+      iterations: 1,
+      duration: forGroup ? 'auto' : 0,
+      playbackRate: 1,
+      direction: 'normal',
+      easing: 'linear',
+    };
+    if (typeof timingInput == 'number') {
+      timing.duration = timingInput;
+    } else if (timingInput !== undefined) {
+      Object.getOwnPropertyNames(timingInput).forEach(function(property) {
+        if (timingInput[property] != 'auto') {
+          if (typeof timing[property] == 'number' && typeof timingInput[property] != 'number' && property != 'duration') {
+            return;
+          }
+          if ((property == 'fill') && (fills.indexOf(timingInput[property]) == -1)) {
+            return;
+          }
+          if ((property == 'direction') && (directions.indexOf(timingInput[property]) == -1)) {
+            return;
+          }
+          timing[property] = timingInput[property];
+        }
+      });
+    }
+    return timing;
+  }
+
+  function normalizeTimingInput(timingInput, forGroup) {
+    var timing = makeTiming(timingInput, forGroup);
+    timing.easing = toTimingFunction(timing.easing);
+    return timing;
+  }
+
+  function cubic(a, b, c, d) {
+    if (a < 0 || a > 1 || c < 0 || c > 1) {
+      return linear;
+    }
+    return function(x) {
+      var start = 0, end = 1;
+      while (1) {
+        var mid = (start + end) / 2;
+        function f(a, b, m) { return 3 * a * (1 - m) * (1 - m) * m + 3 * b * (1 - m) * m * m + m * m * m};
+        var xEst = f(a, c, mid);
+        if (Math.abs(x - xEst) < 0.001) {
+          return f(b, d, mid);
+        }
+        if (xEst < x) {
+          start = mid;
+        } else {
+          end = mid;
+        }
+      }
+    }
+  }
+
+  var Start = 1;
+  var Middle = 0.5;
+  var End = 0;
+
+  function step(count, pos) {
+    return function(x) {
+      if (x >= 1) {
+        return 1;
+      }
+      var stepSize = 1 / count;
+      x += pos * stepSize;
+      return x - x % stepSize;
+    }
+  }
+
+  var presets = {
+    'ease': cubic(0.25, 0.1, 0.25, 1),
+    'ease-in': cubic(0.42, 0, 1, 1),
+    'ease-out': cubic(0, 0, 0.58, 1),
+    'ease-in-out': cubic(0.42, 0, 0.58, 1),
+    'step-start': step(1, Start),
+    'step-middle': step(1, Middle),
+    'step-end': step(1, End)
+  };
+
+  var numberString = '\\s*(-?\\d+\\.?\\d*|-?\\.\\d+)\\s*';
+  var cubicBezierRe = new RegExp('cubic-bezier\\(' + numberString + ',' + numberString + ',' + numberString + ',' + numberString + '\\)');
+  var stepRe = /steps\(\s*(\d+)\s*,\s*(start|middle|end)\s*\)/;
+  var linear = function(x) { return x; };
+
+  function toTimingFunction(easing) {
+    var cubicData = cubicBezierRe.exec(easing);
+    if (cubicData) {
+      return cubic.apply(this, cubicData.slice(1).map(Number));
+    }
+    var stepData = stepRe.exec(easing);
+    if (stepData) {
+      return step(Number(stepData[1]), {'start': Start, 'middle': Middle, 'end': End}[stepData[2]]);
+    }
+    var preset = presets[easing];
+    if (preset) {
+      return preset;
+    }
+    return linear;
+  };
+
+  function calculateActiveDuration(timing) {
+    return Math.abs(repeatedDuration(timing) / timing.playbackRate);
+  }
+
+  function repeatedDuration(timing) {
+    return timing.duration * timing.iterations;
+  }
+
+  var PhaseNone = 0;
+  var PhaseBefore = 1;
+  var PhaseAfter = 2;
+  var PhaseActive = 3;
+
+  function calculatePhase(activeDuration, localTime, timing) {
+    if (localTime == null) {
+      return PhaseNone;
+    }
+    if (localTime < timing.delay) {
+      return PhaseBefore;
+    }
+    if (localTime >= timing.delay + activeDuration) {
+      return PhaseAfter;
+    }
+    return PhaseActive;
+  }
+
+  function calculateActiveTime(activeDuration, fillMode, localTime, phase, delay) {
+    switch (phase) {
+      case PhaseBefore:
+        if (fillMode == 'backwards' || fillMode == 'both')
+          return 0;
+        return null;
+      case PhaseActive:
+        return localTime - delay;
+      case PhaseAfter:
+        if (fillMode == 'forwards' || fillMode == 'both')
+          return activeDuration;
+        return null;
+      case PhaseNone:
+        return null;
+    }
+  }
+
+  function calculateScaledActiveTime(activeDuration, activeTime, startOffset, timing) {
+    return (timing.playbackRate < 0 ? activeTime - activeDuration : activeTime) * timing.playbackRate + startOffset;
+  }
+
+  function calculateIterationTime(iterationDuration, repeatedDuration, scaledActiveTime, startOffset, timing) {
+    if (scaledActiveTime === Infinity || scaledActiveTime === -Infinity || (scaledActiveTime - startOffset == repeatedDuration && timing.iterations && ((timing.iterations + timing.iterationStart) % 1 == 0))) {
+      return iterationDuration;
+    }
+
+    return scaledActiveTime % iterationDuration;
+  }
+
+  function calculateCurrentIteration(iterationDuration, iterationTime, scaledActiveTime, timing) {
+    if (scaledActiveTime === 0) {
+      return 0;
+    }
+    if (iterationTime == iterationDuration) {
+      return timing.iterationStart + timing.iterations - 1;
+    }
+    return Math.floor(scaledActiveTime / iterationDuration);
+  }
+
+  function calculateTransformedTime(currentIteration, iterationDuration, iterationTime, timing) {
+    var currentIterationIsOdd = currentIteration % 2 >= 1;
+    var currentDirectionIsForwards = timing.direction == 'normal' || timing.direction == (currentIterationIsOdd ? 'alternate-reverse' : 'alternate');
+    var directedTime = currentDirectionIsForwards ? iterationTime : iterationDuration - iterationTime;
+    var timeFraction = directedTime / iterationDuration;
+    if (isNaN(timeFraction))
+      return null;
+    return iterationDuration * timing.easing(timeFraction);
+  }
+
+  function calculateTimeFraction(activeDuration, localTime, timing) {
+    var phase = calculatePhase(activeDuration, localTime, timing);
+    var activeTime = calculateActiveTime(activeDuration, timing.fill, localTime, phase, timing.delay);
+    if (activeTime === null)
+      return null;
+    if (activeDuration === 0)
+      return phase === PhaseBefore ? 0 : 1;
+    var startOffset = timing.iterationStart * timing.duration;
+    var scaledActiveTime = calculateScaledActiveTime(activeDuration, activeTime, startOffset, timing);
+    var iterationTime = calculateIterationTime(timing.duration, repeatedDuration(timing), scaledActiveTime, startOffset, timing);
+    var currentIteration = calculateCurrentIteration(timing.duration, iterationTime, scaledActiveTime, timing);
+    return calculateTransformedTime(currentIteration, timing.duration, iterationTime, timing) / timing.duration;
+  }
+
+  shared.makeTiming = makeTiming;
+  shared.normalizeTimingInput = normalizeTimingInput;
+  shared.calculateActiveDuration = calculateActiveDuration;
+  shared.calculateTimeFraction = calculateTimeFraction;
+  shared.calculatePhase = calculatePhase;
+  shared.toTimingFunction = toTimingFunction;
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.normalizeTimingInput = normalizeTimingInput;
+    testing.toTimingFunction = toTimingFunction;
+    testing.calculateActiveDuration = calculateActiveDuration;
+    testing.calculatePhase = calculatePhase;
+    testing.PhaseNone = PhaseNone;
+    testing.PhaseBefore = PhaseBefore;
+    testing.PhaseActive = PhaseActive;
+    testing.PhaseAfter = PhaseAfter;
+    testing.calculateActiveTime = calculateActiveTime;
+    testing.calculateScaledActiveTime = calculateScaledActiveTime;
+    testing.calculateIterationTime = calculateIterationTime;
+    testing.calculateCurrentIteration = calculateCurrentIteration;
+    testing.calculateTransformedTime = calculateTransformedTime;
+  }
+
+})(webAnimationsShared, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, testing) {
+  var shorthandToLonghand = {
+    background: [
+      'backgroundImage',
+      'backgroundPosition',
+      'backgroundSize',
+      'backgroundRepeat',
+      'backgroundAttachment',
+      'backgroundOrigin',
+      'backgroundClip',
+      'backgroundColor'
+    ],
+    border: [
+      'borderTopColor',
+      'borderTopStyle',
+      'borderTopWidth',
+      'borderRightColor',
+      'borderRightStyle',
+      'borderRightWidth',
+      'borderBottomColor',
+      'borderBottomStyle',
+      'borderBottomWidth',
+      'borderLeftColor',
+      'borderLeftStyle',
+      'borderLeftWidth'
+    ],
+    borderBottom: [
+      'borderBottomWidth',
+      'borderBottomStyle',
+      'borderBottomColor'
+    ],
+    borderColor: [
+      'borderTopColor',
+      'borderRightColor',
+      'borderBottomColor',
+      'borderLeftColor'
+    ],
+    borderLeft: [
+      'borderLeftWidth',
+      'borderLeftStyle',
+      'borderLeftColor'
+    ],
+    borderRadius: [
+      'borderTopLeftRadius',
+      'borderTopRightRadius',
+      'borderBottomRightRadius',
+      'borderBottomLeftRadius'
+    ],
+    borderRight: [
+      'borderRightWidth',
+      'borderRightStyle',
+      'borderRightColor'
+    ],
+    borderTop: [
+      'borderTopWidth',
+      'borderTopStyle',
+      'borderTopColor'
+    ],
+    borderWidth: [
+      'borderTopWidth',
+      'borderRightWidth',
+      'borderBottomWidth',
+      'borderLeftWidth'
+    ],
+    flex: [
+      'flexGrow',
+      'flexShrink',
+      'flexBasis'
+    ],
+    font: [
+      'fontFamily',
+      'fontSize',
+      'fontStyle',
+      'fontVariant',
+      'fontWeight',
+      'lineHeight'
+    ],
+    margin: [
+      'marginTop',
+      'marginRight',
+      'marginBottom',
+      'marginLeft'
+    ],
+    outline: [
+      'outlineColor',
+      'outlineStyle',
+      'outlineWidth'
+    ],
+    padding: [
+      'paddingTop',
+      'paddingRight',
+      'paddingBottom',
+      'paddingLeft'
+    ]
+  };
+
+  var shorthandExpanderElem = document.createElement('div');
+
+  var borderWidthAliases = {
+    thin: '1px',
+    medium: '3px',
+    thick: '5px'
+  };
+
+  var aliases = {
+    borderBottomWidth: borderWidthAliases,
+    borderLeftWidth: borderWidthAliases,
+    borderRightWidth: borderWidthAliases,
+    borderTopWidth: borderWidthAliases,
+    fontSize: {
+      'xx-small': '60%',
+      'x-small': '75%',
+      'small': '89%',
+      'medium': '100%',
+      'large': '120%',
+      'x-large': '150%',
+      'xx-large': '200%'
+    },
+    fontWeight: {
+      normal: '400',
+      bold: '700'
+    },
+    outlineWidth: borderWidthAliases,
+    textShadow: {
+      none: '0px 0px 0px transparent'
+    },
+    boxShadow: {
+      none: '0px 0px 0px 0px transparent'
+    }
+  };
+
+  function antiAlias(property, value) {
+    if (property in aliases) {
+      return aliases[property][value] || value;
+    }
+    return value;
+  }
+
+  // This delegates parsing shorthand value syntax to the browser.
+  function expandShorthandAndAntiAlias(property, value, result) {
+    var longProperties = shorthandToLonghand[property];
+    if (longProperties) {
+      shorthandExpanderElem.style[property] = value;
+      for (var i in longProperties) {
+        var longProperty = longProperties[i];
+        var longhandValue = shorthandExpanderElem.style[longProperty];
+        result[longProperty] = antiAlias(longProperty, longhandValue);
+      }
+    } else {
+      result[property] = antiAlias(property, value);
+    }
+  };
+
+  function normalizeKeyframes(effectInput) {
+    if (!Array.isArray(effectInput) && effectInput !== null)
+      throw new TypeError('Keyframe effect must be null or an array of keyframes');
+
+    if (effectInput == null)
+      return [];
+
+    var keyframeEffect = effectInput.map(function(originalKeyframe) {
+      var keyframe = {};
+      for (var member in originalKeyframe) {
+        var memberValue = originalKeyframe[member];
+        if (member == 'offset') {
+          if (memberValue != null) {
+            memberValue = Number(memberValue);
+            if (!isFinite(memberValue))
+              throw new TypeError('keyframe offsets must be numbers.');
+          }
+        } else if (member == 'composite') {
+          throw {
+            type: DOMException.NOT_SUPPORTED_ERR,
+            name: 'NotSupportedError',
+            message: 'add compositing is not supported'
+          };
+        } else if (member == 'easing') {
+          memberValue = shared.toTimingFunction(memberValue);
+        } else {
+          memberValue = '' + memberValue;
+        }
+        expandShorthandAndAntiAlias(member, memberValue, keyframe);
+      }
+      if (keyframe.offset == undefined)
+        keyframe.offset = null;
+      if (keyframe.easing == undefined)
+        keyframe.easing = shared.toTimingFunction('linear');
+      return keyframe;
+    });
+
+    var everyFrameHasOffset = true;
+    var looselySortedByOffset = true;
+    var previousOffset = -Infinity;
+    for (var i = 0; i < keyframeEffect.length; i++) {
+      var offset = keyframeEffect[i].offset;
+      if (offset != null) {
+        if (offset < previousOffset) {
+          throw {
+            code: DOMException.INVALID_MODIFICATION_ERR,
+            name: 'InvalidModificationError',
+            message: 'Keyframes are not loosely sorted by offset. Sort or specify offsets.'
+          };
+        }
+        previousOffset = offset;
+      } else {
+        everyFrameHasOffset = false;
+      }
+    }
+
+    keyframeEffect = keyframeEffect.filter(function(keyframe) {
+      return keyframe.offset >= 0 && keyframe.offset <= 1;
+    });
+
+    function spaceKeyframes() {
+      var length = keyframeEffect.length;
+      if (keyframeEffect[length - 1].offset == null)
+        keyframeEffect[length - 1].offset = 1;
+      if (length > 1 && keyframeEffect[0].offset == null)
+        keyframeEffect[0].offset = 0;
+
+      var previousIndex = 0;
+      var previousOffset = keyframeEffect[0].offset;
+      for (var i = 1; i < length; i++) {
+        var offset = keyframeEffect[i].offset;
+        if (offset != null) {
+          for (var j = 1; j < i - previousIndex; j++)
+            keyframeEffect[previousIndex + j].offset = previousOffset + (offset - previousOffset) * j / (i - previousIndex);
+          previousIndex = i;
+          previousOffset = offset;
+        }
+      }
+    }
+    if (!everyFrameHasOffset)
+      spaceKeyframes();
+
+    return keyframeEffect;
+  }
+
+  shared.normalizeKeyframes = normalizeKeyframes;
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.normalizeKeyframes = normalizeKeyframes;
+  }
+
+})(webAnimationsShared, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, scope) {
+
+  scope.AnimationNode = function(timing) {
+    var timeFraction = 0;
+    var activeDuration = shared.calculateActiveDuration(timing);
+    var animationNode = function(localTime) {
+      return shared.calculateTimeFraction(activeDuration, localTime, timing);
+    };
+    animationNode._totalDuration = timing.delay + activeDuration + timing.endDelay;
+    animationNode._isCurrent = function(localTime) {
+      var phase = shared.calculatePhase(activeDuration, localTime, timing);
+      return phase === PhaseActive || phase === PhaseBefore;
+    };
+    return animationNode;
+  };
+
+})(webAnimationsShared, webAnimationsMinifill);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, scope, testing) {
+
+  scope.convertEffectInput = function(effectInput) {
+    var keyframeEffect = shared.normalizeKeyframes(effectInput);
+    var propertySpecificKeyframeGroups = makePropertySpecificKeyframeGroups(keyframeEffect);
+    var interpolations = makeInterpolations(propertySpecificKeyframeGroups);
+    return function(target, fraction) {
+      if (fraction != null) {
+        interpolations.filter(function(interpolation) {
+          return (fraction <= 0 && interpolation.startTime == 0) ||
+                 (fraction >= 1 && interpolation.endTime == 1) ||
+                 (fraction >= interpolation.startTime && fraction <= interpolation.endTime);
+        }).forEach(function(interpolation) {
+          var offsetFraction = fraction - interpolation.startTime;
+          var localDuration = interpolation.endTime - interpolation.startTime;
+          var scaledLocalTime = localDuration == 0 ? 0 : interpolation.easing(offsetFraction / localDuration);
+          scope.apply(target, interpolation.property, interpolation.interpolation(scaledLocalTime));
+        });
+      } else {
+        for (var property in propertySpecificKeyframeGroups)
+          if (property != 'offset' && property != 'easing' && property != 'composite')
+            scope.clear(target, property);
+      }
+    };
+  };
+
+
+  function makePropertySpecificKeyframeGroups(keyframeEffect) {
+    var propertySpecificKeyframeGroups = {};
+
+    for (var i = 0; i < keyframeEffect.length; i++) {
+      for (var member in keyframeEffect[i]) {
+        if (member != 'offset' && member != 'easing' && member != 'composite') {
+          var propertySpecificKeyframe = {
+            offset: keyframeEffect[i].offset,
+            easing: keyframeEffect[i].easing,
+            value: keyframeEffect[i][member]
+          };
+          propertySpecificKeyframeGroups[member] = propertySpecificKeyframeGroups[member] || [];
+          propertySpecificKeyframeGroups[member].push(propertySpecificKeyframe);
+        }
+      }
+    }
+
+    for (var groupName in propertySpecificKeyframeGroups) {
+      var group = propertySpecificKeyframeGroups[groupName];
+      if (group[0].offset != 0 || group[group.length - 1].offset != 1) {
+        throw {
+          type: DOMException.NOT_SUPPORTED_ERR,
+          name: 'NotSupportedError',
+          message: 'Partial keyframes are not supported'
+        };
+      }
+    }
+    return propertySpecificKeyframeGroups;
+  }
+
+
+  function makeInterpolations(propertySpecificKeyframeGroups) {
+    var interpolations = [];
+    for (var groupName in propertySpecificKeyframeGroups) {
+      var group = propertySpecificKeyframeGroups[groupName];
+      for (var i = 0; i < group.length - 1; i++) {
+        var startTime = group[i].offset;
+        var endTime = group[i + 1].offset;
+        var startValue = group[i].value;
+        var endValue = group[i + 1].value;
+        if (startTime == endTime) {
+          if (endTime == 1) {
+            startValue = endValue;
+          } else {
+            endValue = startValue;
+          }
+        }
+        interpolations.push({
+          startTime: startTime,
+          endTime: endTime,
+          easing: group[i].easing,
+          property: groupName,
+          interpolation: scope.propertyInterpolation(groupName, startValue, endValue)
+        });
+      }
+    }
+    interpolations.sort(function(leftInterpolation, rightInterpolation) {
+      return leftInterpolation.startTime - rightInterpolation.startTime;
+    });
+    return interpolations;
+  }
+
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.makePropertySpecificKeyframeGroups = makePropertySpecificKeyframeGroups;
+    testing.makeInterpolations = makeInterpolations;
+  }
+
+})(webAnimationsShared, webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  var propertyHandlers = {};
+
+  function addPropertyHandler(parser, merger, property) {
+    propertyHandlers[property] = propertyHandlers[property] || [];
+    propertyHandlers[property].push([parser, merger]);
+  }
+  function addPropertiesHandler(parser, merger, properties) {
+    for (var i = 0; i < properties.length; i++) {
+      var property = properties[i];
+      WEB_ANIMATIONS_TESTING && console.assert(property.toLowerCase() === property);
+      addPropertyHandler(parser, merger, property);
+      if (/-/.test(property)) {
+        // Add camel cased variant.
+        addPropertyHandler(parser, merger, property.replace(/-(.)/g, function(_, c) {
+          return c.toUpperCase();
+        }));
+      }
+    }
+  }
+  scope.addPropertiesHandler = addPropertiesHandler;
+
+  function propertyInterpolation(property, left, right) {
+    var handlers = left == right ? [] : propertyHandlers[property];
+    for (var i = 0; handlers && i < handlers.length; i++) {
+      var parsedLeft = handlers[i][0](left);
+      var parsedRight = handlers[i][0](right);
+      if (parsedLeft !== undefined && parsedRight !== undefined) {
+        var interpolationArgs = handlers[i][1](parsedLeft, parsedRight);
+        if (interpolationArgs) {
+          var interp = scope.Interpolation.apply(null, interpolationArgs);
+          return function(t) {
+            if (t == 0) return left;
+            if (t == 1) return right;
+            return interp(t);
+          };
+        }
+      }
+    }
+    return scope.Interpolation(false, true, function(bool) {
+      return bool ? right : left;
+    });
+  }
+  scope.propertyInterpolation = propertyInterpolation;
+
+})(webAnimationsMinifill, webAnimationsTesting);
+
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, scope, testing) {
+
+  scope.Animation = function(target, effectInput, timingInput) {
+    var animationNode = scope.AnimationNode(shared.normalizeTimingInput(timingInput));
+    var effect = scope.convertEffectInput(effectInput);
+    var timeFraction;
+    var animation = function() {
+      WEB_ANIMATIONS_TESTING && console.assert(typeof timeFraction !== 'undefined');
+      effect(target, timeFraction);
+    };
+    // Returns whether the animation is in effect or not after the timing update.
+    animation._update = function(localTime) {
+      timeFraction = animationNode(localTime);
+      return timeFraction !== null;
+    };
+    animation._clear = function() {
+      effect(target, null);
+    };
+    animation._hasSameTarget = function(otherTarget) {
+      return target === otherTarget;
+    };
+    animation._isCurrent = animationNode._isCurrent;
+    animation._totalDuration = animationNode._totalDuration;
+    return animation;
+  };
+
+  scope.NullAnimation = function(clear) {
+    var nullAnimation = function() {
+      if (clear) {
+        clear();
+        clear = null;
+      }
+    };
+    nullAnimation._update = function() {
+      return null;
+    };
+    nullAnimation._totalDuration = 0;
+    nullAnimation._isCurrent = function() {
+      return false;
+    };
+    nullAnimation._hasSameTarget = function() {
+      return false;
+    };
+    return nullAnimation;
+  };
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.minifillAnimation = scope.Animation;
+  }
+
+})(webAnimationsShared, webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  var aliased = {};
+
+  function alias(name, aliases) {
+    aliases.concat([name]).forEach(function(candidate) {
+      if (candidate in document.documentElement.style) {
+        aliased[name] = candidate;
+      }
+    });
+  }
+  alias('transform', ['webkitTransform', 'msTransform']);
+  alias('transformOrigin', ['webkitTransformOrigin']);
+  alias('perspective', ['webkitPerspective']);
+  alias('perspectiveOrigin', ['webkitPerspectiveOrigin']);
+
+  function propertyName(property) {
+    return aliased[property] || property;
+  }
+
+  scope.apply = function(element, property, value) {
+    element.style[propertyName(property)] = value;
+  };
+
+  scope.clear = function(element, property) {
+    element.style[propertyName(property)] = '';
+  };
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope) {
+  window.Element.prototype.animate = function(effectInput, timingInput) {
+    return scope.timeline._play(scope.Animation(this, effectInput, timingInput));
+  };
+})(webAnimationsMinifill);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  function interpolate(from, to, f) {
+    if ((typeof from == 'number') && (typeof to == 'number')) {
+      return from * (1 - f) + to * f;
+    }
+    if ((typeof from == 'boolean') && (typeof to == 'boolean')) {
+      return f < 0.5 ? from : to;
+    }
+
+    WEB_ANIMATIONS_TESTING && console.assert(
+        Array.isArray(from) && Array.isArray(to),
+        'If interpolation arguments are not numbers or bools they must be arrays');
+
+    if (from.length == to.length) {
+      var r = [];
+      for (var i = 0; i < from.length; i++) {
+        r.push(interpolate(from[i], to[i], f));
+      }
+      return r;
+    }
+    throw 'Mismatched interpolation arguments ' + from + ':' + to;
+  }
+
+  scope.Interpolation = function(from, to, convertToString) {
+    return function(f) {
+      return convertToString(interpolate(from, to, f));
+    }
+  };
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.interpolate = interpolate;
+  }
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  var sequenceNumber = 0;
+
+  var AnimationPlayerEvent = function(target, currentTime, timelineTime) {
+    this.target = target;
+    this.currentTime = currentTime;
+    this.timelineTime = timelineTime;
+
+    this.type = 'finish';
+    this.bubbles = false;
+    this.cancelable = false;
+    this.currentTarget = target;
+    this.defaultPrevented = false;
+    this.eventPhase = Event.AT_TARGET;
+    this.timeStamp = Date.now();
+  };
+
+  scope.Player = function(source) {
+    this._sequenceNumber = sequenceNumber++;
+    this._currentTime = 0;
+    this._startTime = null;
+    this.paused = false;
+    this._playbackRate = 1;
+    this._inTimeline = true;
+    this._finishedFlag = false;
+    this.onfinish = null;
+    this._finishHandlers = [];
+    this._source = source;
+    this._inEffect = this._source._update(0);
+    this._idle = true;
+    this._currentTimePending = false;
+  };
+
+  scope.Player.prototype = {
+    _ensureAlive: function() {
+      this._inEffect = this._source._update(this.currentTime);
+      if (!this._inTimeline && (this._inEffect || !this._finishedFlag)) {
+        this._inTimeline = true;
+        scope.timeline._players.push(this);
+      }
+    },
+    _tickCurrentTime: function(newTime, ignoreLimit) {
+      if (newTime != this._currentTime) {
+        this._currentTime = newTime;
+        if (this.finished && !ignoreLimit)
+          this._currentTime = this._playbackRate > 0 ? this._totalDuration : 0;
+        this._ensureAlive();
+      }
+    },
+    get currentTime() {
+      if (this._idle || this._currentTimePending)
+        return null;
+      return this._currentTime;
+    },
+    set currentTime(newTime) {
+      if (scope.restart())
+        this._startTime = null;
+      if (!this.paused && this._startTime != null) {
+        this._startTime = this._timeline.currentTime - newTime / this._playbackRate;
+      }
+      this._currentTimePending = false;
+      if (this._currentTime == newTime)
+        return;
+      this._tickCurrentTime(newTime, true);
+      scope.invalidateEffects();
+    },
+    get startTime() {
+      return this._startTime;
+    },
+    set startTime(newTime) {
+      if (this.paused || this._idle)
+        return;
+      this._startTime = newTime;
+      this._tickCurrentTime((this._timeline.currentTime - this._startTime) * this.playbackRate);
+      scope.invalidateEffects();
+    },
+    get playbackRate() { return this._playbackRate; },
+    get finished() {
+      return !this._idle && (this._playbackRate > 0 && this._currentTime >= this._totalDuration ||
+          this._playbackRate < 0 && this._currentTime <= 0);
+    },
+    get _totalDuration() { return this._source._totalDuration; },
+    get playState() {
+      if (this._idle)
+        return 'idle';
+      if ((this._startTime == null && !this.paused && this.playbackRate != 0) || this._currentTimePending)
+        return 'pending';
+      if (this.paused)
+        return 'paused';
+      if (this.finished)
+        return 'finished';
+      return 'running';
+    },
+    play: function() {
+      this.paused = false;
+      if (this.finished || this._idle) {
+        this._currentTime = this._playbackRate > 0 ? 0 : this._totalDuration;
+        scope.invalidateEffects();
+      }
+      this._finishedFlag = false;
+      if (!scope.restart()) {
+        this._startTime = this._timeline.currentTime - this._currentTime / this._playbackRate;
+      }
+      else
+        this._startTime = null;
+      this._idle = false;
+      this._ensureAlive();
+    },
+    pause: function() {
+      if (!this.finished && !this.paused && !this._idle) {
+        this._currentTimePending = true;
+      }
+      this._startTime = null;
+      this.paused = true;
+    },
+    finish: function() {
+      if (this._idle)
+        return;
+      this.currentTime = this._playbackRate > 0 ? this._totalDuration : 0;
+      this._startTime = this._totalDuration - this.currentTime;
+      this._currentTimePending = false;
+    },
+    cancel: function() {
+      this._inEffect = false;
+      this._idle = true;
+      this.currentTime = 0;
+      this._startTime = null;
+    },
+    reverse: function() {
+      this._playbackRate *= -1;
+      this.play();
+    },
+    addEventListener: function(type, handler) {
+      if (typeof handler == 'function' && type == 'finish')
+        this._finishHandlers.push(handler);
+    },
+    removeEventListener: function(type, handler) {
+      if (type != 'finish')
+        return;
+      var index = this._finishHandlers.indexOf(handler);
+      if (index >= 0)
+        this._finishHandlers.splice(index, 1);
+    },
+    _fireEvents: function(baseTime) {
+      var finished = this.finished;
+      if ((finished || this._idle) && !this._finishedFlag) {
+        var event = new AnimationPlayerEvent(this, this._currentTime, baseTime);
+        var handlers = this._finishHandlers.concat(this.onfinish ? [this.onfinish] : []);
+        setTimeout(function() {
+          handlers.forEach(function(handler) {
+            handler.call(event.target, event);
+          });
+        }, 0);
+      }
+      this._finishedFlag = finished;
+    },
+    _tick: function(timelineTime) {
+      if (!this._idle && !this.paused) {
+        if (this._startTime == null)
+          this.startTime = timelineTime - this._currentTime / this.playbackRate;
+        else if (!this.finished)
+          this._tickCurrentTime((timelineTime - this._startTime) * this.playbackRate);
+      }
+
+      this._currentTimePending = false;
+      this._fireEvents(timelineTime);
+      return !this._idle && (this._inEffect || !this._finishedFlag);
+    },
+  };
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.Player = scope.Player;
+  }
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+(function(shared, scope, testing) {
+  var originalRequestAnimationFrame = window.requestAnimationFrame;
+  var rafCallbacks = [];
+  window.requestAnimationFrame = function(f) {
+    if (rafCallbacks.length == 0 && !WEB_ANIMATIONS_TESTING) {
+      originalRequestAnimationFrame(processRafCallbacks);
+    }
+    rafCallbacks.push(f);
+  };
+
+  function processRafCallbacks(t) {
+    var processing = rafCallbacks;
+    rafCallbacks = [];
+    tick(t);
+    processing.forEach(function(f) { f(t); });
+    if (needsRetick)
+      tick(t);
+    applyPendingEffects();
+  }
+
+  function comparePlayers(leftPlayer, rightPlayer) {
+    return leftPlayer._sequenceNumber - rightPlayer._sequenceNumber;
+  }
+
+  function InternalTimeline() {
+    this._players = [];
+    this.currentTime = window.performance ? performance.now() : 0;
+  };
+
+  InternalTimeline.prototype = {
+    _play: function(source) {
+      source._timing = shared.normalizeTimingInput(source.timing);
+      var player = new scope.Player(source);
+      player._idle = false;
+      player._timeline = this;
+      this._players.push(player);
+      scope.restart();
+      scope.invalidateEffects();
+      return player;
+    }
+  };
+
+  var ticking = false;
+  var hasRestartedThisFrame = false;
+
+  scope.restart = function() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(function() {});
+      hasRestartedThisFrame = true;
+    }
+    return hasRestartedThisFrame;
+  };
+
+  var needsRetick = false;
+  scope.invalidateEffects = function() {
+    needsRetick = true;
+  };
+
+  var pendingEffects = [];
+  function applyPendingEffects() {
+    pendingEffects.forEach(function(f) { f(); });
+  }
+
+  var originalGetComputedStyle = window.getComputedStyle;
+  Object.defineProperty(window, 'getComputedStyle', {
+    configurable: true,
+    enumerable: true,
+    value: function() {
+      if (needsRetick) tick(timeline.currentTime);
+      applyPendingEffects();
+      return originalGetComputedStyle.apply(this, arguments);
+    },
+  });
+
+  function tick(t) {
+    hasRestartedThisFrame = false;
+    var timeline = scope.timeline;
+    timeline.currentTime = t;
+    timeline._players.sort(comparePlayers);
+    ticking = false;
+    var updatingPlayers = timeline._players;
+    timeline._players = [];
+
+    var newPendingClears = [];
+    var newPendingEffects = [];
+    updatingPlayers = updatingPlayers.filter(function(player) {
+      player._inTimeline = player._tick(t);
+
+      if (!player._inEffect)
+        newPendingClears.push(player._source);
+      else
+        newPendingEffects.push(player._source);
+
+      if (!player.finished && !player.paused && !player._idle)
+        ticking = true;
+
+      return player._inTimeline;
+    });
+
+    pendingEffects.length = 0;
+    pendingEffects.push.apply(pendingEffects, newPendingClears);
+    pendingEffects.push.apply(pendingEffects, newPendingEffects);
+
+    timeline._players.push.apply(timeline._players, updatingPlayers);
+    needsRetick = false;
+
+    if (ticking)
+      requestAnimationFrame(function() {});
+  };
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.tick = processRafCallbacks;
+    testing.isTicking = function() { return ticking; };
+    testing.setTicking = function(newVal) { ticking = newVal; };
+  }
+
+  var timeline = new InternalTimeline();
+  scope.timeline = timeline;
+
+})(webAnimationsShared, webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope) {
+
+  // consume* functions return a 2 value array of [parsed-data, '' or not-yet consumed input]
+
+  // Regex should be anchored with /^
+  function consumeToken(regex, string) {
+    var result = regex.exec(string);
+    if (result) {
+      result = regex.ignoreCase ? result[0].toLowerCase() : result[0];
+      return [result, string.substr(result.length)];
+    }
+  }
+
+  function consumeTrimmed(consumer, string) {
+    string = string.replace(/^\s*/, '');
+    var result = consumer(string);
+    if (result) {
+      return [result[0], result[1].replace(/^\s*/, '')];
+    }
+  }
+
+  function consumeRepeated(consumer, separator, string) {
+    consumer = consumeTrimmed.bind(null, consumer);
+    var list = [];
+    while (true) {
+      var result = consumer(string);
+      if (!result) {
+        return [list, string];
+      }
+      list.push(result[0]);
+      string = result[1];
+      result = consumeToken(separator, string);
+      if (!result || result[1] == '') {
+        return [list, string];
+      }
+      string = result[1];
+    }
+  }
+
+  // Consumes a token or expression with balanced parentheses
+  function consumeParenthesised(parser, string) {
+    var nesting = 0;
+    for (var n = 0; n < string.length; n++) {
+      if (/\s|,/.test(string[n]) && nesting == 0) {
+        break;
+      } else if (string[n] == '(') {
+        nesting++;
+      } else if (string[n] == ')') {
+        nesting--;
+        if (nesting == 0)
+          n++;
+        if (nesting <= 0)
+          break;
+      }
+    }
+    var parsed = parser(string.substr(0, n));
+    return parsed ? [parsed, string.substr(n)] : undefined;
+  }
+
+  function lcm(a, b) {
+    var c = a;
+    var d = b;
+    while (c && d)
+      c > d ? c %= d : d %= c;
+    c = (a * b) / (c + d);
+    return c;
+  }
+
+  function ignore(value) {
+    return function(input) {
+      var result = value(input);
+      if (result)
+        result[0] = undefined;
+      return result;
+    }
+  }
+
+  function optional(value, defaultValue) {
+    return function(input) {
+      var result = value(input);
+      if (result)
+        return result;
+      return [defaultValue, input];
+    }
+  }
+
+  function consumeList(list, input) {
+    var output = [];
+    for (var i = 0; i < list.length; i++) {
+      var result = scope.consumeTrimmed(list[i], input);
+      if (!result || result[0] == '')
+        return;
+      if (result[0] !== undefined)
+        output.push(result[0]);
+      input = result[1];
+    }
+    if (input == '') {
+      return output;
+    }
+  }
+
+  function mergeWrappedNestedRepeated(wrap, nestedMerge, separator, left, right) {
+    var matchingLeft = [];
+    var matchingRight = [];
+    var reconsititution = [];
+    var length = lcm(left.length, right.length);
+    for (var i = 0; i < length; i++) {
+      var thing = nestedMerge(left[i % left.length], right[i % right.length]);
+      if (!thing) {
+        return;
+      }
+      matchingLeft.push(thing[0]);
+      matchingRight.push(thing[1]);
+      reconsititution.push(thing[2]);
+    }
+    return [matchingLeft, matchingRight, function(positions) {
+      var result = positions.map(function(position, i) {
+        return reconsititution[i](position);
+      }).join(separator);
+      return wrap ? wrap(result) : result;
+    }];
+  }
+
+  function mergeList(left, right, list) {
+    var lefts = [];
+    var rights = [];
+    var functions = [];
+    var j = 0;
+    for (var i = 0; i < list.length; i++) {
+      if (typeof list[i] == 'function') {
+        var result = list[i](left[j], right[j++]);
+        lefts.push(result[0]);
+        rights.push(result[1]);
+        functions.push(result[2]);
+      } else {
+        (function(pos) {
+          lefts.push(false);
+          rights.push(false);
+          functions.push(function() { return list[pos]; });
+        })(i);
+      }
+    }
+    return [lefts, rights, function(results) {
+      var result = '';
+      for (var i = 0; i < results.length; i++) {
+        result += functions[i](results[i]);
+      }
+      return result;
+    }];
+  }
+
+  scope.consumeToken = consumeToken;
+  scope.consumeTrimmed = consumeTrimmed;
+  scope.consumeRepeated = consumeRepeated;
+  scope.consumeParenthesised = consumeParenthesised;
+  scope.ignore = ignore;
+  scope.optional = optional;
+  scope.consumeList = consumeList;
+  scope.mergeNestedRepeated = mergeWrappedNestedRepeated.bind(null, null);
+  scope.mergeWrappedNestedRepeated = mergeWrappedNestedRepeated;
+  scope.mergeList = mergeList;
+
+})(webAnimationsMinifill);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope) {
+
+  function consumeShadow(string) {
+    var shadow = {
+      inset: false,
+      lengths: [],
+      color: null,
+    };
+    function consumePart(string) {
+      var result = scope.consumeToken(/^inset/i, string);
+      if (result) {
+        shadow.inset = true;
+        return result;
+      }
+      var result = scope.consumeLengthOrPercent(string);
+      if (result) {
+        shadow.lengths.push(result[0]);
+        return result;
+      }
+      var result = scope.consumeColor(string);
+      if (result) {
+        shadow.color = result[0];
+        return result;
+      }
+    }
+    var result = scope.consumeRepeated(consumePart, /^/, string);
+    if (result && result[0].length) {
+      return [shadow, result[1]];
+    }
+  }
+
+  function parseShadowList(string) {
+    var result = scope.consumeRepeated(consumeShadow, /^,/, string);
+    if (result && result[1] == '') {
+      return result[0];
+    }
+  }
+
+  function mergeShadow(left, right) {
+    while (left.lengths.length < Math.max(left.lengths.length, right.lengths.length))
+      left.lengths.push({px: 0});
+    while (right.lengths.length < Math.max(left.lengths.length, right.lengths.length))
+      right.lengths.push({px: 0});
+
+    if (left.inset != right.inset || !!left.color != !!right.color) {
+      return;
+    }
+    var lengthReconstitution = [];
+    var colorReconstitution;
+    var matchingLeft = [[], 0];
+    var matchingRight = [[], 0];
+    for (var i = 0; i < left.lengths.length; i++) {
+      var mergedDimensions = scope.mergeDimensions(left.lengths[i], right.lengths[i], i == 2);
+      matchingLeft[0].push(mergedDimensions[0]);
+      matchingRight[0].push(mergedDimensions[1]);
+      lengthReconstitution.push(mergedDimensions[2]);
+    }
+    if (left.color && right.color) {
+      var mergedColor = scope.mergeColors(left.color, right.color);
+      matchingLeft[1] = mergedColor[0];
+      matchingRight[1] = mergedColor[1];
+      colorReconstitution = mergedColor[2];
+    }
+    return [matchingLeft, matchingRight, function(value) {
+      var result = left.inset ? 'inset ' : ' ';
+      for (var i = 0; i < lengthReconstitution.length; i++) {
+        result += lengthReconstitution[i](value[0][i]) + ' ';
+      }
+      if (colorReconstitution) {
+        result += colorReconstitution(value[1]);
+      }
+      return result;
+    }];
+  }
+
+  function mergeNestedRepeatedShadow(nestedMerge, separator, left, right) {
+    var leftCopy = [];
+    var rightCopy = [];
+    function defaultShadow(inset) {
+      return {inset: inset, color: [0, 0, 0, 0], lengths: [{px: 0}, {px: 0}, {px: 0}, {px: 0}]};
+    }
+    for (var i = 0; i < left.length || i < right.length; i++) {
+      var l = left[i] || defaultShadow(right[i].inset);
+      var r = right[i] || defaultShadow(left[i].inset);
+      leftCopy.push(l);
+      rightCopy.push(r);
+    }
+    return scope.mergeNestedRepeated(nestedMerge, separator, leftCopy, rightCopy);
+  }
+
+  var mergeShadowList = mergeNestedRepeatedShadow.bind(null, mergeShadow, ', ');
+  scope.addPropertiesHandler(parseShadowList, mergeShadowList, ['box-shadow', 'text-shadow']);
+
+})(webAnimationsMinifill);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  function numberToString(x) {
+    return x.toFixed(3).replace('.000', '');
+  }
+
+  function clamp(min, max, x) {
+    return Math.min(max, Math.max(min, x));
+  }
+
+  function parseNumber(string) {
+    if (/^\s*[-+]?(\d*\.)?\d+\s*$/.test(string))
+      return Number(string);
+  }
+
+  function mergeNumbers(left, right) {
+    return [left, right, numberToString];
+  }
+
+  // FIXME: This should probably go in it's own handler.
+  function mergeFlex(left, right) {
+    if (left == 0)
+      return;
+    return clampedMergeNumbers(0, Infinity)(left, right);
+  }
+
+  function mergePositiveIntegers(left, right) {
+    return [left, right, function(x) {
+      return Math.round(clamp(1, Infinity, x));
+    }];
+  }
+
+  function clampedMergeNumbers(min, max) {
+    return function(left, right) {
+      return [left, right, function(x) {
+        return numberToString(clamp(min, max, x));
+      }];
+    };
+  }
+
+  function round(left, right) {
+    return [left, right, Math.round];
+  }
+
+  scope.clamp = clamp;
+  scope.addPropertiesHandler(parseNumber, clampedMergeNumbers(0, Infinity), ['border-image-width', 'line-height']);
+  scope.addPropertiesHandler(parseNumber, clampedMergeNumbers(0, 1), ['opacity', 'shape-image-threshold']);
+  scope.addPropertiesHandler(parseNumber, clampedMergeNumbers(0.01, Infinity), ['zoom']);
+  scope.addPropertiesHandler(parseNumber, mergeFlex, ['flex-grow', 'flex-shrink']);
+  scope.addPropertiesHandler(parseNumber, mergeNumbers, ['zoom']);
+  scope.addPropertiesHandler(parseNumber, mergePositiveIntegers, ['orphans', 'widows']);
+  scope.addPropertiesHandler(parseNumber, round, ['z-index']);
+
+  scope.parseNumber = parseNumber;
+  scope.mergeNumbers = mergeNumbers;
+  scope.numberToString = numberToString;
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  function merge(left, right) {
+    if (left != 'visible' && right != 'visible') return;
+    return [0, 1, function(x) {
+      if (x <= 0) return left;
+      if (x >= 1) return right;
+      return 'visible';
+    }];
+  }
+
+  scope.addPropertiesHandler(String, merge, ['visibility']);
+
+})(webAnimationsMinifill);
+
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  var canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  var context = canvas.getContext('2d');
+
+  function parseColor(string) {
+    string = string.trim();
+    // The context ignores invalid colors
+    context.fillStyle = '#000';
+    context.fillStyle = string;
+    var contextSerializedFillStyle = context.fillStyle;
+    context.fillStyle = '#fff';
+    context.fillStyle = string;
+    if (contextSerializedFillStyle != context.fillStyle)
+      return;
+    context.fillRect(0, 0, 1, 1);
+    var pixelColor = context.getImageData(0, 0, 1, 1).data;
+    context.clearRect(0, 0, 1, 1);
+    var alpha = pixelColor[3] / 255;
+    return [pixelColor[0] * alpha, pixelColor[1] * alpha, pixelColor[2] * alpha, alpha];
+  }
+
+  function mergeColors(left, right) {
+    return [left, right, function(x) {
+      function clamp(v) {
+        return Math.max(0, Math.min(255, v));
+      }
+      if (x[3]) {
+        for (var i = 0; i < 3; i++)
+          x[i] = Math.round(clamp(x[i] / x[3]));
+      }
+      x[3] = scope.numberToString(scope.clamp(0, 1, x[3]));
+      return 'rgba(' + x.join(',') + ')';
+    }];
+  }
+
+  scope.addPropertiesHandler(parseColor, mergeColors,
+      ['background-color', 'border-bottom-color', 'border-left-color', 'border-right-color',
+       'border-top-color', 'color', 'outline-color', 'text-decoration-color']);
+  scope.consumeColor = scope.consumeParenthesised.bind(null, parseColor);
+  scope.mergeColors = mergeColors;
+
+  if (WEB_ANIMATIONS_TESTING) {
+    testing.parseColor = parseColor;
+  }
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  function parseDimension(unitRegExp, string) {
+    string = string.trim().toLowerCase();
+
+    if (string == '0' && 'px'.search(unitRegExp) >= 0)
+      return {px: 0};
+
+    // If we have parenthesis, we're a calc and need to start with 'calc'.
+    if (!/^[^(]*$|^calc/.test(string))
+      return;
+    string = string.replace(/calc\(/g, '(');
+
+    // We tag units by prefixing them with 'U' (note that we are already
+    // lowercase) to prevent problems with types which are substrings of
+    // each other (although prefixes may be problematic!)
+    var matchedUnits = {};
+    string = string.replace(unitRegExp, function(match) {
+      matchedUnits[match] = null;
+      return 'U' + match;
+    });
+    var taggedUnitRegExp = 'U(' + unitRegExp.source + ')';
+
+    // Validating input is simply applying as many reductions as we can.
+    var typeCheck = string.replace(/[-+]?(\d*\.)?\d+/g, 'N')
+                          .replace(new RegExp('N' + taggedUnitRegExp, 'g'), 'D')
+                          .replace(/\s[+-]\s/g, 'O')
+                          .replace(/\s/g, '');
+    var reductions = [/N\*(D)/g, /(N|D)[*/]N/g, /(N|D)O\1/g, /\((N|D)\)/g];
+    var i = 0;
+    while (i < reductions.length) {
+      if (reductions[i].test(typeCheck)) {
+        typeCheck = typeCheck.replace(reductions[i], '$1');
+        i = 0;
+      } else {
+        i++;
+      }
+    }
+    if (typeCheck != 'D')
+      return;
+
+    for (var unit in matchedUnits) {
+      var result = eval(string.replace(new RegExp('U' + unit, 'g'), '').replace(new RegExp(taggedUnitRegExp, 'g'), '*0'));
+      if (!isFinite(result))
+        return;
+      matchedUnits[unit] = result;
+    }
+    return matchedUnits;
+  }
+
+  function mergeDimensionsNonNegative(left, right) {
+    return mergeDimensions(left, right, true);
+  }
+
+  function mergeDimensions(left, right, nonNegative) {
+    var units = [], unit;
+    for (unit in left)
+      units.push(unit);
+    for (unit in right) {
+      if (units.indexOf(unit) < 0)
+        units.push(unit);
+    }
+
+    left = units.map(function(unit) { return left[unit] || 0; });
+    right = units.map(function(unit) { return right[unit] || 0; });
+    return [left, right, function(values) {
+      var result = values.map(function(value, i) {
+        if (values.length == 1 && nonNegative) {
+          value = Math.max(value, 0);
+        }
+        // Scientific notation (e.g. 1e2) is not yet widely supported by browser vendors.
+        return scope.numberToString(value) + units[i];
+      }).join(' + ');
+      return values.length > 1 ? 'calc(' + result + ')' : result;
+    }];
+  }
+
+  var lengthUnits = 'px|em|ex|ch|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc';
+  var parseLength = parseDimension.bind(null, new RegExp(lengthUnits, 'g'));
+  var parseLengthOrPercent = parseDimension.bind(null, new RegExp(lengthUnits + '|%', 'g'));
+  var parseAngle = parseDimension.bind(null, /deg|rad|grad|turn/g);
+
+  scope.parseLength = parseLength;
+  scope.parseLengthOrPercent = parseLengthOrPercent;
+  scope.consumeLengthOrPercent = scope.consumeParenthesised.bind(null, parseLengthOrPercent);
+  scope.parseAngle = parseAngle;
+  scope.mergeDimensions = mergeDimensions;
+
+  var consumeLength = scope.consumeParenthesised.bind(null, parseLength);
+  var consumeSizePair = scope.consumeRepeated.bind(undefined, consumeLength, /^/);
+  var consumeSizePairList = scope.consumeRepeated.bind(undefined, consumeSizePair, /^,/);
+  scope.consumeSizePairList = consumeSizePairList;
+
+  var parseSizePairList = function(input) {
+    var result = consumeSizePairList(input);
+    if (result && result[1] == '') {
+      return result[0];
+    }
+  };
+
+  var mergeNonNegativeSizePair = scope.mergeNestedRepeated.bind(undefined, mergeDimensionsNonNegative, ' ');
+  var mergeNonNegativeSizePairList = scope.mergeNestedRepeated.bind(undefined, mergeNonNegativeSizePair, ',');
+  scope.mergeNonNegativeSizePair = mergeNonNegativeSizePair;
+
+  scope.addPropertiesHandler(parseSizePairList, mergeNonNegativeSizePairList, [
+    'background-size'
+  ]);
+
+  scope.addPropertiesHandler(parseLengthOrPercent, mergeDimensionsNonNegative, [
+    'border-bottom-width',
+    'border-image-width',
+    'border-left-width',
+    'border-right-width',
+    'border-top-width',
+    'flex-basis',
+    'font-size',
+    'height',
+    'line-height',
+    'max-height',
+    'max-width',
+    'outline-width',
+    'width',
+  ]);
+
+  scope.addPropertiesHandler(parseLengthOrPercent, mergeDimensions, [
+    'border-bottom-left-radius',
+    'border-bottom-right-radius',
+    'border-top-left-radius',
+    'border-top-right-radius',
+    'bottom',
+    'left',
+    'letter-spacing',
+    'margin-bottom',
+    'margin-left',
+    'margin-right',
+    'margin-top',
+    'min-height',
+    'min-width',
+    'outline-offset',
+    'padding-bottom',
+    'padding-left',
+    'padding-right',
+    'padding-top',
+    'perspective',
+    'right',
+    'shape-margin',
+    'text-indent',
+    'top',
+    'vertical-align',
+    'word-spacing',
+  ]);
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+  function consumeLengthPercentOrAuto(string) {
+    return scope.consumeLengthOrPercent(string) || scope.consumeToken(/^auto/, string);
+  }
+  function parseBox(string) {
+    var result = scope.consumeList([
+      scope.ignore(scope.consumeToken.bind(null, /^rect/)),
+      scope.ignore(scope.consumeToken.bind(null, /^\(/)),
+      scope.consumeRepeated.bind(null, consumeLengthPercentOrAuto, /^,/),
+      scope.ignore(scope.consumeToken.bind(null, /^\)/)),
+    ], string);
+    if (result && result[0].length == 4) {
+      return result[0];
+    }
+  }
+
+  function mergeComponent(left, right) {
+    if (left == 'auto' || right == 'auto') {
+      return [true, false, function(t) {
+        var result = t ? left : right;
+        if (result == 'auto') {
+          return 'auto';
+        }
+        // FIXME: There's probably a better way to turn a dimension back into a string.
+        var merged = scope.mergeDimensions(result, result);
+        return merged[2](merged[0]);
+      }];
+    }
+    return scope.mergeDimensions(left, right);
+  }
+
+  function wrap(result) {
+    return 'rect(' + result + ')';
+  }
+
+  var mergeBoxes = scope.mergeWrappedNestedRepeated.bind(null, wrap, mergeComponent, ', ');
+
+  scope.parseBox = parseBox;
+  scope.mergeBoxes = mergeBoxes;
+
+  scope.addPropertiesHandler(parseBox, mergeBoxes, ['clip']);
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(scope, testing) {
+
+  // This returns a function for converting transform functions to equivalent
+  // primitive functions, which will take an array of values from the
+  // derivative type and fill in the blanks (underscores) with them.
+  var _ = null;
+  function cast(pattern) {
+    return function(contents) {
+      var i = 0;
+      return pattern.map(function(x) { return x === _ ? contents[i++] : x; });
+    }
+  }
+
+  function id(x) { return x; }
+
+  var Opx = {px: 0};
+  var Odeg = {deg: 0};
+
+  // type: [argTypes, convertTo3D, convertTo2D]
+  // In the argument types string, lowercase characters represent optional arguments
+  var transformFunctions = {
+    matrix: ['NNNNNN', [_, _, 0, 0, _, _, 0, 0, 0, 0, 1, 0, _, _, 0, 1], id],
+    matrix3d: ['NNNNNNNNNNNNNNNN', id],
+    rotate: ['A'],
+    rotatex: ['A'],
+    rotatey: ['A'],
+    rotatez: ['A'],
+    rotate3d: ['NNNA'],
+    perspective: ['L'],
+    scale: ['Nn', cast([_, _, 1]), id],
+    scalex: ['N', cast([_, 1, 1]), cast([_, 1])],
+    scaley: ['N', cast([1, _, 1]), cast([1, _])],
+    scalez: ['N', cast([1, 1, _])],
+    scale3d: ['NNN', id],
+    skew: ['Aa', null, id],
+    skewx: ['A', null, cast([_, Odeg])],
+    skewy: ['A', null, cast([Odeg, _])],
+    translate: ['Tt', cast([_, _, Opx]), id],
+    translatex: ['T', cast([_, Opx, Opx]), cast([_, Opx])],
+    translatey: ['T', cast([Opx, _, Opx]), cast([Opx, _])],
+    translatez: ['L', cast([Opx, Opx, _])],
+    translate3d: ['TTL', id],
+  };
+
+  function parseTransform(string) {
+    string = string.toLowerCase().trim();
+    if (string == 'none')
+      return [];
+    // FIXME: Using a RegExp means calcs won't work here
+    var transformRegExp = /\s*(\w+)\(([^)]*)\)/g;
+    var result = [];
+    var match;
+    var prevLastIndex = 0;
+    while (match = transformRegExp.exec(string)) {
+      if (match.index != prevLastIndex)
+        return;
+      prevLastIndex = match.index + match[0].length;
+      var functionName = match[1];
+      var functionData = transformFunctions[functionName];
+      if (!functionData)
+        return;
+      var args = match[2].split(',');
+      var argTypes = functionData[0];
+      if (argTypes.length < args.length)
+        return;
+
+      var parsedArgs = [];
+      for (var i = 0; i < argTypes.length; i++) {
+        var arg = args[i];
+        var type = argTypes[i];
+        var parsedArg;
+        if (!arg)
+          parsedArg = ({a: Odeg,
+                        n: parsedArgs[0],
+                        t: Opx})[type];
+        else
+          parsedArg = ({A: function(s) { return s.trim() == '0' ? Odeg : scope.parseAngle(s); },
+                        N: scope.parseNumber,
+                        T: scope.parseLengthOrPercent,
+                        L: scope.parseLength})[type.toUpperCase()](arg);
+        if (parsedArg === undefined)
+          return;
+        parsedArgs.push(parsedArg);
+      }
+      result.push({t: functionName, d: parsedArgs});
+
+      if (transformRegExp.lastIndex == string.length)
+        return result;
+    }
+  };
+
+  function numberToLongString(x) {
+    return x.toFixed(6).replace('.000000', '');
+  }
+
+  function mergeMatrices(left, right) {
+    if (left.decompositionPair !== right) {
+      left.decompositionPair = right;
+      var leftArgs = scope.makeMatrixDecomposition(left);
+    }
+    if (right.decompositionPair !== left) {
+      right.decompositionPair = left;
+      var rightArgs = scope.makeMatrixDecomposition(right);
+    }
+    if (leftArgs[0] == null || rightArgs[0] == null)
+      return [[false], [true], function(x) { return x ? right[0].d : left[0].d; }];
+    leftArgs[0].push(0);
+    rightArgs[0].push(1);
+    return [
+      leftArgs,
+      rightArgs,
+      function(list) {
+        var quat = scope.quat(leftArgs[0][3], rightArgs[0][3], list[5]);
+        var mat = scope.composeMatrix(list[0], list[1], list[2], quat, list[4]);
+        var stringifiedArgs = mat.map(numberToLongString).join(',');
+        return stringifiedArgs;
+      }
+    ];
+  }
+
+  function typeTo2D(type) {
+    return type.replace(/[xy]/, '');
+  }
+
+  function typeTo3D(type) {
+    return type.replace(/(x|y|z|3d)?$/, '3d');
+  }
+
+  function mergeTransforms(left, right) {
+    var matrixModulesLoaded = scope.makeMatrixDecomposition && true;
+
+    var flipResults = false;
+    if (!left.length || !right.length) {
+      if (!left.length) {
+        flipResults = true;
+        left = right;
+        right = [];
+      }
+      for (var i = 0; i < left.length; i++) {
+        var type = left[i].t;
+        var args = left[i].d;
+        var defaultValue = type.substr(0, 5) == 'scale' ? 1 : 0;
+        right.push({t: type, d: args.map(function(arg) {
+          if (typeof arg == 'number')
+            return defaultValue;
+          var result = {};
+          for (var unit in arg)
+            result[unit] = defaultValue;
+          return result;
+        })});
+      }
+    }
+
+    var isMatrixOrPerspective = function(lt, rt) {
+      return ((lt == 'perspective') && (rt == 'perspective')) ||
+          ((lt == 'matrix' || lt == 'matrix3d') && (rt == 'matrix' || rt == 'matrix3d'));
+    };
+    var leftResult = [];
+    var rightResult = [];
+    var types = [];
+
+    if (left.length != right.length) {
+      if (!matrixModulesLoaded)
+        return;
+      var merged = mergeMatrices(left, right);
+      leftResult = [merged[0]];
+      rightResult = [merged[1]];
+      types = [['matrix', [merged[2]]]];
+    } else {
+      for (var i = 0; i < left.length; i++) {
+        var leftType = left[i].t;
+        var rightType = right[i].t;
+        var leftArgs = left[i].d;
+        var rightArgs = right[i].d;
+
+        var leftFunctionData = transformFunctions[leftType];
+        var rightFunctionData = transformFunctions[rightType];
+
+        var type;
+        if (isMatrixOrPerspective(leftType, rightType)) {
+          if (!matrixModulesLoaded)
+            return;
+          var merged = mergeMatrices([left[i]], [right[i]]);
+          leftResult.push(merged[0]);
+          rightResult.push(merged[1]);
+          types.push(['matrix', [merged[2]]]);
+          continue;
+        } else if (leftType == rightType) {
+          type = leftType;
+        } else if (leftFunctionData[2] && rightFunctionData[2] && typeTo2D(leftType) == typeTo2D(rightType)) {
+          type = typeTo2D(leftType);
+          leftArgs = leftFunctionData[2](leftArgs);
+          rightArgs = rightFunctionData[2](rightArgs);
+        } else if (leftFunctionData[1] && rightFunctionData[1] && typeTo3D(leftType) == typeTo3D(rightType)) {
+          type = typeTo3D(leftType);
+          leftArgs = leftFunctionData[1](leftArgs);
+          rightArgs = rightFunctionData[1](rightArgs);
+        } else {
+          if (!matrixModulesLoaded)
+            return;
+          var merged = mergeMatrices(left, right);
+          leftResult = [merged[0]];
+          rightResult = [merged[1]];
+          types = [['matrix', [merged[2]]]];
+          break;
+        }
+
+        var leftArgsCopy = [];
+        var rightArgsCopy = [];
+        var stringConversions = [];
+        for (var j = 0; j < leftArgs.length; j++) {
+          var merge = typeof leftArgs[j] == 'number' ? scope.mergeNumbers : scope.mergeDimensions;
+          var merged = merge(leftArgs[j], rightArgs[j]);
+          leftArgsCopy[j] = merged[0];
+          rightArgsCopy[j] = merged[1];
+          stringConversions.push(merged[2]);
+        }
+        leftResult.push(leftArgsCopy);
+        rightResult.push(rightArgsCopy);
+        types.push([type, stringConversions]);
+      }
+    }
+
+    if (flipResults) {
+      var tmp = leftResult;
+      leftResult = rightResult;
+      rightResult = tmp;
+    }
+
+    return [leftResult, rightResult, function(list) {
+      return list.map(function(args, i) {
+        var stringifiedArgs = args.map(function(arg, j) {
+          return types[i][1][j](arg);
+        }).join(',');
+        if (types[i][0] == 'matrix' && stringifiedArgs.split(',').length == 16)
+          types[i][0] = 'matrix3d';
+        return types[i][0] + '(' + stringifiedArgs + ')';
+
+      }).join(' ');
+    }];
+  }
+
+  scope.addPropertiesHandler(parseTransform, mergeTransforms, ['transform']);
+
+  if (WEB_ANIMATIONS_TESTING)
+    testing.parseTransform = parseTransform;
+
+})(webAnimationsMinifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+(function(shared, scope, testing) {
+  scope.AnimationTimeline = function() {
+    this._players = [];
+    this.currentTime = undefined;
+  };
+
+  scope.AnimationTimeline.prototype = {
+    _addPlayer: function(player) {
+      this._players.push(player);
+      scope.restartMaxifillTick();
+    },
+    // FIXME: This needs to return the wrapped players in maxifill
+    // TODO: Does this need to be sorted?
+    // TODO: Do we need to consider needsRetick?
+    getAnimationPlayers: function() {
+      this.filterPlayers();
+      return this._players.slice();
+    },
+    filterPlayers: function() {
+      this._players = this._players.filter(function(player) {
+        return player.playState != 'finished' && player.playState != 'idle';
+      });
+    }
+  };
+
+  var ticking = false;
+
+  scope.restartMaxifillTick = function() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(maxifillTick);
+    }
+  };
+
+  function maxifillTick(t) {
+    var timeline = window.document.timeline;
+    timeline.currentTime = t;
+    timeline.filterPlayers();
+    if (timeline._players.length == 0)
+      ticking = false;
+    else
+      requestAnimationFrame(maxifillTick);
+  }
+
+  var timeline = new scope.AnimationTimeline();
+  scope.timeline = timeline;
+
+  try {
+    Object.defineProperty(window.document, 'timeline', {
+      configurable: true,
+      get: function() { return timeline; }
+    });
+  } catch (e) { }
+  try {
+    window.document.timeline = timeline;
+  } catch (e) { }
+
+})(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, scope, testing) {
+  scope.Player = function(player) {
+    this.source = null;
+    this._isGroup = false;
+    this._player = player;
+    this._childPlayers = [];
+    this._callback = null;
+  };
+
+  // TODO: add a source getter/setter
+  scope.Player.prototype = {
+    get paused() {
+      return this._player.paused;
+    },
+    get playState() {
+      return this._player.playState;
+    },
+    get onfinish() {
+      return this._onfinish;
+    },
+    set onfinish(v) {
+      if (typeof v == 'function') {
+        this._onfinish = v;
+        this._player.onfinish = (function(e) {
+          e.target = this;
+          v.call(this, e);
+        }).bind(this);
+      } else {
+        this._player.onfinish = v;
+        this.onfinish = this._player.onfinish;
+      }
+    },
+    get currentTime() {
+      return this._player.currentTime;
+    },
+    set currentTime(v) {
+      this._player.currentTime = v;
+      this._register();
+      this._forEachChild(function(child, offset) {
+        child.currentTime = v - offset;
+      });
+    },
+    get startTime() {
+      return this._player.startTime;
+    },
+    set startTime(v) {
+      this._player.startTime = v;
+      this._register();
+      this._forEachChild(function(child, offset) {
+        child.startTime = v + offset;
+      });
+    },
+    get playbackRate() {
+      return this._player.playbackRate;
+    },
+    get finished() {
+      return this._player.finished;
+    },
+    play: function() {
+      this._player.play();
+      this._register();
+      scope.awaitStartTime(this);
+      this._forEachChild(function(child) {
+        var time = child.currentTime;
+        child.play();
+        child.currentTime = time;
+      });
+    },
+    pause: function() {
+      this._player.pause();
+      this._register();
+      this._forEachChild(function(child) {
+        child.pause();
+      });
+    },
+    finish: function() {
+      this._player.finish();
+      this._register();
+      // TODO: child players??
+    },
+    cancel: function() {
+      this._player.cancel();
+      if (this._callback) {
+        this._register();
+        this._callback._player = null;
+      }
+      this.source = null;
+      this._removePlayers();
+    },
+    reverse: function() {
+      this._player.reverse();
+      scope.awaitStartTime(this);
+      this._register();
+      this._forEachChild(function(child, offset) {
+        child.reverse();
+        child.startTime = this.startTime + offset * this.playbackRate;
+        child.currentTime = this.currentTime + offset * this.playbackRate;
+      });
+    },
+    addEventListener: function(type, handler) {
+      var wrapped = handler;
+      if (typeof handler == 'function') {
+        wrapped = (function(e) {
+          e.target = this;
+          handler.call(this, e);
+        }).bind(this);
+        handler._wrapper = wrapped;
+      }
+      this._player.addEventListener(type, wrapped);
+    },
+    removeEventListener: function(type, handler) {
+      this._player.removeEventListener(type, (handler && handler._wrapper) || handler);
+    },
+    _removePlayers: function() {
+      while (this._childPlayers.length)
+        this._childPlayers.pop().cancel();
+    },
+    _forEachChild: function(f) {
+      var offset = 0;
+      this._childPlayers.forEach(function(child) {
+        f.call(this, child, offset);
+        if (this.source instanceof window.AnimationSequence)
+          offset += child.source.activeDuration;
+      }.bind(this));
+    },
+  };
+
+})(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, scope, testing) {
+
+  function groupChildDuration(node) {
+    return node._timing.delay + node.activeDuration + node._timing.endDelay;
+  };
+
+  function KeyframeEffect(effect) {
+    this._frames = shared.normalizeKeyframes(effect);
+  }
+
+  KeyframeEffect.prototype = {
+    getFrames: function() { return this._frames; }
+  };
+
+  window.Animation = function(target, effect, timingInput) {
+    this.target = target;
+    // TODO: Make modifications to specified update the underlying player
+    this._timing = shared.normalizeTimingInput(timingInput);
+    this.timing = shared.makeTiming(timingInput);
+    // TODO: Make this a live object - will need to separate normalization of
+    // keyframes into a shared module.
+    if (typeof effect == 'function')
+      this.effect = effect;
+    else
+      this.effect = new KeyframeEffect(effect);
+    this._effect = effect;
+    this._internalPlayer = null;
+    this.activeDuration = shared.calculateActiveDuration(this._timing);
+    return this;
+  };
+
+  var pendingGroups = [];
+  scope.awaitStartTime = function(groupPlayer) {
+    if (groupPlayer.startTime !== null || !groupPlayer._isGroup)
+      return;
+    if (pendingGroups.length == 0) {
+      requestAnimationFrame(updatePendingGroups);
+    }
+    pendingGroups.push(groupPlayer);
+  };
+  function updatePendingGroups() {
+    var updated = false;
+    while (pendingGroups.length) {
+      pendingGroups.shift()._updateChildren();
+      updated = true;
+    }
+    return updated;
+  }
+  var originalGetComputedStyle = window.getComputedStyle;
+  Object.defineProperty(window, 'getComputedStyle', {
+    configurable: true,
+    enumerable: true,
+    value: function() {
+      var result = originalGetComputedStyle.apply(this, arguments);
+      if (updatePendingGroups())
+        result = originalGetComputedStyle.apply(this, arguments);
+      return result;
+    },
+  });
+
+  // TODO: Call into this less frequently.
+  scope.Player.prototype._updateChildren = function() {
+    if (this.startTime === null || !this.source || !this._isGroup)
+      return;
+    var offset = this.source._timing.delay;
+    for (var i = 0; i < this.source.children.length; i++) {
+      var child = this.source.children[i];
+      var childPlayer;
+
+      if (i >= this._childPlayers.length) {
+        childPlayer = window.document.timeline.play(child);
+        child.player = this.source.player;
+        this._childPlayers.push(childPlayer);
+      } else {
+        childPlayer = this._childPlayers[i];
+      }
+
+      if (childPlayer.startTime != this.startTime + offset) {
+        childPlayer.startTime = this.startTime + offset;
+        childPlayer._updateChildren();
+      }
+
+      if (this.playbackRate == -1 && this.currentTime < offset && childPlayer.currentTime !== -1) {
+        childPlayer.currentTime = -1;
+      }
+
+      if (this.source instanceof window.AnimationSequence)
+        offset += groupChildDuration(child);
+    }
+  };
+
+  window.document.timeline.play = function(source) {
+    // TODO: Handle effect callback.
+    if (source instanceof window.Animation) {
+      // TODO: Handle null target.
+      var player = source.target.animate(source._effect, source.timing);
+      player.source = source;
+      source.player = player;
+      return player;
+    }
+    // FIXME: Move this code out of this module
+    if (source instanceof window.AnimationSequence || source instanceof window.AnimationGroup) {
+      var ticker = function(tf) {
+        if (!player.source)
+          return;
+        if (tf == null) {
+          player._removePlayers();
+          return;
+        }
+        if (player.startTime === null)
+          return;
+
+        player._updateChildren();
+      };
+
+
+      // TODO: Use a single static element rather than one per group.
+      var player = document.createElement('div').animate(ticker, source._timing);
+      player.source = source;
+      player._isGroup = true;
+      source.player = player;
+      scope.awaitStartTime(player);
+      return player;
+    }
+  };
+
+  window.Element.prototype.getAnimationPlayers = function() {
+    return document.timeline.getAnimationPlayers().filter(function(player) {
+      return player._player.source !== null && player._player.source.target == this;
+    }.bind(this));
+  };
+
+  scope.groupChildDuration = groupChildDuration;
+
+}(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting));
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+(function(shared, scope, testing) {
+
+  var element = document.createElement('div');
+  var originalAnimate = Element.prototype.animate;
+
+  Element.prototype.animate = function(effect, timing) {
+    var player;
+    if (typeof effect == 'function') {
+      player = new scope.Player(originalAnimate.apply(element, [[], timing]));
+      bind(player, this, effect, timing);
+    } else {
+      player = new scope.Player(originalAnimate.apply(this, [effect, timing]));
+    }
+    // FIXME: See if we can just use the maxifill player source and remove this all together.
+    player._player.source = {target: this};
+    window.document.timeline._addPlayer(player);
+    return player;
+  };
+
+  var sequenceNumber = 0;
+  function bind(player, target, effect, timing) {
+    var animation = 'fixme';
+    var last = undefined;
+    timing = shared.normalizeTimingInput(timing);
+    var callback = function() {
+      var t = callback._player ? callback._player.currentTime : null;
+      if (t !== null) {
+        t = shared.calculateTimeFraction(shared.calculateActiveDuration(timing), t, timing);
+        if (isNaN(t))
+          t = null;
+      }
+      // FIXME: There are actually more conditions under which the effect
+      // should be called.
+      if (t !== last)
+        effect(t, target, animation);
+      last = t;
+    };
+
+    callback._player = player;
+    callback._registered = false;
+    callback._sequenceNumber = sequenceNumber++;
+    player._callback = callback;
+    register(callback);
+  }
+
+  var callbacks = [];
+  var ticking = false;
+  function register(callback) {
+    if (callback._registered)
+      return;
+    callback._registered = true;
+    callbacks.push(callback);
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(tick);
+    }
+  }
+
+  function tick(t) {
+    var updating = callbacks;
+    callbacks = [];
+    updating.sort(function(left, right) {
+      return left._sequenceNumber - right._sequenceNumber;
+    });
+    updating.filter(function(callback) {
+      callback();
+      if (!callback._player || callback._player.finished || callback._player.paused)
+        callback._registered = false;
+      return callback._registered;
+    });
+    callbacks.push.apply(callbacks, updating);
+
+    if (callbacks.length) {
+      ticking = true;
+      requestAnimationFrame(tick);
+    } else {
+      ticking = false;
+    }
+  }
+
+  scope.Player.prototype._register = function() {
+    if (this._callback)
+      register(this._callback);
+  };
+
+})(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting);
+</script>
+<script>// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+// limitations under the License.
+
+(function(shared, scope, testing) {
+
+  function constructor(children, timingInput) {
+    this.children = children || [];
+    this._timing = shared.normalizeTimingInput(timingInput, true);
+    this.timing = shared.makeTiming(timingInput, true);
+
+    if (this._timing.duration === 'auto')
+      this._timing.duration = this.activeDuration;
+    this._internalPlayer = null;
+  }
+
+  window.AnimationSequence = function() {
+    constructor.apply(this, arguments);
+  };
+
+  window.AnimationGroup = function() {
+    constructor.apply(this, arguments);
+  };
+
+  window.AnimationSequence.prototype = {
+    get activeDuration() {
+      var total = 0;
+      this.children.forEach(function(child) {
+        total += scope.groupChildDuration(child);
+      });
+      return Math.max(total, 0);
+    }
+  };
+
+  window.AnimationGroup.prototype = {
+    get activeDuration() {
+      var max = 0;
+      this.children.forEach(function(child) {
+        max = Math.max(max, scope.groupChildDuration(child));
+      });
+      return max;
+    }
+  };
+
+})(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting);
+</script>
 
 
 
@@ -13145,14 +15874,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         text-transform: uppercase;
       }
 
-      .dropdown {
+      paper-dropdown {
         border-radius: 3px;        
       }
 
-      .menu {
+      paper-dropdown .menu {
         margin: 0;
         padding: 8px 0;
         color: black;
+      }
+
+      paper-item {
+        height: 45px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
     </style>
@@ -13160,24 +15896,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <core-header-panel fullbleed="">
 
       <core-toolbar class="medium-tall">
-        <div flex="">
-          Home Assistant
-        </div>
+        <div flex="">Home Assistant</div>
         <paper-icon-button icon="refresh" on-click="{{handleRefreshClick}}"></paper-icon-button>
         <paper-icon-button icon="settings-remote" on-click="{{handleServiceClick}}"></paper-icon-button>
 
         <paper-menu-button>
           <paper-icon-button icon="more-vert" noink=""></paper-icon-button>
-          <paper-dropdown class="dropdown" halign="right" duration="200">
+          <paper-dropdown halign="right" duration="200" class="dropdown">
             <core-menu class="menu">
-              <paper-item label="Set State">
-                <a on-click="{{handleAddStateClick}}"></a>
+              <paper-item>
+                <a on-click="{{handleAddStateClick}}">Set State</a>
               </paper-item>
-              <paper-item label="Trigger Event">
-                <a on-click="{{handleEventClick}}"></a>
+              <paper-item>
+                <a on-click="{{handleEventClick}}">Trigger Event</a>
               </paper-item>
-              <paper-item label="Log Out">
-                <a on-click="{{handleLogOutClick}}"></a>
+              <paper-item>
+                <a on-click="{{handleLogOutClick}}">Log Out</a>
               </paper-item>
             </core-menu>
           </paper-dropdown>
@@ -15730,11 +18464,11 @@ core-item {
         height: 125px;
       }
 
-      #validateBox {
+      #validatebox {
         text-align: center;
       }
 
-      #validateMessage {
+      #validatemessage {
         margin-top: 10px;
       }
 
@@ -15756,9 +18490,9 @@ core-item {
               <paper-button on-click="{{validatePassword}}">Log In</paper-button>
             </div>
 
-            <div id="validateBox" hidden>
+            <div id="validatebox" hidden>
               <paper-spinner active="true"></paper-spinner><br>
-              <div id="validateMessage">Validating password...</div>
+              <div id="validatemessage">Validating password...</div>
             </div>
           </div>
         </div>
@@ -15792,7 +18526,7 @@ core-item {
       // log out functionality
       if(newVal == "" && this.state == "valid_auth") {
         this.state = "no_auth";
-        this.$.validateMessage.innerHTML = "Validating password...";
+        this.$.validatemessage.innerHTML = "Validating password...";
       }
     },
 
@@ -15805,12 +18539,11 @@ core-item {
     },
 
     validatePassword: function() {
-      a = this.$.passwordInput;
       this.$.loginform.setAttribute('hidden', null);
-      this.$.validateBox.removeAttribute('hidden');
+      this.$.validatebox.removeAttribute('hidden');
 
       var passwordValid = function(result) {
-        this.$.validateMessage.innerHTML = "Loading data...";
+        this.$.validatemessage.innerHTML = "Loading data...";
         this.api.fetchEvents();
 
         this.api.fetchStates(function() {
@@ -15827,7 +18560,7 @@ core-item {
         this.auth = null;
         this.$.passwordDecorator.isInvalid = true;
         this.$.loginform.removeAttribute('hidden');
-        this.$.validateBox.setAttribute('hidden', null);
+        this.$.validatebox.setAttribute('hidden', null);
         this.$.passwordInput.focus();
       }
 
