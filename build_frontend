@@ -9,7 +9,8 @@ cp polymer/bower_components/webcomponentsjs/webcomponents.min.js .
 
 # Let Polymer refer to the minified JS version before we compile
 sed -i.bak 's/polymer\.js/polymer\.min\.js/' polymer/bower_components/polymer/polymer.html
-vulcanize -o frontend.html --inline polymer/splash-login.html
+
+vulcanize -o frontend.html --inline --strip polymer/splash-login.html
 
 # Revert back the change to the Polymer component
 rm polymer/bower_components/polymer/polymer.html
