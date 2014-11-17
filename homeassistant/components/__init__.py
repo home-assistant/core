@@ -16,7 +16,6 @@ Each component should publish services only under its own domain.
 """
 import itertools as it
 import logging
-import importlib
 
 import homeassistant as ha
 import homeassistant.util as util

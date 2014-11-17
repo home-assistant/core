@@ -10,8 +10,6 @@ import os
 import csv
 from datetime import datetime, timedelta
 
-import requests
-
 import homeassistant as ha
 from homeassistant.loader import get_component
 import homeassistant.util as util
@@ -268,9 +266,9 @@ class DeviceTracker(object):
                             self.path_known_devices_file)
 
                     # Remove entities that are no longer maintained
-                    new_entity_ids = set([known_devices[device]['entity_id']
-                                          for device in known_devices
-                                          if known_devices[device]['track']])
+                    new_entity_ids = set([known_devices[dev]['entity_id']
+                                          for dev in known_devices
+                                          if known_devices[dev]['track']])
 
                     for entity_id in \
                             self.device_entity_ids - new_entity_ids:

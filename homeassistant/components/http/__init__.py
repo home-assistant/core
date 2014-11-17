@@ -85,8 +85,6 @@ from urllib.parse import urlparse, parse_qs
 import homeassistant as ha
 import homeassistant.remote as rem
 import homeassistant.util as util
-from homeassistant.components import (STATE_ON, STATE_OFF,
-                                      SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from . import frontend
 
 DOMAIN = "http"

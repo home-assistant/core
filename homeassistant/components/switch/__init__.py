@@ -11,7 +11,7 @@ import homeassistant.util as util
 from homeassistant.loader import get_component
 from homeassistant.components import (
     group, extract_entity_ids, STATE_ON,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 
 DOMAIN = 'switch'
 DEPENDENCIES = []

@@ -6,7 +6,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
-import sys
 import os
 import time
 import logging
