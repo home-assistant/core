@@ -39,32 +39,29 @@
 
     <home-assistant-api auth="{{auth}}" id="api"></home-assistant-api>
 
-    <template if="{{state == 'no_auth'}}">
-      <div layout horizontal center fit class='login'>
-        <div layout vertical center flex>
-          <img src="/static/favicon-192x192.png" />
-          <h1>Home Assistant</h1>
+    <div layout horizontal center fit class='login' id="splash">
+      <div layout vertical center flex>
+        <img src="/static/favicon-192x192.png" />
+        <h1>Home Assistant</h1>
+        <a href="#" id="hideKeyboardOnFocus"></a>
+        <div class='interact' layout vertical>
+          <div id='loginform'>
+            <paper-input-decorator label="Password" id="passwordDecorator">
+              <input is="core-input" type="password" id="passwordInput"
+                     value="{{auth}}" on-keyup="{{passwordKeyup}}" autofocus>
+            </paper-input-decorator>
+            <paper-button on-click={{validatePassword}}>Log In</paper-button>
+          </div>
 
-          <div class='interact' layout vertical>
-            <div id='loginform'>
-              <paper-input-decorator label="Password" id="passwordDecorator">
-                <input is="core-input" type="password" id="passwordInput"
-                       value="{{auth}}" on-keyup="{{passwordKeyup}}" autofocus>
-              </paper-input-decorator>
-              <paper-button on-click={{validatePassword}}>Log In</paper-button>
-            </div>
-
-            <div id="validatebox" hidden>
-              <paper-spinner active="true"></paper-spinner><br />
-              <div id="validatemessage">Validating password...</div>
-            </div>
+          <div id="validatebox" hidden>
+            <paper-spinner active="true"></paper-spinner><br />
+            <div id="validatemessage">Validating password...</div>
           </div>
         </div>
       </div>
-    </template>
-    <template if="{{state == 'valid_auth'}}">
-      <home-assistant-main api="{{api}}"></home-assistant-main>
-    </template>
+    </div>
+
+    <home-assistant-main api="{{api}}" hidden id="main"></home-assistant-main>
 
   </template>
   <script>
@@ -88,16 +85,36 @@
 
     authChanged: function(oldVal, newVal) {
       // log out functionality
-      if(newVal == "" && this.state == "valid_auth") {
+      if(newVal === "" && this.state === "valid_auth") {
         this.state = "no_auth";
+      }
+    },
+
+    stateChanged: function(oldVal, newVal) {
+      if(newVal === "no_auth") {
+        // set login box showing
+        this.$.loginform.removeAttribute('hidden');
+        this.$.validatebox.setAttribute('hidden', null);
+
+        // reset to initial message
         this.$.validatemessage.innerHTML = "Validating password...";
+
+        // show splash
+        this.$.splash.removeAttribute('hidden');
+        this.$.main.setAttribute('hidden', null);
+      } else { // valid_auth
+        this.$.splash.setAttribute('hidden', null);
+        this.$.main.removeAttribute('hidden');
       }
     },
 
     passwordKeyup: function(ev) {
-      if(ev.keyCode == 13) {
+      // validate on enter
+      if(ev.keyCode === 13) {
         this.validatePassword();
-      } else {
+
+      // clear error after we start typing again
+      } else if(this.$.passwordDecorator.isInvalid) {
         this.$.passwordDecorator.isInvalid = false;
       }
     },
@@ -105,6 +122,7 @@
     validatePassword: function() {
       this.$.loginform.setAttribute('hidden', null);
       this.$.validatebox.removeAttribute('hidden');
+      this.$.hideKeyboardOnFocus.focus();
 
       var passwordValid = function(result) {
         this.$.validatemessage.innerHTML = "Loading data...";
@@ -113,7 +131,7 @@
         this.api.fetchStates(function() {
           this.state = "valid_auth";
         }.bind(this));
-      }
+      };
 
       var passwordInvalid = function(result) {
         if(result && result.message) {
@@ -126,7 +144,7 @@
         this.$.loginform.removeAttribute('hidden');
         this.$.validatebox.setAttribute('hidden', null);
         this.$.passwordInput.focus();
-      }
+      };
 
       this.api.fetchServices(passwordValid.bind(this), passwordInvalid.bind(this));
     }
