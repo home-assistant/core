@@ -54,51 +54,37 @@
   </template>
   <script>
   Polymer({
-    raw_states: [],
-    states: [],
     filter: null,
-    filter_substates: null,
 
-    filterChanged: function(oldVal, newVal) {
-      this.refilterStates();
+    computed: {
+      states: "getStates(api.states, filter)"
     },
 
-    ready: function() {
-      this.editCallback = this.editCallback.bind(this);
-    },
+    getStates: function(states, filter) {
+      if(!states) {
+        return [];
+      }
 
-    domReady: function() {
-      this.raw_states = this.api.states
-
-      this.api.addEventListener('states-updated', this.statesUpdated.bind(this))
-
-      this.refilterStates();
-    },
-
-    statesUpdated: function() {
-      this.raw_states = this.api.states;
-
-      this.refilterStates();
-    },
-
-    refilterStates: function() {
-      if(this.filter == null) {
-        // all states except groups
-        this.states = this.raw_states.filter(function(state) {
-          return state.domain != 'group'
+      if(!filter) {
+        // if no filter, return all non-group states
+        return states.filter(function(state) {
+          return state.domain != 'group';
         });
-
       } else {
+        // we have a filter, return the parent filter and its children
         var filter_state = this.api.getState(this.filter);
 
         var map_states = function(entity_id) {
           return this.api.getState(entity_id);
-        }.bind(this)
+        }.bind(this);
 
-        // take the parent state and append it's children
-        this.states = [filter_state].concat(
-          filter_state.attributes.entity_id.map(map_states))
+        return [filter_state].concat(
+          filter_state.attributes.entity_id.map(map_states));
       }
+    },
+
+    ready: function() {
+      this.editCallback = this.editCallback.bind(this);
     },
 
     editCallback: function(entityId) {
