@@ -81,7 +81,7 @@
 
           <div class="time-ago">
             <core-tooltip label="{{stateObj.last_changed}}" position="bottom">
-              {{lastChangedFromNow}}
+              {{lastChangedFromNow(stateObj.last_changed)}}
             </core-tooltip>
           </div>
           
@@ -109,7 +109,6 @@
   </template>
   <script>
   Polymer({
-    // attributes
     stateObj: {},
 
     cb_turn_on: null,
@@ -118,16 +117,12 @@
     stateUnknown: false,
     toggleChecked: -1,
 
-    computed: {
-      lastChangedFromNow: "stateObj.last_changed | parseLastChangedFromNow",
-    },
-
     observe: {
       'stateObj.state': 'stateChanged'
     },
 
-    parseLastChangedFromNow: function(lastChanged) {
-      return moment(lastChanged, "HH:mm:ss DD-MM-YYYY").fromNow()
+    lastChangedFromNow: function(lastChanged) {
+      return moment(lastChanged, "HH:mm:ss DD-MM-YYYY").fromNow();
     },
 
     toggleCheckedChanged: function(oldVal, newVal) {
@@ -144,8 +139,8 @@
     },
 
     stateChanged: function(oldVal, newVal) {
-      this.stateUnknown = newVal == null;
-      this.toggleChecked = newVal == "on"
+      this.stateUnknown = newVal === null;
+      this.toggleChecked = newVal === "on";
     },
 
     turn_on: function() {
@@ -155,7 +150,7 @@
         // unset state while we wait for an update
         var delayUnsetSate = function() {
           this.stateObj.state = null;
-        }
+        };
         setTimeout(delayUnsetSate.bind(this), 500);      
       }
     },
@@ -167,7 +162,7 @@
         // unset state while we wait for an update
         var delayUnsetSate = function() {
           this.stateObj.state = null;
-        }
+        };
         setTimeout(delayUnsetSate.bind(this), 500);      
       }
     },

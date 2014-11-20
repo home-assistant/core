@@ -41,7 +41,7 @@
     </style>
 
     <div horizontal layout wrap>
-      <template repeat="{{state in states}}">
+      <template repeat="{{state in getStates(api.states, filter)}}">
         <state-card
           stateObj="{{state}}"
           cb_turn_on="{{api.turn_on}}"
@@ -55,10 +55,6 @@
   <script>
   Polymer({
     filter: null,
-
-    computed: {
-      states: "getStates(api.states, filter)"
-    },
 
     getStates: function(states, filter) {
       if(!states) {
