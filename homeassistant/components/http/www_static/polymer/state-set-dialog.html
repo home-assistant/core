@@ -9,7 +9,7 @@
 
 <polymer-element name="state-set-dialog" attributes="api">
   <template>
-  <paper-action-dialog id="dialog" heading="Set State" transition="core-transition-center" backdrop="true">
+  <paper-action-dialog id="dialog" heading="Set State" transition="core-transition-bottom" backdrop="true">
     <style>
     :host {
         font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
@@ -28,6 +28,12 @@
     }
 
     @media all and (max-width: 620px) {
+      paper-action-dialog {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+
       .stateContainer {
         display: none;
       }
