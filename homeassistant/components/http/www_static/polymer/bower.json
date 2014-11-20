@@ -20,6 +20,7 @@
     "core-item": "Polymer/core-item#~0.5.1",
     "core-input": "Polymer/core-input#~0.5.1",
     "core-icons": "polymer/core-icons#~0.5.1",
+    "core-image": "polymer/core-image#~0.5.1",
     "paper-toast": "Polymer/paper-toast#~0.5.1",
     "paper-dialog": "Polymer/paper-dialog#~0.5.1",
     "paper-spinner": "Polymer/paper-spinner#~0.5.1",
