@@ -24,8 +24,26 @@
         color: white;
       }
 
+      core-toolbar.tall {
+        /* 2x normal height */
+        height: 128px;
+      }
+
+      core-toolbar .bottom {
+        opacity: 0;
+        transition: opacity 0.30s ease-out;
+      }
+
+      core-toolbar.tall .bottom {
+        opacity: 1;
+      }
+
       paper-tab {
         text-transform: uppercase;
+      }
+
+      paper-menu-button {
+        margin-top: 5px;
       }
 
       paper-dropdown {
@@ -50,9 +68,9 @@
 
     </style>
 
-    <core-header-panel fit>
+    <core-header-panel fit mode="{{hasCustomGroups && 'waterfall-tall'}}">
 
-      <core-toolbar class='medium-tall'>
+      <core-toolbar>
         <div flex>Home Assistant</div>
         <paper-icon-button icon="refresh"
           on-click="{{handleRefreshClick}}"></paper-icon-button>
@@ -82,12 +100,10 @@
             
               <paper-tab>ALL</paper-tab>
 
-              <template repeat="{{state in api.states}}">
-                <template if="{{state.isCustomGroup}}">
-                  <paper-tab data-entity="{{state.entity_id}}">
-                    {{state.entityDisplay}}
-                  </paper-tab>
-                </template>
+              <template repeat="{{group in customGroups}}">
+                <paper-tab data-entity="{{group.entity_id}}">
+                  {{group.entityDisplay}}
+                </paper-tab>
               </template>
                 
             </paper-tabs>
@@ -105,6 +121,11 @@
   <script>
   Polymer({
     selectedTab: null,
+
+    computed: {
+      customGroups: "getCustomGroups(api.states)",
+      hasCustomGroups: "customGroups.length > 0"
+    },
 
     tabClicked: function(ev) {
       if(ev.detail.isSelected) {
@@ -131,6 +152,11 @@
 
     handleLogOutClick: function() {
       this.api.logOut();
+    },
+
+    getCustomGroups: function(states) {
+      return states ?
+        states.filter(function(state) { return state.isCustomGroup;}) : [];
     }
 
   });
