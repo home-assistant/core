@@ -13,15 +13,17 @@ Contains the code to interact with WeMo switches. Called if type=wemo in switch 
 **homeassistant/components/switch/tellstick.py**
 Contains the code to interact with Tellstick switches. Called if type=tellstick in switch config.
 
-If a component exists, your job is easy. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add.If you cannot find a suitable component, you'll have to add it yourself. When writing a component try to structure it after the Switch component to maximize reusability.
+If a component exists, your job is easy. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add. If you cannot find a suitable component, you'll have to add it yourself. When writing a component try to structure it after the Switch component to maximize reusability.
 
 Communication between Home Assistant and devices should happen via third-party libraries that implement the device API. This will make sure the platform support code stays as small as possible.
+
+For help on building your component, please see the See the documentation on [further customizing Home Assistant](https://github.com/balloob/home-assistant#further-customizing-home-assistant).
 
 After you finish adding support for your device:
 
  - update the supported devices in README.md.
  - add any new dependencies to requirements.txt.
- - Make sure all your code passes Pylint and PEP8 validation. To generate reports, run `pylint homeassistant > pylint.txt` and `pep8 homeassistant --exclude bower_components,external > pep8.txt`.
+ - Make sure all your code passes Pylint, flake8 (PEP8 and some more) validation. To generate reports, run `pylint homeassistant > pylint.txt` and `flake8 homeassistant --exclude bower_components,external > flake8.txt`.
 
 If you've added a component:
 

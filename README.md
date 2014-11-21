@@ -27,9 +27,11 @@ Home Assistant also includes functionality for controlling HTPCs:
 
 The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](#architecture) and the [section on customizing](#customizing).
 
+If you run into issues while using Home Assistant or during development of a component, reach out to the [Home Assistant developer community](https://groups.google.com/forum/#!forum/home-assistant-dev).
+
 ## Installation instructions / Quick-start guide
 
-Running Home Assistant requires that python3 and the packages pyephem and requests are installed.
+Running Home Assistant requires that python3 and the package requests are installed.
 
 Run the following code to get up and running with the minimum setup:
 
@@ -50,6 +52,8 @@ docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -
 ```
 
 After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in [/config/home-assistant.conf.example](https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example).
+
+*Note:* you can append `?api_password=YOUR_PASSWORD` to the url of the web interface to log in automatically.
 
 ### Philips Hue
 To get Philips Hue working you will have to connect Home Assistant to the Hue bridge.
@@ -88,20 +92,16 @@ Once tracking the `device_tracker` component will maintain a file in your config
 <a name='customizing'></a>
 ## Further customizing Home Assistant
 
-If you run into issues while developing your component, reach out to the [Home Assistant developer community](https://groups.google.com/forum/#!forum/home-assistant-dev).
-
 Home Assistant can be extended by components. Components can listen for- or trigger events and offer services. Components are written in Python and can do all the goodness that Python has to offer.
 
 Home Assistant offers [built-in components](#components) but it is easy to built your own. An example component can be found in [`/config/custom_components/example.py`](https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py).
 
-*Note:* Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the `./config` folder but this can be placed anywhere on the filesystem.
+*Note:* Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the `./config` folder but this can be pointed anywhere on the filesystem by using the `--config /YOUR/CONFIG/PATH/` argument.
 
 A component will be loaded on start if a section (ie. `[light]`) for it exists in the config file or a module that depends on the component is loaded. When loading a component Home Assistant will check the following paths:
 
  * &lt;config file directory>/custom_components/&lt;component name>.py
  * homeassistant/components/&lt;component name>.py (built-in components)
-
-Upon loading of a component it will be validated to see if the required fields (`DOMAIN`, `DEPENDENCIES`) and required method ( `setup(hass, config)` ) are available.
 
 Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if loading and setup of your component went well.
 
@@ -132,6 +132,8 @@ host=paulusschoutsen.nl
 ```
 
 Then in the setup-method of your component you will be able to refer to `config[example][host]` to get the value `paulusschoutsen.nl`.
+
+If you want to get your component included with the Home Assistant distribution, please take a look at the [contributing page](https://github.com/balloob/home-assistant/blob/master/CONTRIBUTING.md).
 
 <a name="architecture"></a>
 ## Architecture
