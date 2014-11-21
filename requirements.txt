@@ -1,5 +1,19 @@
+# required
 requests>=2.0
-pychromecast>=0.5
+
+# optional, needed for specific components
+
+# sun
 pyephem>=3.7
+
+# lights.hue
+phue>=0.7
+
+# chromecast
+pychromecast>=0.5
+
+# keyboard
 pyuserinput>=0.1.9
+
+# switch.tellstick, tellstick_sensor
 tellcore-py>=1.0.4
