@@ -58,8 +58,6 @@ After you got the demo mode running it is time to enable some real components an
 ### Philips Hue
 To get Philips Hue working you will have to connect Home Assistant to the Hue bridge.
 
-*Note*: Home Assistant depends on a feature of Phue that is available on GitHub but not on Pypi. Home Assistant will include Phue as a git submodule till this issue is resolved. Before using Philips Hue you will have to install the Phue library so it can create a config file. Do so by running from the Home Assistant directory: `pip3 install -e homeassistant/external/phue`.
-
 Run the following command from your config dir and follow the instructions:
 
 ```bash

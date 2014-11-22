@@ -4,6 +4,3 @@
 [submodule "homeassistant/external/pywemo"]
 	path = homeassistant/external/pywemo
 	url = https://github.com/balloob/pywemo.git
-[submodule "homeassistant/external/phue"]
-	path = homeassistant/external/phue
-	url = https://github.com/studioimaginaire/phue.git

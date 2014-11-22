@@ -17,9 +17,7 @@ def get_lights(hass, config):
     """ Gets the Hue lights. """
     logger = logging.getLogger(__name__)
     try:
-        # Pylint does not play nice if not every folders has an __init__.py
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.external.phue.phue as phue
+        import phue
     except ImportError:
         logger.exception("Error while importing dependency phue.")
 
