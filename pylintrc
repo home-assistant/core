@@ -6,7 +6,12 @@ reports=no
 # locally-disabled - it spams too much
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
-disable=locally-disabled,duplicate-code,cyclic-import
+# file-ignored - we ignore a file to work around a pylint bug
+disable=
+  locally-disabled,
+  duplicate-code,
+  cyclic-import,
+  file-ignored
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError

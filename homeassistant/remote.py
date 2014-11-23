@@ -18,6 +18,7 @@ import urllib.parse
 import requests
 
 import homeassistant as ha
+from homeassistant.remote_json import JSONEncoder
 
 SERVER_PORT = 8123
 
@@ -236,18 +237,6 @@ class StateMachine(ha.StateMachine):
     def _state_changed_listener(self, event):
         """ Listens for state changed events and applies them. """
         self._states[event.data['entity_id']] = event.data['new_state']
-
-
-class JSONEncoder(json.JSONEncoder):
-    """ JSONEncoder that supports Home Assistant objects. """
-
-    def default(self, obj):  # pylint: disable=method-hidden
-        """ Checks if Home Assistat object and encodes if possible.
-        Else hand it off to original method. """
-        if isinstance(obj, ha.State):
-            return obj.as_dict()
-
-        return json.JSONEncoder.default(self, obj)
 
 
 def validate_api(api):
