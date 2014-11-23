@@ -107,7 +107,11 @@ class HomeAssistant(object):
 
     def track_state_change(self, entity_ids, action,
                            from_state=None, to_state=None):
-        """ Track specific state changes. """
+        """
+        Track specific state changes.
+        entity_ids, from_state and to_state can be string or list.
+        Use list to match multiple.
+        """
         from_state = _process_match_param(from_state)
         to_state = _process_match_param(to_state)
 
@@ -130,14 +134,16 @@ class HomeAssistant(object):
         self.bus.listen(EVENT_STATE_CHANGED, state_listener)
 
     def track_point_in_time(self, action, point_in_time):
-        """ Adds a listener that fires once after a spefic point in time. """
+        """
+        Adds a listener that fires once at or after a spefic point in time.
+        """
 
         @ft.wraps(action)
         def point_in_time_listener(event):
             """ Listens for matching time_changed events. """
             now = event.data[ATTR_NOW]
 
-            if now > point_in_time and \
+            if now >= point_in_time and \
                not hasattr(point_in_time_listener, 'run'):
 
                 # Set variable so that we will never run twice.
@@ -221,7 +227,7 @@ class HomeAssistant(object):
 
 def _process_match_param(parameter):
     """ Wraps parameter in a list if it is not one and returns it. """
-    if not parameter:
+    if not parameter or parameter == MATCH_ALL:
         return MATCH_ALL
     elif isinstance(parameter, list):
         return parameter

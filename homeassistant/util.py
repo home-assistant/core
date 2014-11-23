@@ -246,6 +246,10 @@ class ThreadPool(object):
 
             self.busy_callback(self.current_jobs, self.work_queue.qsize())
 
+    def block_till_done(self):
+        """ Blocks till all work is done. """
+        self.work_queue.join()
+
 
 class PriorityQueueItem(object):
     """ Holds a priority and a value. Used within PriorityQueue. """
