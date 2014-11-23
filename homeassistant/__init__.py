@@ -62,6 +62,10 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
 
+        # Components in a thread we might want to stop later
+        self.timer = None
+        self.http = None
+
         self.config_dir = os.getcwd()
 
     def get_config_path(self, path):
@@ -70,7 +74,7 @@ class HomeAssistant(object):
 
     def start(self):
         """ Start home assistant. """
-        Timer(self)
+        self.timer = Timer(self)
 
         self.bus.fire(EVENT_HOMEASSISTANT_START)
 
@@ -88,6 +92,8 @@ class HomeAssistant(object):
 
             except KeyboardInterrupt:
                 break
+
+        self.stop()
 
     def call_service(self, domain, service, service_data=None):
         """ Fires event to call specified service. """
@@ -223,6 +229,18 @@ class HomeAssistant(object):
                 listener(event)
 
         self.bus.listen(event_type, onetime_listener)
+
+    def stop(self):
+        """ Stops Home Assistant and shuts down all threads. """
+        _LOGGER.info("Stopping")
+
+        self._pool.stop()
+
+        if self.http is not None:
+            self.http.shutdown()
+
+        if self.timer is not None:
+            self.timer.shutdown()
 
 
 def _process_match_param(parameter):
@@ -598,6 +616,7 @@ class Timer(threading.Thread):
         self.daemon = True
         self._bus = hass.bus
         self.interval = interval or TIMER_INTERVAL
+        self._stop = threading.Event()
 
         # We want to be able to fire every time a minute starts (seconds=0).
         # We want this so other modules can use that to make sure they fire
@@ -617,7 +636,7 @@ class Timer(threading.Thread):
         calc_now = dt.datetime.now
         interval = self.interval
 
-        while True:
+        while not self._stop.isSet():
             now = calc_now()
 
             # First check checks if we are not on a second matching the
@@ -641,6 +660,10 @@ class Timer(threading.Thread):
             last_fired_on_second = now.second
 
             self._bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+
+    def shutdown(self):
+        _LOGGER.info("Timer:Stopping")
+        self._stop.set()
 
 
 class HomeAssistantError(Exception):

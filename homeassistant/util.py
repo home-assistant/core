@@ -226,32 +226,58 @@ class ThreadPool(object):
         """
         work_queue = self.work_queue = queue.PriorityQueue()
         current_jobs = self.current_jobs = []
+        self.worker_count = worker_count
         self.busy_callback = busy_callback
         self.busy_warning_limit = worker_count**2
+        self._lock = threading.RLock()
+        self._quit_task = object()
 
         for _ in range(worker_count):
             worker = threading.Thread(target=_threadpool_worker,
                                       args=(work_queue, current_jobs,
-                                            job_handler))
+                                            job_handler, self._quit_task))
             worker.daemon = True
             worker.start()
 
+        self.running = True
+
     def add_job(self, priority, job):
         """ Add a job to be sent to the workers. """
-        self.work_queue.put(PriorityQueueItem(priority, job))
+        with self._lock:
+            if not self.running:
+                raise Exception("We are shutting down the ")
 
-        # check if our queue is getting too big
-        if self.work_queue.qsize() > self.busy_warning_limit \
-           and self.busy_callback is not None:
+            self.work_queue.put(PriorityQueueItem(priority, job))
 
-            # Increase limit we will issue next warning
-            self.busy_warning_limit *= 2
+            # check if our queue is getting too big
+            if self.work_queue.qsize() > self.busy_warning_limit \
+               and self.busy_callback is not None:
 
-            self.busy_callback(self.current_jobs, self.work_queue.qsize())
+                # Increase limit we will issue next warning
+                self.busy_warning_limit *= 2
+
+                self.busy_callback(self.current_jobs, self.work_queue.qsize())
 
     def block_till_done(self):
         """ Blocks till all work is done. """
-        self.work_queue.join()
+        with self._lock:
+            self.work_queue.join()
+
+    def stop(self):
+        """ Stops all the threads. """
+        with self._lock:
+            # Clear the queue
+            while self.work_queue.qsize() > 0:
+                self.work_queue.get()
+                self.work_queue.task_done()
+
+            # Tell the workers to quit
+            for i in range(self.worker_count):
+                self.add_job(1000, self._quit_task)
+
+            self.running = False
+
+            self.block_till_done()
 
 
 class PriorityQueueItem(object):
@@ -266,11 +292,15 @@ class PriorityQueueItem(object):
         return self.priority < other.priority
 
 
-def _threadpool_worker(work_queue, current_jobs, job_handler):
+def _threadpool_worker(work_queue, current_jobs, job_handler, quit_task):
     """ Provides the base functionality of a worker for the thread pool. """
     while True:
         # Get new item from work_queue
         job = work_queue.get().item
+
+        if job == quit_task:
+            work_queue.task_done()
+            return
 
         # Add to current running jobs
         job_log = (datetime.datetime.now(), job)
