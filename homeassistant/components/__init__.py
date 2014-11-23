@@ -59,7 +59,7 @@ def is_on(hass, entity_id=None):
     if entity_id:
         group = get_component('group')
 
-        entity_ids = group.expand_entity_ids([entity_id])
+        entity_ids = group.expand_entity_ids(hass, [entity_id])
     else:
         entity_ids = hass.states.entity_ids
 
@@ -80,13 +80,19 @@ def is_on(hass, entity_id=None):
     return False
 
 
-def turn_on(hass, **service_data):
+def turn_on(hass, entity_id=None, **service_data):
     """ Turns specified entity on if possible. """
+    if entity_id is not None:
+        service_data[ATTR_ENTITY_ID] = entity_id
+
     hass.call_service(ha.DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-def turn_off(hass, **service_data):
+def turn_off(hass, entity_id=None, **service_data):
     """ Turns specified entity off. """
+    if entity_id is not None:
+        service_data[ATTR_ENTITY_ID] = entity_id
+
     hass.call_service(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
 
 
@@ -169,7 +175,6 @@ def setup(hass, config):
 
     def handle_turn_service(service):
         """ Method to handle calls to homeassistant.turn_on/off. """
-
         entity_ids = extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id
