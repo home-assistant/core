@@ -318,11 +318,11 @@ class Event(object):
         # pylint: disable=maybe-no-member
         if self.data:
             return "<Event {}[{}]: {}>".format(
-                self.event_type, self.origin.value[0],
+                self.event_type, str(self.origin)[0],
                 util.repr_helper(self.data))
         else:
             return "<Event {}[{}]>".format(self.event_type,
-                                           self.origin.value[0])
+                                           str(self.origin)[0])
 
 
 class EventBus(object):
@@ -386,9 +386,9 @@ class EventBus(object):
                 if not self._listeners[event_type]:
                     self._listeners.pop(event_type)
 
-            except (KeyError, AttributeError):
+            except (KeyError, ValueError):
                 # KeyError is key event_type listener did not exist
-                # AttributeError if listener did not exist within event_type
+                # ValueError if listener did not exist within event_type
                 pass
 
 

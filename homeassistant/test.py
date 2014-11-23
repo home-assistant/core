@@ -5,11 +5,13 @@ homeassistant.test
 Provides tests to verify that Home Assistant modules do what they should do.
 
 """
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 
 import os
 import unittest
+import time
 import json
+import threading
 from datetime import datetime
 
 import requests
@@ -76,7 +78,6 @@ def ensure_slave_started():
     return HAHelper.slave
 
 
-# pylint: disable=too-many-public-methods
 class TestHomeAssistant(unittest.TestCase):
     """
     Tests the Home Assistant core classes.
@@ -99,7 +100,27 @@ class TestHomeAssistant(unittest.TestCase):
 
     def test_block_till_stoped(self):
         """ Test if we can block till stop service is called. """
-        pass
+        blocking_thread = threading.Thread(target=self.hass.block_till_stopped)
+
+        self.assertFalse(blocking_thread.is_alive())
+
+        blocking_thread.start()
+        # Python will now give attention to the other thread
+        time.sleep(.01)
+
+        self.assertTrue(blocking_thread.is_alive())
+
+        self.hass.call_service(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
+        self.hass._pool.block_till_done()
+
+        # hass.block_till_stopped checks every second if it should quit
+        # we have to wait worst case 1 second
+        wait_loops = 0
+        while blocking_thread.is_alive() and wait_loops < 10:
+            wait_loops += 1
+            time.sleep(0.1)
+
+        self.assertFalse(blocking_thread.is_alive())
 
     def test_get_entity_ids(self):
         """ Test get_entity_ids method. """
@@ -224,7 +245,21 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
 
-# pylint: disable=too-many-public-methods
+class TestEvent(unittest.TestCase):
+    """ Test Event class. """
+    def test_repr(self):
+        """ Test that repr method works. #MoreCoverage """
+        self.assertEqual(
+            "<Event TestEvent[L]>",
+            str(ha.Event("TestEvent")))
+
+        self.assertEqual(
+            "<Event TestEvent[R]: beer=nice>",
+            str(ha.Event("TestEvent",
+                         {"beer": "nice"},
+                         ha.EventOrigin.remote)))
+
+
 class TestEventBus(unittest.TestCase):
     """ Test EventBus methods. """
 
@@ -243,12 +278,17 @@ class TestEventBus(unittest.TestCase):
 
         self.assertEqual(old_count + 1, len(self.bus.listeners))
 
-        self.bus.remove_listener('test', listener)
+        # Try deleting a non registered listener, nothing should happen
+        self.bus.remove_listener('test', lambda x: len)
 
+        # Remove listener
+        self.bus.remove_listener('test', listener)
         self.assertEqual(old_count, len(self.bus.listeners))
 
+        # Try deleting listener while category doesn't exist either
+        self.bus.remove_listener('test', listener)
 
-# pylint: disable=too-many-public-methods
+
 class TestState(unittest.TestCase):
     """ Test EventBus methods. """
 
@@ -258,8 +298,18 @@ class TestState(unittest.TestCase):
             ha.InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
 
+    def test_repr(self):
+        """ Test state.repr """
+        self.assertEqual("<state on @ 12:00:00 08-12-1984>",
+                         str(ha.State(
+                             "happy.happy", "on",
+                             last_changed=datetime(1984, 12, 8, 12, 0, 0))))
 
-# pylint: disable=too-many-public-methods
+        self.assertEqual("<state on:brightness=144 @ 12:00:00 08-12-1984>",
+                         str(ha.State("happy.happy", "on", {"brightness": 144},
+                                      datetime(1984, 12, 8, 12, 0, 0))))
+
+
 class TestStateMachine(unittest.TestCase):
     """ Test EventBus methods. """
 
@@ -286,7 +336,19 @@ class TestStateMachine(unittest.TestCase):
         self.assertFalse(self.states.remove('light.Bowl'))
 
 
-# pylint: disable=too-many-public-methods
+class TestServiceCall(unittest.TestCase):
+    """ Test ServiceCall class. """
+    def test_repr(self):
+        """ Test repr method. """
+        self.assertEqual(
+            "<ServiceCall homeassistant.start>",
+            str(ha.ServiceCall('homeassistant', 'start')))
+
+        self.assertEqual(
+            "<ServiceCall homeassistant.start: fast=yes>",
+            str(ha.ServiceCall('homeassistant', 'start', {"fast": "yes"})))
+
+
 class TestServiceRegistry(unittest.TestCase):
     """ Test EventBus methods. """
 
@@ -303,7 +365,6 @@ class TestServiceRegistry(unittest.TestCase):
             self.services.has_service("test_domain", "test_service"))
 
 
-# pylint: disable=too-many-public-methods
 class TestHTTP(unittest.TestCase):
     """ Test the HTTP debug interface and API. """
 
