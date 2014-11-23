@@ -421,8 +421,8 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("A", util.repr_helper("A"))
         self.assertEqual("5", util.repr_helper(5))
         self.assertEqual("True", util.repr_helper(True))
-        self.assertEqual("test=1, more=2",
-                         util.repr_helper({"test": 1, "more": 2}))
+        self.assertEqual("test=1",
+                         util.repr_helper({"test": 1}))
         self.assertEqual("12:00:00 09-07-1986",
                          util.repr_helper(datetime(1986, 7, 9, 12, 0, 0)))
 
