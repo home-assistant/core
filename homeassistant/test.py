@@ -6,7 +6,7 @@ Provides tests to verify that Home Assistant modules do what they should do.
 
 """
 # pylint: disable=protected-access,too-many-public-methods
-
+import re
 import os
 import unittest
 import time
@@ -463,6 +463,22 @@ class TestHTTP(unittest.TestCase):
     def setUpClass(cls):    # pylint: disable=invalid-name
         """ things to be run when tests are started. """
         cls.hass = ensure_homeassistant_started()
+
+    def test_get_frontend(self):
+        """ Tests if we can get the frontend. """
+        req = requests.get(_url(""))
+
+        self.assertEqual(200, req.status_code)
+
+        frontendjs = re.search(
+            r'(?P<app>\/static\/frontend-[A-Za-z0-9]{32}.html)',
+            req.text).groups(0)[0]
+
+        self.assertIsNotNone(frontendjs)
+
+        req = requests.get(_url(frontendjs))
+
+        self.assertEqual(200, req.status_code)
 
     def test_api_password(self):
         """ Test if we get access denied if we omit or provide
