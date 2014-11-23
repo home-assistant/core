@@ -110,7 +110,7 @@ CONF_DEVELOPMENT = "development"
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO add shutdown https://docs.python.org/3.4/library/socketserver.html#socketserver.BaseServer.shutdown
+
 def setup(hass, config):
     """ Sets up the HTTP API and debug interface. """
 
@@ -136,20 +136,24 @@ def setup(hass, config):
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
 
+    hass.listen_once_event(
+        ha.EVENT_HOMEASSISTANT_STOP,
+        lambda event: server.shutdown())
+
     # If no local api set, set one with known information
     if isinstance(hass, rem.HomeAssistant) and hass.local_api is None:
         hass.local_api = \
             rem.API(util.get_local_ip(), api_password, server_port)
-
-    hass.server = server
 
     return True
 
 
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
+    # pylint: disable=too-few-public-methods
 
     allow_reuse_address = True
+    daemon_threads = True
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, RequestHandlerClass,

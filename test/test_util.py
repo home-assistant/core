@@ -1,9 +1,8 @@
 """
-homeassistant.test
-~~~~~~~~~~~~~~~~~~
+test.test_util
+~~~~~~~~~~~~~~
 
-Provides tests to verify that Home Assistant modules do what they should do.
-
+Tests Home Assistant util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest

@@ -153,7 +153,7 @@ def get_local_ip():
 
 class OrderedEnum(enum.Enum):
     """ Taken from Python 3.4.0 docs. """
-    # pylint: disable=no-init
+    # pylint: disable=no-init, too-few-public-methods
 
     def __ge__(self, other):
         if self.__class__ is other.__class__:
@@ -215,8 +215,8 @@ class ThreadPool(object):
     """ A simple queue-based thread pool.
 
     Will initiate it's workers using worker(queue).start() """
+    # pylint: disable=too-many-instance-attributes
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, worker_count, job_handler, busy_callback=None):
         """
         worker_count: number of threads to run that handle jobs
@@ -224,8 +224,8 @@ class ThreadPool(object):
         busy_callback: method to be called when queue gets too big.
                        Parameters: list_of_current_jobs, number_pending_jobs
         """
-        work_queue = self.work_queue = queue.PriorityQueue()
-        current_jobs = self.current_jobs = []
+        self.work_queue = work_queue = queue.PriorityQueue()
+        self.current_jobs = current_jobs = []
         self.worker_count = worker_count
         self.busy_callback = busy_callback
         self.busy_warning_limit = worker_count**2
@@ -260,19 +260,21 @@ class ThreadPool(object):
 
     def block_till_done(self):
         """ Blocks till all work is done. """
-        with self._lock:
-            self.work_queue.join()
+        self.work_queue.join()
 
     def stop(self):
         """ Stops all the threads. """
         with self._lock:
+            if not self.running:
+                return
+
             # Clear the queue
             while self.work_queue.qsize() > 0:
                 self.work_queue.get()
                 self.work_queue.task_done()
 
             # Tell the workers to quit
-            for i in range(self.worker_count):
+            for _ in range(self.worker_count):
                 self.add_job(1000, self._quit_task)
 
             self.running = False

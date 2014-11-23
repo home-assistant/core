@@ -24,6 +24,7 @@ DOMAIN = "homeassistant"
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
+EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 EVENT_CALL_SERVICE = "call_service"
@@ -62,10 +63,6 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
 
-        # Components in a thread we might want to stop later
-        self.timer = None
-        self.http = None
-
         self.config_dir = os.getcwd()
 
     def get_config_path(self, path):
@@ -74,7 +71,7 @@ class HomeAssistant(object):
 
     def start(self):
         """ Start home assistant. """
-        self.timer = Timer(self)
+        Timer(self)
 
         self.bus.fire(EVENT_HOMEASSISTANT_START)
 
@@ -234,13 +231,12 @@ class HomeAssistant(object):
         """ Stops Home Assistant and shuts down all threads. """
         _LOGGER.info("Stopping")
 
+        self.bus.fire(EVENT_HOMEASSISTANT_STOP)
+
+        # Wait till all responses to homeassistant_stop are done
+        self._pool.block_till_done()
+
         self._pool.stop()
-
-        if self.http is not None:
-            self.http.shutdown()
-
-        if self.timer is not None:
-            self.timer.shutdown()
 
 
 def _process_match_param(parameter):
@@ -263,7 +259,7 @@ def _matcher(subject, pattern):
 
 class JobPriority(util.OrderedEnum):
     """ Provides priorities for bus events. """
-    # pylint: disable=no-init
+    # pylint: disable=no-init,too-few-public-methods
 
     EVENT_SERVICE = 1
     EVENT_STATE = 2
@@ -312,7 +308,7 @@ def create_worker_pool(thread_count=POOL_NUM_THREAD):
 
 class EventOrigin(enum.Enum):
     """ Distinguish between origin of event. """
-    # pylint: disable=no-init
+    # pylint: disable=no-init,too-few-public-methods
 
     local = "LOCAL"
     remote = "REMOTE"
@@ -626,6 +622,9 @@ class Timer(threading.Thread):
         hass.listen_once_event(EVENT_HOMEASSISTANT_START,
                                lambda event: self.start())
 
+        hass.listen_once_event(EVENT_HOMEASSISTANT_STOP,
+                               lambda event: self._stop.set())
+
     def run(self):
         """ Start the timer. """
 
@@ -660,10 +659,6 @@ class Timer(threading.Thread):
             last_fired_on_second = now.second
 
             self._bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
-
-    def shutdown(self):
-        _LOGGER.info("Timer:Stopping")
-        self._stop.set()
 
 
 class HomeAssistantError(Exception):

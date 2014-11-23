@@ -1,9 +1,8 @@
 """
-homeassistant.test
-~~~~~~~~~~~~~~~~~~
+test.test_component_core
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Provides tests to verify that Home Assistant modules do what they should do.
-
+Tests core compoments.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
@@ -24,6 +23,10 @@ class TestComponentsCore(unittest.TestCase):
 
         self.hass.states.set('light.Bowl', comps.STATE_ON)
         self.hass.states.set('light.Ceiling', comps.STATE_OFF)
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """ Stop down stuff we started. """
+        self.hass._pool.stop()
 
     def test_is_on(self):
         """ Test is_on method. """

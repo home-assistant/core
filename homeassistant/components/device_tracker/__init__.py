@@ -174,10 +174,9 @@ class DeviceTracker(object):
                     is_new_file = not os.path.isfile(known_dev_path)
 
                     with open(known_dev_path, 'a') as outp:
-                        _LOGGER.info((
-                            "Found {} new devices,"
-                            " updating {}").format(len(unknown_devices),
-                                                   known_dev_path))
+                        _LOGGER.info(
+                            "Found %d new devices, updating %s",
+                            len(unknown_devices), known_dev_path)
 
                         writer = csv.writer(outp)
 
@@ -197,10 +196,9 @@ class DeviceTracker(object):
                                                  'picture': ""}
 
                 except IOError:
-                    _LOGGER.exception((
-                        "Error updating {}"
-                        "with {} new devices").format(known_dev_path,
-                                                      len(unknown_devices)))
+                    _LOGGER.exception(
+                        "Error updating %s with %d new devices",
+                        known_dev_path, len(unknown_devices))
 
         self.lock.release()
 

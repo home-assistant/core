@@ -1,9 +1,8 @@
 """
-homeassistant.test
-~~~~~~~~~~~~~~~~~~
+test.test_core
+~~~~~~~~~~~~~~
 
-Provides tests to verify that Home Assistant modules do what they should do.
-
+Provides tests to verify that Home Assistant core works.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import os
@@ -28,6 +27,10 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.states.set("light.Bowl", "on")
         self.hass.states.set("switch.AC", "off")
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """ Stop down stuff we started. """
+        self.hass._pool.stop()
+
     def test_get_config_path(self):
         """ Test get_config_path method. """
         self.assertEqual(os.getcwd(), self.hass.config_dir)
@@ -43,7 +46,7 @@ class TestHomeAssistant(unittest.TestCase):
 
         blocking_thread.start()
         # Python will now give attention to the other thread
-        time.sleep(.01)
+        time.sleep(1)
 
         self.assertTrue(blocking_thread.is_alive())
 
@@ -205,6 +208,10 @@ class TestEventBus(unittest.TestCase):
         self.bus = ha.EventBus()
         self.bus.listen('test_event', lambda x: len)
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """ Stop down stuff we started. """
+        self.bus._pool.stop()
+
     def test_add_remove_listener(self):
         """ Test remove_listener method. """
         old_count = len(self.bus.listeners)
@@ -257,6 +264,10 @@ class TestStateMachine(unittest.TestCase):
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """ Stop down stuff we started. """
+        self.bus._pool.stop()
+
     def test_is_state(self):
         """ Test is_state method. """
         self.assertTrue(self.states.is_state('light.Bowl', 'on'))
@@ -291,10 +302,14 @@ class TestServiceRegistry(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        pool = ha.create_worker_pool()
-        self.bus = ha.EventBus(pool)
-        self.services = ha.ServiceRegistry(self.bus, pool)
+        self.pool = ha.create_worker_pool()
+        self.bus = ha.EventBus(self.pool)
+        self.services = ha.ServiceRegistry(self.bus, self.pool)
         self.services.register("test_domain", "test_service", lambda x: len)
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """ Stop down stuff we started. """
+        self.pool.stop()
 
     def test_has_service(self):
         """ Test has_service method. """

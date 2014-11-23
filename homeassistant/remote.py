@@ -18,7 +18,6 @@ import urllib.parse
 import requests
 
 import homeassistant as ha
-from homeassistant.remote_json import JSONEncoder
 
 SERVER_PORT = 8123
 
@@ -39,9 +38,9 @@ METHOD_POST = "post"
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=no-init, invalid-name
 class APIStatus(enum.Enum):
     """ Represents API status. """
+    # pylint: disable=no-init,invalid-name,too-few-public-methods
 
     OK = "ok"
     INVALID_PASSWORD = "invalid_password"
@@ -135,9 +134,22 @@ class HomeAssistant(ha.HomeAssistant):
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
 
+    def stop(self):
+        """ Stops Home Assistant and shuts down all threads. """
+        _LOGGER.info("Stopping")
+
+        self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
+                      origin=ha.EventOrigin.remote)
+
+        # Wait till all responses to homeassistant_stop are done
+        self._pool.block_till_done()
+
+        self._pool.stop()
+
 
 class EventBus(ha.EventBus):
     """ EventBus implementation that forwards fire_event to remote API. """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, api, pool=None):
         super().__init__(pool)
@@ -237,6 +249,19 @@ class StateMachine(ha.StateMachine):
     def _state_changed_listener(self, event):
         """ Listens for state changed events and applies them. """
         self._states[event.data['entity_id']] = event.data['new_state']
+
+
+class JSONEncoder(json.JSONEncoder):
+    """ JSONEncoder that supports Home Assistant objects. """
+    # pylint: disable=too-few-public-methods,method-hidden
+
+    def default(self, obj):
+        """ Converts Home Assistant objects and hands
+            other objects to the original method. """
+        if isinstance(obj, ha.State):
+            return obj.as_dict()
+
+        return json.JSONEncoder.default(self, obj)
 
 
 def validate_api(api):

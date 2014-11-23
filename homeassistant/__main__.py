@@ -20,7 +20,6 @@ except ImportError:
 
 def main():
     """ Starts Home Assistant. Will create demo config if no config found. """
-    tasks = ['serve', 'test']
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -29,64 +28,49 @@ def main():
         default="config",
         help="Directory that contains the Home Assistant configuration")
 
-    parser.add_argument(
-        '-t', '--task',
-        default=tasks[0],
-        choices=tasks,
-        help="Task to execute. Defaults to serve.")
-
     args = parser.parse_args()
 
-    if args.task == tasks[1]:
-        # unittest does not like our command line arguments, remove them
-        sys.argv[1:] = []
+    # Validate that all core dependencies are installed
+    import_fail = False
 
-        import unittest
+    for module in ['requests']:
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            import_fail = True
+            print(
+                'Fatal Error: Unable to find dependency {}'.format(module))
 
-        unittest.main(module='homeassistant.test')
+    if import_fail:
+        print(("Install dependencies by running: "
+               "pip3 install -r requirements.txt"))
+        exit()
 
-    else:
-        # Validate that all core dependencies are installed
-        import_fail = False
+    # Test if configuration directory exists
+    config_dir = os.path.join(os.getcwd(), args.config)
 
-        for module in ['requests']:
-            try:
-                importlib.import_module(module)
-            except ImportError:
-                import_fail = True
-                print(
-                    'Fatal Error: Unable to find dependency {}'.format(module))
+    if not os.path.isdir(config_dir):
+        print(('Fatal Error: Unable to find specified configuration '
+               'directory {} ').format(config_dir))
+        sys.exit()
 
-        if import_fail:
-            print(("Install dependencies by running: "
-                   "pip3 install -r requirements.txt"))
-            exit()
+    config_path = os.path.join(config_dir, 'home-assistant.conf')
 
-        # Test if configuration directory exists
-        config_dir = os.path.join(os.getcwd(), args.config)
-
-        if not os.path.isdir(config_dir):
-            print(('Fatal Error: Unable to find specified configuration '
-                   'directory {} ').format(config_dir))
+    # Ensure a config file exists to make first time usage easier
+    if not os.path.isfile(config_path):
+        try:
+            with open(config_path, 'w') as conf:
+                conf.write("[http]\n")
+                conf.write("api_password=password\n\n")
+                conf.write("[demo]\n")
+        except IOError:
+            print(('Fatal Error: No configuration file found and unable '
+                   'to write a default one to {}').format(config_path))
             sys.exit()
 
-        config_path = os.path.join(config_dir, 'home-assistant.conf')
-
-        # Ensure a config file exists to make first time usage easier
-        if not os.path.isfile(config_path):
-            try:
-                with open(config_path, 'w') as conf:
-                    conf.write("[http]\n")
-                    conf.write("api_password=password\n\n")
-                    conf.write("[demo]\n")
-            except IOError:
-                print(('Fatal Error: No configuration file found and unable '
-                       'to write a default one to {}').format(config_path))
-                sys.exit()
-
-        hass = bootstrap.from_config_file(config_path)
-        hass.start()
-        hass.block_till_stopped()
+    hass = bootstrap.from_config_file(config_path)
+    hass.start()
+    hass.block_till_stopped()
 
 if __name__ == "__main__":
     main()
