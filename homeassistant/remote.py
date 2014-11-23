@@ -351,7 +351,10 @@ def get_states(api):
 
 
 def set_state(api, entity_id, new_state, attributes=None):
-    """ Tells API to update state for entity_id. """
+    """
+    Tells API to update state for entity_id.
+    Returns True if success.
+    """
 
     attributes = attributes or {}
 
@@ -363,12 +366,17 @@ def set_state(api, entity_id, new_state, attributes=None):
                   URL_API_STATES_ENTITY.format(entity_id),
                   data)
 
-        if req.status_code != 201:
+        if req.status_code not in (200, 201):
             _LOGGER.error("Error changing state: %d - %s",
                           req.status_code, req.text)
+            return False
+        else:
+            return True
 
     except ha.HomeAssistantError:
         _LOGGER.exception("Error setting state")
+
+        return False
 
 
 def is_state(api, entity_id, state):

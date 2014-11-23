@@ -217,10 +217,10 @@ class TestHTTP(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        self.hass.listen_once_event("test_event_with_bad_data", listener)
+        self.hass.listen_once_event("test_event_bad_data", listener)
 
         req = requests.post(
-            _url(remote.URL_API_EVENTS_EVENT.format("test_event")),
+            _url(remote.URL_API_EVENTS_EVENT.format("test_event_bad_data")),
             data=json.dumps('not an object'),
             headers=HA_HEADERS)
 
@@ -351,7 +351,7 @@ class TestRemoteMethods(unittest.TestCase):
 
     def test_set_state(self):
         """ Test Python API set_state. """
-        remote.set_state(self.api, 'test.test', 'set_test')
+        self.assertTrue(remote.set_state(self.api, 'test.test', 'set_test'))
 
         self.assertEqual(self.hass.states.get('test.test').state, 'set_test')
 
