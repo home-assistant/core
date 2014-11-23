@@ -24,13 +24,13 @@ def sanitize_filename(filename):
 
 
 def sanitize_path(path):
-    """ Sanitizes a path by removing .. / and \\. """
+    """ Sanitizes a path by removing ~ and .. """
     return RE_SANITIZE_PATH.sub("", path)
 
 
 def slugify(text):
     """ Slugifies a given text. """
-    text = text.strip().replace(" ", "_")
+    text = text.replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
@@ -76,6 +76,9 @@ def repr_helper(inp):
 # pylint: disable=invalid-name
 def color_RGB_to_xy(R, G, B):
     """ Convert from RGB color to XY color. """
+    if R + G + B == 0:
+        return 0, 0
+
     var_R = (R / 255.)
     var_G = (G / 255.)
     var_B = (B / 255.)
@@ -124,7 +127,7 @@ def ensure_unique_string(preferred_string, current_strings):
 
     tries = 1
 
-    while preferred_string in current_strings:
+    while string in current_strings:
         tries += 1
         string = "{}_{}".format(preferred_string, tries)
 
