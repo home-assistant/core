@@ -6,6 +6,7 @@ Provides functionality to interact with Chromecasts.
 """
 import logging
 
+import homeassistant as ha
 import homeassistant.util as util
 import homeassistant.components as components
 
@@ -113,8 +114,8 @@ def setup(hass, config):
 
         return False
 
-    if 'hosts' in config[DOMAIN]:
-        hosts = config[DOMAIN]['hosts'].split(",")
+    if ha.CONF_HOSTS in config[DOMAIN]:
+        hosts = config[DOMAIN][ha.CONF_HOSTS].split(",")
 
     # If no hosts given, scan for chromecasts
     else:
@@ -134,7 +135,7 @@ def setup(hass, config):
 
             casts[entity_id] = cast
 
-        except pychromecast.ChromecastConnectionError:
+        except ConnectionError:
             pass
 
     if not casts:
