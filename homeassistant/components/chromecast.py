@@ -135,7 +135,7 @@ def setup(hass, config):
 
             casts[entity_id] = cast
 
-        except ConnectionError:
+        except pychromecast.ChromecastConnectionError:
             pass
 
     if not casts:
