@@ -8,7 +8,6 @@ Tests Home Assistant HTTP component does what it should do.
 import re
 import unittest
 import json
-import logging
 
 import requests
 
@@ -27,13 +26,15 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
 HA_HEADERS = {remote.AUTH_HEADER: API_PASSWORD}
 
+hass = None
+
 
 def _url(path=""):
     """ Helper method to generate urls. """
     return HTTP_BASE_URL + path
 
 
-def setUpModule():
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
@@ -49,7 +50,7 @@ def setUpModule():
     hass.start()
 
 
-def tearDownModule():
+def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server. """
     global hass
 

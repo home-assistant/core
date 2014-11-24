@@ -6,10 +6,16 @@ Tests the group compoments.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
+import logging
 
 import homeassistant as ha
 import homeassistant.components as comps
 import homeassistant.components.group as group
+
+
+def setUpModule():   # pylint: disable=invalid-name
+    """ Setup to ignore group errors. """
+    logging.disable(logging.CRITICAL)
 
 
 class TestComponentsGroup(unittest.TestCase):

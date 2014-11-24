@@ -6,7 +6,6 @@ Tests Home Assistant remote methods and classes.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-import logging
 
 import homeassistant as ha
 import homeassistant.remote as remote
@@ -18,13 +17,15 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(remote.SERVER_PORT)
 
 HA_HEADERS = {remote.AUTH_HEADER: API_PASSWORD}
 
+hass, slave, master_api = None, None, None
+
 
 def _url(path=""):
     """ Helper method to generate urls. """
     return HTTP_BASE_URL + path
 
 
-def setUpModule():
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server and Slave instance. """
     global hass, slave, master_api
 
@@ -51,7 +52,7 @@ def setUpModule():
     slave.start()
 
 
-def tearDownModule():
+def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server and slave. """
     global hass, slave
 

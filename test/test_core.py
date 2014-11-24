@@ -5,6 +5,7 @@ test.test_core
 Provides tests to verify that Home Assistant core works.
 """
 # pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=too-few-public-methods
 import os
 import unittest
 import time

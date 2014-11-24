@@ -4,7 +4,7 @@ test.test_loader
 
 Provides tests to verify that we can load components.
 """
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods,protected-access
 import unittest
 
 import homeassistant as ha
