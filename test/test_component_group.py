@@ -80,6 +80,9 @@ class TestComponentsGroup(unittest.TestCase):
                 self.hass, 'chromecasts',
                 ['cast.living_room', 'cast.bedroom']))
 
+        # Try to setup an empty group
+        self.assertFalse(group.setup_group(self.hass, 'nothing', []))
+
     def test__get_group_type(self):
         """ Test _get_group_type method. """
         self.assertEqual('on_off', group._get_group_type(comps.STATE_ON))
