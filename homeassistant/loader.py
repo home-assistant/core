@@ -63,6 +63,11 @@ def prepare(hass):
                     'custom_components.{}'.format(fil[0:-3]))
 
 
+def set_component(comp_name, component):
+    """ Sets a component in the cache. """
+    _COMPONENT_CACHE[comp_name] = component
+
+
 def get_component(comp_name):
     """ Tries to load specified component.
         Looks in config dir first, then built-in components.

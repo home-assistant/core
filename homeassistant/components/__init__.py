@@ -145,7 +145,7 @@ class ToggleDevice(object):
 
     def get_state_attributes(self):
         """ Returns optional state attributes. """
-        return None
+        return {}
 
     def update(self):
         """ Retrieve latest state from the real device. """

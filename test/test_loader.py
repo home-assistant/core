@@ -11,6 +11,8 @@ import homeassistant as ha
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
+from mock import switch_platform
+
 
 class TestLoader(unittest.TestCase):
     """ Test the loader module. """
@@ -21,6 +23,13 @@ class TestLoader(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass._pool.stop()
+
+    def test_set_component(self):
+        """ Test if set_component works. """
+        loader.set_component('switch.test', switch_platform)
+
+        self.assertEqual(
+            switch_platform, loader.get_component('switch.test'))
 
     def test_get_component(self):
         """ Test if get_component works. """

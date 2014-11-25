@@ -129,7 +129,7 @@ def setup(hass, config):
 
             switch.update_ha_state(hass)
 
-    # Track all wemos in a group
+    # Track all switches in a group
     group.setup_group(hass, GROUP_NAME_ALL_SWITCHES,
                       ent_to_switch.keys(), False)
 
