@@ -38,7 +38,8 @@ FAKE_NO_SWITCHES = False
 
 SWITCHES = [
     MockSwitch('AC', components.STATE_ON),
-    MockSwitch('AC', components.STATE_OFF)
+    MockSwitch('AC', components.STATE_OFF),
+    MockSwitch(None, components.STATE_OFF)
 ]
 
 

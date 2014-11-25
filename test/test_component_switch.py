@@ -28,7 +28,7 @@ class TestSwitch(unittest.TestCase):
         ))
 
         # Switch 1 is ON, switch 2 is OFF
-        self.switch_1, self.switch_2 = \
+        self.switch_1, self.switch_2, self.switch_3 = \
             mock_switch_platform.get_switches(None, None)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -43,6 +43,7 @@ class TestSwitch(unittest.TestCase):
             self.hass.states.get(switch.ENTITY_ID_ALL_SWITCHES).state)
         self.assertTrue(switch.is_on(self.hass, self.switch_1.entity_id))
         self.assertFalse(switch.is_on(self.hass, self.switch_2.entity_id))
+        self.assertFalse(switch.is_on(self.hass, self.switch_3.entity_id))
 
         switch.turn_off(self.hass, self.switch_1.entity_id)
         switch.turn_on(self.hass, self.switch_2.entity_id)
@@ -64,6 +65,7 @@ class TestSwitch(unittest.TestCase):
             self.hass.states.get(switch.ENTITY_ID_ALL_SWITCHES).state)
         self.assertFalse(switch.is_on(self.hass, self.switch_1.entity_id))
         self.assertFalse(switch.is_on(self.hass, self.switch_2.entity_id))
+        self.assertFalse(switch.is_on(self.hass, self.switch_3.entity_id))
 
         # Turn all on
         switch.turn_on(self.hass)
@@ -76,6 +78,7 @@ class TestSwitch(unittest.TestCase):
             self.hass.states.get(switch.ENTITY_ID_ALL_SWITCHES).state)
         self.assertTrue(switch.is_on(self.hass, self.switch_1.entity_id))
         self.assertTrue(switch.is_on(self.hass, self.switch_2.entity_id))
+        self.assertTrue(switch.is_on(self.hass, self.switch_3.entity_id))
 
     def test_setup(self):
         # Bogus config
