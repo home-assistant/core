@@ -12,7 +12,7 @@ import homeassistant.loader as loader
 import homeassistant.components as components
 import homeassistant.components.switch as switch
 
-from mock import switch_platform
+import mock_switch_platform
 
 
 class TestSwitch(unittest.TestCase):
@@ -21,14 +21,15 @@ class TestSwitch(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
         loader.prepare(self.hass)
-        loader.set_component('switch.test', switch_platform)
+        loader.set_component('switch.test', mock_switch_platform)
 
         self.assertTrue(switch.setup(
             self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
         ))
 
         # Switch 1 is ON, switch 2 is OFF
-        self.switch_1, self.switch_2 = switch_platform.get_switches(None, None)
+        self.switch_1, self.switch_2 = \
+            mock_switch_platform.get_switches(None, None)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -88,12 +89,12 @@ class TestSwitch(unittest.TestCase):
         ))
 
         # Test if switch component returns 0 switches
-        switch_platform.fake_no_switches(True)
+        mock_switch_platform.fake_no_switches(True)
 
-        self.assertEqual([], switch_platform.get_switches(None, None))
+        self.assertEqual([], mock_switch_platform.get_switches(None, None))
 
         self.assertFalse(switch.setup(
             self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
         ))
 
-        switch_platform.fake_no_switches(False)
+        mock_switch_platform.fake_no_switches(False)
