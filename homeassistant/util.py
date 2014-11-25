@@ -188,6 +188,8 @@ def validate_config(config, items, logger):
     """
     errors_found = False
     for domain in items.keys():
+        config.setdefault(domain, {})
+
         errors = [item for item in items[domain] if item not in config[domain]]
 
         if errors:

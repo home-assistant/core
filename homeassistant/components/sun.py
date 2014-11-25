@@ -28,8 +28,10 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ABOVE_HORIZON)
 
 
-def next_setting(hass):
+def next_setting(hass, entity_id=None):
     """ Returns the datetime object representing the next sun setting. """
+    entity_id = entity_id or ENTITY_ID
+
     state = hass.states.get(ENTITY_ID)
 
     try:
@@ -40,8 +42,10 @@ def next_setting(hass):
         return None
 
 
-def next_rising(hass):
+def next_rising(hass, entity_id=None):
     """ Returns the datetime object representing the next sun rising. """
+    entity_id = entity_id or ENTITY_ID
+
     state = hass.states.get(ENTITY_ID)
 
     try:
@@ -72,6 +76,25 @@ def setup(hass, config):
 
     latitude = config[ha.DOMAIN][ha.CONF_LATITUDE]
     longitude = config[ha.DOMAIN][ha.CONF_LONGITUDE]
+
+    # Validate latitude and longitude
+    observer = ephem.Observer()
+
+    errors = []
+
+    try:
+        observer.lat = latitude  # pylint: disable=assigning-non-slot
+    except ValueError:
+        errors.append("invalid value for latitude given: {}".format(latitude))
+
+    try:
+        observer.long = longitude  # pylint: disable=assigning-non-slot
+    except ValueError:
+        errors.append("invalid value for latitude given: {}".format(latitude))
+
+    if errors:
+        logger.error("Error setting up: %s", ", ".join(errors))
+        return False
 
     def update_sun_state(now):    # pylint: disable=unused-argument
         """ Method to update the current state of the sun and
