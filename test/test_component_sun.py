@@ -1,18 +1,16 @@
 """
-test.test_component_chromecast
-~~~~~~~~~~~
+test.test_component_sun
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests Chromecast component.
+Tests Sun component.
 """
 # pylint: disable=too-many-public-methods,protected-access
-import logging
 import unittest
 import datetime as dt
 
 import ephem
 
 import homeassistant as ha
-import homeassistant.components as components
 import homeassistant.components.sun as sun
 
 
