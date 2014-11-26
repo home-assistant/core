@@ -227,11 +227,17 @@ def setup(hass, config):
         if not lights:
             lights = list(ent_to_light.values())
 
+        params = {}
+
         transition = util.convert(dat.get(ATTR_TRANSITION), int)
+
+        if transition is not None:
+            params[ATTR_TRANSITION] = transition
 
         if service.service == SERVICE_TURN_OFF:
             for light in lights:
-                light.turn_off(transition=transition)
+                # pylint: disable=star-args
+                light.turn_off(**params)
 
         else:
             # Processing extra data for turn light on request
@@ -242,20 +248,22 @@ def setup(hass, config):
             profile = profiles.get(dat.get(ATTR_PROFILE))
 
             if profile:
-                *color, bright = profile
-            else:
-                color, bright = None, None
+                # *color, bright = profile
+                *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
 
             if ATTR_BRIGHTNESS in dat:
-                bright = util.convert(dat.get(ATTR_BRIGHTNESS), int)
+                # We pass in the old value as the default parameter if parsing
+                # of the new one goes wrong.
+                params[ATTR_BRIGHTNESS] = util.convert(
+                    dat.get(ATTR_BRIGHTNESS), int, params.get(ATTR_BRIGHTNESS))
 
             if ATTR_XY_COLOR in dat:
                 try:
                     # xy_color should be a list containing 2 floats
-                    xy_color = dat.get(ATTR_XY_COLOR)
+                    xycolor = dat.get(ATTR_XY_COLOR)
 
-                    if len(xy_color) == 2:
-                        color = [float(val) for val in xy_color]
+                    if len(xycolor) == 2:
+                        params[ATTR_XY_COLOR] = [float(val) for val in xycolor]
 
                 except (TypeError, ValueError):
                     # TypeError if xy_color is not iterable
@@ -268,9 +276,10 @@ def setup(hass, config):
                     rgb_color = dat.get(ATTR_RGB_COLOR)
 
                     if len(rgb_color) == 3:
-                        color = util.color_RGB_to_xy(int(rgb_color[0]),
-                                                     int(rgb_color[1]),
-                                                     int(rgb_color[2]))
+                        params[ATTR_XY_COLOR] = \
+                            util.color_RGB_to_xy(int(rgb_color[0]),
+                                                 int(rgb_color[1]),
+                                                 int(rgb_color[2]))
 
                 except (TypeError, ValueError):
                     # TypeError if rgb_color is not iterable
@@ -278,8 +287,8 @@ def setup(hass, config):
                     pass
 
             for light in lights:
-                light.turn_on(transition=transition, brightness=bright,
-                              xy_color=color)
+                # pylint: disable=star-args
+                light.turn_on(**params)
 
         for light in lights:
             light.update_ha_state(hass, True)

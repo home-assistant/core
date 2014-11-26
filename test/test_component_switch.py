@@ -23,6 +23,7 @@ class TestSwitch(unittest.TestCase):
         loader.prepare(self.hass)
         loader.set_component('switch.test', mock_toggledevice_platform)
 
+        mock_toggledevice_platform.init()
         self.assertTrue(switch.setup(
             self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
         ))
@@ -92,7 +93,7 @@ class TestSwitch(unittest.TestCase):
         ))
 
         # Test if switch component returns 0 switches
-        mock_toggledevice_platform.fake_no_switches(True)
+        mock_toggledevice_platform.init(True)
 
         self.assertEqual(
             [], mock_toggledevice_platform.get_switches(None, None))
@@ -100,5 +101,3 @@ class TestSwitch(unittest.TestCase):
         self.assertFalse(switch.setup(
             self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
         ))
-
-        mock_toggledevice_platform.fake_no_switches(False)
