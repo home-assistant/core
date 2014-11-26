@@ -111,7 +111,9 @@ def setup(hass, config):
 
     # Setup chromecast
     hass.states.set("chromecast.Living_Rm", "Netflix",
-                    {'friendly_name': 'Living Room'})
+                    {'friendly_name': 'Living Room',
+                     ATTR_ENTITY_PICTURE:
+                     'http://graph.facebook.com/KillBillMovie/picture'})
 
     # Setup tellstick sensors
     hass.states.set("tellstick_sensor.Outside_temperature", "15.6",

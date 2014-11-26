@@ -12,59 +12,83 @@
 
 <polymer-element name="home-assistant-main" attributes="api">
   <template>
-    <style type="text/css">
+    <style>
 
       core-header-panel {
-        height: 100%;
-        overflow: auto;
         -webkit-overflow-scrolling: touch;
         background-color: #E5E5E5;
       }
 
       core-toolbar {
         background: #03a9f4;
-        font-size: 1.3rem;
         color: white;
+      }
+
+      core-toolbar.tall {
+        /* 2x normal height */
+        height: 128px;
+      }
+
+      core-toolbar .bottom {
+        opacity: 0;
+        transition: opacity 0.30s ease-out;
+      }
+
+      core-toolbar.tall .bottom {
+        opacity: 1;
       }
 
       paper-tab {
         text-transform: uppercase;
       }
 
-      .dropdown {
+      paper-menu-button {
+        margin-top: 5px !important;
+      }
+
+      paper-dropdown {
         border-radius: 3px;        
       }
 
-      .menu {
+      paper-dropdown .menu {
         margin: 0;
         padding: 8px 0;
         color: black;
       }
 
+      paper-item {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      paper-item a {
+        text-decoration: none;
+      }
+
     </style>
 
-    <core-header-panel fullbleed>
+    <core-header-panel fit mode="{{hasCustomGroups && 'waterfall-tall'}}">
 
-      <core-toolbar class='medium-tall'>
-        <div flex>
-          Home Assistant
-        </div>
-        <paper-icon-button icon="refresh" on-click="{{handleRefreshClick}}"></paper-icon-button>
+      <core-toolbar>
+        <div flex>Home Assistant</div>
+        <paper-icon-button icon="refresh"
+          on-click="{{handleRefreshClick}}"></paper-icon-button>
         <paper-icon-button icon="settings-remote"
           on-click="{{handleServiceClick}}"></paper-icon-button>
 
         <paper-menu-button>
           <paper-icon-button icon="more-vert" noink></paper-icon-button>
-          <paper-dropdown class="dropdown" halign="right" duration="200">
+          <paper-dropdown halign="right" duration="200" class="dropdown">
             <core-menu class="menu">
-              <paper-item label="Set State">
-                <a on-click={{handleAddStateClick}}></a>
+              <paper-item>
+                <a on-click={{handleAddStateClick}}>Set State</a>
               </paper-item>
-              <paper-item label="Trigger Event">
-                <a on-click={{handleEventClick}}></a>
+              <paper-item>
+                <a on-click={{handleEventClick}}>Trigger Event</a>
               </paper-item>
-              <paper-item label="Log Out">
-                <a on-click={{handleLogOutClick}}></a>
+              <paper-item>
+                <a on-click={{handleLogOutClick}}>Log Out</a>
               </paper-item>
             </core-menu>
           </paper-dropdown>
@@ -76,21 +100,20 @@
             
               <paper-tab>ALL</paper-tab>
 
-              <template repeat="{{state in api.states}}">
-                <template if="{{state.isCustomGroup}}">
-                  <paper-tab data-entity="{{state.entity_id}}">
-                    {{state.entityDisplay}}
-                  </paper-tab>
-                </template>
+              <template repeat="{{group in customGroups}}">
+                <paper-tab data-entity="{{group.entity_id}}">
+                  {{group.entityDisplay}}
+                </paper-tab>
               </template>
                 
             </paper-tabs>
         </div>
       </core-toolbar>
 
-      <div class="content" flex>
-        <states-cards api="{{api}}" filter="{{selectedTab}}"></states-cards>
-      </div>
+      <states-cards
+        api="{{api}}"
+        filter="{{selectedTab}}"
+        class="content"></states-cards>
 
     </core-header-panel>
 
@@ -98,6 +121,11 @@
   <script>
   Polymer({
     selectedTab: null,
+
+    computed: {
+      customGroups: "getCustomGroups(api.states)",
+      hasCustomGroups: "customGroups.length > 0"
+    },
 
     tabClicked: function(ev) {
       if(ev.detail.isSelected) {
@@ -124,6 +152,11 @@
 
     handleLogOutClick: function() {
       this.api.logOut();
+    },
+
+    getCustomGroups: function(states) {
+      return states ?
+        states.filter(function(state) { return state.isCustomGroup;}) : [];
     }
 
   });

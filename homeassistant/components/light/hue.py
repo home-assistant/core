@@ -17,9 +17,7 @@ def get_lights(hass, config):
     """ Gets the Hue lights. """
     logger = logging.getLogger(__name__)
     try:
-        # Pylint does not play nice if not every folders has an __init__.py
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.external.phue.phue as phue
+        import phue
     except ImportError:
         logger.exception("Error while importing dependency phue.")
 
@@ -100,16 +98,16 @@ class HueLight(ToggleDevice):
         """ Turn the specified or all lights on. """
         command = {'on': True}
 
-        if kwargs.get(ATTR_TRANSITION) is not None:
+        if ATTR_TRANSITION in kwargs:
             # Transition time is in 1/10th seconds and cannot exceed
             # 900 seconds.
-            command['transitiontime'] = min(9000, kwargs['transition'] * 10)
+            command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
 
-        if kwargs.get(ATTR_BRIGHTNESS) is not None:
-            command['bri'] = kwargs['brightness']
+        if ATTR_BRIGHTNESS in kwargs:
+            command['bri'] = kwargs[ATTR_BRIGHTNESS]
 
-        if kwargs.get(ATTR_XY_COLOR) is not None:
-            command['xy'] = kwargs['xy_color']
+        if ATTR_XY_COLOR in kwargs:
+            command['xy'] = kwargs[ATTR_XY_COLOR]
 
         self.bridge.set_light(self.light_id, command)
 
@@ -117,10 +115,10 @@ class HueLight(ToggleDevice):
         """ Turn the specified or all lights off. """
         command = {'on': False}
 
-        if kwargs.get('transition') is not None:
+        if ATTR_TRANSITION in kwargs:
             # Transition time is in 1/10th seconds and cannot exceed
             # 900 seconds.
-            command['transitiontime'] = min(9000, kwargs['transition'] * 10)
+            command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
 
         self.bridge.set_light(self.light_id, command)
 

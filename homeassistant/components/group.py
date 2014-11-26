@@ -80,8 +80,8 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
         entity_ids = hass.states.get(entity_id).attributes[ATTR_ENTITY_ID]
 
         if domain_filter:
-            return [entity_id for entity_id in entity_ids
-                    if entity_id.startswith(domain_filter)]
+            return [ent_id for ent_id in entity_ids
+                    if ent_id.startswith(domain_filter)]
         else:
             return entity_ids
 

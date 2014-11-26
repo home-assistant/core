@@ -85,8 +85,6 @@ from urllib.parse import urlparse, parse_qs
 import homeassistant as ha
 import homeassistant.remote as rem
 import homeassistant.util as util
-from homeassistant.components import (STATE_ON, STATE_OFF,
-                                      SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from . import frontend
 
 DOMAIN = "http"
@@ -138,6 +136,10 @@ def setup(hass, config):
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
 
+    hass.listen_once_event(
+        ha.EVENT_HOMEASSISTANT_STOP,
+        lambda event: server.shutdown())
+
     # If no local api set, set one with known information
     if isinstance(hass, rem.HomeAssistant) and hass.local_api is None:
         hass.local_api = \
@@ -148,6 +150,10 @@ def setup(hass, config):
 
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
+    # pylint: disable=too-few-public-methods
+
+    allow_reuse_address = True
+    daemon_threads = True
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, RequestHandlerClass,
@@ -348,7 +354,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         else:
             app_url = "frontend-{}.html".format(frontend.VERSION)
 
-        write(("<html>"
+        write(("<!doctype html>"
+               "<html>"
                "<head><title>Home Assistant</title>"
                "<meta name='mobile-web-app-capable' content='yes'>"
                "<link rel='shortcut icon' href='/static/favicon.ico' />"

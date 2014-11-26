@@ -1,4 +1,5 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/core-image/core-image.html">
 
 <link rel="import" href="domain-icon.html">
 
@@ -20,7 +21,7 @@
       text-align: center;
     }
 
-    #picture {
+    core-image {
       border-radius: 50%;
     }
 
@@ -40,7 +41,11 @@
         domain="{{stateObj.domain}}" data-domain="{{stateObj.domain}}"
         state="{{stateObj.state}}" data-state="{{stateObj.state}}">
       </domain-icon>
-      <div fit id="picture"></div>
+      <template if="{{stateObj.attributes.entity_picture}}">
+        <core-image
+          sizing="cover" fit
+          src="{{stateObj.attributes.entity_picture}}"></core-image>
+      </template>
     </div>
 
   </template>
@@ -50,8 +55,7 @@
       'stateObj.state': 'updateIconColor',
       'stateObj.attributes.brightness': 'updateIconColor',
       'stateObj.attributes.xy_color[0]': 'updateIconColor',
-      'stateObj.attributes.xy_color[1]': 'updateIconColor',
-      'stateObj.attributes.entity_picture': 'entityPictureChanged'
+      'stateObj.attributes.xy_color[1]': 'updateIconColor'
     },
 
     /**
@@ -70,17 +74,6 @@
         this.$.icon.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
       } else {
         this.$.icon.style.color = null;
-      }
-    },
-
-    /**
-     * Called when the attribute for entity_picture has changed.
-     */
-    entityPictureChanged: function(oldVal, newVal) {
-      if(newVal) {
-        this.$.picture.style.backgroundImage = 'url(' + newVal + ')';
-      } else {
-        this.$.picture.style.backgroundImage = null;
       }
     },
 

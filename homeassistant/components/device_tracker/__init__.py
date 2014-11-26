@@ -10,8 +10,6 @@ import os
 import csv
 from datetime import datetime, timedelta
 
-import requests
-
 import homeassistant as ha
 from homeassistant.loader import get_component
 import homeassistant.util as util
@@ -176,10 +174,9 @@ class DeviceTracker(object):
                     is_new_file = not os.path.isfile(known_dev_path)
 
                     with open(known_dev_path, 'a') as outp:
-                        _LOGGER.info((
-                            "Found {} new devices,"
-                            " updating {}").format(len(unknown_devices),
-                                                   known_dev_path))
+                        _LOGGER.info(
+                            "Found %d new devices, updating %s",
+                            len(unknown_devices), known_dev_path)
 
                         writer = csv.writer(outp)
 
@@ -199,10 +196,9 @@ class DeviceTracker(object):
                                                  'picture': ""}
 
                 except IOError:
-                    _LOGGER.exception((
-                        "Error updating {}"
-                        "with {} new devices").format(known_dev_path,
-                                                      len(unknown_devices)))
+                    _LOGGER.exception(
+                        "Error updating %s with %d new devices",
+                        known_dev_path, len(unknown_devices))
 
         self.lock.release()
 
@@ -268,9 +264,9 @@ class DeviceTracker(object):
                             self.path_known_devices_file)
 
                     # Remove entities that are no longer maintained
-                    new_entity_ids = set([known_devices[device]['entity_id']
-                                          for device in known_devices
-                                          if known_devices[device]['track']])
+                    new_entity_ids = set([known_devices[dev]['entity_id']
+                                          for dev in known_devices
+                                          if known_devices[dev]['track']])
 
                     for entity_id in \
                             self.device_entity_ids - new_entity_ids:

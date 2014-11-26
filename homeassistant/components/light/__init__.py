@@ -141,6 +141,35 @@ def setup(hass, config):
     if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, _LOGGER):
         return False
 
+    # Load built-in profiles and custom profiles
+    profile_paths = [os.path.join(os.path.dirname(__file__),
+                                  LIGHT_PROFILES_FILE),
+                     hass.get_config_path(LIGHT_PROFILES_FILE)]
+    profiles = {}
+
+    for profile_path in profile_paths:
+
+        if os.path.isfile(profile_path):
+            with open(profile_path) as inp:
+                reader = csv.reader(inp)
+
+                # Skip the header
+                next(reader, None)
+
+                try:
+                    for profile_id, color_x, color_y, brightness in reader:
+                        profiles[profile_id] = (float(color_x), float(color_y),
+                                                int(brightness))
+
+                except ValueError:
+                    # ValueError if not 4 values per row
+                    # ValueError if convert to float/int failed
+                    _LOGGER.error(
+                        "Error parsing light profiles from %s", profile_path)
+
+                    return False
+
+    # Load platform
     light_type = config[DOMAIN][ha.CONF_TYPE]
 
     light_init = get_component('light.{}'.format(light_type))
@@ -174,34 +203,6 @@ def setup(hass, config):
         light.entity_id = entity_id
         ent_to_light[entity_id] = light
 
-    # Load built-in profiles and custom profiles
-    profile_paths = [os.path.join(os.path.dirname(__file__),
-                                  LIGHT_PROFILES_FILE),
-                     hass.get_config_path(LIGHT_PROFILES_FILE)]
-    profiles = {}
-
-    for profile_path in profile_paths:
-
-        if os.path.isfile(profile_path):
-            with open(profile_path) as inp:
-                reader = csv.reader(inp)
-
-                # Skip the header
-                next(reader, None)
-
-                try:
-                    for profile_id, color_x, color_y, brightness in reader:
-                        profiles[profile_id] = (float(color_x), float(color_y),
-                                                int(brightness))
-
-                except ValueError:
-                    # ValueError if not 4 values per row
-                    # ValueError if convert to float/int failed
-                    _LOGGER.error(
-                        "Error parsing light profiles from %s", profile_path)
-
-                    return False
-
     # pylint: disable=unused-argument
     def update_lights_state(now):
         """ Update the states of all the lights. """
@@ -227,11 +228,17 @@ def setup(hass, config):
         if not lights:
             lights = list(ent_to_light.values())
 
+        params = {}
+
         transition = util.convert(dat.get(ATTR_TRANSITION), int)
+
+        if transition is not None:
+            params[ATTR_TRANSITION] = transition
 
         if service.service == SERVICE_TURN_OFF:
             for light in lights:
-                light.turn_off(transition=transition)
+                # pylint: disable=star-args
+                light.turn_off(**params)
 
         else:
             # Processing extra data for turn light on request
@@ -242,20 +249,23 @@ def setup(hass, config):
             profile = profiles.get(dat.get(ATTR_PROFILE))
 
             if profile:
-                *color, bright = profile
-            else:
-                color, bright = None, None
+                # *color, bright = profile
+                *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
 
             if ATTR_BRIGHTNESS in dat:
-                bright = util.convert(dat.get(ATTR_BRIGHTNESS), int)
+                # We pass in the old value as the default parameter if parsing
+                # of the new one goes wrong.
+                params[ATTR_BRIGHTNESS] = util.convert(
+                    dat.get(ATTR_BRIGHTNESS), int, params.get(ATTR_BRIGHTNESS))
 
             if ATTR_XY_COLOR in dat:
                 try:
                     # xy_color should be a list containing 2 floats
-                    xy_color = dat.get(ATTR_XY_COLOR)
+                    xycolor = dat.get(ATTR_XY_COLOR)
 
-                    if len(xy_color) == 2:
-                        color = [float(val) for val in xy_color]
+                    # Without this check, a xycolor with value '99' would work
+                    if not isinstance(xycolor, str):
+                        params[ATTR_XY_COLOR] = [float(val) for val in xycolor]
 
                 except (TypeError, ValueError):
                     # TypeError if xy_color is not iterable
@@ -268,9 +278,10 @@ def setup(hass, config):
                     rgb_color = dat.get(ATTR_RGB_COLOR)
 
                     if len(rgb_color) == 3:
-                        color = util.color_RGB_to_xy(int(rgb_color[0]),
-                                                     int(rgb_color[1]),
-                                                     int(rgb_color[2]))
+                        params[ATTR_XY_COLOR] = \
+                            util.color_RGB_to_xy(int(rgb_color[0]),
+                                                 int(rgb_color[1]),
+                                                 int(rgb_color[2]))
 
                 except (TypeError, ValueError):
                     # TypeError if rgb_color is not iterable
@@ -278,8 +289,8 @@ def setup(hass, config):
                     pass
 
             for light in lights:
-                light.turn_on(transition=transition, brightness=bright,
-                              xy_color=color)
+                # pylint: disable=star-args
+                light.turn_on(**params)
 
         for light in lights:
             light.update_ha_state(hass, True)

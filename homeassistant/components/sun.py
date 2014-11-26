@@ -5,7 +5,7 @@ homeassistant.components.sun
 Provides functionality to keep track of the sun.
 """
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
@@ -28,8 +28,10 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ABOVE_HORIZON)
 
 
-def next_setting(hass):
+def next_setting(hass, entity_id=None):
     """ Returns the datetime object representing the next sun setting. """
+    entity_id = entity_id or ENTITY_ID
+
     state = hass.states.get(ENTITY_ID)
 
     try:
@@ -40,8 +42,10 @@ def next_setting(hass):
         return None
 
 
-def next_rising(hass):
+def next_rising(hass, entity_id=None):
     """ Returns the datetime object representing the next sun rising. """
+    entity_id = entity_id or ENTITY_ID
+
     state = hass.states.get(ENTITY_ID)
 
     try:
@@ -73,15 +77,39 @@ def setup(hass, config):
     latitude = config[ha.DOMAIN][ha.CONF_LATITUDE]
     longitude = config[ha.DOMAIN][ha.CONF_LONGITUDE]
 
-    def update_sun_state(now):    # pylint: disable=unused-argument
+    # Validate latitude and longitude
+    observer = ephem.Observer()
+
+    errors = []
+
+    try:
+        observer.lat = latitude  # pylint: disable=assigning-non-slot
+    except ValueError:
+        errors.append("invalid value for latitude given: {}".format(latitude))
+
+    try:
+        observer.long = longitude  # pylint: disable=assigning-non-slot
+    except ValueError:
+        errors.append("invalid value for latitude given: {}".format(latitude))
+
+    if errors:
+        logger.error("Error setting up: %s", ", ".join(errors))
+        return False
+
+    def update_sun_state(now):
         """ Method to update the current state of the sun and
             set time of next setting and rising. """
+        utc_offset = datetime.utcnow() - datetime.now()
+        utc_now = now + utc_offset
+
         observer = ephem.Observer()
         observer.lat = latitude  # pylint: disable=assigning-non-slot
         observer.long = longitude  # pylint: disable=assigning-non-slot
 
-        next_rising_dt = ephem.localtime(observer.next_rising(sun))
-        next_setting_dt = ephem.localtime(observer.next_setting(sun))
+        next_rising_dt = ephem.localtime(
+            observer.next_rising(sun, start=utc_now))
+        next_setting_dt = ephem.localtime(
+            observer.next_setting(sun, start=utc_now))
 
         if next_rising_dt > next_setting_dt:
             new_state = STATE_ABOVE_HORIZON
@@ -101,10 +129,10 @@ def setup(hass, config):
 
         hass.states.set(ENTITY_ID, new_state, state_attributes)
 
-        # +10 seconds to be sure that the change has occured
+        # +1 second so Ephem will report it has set
         hass.track_point_in_time(update_sun_state,
-                                 next_change + timedelta(seconds=10))
+                                 next_change + timedelta(seconds=1))
 
-    update_sun_state(None)
+    update_sun_state(datetime.now())
 
     return True

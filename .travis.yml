@@ -3,8 +3,10 @@ python:
   - "3.4"
 install:
   - pip install -r requirements.txt
-  - pip install pep8 pylint
+  - pip install flake8 pylint coveralls
 script:
-  - pep8 homeassistant --exclude bower_components,external
+  - flake8 homeassistant --exclude bower_components,external
   - pylint homeassistant
-  - python -m homeassistant -t test
+  - coverage run --source=homeassistant -m unittest discover test
+after_success:
+  - coveralls

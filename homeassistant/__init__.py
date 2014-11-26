@@ -6,7 +6,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
-import sys
 import os
 import time
 import logging
@@ -25,6 +24,7 @@ DOMAIN = "homeassistant"
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
+EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 EVENT_CALL_SERVICE = "call_service"
@@ -63,7 +63,7 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
 
-        self.config_dir = os.getcwd()
+        self.config_dir = os.path.join(os.getcwd(), 'config')
 
     def get_config_path(self, path):
         """ Returns path to the file within the config dir. """
@@ -90,6 +90,8 @@ class HomeAssistant(object):
             except KeyboardInterrupt:
                 break
 
+        self.stop()
+
     def call_service(self, domain, service, service_data=None):
         """ Fires event to call specified service. """
         event_data = service_data or {}
@@ -108,7 +110,11 @@ class HomeAssistant(object):
 
     def track_state_change(self, entity_ids, action,
                            from_state=None, to_state=None):
-        """ Track specific state changes. """
+        """
+        Track specific state changes.
+        entity_ids, from_state and to_state can be string or list.
+        Use list to match multiple.
+        """
         from_state = _process_match_param(from_state)
         to_state = _process_match_param(to_state)
 
@@ -131,14 +137,16 @@ class HomeAssistant(object):
         self.bus.listen(EVENT_STATE_CHANGED, state_listener)
 
     def track_point_in_time(self, action, point_in_time):
-        """ Adds a listener that fires once after a spefic point in time. """
+        """
+        Adds a listener that fires once at or after a spefic point in time.
+        """
 
         @ft.wraps(action)
         def point_in_time_listener(event):
             """ Listens for matching time_changed events. """
             now = event.data[ATTR_NOW]
 
-            if now > point_in_time and \
+            if now >= point_in_time and \
                not hasattr(point_in_time_listener, 'run'):
 
                 # Set variable so that we will never run twice.
@@ -219,10 +227,21 @@ class HomeAssistant(object):
 
         self.bus.listen(event_type, onetime_listener)
 
+    def stop(self):
+        """ Stops Home Assistant and shuts down all threads. """
+        _LOGGER.info("Stopping")
+
+        self.bus.fire(EVENT_HOMEASSISTANT_STOP)
+
+        # Wait till all responses to homeassistant_stop are done
+        self._pool.block_till_done()
+
+        self._pool.stop()
+
 
 def _process_match_param(parameter):
     """ Wraps parameter in a list if it is not one and returns it. """
-    if not parameter:
+    if not parameter or parameter == MATCH_ALL:
         return MATCH_ALL
     elif isinstance(parameter, list):
         return parameter
@@ -240,7 +259,7 @@ def _matcher(subject, pattern):
 
 class JobPriority(util.OrderedEnum):
     """ Provides priorities for bus events. """
-    # pylint: disable=no-init
+    # pylint: disable=no-init,too-few-public-methods
 
     EVENT_SERVICE = 1
     EVENT_STATE = 2
@@ -289,7 +308,7 @@ def create_worker_pool(thread_count=POOL_NUM_THREAD):
 
 class EventOrigin(enum.Enum):
     """ Distinguish between origin of event. """
-    # pylint: disable=no-init
+    # pylint: disable=no-init,too-few-public-methods
 
     local = "LOCAL"
     remote = "REMOTE"
@@ -313,11 +332,11 @@ class Event(object):
         # pylint: disable=maybe-no-member
         if self.data:
             return "<Event {}[{}]: {}>".format(
-                self.event_type, self.origin.value[0],
+                self.event_type, str(self.origin)[0],
                 util.repr_helper(self.data))
         else:
             return "<Event {}[{}]>".format(self.event_type,
-                                           self.origin.value[0])
+                                           str(self.origin)[0])
 
 
 class EventBus(object):
@@ -381,9 +400,9 @@ class EventBus(object):
                 if not self._listeners[event_type]:
                     self._listeners.pop(event_type)
 
-            except (KeyError, AttributeError):
+            except (KeyError, ValueError):
                 # KeyError is key event_type listener did not exist
-                # AttributeError if listener did not exist within event_type
+                # ValueError if listener did not exist within event_type
                 pass
 
 
@@ -593,6 +612,7 @@ class Timer(threading.Thread):
         self.daemon = True
         self._bus = hass.bus
         self.interval = interval or TIMER_INTERVAL
+        self._stop = threading.Event()
 
         # We want to be able to fire every time a minute starts (seconds=0).
         # We want this so other modules can use that to make sure they fire
@@ -601,6 +621,9 @@ class Timer(threading.Thread):
 
         hass.listen_once_event(EVENT_HOMEASSISTANT_START,
                                lambda event: self.start())
+
+        hass.listen_once_event(EVENT_HOMEASSISTANT_STOP,
+                               lambda event: self._stop.set())
 
     def run(self):
         """ Start the timer. """
@@ -612,7 +635,7 @@ class Timer(threading.Thread):
         calc_now = dt.datetime.now
         interval = self.interval
 
-        while True:
+        while not self._stop.isSet():
             now = calc_now()
 
             # First check checks if we are not on a second matching the
