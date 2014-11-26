@@ -7,7 +7,7 @@ Provides a mock switch platform.
 import homeassistant.components as components
 
 
-class MockSwitch(components.ToggleDevice):
+class MockToggleDevice(components.ToggleDevice):
     """ Fake switch. """
     def __init__(self, name, state):
         self.name = name
@@ -34,22 +34,24 @@ class MockSwitch(components.ToggleDevice):
         return {}
 
 
-FAKE_NO_SWITCHES = False
+FAKE_NO_DEVICES = False
 
-SWITCHES = [
-    MockSwitch('AC', components.STATE_ON),
-    MockSwitch('AC', components.STATE_OFF),
-    MockSwitch(None, components.STATE_OFF)
+DEVICES = [
+    MockToggleDevice('AC', components.STATE_ON),
+    MockToggleDevice('AC', components.STATE_OFF),
+    MockToggleDevice(None, components.STATE_OFF)
 ]
 
 
 def fake_no_switches(do_fake):
-    """ Set the platform to act as if it has no switches. """
-    global FAKE_NO_SWITCHES
+    """ Set the platform to act as if it has no devices. """
+    global FAKE_NO_DEVICES
 
-    FAKE_NO_SWITCHES = do_fake
+    FAKE_NO_DEVICES = do_fake
 
 
 def get_switches(hass, config):
-    """ Returns mock switches. """
-    return [] if FAKE_NO_SWITCHES else SWITCHES
+    """ Returns mock devices. """
+    return [] if FAKE_NO_DEVICES else DEVICES
+
+get_lights = get_switches

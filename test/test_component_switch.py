@@ -1,8 +1,8 @@
 """
-test.test_component_chromecast
-~~~~~~~~~~~
+test.test_component_switch
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests Chromecast component.
+Tests switch component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
@@ -12,7 +12,7 @@ import homeassistant.loader as loader
 import homeassistant.components as components
 import homeassistant.components.switch as switch
 
-import mock_switch_platform
+import mock_toggledevice_platform
 
 
 class TestSwitch(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestSwitch(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
         loader.prepare(self.hass)
-        loader.set_component('switch.test', mock_switch_platform)
+        loader.set_component('switch.test', mock_toggledevice_platform)
 
         self.assertTrue(switch.setup(
             self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
@@ -29,7 +29,7 @@ class TestSwitch(unittest.TestCase):
 
         # Switch 1 is ON, switch 2 is OFF
         self.switch_1, self.switch_2, self.switch_3 = \
-            mock_switch_platform.get_switches(None, None)
+            mock_toggledevice_platform.get_switches(None, None)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -92,12 +92,13 @@ class TestSwitch(unittest.TestCase):
         ))
 
         # Test if switch component returns 0 switches
-        mock_switch_platform.fake_no_switches(True)
+        mock_toggledevice_platform.fake_no_switches(True)
 
-        self.assertEqual([], mock_switch_platform.get_switches(None, None))
+        self.assertEqual(
+            [], mock_toggledevice_platform.get_switches(None, None))
 
         self.assertFalse(switch.setup(
             self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
         ))
 
-        mock_switch_platform.fake_no_switches(False)
+        mock_toggledevice_platform.fake_no_switches(False)
