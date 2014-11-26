@@ -262,7 +262,8 @@ def setup(hass, config):
                     # xy_color should be a list containing 2 floats
                     xycolor = dat.get(ATTR_XY_COLOR)
 
-                    if len(xycolor) == 2:
+                    # Without this check, a xycolor with value '99' would work
+                    if not isinstance(xycolor, str):
                         params[ATTR_XY_COLOR] = [float(val) for val in xycolor]
 
                 except (TypeError, ValueError):
