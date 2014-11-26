@@ -63,7 +63,7 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
 
-        self.config_dir = os.getcwd()
+        self.config_dir = os.path.join(os.getcwd(), 'config')
 
     def get_config_path(self, path):
         """ Returns path to the file within the config dir. """
