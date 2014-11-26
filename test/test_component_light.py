@@ -178,7 +178,7 @@ class TestLight(unittest.TestCase):
 
         # Test shitty data
         light.turn_on(self.hass, dev1.entity_id, profile="nonexisting")
-        light.turn_on(self.hass, dev2.entity_id, xy_color="bla-di-bla")
+        light.turn_on(self.hass, dev2.entity_id, xy_color=["bla-di-bla", 5])
         light.turn_on(self.hass, dev3.entity_id, rgb_color=[255, None, 2])
 
         self.hass._pool.block_till_done()
