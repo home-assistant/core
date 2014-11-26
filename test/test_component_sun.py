@@ -45,9 +45,12 @@ class TestSun(unittest.TestCase):
         observer.lat = '32.87336'  # pylint: disable=assigning-non-slot
         observer.long = '117.22743'  # pylint: disable=assigning-non-slot
 
+        utc_now = dt.datetime.utcnow()
         body_sun = ephem.Sun()  # pylint: disable=no-member
-        next_rising_dt = ephem.localtime(observer.next_rising(body_sun))
-        next_setting_dt = ephem.localtime(observer.next_setting(body_sun))
+        next_rising_dt = ephem.localtime(
+            observer.next_rising(body_sun, start=utc_now))
+        next_setting_dt = ephem.localtime(
+            observer.next_setting(body_sun, start=utc_now))
 
         # Home Assistant strips out microseconds
         # strip it out of the datetime objects
@@ -67,6 +70,31 @@ class TestSun(unittest.TestCase):
         # Point it at a non-existing state
         self.assertIsNone(sun.next_rising(self.hass, 'non.existing'))
         self.assertIsNone(sun.next_setting(self.hass, 'non.existing'))
+
+    def test_state_change(self):
+        """ Test if the state changes at next setting/rising. """
+        self.assertTrue(sun.setup(
+            self.hass,
+            {ha.DOMAIN: {
+                ha.CONF_LATITUDE: '32.87336',
+                ha.CONF_LONGITUDE: '117.22743'
+            }}))
+
+        if sun.is_on(self.hass):
+            test_state = sun.STATE_BELOW_HORIZON
+            test_time = sun.next_setting(self.hass)
+        else:
+            test_state = sun.STATE_ABOVE_HORIZON
+            test_time = sun.next_rising(self.hass)
+
+        self.assertIsNotNone(test_time)
+
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                           {ha.ATTR_NOW: test_time + dt.timedelta(seconds=5)})
+
+        self.hass._pool.block_till_done()
+
+        self.assertEqual(test_state, self.hass.states.get(sun.ENTITY_ID).state)
 
     def test_setup(self):
         """ Test Sun setup with empty and wrong configs. """
