@@ -12,12 +12,13 @@ import homeassistant.loader as loader
 import homeassistant.components.http as http
 
 import mock_toggledevice_platform
+from helper import get_test_home_assistant
 
 
 class TestLoader(unittest.TestCase):
     """ Test the loader module. """
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         loader.prepare(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -34,3 +35,5 @@ class TestLoader(unittest.TestCase):
     def test_get_component(self):
         """ Test if get_component works. """
         self.assertEqual(http, loader.get_component('http'))
+
+        self.assertIsNotNone(loader.get_component('custom_one'))
