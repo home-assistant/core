@@ -1,5 +1,7 @@
 """asd"""
 
+from homeassistant.components.scheduler import Event
 
-def hej():
-    print('wut sun wut')
+
+def create(schedule, description):
+    print('creating sun')
