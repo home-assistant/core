@@ -6,6 +6,7 @@ Tests switch component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
+import os
 
 import homeassistant as ha
 import homeassistant.loader as loader
@@ -15,20 +16,25 @@ import homeassistant.components.light as light
 
 import mock_toggledevice_platform
 
-from helper import mock_service
+from helper import mock_service, get_test_home_assistant
 
 
 class TestLight(unittest.TestCase):
     """ Test the switch module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         loader.prepare(self.hass)
         loader.set_component('light.test', mock_toggledevice_platform)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass._pool.stop()
+
+        user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
+
+        if os.path.isfile(user_light_file):
+            os.remove(user_light_file)
 
     def test_methods(self):
         """ Test if methods call the services as expected. """
@@ -226,3 +232,41 @@ class TestLight(unittest.TestCase):
         self.assertFalse(light.setup(
             self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
         ))
+
+    def test_light_profiles(self):
+        """ Test light profiles. """
+        mock_toggledevice_platform.init()
+
+        user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
+
+        # Setup a wrong light file
+        with open(user_light_file, 'w') as user_file:
+            user_file.write('id,x,y,brightness\n')
+            user_file.write('I,WILL,NOT,WORK\n')
+
+        self.assertFalse(light.setup(
+            self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
+        ))
+
+        # Clean up broken file
+        os.remove(user_light_file)
+
+        with open(user_light_file, 'w') as user_file:
+            user_file.write('id,x,y,brightness\n')
+            user_file.write('test,.4,.6,100\n')
+
+        self.assertTrue(light.setup(
+            self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
+        ))
+
+        dev1, dev2, dev3 = mock_toggledevice_platform.get_lights(None, None)
+
+        light.turn_on(self.hass, dev1.entity_id, profile='test')
+
+        self.hass._pool.block_till_done()
+
+        method, data = dev1.last_call('turn_on')
+
+        self.assertEqual(
+            {light.ATTR_XY_COLOR: [.4, .6], light.ATTR_BRIGHTNESS: 100},
+            data)

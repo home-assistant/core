@@ -141,6 +141,35 @@ def setup(hass, config):
     if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, _LOGGER):
         return False
 
+    # Load built-in profiles and custom profiles
+    profile_paths = [os.path.join(os.path.dirname(__file__),
+                                  LIGHT_PROFILES_FILE),
+                     hass.get_config_path(LIGHT_PROFILES_FILE)]
+    profiles = {}
+
+    for profile_path in profile_paths:
+
+        if os.path.isfile(profile_path):
+            with open(profile_path) as inp:
+                reader = csv.reader(inp)
+
+                # Skip the header
+                next(reader, None)
+
+                try:
+                    for profile_id, color_x, color_y, brightness in reader:
+                        profiles[profile_id] = (float(color_x), float(color_y),
+                                                int(brightness))
+
+                except ValueError:
+                    # ValueError if not 4 values per row
+                    # ValueError if convert to float/int failed
+                    _LOGGER.error(
+                        "Error parsing light profiles from %s", profile_path)
+
+                    return False
+
+    # Load platform
     light_type = config[DOMAIN][ha.CONF_TYPE]
 
     light_init = get_component('light.{}'.format(light_type))
@@ -173,34 +202,6 @@ def setup(hass, config):
 
         light.entity_id = entity_id
         ent_to_light[entity_id] = light
-
-    # Load built-in profiles and custom profiles
-    profile_paths = [os.path.join(os.path.dirname(__file__),
-                                  LIGHT_PROFILES_FILE),
-                     hass.get_config_path(LIGHT_PROFILES_FILE)]
-    profiles = {}
-
-    for profile_path in profile_paths:
-
-        if os.path.isfile(profile_path):
-            with open(profile_path) as inp:
-                reader = csv.reader(inp)
-
-                # Skip the header
-                next(reader, None)
-
-                try:
-                    for profile_id, color_x, color_y, brightness in reader:
-                        profiles[profile_id] = (float(color_x), float(color_y),
-                                                int(brightness))
-
-                except ValueError:
-                    # ValueError if not 4 values per row
-                    # ValueError if convert to float/int failed
-                    _LOGGER.error(
-                        "Error parsing light profiles from %s", profile_path)
-
-                    return False
 
     # pylint: disable=unused-argument
     def update_lights_state(now):
