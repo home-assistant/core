@@ -19,6 +19,10 @@ import pkgutil
 import importlib
 import logging
 
+from homeassistant.util import OrderedSet
+
+PREPARED = False
+
 # List of available components
 AVAILABLE_COMPONENTS = []
 
@@ -30,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def prepare(hass):
     """ Prepares the loading of components. """
+    global PREPARED  # pylint: disable=global-statement
+
     # Load the built-in components
     import homeassistant.components as components
 
@@ -62,9 +68,13 @@ def prepare(hass):
                 AVAILABLE_COMPONENTS.append(
                     'custom_components.{}'.format(fil[0:-3]))
 
+    PREPARED = True
+
 
 def set_component(comp_name, component):
     """ Sets a component in the cache. """
+    _check_prepared()
+
     _COMPONENT_CACHE[comp_name] = component
 
 
@@ -75,6 +85,8 @@ def get_component(comp_name):
 
     if comp_name in _COMPONENT_CACHE:
         return _COMPONENT_CACHE[comp_name]
+
+    _check_prepared()
 
     # If we ie. try to load custom_components.switch.wemo but the parent
     # custom_components.switch does not exist, importing it will trigger
@@ -125,3 +137,89 @@ def get_component(comp_name):
     _LOGGER.error("Unable to find component %s", comp_name)
 
     return None
+
+
+def load_order_components(components):
+    """
+    Takes in a list of components we want to load:
+     - filters out components we cannot load
+     - filters out components that have invalid/circular dependencies
+     - Will ensure that all components that do not directly depend on
+       the group component will be loaded before the group component.
+     - returns an OrderedSet load order.
+    """
+    _check_prepared()
+
+    group = get_component('group')
+
+    load_order = OrderedSet()
+
+    # Sort the list of modules on if they depend on group component or not.
+    # We do this because the components that do not depend on the group
+    # component usually set up states that the group component requires to be
+    # created before it can group them.
+    # This does not matter in the future if we can setup groups without the
+    # states existing yet.
+    for comp_load_order in sorted((load_order_component(component)
+                                   for component in components),
+                                  # Test if group component exists in case
+                                  # above get_component call had an error.
+                                  key=lambda order:
+                                  group and group.DOMAIN in order):
+        load_order.update(comp_load_order)
+
+    return load_order
+
+
+def load_order_component(comp_name):
+    """
+    Returns an OrderedSet of components in the correct order of loading.
+    Raises HomeAssistantError if a circular dependency is detected.
+    Returns an empty list if component could not be loaded.
+    """
+    return _load_order_component(comp_name, OrderedSet(), set())
+
+
+def _load_order_component(comp_name, load_order, loading):
+    """ Recursive function to get load order of components. """
+    component = get_component(comp_name)
+
+    # if None it does not exist, error already thrown by get_component
+    if component is None:
+        return OrderedSet()
+
+    loading.add(comp_name)
+
+    for dependency in component.DEPENDENCIES:
+        # Check not already loaded
+        if dependency not in load_order:
+            # If we are already loading it, we have a circular dependency
+            if dependency in loading:
+                _LOGGER.error('Circular dependency detected: %s -> %s',
+                              comp_name, dependency)
+
+                return OrderedSet()
+
+            dep_load_order = _load_order_component(
+                dependency, load_order, loading)
+
+            # length == 0 means error loading dependency or children
+            if len(dep_load_order) == 0:
+                _LOGGER.error('Error loading %s dependency: %s',
+                              comp_name, dependency)
+                return OrderedSet()
+
+            load_order.update(dep_load_order)
+
+    load_order.add(comp_name)
+    loading.remove(comp_name)
+
+    return load_order
+
+
+def _check_prepared():
+    """ Issues a warning if loader.prepare() has never been called. """
+    if not PREPARED:
+        _LOGGER.warning((
+            "You did not call loader.prepare() yet. "
+            "Certain functionality might not be working."))

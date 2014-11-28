@@ -4,6 +4,8 @@ homeassistant.util
 
 Helper methods for various modules.
 """
+import collections
+from itertools import chain
 import threading
 import queue
 import datetime
@@ -174,6 +176,75 @@ class OrderedEnum(enum.Enum):
         if self.__class__ is other.__class__:
             return self.value < other.value
         return NotImplemented
+
+
+class OrderedSet(collections.MutableSet):
+    """ Ordered set taken from http://code.activestate.com/recipes/576694/ """
+
+    def __init__(self, iterable=None):
+        self.end = end = []
+        end += [None, end, end]         # sentinel node for doubly linked list
+        self.map = {}                   # key --> [key, prev, next]
+        if iterable is not None:
+            self |= iterable
+
+    def __len__(self):
+        return len(self.map)
+
+    def __contains__(self, key):
+        return key in self.map
+
+    def add(self, key):
+        """ Add an element to the set. """
+        if key not in self.map:
+            end = self.end
+            curr = end[1]
+            curr[2] = end[1] = self.map[key] = [key, curr, end]
+
+    def discard(self, key):
+        """ Discard an element from the set. """
+        if key in self.map:
+            key, prev_item, next_item = self.map.pop(key)
+            prev_item[2] = next_item
+            next_item[1] = prev_item
+
+    def __iter__(self):
+        end = self.end
+        curr = end[2]
+        while curr is not end:
+            yield curr[0]
+            curr = curr[2]
+
+    def __reversed__(self):
+        end = self.end
+        curr = end[1]
+        while curr is not end:
+            yield curr[0]
+            curr = curr[1]
+
+    def pop(self, last=True):  # pylint: disable=arguments-differ
+        """ Pops element of the beginning of the set.
+            Set last=True to pop from the back. """
+        if not self:
+            raise KeyError('set is empty')
+        key = self.end[1][0] if last else self.end[2][0]
+        self.discard(key)
+        return key
+
+    def update(self, *args):
+        """ Add elements from args to the set. """
+        for item in chain(*args):
+            self.add(item)
+
+    def __repr__(self):
+        if not self:
+            return '%s()' % (self.__class__.__name__,)
+        return '%s(%r)' % (self.__class__.__name__, list(self))
+
+    def __eq__(self, other):
+        if isinstance(other, OrderedSet):
+            return len(self) == len(other) and list(self) == list(other)
+        return set(self) == set(other)
 
 
 def validate_config(config, items, logger):

@@ -28,3 +28,13 @@ def mock_service(hass, domain, service):
         domain, service, lambda call: calls.append(call))
 
     return calls
+
+
+class MockModule(object):
+    """ Provides a fake module. """
+
+    def __init__(self, domain, dependencies=[], setup=None):
+        self.DOMAIN = domain
+        self.DEPENDENCIES = dependencies
+        # Setup a mock setup if none given.
+        self.setup = lambda hass, config: False if setup is None else setup
