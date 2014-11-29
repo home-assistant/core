@@ -4,10 +4,10 @@ test.remote
 
 Tests Home Assistant remote methods and classes.
 Uses port 8122 for master, 8123 for slave
+Uses port 8125 as a port that nothing runs on
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-import json
 
 import homeassistant as ha
 import homeassistant.remote as remote
@@ -19,7 +19,7 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(remote.SERVER_PORT)
 
 HA_HEADERS = {remote.AUTH_HEADER: API_PASSWORD}
 
-hass, slave, master_api = None, None, None
+hass, slave, master_api, broken_api = None, None, None, None
 
 
 def _url(path=""):
@@ -29,7 +29,7 @@ def _url(path=""):
 
 def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server and Slave instance. """
-    global hass, slave, master_api
+    global hass, slave, master_api, broken_api
 
     hass = ha.HomeAssistant()
 
@@ -48,6 +48,9 @@ def setUpModule():   # pylint: disable=invalid-name
     slave = remote.HomeAssistant(master_api)
 
     slave.start()
+
+    # Setup API pointing at nothing
+    broken_api = remote.API("127.0.0.1", "", 8125)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -70,8 +73,7 @@ class TestRemoteMethods(unittest.TestCase):
                              remote.API("127.0.0.1", API_PASSWORD + "A")))
 
         self.assertEqual(remote.APIStatus.CANNOT_CONNECT,
-                         remote.validate_api(
-                             remote.API("127.0.0.1", API_PASSWORD, 8125)))
+                         remote.validate_api(broken_api))
 
     def test_get_event_listeners(self):
         """ Test Python API get_event_listeners. """
@@ -83,6 +85,8 @@ class TestRemoteMethods(unittest.TestCase):
                              event["listener_count"])
 
         self.assertEqual(len(local_data), 0)
+
+        self.assertEqual({}, remote.get_event_listeners(broken_api))
 
     def test_fire_event(self):
         """ Test Python API fire_event. """
@@ -100,6 +104,9 @@ class TestRemoteMethods(unittest.TestCase):
 
         self.assertEqual(1, len(test_value))
 
+        # Should not trigger any exception
+        remote.fire_event(broken_api, "test.event_no_data")
+
     def test_get_state(self):
         """ Test Python API get_state. """
 
@@ -107,11 +114,13 @@ class TestRemoteMethods(unittest.TestCase):
             hass.states.get('test.test'),
             remote.get_state(master_api, 'test.test'))
 
+        self.assertEqual(None, remote.get_state(broken_api, 'test.test'))
+
     def test_get_states(self):
         """ Test Python API get_state_entity_ids. """
 
-        self.assertEqual(
-            remote.get_states(master_api), hass.states.all())
+        self.assertEqual(hass.states.all(), remote.get_states(master_api))
+        self.assertEqual([], remote.get_states(broken_api))
 
     def test_set_state(self):
         """ Test Python API set_state. """
@@ -119,11 +128,17 @@ class TestRemoteMethods(unittest.TestCase):
 
         self.assertEqual('set_test', hass.states.get('test.test').state)
 
+        self.assertFalse(remote.set_state(broken_api, 'test.test', 'set_test'))
+
     def test_is_state(self):
         """ Test Python API is_state. """
 
         self.assertTrue(
             remote.is_state(master_api, 'test.test',
+                            hass.states.get('test.test').state))
+
+        self.assertFalse(
+            remote.is_state(broken_api, 'test.test',
                             hass.states.get('test.test').state))
 
     def test_get_services(self):
@@ -135,6 +150,8 @@ class TestRemoteMethods(unittest.TestCase):
             local = local_services.pop(serv_domain["domain"])
 
             self.assertEqual(local, serv_domain["services"])
+
+        self.assertEqual({}, remote.get_services(broken_api))
 
     def test_call_service(self):
         """ Test Python API call_service. """
@@ -151,6 +168,9 @@ class TestRemoteMethods(unittest.TestCase):
         hass._pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
+
+        # Should not raise an exception
+        remote.call_service(broken_api, "test_domain", "test_service")
 
 
 class TestRemoteClasses(unittest.TestCase):

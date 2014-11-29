@@ -340,7 +340,7 @@ def fire_event(api, event_type, data=None):
                           req.status_code, req.text)
 
     except ha.HomeAssistantError:
-        pass
+        _LOGGER.exception("Error firing event")
 
 
 def get_state(api, entity_id):
@@ -376,7 +376,7 @@ def get_states(api):
         # ValueError if req.json() can't parse the json
         _LOGGER.exception("Error fetching states")
 
-        return {}
+        return []
 
 
 def set_state(api, entity_id, new_state, attributes=None):
