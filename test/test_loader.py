@@ -24,7 +24,7 @@ class TestLoader(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass._pool.stop()
+        self.hass.stop()
 
     def test_set_component(self):
         """ Test if set_component works. """

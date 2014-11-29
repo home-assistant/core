@@ -29,7 +29,7 @@ class TestLight(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass._pool.stop()
+        self.hass.stop()
 
         user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
 

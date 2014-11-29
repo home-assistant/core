@@ -34,7 +34,7 @@ class TestSwitch(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass._pool.stop()
+        self.hass.stop()
 
     def test_methods(self):
         """ Test is_on, turn_on, turn_off methods. """

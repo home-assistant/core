@@ -136,10 +136,6 @@ def setup(hass, config):
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
 
-    hass.listen_once_event(
-        ha.EVENT_HOMEASSISTANT_STOP,
-        lambda event: server.shutdown())
-
     # If no local api set, set one with known information
     if isinstance(hass, rem.HomeAssistant) and hass.local_api is None:
         hass.local_api = \
@@ -173,6 +169,10 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     def start(self):
         """ Starts the server. """
+        self.hass.listen_once_event(
+            ha.EVENT_HOMEASSISTANT_STOP,
+            lambda event: self.shutdown())
+
         _LOGGER.info(
             "Starting web interface at http://%s:%d", *self.server_address)
 

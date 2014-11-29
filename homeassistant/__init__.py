@@ -610,7 +610,7 @@ class Timer(threading.Thread):
         threading.Thread.__init__(self)
 
         self.daemon = True
-        self._bus = hass.bus
+        self.hass = hass
         self.interval = interval or TIMER_INTERVAL
         self._stop = threading.Event()
 
@@ -622,11 +622,11 @@ class Timer(threading.Thread):
         hass.listen_once_event(EVENT_HOMEASSISTANT_START,
                                lambda event: self.start())
 
-        hass.listen_once_event(EVENT_HOMEASSISTANT_STOP,
-                               lambda event: self._stop.set())
-
     def run(self):
         """ Start the timer. """
+
+        self.hass.listen_once_event(EVENT_HOMEASSISTANT_STOP,
+                                    lambda event: self._stop.set())
 
         _LOGGER.info("Timer:starting")
 
@@ -658,7 +658,7 @@ class Timer(threading.Thread):
 
             last_fired_on_second = now.second
 
-            self._bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+            self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
 
 
 class HomeAssistantError(Exception):

@@ -22,7 +22,7 @@ class TestSun(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass._pool.stop()
+        self.hass.stop()
 
     def test_is_on(self):
         """ Test is_on method. """
