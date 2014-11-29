@@ -124,7 +124,8 @@ class HomeAssistant(ha.HomeAssistant):
             # pylint: disable=too-many-format-args
             random_password = '%030x'.format(random.randrange(16**30))
 
-            http.setup(self, random_password)
+            http.setup(
+                self, {http.DOMAIN: {http.CONF_API_PASSWORD: random_password}})
 
         ha.Timer(self)
 

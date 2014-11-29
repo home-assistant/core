@@ -6,6 +6,7 @@ Tests Home Assistant remote methods and classes.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
+import json
 
 import homeassistant as ha
 import homeassistant.remote as remote
@@ -35,19 +36,15 @@ def setUpModule():   # pylint: disable=invalid-name
     hass.states.set('test.test', 'a_state')
 
     http.setup(hass,
-               {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD}})
+               {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
+                              http.CONF_SERVER_PORT: 8122}})
 
     hass.start()
 
-    master_api = remote.API("127.0.0.1", API_PASSWORD)
+    master_api = remote.API("127.0.0.1", API_PASSWORD, 8122)
 
     # Start slave
-    local_api = remote.API("127.0.0.1", API_PASSWORD, 8124)
-    slave = remote.HomeAssistant(master_api, local_api)
-
-    http.setup(slave,
-               {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-                              http.CONF_SERVER_PORT: 8124}})
+    slave = remote.HomeAssistant(master_api)
 
     slave.start()
 
@@ -70,6 +67,10 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual(remote.APIStatus.INVALID_PASSWORD,
                          remote.validate_api(
                              remote.API("127.0.0.1", API_PASSWORD + "A")))
+
+        self.assertEqual(remote.APIStatus.CANNOT_CONNECT,
+                         remote.validate_api(
+                             remote.API("127.0.0.1", API_PASSWORD, 8125)))
 
     def test_get_event_listeners(self):
         """ Test Python API get_event_listeners. """
@@ -156,9 +157,15 @@ class TestRemoteClasses(unittest.TestCase):
 
     def test_home_assistant_init(self):
         """ Test HomeAssistant init. """
+        # Wrong password
         self.assertRaises(
             ha.HomeAssistantError, remote.HomeAssistant,
             remote.API('127.0.0.1', API_PASSWORD + 'A', 8124))
+
+        # Wrong port
+        self.assertRaises(
+            ha.HomeAssistantError, remote.HomeAssistant,
+            remote.API('127.0.0.1', API_PASSWORD, 8125))
 
     def test_statemachine_init(self):
         """ Tests if remote.StateMachine copies all states on init. """
@@ -199,3 +206,13 @@ class TestRemoteClasses(unittest.TestCase):
         hass._pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
+
+    def test_json_encoder(self):
+        """ Test the JSON Encoder. """
+        ha_json_enc = remote.JSONEncoder()
+        state = hass.states.get('test.test')
+
+        self.assertEqual(state.as_dict(), ha_json_enc.default(state))
+
+        # Default method raises TypeError if non HA object
+        self.assertRaises(TypeError, ha_json_enc.default, 1)
