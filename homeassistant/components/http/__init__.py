@@ -108,6 +108,8 @@ CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 
+DATA_API_PASSWORD = 'api_password'
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -118,7 +120,7 @@ def setup(hass, config):
                                 _LOGGER):
         return False
 
-    api_password = config[DOMAIN]['api_password']
+    api_password = config[DOMAIN][CONF_API_PASSWORD]
 
     # If no server host is given, accept all incoming requests
     server_host = config[DOMAIN].get(CONF_SERVER_HOST, '0.0.0.0')
@@ -192,7 +194,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     PATHS = [  # debug interface
         ('GET', URL_ROOT, '_handle_get_root'),
-        ('POST', URL_ROOT, '_handle_get_root'),
 
         # /api - for validation purposes
         ('GET', rem.URL_API, '_handle_get_api'),
@@ -228,8 +229,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         ('DELETE', rem.URL_API_EVENT_FORWARD,
          '_handle_delete_api_event_forward'),
 
-        # Statis files
+        # Static files
         ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
+         '_handle_get_static'),
+        ('HEAD', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
          '_handle_get_static')
     ]
 
@@ -255,24 +258,22 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if content_length:
             body_content = self.rfile.read(content_length).decode("UTF-8")
 
-            if self.use_json:
-                try:
-                    data.update(json.loads(body_content))
-                except ValueError:
-                    _LOGGER.exception("Exception parsing JSON: %s",
-                                      body_content)
+            try:
+                data.update(json.loads(body_content))
+            except (TypeError, ValueError):
+                # TypeError is JSON object is not a dict
+                # ValueError if we could not parse JSON
+                _LOGGER.exception("Exception parsing JSON: %s",
+                                  body_content)
 
-                    self._message(
-                        "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
-                    return
-            else:
-                data.update({key: value[-1] for key, value in
-                             parse_qs(body_content).items()})
+                self._json_message(
+                    "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
+                return
 
         api_password = self.headers.get(rem.AUTH_HEADER)
 
-        if not api_password and 'api_password' in data:
-            api_password = data['api_password']
+        if not api_password and DATA_API_PASSWORD in data:
+            api_password = data[DATA_API_PASSWORD]
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -307,7 +308,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             # For API calls we need a valid password
             if self.use_json and api_password != self.server.api_password:
-                self._message(
+                self._json_message(
                     "API password missing or incorrect.", HTTP_UNAUTHORIZED)
 
             else:
@@ -315,9 +316,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         elif path_matched_but_not_method:
             self.send_response(HTTP_METHOD_NOT_ALLOWED)
+            self.end_headers()
 
         else:
             self.send_response(HTTP_NOT_FOUND)
+            self.end_headers()
 
     def do_HEAD(self):  # pylint: disable=invalid-name
         """ HEAD request handler. """
@@ -377,7 +380,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
     # pylint: disable=unused-argument
     def _handle_get_api(self, path_match, data):
         """ Renders the debug interface. """
-        self._message("API running.")
+        self._json_message("API running.")
 
     # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):
@@ -394,7 +397,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if state:
             self._write_json(state)
         else:
-            self._message("State does not exist.", HTTP_NOT_FOUND)
+            self._json_message("State does not exist.", HTTP_NOT_FOUND)
 
     def _handle_post_state_entity(self, path_match, data):
         """ Handles updating the state of an entity.
@@ -407,7 +410,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         try:
             new_state = data['state']
         except KeyError:
-            self._message("state not specified", HTTP_BAD_REQUEST)
+            self._json_message("state not specified", HTTP_BAD_REQUEST)
             return
 
         attributes = data['attributes'] if 'attributes' in data else None
@@ -417,19 +420,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # Write state
         self.server.hass.states.set(entity_id, new_state, attributes)
 
-        # Return state if json, else redirect to main page
-        if self.use_json:
-            state = self.server.hass.states.get(entity_id)
+        state = self.server.hass.states.get(entity_id)
 
-            status_code = HTTP_CREATED if is_new_state else HTTP_OK
+        status_code = HTTP_CREATED if is_new_state else HTTP_OK
 
-            self._write_json(
-                state.as_dict(),
-                status_code=status_code,
-                location=rem.URL_API_STATES_ENTITY.format(entity_id))
-        else:
-            self._message(
-                "State of {} changed to {}".format(entity_id, new_state))
+        self._write_json(
+            state.as_dict(),
+            status_code=status_code,
+            location=rem.URL_API_STATES_ENTITY.format(entity_id))
 
     def _handle_get_api_events(self, path_match, data):
         """ Handles getting overview of event listeners. """
@@ -448,8 +446,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         event_type = path_match.group('event_type')
 
         if event_data is not None and not isinstance(event_data, dict):
-            self._message("event_data should be an object",
-                          HTTP_UNPROCESSABLE_ENTITY)
+            self._json_message("event_data should be an object",
+                               HTTP_UNPROCESSABLE_ENTITY)
 
         event_origin = ha.EventOrigin.remote
 
@@ -464,7 +462,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         self.server.hass.bus.fire(event_type, event_data, event_origin)
 
-        self._message("Event {} fired.".format(event_type))
+        self._json_message("Event {} fired.".format(event_type))
 
     def _handle_get_api_services(self, path_match, data):
         """ Handles getting overview of services. """
@@ -485,7 +483,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         self.server.hass.call_service(domain, service, data)
 
-        self._message("Service {}/{} called.".format(domain, service))
+        self._json_message("Service {}/{} called.".format(domain, service))
 
     # pylint: disable=invalid-name
     def _handle_post_api_event_forward(self, path_match, data):
@@ -495,26 +493,31 @@ class RequestHandler(SimpleHTTPRequestHandler):
             host = data['host']
             api_password = data['api_password']
         except KeyError:
-            self._message("No host or api_password received.",
-                          HTTP_BAD_REQUEST)
+            self._json_message("No host or api_password received.",
+                               HTTP_BAD_REQUEST)
             return
 
         try:
             port = int(data['port']) if 'port' in data else None
         except ValueError:
-            self._message(
+            self._json_message(
                 "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
+            return
+
+        api = rem.API(host, api_password, port)
+
+        if not api.validate_api():
+            self._json_message(
+                "Unable to validate API", HTTP_UNPROCESSABLE_ENTITY)
             return
 
         if self.server.event_forwarder is None:
             self.server.event_forwarder = \
                 rem.EventForwarder(self.server.hass)
 
-        api = rem.API(host, api_password, port)
-
         self.server.event_forwarder.connect(api)
 
-        self._message("Event forwarding setup.")
+        self._json_message("Event forwarding setup.")
 
     def _handle_delete_api_event_forward(self, path_match, data):
         """ Handles deleting an event forwarding target. """
@@ -522,14 +525,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
         try:
             host = data['host']
         except KeyError:
-            self._message("No host received.",
-                          HTTP_BAD_REQUEST)
+            self._json_message("No host received.",
+                               HTTP_BAD_REQUEST)
             return
 
         try:
             port = int(data['port']) if 'port' in data else None
         except ValueError:
-            self._message(
+            self._json_message(
                 "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
             return
 
@@ -538,7 +541,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             self.server.event_forwarder.disconnect(api)
 
-        self._message("Event forwarding cancelled.")
+        self._json_message("Event forwarding cancelled.")
 
     def _handle_get_static(self, path_match, data):
         """ Returns a static file. """
@@ -585,7 +588,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             self.end_headers()
 
-            if do_gzip:
+            if self.command == 'HEAD':
+                return
+
+            elif do_gzip:
                 self.wfile.write(gzip_data)
 
             else:
@@ -599,22 +605,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
             if inp:
                 inp.close()
 
-    def _message(self, message, status_code=HTTP_OK):
+    def _json_message(self, message, status_code=HTTP_OK):
         """ Helper method to return a message to the caller. """
-        if self.use_json:
-            self._write_json({'message': message}, status_code=status_code)
-        else:
-            self.send_error(status_code, message)
-
-    def _redirect(self, location):
-        """ Helper method to redirect caller. """
-        self.send_response(HTTP_MOVED_PERMANENTLY)
-
-        self.send_header(
-            "Location", "{}?api_password={}".format(
-                location, self.server.api_password))
-
-        self.end_headers()
+        self._write_json({'message': message}, status_code=status_code)
 
     def _write_json(self, data=None, status_code=HTTP_OK, location=None):
         """ Helper method to return JSON to the caller. """

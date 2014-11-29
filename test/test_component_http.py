@@ -52,29 +52,49 @@ def setUpModule():   # pylint: disable=invalid-name
 
 def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server. """
-    global hass
-
     hass.stop()
 
 
 class TestHTTP(unittest.TestCase):
     """ Test the HTTP debug interface and API. """
 
-    def test_get_frontend(self):
+    def test_setup(self):
+        """ Test http.setup. """
+        self.assertFalse(http.setup(hass, {}))
+        self.assertFalse(http.setup(hass, {http.DOMAIN: {}}))
+
+    def test_frontend_and_static(self):
         """ Tests if we can get the frontend. """
         req = requests.get(_url(""))
 
         self.assertEqual(200, req.status_code)
 
+        # Test we can retrieve frontend.js
         frontendjs = re.search(
             r'(?P<app>\/static\/frontend-[A-Za-z0-9]{32}.html)',
-            req.text).groups(0)[0]
+            req.text)
 
         self.assertIsNotNone(frontendjs)
 
-        req = requests.get(_url(frontendjs))
+        req = requests.head(_url(frontendjs.groups(0)[0]))
 
         self.assertEqual(200, req.status_code)
+
+        # Test auto filling in api password
+        req = requests.get(
+            _url("?{}={}".format(http.DATA_API_PASSWORD, API_PASSWORD)))
+
+        self.assertEqual(200, req.status_code)
+
+        auth_text = re.search(r"auth='{}'".format(API_PASSWORD), req.text)
+
+        self.assertIsNotNone(auth_text)
+
+        # Test 404
+        self.assertEqual(404, requests.get(_url("/not-existing")).status_code)
+
+        # Test we cannot POST to /
+        self.assertEqual(405, requests.post(_url("")).status_code)
 
     def test_api_password(self):
         """ Test if we get access denied if we omit or provide
@@ -127,8 +147,8 @@ class TestHTTP(unittest.TestCase):
         hass.states.set("test.test", "not_to_be_set")
 
         requests.post(_url(remote.URL_API_STATES_ENTITY.format("test.test")),
-                      data=json.dumps({"state": "debug_state_change2",
-                                       "api_password": API_PASSWORD}))
+                      data=json.dumps({"state": "debug_state_change2"}),
+                      headers=HA_HEADERS)
 
         self.assertEqual("debug_state_change2",
                          hass.states.get("test.test").state)
@@ -143,14 +163,28 @@ class TestHTTP(unittest.TestCase):
         req = requests.post(
             _url(remote.URL_API_STATES_ENTITY.format(
                 "test_entity.that_does_not_exist")),
-            data=json.dumps({"state": new_state,
-                             "api_password": API_PASSWORD}))
+            data=json.dumps({'state': new_state}),
+            headers=HA_HEADERS)
 
         cur_state = (hass.states.
                      get("test_entity.that_does_not_exist").state)
 
         self.assertEqual(201, req.status_code)
         self.assertEqual(cur_state, new_state)
+
+    # pylint: disable=invalid-name
+    def test_api_state_change_with_bad_data(self):
+        """ Test if API sends appropriate error if we omit state. """
+
+        new_state = "debug_state_change"
+
+        req = requests.post(
+            _url(remote.URL_API_STATES_ENTITY.format(
+                "test_entity.that_does_not_exist")),
+            data=json.dumps({}),
+            headers=HA_HEADERS)
+
+        self.assertEqual(400, req.status_code)
 
     # pylint: disable=invalid-name
     def test_api_fire_event_with_no_data(self):
@@ -207,6 +241,17 @@ class TestHTTP(unittest.TestCase):
         req = requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test_event_bad_data")),
             data=json.dumps('not an object'),
+            headers=HA_HEADERS)
+
+        hass._pool.block_till_done()
+
+        self.assertEqual(422, req.status_code)
+        self.assertEqual(0, len(test_value))
+
+        # Try now with valid but unusable JSON
+        req = requests.post(
+            _url(remote.URL_API_EVENTS_EVENT.format("test_event_bad_data")),
+            data=json.dumps([1, 2, 3]),
             headers=HA_HEADERS)
 
         hass._pool.block_till_done()
@@ -279,3 +324,79 @@ class TestHTTP(unittest.TestCase):
         hass._pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
+
+    def test_api_event_forward(self):
+        """ Test setting up event forwarding. """
+
+        req = requests.post(
+            _url(remote.URL_API_EVENT_FORWARD),
+            headers=HA_HEADERS)
+        self.assertEqual(400, req.status_code)
+
+        req = requests.post(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({'host': '127.0.0.1'}),
+            headers=HA_HEADERS)
+        self.assertEqual(400, req.status_code)
+
+        req = requests.post(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({'api_password': 'bla-di-bla'}),
+            headers=HA_HEADERS)
+        self.assertEqual(400, req.status_code)
+
+        req = requests.post(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({
+                'api_password': 'bla-di-bla',
+                'host': '127.0.0.1',
+                'port': 'abcd'
+                }),
+            headers=HA_HEADERS)
+        self.assertEqual(422, req.status_code)
+
+        req = requests.post(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({
+                'api_password': 'bla-di-bla',
+                'host': '127.0.0.1',
+                'port': '8125'
+                }),
+            headers=HA_HEADERS)
+        self.assertEqual(422, req.status_code)
+
+        # Setup a real one
+        req = requests.post(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({
+                'api_password': API_PASSWORD,
+                'host': '127.0.0.1',
+                'port': SERVER_PORT
+                }),
+            headers=HA_HEADERS)
+        self.assertEqual(200, req.status_code)
+
+        # Delete it again..
+        req = requests.delete(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({}),
+            headers=HA_HEADERS)
+        self.assertEqual(400, req.status_code)
+
+        req = requests.delete(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({
+                'host': '127.0.0.1',
+                'port': 'abcd'
+                }),
+            headers=HA_HEADERS)
+        self.assertEqual(422, req.status_code)
+
+        req = requests.delete(
+            _url(remote.URL_API_EVENT_FORWARD),
+            data=json.dumps({
+                'host': '127.0.0.1',
+                'port': SERVER_PORT
+                }),
+            headers=HA_HEADERS)
+        self.assertEqual(200, req.status_code)

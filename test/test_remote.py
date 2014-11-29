@@ -15,7 +15,7 @@ import homeassistant.components.http as http
 
 API_PASSWORD = "test1234"
 
-HTTP_BASE_URL = "http://127.0.0.1:{}".format(remote.SERVER_PORT)
+HTTP_BASE_URL = "http://127.0.0.1:8122"
 
 HA_HEADERS = {remote.AUTH_HEADER: API_PASSWORD}
 
