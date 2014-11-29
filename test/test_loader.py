@@ -6,9 +6,7 @@ Provides tests to verify that we can load components.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-from collections import namedtuple
 
-import homeassistant as ha
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
