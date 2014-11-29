@@ -223,8 +223,8 @@ class OrderedSet(collections.MutableSet):
             curr = curr[1]
 
     def pop(self, last=True):  # pylint: disable=arguments-differ
-        """ Pops element of the beginning of the set.
-            Set last=True to pop from the back. """
+        """ Pops element of the end of the set.
+            Set last=False to pop from the beginning. """
         if not self:
             raise KeyError('set is empty')
         key = self.end[1][0] if last else self.end[2][0]
@@ -318,7 +318,7 @@ class ThreadPool(object):
         """ Add a job to be sent to the workers. """
         with self._lock:
             if not self.running:
-                raise Exception("We are shutting down the ")
+                raise RuntimeError("ThreadPool not running")
 
             self.work_queue.put(PriorityQueueItem(priority, job))
 

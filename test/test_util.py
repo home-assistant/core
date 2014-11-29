@@ -43,6 +43,7 @@ class TestUtil(unittest.TestCase):
         """ Test str_to_datetime. """
         self.assertEqual(datetime(1986, 7, 9, 12, 0, 0),
                          util.str_to_datetime("12:00:00 09-07-1986"))
+        self.assertIsNone(util.str_to_datetime("not a datetime string"))
 
     def test_split_entity_id(self):
         """ Test split_entity_id. """
@@ -87,3 +88,105 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             "Beer_3",
             util.ensure_unique_string("Beer", ["Beer", "Beer_2"]))
+        self.assertEqual(
+            "Beer",
+            util.ensure_unique_string("Beer", ["Wine", "Soda"]))
+
+    def test_ordered_enum(self):
+        """ Test the ordered enum class. """
+
+        class TestEnum(util.OrderedEnum):
+            """ Test enum that can be ordered. """
+            FIRST = 1
+            SECOND = 2
+            THIRD = 3
+
+        self.assertTrue(TestEnum.SECOND >= TestEnum.FIRST)
+        self.assertTrue(TestEnum.SECOND >= TestEnum.SECOND)
+        self.assertFalse(TestEnum.SECOND >= TestEnum.THIRD)
+
+        self.assertTrue(TestEnum.SECOND > TestEnum.FIRST)
+        self.assertFalse(TestEnum.SECOND > TestEnum.SECOND)
+        self.assertFalse(TestEnum.SECOND > TestEnum.THIRD)
+
+        self.assertFalse(TestEnum.SECOND <= TestEnum.FIRST)
+        self.assertTrue(TestEnum.SECOND <= TestEnum.SECOND)
+        self.assertTrue(TestEnum.SECOND <= TestEnum.THIRD)
+
+        self.assertFalse(TestEnum.SECOND < TestEnum.FIRST)
+        self.assertFalse(TestEnum.SECOND < TestEnum.SECOND)
+        self.assertTrue(TestEnum.SECOND < TestEnum.THIRD)
+
+        # Python will raise a TypeError if the <, <=, >, >= methods
+        # raise a NotImplemented error.
+        self.assertRaises(TypeError,
+                          lambda x, y: x < y, TestEnum.FIRST, 1)
+
+        self.assertRaises(TypeError,
+                          lambda x, y: x <= y, TestEnum.FIRST, 1)
+
+        self.assertRaises(TypeError,
+                          lambda x, y: x > y, TestEnum.FIRST, 1)
+
+        self.assertRaises(TypeError,
+                          lambda x, y: x >= y, TestEnum.FIRST, 1)
+
+    def test_ordered_set(self):
+        set1 = util.OrderedSet([1, 2, 3, 4])
+        set2 = util.OrderedSet([3, 4, 5])
+
+        self.assertEqual(4, len(set1))
+        self.assertEqual(3, len(set2))
+
+        self.assertIn(1, set1)
+        self.assertIn(2, set1)
+        self.assertIn(3, set1)
+        self.assertIn(4, set1)
+        self.assertNotIn(5, set1)
+
+        self.assertNotIn(1, set2)
+        self.assertNotIn(2, set2)
+        self.assertIn(3, set2)
+        self.assertIn(4, set2)
+        self.assertIn(5, set2)
+
+        set1.add(5)
+        self.assertIn(5, set1)
+
+        set1.discard(5)
+        self.assertNotIn(5, set1)
+
+        # Try again while key is not in
+        set1.discard(5)
+        self.assertNotIn(5, set1)
+
+        self.assertEqual([1, 2, 3, 4], list(set1))
+        self.assertEqual([4, 3, 2, 1], list(reversed(set1)))
+
+        self.assertEqual(1, set1.pop(False))
+        self.assertEqual([2, 3, 4], list(set1))
+
+        self.assertEqual(4, set1.pop())
+        self.assertEqual([2, 3], list(set1))
+
+        self.assertEqual('OrderedSet()', str(util.OrderedSet()))
+        self.assertEqual('OrderedSet([2, 3])', str(set1))
+
+        self.assertEqual(set1, util.OrderedSet([2, 3]))
+        self.assertNotEqual(set1, util.OrderedSet([3, 2]))
+        self.assertEqual(set1, set([2, 3]))
+        self.assertEqual(set1, set([3, 2]))
+        self.assertEqual(set1, [2, 3])
+        self.assertEqual(set1, [3, 2])
+        self.assertNotEqual(set1, set([2]))
+
+        set3 = util.OrderedSet(set1)
+        set3.update(set2)
+
+        self.assertEqual([3, 4, 5, 2], set3)
+        self.assertEqual([3, 4, 5, 2], set1 | set2)
+        self.assertEqual([3], set1 & set2)
+        self.assertEqual([2], set1 - set2)
+
+        set1.update([1, 2], [5, 6])
+        self.assertEqual([2, 3, 1, 5, 6], set1)
