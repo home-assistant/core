@@ -64,17 +64,6 @@ class TestHomeAssistant(unittest.TestCase):
 
         self.assertFalse(blocking_thread.is_alive())
 
-    def test_get_entity_ids(self):
-        """ Test get_entity_ids method. """
-        ent_ids = self.hass.get_entity_ids()
-        self.assertEqual(2, len(ent_ids))
-        self.assertTrue('light.Bowl' in ent_ids)
-        self.assertTrue('switch.AC' in ent_ids)
-
-        ent_ids = self.hass.get_entity_ids('light')
-        self.assertEqual(1, len(ent_ids))
-        self.assertTrue('light.Bowl' in ent_ids)
-
     def test_track_state_change(self):
         """ Test track_state_change. """
         # 2 lists to track how often our callbacks got called
@@ -111,21 +100,6 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass._pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
-
-    def test_listen_once_event(self):
-        """ Test listen_once_event method. """
-        runs = []
-
-        self.hass.listen_once_event('test_event', lambda x: runs.append(1))
-
-        self.hass.bus.fire('test_event')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(runs))
-
-        # Second time it should not increase runs
-        self.hass.bus.fire('test_event')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(runs))
 
     def test_track_point_in_time(self):
         """ Test track point in time. """
@@ -234,6 +208,21 @@ class TestEventBus(unittest.TestCase):
         # Try deleting listener while category doesn't exist either
         self.bus.remove_listener('test', listener)
 
+    def test_listen_once_event(self):
+        """ Test listen_once_event method. """
+        runs = []
+
+        self.bus.listen_once('test_event', lambda x: runs.append(1))
+
+        self.bus.fire('test_event')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(runs))
+
+        # Second time it should not increase runs
+        self.bus.fire('test_event')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(runs))
+
 
 class TestState(unittest.TestCase):
     """ Test EventBus methods. """
@@ -276,11 +265,22 @@ class TestStateMachine(unittest.TestCase):
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
 
+    def test_entity_ids(self):
+        """ Test get_entity_ids method. """
+        ent_ids = self.states.entity_ids()
+        self.assertEqual(2, len(ent_ids))
+        self.assertTrue('light.Bowl' in ent_ids)
+        self.assertTrue('switch.AC' in ent_ids)
+
+        ent_ids = self.states.entity_ids('light')
+        self.assertEqual(1, len(ent_ids))
+        self.assertTrue('light.Bowl' in ent_ids)
+
     def test_remove(self):
         """ Test remove method. """
-        self.assertTrue('light.Bowl' in self.states.entity_ids)
+        self.assertTrue('light.Bowl' in self.states.entity_ids())
         self.assertTrue(self.states.remove('light.Bowl'))
-        self.assertFalse('light.Bowl' in self.states.entity_ids)
+        self.assertFalse('light.Bowl' in self.states.entity_ids())
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))

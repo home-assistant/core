@@ -61,7 +61,7 @@ def is_on(hass, entity_id=None):
 
         entity_ids = group.expand_entity_ids(hass, [entity_id])
     else:
-        entity_ids = hass.states.entity_ids
+        entity_ids = hass.states.entity_ids()
 
     for entity_id in entity_ids:
         domain = util.split_entity_id(entity_id)[0]

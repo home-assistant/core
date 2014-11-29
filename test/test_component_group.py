@@ -44,7 +44,7 @@ class TestComponentsGroup(unittest.TestCase):
         """ Test setup_group method. """
 
         # Test if group setup in our init mode is ok
-        self.assertIn(self.group_name, self.hass.states.entity_ids)
+        self.assertIn(self.group_name, self.hass.states.entity_ids())
 
         group_state = self.hass.states.get(self.group_name)
         self.assertEqual(comps.STATE_ON, group_state.state)
@@ -73,7 +73,7 @@ class TestComponentsGroup(unittest.TestCase):
             ['light.Bowl', 'device_tracker.Paulus']))
 
         # Try to setup a group with a non existing state
-        self.assertNotIn('non.existing', self.hass.states.entity_ids)
+        self.assertNotIn('non.existing', self.hass.states.entity_ids())
         self.assertFalse(group.setup_group(
             self.hass, 'light_and_nothing',
             ['light.Bowl', 'non.existing']))

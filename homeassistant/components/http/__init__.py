@@ -133,7 +133,7 @@ def setup(hass, config):
                                      RequestHandler, hass, api_password,
                                      development)
 
-    hass.listen_once_event(
+    hass.bus.listen_once(
         ha.EVENT_HOMEASSISTANT_START,
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
@@ -171,7 +171,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     def start(self):
         """ Starts the server. """
-        self.hass.listen_once_event(
+        self.hass.bus.listen_once(
             ha.EVENT_HOMEASSISTANT_STOP,
             lambda event: self.shutdown())
 

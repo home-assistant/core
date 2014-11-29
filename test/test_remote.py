@@ -96,7 +96,7 @@ class TestRemoteMethods(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        hass.listen_once_event("test.event_no_data", listener)
+        hass.bus.listen_once("test.event_no_data", listener)
 
         remote.fire_event(master_api, "test.event_no_data")
 
@@ -217,7 +217,7 @@ class TestRemoteClasses(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        slave.listen_once_event("test.event_no_data", listener)
+        slave.bus.listen_once("test.event_no_data", listener)
 
         slave.bus.fire("test.event_no_data")
 

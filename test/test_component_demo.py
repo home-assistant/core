@@ -6,9 +6,6 @@ Tests demo component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-import datetime as dt
-
-import ephem
 
 import homeassistant as ha
 import homeassistant.components.demo as demo
@@ -33,7 +30,7 @@ class TestDemo(unittest.TestCase):
 
         for domain in ('light', 'switch'):
             # Focus on 1 entity
-            entity_id = self.hass.get_entity_ids(domain)[0]
+            entity_id = self.hass.states.entity_ids(domain)[0]
 
             self.hass.call_service(
                 domain, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
@@ -54,7 +51,7 @@ class TestDemo(unittest.TestCase):
 
             self.hass._pool.block_till_done()
 
-            for entity_id in self.hass.get_entity_ids(domain):
+            for entity_id in self.hass.states.entity_ids(domain):
                 self.assertEqual(
                     STATE_ON, self.hass.states.get(entity_id).state)
 
@@ -62,7 +59,7 @@ class TestDemo(unittest.TestCase):
 
             self.hass._pool.block_till_done()
 
-            for entity_id in self.hass.get_entity_ids(domain):
+            for entity_id in self.hass.states.entity_ids(domain):
                 self.assertEqual(
                     STATE_OFF, self.hass.states.get(entity_id).state)
 

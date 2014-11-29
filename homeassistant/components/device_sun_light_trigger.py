@@ -36,7 +36,7 @@ def setup(hass, config):
 
     logger = logging.getLogger(__name__)
 
-    device_entity_ids = hass.get_entity_ids(device_tracker.DOMAIN)
+    device_entity_ids = hass.states.entity_ids(device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("No devices found to track")

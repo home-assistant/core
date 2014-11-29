@@ -100,14 +100,6 @@ class HomeAssistant(object):
 
         self.bus.fire(EVENT_CALL_SERVICE, event_data)
 
-    def get_entity_ids(self, domain_filter=None):
-        """ Returns known entity ids. """
-        if domain_filter:
-            return [entity_id for entity_id in self.states.entity_ids
-                    if entity_id.startswith(domain_filter)]
-        else:
-            return self.states.entity_ids
-
     def track_state_change(self, entity_ids, action,
                            from_state=None, to_state=None):
         """
@@ -202,31 +194,6 @@ class HomeAssistant(object):
 
         self.bus.listen(EVENT_TIME_CHANGED, time_listener)
 
-    def listen_once_event(self, event_type, listener):
-        """ Listen once for event of a specific type.
-
-        To listen to all events specify the constant ``MATCH_ALL``
-        as event_type.
-
-        Note: at the moment it is impossible to remove a one time listener.
-        """
-        @ft.wraps(listener)
-        def onetime_listener(event):
-            """ Removes listener from eventbus and then fires listener. """
-            if not hasattr(onetime_listener, 'run'):
-                # Set variable so that we will never run twice.
-                # Because the event bus might have to wait till a thread comes
-                # available to execute this listener it might occur that the
-                # listener gets lined up twice to be executed.
-                # This will make sure the second time it does nothing.
-                onetime_listener.run = True
-
-                self.bus.remove_listener(event_type, onetime_listener)
-
-                listener(event)
-
-        self.bus.listen(event_type, onetime_listener)
-
     def stop(self):
         """ Stops Home Assistant and shuts down all threads. """
         _LOGGER.info("Stopping")
@@ -237,6 +204,32 @@ class HomeAssistant(object):
         self._pool.block_till_done()
 
         self._pool.stop()
+
+    def get_entity_ids(self, domain_filter=None):
+        """
+        Returns known entity ids.
+
+        THIS METHOD IS DEPRECATED. Use hass.states.entity_ids
+        """
+        _LOGGER.warning(
+            "hass.get_entiy_ids is deprecated. Use hass.states.entity_ids")
+
+        return self.states.entity_ids(domain_filter)
+
+    def listen_once_event(self, event_type, listener):
+        """ Listen once for event of a specific type.
+
+        To listen to all events specify the constant ``MATCH_ALL``
+        as event_type.
+
+        Note: at the moment it is impossible to remove a one time listener.
+
+        THIS METHOD IS DEPRECATED. Please use hass.events.listen_once.
+        """
+        _LOGGER.warning(
+            "hass.listen_once_event is deprecated. Use hass.bus.listen_once")
+
+        self.bus.listen_once(event_type, listener)
 
 
 def _process_match_param(parameter):
@@ -390,6 +383,31 @@ class EventBus(object):
             else:
                 self._listeners[event_type] = [listener]
 
+    def listen_once(self, event_type, listener):
+        """ Listen once for event of a specific type.
+
+        To listen to all events specify the constant ``MATCH_ALL``
+        as event_type.
+
+        Note: at the moment it is impossible to remove a one time listener.
+        """
+        @ft.wraps(listener)
+        def onetime_listener(event):
+            """ Removes listener from eventbus and then fires listener. """
+            if not hasattr(onetime_listener, 'run'):
+                # Set variable so that we will never run twice.
+                # Because the event bus might have to wait till a thread comes
+                # available to execute this listener it might occur that the
+                # listener gets lined up twice to be executed.
+                # This will make sure the second time it does nothing.
+                onetime_listener.run = True
+
+                self.remove_listener(event_type, onetime_listener)
+
+                listener(event)
+
+        self.listen(event_type, onetime_listener)
+
     def remove_listener(self, event_type, listener):
         """ Removes a listener of a specific event_type. """
         with self._lock:
@@ -487,10 +505,13 @@ class StateMachine(object):
         self._bus = bus
         self._lock = threading.Lock()
 
-    @property
-    def entity_ids(self):
+    def entity_ids(self, domain_filter=None):
         """ List of entity ids that are being tracked. """
-        return list(self._states.keys())
+        if domain_filter is not None:
+            return [entity_id for entity_id in self._states.keys()
+                    if util.split_entity_id(entity_id)[0] == domain_filter]
+        else:
+            return list(self._states.keys())
 
     def all(self):
         """ Returns a list of all states. """
@@ -619,14 +640,14 @@ class Timer(threading.Thread):
         # every minute.
         assert 60 % self.interval == 0, "60 % TIMER_INTERVAL should be 0!"
 
-        hass.listen_once_event(EVENT_HOMEASSISTANT_START,
-                               lambda event: self.start())
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
+                             lambda event: self.start())
 
     def run(self):
         """ Start the timer. """
 
-        self.hass.listen_once_event(EVENT_HOMEASSISTANT_STOP,
-                                    lambda event: self._stop.set())
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                                  lambda event: self._stop.set())
 
         _LOGGER.info("Timer:starting")
 

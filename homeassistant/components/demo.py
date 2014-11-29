@@ -41,7 +41,7 @@ def setup(hass, config):
         if service.data and ATTR_ENTITY_ID in service.data:
             entity_ids = extract_entity_ids(hass, service)
         else:
-            entity_ids = hass.get_entity_ids(service.domain)
+            entity_ids = hass.states.entity_ids(service.domain)
 
         for entity_id in entity_ids:
             domain, _ = split_entity_id(entity_id)
@@ -59,7 +59,7 @@ def setup(hass, config):
         if service.data and ATTR_ENTITY_ID in service.data:
             entity_ids = extract_entity_ids(hass, service)
         else:
-            entity_ids = hass.get_entity_ids(service.domain)
+            entity_ids = hass.states.entity_ids(service.domain)
 
         for entity_id in entity_ids:
             hass.states.set(entity_id, STATE_OFF)

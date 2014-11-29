@@ -176,8 +176,6 @@ class TestHTTP(unittest.TestCase):
     def test_api_state_change_with_bad_data(self):
         """ Test if API sends appropriate error if we omit state. """
 
-        new_state = "debug_state_change"
-
         req = requests.post(
             _url(remote.URL_API_STATES_ENTITY.format(
                 "test_entity.that_does_not_exist")),
@@ -195,7 +193,7 @@ class TestHTTP(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        hass.listen_once_event("test.event_no_data", listener)
+        hass.bus.listen_once("test.event_no_data", listener)
 
         requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test.event_no_data")),
@@ -216,7 +214,7 @@ class TestHTTP(unittest.TestCase):
             if "test" in event.data:
                 test_value.append(1)
 
-        hass.listen_once_event("test_event_with_data", listener)
+        hass.bus.listen_once("test_event_with_data", listener)
 
         requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test_event_with_data")),
@@ -236,7 +234,7 @@ class TestHTTP(unittest.TestCase):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
-        hass.listen_once_event("test_event_bad_data", listener)
+        hass.bus.listen_once("test_event_bad_data", listener)
 
         req = requests.post(
             _url(remote.URL_API_EVENTS_EVENT.format("test_event_bad_data")),

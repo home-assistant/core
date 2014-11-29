@@ -38,7 +38,7 @@ def is_on(hass, entity_id=None):
     """ Returns true if specified ChromeCast entity_id is on.
     Will check all chromecasts if no entity_id specified. """
 
-    entity_ids = [entity_id] if entity_id else hass.get_entity_ids(DOMAIN)
+    entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
 
     return any(not hass.states.is_state(entity_id, STATE_NO_APP)
                for entity_id in entity_ids)
