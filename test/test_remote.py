@@ -3,6 +3,7 @@ test.remote
 ~~~~~~~~~~~
 
 Tests Home Assistant remote methods and classes.
+Uses port 8122 for master, 8123 for slave
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
@@ -53,8 +54,8 @@ def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server and slave. """
     global hass, slave
 
-    hass.stop()
     slave.stop()
+    hass.stop()
 
 
 class TestRemoteMethods(unittest.TestCase):
