@@ -1,6 +1,6 @@
 """
-test.test_component_sun
-~~~~~~~~~~~~~~~~~~~~~~~
+ha_test.test_component_sun
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Sun component.
 """

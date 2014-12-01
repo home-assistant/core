@@ -1,6 +1,6 @@
 """
-test.test_loader
-~~~~~~~~~~~~~~~~~~
+ha_ha_test.test_loader
+~~~~~~~~~~~~~~~~~~~~~~
 
 Provides tests to verify that we can load components.
 """
@@ -10,7 +10,6 @@ import unittest
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
-import mock_toggledevice_platform
 from helper import get_test_home_assistant, MockModule
 
 
@@ -26,16 +25,15 @@ class TestLoader(unittest.TestCase):
 
     def test_set_component(self):
         """ Test if set_component works. """
-        loader.set_component('switch.test', mock_toggledevice_platform)
+        loader.set_component('switch.test', http)
 
-        self.assertEqual(
-            mock_toggledevice_platform, loader.get_component('switch.test'))
+        self.assertEqual(http, loader.get_component('switch.test'))
 
     def test_get_component(self):
         """ Test if get_component works. """
         self.assertEqual(http, loader.get_component('http'))
 
-        self.assertIsNotNone(loader.get_component('custom_one'))
+        self.assertIsNotNone(loader.get_component('switch.test'))
 
     def test_load_order_component(self):
         """ Test if we can get the proper load order of components. """

@@ -1,6 +1,6 @@
 """
-test.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~
+ha_test.test_component_demo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests demo component.
 """

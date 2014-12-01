@@ -62,9 +62,12 @@ def prepare(hass):
         # just might output more errors.
         for fil in os.listdir(custom_path):
             if os.path.isdir(os.path.join(custom_path, fil)):
-                AVAILABLE_COMPONENTS.append('custom_components.{}'.format(fil))
+                if fil != '__pycache__':
+                    AVAILABLE_COMPONENTS.append(
+                        'custom_components.{}'.format(fil))
 
             else:
+                # For files we will strip out .py extension
                 AVAILABLE_COMPONENTS.append(
                     'custom_components.{}'.format(fil[0:-3]))
 

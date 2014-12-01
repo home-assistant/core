@@ -1,6 +1,6 @@
 """
-test.test_component_switch
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+ha_test.test_component_switch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests switch component.
 """
@@ -11,10 +11,10 @@ import os
 import homeassistant as ha
 import homeassistant.loader as loader
 import homeassistant.util as util
-import homeassistant.components as components
+from homeassistant.components import (
+    get_component, ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
+    SERVICE_TURN_ON, SERVICE_TURN_OFF)
 import homeassistant.components.light as light
-
-import mock_toggledevice_platform
 
 from helper import mock_service, get_test_home_assistant
 
@@ -25,7 +25,6 @@ class TestLight(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = get_test_home_assistant()
         loader.prepare(self.hass)
-        loader.set_component('light.test', mock_toggledevice_platform)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -39,21 +38,21 @@ class TestLight(unittest.TestCase):
     def test_methods(self):
         """ Test if methods call the services as expected. """
         # Test is_on
-        self.hass.states.set('light.test', components.STATE_ON)
+        self.hass.states.set('light.test', STATE_ON)
         self.assertTrue(light.is_on(self.hass, 'light.test'))
 
-        self.hass.states.set('light.test', components.STATE_OFF)
+        self.hass.states.set('light.test', STATE_OFF)
         self.assertFalse(light.is_on(self.hass, 'light.test'))
 
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, components.STATE_ON)
+        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_ON)
         self.assertTrue(light.is_on(self.hass))
 
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, components.STATE_OFF)
+        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_OFF)
         self.assertFalse(light.is_on(self.hass))
 
         # Test turn_on
         turn_on_calls = mock_service(
-            self.hass, light.DOMAIN, components.SERVICE_TURN_ON)
+            self.hass, light.DOMAIN, SERVICE_TURN_ON)
 
         light.turn_on(
             self.hass,
@@ -70,17 +69,19 @@ class TestLight(unittest.TestCase):
         call = turn_on_calls[-1]
 
         self.assertEqual(light.DOMAIN, call.domain)
-        self.assertEqual(components.SERVICE_TURN_ON, call.service)
-        self.assertEqual('entity_id_val', call.data[components.ATTR_ENTITY_ID])
-        self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
-        self.assertEqual('brightness_val', call.data[light.ATTR_BRIGHTNESS])
-        self.assertEqual('rgb_color_val', call.data[light.ATTR_RGB_COLOR])
-        self.assertEqual('xy_color_val', call.data[light.ATTR_XY_COLOR])
-        self.assertEqual('profile_val', call.data[light.ATTR_PROFILE])
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual('entity_id_val', call.data.get(ATTR_ENTITY_ID))
+        self.assertEqual(
+            'transition_val', call.data.get(light.ATTR_TRANSITION))
+        self.assertEqual(
+            'brightness_val', call.data.get(light.ATTR_BRIGHTNESS))
+        self.assertEqual('rgb_color_val', call.data.get(light.ATTR_RGB_COLOR))
+        self.assertEqual('xy_color_val', call.data.get(light.ATTR_XY_COLOR))
+        self.assertEqual('profile_val', call.data.get(light.ATTR_PROFILE))
 
         # Test turn_off
         turn_off_calls = mock_service(
-            self.hass, light.DOMAIN, components.SERVICE_TURN_OFF)
+            self.hass, light.DOMAIN, SERVICE_TURN_OFF)
 
         light.turn_off(
             self.hass, entity_id='entity_id_val', transition='transition_val')
@@ -91,17 +92,19 @@ class TestLight(unittest.TestCase):
         call = turn_off_calls[-1]
 
         self.assertEqual(light.DOMAIN, call.domain)
-        self.assertEqual(components.SERVICE_TURN_OFF, call.service)
-        self.assertEqual('entity_id_val', call.data[components.ATTR_ENTITY_ID])
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
         self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
 
     def test_services(self):
         """ Test the provided services. """
-        mock_toggledevice_platform.init()
+        platform = get_component('light.test')
+
+        platform.init()
         self.assertTrue(
             light.setup(self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}))
 
-        dev1, dev2, dev3 = mock_toggledevice_platform.get_lights(None, None)
+        dev1, dev2, dev3 = platform.get_lights(None, None)
 
         # Test init
         self.assertTrue(light.is_on(self.hass, dev1.entity_id))
@@ -224,10 +227,10 @@ class TestLight(unittest.TestCase):
         ))
 
         # Test if light component returns 0 lightes
-        mock_toggledevice_platform.init(True)
+        platform = get_component('light.test')
+        platform.init(True)
 
-        self.assertEqual(
-            [], mock_toggledevice_platform.get_lights(None, None))
+        self.assertEqual([], platform.get_lights(None, None))
 
         self.assertFalse(light.setup(
             self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
@@ -235,7 +238,8 @@ class TestLight(unittest.TestCase):
 
     def test_light_profiles(self):
         """ Test light profiles. """
-        mock_toggledevice_platform.init()
+        platform = get_component('light.test')
+        platform.init()
 
         user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
 
@@ -259,7 +263,7 @@ class TestLight(unittest.TestCase):
             self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
         ))
 
-        dev1, dev2, dev3 = mock_toggledevice_platform.get_lights(None, None)
+        dev1, dev2, dev3 = platform.get_lights(None, None)
 
         light.turn_on(self.hass, dev1.entity_id, profile='test')
 
