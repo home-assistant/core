@@ -118,7 +118,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
     if xy_color:
         data[ATTR_XY_COLOR] = xy_color
 
-    hass.call_service(DOMAIN, SERVICE_TURN_ON, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None, transition=None):
@@ -131,7 +131,7 @@ def turn_off(hass, entity_id=None, transition=None):
     if transition is not None:
         data[ATTR_TRANSITION] = transition
 
-    hass.call_service(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 # pylint: disable=too-many-branches, too-many-locals

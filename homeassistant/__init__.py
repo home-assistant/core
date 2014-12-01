@@ -27,7 +27,7 @@ EVENT_HOMEASSISTANT_START = "homeassistant_start"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
-EVENT_CALL_SERVICE = "call_service"
+EVENT_CALL_SERVICE = "services.call"
 
 ATTR_NOW = "now"
 ATTR_DOMAIN = "domain"
@@ -91,42 +91,6 @@ class HomeAssistant(object):
                 break
 
         self.stop()
-
-    def call_service(self, domain, service, service_data=None):
-        """ Fires event to call specified service. """
-        event_data = service_data or {}
-        event_data[ATTR_DOMAIN] = domain
-        event_data[ATTR_SERVICE] = service
-
-        self.bus.fire(EVENT_CALL_SERVICE, event_data)
-
-    def track_state_change(self, entity_ids, action,
-                           from_state=None, to_state=None):
-        """
-        Track specific state changes.
-        entity_ids, from_state and to_state can be string or list.
-        Use list to match multiple.
-        """
-        from_state = _process_match_param(from_state)
-        to_state = _process_match_param(to_state)
-
-        # Ensure it is a list with entity ids we want to match on
-        if isinstance(entity_ids, str):
-            entity_ids = [entity_ids]
-
-        @ft.wraps(action)
-        def state_listener(event):
-            """ The listener that listens for specific state changes. """
-            if event.data['entity_id'] in entity_ids and \
-                    'old_state' in event.data and \
-                    _matcher(event.data['old_state'].state, from_state) and \
-                    _matcher(event.data['new_state'].state, to_state):
-
-                action(event.data['entity_id'],
-                       event.data['old_state'],
-                       event.data['new_state'])
-
-        self.bus.listen(EVENT_STATE_CHANGED, state_listener)
 
     def track_point_in_time(self, action, point_in_time):
         """
@@ -230,6 +194,33 @@ class HomeAssistant(object):
             "hass.listen_once_event is deprecated. Use hass.bus.listen_once")
 
         self.bus.listen_once(event_type, listener)
+
+    def track_state_change(self, entity_ids, action,
+                           from_state=None, to_state=None):
+        """
+        Track specific state changes.
+        entity_ids, from_state and to_state can be string or list.
+        Use list to match multiple.
+
+        THIS METHOD IS DEPRECATED. Use hass.states.track_change
+        """
+        _LOGGER.warning((
+            "hass.track_state_change is deprecated. "
+            "Use hass.states.track_change"))
+
+        self.states.track_change(entity_ids, action, from_state, to_state)
+
+    def call_service(self, domain, service, service_data=None):
+        """
+        Fires event to call specified service.
+
+        THIS METHOD IS DEPRECATED. Use hass.services.call
+        """
+        _LOGGER.warning((
+            "hass.services.call is deprecated. "
+            "Use hass.services.call"))
+
+        self.services.call(domain, service, service_data)
 
 
 def _process_match_param(parameter):
@@ -561,6 +552,33 @@ class StateMachine(object):
 
                 self._bus.fire(EVENT_STATE_CHANGED, event_data)
 
+    def track_change(self, entity_ids, action, from_state=None, to_state=None):
+        """
+        Track specific state changes.
+        entity_ids, from_state and to_state can be string or list.
+        Use list to match multiple.
+        """
+        from_state = _process_match_param(from_state)
+        to_state = _process_match_param(to_state)
+
+        # Ensure it is a list with entity ids we want to match on
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+
+        @ft.wraps(action)
+        def state_listener(event):
+            """ The listener that listens for specific state changes. """
+            if event.data['entity_id'] in entity_ids and \
+                    'old_state' in event.data and \
+                    _matcher(event.data['old_state'].state, from_state) and \
+                    _matcher(event.data['new_state'].state, to_state):
+
+                action(event.data['entity_id'],
+                       event.data['old_state'],
+                       event.data['new_state'])
+
+        self._bus.listen(EVENT_STATE_CHANGED, state_listener)
+
 
 # pylint: disable=too-few-public-methods
 class ServiceCall(object):
@@ -588,6 +606,7 @@ class ServiceRegistry(object):
         self._services = {}
         self._lock = threading.Lock()
         self._pool = pool or create_worker_pool()
+        self._bus = bus
         bus.listen(EVENT_CALL_SERVICE, self._event_to_service_call)
 
     @property
@@ -608,6 +627,23 @@ class ServiceRegistry(object):
                 self._services[domain][service] = service_func
             else:
                 self._services[domain] = {service: service_func}
+
+    def call(self, domain, service, service_data=None):
+        """
+        Fires event to call specified service.
+
+        This method will fire an event to call the service.
+        This event will be picked up by this ServiceRegistry and any
+        other ServiceRegistry that is listening on the EventBus.
+
+        Because the service is sent as an event you are not allowed to use
+        the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
+        """
+        event_data = service_data or {}
+        event_data[ATTR_DOMAIN] = domain
+        event_data[ATTR_SERVICE] = service
+
+        self._bus.fire(EVENT_CALL_SERVICE, event_data)
 
     def _event_to_service_call(self, event):
         """ Calls a service from an event. """

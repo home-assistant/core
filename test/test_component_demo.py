@@ -32,14 +32,14 @@ class TestDemo(unittest.TestCase):
             # Focus on 1 entity
             entity_id = self.hass.states.entity_ids(domain)[0]
 
-            self.hass.call_service(
+            self.hass.services.call(
                 domain, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
 
             self.hass._pool.block_till_done()
 
             self.assertEqual(STATE_ON, self.hass.states.get(entity_id).state)
 
-            self.hass.call_service(
+            self.hass.services.call(
                 domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
 
             self.hass._pool.block_till_done()
@@ -47,7 +47,7 @@ class TestDemo(unittest.TestCase):
             self.assertEqual(STATE_OFF, self.hass.states.get(entity_id).state)
 
             # Act on all
-            self.hass.call_service(domain, SERVICE_TURN_ON)
+            self.hass.services.call(domain, SERVICE_TURN_ON)
 
             self.hass._pool.block_till_done()
 
@@ -55,7 +55,7 @@ class TestDemo(unittest.TestCase):
                 self.assertEqual(
                     STATE_ON, self.hass.states.get(entity_id).state)
 
-            self.hass.call_service(domain, SERVICE_TURN_OFF)
+            self.hass.services.call(domain, SERVICE_TURN_OFF)
 
             self.hass._pool.block_till_done()
 

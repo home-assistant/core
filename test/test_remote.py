@@ -154,7 +154,7 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual({}, remote.get_services(broken_api))
 
     def test_call_service(self):
-        """ Test Python API call_service. """
+        """ Test Python API services.call. """
         test_value = []
 
         def listener(service_call):   # pylint: disable=unused-argument

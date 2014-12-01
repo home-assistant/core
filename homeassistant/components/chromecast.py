@@ -48,56 +48,56 @@ def turn_off(hass, entity_id=None):
     """ Will turn off specified Chromecast or all. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_TURN_OFF, data)
+    hass.services.call(DOMAIN, components.SERVICE_TURN_OFF, data)
 
 
 def volume_up(hass, entity_id=None):
     """ Send the chromecast the command for volume up. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_VOLUME_UP, data)
+    hass.services.call(DOMAIN, components.SERVICE_VOLUME_UP, data)
 
 
 def volume_down(hass, entity_id=None):
     """ Send the chromecast the command for volume down. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_VOLUME_DOWN, data)
+    hass.services.call(DOMAIN, components.SERVICE_VOLUME_DOWN, data)
 
 
 def media_play_pause(hass, entity_id=None):
     """ Send the chromecast the command for play/pause. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE, data)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE, data)
 
 
 def media_play(hass, entity_id=None):
     """ Send the chromecast the command for play/pause. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PLAY, data)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PLAY, data)
 
 
 def media_pause(hass, entity_id=None):
     """ Send the chromecast the command for play/pause. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PAUSE, data)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PAUSE, data)
 
 
 def media_next_track(hass, entity_id=None):
     """ Send the chromecast the command for next track. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK, data)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK, data)
 
 
 def media_prev_track(hass, entity_id=None):
     """ Send the chromecast the command for prev track. """
     data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK, data)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK, data)
 
 
 # pylint: disable=too-many-locals, too-many-branches

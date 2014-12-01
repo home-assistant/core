@@ -52,7 +52,7 @@ class TestHomeAssistant(unittest.TestCase):
 
         self.assertTrue(blocking_thread.is_alive())
 
-        self.hass.call_service(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
+        self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
         self.hass._pool.block_till_done()
 
         # hass.block_till_stopped checks every second if it should quit
@@ -63,43 +63,6 @@ class TestHomeAssistant(unittest.TestCase):
             time.sleep(0.1)
 
         self.assertFalse(blocking_thread.is_alive())
-
-    def test_track_state_change(self):
-        """ Test track_state_change. """
-        # 2 lists to track how often our callbacks got called
-        specific_runs = []
-        wildcard_runs = []
-
-        self.hass.track_state_change(
-            'light.Bowl', lambda a, b, c: specific_runs.append(1), 'on', 'off')
-
-        self.hass.track_state_change(
-            'light.Bowl', lambda a, b, c: wildcard_runs.append(1),
-            ha.MATCH_ALL, ha.MATCH_ALL)
-
-        # Set same state should not trigger a state change/listener
-        self.hass.states.set('light.Bowl', 'on')
-        self.hass._pool.block_till_done()
-        self.assertEqual(0, len(specific_runs))
-        self.assertEqual(0, len(wildcard_runs))
-
-        # State change off -> on
-        self.hass.states.set('light.Bowl', 'off')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-
-        # State change off -> off
-        self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-
-        # State change off -> on
-        self.hass.states.set('light.Bowl', 'on')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
 
     def test_track_point_in_time(self):
         """ Test track point in time. """
@@ -284,6 +247,43 @@ class TestStateMachine(unittest.TestCase):
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))
+
+    def test_track_change(self):
+        """ Test states.track_change. """
+        # 2 lists to track how often our callbacks got called
+        specific_runs = []
+        wildcard_runs = []
+
+        self.states.track_change(
+            'light.Bowl', lambda a, b, c: specific_runs.append(1), 'on', 'off')
+
+        self.states.track_change(
+            'light.Bowl', lambda a, b, c: wildcard_runs.append(1),
+            ha.MATCH_ALL, ha.MATCH_ALL)
+
+        # Set same state should not trigger a state change/listener
+        self.states.set('light.Bowl', 'on')
+        self.bus._pool.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+        self.assertEqual(0, len(wildcard_runs))
+
+        # State change off -> on
+        self.states.set('light.Bowl', 'off')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+
+        # State change off -> off
+        self.states.set('light.Bowl', 'off', {"some_attr": 1})
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(2, len(wildcard_runs))
+
+        # State change off -> on
+        self.states.set('light.Bowl', 'on')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(3, len(wildcard_runs))
 
 
 class TestServiceCall(unittest.TestCase):

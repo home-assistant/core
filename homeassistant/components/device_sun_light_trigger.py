@@ -92,8 +92,8 @@ def setup(hass, config):
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
-    hass.track_state_change(sun.ENTITY_ID, schedule_light_on_sun_rise,
-                            sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
+    hass.states.track_change(sun.ENTITY_ID, schedule_light_on_sun_rise,
+                             sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
 
     # If the sun is already above horizon
     # schedule the time-based pre-sun set event
@@ -152,12 +152,14 @@ def setup(hass, config):
             light.turn_off(hass)
 
     # Track home coming of each device
-    hass.track_state_change(device_entity_ids, check_light_on_dev_state_change,
-                            components.STATE_NOT_HOME, components.STATE_HOME)
+    hass.states.track_change(
+        device_entity_ids, check_light_on_dev_state_change,
+        components.STATE_NOT_HOME, components.STATE_HOME)
 
     # Track when all devices are gone to shut down lights
-    hass.track_state_change(device_tracker.ENTITY_ID_ALL_DEVICES,
-                            check_light_on_dev_state_change,
-                            components.STATE_HOME, components.STATE_NOT_HOME)
+    hass.states.track_change(
+        device_tracker.ENTITY_ID_ALL_DEVICES,
+        check_light_on_dev_state_change,
+        components.STATE_HOME, components.STATE_NOT_HOME)
 
     return True

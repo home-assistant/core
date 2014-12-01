@@ -43,14 +43,14 @@ def turn_on(hass, entity_id=None):
     """ Turns all or specified switch on. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
 
-    hass.call_service(DOMAIN, SERVICE_TURN_ON, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
     """ Turns all or specified switch off. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
 
-    hass.call_service(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 # pylint: disable=too-many-branches

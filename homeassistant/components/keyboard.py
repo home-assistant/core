@@ -14,32 +14,32 @@ DEPENDENCIES = []
 
 def volume_up(hass):
     """ Press the keyboard button for volume up. """
-    hass.call_service(DOMAIN, components.SERVICE_VOLUME_UP)
+    hass.services.call(DOMAIN, components.SERVICE_VOLUME_UP)
 
 
 def volume_down(hass):
     """ Press the keyboard button for volume down. """
-    hass.call_service(DOMAIN, components.SERVICE_VOLUME_DOWN)
+    hass.services.call(DOMAIN, components.SERVICE_VOLUME_DOWN)
 
 
 def volume_mute(hass):
     """ Press the keyboard button for muting volume. """
-    hass.call_service(DOMAIN, components.SERVICE_VOLUME_MUTE)
+    hass.services.call(DOMAIN, components.SERVICE_VOLUME_MUTE)
 
 
 def media_play_pause(hass):
     """ Press the keyboard button for play/pause. """
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE)
 
 
 def media_next_track(hass):
     """ Press the keyboard button for next track. """
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK)
 
 
 def media_prev_track(hass):
     """ Press the keyboard button for prev track. """
-    hass.call_service(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK)
+    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK)
 
 
 # pylint: disable=unused-argument

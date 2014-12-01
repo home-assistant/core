@@ -481,7 +481,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         domain = path_match.group('domain')
         service = path_match.group('service')
 
-        self.server.hass.call_service(domain, service, data)
+        self.server.hass.services.call(domain, service, data)
 
         self._json_message("Service {}/{} called.".format(domain, service))
 

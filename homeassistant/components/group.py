@@ -186,7 +186,7 @@ def setup_group(hass, name, entity_ids, user_defined=True):
                             if entity_id != ent_id]):
                     hass.states.set(group_entity_id, group_off, state_attr)
 
-        hass.track_state_change(entity_ids, update_group_state)
+        hass.states.track_change(entity_ids, update_group_state)
 
         hass.states.set(group_entity_id, group_state, state_attr)
 

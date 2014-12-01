@@ -25,7 +25,7 @@ def setup(hass, config):
     hass.track_time_change(print, second=[0, 30])
 
     # See also (defined in homeassistant/__init__.py):
-    # hass.track_state_change
+    # hass.states.track_change
     # hass.track_point_in_time
 
     # Tells the bootstrapper that the component was succesfully initialized

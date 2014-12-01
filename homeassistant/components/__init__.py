@@ -85,7 +85,7 @@ def turn_on(hass, entity_id=None, **service_data):
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
-    hass.call_service(ha.DOMAIN, SERVICE_TURN_ON, service_data)
+    hass.services.call(ha.DOMAIN, SERVICE_TURN_ON, service_data)
 
 
 def turn_off(hass, entity_id=None, **service_data):
@@ -93,7 +93,7 @@ def turn_off(hass, entity_id=None, **service_data):
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
-    hass.call_service(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
+    hass.services.call(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
 
 
 def extract_entity_ids(hass, service):
@@ -195,7 +195,7 @@ def setup(hass, config):
             # ent_ids is a generator, convert it to a list.
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
-            hass.call_service(domain, service.service, data)
+            hass.services.call(domain, service.service, data)
 
     hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
