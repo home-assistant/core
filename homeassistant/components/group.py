@@ -7,6 +7,7 @@ Provides functionality to group devices that can be turned on or off.
 
 import logging
 
+import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.components import (STATE_ON, STATE_OFF,
                                       STATE_HOME, STATE_NOT_HOME,
@@ -23,6 +24,8 @@ _GROUP_TYPES = {
     "on_off": (STATE_ON, STATE_OFF),
     "home_not_home": (STATE_HOME, STATE_NOT_HOME)
 }
+
+_GROUPS = {}
 
 
 def _get_group_type(state):
@@ -105,7 +108,6 @@ def setup(hass, config):
 def setup_group(hass, name, entity_ids, user_defined=True):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
-
     # In case an iterable is passed in
     entity_ids = list(entity_ids)
 
@@ -159,35 +161,47 @@ def setup_group(hass, name, entity_ids, user_defined=True):
 
         return False
 
-    else:
-        group_entity_id = ENTITY_ID_FORMAT.format(name)
-        state_attr = {ATTR_ENTITY_ID: entity_ids, ATTR_AUTO: not user_defined}
+    group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
+    state_attr = {ATTR_ENTITY_ID: entity_ids, ATTR_AUTO: not user_defined}
 
-        # pylint: disable=unused-argument
-        def update_group_state(entity_id, old_state, new_state):
-            """ Updates the group state based on a state change by
-                a tracked entity. """
+    # pylint: disable=unused-argument
+    def update_group_state(entity_id, old_state, new_state):
+        """ Updates the group state based on a state change by
+            a tracked entity. """
 
-            cur_gr_state = hass.states.get(group_entity_id).state
+        cur_gr_state = hass.states.get(group_entity_id).state
 
-            # if cur_gr_state = OFF and new_state = ON: set ON
-            # if cur_gr_state = ON and new_state = OFF: research
-            # else: ignore
+        # if cur_gr_state = OFF and new_state = ON: set ON
+        # if cur_gr_state = ON and new_state = OFF: research
+        # else: ignore
 
-            if cur_gr_state == group_off and new_state.state == group_on:
+        if cur_gr_state == group_off and new_state.state == group_on:
 
-                hass.states.set(group_entity_id, group_on, state_attr)
+            hass.states.set(group_entity_id, group_on, state_attr)
 
-            elif cur_gr_state == group_on and new_state.state == group_off:
+        elif cur_gr_state == group_on and new_state.state == group_off:
 
-                # Check if any of the other states is still on
-                if not any([hass.states.is_state(ent_id, group_on)
-                            for ent_id in entity_ids
-                            if entity_id != ent_id]):
-                    hass.states.set(group_entity_id, group_off, state_attr)
+            # Check if any of the other states is still on
+            if not any([hass.states.is_state(ent_id, group_on)
+                        for ent_id in entity_ids
+                        if entity_id != ent_id]):
+                hass.states.set(group_entity_id, group_off, state_attr)
 
-        hass.states.track_change(entity_ids, update_group_state)
+    _GROUPS[group_entity_id] = hass.states.track_change(
+        entity_ids, update_group_state)
 
-        hass.states.set(group_entity_id, group_state, state_attr)
+    hass.states.set(group_entity_id, group_state, state_attr)
 
-        return True
+    return True
+
+
+def remove_group(hass, name):
+    """ Remove a group and its state listener from Home Assistant. """
+    group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
+
+    if hass.states.get(group_entity_id) is not None:
+        hass.states.remove(group_entity_id)
+
+    if group_entity_id in _GROUPS:
+        hass.bus.remove_listener(
+            ha.EVENT_STATE_CHANGED, _GROUPS.pop(group_entity_id))

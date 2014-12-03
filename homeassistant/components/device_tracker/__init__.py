@@ -1,6 +1,6 @@
 """
 homeassistant.components.tracker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to keep track of devices.
 """
@@ -13,9 +13,9 @@ from datetime import datetime, timedelta
 import homeassistant as ha
 from homeassistant.loader import get_component
 import homeassistant.util as util
-import homeassistant.components as components
 
-from homeassistant.components import group
+from homeassistant.components import (
+    group, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "device_tracker"
 DEPENDENCIES = []
@@ -30,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 # After how much time do we consider a device not home if
 # it does not show up on scans
-TIME_SPAN_FOR_ERROR_IN_SCANNING = timedelta(minutes=3)
+TIME_DEVICE_NOT_FOUND = timedelta(minutes=3)
 
 # Filename to save known devices to
 KNOWN_DEVICES_FILE = "known_devices.csv"
@@ -43,7 +43,7 @@ def is_on(hass, entity_id=None):
     """ Returns if any or specified device is home. """
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
-    return hass.states.is_state(entity, components.STATE_HOME)
+    return hass.states.is_state(entity, STATE_HOME)
 
 
 def setup(hass, config):
@@ -70,223 +70,231 @@ def setup(hass, config):
 
         return False
 
-    DeviceTracker(hass, device_scanner)
+    tracker = DeviceTracker(hass, device_scanner)
 
-    return True
+    # We only succeeded if we got to parse the known devices file
+    return not tracker.invalid_known_devices_file
 
 
-# pylint: disable=too-many-instance-attributes
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
     def __init__(self, hass, device_scanner):
-        self.states = hass.states
+        self.hass = hass
 
         self.device_scanner = device_scanner
 
-        self.error_scanning = TIME_SPAN_FOR_ERROR_IN_SCANNING
-
         self.lock = threading.Lock()
 
-        self.path_known_devices_file = hass.get_config_path(KNOWN_DEVICES_FILE)
-
         # Dictionary to keep track of known devices and devices we track
-        self.known_devices = {}
+        self.tracked = {}
+        self.untracked_devices = set()
 
         # Did we encounter an invalid known devices file
         self.invalid_known_devices_file = False
 
         self._read_known_devices_file()
 
+        if self.invalid_known_devices_file:
+            return
+
         # Wrap it in a func instead of lambda so it can be identified in
         # the bus by its __name__ attribute.
-        def update_device_state(time):  # pylint: disable=unused-argument
+        def update_device_state(now):
             """ Triggers update of the device states. """
-            self.update_devices()
+            self.update_devices(now)
+
+        # pylint: disable=unused-argument
+        def reload_known_devices_service(service):
+            """ Reload known devices file. """
+            group.remove_group(self.hass, GROUP_NAME_ALL_DEVICES)
+
+            self._read_known_devices_file()
+
+            self.update_devices(datetime.now())
+
+            if self.tracked:
+                group.setup_group(
+                    self.hass, GROUP_NAME_ALL_DEVICES,
+                    self.device_entity_ids, False)
 
         hass.track_time_change(update_device_state)
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,
-                               lambda service: self._read_known_devices_file())
+                               reload_known_devices_service)
 
-        self.update_devices()
-
-        group.setup_group(
-            hass, GROUP_NAME_ALL_DEVICES, self.device_entity_ids, False)
+        reload_known_devices_service(None)
 
     @property
     def device_entity_ids(self):
         """ Returns a set containing all device entity ids
             that are being tracked. """
-        return set([self.known_devices[device]['entity_id'] for device
-                    in self.known_devices
-                    if self.known_devices[device]['track']])
+        return set(device['entity_id'] for device in self.tracked.values())
 
-    def update_devices(self, found_devices=None):
+    def _update_state(self, now, device, is_home):
+        """ Update the state of a device. """
+        dev_info = self.tracked[device]
+
+        if is_home:
+            # Update last seen if at home
+            dev_info['last_seen'] = now
+        else:
+            # State remains at home if it has been seen in the last
+            # TIME_DEVICE_NOT_FOUND
+            is_home = now - dev_info['last_seen'] < TIME_DEVICE_NOT_FOUND
+
+        state = STATE_HOME if is_home else STATE_NOT_HOME
+
+        self.hass.states.set(
+            dev_info['entity_id'], state,
+            dev_info['state_attr'])
+
+    def update_devices(self, now):
         """ Update device states based on the found devices. """
         self.lock.acquire()
 
-        found_devices = found_devices or self.device_scanner.scan_devices()
+        found_devices = set(self.device_scanner.scan_devices())
 
-        now = datetime.now()
+        for device in self.tracked:
+            is_home = device in found_devices
 
-        known_dev = self.known_devices
+            self._update_state(now, device, is_home)
 
-        temp_tracking_devices = [device for device in known_dev
-                                 if known_dev[device]['track']]
+            if is_home:
+                found_devices.remove(device)
 
-        for device in found_devices:
-            # Are we tracking this device?
-            if device in temp_tracking_devices:
-                temp_tracking_devices.remove(device)
+        # Did we find any devices that we didn't know about yet?
+        new_devices = found_devices - self.untracked_devices
 
-                known_dev[device]['last_seen'] = now
+        # Write new devices to known devices file
+        if not self.invalid_known_devices_file and new_devices:
 
-                self.states.set(
-                    known_dev[device]['entity_id'], components.STATE_HOME,
-                    known_dev[device]['default_state_attr'])
+            known_dev_path = self.hass.get_config_path(KNOWN_DEVICES_FILE)
 
-        # For all devices we did not find, set state to NH
-        # But only if they have been gone for longer then the error time span
-        # Because we do not want to have stuff happening when the device does
-        # not show up for 1 scan beacuse of reboot etc
-        for device in temp_tracking_devices:
-            if now - known_dev[device]['last_seen'] > self.error_scanning:
+            try:
+                # If file does not exist we will write the header too
+                is_new_file = not os.path.isfile(known_dev_path)
 
-                self.states.set(known_dev[device]['entity_id'],
-                                components.STATE_NOT_HOME,
-                                known_dev[device]['default_state_attr'])
+                with open(known_dev_path, 'a') as outp:
+                    _LOGGER.info(
+                        "Found %d new devices, updating %s",
+                        len(new_devices), known_dev_path)
 
-        # If we come along any unknown devices we will write them to the
-        # known devices file but only if we did not encounter an invalid
-        # known devices file
-        if not self.invalid_known_devices_file:
+                    writer = csv.writer(outp)
 
-            known_dev_path = self.path_known_devices_file
+                    if is_new_file:
+                        writer.writerow((
+                            "device", "name", "track", "picture"))
 
-            unknown_devices = [device for device in found_devices
-                               if device not in known_dev]
+                    for device in new_devices:
+                        # See if the device scanner knows the name
+                        # else defaults to unknown device
+                        name = (self.device_scanner.get_device_name(device)
+                                or "unknown_device")
 
-            if unknown_devices:
-                try:
-                    # If file does not exist we will write the header too
-                    is_new_file = not os.path.isfile(known_dev_path)
+                        writer.writerow((device, name, 0, ""))
 
-                    with open(known_dev_path, 'a') as outp:
-                        _LOGGER.info(
-                            "Found %d new devices, updating %s",
-                            len(unknown_devices), known_dev_path)
-
-                        writer = csv.writer(outp)
-
-                        if is_new_file:
-                            writer.writerow((
-                                "device", "name", "track", "picture"))
-
-                        for device in unknown_devices:
-                            # See if the device scanner knows the name
-                            # else defaults to unknown device
-                            name = (self.device_scanner.get_device_name(device)
-                                    or "unknown_device")
-
-                            writer.writerow((device, name, 0, ""))
-                            known_dev[device] = {'name': name,
-                                                 'track': False,
-                                                 'picture': ""}
-
-                except IOError:
-                    _LOGGER.exception(
-                        "Error updating %s with %d new devices",
-                        known_dev_path, len(unknown_devices))
+            except IOError:
+                _LOGGER.exception(
+                    "Error updating %s with %d new devices",
+                    known_dev_path, len(new_devices))
 
         self.lock.release()
 
+    # pylint: disable=too-many-branches
     def _read_known_devices_file(self):
         """ Parse and process the known devices file. """
+        known_dev_path = self.hass.get_config_path(KNOWN_DEVICES_FILE)
 
-        # Read known devices if file exists
-        if os.path.isfile(self.path_known_devices_file):
-            self.lock.acquire()
+        # Return if no known devices file exists
+        if not os.path.isfile(known_dev_path):
+            return
 
-            known_devices = {}
+        self.lock.acquire()
 
-            with open(self.path_known_devices_file) as inp:
-                default_last_seen = datetime(1990, 1, 1)
+        self.untracked_devices.clear()
 
-                # Temp variable to keep track of which entity ids we use
-                # so we can ensure we have unique entity ids.
-                used_entity_ids = []
+        with open(known_dev_path) as inp:
+            default_last_seen = datetime(1990, 1, 1)
 
-                try:
-                    for row in csv.DictReader(inp):
-                        device = row['device']
+            # To track which devices need an entity_id assigned
+            need_entity_id = []
 
-                        row['track'] = True if row['track'] == '1' else False
+            # All devices that are still in this set after we read the CSV file
+            # have been removed from the file and thus need to be cleaned up.
+            removed_devices = set(self.tracked.keys())
+
+            try:
+                for row in csv.DictReader(inp):
+                    device = row['device']
+
+                    if row['track'] == '1':
+                        if device in self.tracked:
+                            # Device exists
+                            removed_devices.remove(device)
+                        else:
+                            # We found a new device
+                            need_entity_id.append(device)
+
+                            self.tracked[device] = {
+                                'name': row['name'],
+                                'last_seen': default_last_seen
+                            }
+
+                        # Update state_attr with latest from file
+                        state_attr = {
+                            ATTR_FRIENDLY_NAME: row['name']
+                        }
 
                         if row['picture']:
-                            row['default_state_attr'] = {
-                                components.ATTR_ENTITY_PICTURE: row['picture']}
+                            state_attr[ATTR_ENTITY_PICTURE] = row['picture']
 
-                        else:
-                            row['default_state_attr'] = None
+                        self.tracked[device]['state_attr'] = state_attr
 
-                        # If we track this device setup tracking variables
-                        if row['track']:
-                            row['last_seen'] = default_last_seen
+                    else:
+                        self.untracked_devices.add(device)
 
-                            # Make sure that each device is mapped
-                            # to a unique entity_id name
-                            name = util.slugify(row['name']) if row['name'] \
-                                else "unnamed_device"
+                # Remove existing devices that we no longer track
+                for device in removed_devices:
+                    entity_id = self.tracked[device]['entity_id']
 
-                            entity_id = ENTITY_ID_FORMAT.format(name)
-                            tries = 1
+                    _LOGGER.info("Removing entity %s", entity_id)
 
-                            while entity_id in used_entity_ids:
-                                tries += 1
+                    self.hass.states.remove(entity_id)
 
-                                suffix = "_{}".format(tries)
+                    self.tracked.pop(device)
 
-                                entity_id = ENTITY_ID_FORMAT.format(
-                                    name + suffix)
+                # Setup entity_ids for the new devices
+                used_entity_ids = [info['entity_id'] for device, info
+                                   in self.tracked.items()
+                                   if device not in need_entity_id]
 
-                            row['entity_id'] = entity_id
-                            used_entity_ids.append(entity_id)
+                for device in need_entity_id:
+                    name = self.tracked[device]['name']
 
-                            row['picture'] = row['picture']
+                    entity_id = util.ensure_unique_string(
+                        ENTITY_ID_FORMAT.format(util.slugify(name)),
+                        used_entity_ids)
 
-                        known_devices[device] = row
+                    used_entity_ids.append(entity_id)
 
-                    if not known_devices:
-                        _LOGGER.warning(
-                            "No devices to track. Please update %s.",
-                            self.path_known_devices_file)
+                    self.tracked[device]['entity_id'] = entity_id
 
-                    # Remove entities that are no longer maintained
-                    new_entity_ids = set([known_devices[dev]['entity_id']
-                                          for dev in known_devices
-                                          if known_devices[dev]['track']])
-
-                    for entity_id in \
-                            self.device_entity_ids - new_entity_ids:
-
-                        _LOGGER.info("Removing entity %s", entity_id)
-                        self.states.remove(entity_id)
-
-                    # File parsed, warnings given if necessary
-                    # entities cleaned up, make it available
-                    self.known_devices = known_devices
-
-                    _LOGGER.info("Loaded devices from %s",
-                                 self.path_known_devices_file)
-
-                except KeyError:
-                    self.invalid_known_devices_file = True
+                if not self.tracked:
                     _LOGGER.warning(
-                        ("Invalid known devices file: %s. "
-                         "We won't update it with new found devices."),
-                        self.path_known_devices_file)
+                        "No devices to track. Please update %s.",
+                        known_dev_path)
 
-                finally:
-                    self.lock.release()
+                _LOGGER.info("Loaded devices from %s", known_dev_path)
+
+            except KeyError:
+                self.invalid_known_devices_file = True
+
+                _LOGGER.warning(
+                    ("Invalid known devices file: %s. "
+                     "We won't update it with new found devices."),
+                    known_dev_path)
+
+            finally:
+                self.lock.release()

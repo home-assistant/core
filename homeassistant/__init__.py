@@ -557,6 +557,9 @@ class StateMachine(object):
         Track specific state changes.
         entity_ids, from_state and to_state can be string or list.
         Use list to match multiple.
+
+        Returns the listener that listens on the bus for EVENT_STATE_CHANGED.
+        Pass the return value into hass.bus.remove_listener to remove it.
         """
         from_state = _process_match_param(from_state)
         to_state = _process_match_param(to_state)
@@ -578,6 +581,8 @@ class StateMachine(object):
                        event.data['new_state'])
 
         self._bus.listen(EVENT_STATE_CHANGED, state_listener)
+
+        return state_listener
 
 
 # pylint: disable=too-few-public-methods
