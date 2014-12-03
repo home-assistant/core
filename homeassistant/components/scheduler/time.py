@@ -15,34 +15,33 @@ which time.
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.components.scheduler import Event
+from homeassistant.components.scheduler import EventListener
+from homeassistant.components import ATTR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def create(schedule, description):
+def create(schedule, event_listener_data):
     """ Create a TimeEvent based on the description """
 
-    service = description['service']
-    (hour, minute) = [int(x) for x in description['time'].split(':')]
+    service = event_listener_data['service']
+    (hour, minute) = [int(x) for x in event_listener_data['time'].split(':')]
 
-    return TimeEvent(schedule, service, hour, minute)
+    return TimeEventListener(schedule, service, hour, minute)
 
 
-class TimeEvent(Event):
+class TimeEventListener(EventListener):
     """ The time event that the scheduler uses """
 
     def __init__(self, schedule, service, hour, minute):
-        Event.__init__(self, schedule)
+        EventListener.__init__(self, schedule)
 
         (self._domain, self._service) = service.split('.')
 
         self._hour = hour
         self._minute = minute
 
-        print(self._domain, self._service)
-
-    def schedule(self):
+    def schedule(self, hass):
         """ Schedule this event so that it will be called """
 
         next_time = datetime.now().replace(hour=self._hour,
@@ -59,16 +58,18 @@ class TimeEvent(Event):
         # pylint: disable=unused-argument
         def execute(now):
             """ Call the execute method """
-            self.execute()
+            self.execute(hass)
 
-        self._schedule.hass.track_point_in_time(execute, next_time)
+        hass.track_point_in_time(execute, next_time)
 
-        _LOGGER.info('point in time scheduled at {} for {}'
-                     .format(next_time, ""))
+        _LOGGER.info(
+            'TimeEventListener scheduled for {}, will call service {}.{}'
+            .format(next_time, self._domain, self._service))
 
-    def execute(self):
+    def execute(self, hass):
         """ Call the service """
-        # data = {ATTR_ENTITY_ID: self._schedule.entity_ids}
-        # self._schedule.hass.call_service(self._domain, self._service, data)
-        print("executoing time", self._domain, self._service)
-        self.schedule()
+        data = {ATTR_ENTITY_ID: self._schedule.entity_ids}
+        hass.call_service(self._domain, self._service, data)
+
+        # Reschedule for next day
+        self.schedule(hass)

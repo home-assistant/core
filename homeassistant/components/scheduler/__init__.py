@@ -39,22 +39,22 @@ _SCHEDULE_FILE = 'schedule.json'
 def setup(hass, config):
     """ Create the schedules """
 
-    def setup_schedule(description):
+    def setup_schedule(schedule_data):
         """ setup a schedule based on the description """
 
-        schedule = Schedule(hass, description['id'],
-                            name=description['name'],
-                            description=description['description'],
-                            entity_ids=description['entity_ids'],
-                            days=description['days'])
+        schedule = Schedule(schedule_data['id'],
+                            name=schedule_data['name'],
+                            description=schedule_data['description'],
+                            entity_ids=schedule_data['entity_ids'],
+                            days=schedule_data['days'])
 
-        for event_description in description['events']:
-            event_type = \
-                get_component('scheduler.{}'.format(event_description['type']))
-            event = event_type.create(schedule, event_description)
-            schedule.add_event(event)
+        for event_data in schedule_data['events']:
+            event_listener_type = \
+                get_component('scheduler.{}'.format(event_data['type']))
+            event_listener = event_listener_type.create(schedule, event_data)
+            schedule.add_event_listener(event_listener)
 
-        schedule.schedule()
+        schedule.schedule(hass)
         return True
 
     with open(hass.get_config_path(_SCHEDULE_FILE)) as schedule_file:
@@ -69,10 +69,8 @@ def setup(hass, config):
 
 class Schedule(object):
     """ A Schedule """
-    def __init__(self, hass, schedule_id, name=None, description=None,
+    def __init__(self, schedule_id, name=None, description=None,
                  entity_ids=None, days=None):
-
-        self.hass = hass
 
         self.schedule_id = schedule_id
         self.name = name
@@ -82,27 +80,27 @@ class Schedule(object):
 
         self.days = days or [0, 1, 2, 3, 4, 5, 6]
 
-        self._events = []
+        self._event_listeners = []
 
-    def add_event(self, event):
+    def add_event_listener(self, event_listener):
         """ Add a event to the schedule """
-        self._events.append(event)
+        self._event_listeners.append(event_listener)
 
-    def schedule(self):
+    def schedule(self, hass):
         """ Schedule all the events in the schdule """
-        for event in self._events:
-            event.schedule()
+        for event in self._event_listeners:
+            event.schedule(hass)
 
 
-class Event(object):
+class EventListener(object):
     """ The base Event class that the schedule uses """
     def __init__(self, schedule):
         self._schedule = schedule
 
-    def schedule(self):
+    def schedule(self, hass):
         """ Schedule the event """
         pass
 
-    def execute(self):
+    def execute(self, hass):
         """ execute the event """
         pass
