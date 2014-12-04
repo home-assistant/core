@@ -6,7 +6,8 @@ Tests Home Assistant util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 import homeassistant.util as util
 
@@ -190,3 +191,33 @@ class TestUtil(unittest.TestCase):
 
         set1.update([1, 2], [5, 6])
         self.assertEqual([2, 3, 1, 5, 6], set1)
+
+    def test_add_cooldown(self):
+        """ Test the add cooldown decorator. """
+        calls = []
+
+        @util.AddCooldown(timedelta(milliseconds=500))
+        def test_cooldown():
+            calls.append(1)
+
+        self.assertEqual(0, len(calls))
+
+        test_cooldown()
+
+        self.assertEqual(1, len(calls))
+
+        test_cooldown()
+
+        self.assertEqual(1, len(calls))
+
+        time.sleep(.3)
+
+        test_cooldown()
+
+        self.assertEqual(1, len(calls))
+
+        time.sleep(.2)
+
+        test_cooldown()
+
+        self.assertEqual(2, len(calls))

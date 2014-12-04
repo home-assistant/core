@@ -1,7 +1,7 @@
 """ Supports scanning a Tomato router. """
 import logging
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 import threading
 
@@ -55,7 +55,6 @@ class TomatoDeviceScanner(object):
         self.logger = logging.getLogger("{}.{}".format(__name__, "Tomato"))
         self.lock = threading.Lock()
 
-        self.date_updated = None
         self.last_results = {"wldev": [], "dhcpd_lease": []}
 
         self.success_init = self._update_tomato_info()
@@ -71,10 +70,6 @@ class TomatoDeviceScanner(object):
     def get_device_name(self, device):
         """ Returns the name of the given device or None if we don't know. """
 
-        # Make sure there are results
-        if not self.date_updated:
-            self._update_tomato_info()
-
         filter_named = [item[0] for item in self.last_results['dhcpd_lease']
                         if item[2] == device]
 
@@ -83,16 +78,12 @@ class TomatoDeviceScanner(object):
         else:
             return filter_named[0]
 
+    @util.AddCooldown(MIN_TIME_BETWEEN_SCANS)
     def _update_tomato_info(self):
         """ Ensures the information from the Tomato router is up to date.
             Returns boolean if scanning successful. """
 
-        self.lock.acquire()
-
-        # if date_updated is None or the date is too old we scan for new data
-        if not self.date_updated or \
-           datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
-
+        with self.lock:
             self.logger.info("Scanning")
 
             try:
@@ -110,8 +101,6 @@ class TomatoDeviceScanner(object):
                         if param == 'wldev' or param == 'dhcpd_lease':
                             self.last_results[param] = \
                                 json.loads(value.replace("'", '"'))
-
-                    self.date_updated = datetime.now()
 
                     return True
 
@@ -146,13 +135,3 @@ class TomatoDeviceScanner(object):
                     "Failed to parse response from router")
 
                 return False
-
-            finally:
-                self.lock.release()
-
-        else:
-            # We acquired the lock before the IF check,
-            # release it before we return True
-            self.lock.release()
-
-            return True

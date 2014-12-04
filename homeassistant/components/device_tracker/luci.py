@@ -1,7 +1,7 @@
 """ Supports scanning a OpenWRT router. """
 import logging
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 import threading
 import requests
@@ -52,7 +52,6 @@ class LuciDeviceScanner(object):
 
         self.lock = threading.Lock()
 
-        self.date_updated = None
         self.last_results = {}
 
         self.token = _get_token(host, username, password)
@@ -88,29 +87,25 @@ class LuciDeviceScanner(object):
                     return
             return self.mac2name.get(device, None)
 
+    @util.AddCooldown(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Ensures the information from the Luci router is up to date.
             Returns boolean if scanning successful. """
         if not self.success_init:
             return False
+
         with self.lock:
-            # if date_updated is None or the date is too old we scan
-            # for new data
-            if not self.date_updated or \
-               datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
+            _LOGGER.info("Checking ARP")
 
-                _LOGGER.info("Checking ARP")
+            url = 'http://{}/cgi-bin/luci/rpc/sys'.format(self.host)
+            result = _req_json_rpc(url, 'net.arptable',
+                                   params={'auth': self.token})
+            if result:
+                self.last_results = [x['HW address'] for x in result]
 
-                url = 'http://{}/cgi-bin/luci/rpc/sys'.format(self.host)
-                result = _req_json_rpc(url, 'net.arptable',
-                                       params={'auth': self.token})
-                if result:
-                    self.last_results = [x['HW address'] for x in result]
-                    self.date_updated = datetime.now()
-                    return True
-                return False
+                return True
 
-            return True
+            return False
 
 
 def _req_json_rpc(url, method, *args, **kwargs):

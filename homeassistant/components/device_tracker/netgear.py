@@ -1,6 +1,6 @@
 """ Supports scanning a Netgear router. """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 import threading
 
 import homeassistant as ha
@@ -34,7 +34,6 @@ class NetgearDeviceScanner(object):
         host = config[ha.CONF_HOST]
         username, password = config[ha.CONF_USERNAME], config[ha.CONF_PASSWORD]
 
-        self.date_updated = None
         self.last_results = []
 
         try:
@@ -75,10 +74,6 @@ class NetgearDeviceScanner(object):
     def get_device_name(self, mac):
         """ Returns the name of the given device or None if we don't know. """
 
-        # Make sure there are results
-        if not self.date_updated:
-            self._update_info()
-
         filter_named = [device.name for device in self.last_results
                         if device.mac == mac]
 
@@ -87,6 +82,7 @@ class NetgearDeviceScanner(object):
         else:
             return None
 
+    @util.AddCooldown(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Retrieves latest information from the Netgear router.
             Returns boolean if scanning successful. """
@@ -94,18 +90,6 @@ class NetgearDeviceScanner(object):
             return
 
         with self.lock:
-            # if date_updated is None or the date is too old we scan for
-            # new data
-            if not self.date_updated or \
-               datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
+            _LOGGER.info("Scanning")
 
-                _LOGGER.info("Scanning")
-
-                self.last_results = self._api.get_attached_devices()
-
-                self.date_updated = datetime.now()
-
-                return
-
-            else:
-                return
+            self.last_results = self._api.get_attached_devices()

@@ -12,6 +12,7 @@ import datetime
 import re
 import enum
 import socket
+from functools import wraps
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
@@ -271,6 +272,45 @@ def validate_config(config, items, logger):
             errors_found = True
 
     return not errors_found
+
+
+class AddCooldown(object):
+    """
+    A method decorator to add a cooldown to a method.
+
+    If you set a cooldown of 5 seconds. Then if you call a method twice the
+    underlaying method will not be called if the second call was within
+    5 seconds of the first. None will be returned instead.
+
+    Makes a last_call attribute available on the wrapped method.
+    """
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self, min_time):
+        self.min_time = min_time
+
+    def __call__(self, method):
+        lock = threading.Lock()
+
+        @wraps(method)
+        def wrapper(*args, **kwargs):
+            """
+            Wrapper that allows wrapped to be called only once per min_time.
+            """
+            with lock:
+                now = datetime.datetime.now()
+                last_call = wrapper.last_call
+
+                if last_call is None or now - last_call > self.min_time:
+                    result = method(*args, **kwargs)
+                    wrapper.last_call = now
+                    return result
+                else:
+                    return None
+
+        wrapper.last_call = None
+
+        return wrapper
 
 
 # Reason why I decided to roll my own ThreadPool instead of using
