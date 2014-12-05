@@ -8,7 +8,7 @@ import collections
 from itertools import chain
 import threading
 import queue
-import datetime
+from datetime import datetime
 import re
 import enum
 import socket
@@ -52,7 +52,7 @@ def str_to_datetime(dt_str):
     @rtype: datetime
     """
     try:
-        return datetime.datetime.strptime(dt_str, DATE_STR_FORMAT)
+        return datetime.strptime(dt_str, DATE_STR_FORMAT)
     except ValueError:  # If dt_str did not match our format
         return None
 
@@ -68,7 +68,7 @@ def repr_helper(inp):
         return ", ".join(
             repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
-    elif isinstance(inp, datetime.datetime):
+    elif isinstance(inp, datetime):
         return datetime_to_str(inp)
     else:
         return str(inp)
@@ -274,23 +274,33 @@ def validate_config(config, items, logger):
     return not errors_found
 
 
-class AddCooldown(object):
+class Throttle(object):
     """
-    A method decorator to add a cooldown to a method.
+    A method decorator to add a cooldown to a method to prevent it from being
+    called more then 1 time within the timedelta interval `min_time` after it
+    returned its result.
 
-    If you set a cooldown of 5 seconds. Then if you call a method twice the
-    underlaying method will not be called if the second call was within
-    5 seconds of the first. None will be returned instead.
+    Calling a method a second time during the interval will return None.
 
-    Makes a last_call attribute available on the wrapped method.
+    Pass keyword argument `no_throttle=True` to the wrapped method to make
+    the call not throttled.
+
+    Decorator takes in an optional second timedelta interval to throttle the
+    'no_throttle' calls.
+
+    Adds a datetime attribute `last_call` to the method.
     """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, min_time):
+    def __init__(self, min_time, limit_no_throttle=None):
         self.min_time = min_time
+        self.limit_no_throttle = limit_no_throttle
 
     def __call__(self, method):
         lock = threading.Lock()
+
+        if self.limit_no_throttle is not None:
+            method = Throttle(self.limit_no_throttle)(method)
 
         @wraps(method)
         def wrapper(*args, **kwargs):
@@ -298,12 +308,14 @@ class AddCooldown(object):
             Wrapper that allows wrapped to be called only once per min_time.
             """
             with lock:
-                now = datetime.datetime.now()
                 last_call = wrapper.last_call
+                # Check if method is never called or no_throttle is given
+                force = last_call is None or kwargs.pop('no_throttle', False)
 
-                if last_call is None or now - last_call > self.min_time:
+                if force or datetime.now() - last_call > self.min_time:
+
                     result = method(*args, **kwargs)
-                    wrapper.last_call = now
+                    wrapper.last_call = datetime.now()
                     return result
                 else:
                     return None
@@ -418,7 +430,7 @@ def _threadpool_worker(work_queue, current_jobs, job_handler, quit_task):
             return
 
         # Add to current running jobs
-        job_log = (datetime.datetime.now(), job)
+        job_log = (datetime.now(), job)
         current_jobs.append(job_log)
 
         # Do the job

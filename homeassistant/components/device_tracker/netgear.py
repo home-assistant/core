@@ -82,7 +82,7 @@ class NetgearDeviceScanner(object):
         else:
             return None
 
-    @util.AddCooldown(MIN_TIME_BETWEEN_SCANS)
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Retrieves latest information from the Netgear router.
             Returns boolean if scanning successful. """

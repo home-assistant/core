@@ -1,14 +1,16 @@
 """ Support for Hue lights. """
 import logging
 import socket
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import homeassistant as ha
+import homeassistant.util as util
 from homeassistant.components import ToggleDevice, ATTR_FRIENDLY_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 PHUE_CONFIG_FILE = "phue.conf"
 
@@ -37,25 +39,9 @@ def get_lights(hass, config):
 
     lights = {}
 
-    def update_lights(force_reload=False):
-        """ Updates the light states. """
-        now = datetime.now()
-
-        try:
-            time_scans = now - update_lights.last_updated
-
-            # force_reload == True, return if updated in last second
-            # force_reload == False, return if last update was less then
-            # MIN_TIME_BETWEEN_SCANS ago
-            if force_reload and time_scans.seconds < 1 or \
-               not force_reload and time_scans < MIN_TIME_BETWEEN_SCANS:
-                return
-        except AttributeError:
-            # First time we run last_updated is not set, continue as usual
-            pass
-
-        update_lights.last_updated = now
-
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
+    def update_lights():
+        """ Updates the Hue light objects with latest info from the bridge. """
         try:
             api = bridge.get_api()
         except socket.error:
@@ -142,4 +128,4 @@ class HueLight(ToggleDevice):
 
     def update(self):
         """ Synchronize state with bridge. """
-        self.update_lights(True)
+        self.update_lights(no_throttle=True)

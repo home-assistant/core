@@ -87,7 +87,7 @@ class LuciDeviceScanner(object):
                     return
             return self.mac2name.get(device, None)
 
-    @util.AddCooldown(MIN_TIME_BETWEEN_SCANS)
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Ensures the information from the Luci router is up to date.
             Returns boolean if scanning successful. """

@@ -78,7 +78,7 @@ class TomatoDeviceScanner(object):
         else:
             return filter_named[0]
 
-    @util.AddCooldown(MIN_TIME_BETWEEN_SCANS)
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_tomato_info(self):
         """ Ensures the information from the Tomato router is up to date.
             Returns boolean if scanning successful. """

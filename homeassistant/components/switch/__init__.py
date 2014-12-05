@@ -4,7 +4,7 @@ homeassistant.components.switch
 Component to interface with various switches that can be controlled remotely.
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import homeassistant as ha
 import homeassistant.util as util
@@ -96,21 +96,16 @@ def setup(hass, config):
         ent_to_switch[entity_id] = switch
 
     # pylint: disable=unused-argument
-    def update_states(time, force_reload=False):
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
+    def update_states(now):
         """ Update states of all switches. """
 
-        # First time this method gets called, force_reload should be True
-        if force_reload or \
-           datetime.now() - update_states.last_updated > \
-           MIN_TIME_BETWEEN_SCANS:
+        logger.info("Updating switch states")
 
-            logger.info("Updating switch states")
-            update_states.last_updated = datetime.now()
+        for switch in switches:
+            switch.update_ha_state(hass)
 
-            for switch in switches:
-                switch.update_ha_state(hass)
-
-    update_states(None, True)
+    update_states(None)
 
     def handle_switch_service(service):
         """ Handles calls to the switch services. """

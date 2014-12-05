@@ -192,32 +192,65 @@ class TestUtil(unittest.TestCase):
         set1.update([1, 2], [5, 6])
         self.assertEqual([2, 3, 1, 5, 6], set1)
 
-    def test_add_cooldown(self):
+    def test_throttle(self):
         """ Test the add cooldown decorator. """
-        calls = []
+        calls1 = []
 
-        @util.AddCooldown(timedelta(milliseconds=500))
-        def test_cooldown():
-            calls.append(1)
+        @util.Throttle(timedelta(milliseconds=500))
+        def test_throttle1():
+            calls1.append(1)
 
-        self.assertEqual(0, len(calls))
+        calls2 = []
 
-        test_cooldown()
+        @util.Throttle(
+            timedelta(milliseconds=500), timedelta(milliseconds=250))
+        def test_throttle2():
+            calls2.append(1)
 
-        self.assertEqual(1, len(calls))
+        # Ensure init is ok
+        self.assertEqual(0, len(calls1))
+        self.assertEqual(0, len(calls2))
 
-        test_cooldown()
+        # Call first time and ensure methods got called
+        test_throttle1()
+        test_throttle2()
 
-        self.assertEqual(1, len(calls))
+        self.assertEqual(1, len(calls1))
+        self.assertEqual(1, len(calls2))
 
+        # Call second time. Methods should not get called
+        test_throttle1()
+        test_throttle2()
+
+        self.assertEqual(1, len(calls1))
+        self.assertEqual(1, len(calls2))
+
+        # Call again, overriding throttle, only first one should fire
+        test_throttle1(no_throttle=True)
+        test_throttle2(no_throttle=True)
+
+        self.assertEqual(2, len(calls1))
+        self.assertEqual(1, len(calls2))
+
+        # Sleep past the no throttle interval for throttle2
         time.sleep(.3)
 
-        test_cooldown()
+        test_throttle1()
+        test_throttle2()
 
-        self.assertEqual(1, len(calls))
+        self.assertEqual(2, len(calls1))
+        self.assertEqual(1, len(calls2))
 
-        time.sleep(.2)
+        test_throttle1(no_throttle=True)
+        test_throttle2(no_throttle=True)
 
-        test_cooldown()
+        self.assertEqual(3, len(calls1))
+        self.assertEqual(2, len(calls2))
 
-        self.assertEqual(2, len(calls))
+        time.sleep(.5)
+
+        test_throttle1()
+        test_throttle2()
+
+        self.assertEqual(4, len(calls1))
+        self.assertEqual(3, len(calls2))
