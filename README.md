@@ -234,9 +234,9 @@ Home Assistent runs a webserver accessible on port 8123.
 
 In the package `homeassistant.remote` a Python API on top of the HTTP API can be found.
 
-All API calls have to be accompanied by the header "HA-Access" with as value the api password (as specified in `home-assistant.conf`). The API returns only JSON encoded objects. Successful calls will return status code 200 or 201.
+The API accepts and returns only JSON encoded objects. All API calls have to be accompanied by the header "HA-Access" with as value the api password (as specified in `home-assistant.conf`).
 
-Other status codes that can occur are:
+Successful calls will return status code 200 or 201. Other status codes that can return are:
  - 400 (Bad Request)
  - 401 (Unauthorized)
  - 404 (Not Found)
@@ -254,7 +254,7 @@ Returns message if API is up and running.
 ```
 
 **/api/events - GET**<br>
-Returns a dict with as keys the events and as value the number of listeners.
+Returns an array of event objects. Each event object contain event name and listener count.
 
 ```json
 [
@@ -270,7 +270,7 @@ Returns a dict with as keys the events and as value the number of listeners.
 ```
 
 **/api/services - GET**<br>
-Returns a dict with as keys the domain and as value a list of published services.
+Returns an array of service objects. Each object contains the domain and which services it contains.
 
 ```json
 [
@@ -291,7 +291,7 @@ Returns a dict with as keys the domain and as value a list of published services
 ```
 
 **/api/states - GET**<br>
-Returns a dict with as keys the entity_ids and as value the state.
+Returns an array of state objects. Each state has the following attributes: entity_id, state, last_changed and attributes.
 
 ```json
 [
@@ -314,7 +314,7 @@ Returns a dict with as keys the entity_ids and as value the state.
 ```
 
 **/api/states/&lt;entity_id>** - GET<br>
-Returns the current state from an entity
+Returns a state object for specified entity_id. Returns 404 if not found.
 
 ```json
 {
@@ -329,9 +329,12 @@ Returns the current state from an entity
 ```
 
 **/api/states/&lt;entity_id>** - POST<br>
-Updates the current state of an entity. Returns status code 201 if successful with location header of updated resource and the new state in the body.<br>
-parameter: new_state - string<br>
-optional parameter: attributes - JSON encoded object
+Updates or creates the current state of an entity.
+
+Return code is 200 if the entity existed, 201 if the state of a new entity was set. A location header will be returned with the url of the new resource. The response body will contain a JSON encoded State object.<br>
+<br>
+parameter: state - string<br>
+optional parameter: attributes - JSON object
 
 ```json
 {
