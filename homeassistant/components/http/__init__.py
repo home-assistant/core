@@ -157,9 +157,9 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
 
     # pylint: disable=too-many-arguments
-    def __init__(self, server_address, RequestHandlerClass,
+    def __init__(self, server_address, request_handler_class,
                  hass, api_password, development=False):
-        super().__init__(server_address, RequestHandlerClass)
+        super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
         self.hass = hass

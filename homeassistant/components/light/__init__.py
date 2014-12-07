@@ -235,7 +235,6 @@ def setup(hass, config):
             profile = profiles.get(dat.get(ATTR_PROFILE))
 
             if profile:
-                # *color, bright = profile
                 *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
 
             if ATTR_BRIGHTNESS in dat:
