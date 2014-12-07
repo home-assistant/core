@@ -1,12 +1,16 @@
 """
-homeassistant.components.keyboard
+homeassistant.keyboard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to emulate keyboard presses on host machine.
 """
 import logging
 
-import homeassistant.components as components
+from homeassistant.const import (
+    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK,
+    SERVICE_MEDIA_PLAY_PAUSE)
+
 
 DOMAIN = "keyboard"
 DEPENDENCIES = []
@@ -14,32 +18,32 @@ DEPENDENCIES = []
 
 def volume_up(hass):
     """ Press the keyboard button for volume up. """
-    hass.services.call(DOMAIN, components.SERVICE_VOLUME_UP)
+    hass.services.call(DOMAIN, SERVICE_VOLUME_UP)
 
 
 def volume_down(hass):
     """ Press the keyboard button for volume down. """
-    hass.services.call(DOMAIN, components.SERVICE_VOLUME_DOWN)
+    hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN)
 
 
 def volume_mute(hass):
     """ Press the keyboard button for muting volume. """
-    hass.services.call(DOMAIN, components.SERVICE_VOLUME_MUTE)
+    hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE)
 
 
 def media_play_pause(hass):
     """ Press the keyboard button for play/pause. """
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE)
 
 
 def media_next_track(hass):
     """ Press the keyboard button for next track. """
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
 
 
 def media_prev_track(hass):
     """ Press the keyboard button for prev track. """
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PREV_TRACK)
 
 
 # pylint: disable=unused-argument
@@ -56,27 +60,27 @@ def setup(hass, config):
     keyboard = pykeyboard.PyKeyboard()
     keyboard.special_key_assignment()
 
-    hass.services.register(DOMAIN, components.SERVICE_VOLUME_UP,
+    hass.services.register(DOMAIN, SERVICE_VOLUME_UP,
                            lambda service:
                            keyboard.tap_key(keyboard.volume_up_key))
 
-    hass.services.register(DOMAIN, components.SERVICE_VOLUME_DOWN,
+    hass.services.register(DOMAIN, SERVICE_VOLUME_DOWN,
                            lambda service:
                            keyboard.tap_key(keyboard.volume_down_key))
 
-    hass.services.register(DOMAIN, components.SERVICE_VOLUME_MUTE,
+    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE,
                            lambda service:
                            keyboard.tap_key(keyboard.volume_mute_key))
 
-    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE,
                            lambda service:
                            keyboard.tap_key(keyboard.media_play_pause_key))
 
-    hass.services.register(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_NEXT_TRACK,
                            lambda service:
                            keyboard.tap_key(keyboard.media_next_track_key))
 
-    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_PREV_TRACK,
                            lambda service:
                            keyboard.tap_key(keyboard.media_prev_track_key))
 

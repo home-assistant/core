@@ -10,7 +10,7 @@ import unittest
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
-from helper import get_test_home_assistant, MockModule
+from helpers import get_test_home_assistant, MockModule
 
 
 class TestLoader(unittest.TestCase):

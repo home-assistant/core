@@ -9,9 +9,8 @@ import logging
 
 import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import (STATE_ON, STATE_OFF,
-                                      STATE_HOME, STATE_NOT_HOME,
-                                      ATTR_ENTITY_ID)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME)
 
 DOMAIN = "group"
 DEPENDENCIES = []

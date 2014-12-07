@@ -6,12 +6,12 @@ Component to interface with various switches that can be controlled remotely.
 import logging
 from datetime import timedelta
 
-import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.loader import get_component
-from homeassistant.components import (
-    group, extract_entity_ids, STATE_ON,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.const import (
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.helpers import (
+    extract_entity_ids, platform_devices_from_config)
+from homeassistant.components import group
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -53,27 +53,13 @@ def turn_off(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-# pylint: disable=too-many-branches
 def setup(hass, config):
     """ Track states and offer events for switches. """
     logger = logging.getLogger(__name__)
 
-    if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, logger):
-        return False
+    switches = platform_devices_from_config(config, DOMAIN, hass, logger)
 
-    switch_type = config[DOMAIN][ha.CONF_TYPE]
-
-    switch_init = get_component('switch.{}'.format(switch_type))
-
-    if switch_init is None:
-        logger.error("Error loading switch component %s", switch_type)
-
-        return False
-
-    switches = switch_init.get_switches(hass, config[DOMAIN])
-
-    if len(switches) == 0:
-        logger.error("No switches found")
+    if not switches:
         return False
 
     # Setup a dict mapping entity IDs to devices
@@ -90,7 +76,7 @@ def setup(hass, config):
 
         entity_id = util.ensure_unique_string(
             ENTITY_ID_FORMAT.format(util.slugify(name)),
-            list(ent_to_switch.keys()))
+            ent_to_switch.keys())
 
         switch.entity_id = entity_id
         ent_to_switch[entity_id] = switch

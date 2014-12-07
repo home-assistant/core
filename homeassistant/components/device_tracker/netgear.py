@@ -3,8 +3,9 @@ import logging
 from datetime import timedelta
 import threading
 
-import homeassistant as ha
-import homeassistant.util as util
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers import validate_config
+from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
@@ -16,10 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a Netgear scanner. """
-    if not util.validate_config(config,
-                                {DOMAIN: [ha.CONF_HOST, ha.CONF_USERNAME,
-                                          ha.CONF_PASSWORD]},
-                                _LOGGER):
+    if not validate_config(config,
+                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
+                           _LOGGER):
         return None
 
     scanner = NetgearDeviceScanner(config[DOMAIN])
@@ -31,8 +31,8 @@ class NetgearDeviceScanner(object):
     """ This class queries a Netgear wireless router using the SOAP-api. """
 
     def __init__(self, config):
-        host = config[ha.CONF_HOST]
-        username, password = config[ha.CONF_USERNAME], config[ha.CONF_PASSWORD]
+        host = config[CONF_HOST]
+        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
         self.last_results = []
 
@@ -82,7 +82,7 @@ class NetgearDeviceScanner(object):
         else:
             return None
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Retrieves latest information from the Netgear router.
             Returns boolean if scanning successful. """

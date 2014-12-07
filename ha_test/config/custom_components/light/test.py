@@ -6,8 +6,8 @@ Provides a mock switch platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-import homeassistant.components as components
-from ha_test.helper import MockToggleDevice
+from homeassistant.const import STATE_ON, STATE_OFF
+from ha_test.helpers import MockToggleDevice
 
 
 DEVICES = []
@@ -18,9 +18,9 @@ def init(empty=False):
     global DEVICES
 
     DEVICES = [] if empty else [
-        MockToggleDevice('Ceiling', components.STATE_ON),
-        MockToggleDevice('Ceiling', components.STATE_OFF),
-        MockToggleDevice(None, components.STATE_OFF)
+        MockToggleDevice('Ceiling', STATE_ON),
+        MockToggleDevice('Ceiling', STATE_OFF),
+        MockToggleDevice(None, STATE_OFF)
     ]
 
 

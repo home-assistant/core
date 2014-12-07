@@ -1,12 +1,12 @@
 """ Support for WeMo switchces. """
 import logging
 
-import homeassistant as ha
-from homeassistant.components import ToggleDevice, ATTR_FRIENDLY_NAME
+from homeassistant.helpers import ToggleDevice
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOSTS
 
 
 # pylint: disable=unused-argument
-def get_switches(hass, config):
+def get_devices(hass, config):
     """ Find and return WeMo switches. """
 
     try:
@@ -21,9 +21,9 @@ def get_switches(hass, config):
 
         return []
 
-    if ha.CONF_HOSTS in config:
+    if CONF_HOSTS in config:
         switches = (pywemo.device_from_host(host) for host
-                    in config[ha.CONF_HOSTS].split(","))
+                    in config[CONF_HOSTS].split(","))
 
     else:
         logging.getLogger(__name__).info("Scanning for WeMo devices")

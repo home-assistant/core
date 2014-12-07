@@ -83,6 +83,10 @@ from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant as ha
+from homeassistant.const import (
+    SERVER_PORT, URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
+    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, AUTH_HEADER)
+from homeassistant.helpers import validate_config
 import homeassistant.remote as rem
 import homeassistant.util as util
 from . import frontend
@@ -116,8 +120,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Sets up the HTTP API and debug interface. """
 
-    if not util.validate_config(config, {DOMAIN: [CONF_API_PASSWORD]},
-                                _LOGGER):
+    if not validate_config(config, {DOMAIN: [CONF_API_PASSWORD]}, _LOGGER):
         return False
 
     api_password = config[DOMAIN][CONF_API_PASSWORD]
@@ -125,7 +128,7 @@ def setup(hass, config):
     # If no server host is given, accept all incoming requests
     server_host = config[DOMAIN].get(CONF_SERVER_HOST, '0.0.0.0')
 
-    server_port = config[DOMAIN].get(CONF_SERVER_PORT, rem.SERVER_PORT)
+    server_port = config[DOMAIN].get(CONF_SERVER_PORT, SERVER_PORT)
 
     development = config[DOMAIN].get(CONF_DEVELOPMENT, "") == "1"
 
@@ -196,10 +199,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         ('GET', URL_ROOT, '_handle_get_root'),
 
         # /api - for validation purposes
-        ('GET', rem.URL_API, '_handle_get_api'),
+        ('GET', URL_API, '_handle_get_api'),
 
         # /states
-        ('GET', rem.URL_API_STATES, '_handle_get_api_states'),
+        ('GET', URL_API_STATES, '_handle_get_api_states'),
         ('GET',
          re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
          '_handle_get_api_states_entity'),
@@ -211,13 +214,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
          '_handle_post_state_entity'),
 
         # /events
-        ('GET', rem.URL_API_EVENTS, '_handle_get_api_events'),
+        ('GET', URL_API_EVENTS, '_handle_get_api_events'),
         ('POST',
          re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
          '_handle_api_post_events_event'),
 
         # /services
-        ('GET', rem.URL_API_SERVICES, '_handle_get_api_services'),
+        ('GET', URL_API_SERVICES, '_handle_get_api_services'),
         ('POST',
          re.compile((r'/api/services/'
                      r'(?P<domain>[a-zA-Z\._0-9]+)/'
@@ -225,8 +228,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
          '_handle_post_api_services_domain_service'),
 
         # /event_forwarding
-        ('POST', rem.URL_API_EVENT_FORWARD, '_handle_post_api_event_forward'),
-        ('DELETE', rem.URL_API_EVENT_FORWARD,
+        ('POST', URL_API_EVENT_FORWARD, '_handle_post_api_event_forward'),
+        ('DELETE', URL_API_EVENT_FORWARD,
          '_handle_delete_api_event_forward'),
 
         # Static files
@@ -270,7 +273,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        api_password = self.headers.get(rem.AUTH_HEADER)
+        api_password = self.headers.get(AUTH_HEADER)
 
         if not api_password and DATA_API_PASSWORD in data:
             api_password = data[DATA_API_PASSWORD]
@@ -427,7 +430,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self._write_json(
             state.as_dict(),
             status_code=status_code,
-            location=rem.URL_API_STATES_ENTITY.format(entity_id))
+            location=URL_API_STATES_ENTITY.format(entity_id))
 
     def _handle_get_api_events(self, path_match, data):
         """ Handles getting overview of event listeners. """

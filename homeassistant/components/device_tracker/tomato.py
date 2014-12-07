@@ -7,8 +7,9 @@ import threading
 
 import requests
 
-import homeassistant as ha
-import homeassistant.util as util
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers import validate_config
+from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
@@ -22,10 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a Tomato scanner. """
-    if not util.validate_config(config,
-                                {DOMAIN: [ha.CONF_HOST, ha.CONF_USERNAME,
-                                          ha.CONF_PASSWORD, CONF_HTTP_ID]},
-                                _LOGGER):
+    if not validate_config(config,
+                           {DOMAIN: [CONF_HOST, CONF_USERNAME,
+                                     CONF_PASSWORD, CONF_HTTP_ID]},
+                           _LOGGER):
         return None
 
     return TomatoDeviceScanner(config[DOMAIN])
@@ -40,8 +41,8 @@ class TomatoDeviceScanner(object):
     """
 
     def __init__(self, config):
-        host, http_id = config[ha.CONF_HOST], config[CONF_HTTP_ID]
-        username, password = config[ha.CONF_USERNAME], config[ha.CONF_PASSWORD]
+        host, http_id = config[CONF_HOST], config[CONF_HTTP_ID]
+        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
         self.req = requests.Request('POST',
                                     'http://{}/update.cgi'.format(host),
@@ -78,7 +79,7 @@ class TomatoDeviceScanner(object):
         else:
             return filter_named[0]
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_tomato_info(self):
         """ Ensures the information from the Tomato router is up to date.
             Returns boolean if scanning successful. """

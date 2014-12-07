@@ -15,31 +15,13 @@ import re
 import datetime as dt
 import functools as ft
 
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
+    EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL)
 import homeassistant.util as util
 
-MATCH_ALL = '*'
-
 DOMAIN = "homeassistant"
-
-SERVICE_HOMEASSISTANT_STOP = "stop"
-
-EVENT_HOMEASSISTANT_START = "homeassistant_start"
-EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
-EVENT_STATE_CHANGED = "state_changed"
-EVENT_TIME_CHANGED = "time_changed"
-EVENT_CALL_SERVICE = "services.call"
-
-ATTR_NOW = "now"
-ATTR_DOMAIN = "domain"
-ATTR_SERVICE = "service"
-
-CONF_LATITUDE = "latitude"
-CONF_LONGITUDE = "longitude"
-CONF_TYPE = "type"
-CONF_HOST = "host"
-CONF_HOSTS = "hosts"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
 
 # How often time_changed event should fire
 TIMER_INTERVAL = 10  # seconds

@@ -9,9 +9,13 @@ import logging
 import unittest
 
 import homeassistant as ha
-import homeassistant.components as components
+from homeassistant.const import (
+    SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK, ATTR_ENTITY_ID,
+    CONF_HOSTS)
 import homeassistant.components.chromecast as chromecast
-from helper import mock_service
+from helpers import mock_service
 
 
 def setUpModule():   # pylint: disable=invalid-name
@@ -45,14 +49,14 @@ class TestChromecast(unittest.TestCase):
         Test if the call service methods conver to correct service calls.
         """
         services = {
-            components.SERVICE_TURN_OFF: chromecast.turn_off,
-            components.SERVICE_VOLUME_UP: chromecast.volume_up,
-            components.SERVICE_VOLUME_DOWN: chromecast.volume_down,
-            components.SERVICE_MEDIA_PLAY_PAUSE: chromecast.media_play_pause,
-            components.SERVICE_MEDIA_PLAY: chromecast.media_play,
-            components.SERVICE_MEDIA_PAUSE: chromecast.media_pause,
-            components.SERVICE_MEDIA_NEXT_TRACK: chromecast.media_next_track,
-            components.SERVICE_MEDIA_PREV_TRACK: chromecast.media_prev_track
+            SERVICE_TURN_OFF: chromecast.turn_off,
+            SERVICE_VOLUME_UP: chromecast.volume_up,
+            SERVICE_VOLUME_DOWN: chromecast.volume_down,
+            SERVICE_MEDIA_PLAY_PAUSE: chromecast.media_play_pause,
+            SERVICE_MEDIA_PLAY: chromecast.media_play,
+            SERVICE_MEDIA_PAUSE: chromecast.media_pause,
+            SERVICE_MEDIA_NEXT_TRACK: chromecast.media_next_track,
+            SERVICE_MEDIA_PREV_TRACK: chromecast.media_prev_track
         }
 
         for service_name, service_method in services.items():
@@ -75,7 +79,7 @@ class TestChromecast(unittest.TestCase):
             self.assertEqual(call.domain, chromecast.DOMAIN)
             self.assertEqual(call.service, service_name)
             self.assertEqual(call.data,
-                             {components.ATTR_ENTITY_ID: self.test_entity})
+                             {ATTR_ENTITY_ID: self.test_entity})
 
     def test_setup(self):
         """
@@ -84,4 +88,4 @@ class TestChromecast(unittest.TestCase):
         In an ideal world we would create a mock pychromecast API..
         """
         self.assertFalse(chromecast.setup(
-            self.hass, {chromecast.DOMAIN: {ha.CONF_HOSTS: '127.0.0.1'}}))
+            self.hass, {chromecast.DOMAIN: {CONF_HOSTS: '127.0.0.1'}}))

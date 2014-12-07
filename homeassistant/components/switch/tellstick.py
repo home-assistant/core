@@ -1,7 +1,8 @@
 """ Support for Tellstick switches. """
 import logging
 
-from homeassistant.components import ToggleDevice, ATTR_FRIENDLY_NAME
+from homeassistant.helpers import ToggleDevice
+from homeassistant.const import ATTR_FRIENDLY_NAME
 
 try:
     import tellcore.constants as tc_constants
@@ -11,7 +12,7 @@ except ImportError:
 
 
 # pylint: disable=unused-argument
-def get_switches(hass, config):
+def get_devices(hass, config):
     """ Find and return Tellstick switches. """
     try:
         import tellcore.telldus as telldus

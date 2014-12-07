@@ -8,7 +8,7 @@ the state of the sun and devices.
 import logging
 from datetime import datetime, timedelta
 
-import homeassistant.components as components
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from . import light, sun, device_tracker, group
 
 DOMAIN = "device_sun_light_trigger"
@@ -108,7 +108,7 @@ def setup(hass, config):
 
         # Specific device came home ?
         if entity != device_tracker.ENTITY_ID_ALL_DEVICES and \
-           new_state.state == components.STATE_HOME:
+           new_state.state == STATE_HOME:
 
             # These variables are needed for the elif check
             now = datetime.now()
@@ -143,7 +143,7 @@ def setup(hass, config):
 
         # Did all devices leave the house?
         elif (entity == device_tracker.ENTITY_ID_ALL_DEVICES and
-              new_state.state == components.STATE_NOT_HOME and lights_are_on
+              new_state.state == STATE_NOT_HOME and lights_are_on
               and not disable_turn_off):
 
             logger.info(
@@ -154,12 +154,12 @@ def setup(hass, config):
     # Track home coming of each device
     hass.states.track_change(
         device_entity_ids, check_light_on_dev_state_change,
-        components.STATE_NOT_HOME, components.STATE_HOME)
+        STATE_NOT_HOME, STATE_HOME)
 
     # Track when all devices are gone to shut down lights
     hass.states.track_change(
         device_tracker.ENTITY_ID_ALL_DEVICES,
         check_light_on_dev_state_change,
-        components.STATE_HOME, components.STATE_NOT_HOME)
+        STATE_HOME, STATE_NOT_HOME)
 
     return True

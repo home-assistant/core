@@ -9,7 +9,7 @@ import unittest
 import logging
 
 import homeassistant as ha
-import homeassistant.components as comps
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME
 import homeassistant.components.group as group
 
 
@@ -25,9 +25,9 @@ class TestComponentsGroup(unittest.TestCase):
         """ Init needed objects. """
         self.hass = ha.HomeAssistant()
 
-        self.hass.states.set('light.Bowl', comps.STATE_ON)
-        self.hass.states.set('light.Ceiling', comps.STATE_OFF)
-        self.hass.states.set('switch.AC', comps.STATE_OFF)
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        self.hass.states.set('switch.AC', STATE_OFF)
         group.setup_group(self.hass, 'init_group',
                           ['light.Bowl', 'light.Ceiling'], False)
         group.setup_group(self.hass, 'mixed_group',
@@ -47,27 +47,27 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIn(self.group_name, self.hass.states.entity_ids())
 
         group_state = self.hass.states.get(self.group_name)
-        self.assertEqual(comps.STATE_ON, group_state.state)
+        self.assertEqual(STATE_ON, group_state.state)
         self.assertTrue(group_state.attributes[group.ATTR_AUTO])
 
         # Turn the Bowl off and see if group turns off
-        self.hass.states.set('light.Bowl', comps.STATE_OFF)
+        self.hass.states.set('light.Bowl', STATE_OFF)
 
         self.hass._pool.block_till_done()
 
         group_state = self.hass.states.get(self.group_name)
-        self.assertEqual(comps.STATE_OFF, group_state.state)
+        self.assertEqual(STATE_OFF, group_state.state)
 
         # Turn the Ceiling on and see if group turns on
-        self.hass.states.set('light.Ceiling', comps.STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_ON)
 
         self.hass._pool.block_till_done()
 
         group_state = self.hass.states.get(self.group_name)
-        self.assertEqual(comps.STATE_ON, group_state.state)
+        self.assertEqual(STATE_ON, group_state.state)
 
         # Try to setup a group with mixed groupable states
-        self.hass.states.set('device_tracker.Paulus', comps.STATE_HOME)
+        self.hass.states.set('device_tracker.Paulus', STATE_HOME)
         self.assertFalse(group.setup_group(
             self.hass, 'person_and_light',
             ['light.Bowl', 'device_tracker.Paulus']))
@@ -91,12 +91,12 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test__get_group_type(self):
         """ Test _get_group_type method. """
-        self.assertEqual('on_off', group._get_group_type(comps.STATE_ON))
-        self.assertEqual('on_off', group._get_group_type(comps.STATE_OFF))
+        self.assertEqual('on_off', group._get_group_type(STATE_ON))
+        self.assertEqual('on_off', group._get_group_type(STATE_OFF))
         self.assertEqual('home_not_home',
-                         group._get_group_type(comps.STATE_HOME))
+                         group._get_group_type(STATE_HOME))
         self.assertEqual('home_not_home',
-                         group._get_group_type(comps.STATE_NOT_HOME))
+                         group._get_group_type(STATE_NOT_HOME))
 
         # Unsupported state
         self.assertIsNone(group._get_group_type('unsupported_state'))
@@ -104,7 +104,7 @@ class TestComponentsGroup(unittest.TestCase):
     def test_is_on(self):
         """ Test is_on method. """
         self.assertTrue(group.is_on(self.hass, self.group_name))
-        self.hass.states.set('light.Bowl', comps.STATE_OFF)
+        self.hass.states.set('light.Bowl', STATE_OFF)
         self.hass._pool.block_till_done()
         self.assertFalse(group.is_on(self.hass, self.group_name))
 
@@ -159,5 +159,5 @@ class TestComponentsGroup(unittest.TestCase):
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('second_group'))
 
-        self.assertEqual(comps.STATE_ON, group_state.state)
+        self.assertEqual(STATE_ON, group_state.state)
         self.assertFalse(group_state.attributes[group.ATTR_AUTO])

@@ -9,10 +9,10 @@ import unittest
 
 import homeassistant as ha
 import homeassistant.loader as loader
-from homeassistant.components import get_component, STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 import homeassistant.components.switch as switch
 
-from helper import get_test_home_assistant
+from helpers import get_test_home_assistant
 
 
 class TestSwitch(unittest.TestCase):
@@ -22,11 +22,11 @@ class TestSwitch(unittest.TestCase):
         self.hass = get_test_home_assistant()
         loader.prepare(self.hass)
 
-        platform = get_component('switch.test')
+        platform = loader.get_component('switch.test')
 
         platform.init()
         self.assertTrue(switch.setup(
-            self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
+            self.hass, {switch.DOMAIN: {CONF_PLATFORM: 'test'}}
         ))
 
         # Switch 1 is ON, switch 2 is OFF
@@ -90,15 +90,27 @@ class TestSwitch(unittest.TestCase):
 
         # Test with non-existing component
         self.assertFalse(switch.setup(
-            self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'nonexisting'}}
+            self.hass, {switch.DOMAIN: {CONF_PLATFORM: 'nonexisting'}}
         ))
 
         # Test if switch component returns 0 switches
-        get_component('switch.test').init(True)
+        test_platform = loader.get_component('switch.test')
+        test_platform.init(True)
 
         self.assertEqual(
-            [], get_component('switch.test').get_switches(None, None))
+            [], test_platform.get_switches(None, None))
 
         self.assertFalse(switch.setup(
-            self.hass, {switch.DOMAIN: {ha.CONF_TYPE: 'test'}}
+            self.hass, {switch.DOMAIN: {CONF_PLATFORM: 'test'}}
+        ))
+
+        # Test if we can load 2 platforms
+        loader.set_component('switch.test2', test_platform)
+        test_platform.init(False)
+
+        self.assertTrue(switch.setup(
+            self.hass, {
+                switch.DOMAIN: {CONF_PLATFORM: 'test'},
+                '{} 2'.format(switch.DOMAIN): {CONF_PLATFORM: 'test2'},
+            }
         ))

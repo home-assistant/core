@@ -52,12 +52,12 @@ import logging
 import os
 import csv
 
-import homeassistant as ha
-from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.components import (
-    group, extract_entity_ids, STATE_ON,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.const import (
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.helpers import (
+    extract_entity_ids, platform_devices_from_config)
+from homeassistant.components import group
 
 
 DOMAIN = "light"
@@ -138,9 +138,6 @@ def turn_off(hass, entity_id=None, transition=None):
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
 
-    if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, _LOGGER):
-        return False
-
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),
                                   LIGHT_PROFILES_FILE),
@@ -169,20 +166,9 @@ def setup(hass, config):
 
                     return False
 
-    # Load platform
-    light_type = config[DOMAIN][ha.CONF_TYPE]
+    lights = platform_devices_from_config(config, DOMAIN, hass, _LOGGER)
 
-    light_init = get_component('light.{}'.format(light_type))
-
-    if light_init is None:
-        _LOGGER.error("Unknown light type specified: %s", light_type)
-
-        return False
-
-    lights = light_init.get_lights(hass, config[DOMAIN])
-
-    if len(lights) == 0:
-        _LOGGER.error("No lights found")
+    if not lights:
         return False
 
     ent_to_light = {}
@@ -198,7 +184,7 @@ def setup(hass, config):
 
         entity_id = util.ensure_unique_string(
             ENTITY_ID_FORMAT.format(util.slugify(name)),
-            list(ent_to_light.keys()))
+            ent_to_light.keys())
 
         light.entity_id = entity_id
         ent_to_light[entity_id] = light

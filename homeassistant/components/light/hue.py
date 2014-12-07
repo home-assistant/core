@@ -3,9 +3,9 @@ import logging
 import socket
 from datetime import timedelta
 
-import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.components import ToggleDevice, ATTR_FRIENDLY_NAME
+from homeassistant.helpers import ToggleDevice
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION)
 
@@ -15,7 +15,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 PHUE_CONFIG_FILE = "phue.conf"
 
 
-def get_lights(hass, config):
+def get_devices(hass, config):
     """ Gets the Hue lights. """
     logger = logging.getLogger(__name__)
     try:
@@ -25,7 +25,7 @@ def get_lights(hass, config):
 
         return []
 
-    host = config.get(ha.CONF_HOST, None)
+    host = config.get(CONF_HOST, None)
 
     try:
         bridge = phue.Bridge(

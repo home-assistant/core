@@ -9,7 +9,7 @@ import unittest
 
 import homeassistant as ha
 import homeassistant.components.demo as demo
-from homeassistant.components import (
+from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
 
 

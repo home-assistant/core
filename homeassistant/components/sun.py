@@ -8,7 +8,9 @@ import logging
 from datetime import datetime, timedelta
 
 import homeassistant as ha
-import homeassistant.util as util
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.helpers import validate_config
+from homeassistant.util import str_to_datetime, datetime_to_str
 
 DEPENDENCIES = []
 DOMAIN = "sun"
@@ -35,7 +37,7 @@ def next_setting(hass, entity_id=None):
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return util.str_to_datetime(state.attributes[STATE_ATTR_NEXT_SETTING])
+        return str_to_datetime(state.attributes[STATE_ATTR_NEXT_SETTING])
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_SETTING does not exist
@@ -49,7 +51,7 @@ def next_rising(hass, entity_id=None):
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return util.str_to_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
+        return str_to_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_RISING does not exist
@@ -60,10 +62,9 @@ def setup(hass, config):
     """ Tracks the state of the sun. """
     logger = logging.getLogger(__name__)
 
-    if not util.validate_config(config,
-                                {ha.DOMAIN: [ha.CONF_LATITUDE,
-                                             ha.CONF_LONGITUDE]},
-                                logger):
+    if not validate_config(config,
+                           {ha.DOMAIN: [CONF_LATITUDE, CONF_LONGITUDE]},
+                           logger):
         return False
 
     try:
@@ -74,8 +75,8 @@ def setup(hass, config):
 
     sun = ephem.Sun()  # pylint: disable=no-member
 
-    latitude = config[ha.DOMAIN][ha.CONF_LATITUDE]
-    longitude = config[ha.DOMAIN][ha.CONF_LONGITUDE]
+    latitude = config[ha.DOMAIN][CONF_LATITUDE]
+    longitude = config[ha.DOMAIN][CONF_LONGITUDE]
 
     # Validate latitude and longitude
     observer = ephem.Observer()
@@ -123,8 +124,8 @@ def setup(hass, config):
                     new_state, next_change.strftime("%H:%M"))
 
         state_attributes = {
-            STATE_ATTR_NEXT_RISING: util.datetime_to_str(next_rising_dt),
-            STATE_ATTR_NEXT_SETTING: util.datetime_to_str(next_setting_dt)
+            STATE_ATTR_NEXT_RISING: datetime_to_str(next_rising_dt),
+            STATE_ATTR_NEXT_SETTING: datetime_to_str(next_setting_dt)
         }
 
         hass.states.set(ENTITY_ID, new_state, state_attributes)

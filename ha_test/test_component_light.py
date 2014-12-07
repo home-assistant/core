@@ -11,12 +11,12 @@ import os
 import homeassistant as ha
 import homeassistant.loader as loader
 import homeassistant.util as util
-from homeassistant.components import (
-    get_component, ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
+from homeassistant.const import (
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_TYPE,
     SERVICE_TURN_ON, SERVICE_TURN_OFF)
 import homeassistant.components.light as light
 
-from helper import mock_service, get_test_home_assistant
+from helpers import mock_service, get_test_home_assistant
 
 
 class TestLight(unittest.TestCase):
@@ -98,11 +98,11 @@ class TestLight(unittest.TestCase):
 
     def test_services(self):
         """ Test the provided services. """
-        platform = get_component('light.test')
+        platform = loader.get_component('light.test')
 
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}))
+            light.setup(self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}))
 
         dev1, dev2, dev3 = platform.get_lights(None, None)
 
@@ -223,22 +223,22 @@ class TestLight(unittest.TestCase):
 
         # Test with non-existing component
         self.assertFalse(light.setup(
-            self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'nonexisting'}}
+            self.hass, {light.DOMAIN: {CONF_TYPE: 'nonexisting'}}
         ))
 
         # Test if light component returns 0 lightes
-        platform = get_component('light.test')
+        platform = loader.get_component('light.test')
         platform.init(True)
 
         self.assertEqual([], platform.get_lights(None, None))
 
         self.assertFalse(light.setup(
-            self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
+            self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
         ))
 
     def test_light_profiles(self):
         """ Test light profiles. """
-        platform = get_component('light.test')
+        platform = loader.get_component('light.test')
         platform.init()
 
         user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
@@ -249,7 +249,7 @@ class TestLight(unittest.TestCase):
             user_file.write('I,WILL,NOT,WORK\n')
 
         self.assertFalse(light.setup(
-            self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
+            self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
         ))
 
         # Clean up broken file
@@ -260,7 +260,7 @@ class TestLight(unittest.TestCase):
             user_file.write('test,.4,.6,100\n')
 
         self.assertTrue(light.setup(
-            self.hass, {light.DOMAIN: {ha.CONF_TYPE: 'test'}}
+            self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
         ))
 
         dev1, dev2, dev3 = platform.get_lights(None, None)

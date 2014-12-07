@@ -127,6 +127,7 @@ def ensure_unique_string(preferred_string, current_strings):
     """ Returns a string that is not present in current_strings.
         If preferred string exists will append _2, _3, .. """
     string = preferred_string
+    current_strings = list(current_strings)
 
     tries = 1
 
@@ -246,32 +247,6 @@ class OrderedSet(collections.MutableSet):
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
-
-
-def validate_config(config, items, logger):
-    """
-    Validates if all items are available in the configuration.
-
-    config is the general dictionary with all the configurations.
-    items is a dict with per domain which attributes we require.
-    logger is the logger from the caller to log the errors to.
-
-    Returns True if all required items were found.
-    """
-    errors_found = False
-    for domain in items.keys():
-        config.setdefault(domain, {})
-
-        errors = [item for item in items[domain] if item not in config[domain]]
-
-        if errors:
-            logger.error(
-                "Missing required configuration items in {}: {}".format(
-                    domain, ", ".join(errors)))
-
-            errors_found = True
-
-    return not errors_found
 
 
 class Throttle(object):

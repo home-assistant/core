@@ -9,6 +9,8 @@ import unittest
 
 import homeassistant as ha
 import homeassistant.loader as loader
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 import homeassistant.components as comps
 
 
@@ -21,8 +23,8 @@ class TestComponentsCore(unittest.TestCase):
         loader.prepare(self.hass)
         self.assertTrue(comps.setup(self.hass, {}))
 
-        self.hass.states.set('light.Bowl', comps.STATE_ON)
-        self.hass.states.set('light.Ceiling', comps.STATE_OFF)
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -38,7 +40,7 @@ class TestComponentsCore(unittest.TestCase):
         """ Test turn_on method. """
         runs = []
         self.hass.services.register(
-            'light', comps.SERVICE_TURN_ON, lambda x: runs.append(1))
+            'light', SERVICE_TURN_ON, lambda x: runs.append(1))
 
         comps.turn_on(self.hass, 'light.Ceiling')
 
@@ -50,24 +52,10 @@ class TestComponentsCore(unittest.TestCase):
         """ Test turn_off method. """
         runs = []
         self.hass.services.register(
-            'light', comps.SERVICE_TURN_OFF, lambda x: runs.append(1))
+            'light', SERVICE_TURN_OFF, lambda x: runs.append(1))
 
         comps.turn_off(self.hass, 'light.Bowl')
 
         self.hass._pool.block_till_done()
 
         self.assertEqual(1, len(runs))
-
-    def test_extract_entity_ids(self):
-        """ Test extract_entity_ids method. """
-        call = ha.ServiceCall('light', 'turn_on',
-                              {comps.ATTR_ENTITY_ID: 'light.Bowl'})
-
-        self.assertEqual(['light.Bowl'],
-                         comps.extract_entity_ids(self.hass, call))
-
-        call = ha.ServiceCall('light', 'turn_on',
-                              {comps.ATTR_ENTITY_ID: ['light.Bowl']})
-
-        self.assertEqual(['light.Bowl'],
-                         comps.extract_entity_ids(self.hass, call))

@@ -9,11 +9,11 @@ api_password=mypass
 # development=1
 
 [light]
-type=hue
+platform=hue
 
 [device_tracker]
 # The following types are available: netgear, tomato, luci
-type=netgear
+platform=netgear
 host=192.168.1.1
 username=admin
 password=PASSWORD
@@ -26,7 +26,7 @@ password=PASSWORD
 # hosts=192.168.1.9,192.168.1.12
 
 [switch]
-type=wemo
+platform=wemo
 # Optional: hard code the hosts (comma seperated) to avoid scanning the network
 # hosts=192.168.1.9,192.168.1.12
 

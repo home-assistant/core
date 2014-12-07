@@ -7,7 +7,8 @@ Helper method for writing tests.
 import os
 
 import homeassistant as ha
-import homeassistant.components as components
+from homeassistant.helpers import ToggleDevice
+from homeassistant.const import STATE_ON, STATE_OFF
 
 
 def get_test_home_assistant():
@@ -41,7 +42,7 @@ class MockModule(object):
         self.setup = lambda hass, config: False if setup is None else setup
 
 
-class MockToggleDevice(components.ToggleDevice):
+class MockToggleDevice(ToggleDevice):
     """ Provides a mock toggle device. """
     def __init__(self, name, state):
         self.name = name
@@ -56,17 +57,17 @@ class MockToggleDevice(components.ToggleDevice):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
         self.calls.append(('turn_on', kwargs))
-        self.state = components.STATE_ON
+        self.state = STATE_ON
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
         self.calls.append(('turn_off', kwargs))
-        self.state = components.STATE_OFF
+        self.state = STATE_OFF
 
     def is_on(self):
         """ True if device is on. """
         self.calls.append(('is_on', {}))
-        return self.state == components.STATE_ON
+        return self.state == STATE_ON
 
     def last_call(self, method=None):
         if method is None:

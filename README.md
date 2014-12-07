@@ -55,6 +55,8 @@ After you got the demo mode running it is time to enable some real components an
 
 *Note:* you can append `?api_password=YOUR_PASSWORD` to the url of the web interface to log in automatically.
 
+*Note:* for the light and switch component, you can specify multiple types by using sequential sections: [switch], [switch 2], [switch 3] etc
+
 ### Philips Hue
 To get Philips Hue working you will have to connect Home Assistant to the Hue bridge.
 
@@ -68,7 +70,7 @@ After that add the following lines to your `home-assistant.conf`:
 
 ```
 [light]
-type=hue
+platform=hue
 ```
 
 ### Wireless router
@@ -77,7 +79,7 @@ Your wireless router is used to track which devices are connected. Three differe
 
 ```
 [device_tracker]
-type=netgear
+platform=netgear
 host=192.168.1.1
 username=admin
 password=MY_PASSWORD

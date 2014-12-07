@@ -26,8 +26,7 @@ import logging
 from collections import namedtuple
 
 import homeassistant.util as util
-from homeassistant.components import (ATTR_FRIENDLY_NAME,
-                                      ATTR_UNIT_OF_MEASUREMENT)
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 # The domain of your component. Should be equal to the name of your component
 DOMAIN = "tellstick_sensor"

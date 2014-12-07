@@ -37,8 +37,9 @@ def from_config_dict(config, hass=None):
     # Convert it to defaultdict so components can always have config dict
     config = defaultdict(dict, config)
 
-    # Filter out the common config section [homeassistant]
-    components = (key for key in config.keys() if key != homeassistant.DOMAIN)
+    # Filter out the repeating and common config section [homeassistant]
+    components = (key for key in config.keys()
+                  if ' ' not in key and key != homeassistant.DOMAIN)
 
     # Setup the components
     if core_components.setup(hass, config):

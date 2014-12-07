@@ -19,18 +19,10 @@ import requests
 
 import homeassistant as ha
 
-SERVER_PORT = 8123
-
-AUTH_HEADER = "HA-access"
-
-URL_API = "/api/"
-URL_API_STATES = "/api/states"
-URL_API_STATES_ENTITY = "/api/states/{}"
-URL_API_EVENTS = "/api/events"
-URL_API_EVENTS_EVENT = "/api/events/{}"
-URL_API_SERVICES = "/api/services"
-URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
-URL_API_EVENT_FORWARD = "/api/event_forwarding"
+from homeassistant.const import (
+    SERVER_PORT, AUTH_HEADER, URL_API, URL_API_STATES, URL_API_STATES_ENTITY,
+    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
+    URL_API_SERVICES_SERVICE, URL_API_EVENT_FORWARD)
 
 METHOD_GET = "get"
 METHOD_POST = "post"

@@ -12,11 +12,11 @@ import os
 
 import homeassistant as ha
 import homeassistant.loader as loader
-from homeassistant.components import (
-    STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE)
+from homeassistant.const import (
+    STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, CONF_PLATFORM)
 import homeassistant.components.device_tracker as device_tracker
 
-from helper import get_test_home_assistant
+from helpers import get_test_home_assistant
 
 
 def setUpModule():   # pylint: disable=invalid-name
@@ -64,7 +64,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         # Test with non-existing component
         self.assertFalse(device_tracker.setup(
-            self.hass, {device_tracker.DOMAIN: {ha.CONF_TYPE: 'nonexisting'}}
+            self.hass, {device_tracker.DOMAIN: {CONF_PLATFORM: 'nonexisting'}}
         ))
 
         # Test with a bad known device file around
@@ -72,7 +72,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             fil.write("bad data\nbad data\n")
 
         self.assertFalse(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {ha.CONF_TYPE: 'test'}
+            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
         }))
 
     def test_device_tracker(self):
@@ -84,7 +84,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner.come_home('dev2')
 
         self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {ha.CONF_TYPE: 'test'}
+            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
         }))
 
         # Ensure a new known devices file has been created.

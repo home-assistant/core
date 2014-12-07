@@ -8,9 +8,10 @@ import random
 
 import homeassistant as ha
 import homeassistant.loader as loader
-from homeassistant.components import (
+from homeassistant.helpers import extract_entity_ids
+from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF,
-    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, extract_entity_ids)
+    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.components.light import (
     ATTR_XY_COLOR, ATTR_BRIGHTNESS, GROUP_NAME_ALL_LIGHTS)
 from homeassistant.util import split_entity_id
@@ -65,11 +66,11 @@ def setup(hass, config):
             hass.states.set(entity_id, STATE_OFF)
 
     # Setup sun
-    if ha.CONF_LATITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][ha.CONF_LATITUDE] = '32.87336'
+    if CONF_LATITUDE not in config[ha.DOMAIN]:
+        config[ha.DOMAIN][CONF_LATITUDE] = '32.87336'
 
-    if ha.CONF_LONGITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][ha.CONF_LONGITUDE] = '-117.22743'
+    if CONF_LONGITUDE not in config[ha.DOMAIN]:
+        config[ha.DOMAIN][CONF_LONGITUDE] = '-117.22743'
 
     loader.get_component('sun').setup(hass, config)
 

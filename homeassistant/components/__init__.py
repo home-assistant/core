@@ -19,36 +19,10 @@ import logging
 
 import homeassistant as ha
 import homeassistant.util as util
+from homeassistant.helpers import extract_entity_ids
 from homeassistant.loader import get_component
-
-# Contains one string or a list of strings, each being an entity id
-ATTR_ENTITY_ID = 'entity_id'
-
-# String with a friendly name for the entity
-ATTR_FRIENDLY_NAME = "friendly_name"
-
-# A picture to represent entity
-ATTR_ENTITY_PICTURE = "entity_picture"
-
-# The unit of measurement if applicable
-ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
-
-STATE_ON = 'on'
-STATE_OFF = 'off'
-STATE_HOME = 'home'
-STATE_NOT_HOME = 'not_home'
-
-SERVICE_TURN_ON = 'turn_on'
-SERVICE_TURN_OFF = 'turn_off'
-
-SERVICE_VOLUME_UP = "volume_up"
-SERVICE_VOLUME_DOWN = "volume_down"
-SERVICE_VOLUME_MUTE = "volume_mute"
-SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
-SERVICE_MEDIA_PLAY = "media_play"
-SERVICE_MEDIA_PAUSE = "media_pause"
-SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
-SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,79 +68,6 @@ def turn_off(hass, entity_id=None, **service_data):
         service_data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
-
-
-def extract_entity_ids(hass, service):
-    """
-    Helper method to extract a list of entity ids from a service call.
-    Will convert group entity ids to the entity ids it represents.
-    """
-    entity_ids = []
-
-    if service.data and ATTR_ENTITY_ID in service.data:
-        group = get_component('group')
-
-        # Entity ID attr can be a list or a string
-        service_ent_id = service.data[ATTR_ENTITY_ID]
-        if isinstance(service_ent_id, list):
-            ent_ids = service_ent_id
-        else:
-            ent_ids = [service_ent_id]
-
-        entity_ids.extend(
-            ent_id for ent_id
-            in group.expand_entity_ids(hass, ent_ids)
-            if ent_id not in entity_ids)
-
-    return entity_ids
-
-
-class ToggleDevice(object):
-    """ ABC for devices that can be turned on and off. """
-    # pylint: disable=no-self-use
-
-    entity_id = None
-
-    def get_name(self):
-        """ Returns the name of the device if any. """
-        return None
-
-    def turn_on(self, **kwargs):
-        """ Turn the device on. """
-        pass
-
-    def turn_off(self, **kwargs):
-        """ Turn the device off. """
-        pass
-
-    def is_on(self):
-        """ True if device is on. """
-        return False
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return {}
-
-    def update(self):
-        """ Retrieve latest state from the real device. """
-        pass
-
-    def update_ha_state(self, hass, force_refresh=False):
-        """
-        Updates Home Assistant with current state of device.
-        If force_refresh == True will update device before setting state.
-        """
-        if self.entity_id is None:
-            raise ha.NoEntitySpecifiedError(
-                "No entity specified for device {}".format(self.get_name()))
-
-        if force_refresh:
-            self.update()
-
-        state = STATE_ON if self.is_on() else STATE_OFF
-
-        return hass.states.set(self.entity_id, state,
-                               self.get_state_attributes())
 
 
 # pylint: disable=unused-argument

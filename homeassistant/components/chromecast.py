@@ -6,9 +6,14 @@ Provides functionality to interact with Chromecasts.
 """
 import logging
 
-import homeassistant as ha
 import homeassistant.util as util
-import homeassistant.components as components
+from homeassistant.helpers import extract_entity_ids
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
+    SERVICE_VOLUME_DOWN, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK,
+    CONF_HOSTS)
+
 
 DOMAIN = 'chromecast'
 DEPENDENCIES = []
@@ -46,58 +51,58 @@ def is_on(hass, entity_id=None):
 
 def turn_off(hass, entity_id=None):
     """ Will turn off specified Chromecast or all. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_TURN_OFF, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 def volume_up(hass, entity_id=None):
     """ Send the chromecast the command for volume up. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_VOLUME_UP, data)
+    hass.services.call(DOMAIN, SERVICE_VOLUME_UP, data)
 
 
 def volume_down(hass, entity_id=None):
     """ Send the chromecast the command for volume down. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_VOLUME_DOWN, data)
+    hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
 
 
 def media_play_pause(hass, entity_id=None):
     """ Send the chromecast the command for play/pause. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE, data)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data)
 
 
 def media_play(hass, entity_id=None):
     """ Send the chromecast the command for play/pause. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PLAY, data)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY, data)
 
 
 def media_pause(hass, entity_id=None):
     """ Send the chromecast the command for play/pause. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PAUSE, data)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
 
 
 def media_next_track(hass, entity_id=None):
     """ Send the chromecast the command for next track. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK, data)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
 
 
 def media_prev_track(hass, entity_id=None):
     """ Send the chromecast the command for prev track. """
-    data = {components.ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, components.SERVICE_MEDIA_PREV_TRACK, data)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PREV_TRACK, data)
 
 
 # pylint: disable=too-many-locals, too-many-branches
@@ -114,8 +119,8 @@ def setup(hass, config):
 
         return False
 
-    if ha.CONF_HOSTS in config[DOMAIN]:
-        hosts = config[DOMAIN][ha.CONF_HOSTS].split(",")
+    if CONF_HOSTS in config[DOMAIN]:
+        hosts = config[DOMAIN][CONF_HOSTS].split(",")
 
     # If no hosts given, scan for chromecasts
     else:
@@ -131,7 +136,7 @@ def setup(hass, config):
             entity_id = util.ensure_unique_string(
                 ENTITY_ID_FORMAT.format(
                     util.slugify(cast.device.friendly_name)),
-                list(casts.keys()))
+                casts.keys())
 
             casts[entity_id] = cast
 
@@ -148,7 +153,7 @@ def setup(hass, config):
 
         status = chromecast.app
 
-        state_attr = {components.ATTR_FRIENDLY_NAME:
+        state_attr = {ATTR_FRIENDLY_NAME:
                       chromecast.device.friendly_name}
 
         if status and status.app_id != pychromecast.APP_ID['HOME']:
@@ -196,7 +201,7 @@ def setup(hass, config):
 
     def _service_to_entities(service):
         """ Helper method to get entities from service. """
-        entity_ids = components.extract_entity_ids(hass, service)
+        entity_ids = extract_entity_ids(hass, service)
 
         if entity_ids:
             for entity_id in entity_ids:
@@ -274,25 +279,25 @@ def setup(hass, config):
 
     hass.track_time_change(update_chromecast_states)
 
-    hass.services.register(DOMAIN, components.SERVICE_TURN_OFF,
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF,
                            turn_off_service)
 
-    hass.services.register(DOMAIN, components.SERVICE_VOLUME_UP,
+    hass.services.register(DOMAIN, SERVICE_VOLUME_UP,
                            volume_up_service)
 
-    hass.services.register(DOMAIN, components.SERVICE_VOLUME_DOWN,
+    hass.services.register(DOMAIN, SERVICE_VOLUME_DOWN,
                            volume_down_service)
 
-    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PLAY_PAUSE,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE,
                            media_play_pause_service)
 
-    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PLAY,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_PLAY,
                            media_play_service)
 
-    hass.services.register(DOMAIN, components.SERVICE_MEDIA_PAUSE,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_PAUSE,
                            media_pause_service)
 
-    hass.services.register(DOMAIN, components.SERVICE_MEDIA_NEXT_TRACK,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_NEXT_TRACK,
                            media_next_track_service)
 
     hass.services.register(DOMAIN, "start_fireplace",
