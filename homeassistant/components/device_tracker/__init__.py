@@ -105,11 +105,6 @@ class DeviceTracker(object):
         # Did we encounter an invalid known devices file
         self.invalid_known_devices_file = False
 
-        self._read_known_devices_file()
-
-        if self.invalid_known_devices_file:
-            return
-
         # Wrap it in a func instead of lambda so it can be identified in
         # the bus by its __name__ attribute.
         def update_device_state(now):
@@ -130,13 +125,16 @@ class DeviceTracker(object):
                     self.hass, GROUP_NAME_ALL_DEVICES,
                     self.device_entity_ids, False)
 
+        reload_known_devices_service(None)
+
+        if self.invalid_known_devices_file:
+            return
+
         hass.track_time_change(update_device_state)
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,
                                reload_known_devices_service)
-
-        reload_known_devices_service(None)
 
     @property
     def device_entity_ids(self):
