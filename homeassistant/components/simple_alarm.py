@@ -93,3 +93,5 @@ def setup(hass, config):
     hass.states.track_change(
         hass.states.entity_ids(device_tracker.DOMAIN),
         ring_known_alarm, STATE_NOT_HOME, STATE_HOME)
+
+    return True
