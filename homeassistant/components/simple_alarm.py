@@ -83,11 +83,11 @@ def setup(hass, config):
         light.ENTITY_ID_ALL_LIGHTS,
         unknown_alarm_if_lights_on, STATE_OFF, STATE_ON)
 
-    # Not defined as a lambda so the __repr__ has a nice name.
     # pylint: disable=unused-argument
     def ring_known_alarm(entity_id, old_state, new_state):
         """ Called when a known person comes home. """
-        known_alarm()
+        if light.is_on(hass, known_light_id):
+            known_alarm()
 
     # Track home coming of each device
     hass.states.track_change(
