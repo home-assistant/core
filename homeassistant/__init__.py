@@ -207,7 +207,7 @@ class HomeAssistant(object):
 
 def _process_match_param(parameter):
     """ Wraps parameter in a list if it is not one and returns it. """
-    if not parameter or parameter == MATCH_ALL:
+    if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL
     elif isinstance(parameter, list):
         return parameter
