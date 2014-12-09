@@ -69,10 +69,6 @@
     events: [],
     stateUpdateTimeout: null,
 
-    computed: {
-      ha_headers: '{"HA-access": auth}'
-    },
-
     created: function() {
       this.api = this;
 
@@ -285,7 +281,7 @@
     call_api: function(method, path, parameters, onSuccess, onError) {
       var req = new XMLHttpRequest();
       req.open(method, "/api/" + path, true)
-      req.setRequestHeader("HA-access", this.auth);
+      req.setRequestHeader("X-HA-access", this.auth);
 
       req.onreadystatechange = function() {
 

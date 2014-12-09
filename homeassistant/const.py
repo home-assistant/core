@@ -66,7 +66,7 @@ SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
 # #### API / REMOTE ####
 SERVER_PORT = 8123
 
-AUTH_HEADER = "HA-access"
+AUTH_HEADER = "X-HA-access"
 
 URL_API = "/api/"
 URL_API_STATES = "/api/states"

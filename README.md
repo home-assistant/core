@@ -245,7 +245,7 @@ Home Assistent runs a webserver accessible on port 8123.
 
 In the package `homeassistant.remote` a Python API on top of the HTTP API can be found.
 
-The API accepts and returns only JSON encoded objects. All API calls have to be accompanied by the header "HA-Access" with as value the api password (as specified in `home-assistant.conf`).
+The API accepts and returns only JSON encoded objects. All API calls have to be accompanied by the header "X-HA-Access" with as value the api password (as specified in `home-assistant.conf`).
 
 Successful calls will return status code 200 or 201. Other status codes that can return are:
  - 400 (Bad Request)
