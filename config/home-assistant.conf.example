@@ -53,6 +53,12 @@ xbmc=XBMC.App
 
 [example]
 
+[simple_alarm]
+# Which light/light group has to flash when a known device comes home
+known_light=light.Bowl
+# Which light/light group has to flash red when light turns on while no one home
+unknown_light=group.living_room
+
 [browser]
 
 [keyboard]

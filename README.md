@@ -226,6 +226,15 @@ Registers service `browser/browse_url` that opens `url` as specified in event_da
 **tellstick_sensor**
 Shows the values of that sensors that is connected to your Tellstick.
 
+**simple_alarm**
+Will provide simple alarm functionality. Will flash a light shortly if a known device comes home. Will flash the lights red if the lights turn on while no one is home.
+
+Depends on device_tracker, light.
+
+Config options:
+known_light: entity id of the light/light group to target to flash when a known device comes home
+unknown_light: entity if of the light/light group to target when a light is turned on while no one is at home.
+
 <a name='API'></a>
 ## Rest API
 
