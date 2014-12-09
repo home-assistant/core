@@ -28,23 +28,28 @@
           return "image:flash-on";
 
         case "chromecast":
-          if(state && state != "idle") {
-            return "hardware:cast-connected";
-          } else {
-            return "hardware:cast";
+          var icon = "hardware:cast";
+
+          if (state !== "idle") {
+            icon += "-connected";
           }
 
+          return icon;
+
         case "process":
-          return "hardware:memory"
+          return "hardware:memory";
 
         case "sun":
-          return "image:wb-sunny"
+          return "image:wb-sunny";
 
         case "light":
-          return "image:wb-incandescent"
+          return "image:wb-incandescent";
 
         case "tellstick_sensor":
-            return "trending-up";
+          return "trending-up";
+
+        case "simple_alarm":
+          return "social:notifications";
 
         default:
           return "bookmark-outline";
