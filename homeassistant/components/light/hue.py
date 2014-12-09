@@ -7,7 +7,8 @@ import homeassistant.util as util
 from homeassistant.helpers import ToggleDevice
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG)
+    ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
+    ATTR_FLASH, FLASH_LONG, FLASH_SHORT)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
@@ -97,8 +98,12 @@ class HueLight(ToggleDevice):
 
         flash = kwargs.get(ATTR_FLASH)
 
-        if flash is not None:
-            command['alert'] = 'lselect' if flash == FLASH_LONG else 'select'
+        if flash == FLASH_LONG:
+            command['alert'] = 'lselect'
+        elif flash == FLASH_SHORT:
+            command['alert'] = 'select'
+        else:
+            command['alert'] = 'none'
 
         self.bridge.set_light(self.light_id, command)
 
