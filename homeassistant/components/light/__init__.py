@@ -82,6 +82,12 @@ ATTR_BRIGHTNESS = "brightness"
 # String representing a profile (built-in ones or external defined)
 ATTR_PROFILE = "profile"
 
+# If the light should flash, can be FLASH_SHORT or FLASH_LONG
+ATTR_FLASH = "flash"
+FLASH_SHORT = "short"
+FLASH_LONG = "long"
+
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,40 +102,31 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, profile=None):
+            rgb_color=None, xy_color=None, profile=None, flash=None):
     """ Turns all or specified light on. """
-    data = {}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if profile:
-        data[ATTR_PROFILE] = profile
-
-    if transition is not None:
-        data[ATTR_TRANSITION] = transition
-
-    if brightness is not None:
-        data[ATTR_BRIGHTNESS] = brightness
-
-    if rgb_color:
-        data[ATTR_RGB_COLOR] = rgb_color
-
-    if xy_color:
-        data[ATTR_XY_COLOR] = xy_color
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_PROFILE, profile),
+            (ATTR_TRANSITION, transition),
+            (ATTR_BRIGHTNESS, brightness),
+            (ATTR_RGB_COLOR, rgb_color),
+            (ATTR_XY_COLOR, xy_color),
+            (ATTR_FLASH, flash),
+        ] if value is not None
+    }
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None, transition=None):
     """ Turns all or specified light off. """
-    data = {}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if transition is not None:
-        data[ATTR_TRANSITION] = transition
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_TRANSITION, transition),
+        ] if value is not None
+    }
 
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
@@ -272,6 +269,13 @@ def setup(hass, config):
                     # TypeError if rgb_color is not iterable
                     # ValueError if not all values can be converted to int
                     pass
+
+            if ATTR_FLASH in dat:
+                if dat[ATTR_FLASH] == FLASH_SHORT:
+                    params[ATTR_FLASH] = FLASH_SHORT
+
+                elif dat[ATTR_FLASH] == FLASH_LONG:
+                    params[ATTR_FLASH] = FLASH_LONG
 
             for light in lights:
                 # pylint: disable=star-args
