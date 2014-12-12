@@ -181,7 +181,7 @@ Registers services `light/turn_on` and `light/turn_off` to turn a or all lights 
 
 Optional service data:
   - `entity_id` - only act on specific light. Else targets all.
-  - `transition_seconds` - seconds to take to swithc to new state.
+  - `transition_seconds` - seconds to take to switch to new state.
   - `profile` - which light profile to use.
   - `xy_color` - two comma seperated floats that represent the color in XY
   - `rgb_color` - three comma seperated integers that represent the color in RGB
