@@ -90,7 +90,7 @@ def from_config_file(config_path, hass=None, enable_logging=True):
             err_handler = logging.FileHandler(
                 err_log_path, mode='w', delay=True)
 
-            err_handler.setLevel(logging.ERROR)
+            err_handler.setLevel(logging.WARNING)
             err_handler.setFormatter(
                 logging.Formatter('%(asctime)s %(name)s: %(message)s',
                                   datefmt='%H:%M %d-%m-%y'))
