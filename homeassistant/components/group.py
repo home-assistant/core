@@ -19,21 +19,19 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 ATTR_AUTO = "auto"
 
-_GROUP_TYPES = {
-    "on_off": (STATE_ON, STATE_OFF),
-    "home_not_home": (STATE_HOME, STATE_NOT_HOME)
-}
+# List of ON/OFF state tuples for groupable states
+_GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME)]
 
 _GROUPS = {}
 
 
-def _get_group_type(state):
-    """ Determine the group type based on the given group type. """
-    for group_type, states in _GROUP_TYPES.items():
+def _get_group_on_off(state):
+    """ Determine the group on/off states based on a state. """
+    for states in _GROUP_TYPES:
         if state in states:
-            return group_type
+            return states
 
-    return None
+    return None, None
 
 
 def is_on(hass, entity_id):
@@ -41,10 +39,10 @@ def is_on(hass, entity_id):
     state = hass.states.get(entity_id)
 
     if state:
-        group_type = _get_group_type(state.state)
+        group_on, _ = _get_group_on_off(state.state)
 
         # If we found a group_type, compare to ON-state
-        return group_type and state.state == _GROUP_TYPES[group_type][0]
+        return group_on is not None and state.state == group_on
 
     return False
 
@@ -103,64 +101,74 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-many-branches
 def setup_group(hass, name, entity_ids, user_defined=True):
     """ Sets up a group state that is the combined state of
         several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
+    logger = logging.getLogger(__name__)
+
     # In case an iterable is passed in
     entity_ids = list(entity_ids)
 
+    if not entity_ids:
+        logger.error(
+            'Error setting up group %s: no entities passed in to track', name)
+
+        return False
+
     # Loop over the given entities to:
     #  - determine which group type this is (on_off, device_home)
-    #  - if all states exist and have valid states
-    #  - retrieve the current state of the group
-    errors = []
-    group_type, group_on, group_off, group_state = None, None, None, None
+    #  - determine which states exist and have groupable states
+    #  - determine the current state of the group
+    warnings = []
+    group_ids = []
+    group_on, group_off = None, None
+    group_state = False
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
 
         # Try to determine group type if we didn't yet
-        if not group_type and state:
-            group_type = _get_group_type(state.state)
+        if group_on is None and state:
+            group_on, group_off = _get_group_on_off(state.state)
 
-            if group_type:
-                group_on, group_off = _GROUP_TYPES[group_type]
-                group_state = group_off
-
-            else:
+            if group_on is None:
                 # We did not find a matching group_type
-                errors.append(
+                warnings.append(
                     "Entity {} has ungroupable state '{}'".format(
                         name, state.state))
 
-                # Stop check all other entity IDs and report as error
-                break
+                continue
 
         # Check if entity exists
         if not state:
-            errors.append("Entity {} does not exist".format(entity_id))
+            warnings.append("Entity {} does not exist".format(entity_id))
 
-        # Check if entity is valid state
+        # Check if entity is invalid state
         elif state.state != group_off and state.state != group_on:
 
-            errors.append("State of {} is {} (expected: {} or {})".format(
+            warnings.append("State of {} is {} (expected: {} or {})".format(
                 entity_id, state.state, group_off, group_on))
 
-        # Keep track of the group state to init later on
-        elif state.state == group_on:
-            group_state = group_on
+        # We have a valid group state
+        else:
+            group_ids.append(entity_id)
 
-    if group_type is None and not errors:
-        errors.append('Unable to determine group type for {}'.format(name))
+            # Keep track of the group state to init later on
+            group_state = group_state or state.state == group_on
 
-    if errors:
-        logging.getLogger(__name__).error(
-            "Error setting up group %s: %s", name, ", ".join(errors))
+    # If none of the entities could be found during setup
+    if not group_ids:
+        logger.error('Unable to find any entities to track for group %s', name)
 
         return False
 
+    elif warnings:
+        logger.warning(
+            'Warnings during setting up group %s: %s',
+            name, ", ".join(warnings))
+
     group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
+    state = group_on if group_state else group_off
     state_attr = {ATTR_ENTITY_ID: entity_ids, ATTR_AUTO: not user_defined}
 
     # pylint: disable=unused-argument
@@ -182,14 +190,14 @@ def setup_group(hass, name, entity_ids, user_defined=True):
 
             # Check if any of the other states is still on
             if not any([hass.states.is_state(ent_id, group_on)
-                        for ent_id in entity_ids
+                        for ent_id in group_ids
                         if entity_id != ent_id]):
                 hass.states.set(group_entity_id, group_off, state_attr)
 
     _GROUPS[group_entity_id] = hass.states.track_change(
-        entity_ids, update_group_state)
+        group_ids, update_group_state)
 
-    hass.states.set(group_entity_id, group_state, state_attr)
+    hass.states.set(group_entity_id, state, state_attr)
 
     return True
 

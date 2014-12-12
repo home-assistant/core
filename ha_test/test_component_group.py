@@ -40,8 +40,41 @@ class TestComponentsGroup(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_setup_and_monitor_group(self):
+    def test_setup_group(self):
         """ Test setup_group method. """
+        # Try to setup a group with mixed groupable states
+        self.hass.states.set('device_tracker.Paulus', STATE_HOME)
+        self.assertTrue(group.setup_group(
+            self.hass, 'person_and_light',
+            ['light.Bowl', 'device_tracker.Paulus']))
+        self.assertEqual(
+            STATE_ON,
+            self.hass.states.get(
+                group.ENTITY_ID_FORMAT.format('person_and_light')).state)
+
+        # Try to setup a group with a non existing state
+        self.assertNotIn('non.existing', self.hass.states.entity_ids())
+        self.assertTrue(group.setup_group(
+            self.hass, 'light_and_nothing',
+            ['light.Bowl', 'non.existing']))
+        self.assertEqual(
+            STATE_ON,
+            self.hass.states.get(
+                group.ENTITY_ID_FORMAT.format('light_and_nothing')).state)
+
+        # Try to setup a group with non groupable states
+        self.hass.states.set('cast.living_room', "Plex")
+        self.hass.states.set('cast.bedroom', "Netflix")
+        self.assertFalse(
+            group.setup_group(
+                self.hass, 'chromecasts',
+                ['cast.living_room', 'cast.bedroom']))
+
+        # Try to setup an empty group
+        self.assertFalse(group.setup_group(self.hass, 'nothing', []))
+
+    def test_monitor_group(self):
+        """ Test if the group keeps track of states. """
 
         # Test if group setup in our init mode is ok
         self.assertIn(self.group_name, self.hass.states.entity_ids())
@@ -65,41 +98,6 @@ class TestComponentsGroup(unittest.TestCase):
 
         group_state = self.hass.states.get(self.group_name)
         self.assertEqual(STATE_ON, group_state.state)
-
-        # Try to setup a group with mixed groupable states
-        self.hass.states.set('device_tracker.Paulus', STATE_HOME)
-        self.assertFalse(group.setup_group(
-            self.hass, 'person_and_light',
-            ['light.Bowl', 'device_tracker.Paulus']))
-
-        # Try to setup a group with a non existing state
-        self.assertNotIn('non.existing', self.hass.states.entity_ids())
-        self.assertFalse(group.setup_group(
-            self.hass, 'light_and_nothing',
-            ['light.Bowl', 'non.existing']))
-
-        # Try to setup a group with non groupable states
-        self.hass.states.set('cast.living_room', "Plex")
-        self.hass.states.set('cast.bedroom', "Netflix")
-        self.assertFalse(
-            group.setup_group(
-                self.hass, 'chromecasts',
-                ['cast.living_room', 'cast.bedroom']))
-
-        # Try to setup an empty group
-        self.assertFalse(group.setup_group(self.hass, 'nothing', []))
-
-    def test__get_group_type(self):
-        """ Test _get_group_type method. """
-        self.assertEqual('on_off', group._get_group_type(STATE_ON))
-        self.assertEqual('on_off', group._get_group_type(STATE_OFF))
-        self.assertEqual('home_not_home',
-                         group._get_group_type(STATE_HOME))
-        self.assertEqual('home_not_home',
-                         group._get_group_type(STATE_NOT_HOME))
-
-        # Unsupported state
-        self.assertIsNone(group._get_group_type('unsupported_state'))
 
     def test_is_on(self):
         """ Test is_on method. """
