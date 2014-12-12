@@ -169,7 +169,7 @@ def setup_group(hass, name, entity_ids, user_defined=True):
 
     group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
     state = group_on if group_state else group_off
-    state_attr = {ATTR_ENTITY_ID: entity_ids, ATTR_AUTO: not user_defined}
+    state_attr = {ATTR_ENTITY_ID: group_ids, ATTR_AUTO: not user_defined}
 
     # pylint: disable=unused-argument
     def update_group_state(entity_id, old_state, new_state):
