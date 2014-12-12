@@ -177,38 +177,41 @@ class DeviceTracker(object):
         # Did we find any devices that we didn't know about yet?
         new_devices = found_devices - self.untracked_devices
 
-        # Write new devices to known devices file
-        if not self.invalid_known_devices_file and new_devices:
+        if new_devices:
+            self.untracked_devices.update(new_devices)
 
-            known_dev_path = self.hass.get_config_path(KNOWN_DEVICES_FILE)
+            # Write new devices to known devices file
+            if not self.invalid_known_devices_file:
 
-            try:
-                # If file does not exist we will write the header too
-                is_new_file = not os.path.isfile(known_dev_path)
+                known_dev_path = self.hass.get_config_path(KNOWN_DEVICES_FILE)
 
-                with open(known_dev_path, 'a') as outp:
-                    _LOGGER.info(
-                        "Found %d new devices, updating %s",
-                        len(new_devices), known_dev_path)
+                try:
+                    # If file does not exist we will write the header too
+                    is_new_file = not os.path.isfile(known_dev_path)
 
-                    writer = csv.writer(outp)
+                    with open(known_dev_path, 'a') as outp:
+                        _LOGGER.info(
+                            "Found %d new devices, updating %s",
+                            len(new_devices), known_dev_path)
 
-                    if is_new_file:
-                        writer.writerow((
-                            "device", "name", "track", "picture"))
+                        writer = csv.writer(outp)
 
-                    for device in new_devices:
-                        # See if the device scanner knows the name
-                        # else defaults to unknown device
-                        name = (self.device_scanner.get_device_name(device)
-                                or "unknown_device")
+                        if is_new_file:
+                            writer.writerow((
+                                "device", "name", "track", "picture"))
 
-                        writer.writerow((device, name, 0, ""))
+                        for device in new_devices:
+                            # See if the device scanner knows the name
+                            # else defaults to unknown device
+                            name = (self.device_scanner.get_device_name(device)
+                                    or "unknown_device")
 
-            except IOError:
-                _LOGGER.exception(
-                    "Error updating %s with %d new devices",
-                    known_dev_path, len(new_devices))
+                            writer.writerow((device, name, 0, ""))
+
+                except IOError:
+                    _LOGGER.exception(
+                        "Error updating %s with %d new devices",
+                        known_dev_path, len(new_devices))
 
         self.lock.release()
 
