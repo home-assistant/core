@@ -112,7 +112,7 @@
         } else {
           return 0;
         }
-      })
+      });
     },
 
     _pushNewState: function(new_state) {
@@ -136,7 +136,7 @@
         this._sortStates(this.states);
       }
 
-      this.fire('states-updated')
+      this.fire('states-updated');
     },
 
     // call api methods
@@ -149,7 +149,7 @@
     fetchState: function(entityId) {
       var successStateUpdate = function(new_state) {
         this._pushNewState(new_state);
-      }
+      };
 
       this.call_api("GET", "states/" + entityId, null, successStateUpdate.bind(this));
     },
@@ -162,14 +162,14 @@
           return new State(json, this);
         }.bind(this));
 
-        this.fire('states-updated')
+        this.fire('states-updated');
 
         this._laterFetchStates();
 
         if(onSuccess) {
           onSuccess(this.states);
         }
-      }
+      };
 
       this.call_api(
         "GET", "states", null, successStatesUpdate.bind(this), onError);
@@ -179,12 +179,12 @@
       var successEventsUpdated = function(events) {
         this.events = events;
 
-        this.fire('events-updated')
+        this.fire('events-updated');
 
         if(onSuccess) {
           onSuccess(events);
         }
-      }
+      };
 
       this.call_api(
         "GET", "events", null, successEventsUpdated.bind(this), onError);
@@ -194,12 +194,12 @@
       var successServicesUpdated = function(services) {
         this.services = services;
 
-        this.fire('services-updated')
+        this.fire('services-updated');
 
         if(onSuccess) {
           onSuccess(this.services);
         }
-      }
+      };
 
       this.call_api(
         "GET", "services", null, successServicesUpdated.bind(this), onError);
@@ -210,11 +210,11 @@
     },
 
     turn_off: function(entity_id) {
-      this.call_service("homeassistant", "turn_off", {entity_id: entity_id})
+      this.call_service("homeassistant", "turn_off", {entity_id: entity_id});
     },
 
     set_state: function(entity_id, state, attributes) {
-      var payload = {state: state}
+      var payload = {state: state};
 
       if(attributes) {
         payload.attributes = attributes;
@@ -223,7 +223,7 @@
       var successToast = function(new_state) {
         this.showToast("State of "+entity_id+" set to "+state+".");
         this._pushNewState(new_state);
-      }
+      };
 
       this.call_api("POST", "states/" + entity_id,
                     payload, successToast.bind(this));
@@ -249,19 +249,19 @@
           if(typeof(parameters.entity_id === "string")) {
             // if it is a group, fetch all
             if(parameters.entity_id.slice(0,6) == "group.") {
-              update_func = this.fetchStates
+              update_func = this.fetchStates;
             } else {
               update_func = function() {
                 this.fetchState(parameters.entity_id);
-              }
+              };
             }
           } else {
-            update_func = this.fetchStates
+            update_func = this.fetchStates;
           }
 
           setTimeout(update_func.bind(this), 1000);
         }
-      }
+      };
 
       this.call_api("POST", "services/" + domain + "/" + service,
                     parameters, successToast.bind(this));
@@ -272,7 +272,7 @@
 
       var successToast = function() {
         this.showToast("Event "+eventType+" fired.");
-      }
+      };
 
       this.call_api("POST", "events/" + eventType,
                     eventData, successToast.bind(this));
@@ -280,7 +280,7 @@
 
     call_api: function(method, path, parameters, onSuccess, onError) {
       var req = new XMLHttpRequest();
-      req.open(method, "/api/" + path, true)
+      req.open(method, "/api/" + path, true);
       req.setRequestHeader("X-HA-access", this.auth);
 
       req.onreadystatechange = function() {
@@ -299,7 +299,7 @@
 
 
         }
-      }.bind(this)
+      }.bind(this);
 
       if(parameters) {
         req.send(JSON.stringify(parameters));
@@ -312,7 +312,7 @@
     showEditStateDialog: function(entityId) {
       var state = this.getState(entityId);
 
-      this.showSetStateDialog(entityId, state.state, state.attributes)
+      this.showSetStateDialog(entityId, state.state, state.attributes);
     },
 
     showSetStateDialog: function(entityId, state, stateAttributes) {
