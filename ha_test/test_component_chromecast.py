@@ -67,19 +67,18 @@ class TestChromecast(unittest.TestCase):
 
             self.assertEqual(1, len(calls))
             call = calls[-1]
-            self.assertEqual(call.domain, chromecast.DOMAIN)
-            self.assertEqual(call.service, service_name)
-            self.assertEqual(call.data, {})
+            self.assertEqual(chromecast.DOMAIN, call.domain)
+            self.assertEqual(service_name, call.service)
 
             service_method(self.hass, self.test_entity)
             self.hass._pool.block_till_done()
 
             self.assertEqual(2, len(calls))
             call = calls[-1]
-            self.assertEqual(call.domain, chromecast.DOMAIN)
-            self.assertEqual(call.service, service_name)
-            self.assertEqual(call.data,
-                             {ATTR_ENTITY_ID: self.test_entity})
+            self.assertEqual(chromecast.DOMAIN, call.domain)
+            self.assertEqual(service_name, call.service)
+            self.assertEqual(self.test_entity,
+                             call.data.get(ATTR_ENTITY_ID))
 
     def test_setup(self):
         """
