@@ -139,31 +139,34 @@
     },
 
     stateChanged: function(oldVal, newVal) {
-      this.stateUnknown = newVal === null;
       this.toggleChecked = newVal === "on";
     },
 
     turn_on: function() {
+      // We call stateChanged after a successful call to re-sync the toggle
+      // with the state. It will be out of sync if our service call did not
+      // result in the entity to be turned on. Since the state is not changing,
+      // the resync is not called automatic.
       if(this.cb_turn_on) {
-        this.cb_turn_on(this.stateObj.entity_id);
-
-        // unset state while we wait for an update
-        var delayUnsetSate = function() {
-          this.stateObj.state = null;
-        };
-        setTimeout(delayUnsetSate.bind(this), 500);      
+        this.cb_turn_on(this.stateObj.entity_id, {
+          success: function() {
+            this.stateChanged(this.stateObj.state, this.stateObj.state);
+          }.bind(this)
+        });
       }
     },
 
     turn_off: function() {
+      // We call stateChanged after a successful call to re-sync the toggle
+      // with the state. It will be out of sync if our service call did not
+      // result in the entity to be turned on. Since the state is not changing,
+      // the resync is not called automatic.
       if(this.cb_turn_off) {
-        this.cb_turn_off(this.stateObj.entity_id);
-
-        // unset state while we wait for an update
-        var delayUnsetSate = function() {
-          this.stateObj.state = null;
-        };
-        setTimeout(delayUnsetSate.bind(this), 500);      
+        this.cb_turn_off(this.stateObj.entity_id, {
+          success: function() {
+            this.stateChanged(this.stateObj.state, this.stateObj.state);
+          }.bind(this)
+        });
       }
     },
 

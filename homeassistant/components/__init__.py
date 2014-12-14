@@ -96,7 +96,7 @@ def setup(hass, config):
             # ent_ids is a generator, convert it to a list.
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
-            hass.services.call(domain, service.service, data)
+            hass.services.call(domain, service.service, data, True)
 
     hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)

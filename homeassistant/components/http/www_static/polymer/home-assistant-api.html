@@ -139,6 +139,12 @@
       this.fire('states-updated');
     },
 
+    _pushNewStates: function(new_states) {
+      new_states.map(function(state) {
+        this._pushNewState(state);
+      }.bind(this));
+    },
+
     // call api methods
     fetchAll: function() {
       this.fetchStates();
@@ -205,19 +211,14 @@
         "GET", "services", null, successServicesUpdated.bind(this), onError);
     },
 
-    turn_on: function(entity_id) {
-      // we call the turn_on method on the domain of the entity_id
-      // because the call to homeassistant.turn_on does not wait
-      // till the call is done.
-      var parts = entity_id.split(".");
-
-      this.call_service(parts[0], "turn_on", {entity_id: entity_id});
+    turn_on: function(entity_id, options) {
+      this.call_service(
+        "homeassistant", "turn_on", {entity_id: entity_id}, options);
     },
 
-    turn_off: function(entity_id) {
-      var parts = entity_id.split(".");
-
-      this.call_service(parts[0], "turn_off", {entity_id: entity_id});
+    turn_off: function(entity_id, options) {
+      this.call_service(
+        "homeassistant", "turn_off", {entity_id: entity_id}, options);
     },
 
     set_state: function(entity_id, state, attributes) {
@@ -236,10 +237,11 @@
                     payload, successToast.bind(this));
     },
 
-    call_service: function(domain, service, parameters) {
+    call_service: function(domain, service, parameters, options) {
       parameters = parameters || {};
+      options = options || {};
 
-      var successToast = function() {
+      var successHandler = function(changed_states) {
         if(service == "turn_on" && parameters.entity_id) {
           this.showToast("Turned on " + parameters.entity_id + '.');
         } else if(service == "turn_off" && parameters.entity_id) {
@@ -248,14 +250,21 @@
           this.showToast("Service "+domain+"/"+service+" called.");  
         }
 
-        // if we call a service on an entity_id, update the state
-        if(parameters && parameters.entity_id) {
-          this.fetchStates();
+        this._pushNewStates(changed_states);
+
+        if(options.success) {
+          options.success();
+        }
+      };
+
+      var errorHandler = function(error_data) {
+        if(options.error) {
+          options.error(error_data);
         }
       };
 
       this.call_api("POST", "services/" + domain + "/" + service,
-                    parameters, successToast.bind(this));
+                    parameters, successHandler.bind(this), errorHandler);
     },
 
     fire_event: function(eventType, eventData) {

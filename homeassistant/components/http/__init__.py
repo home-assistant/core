@@ -86,7 +86,7 @@ import homeassistant as ha
 from homeassistant.const import (
     SERVER_PORT, URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, AUTH_HEADER)
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, TrackStates
 import homeassistant.remote as rem
 import homeassistant.util as util
 from . import frontend
@@ -484,9 +484,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         domain = path_match.group('domain')
         service = path_match.group('service')
 
-        self.server.hass.services.call(domain, service, data, True)
+        with TrackStates(self.server.hass) as changed_states:
+            self.server.hass.services.call(domain, service, data, True)
 
-        self._json_message("Service {}/{} called.".format(domain, service))
+        self._write_json(changed_states)
 
     # pylint: disable=invalid-name
     def _handle_post_api_event_forward(self, path_match, data):

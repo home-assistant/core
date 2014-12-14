@@ -370,13 +370,29 @@ optional body: JSON encoded object that represents event_data
 ```
 
 **/api/services/&lt;domain>/&lt;service>** - POST<br>
-Calls a service within a specific domain.<br>
+Calls a service within a specific domain. Will return when the service has been executed or 10 seconds has past, whichever comes first.<br>
 optional body: JSON encoded object that represents service_data
 
+Returns a list of states that have changed since the start of this service call.
+
 ```json
-{
-    "message": "Service keyboard/volume_up called."
-}
+[
+    {
+        "attributes": {
+            "next_rising": "07:04:15 29-10-2013",
+            "next_setting": "18:00:31 29-10-2013"
+        },
+        "entity_id": "sun.sun",
+        "last_changed": "23:24:33 28-10-2013",
+        "state": "below_horizon"
+    },
+    {
+        "attributes": {},
+        "entity_id": "process.Dropbox",
+        "last_changed": "23:24:33 28-10-2013",
+        "state": "on"
+    }
+]
 ```
 
 **/api/event_forwarding** - POST<br>
