@@ -18,13 +18,17 @@ import functools as ft
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
-    EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL)
+    EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
+    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID)
 import homeassistant.util as util
 
 DOMAIN = "homeassistant"
 
 # How often time_changed event should fire
 TIMER_INTERVAL = 10  # seconds
+
+# How long we wait for the result of a service call
+SERVICE_CALL_LIMIT = 10  # seconds
 
 # Number of worker threads
 POOL_NUM_THREAD = 4
@@ -227,6 +231,7 @@ class JobPriority(util.OrderedEnum):
     """ Provides priorities for bus events. """
     # pylint: disable=no-init,too-few-public-methods
 
+    EVENT_CALLBACK = 0
     EVENT_SERVICE = 1
     EVENT_STATE = 2
     EVENT_TIME = 3
@@ -241,6 +246,8 @@ class JobPriority(util.OrderedEnum):
             return JobPriority.EVENT_STATE
         elif event_type == EVENT_CALL_SERVICE:
             return JobPriority.EVENT_SERVICE
+        elif event_type == EVENT_SERVICE_EXECUTED:
+            return JobPriority.EVENT_CALLBACK
         else:
             return JobPriority.EVENT_DEFAULT
 
@@ -594,6 +601,7 @@ class ServiceRegistry(object):
         self._lock = threading.Lock()
         self._pool = pool or create_worker_pool()
         self._bus = bus
+        self._cur_id = 0
         bus.listen(EVENT_CALL_SERVICE, self._event_to_service_call)
 
     @property
@@ -615,9 +623,14 @@ class ServiceRegistry(object):
             else:
                 self._services[domain] = {service: service_func}
 
-    def call(self, domain, service, service_data=None):
+    def call(self, domain, service, service_data=None, blocking=False):
         """
-        Fires event to call specified service.
+        Calls specified service.
+        Specify blocking=True to wait till service is executed.
+        Waits a maximum of SERVICE_CALL_LIMIT.
+
+        If blocking = True, will return boolean if service executed
+        succesfully within SERVICE_CALL_LIMIT.
 
         This method will fire an event to call the service.
         This event will be picked up by this ServiceRegistry and any
@@ -626,11 +639,40 @@ class ServiceRegistry(object):
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
         """
+        call_id = self._generate_unique_id()
         event_data = service_data or {}
         event_data[ATTR_DOMAIN] = domain
         event_data[ATTR_SERVICE] = service
+        event_data[ATTR_SERVICE_CALL_ID] = call_id
+
+        if blocking:
+            executed_event = threading.Event()
+
+            def service_executed(call):
+                """
+                Called when a service is executed.
+                Will set the event if matches our service call.
+                """
+                if call.data[ATTR_SERVICE_CALL_ID] == call_id:
+                    executed_event.set()
+
+                    self._bus.remove_listener(
+                        EVENT_SERVICE_EXECUTED, service_executed)
+
+            self._bus.listen(EVENT_SERVICE_EXECUTED, service_executed)
 
         self._bus.fire(EVENT_CALL_SERVICE, event_data)
+
+        if blocking:
+            # wait will return False if event not set after our limit has
+            # passed. If not set, clean up the listener
+            if not executed_event.wait(SERVICE_CALL_LIMIT):
+                self._bus.remove_listener(
+                    EVENT_SERVICE_EXECUTED, service_executed)
+
+                return False
+
+            return True
 
     def _event_to_service_call(self, event):
         """ Calls a service from an event. """
@@ -642,9 +684,27 @@ class ServiceRegistry(object):
             if domain in self._services and service in self._services[domain]:
                 service_call = ServiceCall(domain, service, service_data)
 
+                # Add a job to the pool that calls _execute_service
                 self._pool.add_job(JobPriority.EVENT_SERVICE,
-                                   (self._services[domain][service],
-                                    service_call))
+                                   (self._execute_service,
+                                    (self._services[domain][service],
+                                     service_call)))
+
+    def _execute_service(self, service_and_call):
+        """ Executes a service and fires a SERVICE_EXECUTED event. """
+        service, call = service_and_call
+
+        service(call)
+
+        self._bus.fire(
+            EVENT_SERVICE_EXECUTED, {
+                ATTR_SERVICE_CALL_ID: call.data[ATTR_SERVICE_CALL_ID]
+            })
+
+    def _generate_unique_id(self):
+        """ Generates a unique service call id. """
+        self._cur_id += 1
+        return "{}-{}".format(id(self), self._cur_id)
 
 
 class Timer(threading.Thread):

@@ -206,11 +206,18 @@
     },
 
     turn_on: function(entity_id) {
-      this.call_service("homeassistant", "turn_on", {entity_id: entity_id});
+      // we call the turn_on method on the domain of the entity_id
+      // because the call to homeassistant.turn_on does not wait
+      // till the call is done.
+      var parts = entity_id.split(".");
+
+      this.call_service(parts[0], "turn_on", {entity_id: entity_id});
     },
 
     turn_off: function(entity_id) {
-      this.call_service("homeassistant", "turn_off", {entity_id: entity_id});
+      var parts = entity_id.split(".");
+
+      this.call_service(parts[0], "turn_off", {entity_id: entity_id});
     },
 
     set_state: function(entity_id, state, attributes) {
@@ -243,23 +250,7 @@
 
         // if we call a service on an entity_id, update the state
         if(parameters && parameters.entity_id) {
-          var update_func;
-
-          // if entity_id is a string, update 1 state, else all.
-          if(typeof(parameters.entity_id === "string")) {
-            // if it is a group, fetch all
-            if(parameters.entity_id.slice(0,6) == "group.") {
-              update_func = this.fetchStates;
-            } else {
-              update_func = function() {
-                this.fetchState(parameters.entity_id);
-              };
-            }
-          } else {
-            update_func = this.fetchStates;
-          }
-
-          setTimeout(update_func.bind(this), 1000);
+          this.fetchStates();
         }
       };
 

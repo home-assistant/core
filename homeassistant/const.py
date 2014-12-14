@@ -20,7 +20,8 @@ EVENT_HOMEASSISTANT_START = "homeassistant_start"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
-EVENT_CALL_SERVICE = "services.call"
+EVENT_CALL_SERVICE = "call_service"
+EVENT_SERVICE_EXECUTED = "service_executed"
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -28,13 +29,17 @@ STATE_OFF = 'off'
 STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
 
-# #### STATE ATTRIBUTES ####
+# #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
 ATTR_NOW = "now"
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = "domain"
 ATTR_SERVICE = "service"
+
+# Data for a SERVICE_EXECUTED event
+ATTR_SERVICE_CALL_ID = "service_call_id"
+ATTR_RESULT = "result"
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
