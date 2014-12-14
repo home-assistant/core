@@ -39,7 +39,6 @@ ATTR_SERVICE = "service"
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = "service_call_id"
-ATTR_RESULT = "result"
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'

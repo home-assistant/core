@@ -418,17 +418,13 @@ class State(object):
         self.entity_id = entity_id
         self.state = state
         self.attributes = attributes or {}
-        last_changed = last_changed or dt.datetime.now()
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
         # This behavior occurs because to_dict uses datetime_to_str
-        # which strips microseconds
-        if last_changed.microsecond:
-            self.last_changed = last_changed - dt.timedelta(
-                microseconds=last_changed.microsecond)
-        else:
-            self.last_changed = last_changed
+        # which does not preserve microseconds
+        self.last_changed = util.strip_microseconds(
+            last_changed or dt.datetime.now())
 
     def copy(self):
         """ Creates a copy of itself. """
@@ -503,6 +499,19 @@ class StateMachine(object):
 
         # Make a copy so people won't mutate the state
         return state.copy() if state else None
+
+    def get_since(self, point_in_time):
+        """
+        Returns all states that have been changed since point_in_time.
+
+        Note: States keep track of last_changed -without- microseconds.
+        Therefore your point_in_time will also be stripped of microseconds.
+        """
+        point_in_time = util.strip_microseconds(point_in_time)
+
+        with self._lock:
+            return [state for state in self._states.values()
+                    if state.last_changed >= point_in_time]
 
     def is_state(self, entity_id, state):
         """ Returns True if entity exists and is specified state. """

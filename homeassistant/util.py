@@ -8,7 +8,7 @@ import collections
 from itertools import chain
 import threading
 import queue
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import enum
 import socket
@@ -55,6 +55,14 @@ def str_to_datetime(dt_str):
         return datetime.strptime(dt_str, DATE_STR_FORMAT)
     except ValueError:  # If dt_str did not match our format
         return None
+
+
+def strip_microseconds(dattim):
+    """ Returns a copy of dattime object but with microsecond set to 0. """
+    if dattim.microsecond:
+        return dattim - timedelta(microseconds=dattim.microsecond)
+    else:
+        return dattim
 
 
 def split_entity_id(entity_id):

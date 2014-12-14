@@ -1,6 +1,8 @@
 """
 Helper methods for components within Home Assistant.
 """
+from datetime import datetime
+
 from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.loader import get_component
@@ -31,6 +33,25 @@ def extract_entity_ids(hass, service):
             if ent_id not in entity_ids)
 
     return entity_ids
+
+
+# pylint: disable=too-few-public-methods, attribute-defined-outside-init
+class TrackStates(object):
+    """
+    Records the time when the with-block is entered. Will add all states
+    that have changed since the start time to the return list when with-block
+    is exited.
+    """
+    def __init__(self, hass):
+        self.hass = hass
+        self.states = []
+
+    def __enter__(self):
+        self.now = datetime.now()
+        return self.states
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.states.extend(self.hass.states.get_since(self.now))
 
 
 def validate_config(config, items, logger):
