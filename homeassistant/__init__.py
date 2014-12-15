@@ -288,7 +288,7 @@ def create_worker_pool(thread_count=POOL_NUM_THREAD):
 
         for start, job in current_jobs:
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
-                          util.datetime_to_str(start), job)
+                            util.datetime_to_str(start), job)
 
     return util.ThreadPool(thread_count, job_handler, busy_callback)
 
