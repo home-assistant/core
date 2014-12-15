@@ -21,6 +21,7 @@ LIGHT_PROFILE = 'relax'
 
 CONF_LIGHT_PROFILE = 'light_profile'
 CONF_LIGHT_GROUP = 'light_group'
+CONF_DEVICE_GROUP = 'device_group'
 
 
 # pylint: disable=too-many-branches
@@ -34,9 +35,13 @@ def setup(hass, config):
 
     light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
 
+    device_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
+                                      device_tracker.GROUP_NAME_ALL_DEVICES)
+
     logger = logging.getLogger(__name__)
 
-    device_entity_ids = hass.states.entity_ids(device_tracker.DOMAIN)
+    device_entity_ids = group.get_entity_ids(hass, device_group,
+                                             device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("No devices found to track")
