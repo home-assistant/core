@@ -147,7 +147,7 @@ def setup(hass, config):
                         break
 
         # Did all devices leave the house?
-        elif (entity == device_tracker.ENTITY_ID_ALL_DEVICES and
+        elif (entity == device_group and
               new_state.state == STATE_NOT_HOME and lights_are_on
               and not disable_turn_off):
 
@@ -163,8 +163,7 @@ def setup(hass, config):
 
     # Track when all devices are gone to shut down lights
     hass.states.track_change(
-        device_tracker.ENTITY_ID_ALL_DEVICES,
-        check_light_on_dev_state_change,
+        device_group, check_light_on_dev_state_change,
         STATE_HOME, STATE_NOT_HOME)
 
     return True
