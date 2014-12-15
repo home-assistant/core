@@ -58,7 +58,7 @@ class TestHomeAssistant(unittest.TestCase):
         # hass.block_till_stopped checks every second if it should quit
         # we have to wait worst case 1 second
         wait_loops = 0
-        while blocking_thread.is_alive() and wait_loops < 10:
+        while blocking_thread.is_alive() and wait_loops < 50:
             wait_loops += 1
             time.sleep(0.1)
 
