@@ -31,13 +31,12 @@ def setup(hass, config):
     disable_turn_off = 'disable_turn_off' in config[DOMAIN]
 
     light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
-                                     'group.' + light.GROUP_NAME_ALL_LIGHTS)
+                                     light.ENTITY_ID_ALL_LIGHTS)
 
     light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
 
     device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
-                                      'group.' +
-                                      device_tracker.GROUP_NAME_ALL_DEVICES)
+                                      device_tracker.ENTITY_ID_ALL_DEVICES)
 
     logger = logging.getLogger(__name__)
 
