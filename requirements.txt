@@ -17,3 +17,6 @@ pyuserinput>=0.1.9
 
 # switch.tellstick, tellstick_sensor
 tellcore-py>=1.0.4
+
+# namp_tracker plugin
+python-libnmap

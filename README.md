@@ -91,6 +91,14 @@ password=MY_PASSWORD
 
 Once tracking the `device_tracker` component will maintain a file in your config dir called `known_devices.csv`. Edit this file to adjust which devices have to be tracked.
 
+As an alternative to the router-based device tracking, it is possible to directly scan the network for devices by using nmap. The IP addresses to scan can be specified in any format that nmap understands, including the network-prefix notation (`192.168.1.1/24`) and the range notation (`192.168.1.1-255`).
+
+```
+[device_tracker]
+platform=nmap_tracker
+hosts=192.168.1.1/24
+```
+
 <a name='customizing'></a>
 ## Further customizing Home Assistant
 
