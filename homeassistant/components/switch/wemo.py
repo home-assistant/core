@@ -3,6 +3,8 @@ import logging
 
 from homeassistant.helpers import ToggleDevice
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOSTS
+from homeassistant.components.switch import (
+    ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
 
 
 # pylint: disable=unused-argument
@@ -38,7 +40,6 @@ class WemoSwitch(ToggleDevice):
     """ represents a WeMo switch within home assistant. """
     def __init__(self, wemo):
         self.wemo = wemo
-        self.state_attr = {ATTR_FRIENDLY_NAME: wemo.name}
 
     def get_name(self):
         """ Returns the name of the switch if any. """
@@ -58,4 +59,13 @@ class WemoSwitch(ToggleDevice):
 
     def get_state_attributes(self):
         """ Returns optional state attributes. """
-        return self.state_attr
+        if self.wemo.model.startswith('Belkin Insight'):
+            cur_info = self.wemo.insight_params
+
+            return {
+                ATTR_FRIENDLY_NAME: self.wemo.name,
+                ATTR_CURRENT_POWER_MWH: cur_info['currentpower'],
+                ATTR_TODAY_MWH: cur_info['todaymw']
+            }
+        else:
+            return {ATTR_FRIENDLY_NAME: self.wemo.name}

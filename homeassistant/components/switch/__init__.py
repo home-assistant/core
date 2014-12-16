@@ -22,10 +22,8 @@ ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format(
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ATTR_TODAY_KWH = "today_kwh"
-ATTR_CURRENT_POWER = "current_power"
-ATTR_TODAY_ON_TIME = "today_on_time"
-ATTR_TODAY_STANDBY_TIME = "today_standby_time"
+ATTR_TODAY_MWH = "today_mwh"
+ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
