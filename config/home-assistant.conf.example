@@ -12,13 +12,16 @@ api_password=mypass
 platform=hue
 
 [device_tracker]
-# The following types are available: netgear, tomato, luci
+# The following types are available: netgear, tomato, luci, nmap_tracker
 platform=netgear
 host=192.168.1.1
 username=admin
 password=PASSWORD
 # http_id is needed for Tomato routers only
 # http_id=ABCDEFGHH
+# For nmap_tracker, only the IP addresses to scan are needed:
+# hosts=192.168.1.1/24 # netmask prefix notation or
+# hosts=192.168.1.1-255 # address range
 
 [chromecast]
 # Optional: hard code the hosts (comma seperated) to find chromecasts
