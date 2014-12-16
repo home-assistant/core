@@ -28,7 +28,7 @@ def get_devices(hass, config):
             "and `git submodule update`?"))
 
         return []
-    token = config["bearer_token"]
+    token = config["access_token"]
     pywink.set_bearer_token(token)
 
     switches = pywink.get_bulbs()
@@ -37,7 +37,6 @@ def get_devices(hass, config):
 
     # Filter out the switches and wrap in WemoSwitch object
     return [WinkLight(switch) for switch in switches]
-
 
 
 class WinkLight(ToggleDevice):

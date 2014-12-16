@@ -21,7 +21,7 @@ def get_devices(hass, config):
             "and `git submodule update`?"))
 
         return []
-    token = config["bearer_token"]
+    token = config["access_token"]
     pywink.set_bearer_token(token)
 
     switches = pywink.get_switches()
