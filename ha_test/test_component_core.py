@@ -44,7 +44,7 @@ class TestComponentsCore(unittest.TestCase):
 
         comps.turn_on(self.hass, 'light.Ceiling')
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(runs))
 
@@ -56,6 +56,6 @@ class TestComponentsCore(unittest.TestCase):
 
         comps.turn_off(self.hass, 'light.Bowl')
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(runs))

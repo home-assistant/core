@@ -93,7 +93,7 @@ class TestSun(unittest.TestCase):
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
                            {ha.ATTR_NOW: test_time + dt.timedelta(seconds=5)})
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         self.assertEqual(test_state, self.hass.states.get(sun.ENTITY_ID).state)
 

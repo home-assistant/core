@@ -308,67 +308,79 @@ class Throttle(object):
         return wrapper
 
 
-# Reason why I decided to roll my own ThreadPool instead of using
-# multiprocessing.dummy.pool or even better, use multiprocessing.pool and
-# not be hurt by the GIL in the cpython interpreter:
-# 1. The built in threadpool does not allow me to create custom workers and so
-#    I would have to wrap every listener that I passed into it with code to log
-#    the exceptions. Saving a reference to the logger in the worker seemed
-#    like a more sane thing to do.
-# 2. Most event listeners are simple checks if attributes match. If the method
-#    that they will call takes a long time to complete it might be better to
-#    put that request in a seperate thread. This is for every component to
-#    decide on its own instead of enforcing it for everyone.
 class ThreadPool(object):
-    """ A simple queue-based thread pool.
-
-    Will initiate it's workers using worker(queue).start() """
+    """ A priority queue-based thread pool. """
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, worker_count, job_handler, busy_callback=None):
+    def __init__(self, job_handler, worker_count=0, busy_callback=None):
         """
-        worker_count: number of threads to run that handle jobs
         job_handler: method to be called from worker thread to handle job
+        worker_count: number of threads to run that handle jobs
         busy_callback: method to be called when queue gets too big.
-                       Parameters: list_of_current_jobs, number_pending_jobs
+                       Parameters: worker_count, list of current_jobs,
+                                   pending_jobs_count
         """
-        self.work_queue = work_queue = queue.PriorityQueue()
-        self.current_jobs = current_jobs = []
-        self.worker_count = worker_count
-        self.busy_callback = busy_callback
-        self.busy_warning_limit = worker_count**2
+        self._job_handler = job_handler
+        self._busy_callback = busy_callback
+
+        self.worker_count = 0
+        self.busy_warning_limit = 0
+        self._work_queue = queue.PriorityQueue()
+        self.current_jobs = []
         self._lock = threading.RLock()
         self._quit_task = object()
 
-        for _ in range(worker_count):
-            worker = threading.Thread(target=_threadpool_worker,
-                                      args=(work_queue, current_jobs,
-                                            job_handler, self._quit_task))
-            worker.daemon = True
-            worker.start()
-
         self.running = True
 
-    def add_job(self, priority, job):
-        """ Add a job to be sent to the workers. """
+        for _ in range(worker_count):
+            self.add_worker()
+
+    def add_worker(self):
+        """ Adds a worker to the thread pool. Resets warning limit. """
         with self._lock:
             if not self.running:
                 raise RuntimeError("ThreadPool not running")
 
-            self.work_queue.put(PriorityQueueItem(priority, job))
+            worker = threading.Thread(target=self._worker)
+            worker.daemon = True
+            worker.start()
+
+            self.worker_count += 1
+            self.busy_warning_limit = self.worker_count * 3
+
+    def remove_worker(self):
+        """ Removes a worker from the thread pool. Resets warning limit. """
+        with self._lock:
+            if not self.running:
+                raise RuntimeError("ThreadPool not running")
+
+            self._work_queue.put(PriorityQueueItem(0, self._quit_task))
+
+            self.worker_count -= 1
+            self.busy_warning_limit = self.worker_count * 3
+
+    def add_job(self, priority, job):
+        """ Add a job to the queue. """
+        with self._lock:
+            if not self.running:
+                raise RuntimeError("ThreadPool not running")
+
+            self._work_queue.put(PriorityQueueItem(priority, job))
 
             # check if our queue is getting too big
-            if self.work_queue.qsize() > self.busy_warning_limit \
-               and self.busy_callback is not None:
+            if self._work_queue.qsize() > self.busy_warning_limit \
+               and self._busy_callback is not None:
 
                 # Increase limit we will issue next warning
                 self.busy_warning_limit *= 2
 
-                self.busy_callback(self.current_jobs, self.work_queue.qsize())
+                self._busy_callback(
+                    self.worker_count, self.current_jobs,
+                    self._work_queue.qsize())
 
     def block_till_done(self):
         """ Blocks till all work is done. """
-        self.work_queue.join()
+        self._work_queue.join()
 
     def stop(self):
         """ Stops all the threads. """
@@ -376,18 +388,40 @@ class ThreadPool(object):
             if not self.running:
                 return
 
-            # Clear the queue
-            while self.work_queue.qsize() > 0:
-                self.work_queue.get()
-                self.work_queue.task_done()
+            # Ensure all current jobs finish
+            self.block_till_done()
 
             # Tell the workers to quit
             for _ in range(self.worker_count):
-                self.add_job(1000, self._quit_task)
+                self.remove_worker()
 
             self.running = False
 
+            # Wait till all workers have quit
             self.block_till_done()
+
+    def _worker(self):
+        """ Handles jobs for the thread pool. """
+        while True:
+            # Get new item from work_queue
+            job = self._work_queue.get().item
+
+            if job == self._quit_task:
+                self._work_queue.task_done()
+                return
+
+            # Add to current running jobs
+            job_log = (datetime.now(), job)
+            self.current_jobs.append(job_log)
+
+            # Do the job
+            self._job_handler(job)
+
+            # Remove from current running job
+            self.current_jobs.remove(job_log)
+
+            # Tell work_queue the task is done
+            self._work_queue.task_done()
 
 
 class PriorityQueueItem(object):
@@ -400,27 +434,3 @@ class PriorityQueueItem(object):
 
     def __lt__(self, other):
         return self.priority < other.priority
-
-
-def _threadpool_worker(work_queue, current_jobs, job_handler, quit_task):
-    """ Provides the base functionality of a worker for the thread pool. """
-    while True:
-        # Get new item from work_queue
-        job = work_queue.get().item
-
-        if job == quit_task:
-            work_queue.task_done()
-            return
-
-        # Add to current running jobs
-        job_log = (datetime.now(), job)
-        current_jobs.append(job_log)
-
-        # Do the job
-        job_handler(job)
-
-        # Remove from current running job
-        current_jobs.remove(job_log)
-
-        # Tell work_queue a task is done
-        work_queue.task_done()

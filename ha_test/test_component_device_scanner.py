@@ -110,7 +110,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             device_tracker.DOMAIN,
             device_tracker.SERVICE_DEVICE_TRACKER_RELOAD)
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         dev1 = device_tracker.ENTITY_ID_FORMAT.format('Device_1')
         dev2 = device_tracker.ENTITY_ID_FORMAT.format('Device_2')
@@ -154,7 +154,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             device_tracker.DOMAIN,
             device_tracker.SERVICE_DEVICE_TRACKER_RELOAD)
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         # Test what happens if a device comes home and another leaves
         self.assertTrue(device_tracker.is_on(self.hass))
@@ -171,7 +171,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.hass.bus.fire(
             ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: nowAlmostMinGone})
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         self.assertTrue(device_tracker.is_on(self.hass))
         self.assertTrue(device_tracker.is_on(self.hass, dev1))
@@ -182,7 +182,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         # Now test if gone for longer then error margin
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: nowMinGone})
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         self.assertTrue(device_tracker.is_on(self.hass))
         self.assertTrue(device_tracker.is_on(self.hass, dev1))

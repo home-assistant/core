@@ -100,7 +100,7 @@ class TestRemoteMethods(unittest.TestCase):
 
         remote.fire_event(master_api, "test.event_no_data")
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -165,7 +165,7 @@ class TestRemoteMethods(unittest.TestCase):
 
         remote.call_service(master_api, "test_domain", "test_service")
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -204,7 +204,7 @@ class TestRemoteClasses(unittest.TestCase):
         # Wait till slave tells master
         slave._pool.block_till_done()
         # Wait till master gives updated state
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual("remote.statemachine test",
                          slave.states.get("remote.test").state)
@@ -224,7 +224,7 @@ class TestRemoteClasses(unittest.TestCase):
         # Wait till slave tells master
         slave._pool.block_till_done()
         # Wait till master gives updated event
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
 

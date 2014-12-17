@@ -53,7 +53,7 @@ class TestHomeAssistant(unittest.TestCase):
         self.assertTrue(blocking_thread.is_alive())
 
         self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         # hass.block_till_stopped checks every second if it should quit
         # we have to wait worst case 1 second
@@ -76,23 +76,23 @@ class TestHomeAssistant(unittest.TestCase):
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(before_birthday)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(0, len(runs))
 
         self._send_time_changed(birthday_paulus)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
         # A point in time tracker will only fire once, this should do nothing
         self._send_time_changed(birthday_paulus)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
         self.hass.track_point_in_time(
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(after_birthday)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(2, len(runs))
 
     def test_track_time_change(self):
@@ -105,17 +105,17 @@ class TestHomeAssistant(unittest.TestCase):
             lambda x: specific_runs.append(1), second=[0, 30])
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 

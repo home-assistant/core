@@ -86,7 +86,7 @@ class TestComponentsGroup(unittest.TestCase):
         # Turn the Bowl off and see if group turns off
         self.hass.states.set('light.Bowl', STATE_OFF)
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         group_state = self.hass.states.get(self.group_name)
         self.assertEqual(STATE_OFF, group_state.state)
@@ -94,7 +94,7 @@ class TestComponentsGroup(unittest.TestCase):
         # Turn the Ceiling on and see if group turns on
         self.hass.states.set('light.Ceiling', STATE_ON)
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         group_state = self.hass.states.get(self.group_name)
         self.assertEqual(STATE_ON, group_state.state)
@@ -103,7 +103,7 @@ class TestComponentsGroup(unittest.TestCase):
         """ Test is_on method. """
         self.assertTrue(group.is_on(self.hass, self.group_name))
         self.hass.states.set('light.Bowl', STATE_OFF)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertFalse(group.is_on(self.hass, self.group_name))
 
         # Try on non existing state

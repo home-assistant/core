@@ -41,23 +41,38 @@ def from_config_dict(config, hass=None):
     components = (key for key in config.keys()
                   if ' ' not in key and key != homeassistant.DOMAIN)
 
-    # Setup the components
-    if core_components.setup(hass, config):
-        logger.info("Home Assistant core initialized")
-
-        for domain in loader.load_order_components(components):
-            try:
-                if loader.get_component(domain).setup(hass, config):
-                    logger.info("component %s initialized", domain)
-                else:
-                    logger.error("component %s failed to initialize", domain)
-
-            except Exception:  # pylint: disable=broad-except
-                logger.exception("Error during setup of component %s", domain)
-
-    else:
+    if not core_components.setup(hass, config):
         logger.error(("Home Assistant core failed to initialize. "
                       "Further initialization aborted."))
+
+        return hass
+
+    logger.info("Home Assistant core initialized")
+
+    # Setup the components
+
+    # We assume that all components that load before the group component loads
+    # are components that poll devices. As their tasks are IO based, we will
+    # add an extra worker for each of them.
+    add_worker = True
+
+    for domain in loader.load_order_components(components):
+        component = loader.get_component(domain)
+
+        try:
+            if component.setup(hass, config):
+                logger.info("component %s initialized", domain)
+
+                add_worker = add_worker and domain != "group"
+
+                if add_worker:
+                    hass.pool.add_worker()
+
+            else:
+                logger.error("component %s failed to initialize", domain)
+
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("Error during setup of component %s", domain)
 
     return hass
 

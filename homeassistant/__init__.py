@@ -30,22 +30,10 @@ TIMER_INTERVAL = 10  # seconds
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Define number of worker threads
-#
-# There are two categories of Home Assistant jobs:
-#  - jobs that poll external components that are mostly waiting for IO
-#  - jobs that respond to events that happen inside HA (state_changed, etc)
-#
-# Based on different setups I see 3 times as many events responding to events
-# then that there are ones that poll components. We therefore want to set the
-# number of threads to 1.25 of the CPU count, we will round it up so the
-# minimum number of threads is 2.
-#
-# We want to have atleast 2 threads because a call to the homeassistant.turn_on
-# will wait till the service is executed which is in a different thread.
-#
-# If os.cpu_count() cannot determine the cpu_count, we will assume there is 1.
-POOL_NUM_THREAD = int((os.cpu_count() or 1) * 1.25) + 1
+# Define number of MINIMUM worker threads.
+# During bootstrap of HA (see bootstrap.from_config_dict()) worker threads
+# will be added for each component that polls devices.
+MIN_WORKER_THREAD = 2
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(?P<domain>\w+)\.(?P<entity>\w+)$")
@@ -57,8 +45,7 @@ class HomeAssistant(object):
     """ Core class to route all communication to right components. """
 
     def __init__(self):
-        self._pool = pool = create_worker_pool()
-
+        self.pool = pool = create_worker_pool()
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
@@ -71,6 +58,9 @@ class HomeAssistant(object):
 
     def start(self):
         """ Start home assistant. """
+        _LOGGER.info(
+            "Starting Home Assistant (%d threads)", self.pool.worker_count)
+
         Timer(self)
 
         self.bus.fire(EVENT_HOMEASSISTANT_START)
@@ -165,9 +155,9 @@ class HomeAssistant(object):
         self.bus.fire(EVENT_HOMEASSISTANT_STOP)
 
         # Wait till all responses to homeassistant_stop are done
-        self._pool.block_till_done()
+        self.pool.block_till_done()
 
-        self._pool.stop()
+        self.pool.stop()
 
     def get_entity_ids(self, domain_filter=None):
         """
@@ -266,7 +256,7 @@ class JobPriority(util.OrderedEnum):
             return JobPriority.EVENT_DEFAULT
 
 
-def create_worker_pool(thread_count=POOL_NUM_THREAD):
+def create_worker_pool():
     """ Creates a worker pool to be used. """
 
     def job_handler(job):
@@ -279,18 +269,18 @@ def create_worker_pool(thread_count=POOL_NUM_THREAD):
             # We do not want to crash our ThreadPool
             _LOGGER.exception("BusHandler:Exception doing job")
 
-    def busy_callback(current_jobs, pending_jobs_count):
+    def busy_callback(worker_count, current_jobs, pending_jobs_count):
         """ Callback to be called when the pool queue gets too big. """
 
         _LOGGER.warning(
             "WorkerPool:All %d threads are busy and %d jobs pending",
-            thread_count, pending_jobs_count)
+            worker_count, pending_jobs_count)
 
         for start, job in current_jobs:
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
                             util.datetime_to_str(start), job)
 
-    return util.ThreadPool(thread_count, job_handler, busy_callback)
+    return util.ThreadPool(job_handler, MIN_WORKER_THREAD, busy_callback)
 
 
 class EventOrigin(enum.Enum):

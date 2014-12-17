@@ -63,7 +63,7 @@ class TestChromecast(unittest.TestCase):
             calls = mock_service(self.hass, chromecast.DOMAIN, service_name)
 
             service_method(self.hass)
-            self.hass._pool.block_till_done()
+            self.hass.pool.block_till_done()
 
             self.assertEqual(1, len(calls))
             call = calls[-1]
@@ -71,7 +71,7 @@ class TestChromecast(unittest.TestCase):
             self.assertEqual(service_name, call.service)
 
             service_method(self.hass, self.test_entity)
-            self.hass._pool.block_till_done()
+            self.hass.pool.block_till_done()
 
             self.assertEqual(2, len(calls))
             call = calls[-1]

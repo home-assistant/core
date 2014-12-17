@@ -199,7 +199,7 @@ class TestHTTP(unittest.TestCase):
             _url(remote.URL_API_EVENTS_EVENT.format("test.event_no_data")),
             headers=HA_HEADERS)
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -221,7 +221,7 @@ class TestHTTP(unittest.TestCase):
             data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -241,7 +241,7 @@ class TestHTTP(unittest.TestCase):
             data=json.dumps('not an object'),
             headers=HA_HEADERS)
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(422, req.status_code)
         self.assertEqual(0, len(test_value))
@@ -252,7 +252,7 @@ class TestHTTP(unittest.TestCase):
             data=json.dumps([1, 2, 3]),
             headers=HA_HEADERS)
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(422, req.status_code)
         self.assertEqual(0, len(test_value))
@@ -297,7 +297,7 @@ class TestHTTP(unittest.TestCase):
                 "test_domain", "test_service")),
             headers=HA_HEADERS)
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -319,7 +319,7 @@ class TestHTTP(unittest.TestCase):
             data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
 
-        hass._pool.block_till_done()
+        hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
