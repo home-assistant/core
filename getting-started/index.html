@@ -1,0 +1,199 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Getting Started - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="http://balloob.github.io/home-assistant/getting-started">
+    
+    <link href="/github/favicon.png" rel="icon">
+    <link href="/github/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/github/github/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+  </head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-four-sixths palm-one-whole">
+  <a href="/github/" class="site-title">Home Assistant</a>
+</div>
+
+<div class="grid__item seven-tenths lap-two-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li><a href="/github/getting-started">Getting started</a></li>
+  <li><a href="/github/architecture">Architecture</a></li>
+  <li><a href="/github/contributing">Contributing</a></li>
+  <li><a href="/github/blog/2014/12/18/website-launched/">Blog</a></li>
+  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Getting Started
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>Running Home Assistant requires that python3 and the package requests are installed.</p>
+
+<p>Run the following code to get up and running with the minimum setup:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>git clone --recursive https://github.com/balloob/home-assistant.git
+</span><span class='line'><span class="nb">cd </span>home-assistant
+</span><span class='line'>pip3 install -r requirements.txt
+</span><span class='line'>
+</span><span class='line'>python3 -m homeassistant
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This will start the Home Assistant server and create an initial configuration file in <code>config/home-assistant.conf</code> that is setup for demo mode. It will launch its web interface on <a href="http://127.0.0.1:8123">http://127.0.0.1:8123</a>. The default password is &lsquo;password&rsquo;.</p>
+
+<p>If you&rsquo;re using Docker, you can use</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d --name<span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro -p 8123:8123 balloob/home-assistant
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example">/config/home-assistant.conf.example</a>.</p>
+
+<p><em>Note:</em> you can append <code>?api_password=YOUR_PASSWORD</code> to the url of the web interface to log in automatically.</p>
+
+<p><em>Note:</em> for the light and switch component, you can specify multiple platforms by using sequential sections: [switch], [switch 2], [switch 3] etc</p>
+
+<h3>Philips Hue</h3>
+
+<p>To get Philips Hue working you will have to connect Home Assistant to the Hue bridge.</p>
+
+<p>Run the following command from your config dir and follow the instructions:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>python3 -m phue --host HUE_BRIDGE_IP_ADDRESS --config-file-path phue.conf
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After that add the following lines to your <code>home-assistant.conf</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>light<span class="o">]</span>
+</span><span class='line'><span class="nv">platform</span><span class="o">=</span>hue
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Wireless router</h3>
+
+<p>Your wireless router is used to track which devices are connected. Three different types of wireless routers are currently supported: tomato, netgear and luci (OpenWRT). To get started add the following lines to your <code>home-assistant.conf</code> (example for Netgear):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>device_tracker<span class="o">]</span>
+</span><span class='line'><span class="nv">platform</span><span class="o">=</span>netgear
+</span><span class='line'><span class="nv">host</span><span class="o">=</span>192.168.1.1
+</span><span class='line'><span class="nv">username</span><span class="o">=</span>admin
+</span><span class='line'><span class="nv">password</span><span class="o">=</span>MY_PASSWORD
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><em>Note on tomato:</em> Tomato requires an extra config variable called <code>http_id</code>. The value can be obtained by logging in to the Tomato admin interface and search for <code>http_id</code> in the page source code.</p>
+
+<p><em>Note on luci:</em> before the Luci scanner can be used you have to install the luci RPC package on OpenWRT: <code>opkg install luci-mod-rpc</code>.</p>
+
+<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked.</p>
+
+<p>As an alternative to the router-based device tracking, it is possible to directly scan the network for devices by using nmap. The IP addresses to scan can be specified in any format that nmap understands, including the network-prefix notation (<code>192.168.1.1/24</code>) and the range notation (<code>192.168.1.1-255</code>).</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>device_tracker<span class="o">]</span>
+</span><span class='line'><span class="nv">platform</span><span class="o">=</span>nmap_tracker
+</span><span class='line'><span class="nv">hosts</span><span class="o">=</span>192.168.1.1/24
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  All content by Paulus Schoutsen and licenced under <a href="//creativecommons.org/licenses/by-nc-sa/3.0/ie/">Creative Commons</a>.<br>
+  Code under <a href="//github.com/coogie/oscailte/blob/master/README.md">MIT Licence</a>. <span class="credit">Site powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
+<script defer src="/github/javascripts/octopress.js"></script>
+
+
+
+
+
+
+
+  </body>
+</html>

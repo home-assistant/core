@@ -1,0 +1,144 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>architecture - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="http://balloob.github.io/home-assistant/architecture">
+    
+    <link href="/github/favicon.png" rel="icon">
+    <link href="/github/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/github/github/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+  </head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-four-sixths palm-one-whole">
+  <a href="/github/" class="site-title">Home Assistant</a>
+</div>
+
+<div class="grid__item seven-tenths lap-two-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li><a href="/github/getting-started">Getting started</a></li>
+  <li><a href="/github/architecture">Architecture</a></li>
+  <li><a href="/github/contributing">Contributing</a></li>
+  <li><a href="/github/blog/2014/12/18/website-launched/">Blog</a></li>
+  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Architecture
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p><img src='/github/images/ha_architecture.png' style='background-color: white'/></p>
+
+<p>The core of Home Assistant exists of the following parts.</p>
+
+<p>The <b>Event Bus</b> facilitates the firing and listening of events. This is the beating heart of Home Assistant.</p>
+
+<p>The <b>State Machine</b> keeps track of the states of things. Fires a state_changed event when a state has been changed.</p>
+
+<p>The <b>Service Registry</b> listens on the event bus for call_service events and allows other code to register services.</p>
+
+<p>The <b>Timer</b> will send every 10 seconds a time_changed event on the event bus.</p>
+
+<p>Take for example the device_tracker component. This component is responsible for keeping track which devices are home. It checks which devices are home every time a time_changed event is fired on the event bus. It will then update the state machine with the information for each device.</p>
+
+<p>This setup allows us to create simple yet powerful logic for controlling your home:</p>
+
+<pre><code>In the event that the state of device 'Paulus Nexus 5' changes to the 'Home' state:
+  If the sun has set and the lights are not on:
+    Turn on the lights
+
+In the event that the combined state of all tracked devices changes to 'Not Home':
+  If the lights are on:
+    Turn off the lights
+
+In the event of the sun setting:
+  If the lights are off and the combined state of all tracked device equals 'Home':
+    Turn on the lights
+</code></pre>
+
+<p>By using the Bus as a central communication hub between components it is easy to replace components or add functionality. If you would want to change the way devices are detected you only have to write a component that updates the device states in the State Machine.</p>
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  All content by Paulus Schoutsen and licenced under <a href="//creativecommons.org/licenses/by-nc-sa/3.0/ie/">Creative Commons</a>.<br>
+  Code under <a href="//github.com/coogie/oscailte/blob/master/README.md">MIT Licence</a>. <span class="credit">Site powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
+<script defer src="/github/javascripts/octopress.js"></script>
+
+
+
+
+
+
+
+  </body>
+</html>

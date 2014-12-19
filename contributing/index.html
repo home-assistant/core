@@ -1,0 +1,182 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>contributing - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="http://balloob.github.io/home-assistant/contributing">
+    
+    <link href="/github/favicon.png" rel="icon">
+    <link href="/github/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/github/github/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+  </head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-four-sixths palm-one-whole">
+  <a href="/github/" class="site-title">Home Assistant</a>
+</div>
+
+<div class="grid__item seven-tenths lap-two-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li><a href="/github/getting-started">Getting started</a></li>
+  <li><a href="/github/architecture">Architecture</a></li>
+  <li><a href="/github/contributing">Contributing</a></li>
+  <li><a href="/github/blog/2014/12/18/website-launched/">Blog</a></li>
+  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Contributing
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>You&rsquo;ve probably came here beacuse you noticed that your favorite device is not supported and want to add it.</p>
+
+<p>First step is to decide under which component the device has to reside. Each component is responsible for a specific domain within Home Assistant. An example is the switch component, which is responsible for interaction with different types of switches. The switch component consists of the following files:</p>
+
+<p><strong>homeassistant/components/switch/__init__.py</strong><br />
+Contains the Switch component code.</p>
+
+<p><strong>homeassistant/components/switch/wemo.py</strong><br />
+Contains the code to interact with WeMo switches. Called if platform=wemo in switch config.</p>
+
+<p><strong>homeassistant/components/switch/tellstick.py</strong>
+Contains the code to interact with Tellstick switches. Called if platform=tellstick in switch config.</p>
+
+<p>If a component exists, your job is easy. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add. If you cannot find a suitable component, you&rsquo;ll have to add it yourself. When writing a component try to structure it after the Switch component to maximize reusability.</p>
+
+<p>Communication between Home Assistant and devices should happen via third-party libraries that implement the device API. This will make sure the platform support code stays as small as possible.</p>
+
+<p>For help on building your component, please see the See the documentation on <a href="https://github.com/balloob/home-assistant#further-customizing-home-assistant">further customizing Home Assistant</a>.</p>
+
+<p>After you finish adding support for your device:</p>
+
+<ul>
+<li>update the supported devices in README.md.</li>
+<li>add any new dependencies to requirements.txt.</li>
+<li>Make sure all your code passes Pylint, flake8 (PEP8 and some more) validation. To generate reports, run <code>pylint homeassistant &gt; pylint.txt</code> and <code>flake8 homeassistant --exclude bower_components,external &gt; flake8.txt</code>.</li>
+</ul>
+
+
+<p>If you&rsquo;ve added a component:</p>
+
+<ul>
+<li>update the file <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/domain-icon.html"><code>domain-icon.html</code></a> with an icon for your domain (<a href="https://www.polymer-project.org/components/core-icons/demo.html">pick from this list</a>)</li>
+<li>update the demo component with two states that it provides</li>
+<li>Add your component to home-assistant.conf.example</li>
+</ul>
+
+
+<p>Since you&rsquo;ve updated domain-icon.html, you&rsquo;ve made changes to the frontend:</p>
+
+<ul>
+<li>run <code>build_frontend</code>. This will build a new version of the frontend. Make sure you add the changed files <code>frontend.py</code> and <code>frontend.html</code> to the commit.</li>
+</ul>
+
+
+<h2>Setting states</h2>
+
+<p>It is the responsibility of the component to maintain the states of the devices in your domain. Each device should be a single state and, if possible, a group should be provided that tracks the combined state of the devices.</p>
+
+<p>A state can have several attributes that will help the frontend in displaying your state:</p>
+
+<ul>
+<li><code>friendly_name</code>: this name will be used as the name of the device</li>
+<li><code>entity_picture</code>: this picture will be shown instead of the domain icon</li>
+<li><code>unit_of_measurement</code>: this will be appended to the state in the interface</li>
+</ul>
+
+
+<p>These attributes are defined in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/__init__.py#L25">homeassistant.components</a>.</p>
+
+<h2>Working on the frontend</h2>
+
+<p>The frontend is composed of Polymer web-components and compiled into the file <code>frontend.html</code>. During development you do not want to work with the compiled version but with the seperate files. To have Home Assistant serve the seperate files, set <code>development=1</code> for the http-component in your config.</p>
+
+<p>When you are done with development and ready to commit your changes, run <code>build_frontend</code>, set <code>development=0</code> in your config and validate that everything still works.</p>
+
+<h2>Notes on PyLint and PEP8 validation</h2>
+
+<p>In case a PyLint warning cannot be avoided, add a comment to disable the PyLint check for that line. This can be done using the format <code># pylint: disable=YOUR-ERROR-NAME</code>. Example of an unavoidable PyLint warning is if you do not use the passed in datetime if you&rsquo;re listening for time change.</p>
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  All content by Paulus Schoutsen and licenced under <a href="//creativecommons.org/licenses/by-nc-sa/3.0/ie/">Creative Commons</a>.<br>
+  Code under <a href="//github.com/coogie/oscailte/blob/master/README.md">MIT Licence</a>. <span class="credit">Site powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
+<script defer src="/github/javascripts/octopress.js"></script>
+
+
+
+
+
+
+
+  </body>
+</html>

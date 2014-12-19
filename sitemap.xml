@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>http://balloob.github.io/home-assistant/blog/2014/12/18/website-launched/</loc>
+    <lastmod>2014-12-18T23:24:45-08:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>http://balloob.github.io/home-assistant/blog/archives/</loc>
+    <lastmod>2014-12-19T00:20:47-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://balloob.github.io/home-assistant/blog/</loc>
+    <lastmod>2014-12-19T00:20:47-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://balloob.github.io/home-assistant/</loc>
+    <lastmod>2014-12-19T00:20:47-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>http://balloob.github.io/home-assistant/contributing/</loc>
+    <lastmod>2014-12-19T00:20:47-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://balloob.github.io/home-assistant/getting-started/</loc>
+    <lastmod>2014-12-19T00:20:47-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://balloob.github.io/home-assistant/architecture/</loc>
+    <lastmod>2014-12-19T00:20:47-08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Home Assistant]]></title>
+  <link href="http://balloob.github.io/home-assistant/atom.xml" rel="self"/>
+  <link href="http://balloob.github.io/home-assistant/"/>
+  <updated>2014-12-19T00:20:47-08:00</updated>
+  <id>http://balloob.github.io/home-assistant/</id>
+  <author>
+    <name><![CDATA[Paulus Schoutsen]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Website launched!]]></title>
+    <link href="http://balloob.github.io/home-assistant/blog/2014/12/18/website-launched/"/>
+    <updated>2014-12-18T23:24:45-08:00</updated>
+    <id>http://balloob.github.io/home-assistant/blog/2014/12/18/website-launched</id>
+    <content type="html"><![CDATA[<p>I finally took the time to setup a simple website to help people getting started with Home Assistant. This will make sure that the README on GitHub can be purely focussed on developers.</p>
+]]></content>
+  </entry>
+  
+</feed>
