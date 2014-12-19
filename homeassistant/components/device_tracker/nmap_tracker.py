@@ -39,7 +39,7 @@ def _arp(ip_address):
     cmd = ['arp', '-n', ip_address]
     arp = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     out, _ = arp.communicate()
-    match = re.search('(([0-9A-Fa-f]{2}\\:){5}[0-9A-Fa-f]{2})', str(out))
+    match = re.search(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})', str(out))
     if match:
         return match.group(0)
     _LOGGER.info("No MAC address found for %s", ip_address)
