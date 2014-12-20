@@ -100,9 +100,17 @@
 
 <p>After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example">/config/home-assistant.conf.example</a>.</p>
 
-<p><em>Note:</em> you can append <code>?api_password=YOUR_PASSWORD</code> to the url of the web interface to log in automatically.</p>
+<div class='note'><p class='title'>Note</p><p class='content'>
+You can append `?api_password=YOUR_PASSWORD` to the url of the web interface to log in automatically.
+</p></div>
 
-<p><em>Note:</em> for the light and switch component, you can specify multiple platforms by using sequential sections: [switch], [switch 2], [switch 3] etc</p>
+
+
+
+<div class='note'><p class='title'>Note</p><p class='content'>
+For the light and switch component, you can specify multiple platforms by using sequential sections: [switch], [switch 2], [switch 3] etc
+</p></div>
+
 
 <h3>Philips Hue</h3>
 
@@ -141,9 +149,19 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><em>Note on tomato:</em> Tomato requires an extra config variable called <code>http_id</code>. The value can be obtained by logging in to the Tomato admin interface and search for <code>http_id</code> in the page source code.</p>
 
-<p><em>Note on luci:</em> before the Luci scanner can be used you have to install the luci RPC package on OpenWRT: <code>opkg install luci-mod-rpc</code>.</p>
+
+<div class='note'><p class='title'>Note on Tomato</p><p class='content'>
+Tomato requires an extra config variable called `http_id`. The value can be obtained by logging in to the Tomato admin interface and search for `http_id` in the page source code.
+</p></div>
+
+
+
+
+<div class='note'><p class='title'>Note on Luci</p><p class='content'>
+Before the Luci scanner can be used you have to install the luci RPC package on OpenWRT: `opkg install luci-mod-rpc`.
+</p></div>
+
 
 <p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked.</p>
 
