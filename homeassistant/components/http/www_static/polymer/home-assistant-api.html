@@ -279,8 +279,18 @@
     },
 
     call_api: function(method, path, parameters, onSuccess, onError) {
+      var url = "/api/" + path;
+
+      // set to true to generate a frontend to be used as demo on the website
+      if (false) {
+        if (path === "states" || path === "services" || path === "events") {
+          url = "/demo/" + path + ".json";
+        } else {
+          return;
+        }
+      }
       var req = new XMLHttpRequest();
-      req.open(method, "/api/" + path, true);
+      req.open(method, url, true);
       req.setRequestHeader("X-HA-access", this.auth);
 
       req.onreadystatechange = function() {
