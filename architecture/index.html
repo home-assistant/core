@@ -43,8 +43,9 @@
 <ul class="menu pull-right">
   <li><a href="/getting-started/">Getting started</a></li>
   <li><a href="/architecture/">Architecture</a></li>
-  <li><a href="/contributing/">Contributing</a></li>
-  <li><a href="/blog/2014/12/18/website-launched/">Blog</a></li>
+  <li><a href="/developers/">Developers</a></li>
+  <li><a href="/api/">API</a></li>
+  <li><a href="/blog/">Blog</a></li>
   <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
 </ul>
   </nav>
@@ -74,23 +75,25 @@
   <hr class="divider">
   
 
-  <p><img src='/images/ha_architecture.png' style='background-color: white'/></p>
+  <p><a href='/images/ha_architecture.png'>
+  <img src='/images/ha_architecture.png' style='border: 0; box-shadow: none;'/>
+</a></p>
 
 <p>The core of Home Assistant exists of the following parts.</p>
 
-<p>The <b>Event Bus</b> facilitates the firing and listening of events. This is the beating heart of Home Assistant.</p>
+<p>The <strong>Event Bus</strong> facilitates the firing and listening of events. This is the beating heart of Home Assistant.</p>
 
-<p>The <b>State Machine</b> keeps track of the states of things. Fires a state_changed event when a state has been changed.</p>
+<p>The <strong>State Machine</strong> keeps track of the states of things. Fires a state_changed event when a state has been changed.</p>
 
-<p>The <b>Service Registry</b> listens on the event bus for call_service events and allows other code to register services.</p>
+<p>The <strong>Service Registry</strong> listens on the event bus for call_service events and allows other code to register services.</p>
 
-<p>The <b>Timer</b> will send every 10 seconds a time_changed event on the event bus.</p>
+<p>The <strong>Timer</strong> will send every 10 seconds a time_changed event on the event bus.</p>
 
 <p>Take for example the device_tracker component. This component is responsible for keeping track which devices are home. It checks which devices are home every time a time_changed event is fired on the event bus. It will then update the state machine with the information for each device.</p>
 
 <p>This setup allows us to create simple yet powerful logic for controlling your home:</p>
 
-<pre><code>In the event that the state of device 'Paulus Nexus 5' changes to the 'Home' state:
+<pre><code>In the event that device 'Paulus Nexus 5' changes to the 'Home' state:
   If the sun has set and the lights are not on:
     Turn on the lights
 
@@ -104,6 +107,43 @@ In the event of the sun setting:
 </code></pre>
 
 <p>By using the Bus as a central communication hub between components it is easy to replace components or add functionality. If you would want to change the way devices are detected you only have to write a component that updates the device states in the State Machine.</p>
+
+<h2>Multiple connected instances</h2>
+
+<p>Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local events fired and states set to the master instance which will then replicate it to each slave.</p>
+
+<p>Because each slave maintains its own ServiceRegistry it is possible to have multiple slaves respond to one service call.</p>
+
+<p><a href='/images/architecture-remote.png'>
+  <img src='/images/architecture-remote.png' style='border: 0; box-shadow: none;' />
+</a></p>
+
+<p>A slave instance can be started with the following code and has the same support for components as a master-instance.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.remote</span> <span class="kn">as</span> <span class="nn">remote</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.components.http</span> <span class="kn">as</span> <span class="nn">http</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">remote_api</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">API</span><span class="p">(</span><span class="s">&quot;remote_host_or_ip&quot;</span><span class="p">,</span> <span class="s">&quot;remote_api_password&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">hass</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">HomeAssistant</span><span class="p">(</span><span class="n">remote_api</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">http</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&quot;my_local_api_password&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">hass</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span class='line'><span class="n">hass</span><span class="o">.</span><span class="n">block_till_stopped</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 
 </article>
@@ -133,8 +173,7 @@ In the event of the sun setting:
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-<script defer src="/javascripts/octopress.js"></script>
+    
 
 
 

@@ -43,8 +43,9 @@
 <ul class="menu pull-right">
   <li><a href="/getting-started/">Getting started</a></li>
   <li><a href="/architecture/">Architecture</a></li>
-  <li><a href="/contributing/">Contributing</a></li>
-  <li><a href="/blog/2014/12/18/website-launched/">Blog</a></li>
+  <li><a href="/developers/">Developers</a></li>
+  <li><a href="/api/">API</a></li>
+  <li><a href="/blog/">Blog</a></li>
   <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
 </ul>
   </nav>
@@ -98,10 +99,10 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example">/config/home-assistant.conf.example</a>.</p>
+<p>After you got the demo mode running it is time to enable some <a href="/components/">components</a> and get started. An example configuration file has been provided in <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example"><code>/config/home-assistant.conf.example</code></a>.</p>
 
 <div class='note'><p class='title'>Note</p><p class='content'>
-You can append `?api_password=YOUR_PASSWORD` to the url of the web interface to log in automatically.
+You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in automatically.
 </p></div>
 
 
@@ -163,7 +164,7 @@ Before the Luci scanner can be used you have to install the luci RPC package on 
 </p></div>
 
 
-<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked.</p>
+<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>
 
 <p>As an alternative to the router-based device tracking, it is possible to directly scan the network for devices by using nmap. The IP addresses to scan can be specified in any format that nmap understands, including the network-prefix notation (<code>192.168.1.1/24</code>) and the range notation (<code>192.168.1.1-255</code>).</p>
 
@@ -204,8 +205,7 @@ Before the Luci scanner can be used you have to install the luci RPC package on 
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-<script defer src="/javascripts/octopress.js"></script>
+    
 
 
 
