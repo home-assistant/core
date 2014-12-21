@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: website | Home Assistant]]></title>
-  <link href="http://home-assistant.io/blog/categories/website/atom.xml" rel="self"/>
-  <link href="http://home-assistant.io/"/>
-  <updated>2014-12-20T13:27:22-08:00</updated>
-  <id>http://home-assistant.io/</id>
+  <link href="https://home-assistant.io/blog/categories/website/atom.xml" rel="self"/>
+  <link href="https://home-assistant.io/"/>
+  <updated>2014-12-21T10:51:00-08:00</updated>
+  <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Website launched!]]></title>
-    <link href="http://home-assistant.io/blog/2014/12/18/website-launched/"/>
+    <link href="https://home-assistant.io/blog/2014/12/18/website-launched/"/>
     <updated>2014-12-18T23:24:45-08:00</updated>
-    <id>http://home-assistant.io/blog/2014/12/18/website-launched</id>
+    <id>https://home-assistant.io/blog/2014/12/18/website-launched</id>
     <content type="html"><![CDATA[<p>I finally took the time to setup a simple website to help people getting started with Home Assistant. This will make sure that the README on GitHub can be purely focussed on developers.</p>
 ]]></content>
   </entry>

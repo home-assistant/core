@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://home-assistant.io/blog/2014/12/18/website-launched/</loc>
+    <loc>https://home-assistant.io/blog/2014/12/18/website-launched/</loc>
     <lastmod>2014-12-18T23:24:45-08:00</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>http://home-assistant.io/blog/archives/</loc>
-    <lastmod>2014-12-20T13:27:22-08:00</lastmod>
+    <loc>https://home-assistant.io/blog/archives/</loc>
+    <lastmod>2014-12-21T10:51:00-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>http://home-assistant.io/blog/</loc>
-    <lastmod>2014-12-20T13:27:22-08:00</lastmod>
+    <loc>https://home-assistant.io/blog/</loc>
+    <lastmod>2014-12-21T10:51:00-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>http://home-assistant.io/</loc>
-    <lastmod>2014-12-20T13:27:22-08:00</lastmod>
+    <loc>https://home-assistant.io/</loc>
+    <lastmod>2014-12-21T10:51:00-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>http://home-assistant.io/contributing/</loc>
-    <lastmod>2014-12-20T13:27:22-08:00</lastmod>
+    <loc>https://home-assistant.io/contributing/</loc>
+    <lastmod>2014-12-21T10:51:00-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>http://home-assistant.io/getting-started/</loc>
-    <lastmod>2014-12-20T13:27:22-08:00</lastmod>
+    <loc>https://home-assistant.io/getting-started/</loc>
+    <lastmod>2014-12-21T10:51:00-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>http://home-assistant.io/architecture/</loc>
-    <lastmod>2014-12-20T13:27:22-08:00</lastmod>
+    <loc>https://home-assistant.io/architecture/</loc>
+    <lastmod>2014-12-21T10:51:00-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

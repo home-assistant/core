@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://home-assistant.io/sitemap.xml 
+Sitemap: https://home-assistant.io/sitemap.xml 
