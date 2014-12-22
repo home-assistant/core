@@ -7,49 +7,49 @@
   </url>
   <url>
     <loc>https://home-assistant.io/blog/archives/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/api/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/architecture/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/</loc>
-    <lastmod>2014-12-21T22:16:07-08:00</lastmod>
+    <lastmod>2014-12-22T00:11:55-08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -61,6 +61,11 @@
   <url>
     <loc>https://home-assistant.io/demo/index.html</loc>
     <lastmod>2014-12-21T15:03:39-08:00</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/googlef4f3693c209fe788.html</loc>
+    <lastmod>2014-12-22T00:10:47-08:00</lastmod>
     <priority>0.6</priority>
   </url>
 </urlset>
