@@ -1,6 +1,6 @@
 # Home Assistant [![Build Status](https://travis-ci.org/balloob/home-assistant.svg?branch=master)](https://travis-ci.org/balloob/home-assistant) [![Coverage Status](https://img.shields.io/coveralls/balloob/home-assistant.svg)](https://coveralls.io/r/balloob/home-assistant?branch=master)
 
-This is the source for Home Assistant. For installation instructions, tutorials and the docs, please see [https://home-assistant.io](https://home-assistant.io).
+This is the source for Home Assistant. For installation instructions, tutorials and the docs, please see [https://home-assistant.io](https://home-assistant.io). For a fully functioning frontend of Home Assistant, [click here](https://home-assistant.io/demo/).
 
 Home Assistant is a home automation platform running on Python 3. The goal of Home Assistant is to be able to track and control all devices at home and offer a platform for automating control.
 
@@ -25,7 +25,7 @@ Home Assistant also includes functionality for controlling HTPCs:
  * Download files
  * Open URLs in the default browser
 
-![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/screenshots.png)
+[![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/screenshots.png)](https://home-assistant.io/demo/)
 
 The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](#architecture) and the [section on customizing](#customizing).
 
