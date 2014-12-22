@@ -104,8 +104,9 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 <p>The api supports the following actions:</p>
 
-<p><strong>/api - GET</strong><br>
-Returns message if API is up and running.</p>
+<h4>GET /api</h4>
+
+<p>Returns message if API is up and running.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -116,8 +117,9 @@ Returns message if API is up and running.</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/events - GET</strong><br>
-Returns an array of event objects. Each event object contain event name and listener count.</p>
+<h4>GET /api/events</h4>
+
+<p>Returns an array of event objects. Each event object contain event name and listener count.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -142,8 +144,9 @@ Returns an array of event objects. Each event object contain event name and list
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/services - GET</strong><br>
-Returns an array of service objects. Each object contains the domain and which services it contains.</p>
+<h4>GET /api/services</h4>
+
+<p>Returns an array of service objects. Each object contains the domain and which services it contains.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -178,8 +181,9 @@ Returns an array of service objects. Each object contains the domain and which s
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/states - GET</strong><br>
-Returns an array of state objects. Each state has the following attributes: entity_id, state, last_changed and attributes.</p>
+<h4>GET /api/states</h4>
+
+<p>Returns an array of state objects. Each state has the following attributes: entity_id, state, last_changed and attributes.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -218,8 +222,9 @@ Returns an array of state objects. Each state has the following attributes: enti
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/states/&lt;entity_id></strong> - GET<br>
-Returns a state object for specified entity_id. Returns 404 if not found.</p>
+<h4>GET /api/states/&lt;entity_id></h4>
+
+<p>Returns a state object for specified entity_id. Returns 404 if not found.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -242,13 +247,26 @@ Returns a state object for specified entity_id. Returns 404 if not found.</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/states/&lt;entity_id></strong> - POST<br>
-Updates or creates the current state of an entity.</p>
+<h4>POST /api/states/&lt;entity_id></h4>
 
-<p>Return code is 200 if the entity existed, 201 if the state of a new entity was set. A location header will be returned with the url of the new resource. The response body will contain a JSON encoded State object.<br>
-<br>
-parameter: state - string<br>
-optional parameter: attributes - JSON object</p>
+<p>Updates or creates the current state of an entity.</p>
+
+<p>Expects a JSON object that has atleast a state attribute:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;state&quot;</span><span class="p">:</span> <span class="s2">&quot;below_horizon&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;next_rising&quot;</span><span class="p">:</span> <span class="s2">&quot;07:04:15 29-10-2013&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;next_setting&quot;</span><span class="p">:</span> <span class="s2">&quot;18:00:31 29-10-2013&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Return code is 200 if the entity existed, 201 if the state of a new entity was set. A location header will be returned with the url of the new resource. The response body will contain a JSON encoded State object.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -271,9 +289,22 @@ optional parameter: attributes - JSON object</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/events/&lt;event_type></strong> - POST<br>
-Fires an event with event_type<br>
-optional body: JSON encoded object that represents event_data</p>
+<h4>POST /api/events/&lt;event_type></h4>
+
+<p>Fires an event with event_type</p>
+
+<p>You can pass an optional JSON object to be used as <code>event_data</code>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;next_rising&quot;</span><span class="p">:</span> <span class="s2">&quot;18:00:31 29-10-2013&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Returns a message if successful.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -284,11 +315,22 @@ optional body: JSON encoded object that represents event_data</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/services/&lt;domain>/&lt;service></strong> - POST<br>
-Calls a service within a specific domain. Will return when the service has been executed or 10 seconds has past, whichever comes first.<br>
-optional body: JSON encoded object that represents service_data</p>
+<h4>POST /api/services/&lt;domain>/&lt;service></h4>
 
-<p>Returns a list of states that have changed since the start of this service call.</p>
+<p>Calls a service within a specific domain. Will return when the service has been executed or 10 seconds has past, whichever comes first.</p>
+
+<p>You can pass an optional JSON object to be used as <code>service_data</code>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;entity_id&quot;</span><span class="p">:</span> <span class="s2">&quot;light.Ceiling&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Returns a list of states that have changed while the service was being executed.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -327,11 +369,33 @@ optional body: JSON encoded object that represents service_data</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/event_forwarding</strong> - POST<br>
-Setup event forwarding to another Home Assistant instance.<br>
-parameter: host - string<br>
-parameter: api_password - string<br>
-optional parameter: port - int<br></p>
+
+
+<div class='note'><p class='title'>Note</p><p class='content'>
+The result will include any changed states that changed while the service was being executed, even if their change was the result of something else happening in the system. 
+</p></div>
+
+
+<h4>POST /api/event_forwarding</h4>
+
+<p>Setup event forwarding to another Home Assistant instance.</p>
+
+<p>Requires a JSON object that represents the API to forward to.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;machine&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;api_password&quot;</span><span class="p">:</span> <span class="s2">&quot;my_super_secret_password&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;port&quot;</span><span class="p">:</span> <span class="mi">8880</span> <span class="err">//</span> <span class="err">optional</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It will return a message if event forwarding was setup successful.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -342,12 +406,26 @@ optional parameter: port - int<br></p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>/api/event_forwarding</strong> - DELETE<br>
-Cancel event forwarding to another Home Assistant instance.<br>
-parameter: host - string<br>
-optional parameter: port - int<br></p>
+<h4>DELETE /api/event_forwarding</h4>
 
-<p>If your client does not support DELETE HTTP requests you can add an optional attribute _METHOD and set its value to DELETE.</p>
+<p>Cancel event forwarding to another Home Assistant instance.<br></p>
+
+<p>Requires a JSON object that represents the API to cancel forwarding to.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;machine&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;api_password&quot;</span><span class="p">:</span> <span class="s2">&quot;my_super_secret_password&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;port&quot;</span><span class="p">:</span> <span class="mi">8880</span> <span class="err">//</span> <span class="err">optional</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It will return a message if event forwarding was cancelled successful.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -356,6 +434,13 @@ optional parameter: port - int<br></p>
 </span><span class='line'>    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Event forwarding cancelled.&quot;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<div class='note'><p class='title'>Note</p><p class='content'>
+If your client does not support <code>DELETE</code> HTTP requests you can add an optional attribute <code>_METHOD</code> and set its value to <code>DELETE</code>.
+</p></div>
 
 
 
@@ -373,7 +458,7 @@ optional parameter: port - int<br></p>
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Site powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and using the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.</span>
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>

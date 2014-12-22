@@ -90,7 +90,7 @@
     },
     {
         "attributes": {
-            "entity_picture": "http://graph.facebook.com/KillBillMovie/picture",
+            "entity_picture": "//graph.facebook.com/KillBillMovie/picture",
             "friendly_name": "Living Room"
         },
         "entity_id": "chromecast.Living_Rm",
@@ -117,7 +117,7 @@
     },
     {
         "attributes": {
-            "entity_picture": "http://graph.facebook.com/schoutsen/picture"
+            "entity_picture": "//graph.facebook.com/schoutsen/picture"
         },
         "entity_id": "device_tracker.Paulus",
         "last_changed": "14:55:25 21-12-2014",
@@ -157,7 +157,7 @@
     },
     {
         "attributes": {
-            "entity_picture": "http://graph.facebook.com/anne.t.frederiksen/picture"
+            "entity_picture": "//graph.facebook.com/anne.t.frederiksen/picture"
         },
         "entity_id": "device_tracker.Anne_Therese",
         "last_changed": "14:55:25 21-12-2014",

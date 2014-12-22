@@ -96,12 +96,20 @@
 <pre><code>In the event that device 'Paulus Nexus 5' changes to the 'Home' state:
   If the sun has set and the lights are not on:
     Turn on the lights
+</code></pre>
 
-In the event that the combined state of all tracked devices changes to 'Not Home':
+<!-- comment to seperate markdown blockquotes -->
+
+
+<pre><code>In the event that the combined state of all tracked devices changes to 'Not Home':
   If the lights are on:
     Turn off the lights
+</code></pre>
 
-In the event of the sun setting:
+<!-- comment to seperate markdown blockquotes -->
+
+
+<pre><code>In the event of the sun setting:
   If the lights are off and the combined state of all tracked device equals 'Home':
     Turn on the lights
 </code></pre>
@@ -111,8 +119,6 @@ In the event of the sun setting:
 <h2>Multiple connected instances</h2>
 
 <p>Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local events fired and states set to the master instance which will then replicate it to each slave.</p>
-
-<p>Because each slave maintains its own ServiceRegistry it is possible to have multiple slaves respond to one service call.</p>
 
 <p><a href='/images/architecture-remote.png'>
   <img src='/images/architecture-remote.png' class='no-shadow' />
@@ -146,6 +152,13 @@ In the event of the sun setting:
 
 
 
+
+<div class='note'><p class='title'>Note</p><p class='content'>
+Because each slave maintains its own ServiceRegistry it is possible to have multiple slaves respond to one service call.
+</p></div>
+
+
+
 </article>
 
 
@@ -160,7 +173,7 @@ In the event of the sun setting:
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Site powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and using the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.</span>
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>

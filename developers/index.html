@@ -75,31 +75,15 @@
   <hr class="divider">
   
 
-  <p>Home Assistant can be extended by components. Components can listen for- or trigger events and offer services. Components are written in Python and can do all the goodness that Python has to offer.</p>
+  <p>Home Assistant can be extended by components. Each component is responsible for a specific domain within Home Assistant. An example is the switch component, which is responsible for interaction with different types of switches. Components can listen for- or trigger events, offer services and maintain states. Components are written in Python and can do all the goodness that Python has to offer.</p>
 
 <p>Home Assistant offers <a href="/components/">built-in components</a> but it is easy to built your own. An example component can be found in <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py"><code>/config/custom_components/example.py</code></a>.</p>
 
-<div class='note'><p class='title'>Note</p><p class='content'>
-Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the <code>config</code> folder in your current work directory. You can use a different folder by running Home Assistant with the &#8211;config argument <code>python3 homeassistant --config /YOUR/CONFIG/PATH/</code>.
-</p></div>
+<h2>Component structure</h2>
 
+<p>Components that interact with devices are structured in core- and platform logic. This allows the same logic to be used for different platforms. Components that add automation usually consist of, but are not limited to, one file.</p>
 
-<p>A component will be loaded on start if a section (ie. <code>[light]</code>) for it exists in the config file. A component can also be loaded if another component is loaded that depends on it. When loading a component Home Assistant will check the following paths:</p>
-
-<ul>
-<li><code>&lt;config directory>/custom_components/&lt;component name></code></li>
-<li><code>homeassistant/components/&lt;component name></code> (built-in components)</li>
-</ul>
-
-
-<p>Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if loading and setup of your component went well.</p>
-
-<div class='note warning'><p class='title'>Warning</p><p class='content'>
-*Warning:* You can override a built-in component by offering a component with the same name in your custom_components folder. This is not recommended and may lead to unexpected behavior!
-</p></div>
-
-
-<p>Each component is responsible for a specific domain within Home Assistant. An example is the switch component, which is responsible for interaction with different types of switches. The switch component consists of the following files in <code>homeassistant/components/switch/</code>:</p>
+<p>For example, the built-in switch component consists of the following files in <a href="https://github.com/balloob/home-assistant/tree/master/homeassistant/components/switch"><code>homeassistant/components/switch/</code></a>:</p>
 
 <table>
 <thead>
@@ -111,25 +95,56 @@ Home Assistant will use the directory that contains your config file as the dire
 <tbody>
 <tr>
 <td> __init__.py </td>
-<td> Contains the Switch component code.</td>
+<td> Contains the Switch core logic.</td>
 </tr>
 <tr>
 <td> wemo.py </td>
-<td> WeMo platform support. Included if in config <code>platform=wemo</code>. </td>
+<td> WeMo platform logic. Included if in config <code>platform=wemo</code>. </td>
 </tr>
 <tr>
 <td> tellstick.py </td>
-<td> Tellstick platform support. Included if in config <code>platform=tellstick</code>. </td>
+<td> Tellstick platform logic. Included if in config <code>platform=tellstick</code>. </td>
 </tr>
 </tbody>
 </table>
 
 
-<p>If a component exists, your job is easy. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add. If you cannot find a suitable component, you&rsquo;ll have to add it yourself. When writing a component try to structure it after the Switch component to maximize reusability.</p>
+<h2>Deciding what to built</h2>
 
-<p>Communication between Home Assistant and devices should happen via third-party libraries that implement the device API. This will make sure the platform support code stays as small as possible.</p>
+<p>If you are planning to add support for a new type of device to an existing component, you can get away with only writing a platform. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add.</p>
 
-<p>After a component is loaded the bootstrapper will call its setup method <code>setup(hass, config)</code>:</p>
+<div class='note'><p class='title'>Note</p><p class='content'>
+Platform logic should not interface directly with the devices but use a third-party Python 3 library that speaks the actual API.
+</p></div>
+
+
+<h2>Loading components</h2>
+
+<p>A component will be loaded on start if a section (ie. <code>[light]</code>) for it exists in the config file. A component can also be loaded if another component is loaded that depends on it. When loading a component Home Assistant will check the following paths:</p>
+
+<ul>
+<li><code>&lt;config directory>/custom_components/&lt;component name></code></li>
+<li><code>homeassistant/components/&lt;component name></code> (built-in components)</li>
+</ul>
+
+
+<p>Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if your component could be loaded and initialized.</p>
+
+<div class='note warning'><p class='title'>Warning</p><p class='content'>
+You can override a built-in component by having a component with the same name in your <code>config/custom_components</code> folder. This is not recommended and will probably break things!
+</p></div>
+
+
+
+
+<div class='note'><p class='title'>Note</p><p class='content'>
+Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the <code>config</code> folder in your current work directory. You can use a different folder by running Home Assistant with the &#8211;config argument: <code>python3 homeassistant --config /YOUR/CONFIG/PATH/</code>.
+</p></div>
+
+
+<h2>Initializing components</h2>
+
+<p>After loading, the bootstrapper will call <code>setup(hass, config)</code> method on the component to initialize it. The following parameters are passed in:</p>
 
 <table>
 <thead>
@@ -141,11 +156,11 @@ Home Assistant will use the directory that contains your config file as the dire
 <tbody>
 <tr>
 <td> <code>hass</code> </td>
-<td> The Home Assistant object. Call its methods to track time, register services or listen for events: <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L38">Overview of available methods.</a> </td>
+<td> The Home Assistant object. Call its methods to track time, register services, listen for events or track states: <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L38">Overview of available methods.</a> </td>
 </tr>
 <tr>
 <td> <code>config</code> </td>
-<td> A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with configuration attributes. </td>
+<td> A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with the component configuration. </td>
 </tr>
 </tbody>
 </table>
@@ -165,15 +180,15 @@ Home Assistant will use the directory that contains your config file as the dire
 <tbody>
 <tr>
 <td> <code>hass.states</code> </td>
-<td> This is the StateMachine. The StateMachine allows you to see which states are available and set/test states for specified entities. <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L473">See available methods</a>. </td>
+<td> This is the StateMachine. It allows you to set states and trach when they are changed. <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L473">See available methods</a>. </td>
 </tr>
 <tr>
 <td> <code>hass.events</code> </td>
-<td> This is the EventBus. The EventBus allows you to listen and trigger events. <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L308">See available methods</a>. </td>
+<td> This is the EventBus. It allows you to trigger and listen for events.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L308">See available methods</a>. </td>
 </tr>
 <tr>
 <td> <code>hass.services</code> </td>
-<td> This is the ServiceRegistry. The ServiceRegistry allows you to register services. <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L589">See available methods</a>. </td>
+<td> This is the ServiceRegistry. It allows you to register services.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L589">See available methods</a>. </td>
 </tr>
 </tbody>
 </table>
@@ -206,7 +221,7 @@ Home Assistant will use the directory that contains your config file as the dire
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Site powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and using the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.</span>
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
