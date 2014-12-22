@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup(hass, config):
-    """ Setup christmas. """
+    """ Setup example component. """
 
     # Validate that all required config options are given
     if not validate_config(config, {DOMAIN: [CONF_TARGET]}, _LOGGER):
