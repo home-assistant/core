@@ -1,0 +1,30 @@
+<script src="bower_components/moment/moment.js"></script>
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/core-style/core-style.html">
+
+<link rel="import" href="state-info.html">
+
+<polymer-element name="state-card-display"
+                 attributes="stateObj cb_edit"
+                 noscript>
+  <template>
+    <core-style ref='state-card'></core-style>
+    <style>
+    .state {
+      text-transform: capitalize;  
+      font-weight: 300;
+      font-size: 1.3rem;
+      text-align: right;
+    }
+    </style>
+
+    <div horizontal justified layout> 
+      <state-info
+        stateObj="{{stateObj}}"
+        cb_edit="{{cb_edit}}">
+      </state-info>
+
+      <div class='state'>{{stateObj.stateDisplay}}</div>
+    </div>
+  </template>
+</polymer-element>

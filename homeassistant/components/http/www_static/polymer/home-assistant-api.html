@@ -35,7 +35,7 @@
   };
 
   Object.defineProperties(State.prototype, {
-    "stateDisplay": {
+    stateDisplay: {
       get: function() {
         var state = this.state.replace(/_/g, " ");
         if(this.attributes.unit_of_measurement) {
@@ -46,18 +46,29 @@
       }
     },
 
-    "isCustomGroup": {
+    isCustomGroup: {
       get: function() {
         return this.domain == "group" && !this.attributes.auto;
       }
     },
 
-    "canToggle": {
+    canToggle: {
       get: function() {
         // groups that have the on/off state or if there is a turn_on service
         return ((this.domain == 'group' &&
                  (this.state == 'on' || this.state == 'off')) ||
                 this.api.hasService(this.domain, 'turn_on'));
+      }
+    },
+
+    // how to render the card for this state
+    cardType: {
+      get: function() {
+        if(this.canToggle) {
+          return "toggle";
+        } else {
+          return "display";
+        }
       }
     }
   });

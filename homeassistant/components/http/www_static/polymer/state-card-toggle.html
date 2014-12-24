@@ -1,53 +1,17 @@
 <script src="bower_components/moment/moment.js"></script>
 <link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/core-tooltip/core-tooltip.html">
-<link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="bower_components/core-style/core-style.html">
 
 <link rel="import" href="state-badge.html">
 
-<polymer-element name="state-card"
+<polymer-element name="state-card-toggle"
                  attributes="stateObj cb_turn_on, cb_turn_off cb_edit">
   <template>
+    <core-style ref='state-card'></core-style>
     <style>
-    :host {
-      background-color: #fff;
-      border-radius: 2px;
-      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
-      transition: all 0.30s ease-out;
-
-      position: relative;
-      background-color: white;
-      padding: 16px;
-      width: 100%;
-    }
-
-    state-badge {
-      float: left;
-      cursor: pointer;
-    }
-
-    state-badge:hover {
-      background-color: #039be5;
-    }
-
-    .name, .state.text {
-      text-transform: capitalize;  
-      font-weight: 300;
-      font-size: 1.3rem;
-    }
-
     .state {
       text-align: right;
-    }
-
-    .info {
-      margin-left: 60px;
-    }
-
-    .time-ago {
-      color: darkgrey;
-      margin-top: -2px;
     }
 
     /* the splash while enabling */
@@ -68,43 +32,16 @@
 
     <div horizontal justified layout>
       
-      <div class="entity">
-        <state-badge
-          stateObj="{{stateObj}}"
-          on-click="{{editClicked}}">
-        </state-badge>
+      <state-info
+        stateObj="{{stateObj}}"
+        cb_edit="{{cb_edit}}">
+      </state-info>
 
-        <div class='info'>
-          <div class='name'>
-            {{stateObj.entityDisplay}}
-          </div>
-
-          <div class="time-ago">
-            <core-tooltip label="{{stateObj.last_changed}}" position="bottom">
-              {{lastChangedFromNow(stateObj.last_changed)}}
-            </core-tooltip>
-          </div>
-          
-        </div>
+      <div class='state toggle' self-center flex>
+        <paper-toggle-button checked="{{toggleChecked}}">
+        </paper-toggle-button>
       </div>
-
-      <template if="{{!stateUnknown}}">
-        <template if="{{stateObj.canToggle}}">
-          <div class='state toggle' self-center flex>
-            <paper-toggle-button checked="{{toggleChecked}}">
-            </paper-toggle-button>
-          </div>
-        </template>
-        <template if="{{!stateObj.canToggle}}">
-          <div class='state text'>{{stateObj.stateDisplay}}</div>
-        </template>
-      </template>
-
-      <template if="{{stateUnknown}}">
-        <div class="state" self-center flex>Updating..</div>
-      </template>
-
-    </div>    
+    </div>
 
   </template>
   <script>
@@ -114,7 +51,6 @@
     cb_turn_on: null,
     cb_turn_off: null,
     cb_edit: null,
-    stateUnknown: false,
     toggleChecked: -1,
 
     observe: {
