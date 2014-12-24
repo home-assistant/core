@@ -9,7 +9,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Home Assistant</title>
+    <title>Frontend development - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
@@ -68,116 +68,76 @@
     </header>
 
     
-      <div class="hero">
-  <div class="grid-wrapper">
-    <div class="grid flex">
-      <div class="grid__item flex__item two-fifths palm-one-whole">
-        <a href='/demo/' target='_blank'>
-          <img src="/images/hero_screenshot.png" alt="Home Assistant screenshot">
-        </a>
-      </div>
-      <div class="grid__item flex__item three-fifths palm-one-whole">
-       <h1>Awaken your home</h1>
- <hr>
- <p class="lead">
-Home Assistant is an open-source home automation platform running on Python 3. Track and control all devices at home and automate control. Installation in less then a minute.
-</p>
-<p class='hero-buttons'>
-  <a href='/demo/' target='_blank' class='btn'>View demo</a>
-  <a href='/getting-started/' class='btn'>Get started</a>
-  <a href='https://www.github.com/balloob/home-assistant' class='btn'>Browse code on GitHub</a>
-</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-    
 
     <div class="grid-wrapper">
       <div class="grid grid-center">
         
-        <div class="grid__item one-whole">
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
           <article class="page">
 
   
+  <header>
+    <h1 class="title indent">
+      Frontend Development
+    </h1>
+  </header>
+  <hr class="divider">
+  
 
-  <div class="grid-wrapper">
-  <div class="grid">
-    <div class="grid__item one-third lap-one-whole palm-one-whole usp">
-      <div class="grid">
-        <div class="grid__item one-whole lap-one-third">
-          <span class="icon">
-            <i class="icon-home"></i>
-          </span>
-        </div>
+  <p>Home Assistant uses <a href="https://www.polymer-project.org/">Polymer</a> for the frontend. Polymer allows building encapsulated and interoperable custom elements that extend HTML itself.</p>
 
-        <div class="grid__item one-whole lap-two-thirds">
-          <h2 class="title">Observe</h2>
-<hr>
-<p>
-Home Assistant will track the state of all the devices in your home, so you don&#8217;t have to.
-</p>
-<p>The following devices are supported:</p>
+<h1>Turning on development mode</h1>
+
+<p>Home Assistant will by default serve the compiled version of the frontend. To change it so that the components are served separately, update your <code>home-assistant.conf</code> to have these lines:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[http]
+</span><span class='line'>api_password=YOUR_PASSWORD
+</span><span class='line'>development=1</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After turning on development mode, you will have to install the webcomponents that the frontend depends on. You can do this by running the <code>build_frontend</code> script.</p>
+
+<div class='note warning'><p class='title'>Warning</p><p class='content'>
+Do not use development mode in production. Home Assistant uses aggresive caching to improve the mobile experience. This is disabled during development so that you do not have to restart the server in between changes.
+</p></div>
+
+
+<h1>Building the frontend</h1>
+
+<p>To build the frontend you need to install node and the npm packages bower and vulcanize.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>npm install -g bower vulcanize
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After that you can run <a href="https://github.com/balloob/home-assistant/blob/master/build_frontend"><code>./build_frontend</code></a> from the project directory. This will take all the used webcomponents and &lsquo;vulcanize&rsquo; it into a single file to be served by Home Assistant. The script also updates <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/frontend.py"><code>homeassistant/components/http/frontend.py</code></a> with an MD5 hash of the frontend.</p>
+
+<h1>Adding new state cards</h1>
+
+<p>The main interface of Home Assistant is a list of current states in the State Machine. It will filter out the group states and offers options to filter by groups on the top.</p>
+
+<p>Currently there are two supported card types:</p>
+
 <ul>
-  <li>Philips Hue</li>
-  <li>Belkin WeMo</li>
-  <li>Google Chromecast</li>
-  <li>Netgear, Tomato and OpenWRT routers</li>
-  <li>Tellstick devices &amp; sensors</li>
-  <li>Scanning network for connected devices</li>
+<li>Display: shows the state in the card</li>
+<li>Toggle: allows the user to toggle a device on/off from its state</li>
 </ul>
 
-        </div>
-      </div>
-    </div>
 
-    <div class="grid__item one-third lap-one-whole palm-one-whole usp">
-      <div class="grid">
-        <div class="grid__item one-whole lap-one-third">
-          <span class="icon">
-            <i class="icon-mobile-phone"></i>
-          </span>
-        </div>
+<p>To add your own card type, follow the following steps:</p>
 
-        <div class="grid__item one-whole lap-two-thirds">
-          <h2 class="title">Control</h2>
-<hr>
-<p>Control all your devices from a single, mobile-friendly, interface.</p>
-<p>
-  Home Assistant allows you to control all your devices without storing any of your data in the cloud. We like to keep your privacy private.
-</p>
-        </div>
-      </div>
-    </div>
+<ol>
+<li>Adjust the cardType property of the State class in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/home-assistant-api.html">home-assistant-api.html</a> to return your new card type when appropriate.</li>
+<li>Create a new component following the naming convention state-card-CARDTYPE.html.</li>
+<li>Import your new component and add a template for it in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/states-cards.html">states-cards.html</a>.</li>
+</ol>
 
-    <div class="grid__item one-third lap-one-whole palm-one-whole usp">
-      <div class="grid">
-        <div class="grid__item one-whole lap-one-third">
-          <span class="icon">
-            <i class="icon-cogs"></i>
-          </span>
-        </div>
-
-        <div class="grid__item one-whole lap-two-thirds">
-         <h2 class="title">Automate</h2>
-<hr>
-<p>Setup advanced rules to control devices and bring your home alive.</p>
-<p>Do you want to have&hellip;</p>
-<ul>
-  <li>the lights turn on when the sun sets and you are home?</li>
-  <li>the lights turn on when anyome comes home and it is dark?</li>
-  <li>dim the lights when you start watching Netflix on your Chromecast?</li>
-</ul>
-<p>We&#8217;ve got you covered.</p>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 </article>

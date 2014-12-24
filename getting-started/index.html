@@ -30,21 +30,32 @@
       <div class="grid-wrapper">
   <div class="grid">
 
-    <div class="grid__item three-tenths lap-four-sixths palm-one-whole ha-title">
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
   <a href="/" class="site-title">
     <img width='40' src='/images/favicon-192x192.png'> Home Assistant
   </a>
 </div>
 
-<div class="grid__item seven-tenths lap-two-sixths palm-one-whole">
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
   <nav>
     <input type="checkbox" id="toggle">
 <label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
 <ul class="menu pull-right">
   <li><a href="/getting-started/">Getting started</a></li>
-  <li><a href="/architecture/">Architecture</a></li>
-  <li><a href="/developers/">Developers</a></li>
-  <li><a href="/api/">API</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">Rest API</a></li>
+    </ul>
+  </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
 </ul>

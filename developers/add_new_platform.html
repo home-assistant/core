@@ -9,7 +9,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Home Assistant</title>
+    <title>Adding support for a new platform - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
@@ -68,116 +68,58 @@
     </header>
 
     
-      <div class="hero">
-  <div class="grid-wrapper">
-    <div class="grid flex">
-      <div class="grid__item flex__item two-fifths palm-one-whole">
-        <a href='/demo/' target='_blank'>
-          <img src="/images/hero_screenshot.png" alt="Home Assistant screenshot">
-        </a>
-      </div>
-      <div class="grid__item flex__item three-fifths palm-one-whole">
-       <h1>Awaken your home</h1>
- <hr>
- <p class="lead">
-Home Assistant is an open-source home automation platform running on Python 3. Track and control all devices at home and automate control. Installation in less then a minute.
-</p>
-<p class='hero-buttons'>
-  <a href='/demo/' target='_blank' class='btn'>View demo</a>
-  <a href='/getting-started/' class='btn'>Get started</a>
-  <a href='https://www.github.com/balloob/home-assistant' class='btn'>Browse code on GitHub</a>
-</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-    
 
     <div class="grid-wrapper">
       <div class="grid grid-center">
         
-        <div class="grid__item one-whole">
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
           <article class="page">
 
   
+  <header>
+    <h1 class="title indent">
+      Adding Support for a New Platform
+    </h1>
+  </header>
+  <hr class="divider">
+  
 
-  <div class="grid-wrapper">
-  <div class="grid">
-    <div class="grid__item one-third lap-one-whole palm-one-whole usp">
-      <div class="grid">
-        <div class="grid__item one-whole lap-one-third">
-          <span class="icon">
-            <i class="icon-home"></i>
-          </span>
-        </div>
+  <p>Components that interact with devices are structured in core- and platform logic. This allows the same logic to be used for different platforms.</p>
 
-        <div class="grid__item one-whole lap-two-thirds">
-          <h2 class="title">Observe</h2>
-<hr>
-<p>
-Home Assistant will track the state of all the devices in your home, so you don&#8217;t have to.
-</p>
-<p>The following devices are supported:</p>
-<ul>
-  <li>Philips Hue</li>
-  <li>Belkin WeMo</li>
-  <li>Google Chromecast</li>
-  <li>Netgear, Tomato and OpenWRT routers</li>
-  <li>Tellstick devices &amp; sensors</li>
-  <li>Scanning network for connected devices</li>
-</ul>
+<p>For example, the built-in <code>switch</code> component consists of the following files in <a href="https://github.com/balloob/home-assistant/tree/master/homeassistant/components/switch"><code>homeassistant/components/switch/</code></a>:</p>
 
-        </div>
-      </div>
-    </div>
+<table>
+<thead>
+<tr>
+<th> File </th>
+<th> Description </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> __init__.py </td>
+<td> Contains the Switch core logic.</td>
+</tr>
+<tr>
+<td> wemo.py </td>
+<td> WeMo platform logic. Included if in config <code>platform=wemo</code>. </td>
+</tr>
+<tr>
+<td> tellstick.py </td>
+<td> Tellstick platform logic. Included if in config <code>platform=tellstick</code>. </td>
+</tr>
+</tbody>
+</table>
 
-    <div class="grid__item one-third lap-one-whole palm-one-whole usp">
-      <div class="grid">
-        <div class="grid__item one-whole lap-one-third">
-          <span class="icon">
-            <i class="icon-mobile-phone"></i>
-          </span>
-        </div>
 
-        <div class="grid__item one-whole lap-two-thirds">
-          <h2 class="title">Control</h2>
-<hr>
-<p>Control all your devices from a single, mobile-friendly, interface.</p>
-<p>
-  Home Assistant allows you to control all your devices without storing any of your data in the cloud. We like to keep your privacy private.
-</p>
-        </div>
-      </div>
-    </div>
+<p>If you are planning to add support for a new type of device to an existing component, you can get away with only writing platform logic. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add.</p>
 
-    <div class="grid__item one-third lap-one-whole palm-one-whole usp">
-      <div class="grid">
-        <div class="grid__item one-whole lap-one-third">
-          <span class="icon">
-            <i class="icon-cogs"></i>
-          </span>
-        </div>
+<div class='note'><p class='title'>Note</p><p class='content'>
+Platform logic should not interface directly with the devices but use a third-party Python 3 library that speaks the actual API.
+</p></div>
 
-        <div class="grid__item one-whole lap-two-thirds">
-         <h2 class="title">Automate</h2>
-<hr>
-<p>Setup advanced rules to control devices and bring your home alive.</p>
-<p>Do you want to have&hellip;</p>
-<ul>
-  <li>the lights turn on when the sun sets and you are home?</li>
-  <li>the lights turn on when anyome comes home and it is dark?</li>
-  <li>dim the lights when you start watching Netflix on your Chromecast?</li>
-</ul>
-<p>We&#8217;ve got you covered.</p>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 </article>

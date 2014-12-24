@@ -1,0 +1,249 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Creating components - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li><a href="/getting-started/">Getting started</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">Rest API</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Creating Components
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>Home Assistant offers <a href="/components/">built-in components</a> but it
+is easy to built your own.</p>
+
+<p>Each component is responsible for a specific domain within Home Assistant.
+Components can listen for- or trigger events, offer services and maintain
+states. Components are written in Python and can do all the goodness that
+Python has to offer.</p>
+
+<p>We can differentiate between two different types of
+components within Home Assistant.</p>
+
+<h4>Components that interact with devices</h4>
+
+<p>These components are keeping track of devices within a specific domain. It will also provide services to control those devices.</p>
+
+<p>For example, one of the built-in components is the <code>switch</code> component. This component is responsible for interaction with different types of switches.</p>
+
+<p>If you are planning on adding support for a new platform, do not forget to check out the <a href="/developers/add_new_platform.html">add new platform section</a>.</p>
+
+<h4>Components that respond to events that happen within Home Assistant</h4>
+
+<p>These components can provide automation logic or services that do common tasks within your house.</p>
+
+<p>For example the <code>device_sun_light_trigger</code> component tracks the state of
+devices and the sun to make sure that the lights are turned on when it gets
+dark and there are people home.</p>
+
+<p>An example of such a component can be found in <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py"><code>/config/custom_components/example.py</code></a>.</p>
+
+<h2>Loading components</h2>
+
+<p>A component will be loaded on start if a section (ie. <code>[light]</code>) for it exists in the config file. A component can also be loaded if another component is loaded that depends on it. When loading a component Home Assistant will check the following paths:</p>
+
+<ul>
+<li><code>&lt;config directory>/custom_components/&lt;component name></code></li>
+<li><code>homeassistant/components/&lt;component name></code> (built-in components)</li>
+</ul>
+
+
+<p>Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if your component could be loaded and initialized.</p>
+
+<div class='note warning'><p class='title'>Warning</p><p class='content'>
+You can override a built-in component by having a component with the same name in your <code>config/custom_components</code> folder. This is not recommended and will probably break things!
+</p></div>
+
+
+
+
+<div class='note'><p class='title'>Note</p><p class='content'>
+Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the <code>config</code> folder in your current work directory. You can use a different folder by running Home Assistant with the &#8211;config argument: <code>python3 homeassistant --config /YOUR/CONFIG/PATH/</code>.
+</p></div>
+
+
+<h2>Initializing components</h2>
+
+<p>After loading, the bootstrapper will call <code>setup(hass, config)</code> method on the component to initialize it. The following parameters are passed in:</p>
+
+<table>
+<thead>
+<tr>
+<th> Parameter </th>
+<th> Description </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <code>hass</code> </td>
+<td> The Home Assistant object. Call its methods to track time, register services, listen for events or track states: <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L38">Overview of available methods.</a> </td>
+</tr>
+<tr>
+<td> <code>config</code> </td>
+<td> A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with the component configuration. </td>
+</tr>
+</tbody>
+</table>
+
+
+<h3>Guidance on using the Home Assistant object</h3>
+
+<p>The Home Assistant object contains three objects to help you interact with the system.</p>
+
+<table>
+<thead>
+<tr>
+<th> Object </th>
+<th> Description </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <code>hass.states</code> </td>
+<td> This is the StateMachine. It allows you to set states and trach when they are changed. <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L473">See available methods</a>. </td>
+</tr>
+<tr>
+<td> <code>hass.events</code> </td>
+<td> This is the EventBus. It allows you to trigger and listen for events.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L308">See available methods</a>. </td>
+</tr>
+<tr>
+<td> <code>hass.services</code> </td>
+<td> This is the ServiceRegistry. It allows you to register services.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L589">See available methods</a>. </td>
+</tr>
+</tbody>
+</table>
+
+
+<h3>Example on using the configuration parameter</h3>
+
+<p>If your configuration file containes the following lines:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[example]
+</span><span class='line'>host=paulusschoutsen.nl</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then in the setup-method of your component you will be able to refer to <code>config['example']['host']</code> to get the value <code>paulusschoutsen.nl</code>.</p>
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    
+
+
+<script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+
+
+
+
+
+  </body>
+</html>

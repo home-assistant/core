@@ -30,21 +30,32 @@
       <div class="grid-wrapper">
   <div class="grid">
 
-    <div class="grid__item three-tenths lap-four-sixths palm-one-whole ha-title">
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
   <a href="/" class="site-title">
     <img width='40' src='/images/favicon-192x192.png'> Home Assistant
   </a>
 </div>
 
-<div class="grid__item seven-tenths lap-two-sixths palm-one-whole">
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
   <nav>
     <input type="checkbox" id="toggle">
 <label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
 <ul class="menu pull-right">
   <li><a href="/getting-started/">Getting started</a></li>
-  <li><a href="/architecture/">Architecture</a></li>
-  <li><a href="/developers/">Developers</a></li>
-  <li><a href="/api/">API</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">Rest API</a></li>
+    </ul>
+  </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
 </ul>
@@ -75,136 +86,24 @@
   <hr class="divider">
   
 
-  <p>Home Assistant can be extended by components. Each component is responsible for a specific domain within Home Assistant. An example is the switch component, which is responsible for interaction with different types of switches. Components can listen for- or trigger events, offer services and maintain states. Components are written in Python and can do all the goodness that Python has to offer.</p>
+  <p>Home Assistant is build from the ground-up to be easily extensible by other developers using components. It uses <a href="https://www.python.org/">Python 3</a> for the backend and <a href="https://www.polymer-project.org/">Polymer (Webcomponents)</a> for the frontend.</p>
 
-<p>Home Assistant offers <a href="/components/">built-in components</a> but it is easy to built your own. An example component can be found in <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py"><code>/config/custom_components/example.py</code></a>.</p>
-
-<h2>Component structure</h2>
-
-<p>Components that interact with devices are structured in core- and platform logic. This allows the same logic to be used for different platforms. Components that add automation usually consist of, but are not limited to, one file.</p>
-
-<p>For example, the built-in switch component consists of the following files in <a href="https://github.com/balloob/home-assistant/tree/master/homeassistant/components/switch"><code>homeassistant/components/switch/</code></a>:</p>
-
-<table>
-<thead>
-<tr>
-<th> File </th>
-<th> Description </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> __init__.py </td>
-<td> Contains the Switch core logic.</td>
-</tr>
-<tr>
-<td> wemo.py </td>
-<td> WeMo platform logic. Included if in config <code>platform=wemo</code>. </td>
-</tr>
-<tr>
-<td> tellstick.py </td>
-<td> Tellstick platform logic. Included if in config <code>platform=tellstick</code>. </td>
-</tr>
-</tbody>
-</table>
-
-
-<h2>Deciding what to built</h2>
-
-<p>If you are planning to add support for a new type of device to an existing component, you can get away with only writing a platform. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add.</p>
-
-<div class='note'><p class='title'>Note</p><p class='content'>
-Platform logic should not interface directly with the devices but use a third-party Python 3 library that speaks the actual API.
-</p></div>
-
-
-<h2>Loading components</h2>
-
-<p>A component will be loaded on start if a section (ie. <code>[light]</code>) for it exists in the config file. A component can also be loaded if another component is loaded that depends on it. When loading a component Home Assistant will check the following paths:</p>
+<p>For further reading, see:</p>
 
 <ul>
-<li><code>&lt;config directory>/custom_components/&lt;component name></code></li>
-<li><code>homeassistant/components/&lt;component name></code> (built-in components)</li>
+  <li><a href="/developers/architecture.html">
+    Home Assistant Architecture
+  </a></li>
+  <li><a href="/developers/frontend.html">Frontend development</a></li>
+  <li><a href="/developers/creating_components.html">
+    Creating a custom component
+  </a></li>
+  <li><a href="/developers/add_new_platform.html">
+    Adding support for a new platform
+  </a></li>
+  <li><a href="/developers/api.html">Rest API</a></li>
 </ul>
 
-
-<p>Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if your component could be loaded and initialized.</p>
-
-<div class='note warning'><p class='title'>Warning</p><p class='content'>
-You can override a built-in component by having a component with the same name in your <code>config/custom_components</code> folder. This is not recommended and will probably break things!
-</p></div>
-
-
-
-
-<div class='note'><p class='title'>Note</p><p class='content'>
-Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the <code>config</code> folder in your current work directory. You can use a different folder by running Home Assistant with the &#8211;config argument: <code>python3 homeassistant --config /YOUR/CONFIG/PATH/</code>.
-</p></div>
-
-
-<h2>Initializing components</h2>
-
-<p>After loading, the bootstrapper will call <code>setup(hass, config)</code> method on the component to initialize it. The following parameters are passed in:</p>
-
-<table>
-<thead>
-<tr>
-<th> Parameter </th>
-<th> Description </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> <code>hass</code> </td>
-<td> The Home Assistant object. Call its methods to track time, register services, listen for events or track states: <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L38">Overview of available methods.</a> </td>
-</tr>
-<tr>
-<td> <code>config</code> </td>
-<td> A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with the component configuration. </td>
-</tr>
-</tbody>
-</table>
-
-
-<h3>Guidance on using the Home Assistant object</h3>
-
-<p>The Home Assistant object contains three objects to help you interact with the system.</p>
-
-<table>
-<thead>
-<tr>
-<th> Object </th>
-<th> Description </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> <code>hass.states</code> </td>
-<td> This is the StateMachine. It allows you to set states and trach when they are changed. <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L473">See available methods</a>. </td>
-</tr>
-<tr>
-<td> <code>hass.events</code> </td>
-<td> This is the EventBus. It allows you to trigger and listen for events.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L308">See available methods</a>. </td>
-</tr>
-<tr>
-<td> <code>hass.services</code> </td>
-<td> This is the ServiceRegistry. It allows you to register services.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L589">See available methods</a>. </td>
-</tr>
-</tbody>
-</table>
-
-
-<h3>Example on using the configuration parameter</h3>
-
-<p>If your configuration file containes the following lines:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[example]
-</span><span class='line'>host=paulusschoutsen.nl</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then in the setup-method of your component you will be able to refer to <code>config['example']['host']</code> to get the value <code>paulusschoutsen.nl</code>.</p>
 
 
 </article>
