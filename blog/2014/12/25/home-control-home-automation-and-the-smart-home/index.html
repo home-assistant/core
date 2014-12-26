@@ -9,7 +9,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Home Assistant</title>
+    <title>Home Control, Automation &amp; the Smart Home - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
@@ -75,15 +75,10 @@
         <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
-            
+          <article class="post">
+  <header>
   
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2014/12/25/home-control-home-automation-and-the-smart-home/">Home Control, Automation &amp; the Smart Home</a>
-  </h1>
+  <h1 class="title indent">Home Control, Automation &amp; the Smart Home</h1>
   
 
   
@@ -110,7 +105,7 @@
     
 
     
-      <a href="/blog/2014/12/25/home-control-home-automation-and-the-smart-home/#disqus_thread">
+      <a href="#disqus_thread">
         <i class="icon-comment"></i> Comments
       </a>
     
@@ -121,7 +116,6 @@
 
 
 
-<div class="entry-content clearfix">
   <p>The internet has been buzzing over the last year about home automation. A lot of different terms fly around like the internet of things, home automation and the smart home.
 This article will try to explain how they all relate.</p>
 
@@ -140,84 +134,93 @@ This article will try to explain how they all relate.</p>
 </p>
 
 
+<a name="read-more"></a>
 
-  <a class="btn pull-right" href="/blog/2014/12/25/home-control-home-automation-and-the-smart-home/#read-more">Read on &rarr;</a>
+
+<p>A step up from home control is to have the user setup triggers to send commands based on information in the home control layer. For example, to turn on the lights when a person arrives home. A hub with these capabilities is capable of <strong>home automation</strong>.</p>
+
+<p>Most hubs on the market today offer this in various degrees of functionality and usability. Some IoT-capable devices offer this too, but only control themselves and are usually limited to location and time-based events.</p>
+
+<p>The last category, and this is still very much in the future, is the <strong>smart home</strong>. A self-learning and adopting system that will decide which events should impact other devices.</p>
+
+<p>An example of a smart home in action is that it observes that when person A comes home, the lights in the living room and the kitchen switch on. While if person B comes home, the lights in the living room and the study room are switched on. The next time person A or B comes home, the smart home will turn on its preferred lights without any configuration being set by the user.</p>
+
+<p>A glimpse today at how the future can look is the <a href="https://nest.com/">Nest thermostat</a>. A thermostat smart enough to learn your schedule and adjust its own temperature accordingly.</p>
+
+<p>All this results in the following overview of Home Automation.</p>
+
+<p class='img'>
+  <a href='/images/architecture/home_automation_landscape.png'>
+    <img alt='Home Automation landscape'
+         src='/images/architecture/home_automation_landscape.png' />
+  </a>
+  Overview of the home automation landscape.
+</p>
+
+
+<h3>Challenges</h3>
+
+<p>You are probably wondering, this all seems relatively simple, why don&rsquo;t I have my very own smart home yet? There are a couple of challenges today that keep us from stepping into the future.</p>
+
+<h4>More Internet of Things-capable devices</h4>
+
+<p>The majority of the IoT products out there are either lights, switches or presence detection. That&rsquo;s not enough for your home to be very smart about. We need televisions, fridges, ovens and more to join the party to increase the number of devices that we can control.</p>
+
+<h4>More data</h4>
+
+<p>Most first generation IoT devices are only exposing information that is needed for controlling it. We need to be able to track all interactions with each device for our smart home to learn how interaction with devices influence other things. For example, we need to be able to track how many cups of coffee were made or how often the fridge was open. This will increase the information flow and open up a whole bunch of new possibilities. For example, the smart home can order new coffee when you&rsquo;re running low.</p>
+
+<h4>Easy to use, open software that we can trust</h4>
+
+<p>To increase adoption we will need people to trust their smart home system. It will be very tought to convince people to upgrade all their devices and upload all interactions with each of them to the cloud. This data could reveal their whole life including all bad habits. That&rsquo;s why such a system should be simple and open-source so people can validate that their data generated at home stay home.</p>
+
+<p>Anoter important booster for adoption is that the software should be easy to set up and use by the average user. A lot of people are not burning their hands yet on Home Automation because they are scared of having to configure it all.</p>
+
+<p>Home Assistant is trying to be this software. It is not there yet but trying hard. Device discovery and a user interface for configuring home automation are problems we hope to tackle in 2015 while not sacrificing modularity or usability.</p>
+
+<p>Happy new year!</p>
+
+
+</article>
+
+ 
+<section id="disqus">
+  <h3 class="indent title">Comments</h3>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
-
-  </article>
-  <hr>
-  
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2014/12/18/website-launched/">Website launched!</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-12-18T23:24:45-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 18, 2014</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> less than one minute reading time</span>
-    
-
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/website/'>website</a></li>
-      
-    
-    </ul>
-  </span>
-
-    
-      <a href="/blog/2014/12/18/website-launched/#disqus_thread">
-        <i class="icon-comment"></i> Comments
-      </a>
-    
-  </div>
-  
-</header>
-
-
-
-
-  <p>I finally took the time to setup a simple website to help people getting started with Home Assistant. The process was super smooth thanks to the great tools <a href="http://jekyllrb.com">Jekyll</a> and <a href="http://octopress.org">Octopress</a> and the great services <a href="https://pages.github.com">GitHub Pages</a> and <a href="https://cloudflare.com">CloudFlare</a>.</p>
-
-
-  </article>
-  <hr>
-  
-
-  <div class="pagination">
-    
-
-    
-  </div>
+</section>
 
 
         </div>
 
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+
+  
+
+
+  <section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Recent Posts</h1>
+  <ul class="divided">
+    
+      <li class="post">
+        <a href="/blog/2014/12/25/home-control-home-automation-and-the-smart-home/">Home Control, Automation &amp; the Smart Home</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/12/18/website-launched/">Website launched!</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+</div>
+
+        </aside>
         
       </div>
     </div>
@@ -255,7 +258,10 @@ This article will try to explain how they all relate.</p>
   var disqus_shortname = 'home-assistant';
   
     
-    var disqus_script = 'count.js';
+    // var disqus_developer = 1;
+    var disqus_identifier = 'https://home-assistant.io/blog/2014/12/25/home-control-home-automation-and-the-smart-home/';
+    var disqus_url = 'https://home-assistant.io/blog/2014/12/25/home-control-home-automation-and-the-smart-home/';
+    var disqus_script = 'embed.js';
   
   (function () {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
@@ -263,6 +269,11 @@ This article will try to explain how they all relate.</p>
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
+
+
+
+
+
 
 
 

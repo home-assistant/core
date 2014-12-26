@@ -89,32 +89,6 @@
   <p>Home Assistant offers <a href="/components/">built-in components</a> but it
 is easy to built your own.</p>
 
-<p>Each component is responsible for a specific domain within Home Assistant.
-Components can listen for- or trigger events, offer services and maintain
-states. Components are written in Python and can do all the goodness that
-Python has to offer.</p>
-
-<p>We can differentiate between two different types of
-components within Home Assistant.</p>
-
-<h4>Components that interact with devices</h4>
-
-<p>These components are keeping track of devices within a specific domain. It will also provide services to control those devices.</p>
-
-<p>For example, one of the built-in components is the <code>switch</code> component. This component is responsible for interaction with different types of switches.</p>
-
-<p>If you are planning on adding support for a new platform, do not forget to check out the <a href="/developers/add_new_platform.html">add new platform section</a>.</p>
-
-<h4>Components that respond to events that happen within Home Assistant</h4>
-
-<p>These components can provide automation logic or services that do common tasks within your house.</p>
-
-<p>For example the <code>device_sun_light_trigger</code> component tracks the state of
-devices and the sun to make sure that the lights are turned on when it gets
-dark and there are people home.</p>
-
-<p>An example of such a component can be found in <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py"><code>/config/custom_components/example.py</code></a>.</p>
-
 <h2>Loading components</h2>
 
 <p>A component will be loaded on start if a section (ie. <code>[light]</code>) for it exists in the config file. A component can also be loaded if another component is loaded that depends on it. When loading a component Home Assistant will check the following paths:</p>
@@ -127,16 +101,16 @@ dark and there are people home.</p>
 
 <p>Once loaded, a component will only be setup if all dependencies can be loaded and are able to setup. Keep an eye on the logs to see if your component could be loaded and initialized.</p>
 
-<div class='note warning'><p class='title'>Warning</p><p class='content'>
+<p class='note warning'>
 You can override a built-in component by having a component with the same name in your <code>config/custom_components</code> folder. This is not recommended and will probably break things!
-</p></div>
+</p>
 
 
 
 
-<div class='note'><p class='title'>Note</p><p class='content'>
+<p class='note'>
 Home Assistant will use the directory that contains your config file as the directory that holds your customizations. By default this is the <code>config</code> folder in your current work directory. You can use a different folder by running Home Assistant with the &#8211;config argument: <code>python3 homeassistant --config /YOUR/CONFIG/PATH/</code>.
-</p></div>
+</p>
 
 
 <h2>Initializing components</h2>
@@ -241,22 +215,6 @@ Home Assistant will use the directory that contains your config file as the dire
 </script>
 
 
-
-<script>
-  var disqus_shortname = 'home-assistant';
-  
-    
-    // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/developers/creating_components.html';
-    var disqus_url = 'https://home-assistant.io/developers/creating_components.html';
-    var disqus_script = 'embed.js';
-  
-  (function () {
-    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-    dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-  }());
-</script>
 
 
 

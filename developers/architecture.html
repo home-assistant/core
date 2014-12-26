@@ -86,23 +86,60 @@
   <hr class="divider">
   
 
-  <p><a href='/images/ha_architecture.png'>
-  <img src='/images/ha_architecture.png' class='no-shadow' />
-</a></p>
+  <p>Before we dive into the Home Assistant architecture, it is important to get a clear overview of the home automation landscape as a whole. This will allow us to show how the different parts of Home Assistant fit in the picture. For a more lengthy discussion about what each part in this overview is responsible for, <a href='/blog/2014/12/25/home-control-home-automation-and-the-smart-home/'>check out our blog</a>. A tl;dr version of the blog:</p>
 
-<p>The core of Home Assistant exists of the following parts.</p>
+<ul>
+<li>Home Control is responsible for collecting information on- and controlling devices.</li>
+<li>Home Automation triggers commands based on user configurations.</li>
+<li>Smart Home triggers commands based on previous behavior.</li>
+</ul>
 
-<p>The <strong>Event Bus</strong> facilitates the firing and listening of events. This is the beating heart of Home Assistant.</p>
 
-<p>The <strong>State Machine</strong> keeps track of the states of things. Fires a state_changed event when a state has been changed.</p>
+<p class='img'>
+  <a href='/images/architecture/home_automation_landscape.png'>
+    <img alt='Home Automation landscape'
+         src='/images/architecture/home_automation_landscape.png' />
+  </a>
+  Overview of the home automation landscape.
+</p>
 
-<p>The <strong>Service Registry</strong> listens on the event bus for call_service events and allows other code to register services.</p>
 
-<p>The <strong>Timer</strong> will send every 10 seconds a time_changed event on the event bus.</p>
+<p>The core of Home Assistant is responsible for the Home Control part and is made up:</p>
 
-<p>Take for example the device_tracker component. This component is responsible for keeping track which devices are home. It checks which devices are home every time a time_changed event is fired on the event bus. It will then update the state machine with the information for each device.</p>
+<ul>
+<li>The <strong>Event Bus</strong> facilitates the firing and listening of events. This is the beating heart of Home Assistant.</li>
+<li>The <strong>State Machine</strong> keeps track of the states of things. Fires a <code>state_changed</code> event when a state has been changed.</li>
+<li>The <strong>Service Registry</strong> listens on the event bus for <code>call_service</code> events and allows other code to register services.</li>
+<li>The <strong>Timer</strong> will send every 10 seconds a <code>time_changed</code> event on the event bus.</li>
+</ul>
 
-<p>This setup allows us to create simple yet powerful logic for controlling your home:</p>
+
+<p class='img'>
+  <a href='/images/architecture/ha_architecture.png'>
+    <img src='/images/architecture/ha_architecture.png' />
+  </a>
+  Overview of the Home Assistant architecture
+</p>
+
+
+<p>Home Assistant can be extended by <strong>components</strong>. Each component is responsible for a specific domain within Home Assistant. Components can listen for- or trigger events, offer services and maintain states. Components are written in Python and can do all the goodness that Python has to offer. Out of the box, Home Assistant offers a bunch of <a href="/components/">built-in components</a>.</p>
+
+<p>We can differentiate between two different types of
+components within Home Assistant.</p>
+
+<h4>Components that interact with an Internet of Things domain</h4>
+
+<p>These components will track devices within a specific domain and make this information available via the State Machine and the Event Bus. The component will also register services in the Service Registry to expose control of the devices. Each of these components exist of a core part and small pieces of platform specific logic.</p>
+
+<p>For example, one of the built-in components is the <code>switch</code> component. This component is responsible for interaction with different types of switches.</p>
+
+<p>If you are planning to add support for a new platform, please check out the <a href="/developers/add_new_platform.html">add new platform section</a>.</p>
+
+<h4>Components that respond to events that happen within Home Assistant</h4>
+
+<p>These components provide small pieces of home automation logic or services that do common tasks within your house.</p>
+
+<p>For example the <code>device_sun_light_trigger</code> component tracks the state of devices and the sun to make sure that the lights are turned on when it gets dark and there are people home. The component uses logic along the following lines:</p>
 
 <pre><code>In the event that device 'Paulus Nexus 5' changes to the 'Home' state:
   If the sun has set and the lights are not on:
@@ -125,15 +162,19 @@
     Turn on the lights
 </code></pre>
 
-<p>By using the Bus as a central communication hub between components it is easy to replace components or add functionality. If you would want to change the way devices are detected you only have to write a component that updates the device states in the State Machine.</p>
+<p>Another example of a home automation component can be found in <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py"><code>/config/custom_components/example.py</code></a>.</p>
 
 <h2>Multiple connected instances</h2>
 
-<p>Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local events fired and states set to the master instance which will then replicate it to each slave.</p>
+<p>Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local fired events and set states to the master instance which will then replicate it to each slave.</p>
 
-<p><a href='/images/architecture-remote.png'>
-  <img src='/images/architecture-remote.png' class='no-shadow' />
-</a></p>
+<p class='img'>
+  <a href='/images/architecture/architecture-remote.png'>
+    <img src='/images/architecture/architecture-remote.png' />
+  </a>
+  Overview of the Home Assistant architecture for multiple devices.
+</p>
+
 
 <p>A slave instance can be started with the following code and has the same support for components as a master-instance.</p>
 
@@ -164,9 +205,9 @@
 
 
 
-<div class='note'><p class='title'>Note</p><p class='content'>
+<p class='note'>
 Because each slave maintains its own ServiceRegistry it is possible to have multiple slaves respond to one service call.
-</p></div>
+</p>
 
 
 
@@ -207,22 +248,6 @@ Because each slave maintains its own ServiceRegistry it is possible to have mult
 </script>
 
 
-
-<script>
-  var disqus_shortname = 'home-assistant';
-  
-    
-    // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/developers/architecture.html';
-    var disqus_url = 'https://home-assistant.io/developers/architecture.html';
-    var disqus_script = 'embed.js';
-  
-  (function () {
-    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-    dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-  }());
-</script>
 
 
 

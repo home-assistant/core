@@ -112,16 +112,16 @@
 
 <p>After you got the demo mode running it is time to customize your configuration and enable some <a href="/components/">built-in components</a>. See <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example"><code>/config/home-assistant.conf.example</code></a> for an example configuration.</p>
 
-<div class='note'><p class='title'>Note</p><p class='content'>
+<p class='note'>
 You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in automatically.
-</p></div>
+</p>
 
 
 
 
-<div class='note'><p class='title'>Note</p><p class='content'>
+<p class='note'>
 For the light and switch component, you can specify multiple platforms by using sequential sections: [switch], [switch 2], [switch 3] etc
-</p></div>
+</p>
 
 
 <h3>Philips Hue</h3>
@@ -163,16 +163,16 @@ For the light and switch component, you can specify multiple platforms by using 
 
 
 
-<div class='note'><p class='title'>Note on Tomato</p><p class='content'>
+<p class='note' data-title='on Tomato'>
 Tomato requires an extra config variable called `http_id`. The value can be obtained by logging in to the Tomato admin interface and search for `http_id` in the page source code.
-</p></div>
+</p>
 
 
 
 
-<div class='note'><p class='title'>Note on Luci</p><p class='content'>
+<p class='note' data-title='on Luci'>
 Before the Luci scanner can be used you have to install the luci RPC package on OpenWRT: <code>opkg install luci-mod-rpc</code>.
-</p></div>
+</p>
 
 
 <p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>
@@ -226,22 +226,6 @@ Before the Luci scanner can be used you have to install the luci RPC package on 
 </script>
 
 
-
-<script>
-  var disqus_shortname = 'home-assistant';
-  
-    
-    // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/getting-started/index.html';
-    var disqus_url = 'https://home-assistant.io/getting-started/index.html';
-    var disqus_script = 'embed.js';
-  
-  (function () {
-    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-    dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-  }());
-</script>
 
 
 

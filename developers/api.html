@@ -98,9 +98,9 @@
 
 <p>The API accepts and returns only JSON encoded objects. All API calls have to be accompanied by the header <code>X-HA-Access: YOUR_PASSWORD</code> (as specified in your <code>home-assistant.conf</code>).</p>
 
-<div class='note'><p class='title'>Note</p><p class='content'>
+<p class='note'>
 You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in automatically.
-</p></div>
+</p>
 
 
 <p>Successful calls will return status code 200 or 201. Other status codes that can return are:</p>
@@ -382,9 +382,9 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 
 
-<div class='note'><p class='title'>Note</p><p class='content'>
+<p class='note'>
 The result will include any changed states that changed while the service was being executed, even if their change was the result of something else happening in the system. 
-</p></div>
+</p>
 
 
 <h4>POST /api/event_forwarding</h4>
@@ -449,9 +449,9 @@ The result will include any changed states that changed while the service was be
 
 
 
-<div class='note'><p class='title'>Note</p><p class='content'>
+<p class='note'>
 If your client does not support <code>DELETE</code> HTTP requests you can add an optional attribute <code>_METHOD</code> and set its value to <code>DELETE</code>.
-</p></div>
+</p>
 
 
 
@@ -492,22 +492,6 @@ If your client does not support <code>DELETE</code> HTTP requests you can add an
 </script>
 
 
-
-<script>
-  var disqus_shortname = 'home-assistant';
-  
-    
-    // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/developers/api.html';
-    var disqus_url = 'https://home-assistant.io/developers/api.html';
-    var disqus_script = 'embed.js';
-  
-  (function () {
-    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-    dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-  }());
-</script>
 
 
 
