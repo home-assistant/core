@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2014-12-26T00:03:45-08:00</updated>
+  <updated>2014-12-26T00:04:48-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Home Control, Automation &amp; the Smart Home]]></title>
-    <link href="https://home-assistant.io/blog/2014/12/25/home-control-home-automation-and-the-smart-home/"/>
-    <updated>2014-12-25T10:23:13-08:00</updated>
-    <id>https://home-assistant.io/blog/2014/12/25/home-control-home-automation-and-the-smart-home</id>
+    <link href="https://home-assistant.io/blog/2014/12/26/home-control-home-automation-and-the-smart-home/"/>
+    <updated>2014-12-26T10:23:13-08:00</updated>
+    <id>https://home-assistant.io/blog/2014/12/26/home-control-home-automation-and-the-smart-home</id>
     <content type="html"><![CDATA[<p>The internet has been buzzing over the last year about home automation. A lot of different terms fly around like the internet of things, home automation and the smart home.
 This article will try to explain how they all relate.</p>
 
