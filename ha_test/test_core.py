@@ -285,6 +285,19 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 
+    def test_case_insensitivty(self):
+        runs = []
+
+        self.states.track_change(
+            'light.BoWl', lambda a, b, c: runs.append(1),
+            ha.MATCH_ALL, ha.MATCH_ALL)
+
+        self.states.set('light.BOWL', 'off')
+        self.bus._pool.block_till_done()
+
+        self.assertTrue(self.states.is_state('light.bowl', 'off'))
+        self.assertEqual(1, len(runs))
+
 
 class TestServiceCall(unittest.TestCase):
     """ Test ServiceCall class. """
