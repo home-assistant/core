@@ -113,7 +113,7 @@
 </p>
 
 
-<p>The core of Home Assistant is responsible for the Home Control part and is made up:</p>
+<p>The Home Assistant core is responsible for Home Control. It has four parts to make this possible:</p>
 
 <ul>
 <li>The <strong>Event Bus</strong> facilitates the firing and listening of events. This is the beating heart of Home Assistant.</li>
@@ -127,7 +127,7 @@
   <a href='/images/architecture/ha_architecture.png'>
     <img src='/images/architecture/ha_architecture.png' />
   </a>
-  Overview of the Home Assistant architecture
+  Overview of the Home Assistant core architecture
 </p>
 
 
@@ -138,7 +138,7 @@ components within Home Assistant.</p>
 
 <h4>Components that interact with an Internet of Things domain</h4>
 
-<p>These components will track devices within a specific domain and make this information available via the State Machine and the Event Bus. The component will also register services in the Service Registry to expose control of the devices. Each of these components exist of a core part and small pieces of platform specific logic.</p>
+<p>These components will track devices within a specific domain and exist of a core part and platform specific logic. These components make their information available via the State Machine and the Event Bus. The component will also register services in the Service Registry to expose control of the devices.</p>
 
 <p>For example, one of the built-in components is the <code>switch</code> component. This component is responsible for interaction with different types of switches.</p>
 
@@ -173,9 +173,23 @@ components within Home Assistant.</p>
 
 <p>Another example of a home automation component can be found in <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py"><code>/config/custom_components/example.py</code></a>.</p>
 
+<h3>The full picture</h3>
+
+<p>When we put all the different pieces of Home Assistant together we see that we match pretty close to the initial sketched home automation overview. The smart home AI is not implemented yet and therefor ommitted from the following picture.</p>
+
+<p class='img'>
+  <a href='/images/architecture/ha_full_architecture.png'>
+    <img src='/images/architecture/ha_full_architecture.png' />
+  </a>
+  Overview of the full Home Assistant architecture with a couple of loaded components and platforms.
+</p>
+
+
+<p>Component&rsquo;s platform logic uses 3rd party Python libraries to communicate with the devices. This is done so that we can leverage great device libraries that are out there in the Python community.</p>
+
 <h2>Multiple connected instances</h2>
 
-<p>Home Assistant supports running multiple synchronzied instances using a master-slave model. Slaves forward all local fired events and set states to the master instance which will then replicate it to each slave.</p>
+<p>Home Assistant supports running multiple synchronzied instances using a master-slave model. Whenever <code>events.fire</code> or <code>states.set</code> is called on the salve it will forward it to the master. The master will replicate all events and changed states to its slaves.</p>
 
 <p class='img'>
   <a href='/images/architecture/architecture-remote.png'>
