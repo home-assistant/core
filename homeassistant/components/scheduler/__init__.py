@@ -28,7 +28,7 @@ DOMAIN = 'scheduler'
 # List of component names (string) your component depends upon
 # If you are setting up a group but not using a group for anything,
 # don't depend on group
-DEPENDENCIES = []
+DEPENDENCIES = ['sun']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class Schedule(object):
 
 
 class EventListener(object):
-    """ The base Event class that the schedule uses """
+    """ The base EventListner class that the schedule uses """
     def __init__(self, schedule):
         self._schedule = schedule
 
@@ -104,3 +104,19 @@ class EventListener(object):
     def execute(self, hass):
         """ execute the event """
         pass
+
+class ServiceEventListener(EventListener):
+    """ A EventListner that calls a service when executed """
+
+    def __init__(self, schdule, service):
+        EventListener.__init__(self, schdule)
+
+        (self._domain, self._service) = service.split('.')
+
+    def execute(self, hass):
+        """ Call the service """
+        data = {ATTR_ENTITY_ID: self._schedule.entity_ids}
+        hass.call_service(self._domain, self._service, data)
+
+        # Reschedule for next day
+        self.schedule(hass)
