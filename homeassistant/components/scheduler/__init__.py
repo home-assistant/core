@@ -17,10 +17,10 @@ entity_ids, and events.
 """
 import logging
 import json
-import importlib
 
-from homeassistant.components import switch
 from homeassistant.loader import get_component
+
+from homeassistant.const import ATTR_ENTITY_ID
 
 # The domain of your component. Should be equal to the name of your component
 DOMAIN = 'scheduler'
@@ -69,6 +69,8 @@ def setup(hass, config):
 
 class Schedule(object):
     """ A Schedule """
+
+    # pylint: disable=too-many-arguments
     def __init__(self, schedule_id, name=None, description=None,
                  entity_ids=None, days=None):
 
@@ -80,22 +82,22 @@ class Schedule(object):
 
         self.days = days or [0, 1, 2, 3, 4, 5, 6]
 
-        self._event_listeners = []
+        self.__event_listeners = []
 
     def add_event_listener(self, event_listener):
         """ Add a event to the schedule """
-        self._event_listeners.append(event_listener)
+        self.__event_listeners.append(event_listener)
 
     def schedule(self, hass):
         """ Schedule all the events in the schdule """
-        for event in self._event_listeners:
+        for event in self.__event_listeners:
             event.schedule(hass)
 
 
 class EventListener(object):
     """ The base EventListner class that the schedule uses """
     def __init__(self, schedule):
-        self._schedule = schedule
+        self.my_schedule = schedule
 
     def schedule(self, hass):
         """ Schedule the event """
@@ -105,18 +107,20 @@ class EventListener(object):
         """ execute the event """
         pass
 
+
+# pylint: disable=too-few-public-methods
 class ServiceEventListener(EventListener):
     """ A EventListner that calls a service when executed """
 
     def __init__(self, schdule, service):
         EventListener.__init__(self, schdule)
 
-        (self._domain, self._service) = service.split('.')
+        (self.domain, self.service) = service.split('.')
 
     def execute(self, hass):
         """ Call the service """
-        data = {ATTR_ENTITY_ID: self._schedule.entity_ids}
-        hass.call_service(self._domain, self._service, data)
+        data = {ATTR_ENTITY_ID: self.my_schedule.entity_ids}
+        hass.call_service(self.domain, self.service, data)
 
         # Reschedule for next day
         self.schedule(hass)

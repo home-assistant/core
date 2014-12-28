@@ -23,12 +23,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def create(schedule, event_listener_data):
+    """ Create a sun event listener based on the description. """
+
     negative_offset = False
     service = event_listener_data['service']
     offset_str = event_listener_data['offset']
     event = event_listener_data['event']
 
-    if (offset_str.startswith('-')):
+    if offset_str.startswith('-'):
         negative_offset = True
         offset_str = offset_str[1:]
 
@@ -42,26 +44,35 @@ def create(schedule, event_listener_data):
     return SunriseEventListener(schedule, service, offset, negative_offset)
 
 
+# pylint: disable=too-few-public-methods
 class SunEventListener(ServiceEventListener):
+    """ This is the base class for sun event listeners. """
+
     def __init__(self, schedule, service, offset, negative_offset):
         ServiceEventListener.__init__(self, schedule, service)
 
-        self._offset = offset
-        self._negative_offset = negative_offset
+        self.offset = offset
+        self.negative_offset = negative_offset
 
     def __get_next_time(self, next_event):
-        if self._negative_offset:
-            next_time = next_event - self._offset
+        """
+        Returns when the next time the service should be called.
+        Taking into account the offset and which days the event should execute.
+        """
+
+        if self.negative_offset:
+            next_time = next_event - self.offset
         else:
-            next_time = next_event + self._offset
+            next_time = next_event + self.offset
 
         while next_time < datetime.now() or \
-                next_time.weekday() not in self._schedule.days:
+                next_time.weekday() not in self.my_schedule.days:
             next_time = next_time + timedelta(days=1)
 
         return next_time
 
     def schedule_next_event(self, hass, next_event):
+        """ Schedule the event """
         next_time = self.__get_next_time(next_event)
 
         # pylint: disable=unused-argument
@@ -74,23 +85,30 @@ class SunEventListener(ServiceEventListener):
         return next_time
 
 
+# pylint: disable=too-few-public-methods
 class SunsetEventListener(SunEventListener):
+    """ This class is used the call a service when the sun sets. """
     def schedule(self, hass):
+        """ Schedule the event """
         next_setting = sun.next_setting(hass)
 
         next_time = self.schedule_next_event(hass, next_setting)
 
         _LOGGER.info(
-            'SunsetEventListener scheduled for {}, wiill call service {}.{}'
-            .format(next_time, self._domain, self._service))
+            'SunsetEventListener scheduled for {}, will call service {}.{}'
+            .format(next_time, self.domain, self.service))
 
 
+# pylint: disable=too-few-public-methods
 class SunriseEventListener(SunEventListener):
+    """ This class is used the call a service when the sun rises. """
+
     def schedule(self, hass):
+        """ Schedule the event """
         next_rising = sun.next_rising(hass)
 
         next_time = self.schedule_next_event(hass, next_rising)
 
         _LOGGER.info(
-            'SunriseEventListener scheduled for {}, wiill call service {}.{}'
-            .format(next_time, self._domain, self._service))
+            'SunriseEventListener scheduled for {}, will call service {}.{}'
+            .format(next_time, self.domain, self.service))
