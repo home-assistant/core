@@ -7,7 +7,7 @@ which time.
 {
     "type": "time",
     "service": "switch.turn_off",
-    "time": "22:00"
+    "time": "22:00:00"
 }
 
 """
@@ -25,28 +25,31 @@ def create(schedule, event_listener_data):
     """ Create a TimeEvent based on the description """
 
     service = event_listener_data['service']
-    (hour, minute) = [int(x) for x in event_listener_data['time'].split(':')]
+    (hour, minute, second) = [int(x) for x in
+        event_listener_data['time'].split(':')]
 
-    return TimeEventListener(schedule, service, hour, minute)
+    return TimeEventListener(schedule, service, hour, minute, second)
 
 
 class TimeEventListener(EventListener):
     """ The time event that the scheduler uses """
 
-    def __init__(self, schedule, service, hour, minute):
+    def __init__(self, schedule, service, hour, minute, second):
         EventListener.__init__(self, schedule)
 
         (self._domain, self._service) = service.split('.')
 
         self._hour = hour
         self._minute = minute
+        self._second = second
 
     def schedule(self, hass):
         """ Schedule this event so that it will be called """
 
         next_time = datetime.now().replace(hour=self._hour,
                                            minute=self._minute,
-                                           second=0, microsecond=0)
+                                           second=self._second,
+                                           microsecond=0)
 
         # Calculate the next time the event should be executed.
         # That is the next day that the schedule is configured to run
