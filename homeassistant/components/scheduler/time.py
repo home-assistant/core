@@ -15,7 +15,7 @@ which time.
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.components.scheduler import EventListener
+from homeassistant.components.scheduler import ServiceEventListener
 from homeassistant.components import ATTR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,13 +31,11 @@ def create(schedule, event_listener_data):
     return TimeEventListener(schedule, service, hour, minute, second)
 
 
-class TimeEventListener(EventListener):
+class TimeEventListener(ServiceEventListener):
     """ The time event that the scheduler uses """
 
     def __init__(self, schedule, service, hour, minute, second):
-        EventListener.__init__(self, schedule)
-
-        (self._domain, self._service) = service.split('.')
+        ServiceEventListener.__init__(self, schedule, service)
 
         self._hour = hour
         self._minute = minute
@@ -68,11 +66,3 @@ class TimeEventListener(EventListener):
         _LOGGER.info(
             'TimeEventListener scheduled for {}, will call service {}.{}'
             .format(next_time, self._domain, self._service))
-
-    def execute(self, hass):
-        """ Call the service """
-        data = {ATTR_ENTITY_ID: self._schedule.entity_ids}
-        hass.call_service(self._domain, self._service, data)
-
-        # Reschedule for next day
-        self.schedule(hass)
