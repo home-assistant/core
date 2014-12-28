@@ -1,4 +1,17 @@
-"""asd"""
+"""
+An event in the scheduler component that will call the service
+when the sun rises or sets with an offset.
+The sun evnt need to have the type 'sun', which service to call,
+which event (sunset or sunrise) and the offset.
+
+{
+    "type": "sun",
+    "service": "switch.turn_on",
+    "event": "sunset",
+    "offset": "-01:00:00"
+}
+
+"""
 
 from datetime import datetime, timedelta
 import logging
