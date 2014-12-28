@@ -6,6 +6,7 @@ homeassistant/components/http/www_static/polymer/bower_components/*
 !config/custom_components
 config/custom_components/*
 !config/custom_components/example.py
+!config/custom_components/hello_world.py
 
 # Hide sublime text stuff
 *.sublime-project

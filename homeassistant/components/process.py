@@ -10,7 +10,7 @@ Author: Markus Stenberg <fingon@iki.fi>
 
 import os
 
-from homeassistant.components import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.util as util
 
 DOMAIN = 'process'

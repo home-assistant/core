@@ -1,23 +1,6 @@
 # Adding support for a new device
 
-You've probably came here beacuse you noticed that your favorite device is not supported and want to add it.
-
-First step is to decide under which component the device has to reside. Each component is responsible for a specific domain within Home Assistant. An example is the switch component, which is responsible for interaction with different types of switches. The switch component consists of the following files:
-
-**homeassistant/components/switch/\_\_init\_\_.py**<br />
-Contains the Switch component code.
-
-**homeassistant/components/switch/wemo.py**<br />
-Contains the code to interact with WeMo switches. Called if type=wemo in switch config. 
-
-**homeassistant/components/switch/tellstick.py**
-Contains the code to interact with Tellstick switches. Called if type=tellstick in switch config.
-
-If a component exists, your job is easy. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add. If you cannot find a suitable component, you'll have to add it yourself. When writing a component try to structure it after the Switch component to maximize reusability.
-
-Communication between Home Assistant and devices should happen via third-party libraries that implement the device API. This will make sure the platform support code stays as small as possible.
-
-For help on building your component, please see the See the documentation on [further customizing Home Assistant](https://github.com/balloob/home-assistant#further-customizing-home-assistant).
+For help on building your component, please see the See the [developer documentation on home-assistant.io](https://home-assistant.io/developers/).
 
 After you finish adding support for your device:
 

@@ -8,7 +8,7 @@ the state of the sun and devices.
 import logging
 from datetime import datetime, timedelta
 
-import homeassistant.components as components
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from . import light, sun, device_tracker, group
 
 DOMAIN = "device_sun_light_trigger"
@@ -21,6 +21,7 @@ LIGHT_PROFILE = 'relax'
 
 CONF_LIGHT_PROFILE = 'light_profile'
 CONF_LIGHT_GROUP = 'light_group'
+CONF_DEVICE_GROUP = 'device_group'
 
 
 # pylint: disable=too-many-branches
@@ -30,13 +31,17 @@ def setup(hass, config):
     disable_turn_off = 'disable_turn_off' in config[DOMAIN]
 
     light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
-                                     light.GROUP_NAME_ALL_LIGHTS)
+                                     light.ENTITY_ID_ALL_LIGHTS)
 
     light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
 
+    device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
+                                      device_tracker.ENTITY_ID_ALL_DEVICES)
+
     logger = logging.getLogger(__name__)
 
-    device_entity_ids = hass.get_entity_ids(device_tracker.DOMAIN)
+    device_entity_ids = group.get_entity_ids(hass, device_group,
+                                             device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("No devices found to track")
@@ -92,8 +97,8 @@ def setup(hass, config):
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
-    hass.track_state_change(sun.ENTITY_ID, schedule_light_on_sun_rise,
-                            sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
+    hass.states.track_change(sun.ENTITY_ID, schedule_light_on_sun_rise,
+                             sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
 
     # If the sun is already above horizon
     # schedule the time-based pre-sun set event
@@ -108,7 +113,7 @@ def setup(hass, config):
 
         # Specific device came home ?
         if entity != device_tracker.ENTITY_ID_ALL_DEVICES and \
-           new_state.state == components.STATE_HOME:
+           new_state.state == STATE_HOME:
 
             # These variables are needed for the elif check
             now = datetime.now()
@@ -142,8 +147,8 @@ def setup(hass, config):
                         break
 
         # Did all devices leave the house?
-        elif (entity == device_tracker.ENTITY_ID_ALL_DEVICES and
-              new_state.state == components.STATE_NOT_HOME and lights_are_on
+        elif (entity == device_group and
+              new_state.state == STATE_NOT_HOME and lights_are_on
               and not disable_turn_off):
 
             logger.info(
@@ -152,12 +157,13 @@ def setup(hass, config):
             light.turn_off(hass)
 
     # Track home coming of each device
-    hass.track_state_change(device_entity_ids, check_light_on_dev_state_change,
-                            components.STATE_NOT_HOME, components.STATE_HOME)
+    hass.states.track_change(
+        device_entity_ids, check_light_on_dev_state_change,
+        STATE_NOT_HOME, STATE_HOME)
 
     # Track when all devices are gone to shut down lights
-    hass.track_state_change(device_tracker.ENTITY_ID_ALL_DEVICES,
-                            check_light_on_dev_state_change,
-                            components.STATE_HOME, components.STATE_NOT_HOME)
+    hass.states.track_change(
+        device_group, check_light_on_dev_state_change,
+        STATE_HOME, STATE_NOT_HOME)
 
     return True

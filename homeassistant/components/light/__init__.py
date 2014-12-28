@@ -52,12 +52,12 @@ import logging
 import os
 import csv
 
-import homeassistant as ha
-from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.components import (
-    group, extract_entity_ids, STATE_ON,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.const import (
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.helpers import (
+    extract_entity_ids, platform_devices_from_config)
+from homeassistant.components import group
 
 
 DOMAIN = "light"
@@ -82,6 +82,12 @@ ATTR_BRIGHTNESS = "brightness"
 # String representing a profile (built-in ones or external defined)
 ATTR_PROFILE = "profile"
 
+# If the light should flash, can be FLASH_SHORT or FLASH_LONG
+ATTR_FLASH = "flash"
+FLASH_SHORT = "short"
+FLASH_LONG = "long"
+
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,50 +102,38 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, profile=None):
+            rgb_color=None, xy_color=None, profile=None, flash=None):
     """ Turns all or specified light on. """
-    data = {}
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_PROFILE, profile),
+            (ATTR_TRANSITION, transition),
+            (ATTR_BRIGHTNESS, brightness),
+            (ATTR_RGB_COLOR, rgb_color),
+            (ATTR_XY_COLOR, xy_color),
+            (ATTR_FLASH, flash),
+        ] if value is not None
+    }
 
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if profile:
-        data[ATTR_PROFILE] = profile
-
-    if transition is not None:
-        data[ATTR_TRANSITION] = transition
-
-    if brightness is not None:
-        data[ATTR_BRIGHTNESS] = brightness
-
-    if rgb_color:
-        data[ATTR_RGB_COLOR] = rgb_color
-
-    if xy_color:
-        data[ATTR_XY_COLOR] = xy_color
-
-    hass.call_service(DOMAIN, SERVICE_TURN_ON, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None, transition=None):
     """ Turns all or specified light off. """
-    data = {}
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_TRANSITION, transition),
+        ] if value is not None
+    }
 
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if transition is not None:
-        data[ATTR_TRANSITION] = transition
-
-    hass.call_service(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 # pylint: disable=too-many-branches, too-many-locals
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
-
-    if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, _LOGGER):
-        return False
 
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),
@@ -169,20 +163,9 @@ def setup(hass, config):
 
                     return False
 
-    # Load platform
-    light_type = config[DOMAIN][ha.CONF_TYPE]
+    lights = platform_devices_from_config(config, DOMAIN, hass, _LOGGER)
 
-    light_init = get_component('light.{}'.format(light_type))
-
-    if light_init is None:
-        _LOGGER.error("Unknown light type specified: %s", light_type)
-
-        return False
-
-    lights = light_init.get_lights(hass, config[DOMAIN])
-
-    if len(lights) == 0:
-        _LOGGER.error("No lights found")
+    if not lights:
         return False
 
     ent_to_light = {}
@@ -198,7 +181,7 @@ def setup(hass, config):
 
         entity_id = util.ensure_unique_string(
             ENTITY_ID_FORMAT.format(util.slugify(name)),
-            list(ent_to_light.keys()))
+            ent_to_light.keys())
 
         light.entity_id = entity_id
         ent_to_light[entity_id] = light
@@ -249,7 +232,6 @@ def setup(hass, config):
             profile = profiles.get(dat.get(ATTR_PROFILE))
 
             if profile:
-                # *color, bright = profile
                 *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
 
             if ATTR_BRIGHTNESS in dat:
@@ -287,6 +269,13 @@ def setup(hass, config):
                     # TypeError if rgb_color is not iterable
                     # ValueError if not all values can be converted to int
                     pass
+
+            if ATTR_FLASH in dat:
+                if dat[ATTR_FLASH] == FLASH_SHORT:
+                    params[ATTR_FLASH] = FLASH_SHORT
+
+                elif dat[ATTR_FLASH] == FLASH_LONG:
+                    params[ATTR_FLASH] = FLASH_LONG
 
             for light in lights:
                 # pylint: disable=star-args

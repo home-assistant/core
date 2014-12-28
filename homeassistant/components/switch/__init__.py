@@ -4,14 +4,14 @@ homeassistant.components.switch
 Component to interface with various switches that can be controlled remotely.
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-import homeassistant as ha
 import homeassistant.util as util
-from homeassistant.loader import get_component
-from homeassistant.components import (
-    group, extract_entity_ids, STATE_ON,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.const import (
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.helpers import (
+    extract_entity_ids, platform_devices_from_config)
+from homeassistant.components import group
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -22,10 +22,8 @@ ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format(
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ATTR_TODAY_KWH = "today_kwh"
-ATTR_CURRENT_POWER = "current_power"
-ATTR_TODAY_ON_TIME = "today_on_time"
-ATTR_TODAY_STANDBY_TIME = "today_standby_time"
+ATTR_TODAY_MWH = "today_mwh"
+ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -43,37 +41,23 @@ def turn_on(hass, entity_id=None):
     """ Turns all or specified switch on. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
 
-    hass.call_service(DOMAIN, SERVICE_TURN_ON, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
     """ Turns all or specified switch off. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
 
-    hass.call_service(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-# pylint: disable=too-many-branches
 def setup(hass, config):
     """ Track states and offer events for switches. """
     logger = logging.getLogger(__name__)
 
-    if not util.validate_config(config, {DOMAIN: [ha.CONF_TYPE]}, logger):
-        return False
+    switches = platform_devices_from_config(config, DOMAIN, hass, logger)
 
-    switch_type = config[DOMAIN][ha.CONF_TYPE]
-
-    switch_init = get_component('switch.{}'.format(switch_type))
-
-    if switch_init is None:
-        logger.error("Error loading switch component %s", switch_type)
-
-        return False
-
-    switches = switch_init.get_switches(hass, config[DOMAIN])
-
-    if len(switches) == 0:
-        logger.error("No switches found")
+    if not switches:
         return False
 
     # Setup a dict mapping entity IDs to devices
@@ -90,27 +74,22 @@ def setup(hass, config):
 
         entity_id = util.ensure_unique_string(
             ENTITY_ID_FORMAT.format(util.slugify(name)),
-            list(ent_to_switch.keys()))
+            ent_to_switch.keys())
 
         switch.entity_id = entity_id
         ent_to_switch[entity_id] = switch
 
     # pylint: disable=unused-argument
-    def update_states(time, force_reload=False):
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
+    def update_states(now):
         """ Update states of all switches. """
 
-        # First time this method gets called, force_reload should be True
-        if force_reload or \
-           datetime.now() - update_states.last_updated > \
-           MIN_TIME_BETWEEN_SCANS:
+        logger.info("Updating switch states")
 
-            logger.info("Updating switch states")
-            update_states.last_updated = datetime.now()
+        for switch in switches:
+            switch.update_ha_state(hass)
 
-            for switch in switches:
-                switch.update_ha_state(hass)
-
-    update_states(None, True)
+    update_states(None)
 
     def handle_switch_service(service):
         """ Handles calls to the switch services. """

@@ -1,5 +1,7 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="state-card.html">
+<link rel="import" href="bower_components/core-style/core-style.html">
+<link rel="import" href="state-card-display.html">
+<link rel="import" href="state-card-toggle.html">
 
 <polymer-element name="states-cards" attributes="api filter">
   <template>
@@ -9,45 +11,68 @@
       width: 100%;
     }
 
-    state-card {
-      display: inline-block;
-    }
-
     @media all and (min-width: 764px) {
       :host {
         padding-bottom: 8px;
       }
 
-      state-card {
+      .state-card {
         width: calc(50% - 44px);
         margin: 8px 0 0 8px;
       }
     }
 
     @media all and (min-width: 1100px) {
-      state-card {
+      .state-card {
         width: calc(33% - 38px);
 
       }
     }
 
     @media all and (min-width: 1450px) {
-      state-card {
+      .state-card {
         width: calc(25% - 42px);
-
       }
     }
-
     </style>
 
+    <core-style id="state-card">
+      <!-- generic state card CSS -->
+      :host {
+        background-color: #fff;
+        border-radius: 2px;
+        box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+        transition: all 0.30s ease-out;
+
+        position: relative;
+        background-color: white;
+        padding: 16px;
+        width: 100%;
+      }
+    </core-style>
+
     <div horizontal layout wrap>
-      <template repeat="{{state in getStates(api.states, filter)}}">
-        <state-card
+
+      <template id="display">
+        <state-card-display
+          class='state-card'
+          stateObj="{{state}}"
+          cb_edit={{editCallback}}>
+        </state-card-display>
+      </template>
+
+      <template id="toggle">
+        <state-card-toggle
+          class='state-card'
           stateObj="{{state}}"
           cb_turn_on="{{api.turn_on}}"
           cb_turn_off="{{api.turn_off}}"
           cb_edit={{editCallback}}>
-        </state-card>
+        </state-card-display>
+      </template>
+
+      <template repeat="{{state in getStates(api.states, filter)}}">
+        <template bind ref="{{state.cardType}}"></template>
       </template>
 
     </div>

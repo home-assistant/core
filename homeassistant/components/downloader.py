@@ -9,7 +9,8 @@ import logging
 import re
 import threading
 
-import homeassistant.util as util
+from homeassistant.helpers import validate_config
+from homeassistant.util import sanitize_filename
 
 DOMAIN = "downloader"
 DEPENDENCIES = []
@@ -36,7 +37,7 @@ def setup(hass, config):
 
         return False
 
-    if not util.validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
+    if not validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
         return False
 
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
@@ -64,7 +65,7 @@ def setup(hass, config):
                 subdir = service.data.get(ATTR_SUBDIR)
 
                 if subdir:
-                    subdir = util.sanitize_filename(subdir)
+                    subdir = sanitize_filename(subdir)
 
                 final_path = None
 
@@ -88,7 +89,7 @@ def setup(hass, config):
                         filename = "ha_download"
 
                     # Remove stuff to ruin paths
-                    filename = util.sanitize_filename(filename)
+                    filename = sanitize_filename(filename)
 
                     # Do we want to download to subdir, create if needed
                     if subdir:

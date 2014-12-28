@@ -19,21 +19,14 @@ import requests
 
 import homeassistant as ha
 
-SERVER_PORT = 8123
-
-AUTH_HEADER = "HA-access"
-
-URL_API = "/api/"
-URL_API_STATES = "/api/states"
-URL_API_STATES_ENTITY = "/api/states/{}"
-URL_API_EVENTS = "/api/events"
-URL_API_EVENTS_EVENT = "/api/events/{}"
-URL_API_SERVICES = "/api/services"
-URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
-URL_API_EVENT_FORWARD = "/api/event_forwarding"
+from homeassistant.const import (
+    SERVER_PORT, AUTH_HEADER, URL_API, URL_API_STATES, URL_API_STATES_ENTITY,
+    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
+    URL_API_SERVICES_SERVICE, URL_API_EVENT_FORWARD)
 
 METHOD_GET = "get"
 METHOD_POST = "post"
+METHOD_DELETE = "delete"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +87,10 @@ class API(object):
             _LOGGER.exception(error)
             raise ha.HomeAssistantError(error)
 
+    def __repr__(self):
+        return "API({}, {}, {})".format(
+            self.host, self.api_password, self.port)
+
 
 class HomeAssistant(ha.HomeAssistant):
     """ Home Assistant that forwards work. """
@@ -122,17 +119,22 @@ class HomeAssistant(ha.HomeAssistant):
             import random
 
             # pylint: disable=too-many-format-args
-            random_password = '%030x'.format(random.randrange(16**30))
+            random_password = '{:30}'.format(random.randrange(16**30))
 
-            http.setup(self, random_password)
+            http.setup(
+                self, {http.DOMAIN: {http.CONF_API_PASSWORD: random_password}})
 
         ha.Timer(self)
 
-        # Setup that events from remote_api get forwarded to local_api
-        connect_remote_events(self.remote_api, self.local_api)
-
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
+
+        # Setup that events from remote_api get forwarded to local_api
+        # Do this after we fire START, otherwise HTTP is not started
+        if not connect_remote_events(self.remote_api, self.local_api):
+            raise ha.HomeAssistantError((
+                'Could not setup event forwarding from api {} to '
+                'local api {}').format(self.remote_api, self.local_api))
 
     def stop(self):
         """ Stops Home Assistant and shuts down all threads. """
@@ -140,6 +142,9 @@ class HomeAssistant(ha.HomeAssistant):
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
                       origin=ha.EventOrigin.remote)
+
+        # Disconnect master event forwarding
+        disconnect_remote_events(self.remote_api, self.local_api)
 
         # Wait till all responses to homeassistant_stop are done
         self._pool.block_till_done()
@@ -285,30 +290,51 @@ def validate_api(api):
 def connect_remote_events(from_api, to_api):
     """ Sets up from_api to forward all events to to_api. """
 
-    data = {'host': to_api.host, 'api_password': to_api.api_password}
-
-    if to_api.port is not None:
-        data['port'] = to_api.port
+    data = {
+        'host': to_api.host,
+        'api_password': to_api.api_password,
+        'port': to_api.port
+    }
 
     try:
-        from_api(METHOD_POST, URL_API_EVENT_FORWARD, data)
+        req = from_api(METHOD_POST, URL_API_EVENT_FORWARD, data)
+
+        if req.status_code == 200:
+            return True
+        else:
+            _LOGGER.error(
+                "Error settign up event forwarding: %s - %s",
+                req.status_code, req.text)
+
+            return False
 
     except ha.HomeAssistantError:
-        pass
+        _LOGGER.exception("Error setting up event forwarding")
+        return False
 
 
 def disconnect_remote_events(from_api, to_api):
     """ Disconnects forwarding events from from_api to to_api. """
-    data = {'host': to_api.host, '_METHOD': 'DELETE'}
-
-    if to_api.port is not None:
-        data['port'] = to_api.port
+    data = {
+        'host': to_api.host,
+        'port': to_api.port
+    }
 
     try:
-        from_api(METHOD_POST, URL_API_EVENT_FORWARD, data)
+        req = from_api(METHOD_DELETE, URL_API_EVENT_FORWARD, data)
+
+        if req.status_code == 200:
+            return True
+        else:
+            _LOGGER.error(
+                "Error removing event forwarding: %s - %s",
+                req.status_code, req.text)
+
+            return False
 
     except ha.HomeAssistantError:
-        pass
+        _LOGGER.exception("Error removing an event forwarder")
+        return False
 
 
 def get_event_listeners(api):
@@ -336,7 +362,7 @@ def fire_event(api, event_type, data=None):
                           req.status_code, req.text)
 
     except ha.HomeAssistantError:
-        pass
+        _LOGGER.exception("Error firing event")
 
 
 def get_state(api, entity_id):
@@ -372,7 +398,7 @@ def get_states(api):
         # ValueError if req.json() can't parse the json
         _LOGGER.exception("Error fetching states")
 
-        return {}
+        return []
 
 
 def set_state(api, entity_id, new_state, attributes=None):

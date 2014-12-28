@@ -26,8 +26,7 @@ import logging
 from collections import namedtuple
 
 import homeassistant.util as util
-from homeassistant.components import (ATTR_FRIENDLY_NAME,
-                                      ATTR_UNIT_OF_MEASUREMENT)
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 # The domain of your component. Should be equal to the name of your component
 DOMAIN = "tellstick_sensor"
@@ -88,7 +87,7 @@ def setup(hass, config):
     }
 
     def update_sensor_value_state(sensor_name, sensor_value):
-        "Update the state of a sensor value"
+        """ Update the state of a sensor value """
         sensor_value_description = \
             sensor_value_descriptions[sensor_value.datatype]
         sensor_value_name = '{} {}'.format(
@@ -117,7 +116,7 @@ def setup(hass, config):
     ]
 
     def update_sensor_state(sensor):
-        "Updates all the sensor values from the sensor"
+        """ Updates all the sensor values from the sensor """
         try:
             sensor_name = config[DOMAIN][str(sensor.id)]
         except KeyError:
@@ -132,7 +131,7 @@ def setup(hass, config):
 
     # pylint: disable=unused-argument
     def update_sensors_state(time):
-        "Update the state of all sensors"
+        """ Update the state of all sensors """
         for sensor in sensors:
             update_sensor_state(sensor)
 

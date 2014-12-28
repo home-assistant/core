@@ -1,10 +1,11 @@
 """ Supports scanning a Netgear router. """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 import threading
 
-import homeassistant as ha
-import homeassistant.util as util
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers import validate_config
+from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
@@ -16,10 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a Netgear scanner. """
-    if not util.validate_config(config,
-                                {DOMAIN: [ha.CONF_HOST, ha.CONF_USERNAME,
-                                          ha.CONF_PASSWORD]},
-                                _LOGGER):
+    if not validate_config(config,
+                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
+                           _LOGGER):
         return None
 
     scanner = NetgearDeviceScanner(config[DOMAIN])
@@ -31,10 +31,9 @@ class NetgearDeviceScanner(object):
     """ This class queries a Netgear wireless router using the SOAP-api. """
 
     def __init__(self, config):
-        host = config[ha.CONF_HOST]
-        username, password = config[ha.CONF_USERNAME], config[ha.CONF_PASSWORD]
+        host = config[CONF_HOST]
+        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
-        self.date_updated = None
         self.last_results = []
 
         try:
@@ -75,10 +74,6 @@ class NetgearDeviceScanner(object):
     def get_device_name(self, mac):
         """ Returns the name of the given device or None if we don't know. """
 
-        # Make sure there are results
-        if not self.date_updated:
-            self._update_info()
-
         filter_named = [device.name for device in self.last_results
                         if device.mac == mac]
 
@@ -87,6 +82,7 @@ class NetgearDeviceScanner(object):
         else:
             return None
 
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Retrieves latest information from the Netgear router.
             Returns boolean if scanning successful. """
@@ -94,18 +90,6 @@ class NetgearDeviceScanner(object):
             return
 
         with self.lock:
-            # if date_updated is None or the date is too old we scan for
-            # new data
-            if not self.date_updated or \
-               datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
+            _LOGGER.info("Scanning")
 
-                _LOGGER.info("Scanning")
-
-                self.last_results = self._api.get_attached_devices()
-
-                self.date_updated = datetime.now()
-
-                return
-
-            else:
-                return
+            self.last_results = self._api.get_attached_devices()

@@ -1,6 +1,6 @@
 """
-test.test_core
-~~~~~~~~~~~~~~
+ha_test.test_core
+~~~~~~~~~~~~~~~~~
 
 Provides tests to verify that Home Assistant core works.
 """
@@ -30,7 +30,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass._pool.stop()
+        self.hass.stop()
 
     def test_get_config_path(self):
         """ Test get_config_path method. """
@@ -52,80 +52,17 @@ class TestHomeAssistant(unittest.TestCase):
 
         self.assertTrue(blocking_thread.is_alive())
 
-        self.hass.call_service(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
-        self.hass._pool.block_till_done()
+        self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
+        self.hass.pool.block_till_done()
 
         # hass.block_till_stopped checks every second if it should quit
         # we have to wait worst case 1 second
         wait_loops = 0
-        while blocking_thread.is_alive() and wait_loops < 10:
+        while blocking_thread.is_alive() and wait_loops < 50:
             wait_loops += 1
             time.sleep(0.1)
 
         self.assertFalse(blocking_thread.is_alive())
-
-    def test_get_entity_ids(self):
-        """ Test get_entity_ids method. """
-        ent_ids = self.hass.get_entity_ids()
-        self.assertEqual(2, len(ent_ids))
-        self.assertTrue('light.Bowl' in ent_ids)
-        self.assertTrue('switch.AC' in ent_ids)
-
-        ent_ids = self.hass.get_entity_ids('light')
-        self.assertEqual(1, len(ent_ids))
-        self.assertTrue('light.Bowl' in ent_ids)
-
-    def test_track_state_change(self):
-        """ Test track_state_change. """
-        # 2 lists to track how often our callbacks got called
-        specific_runs = []
-        wildcard_runs = []
-
-        self.hass.track_state_change(
-            'light.Bowl', lambda a, b, c: specific_runs.append(1), 'on', 'off')
-
-        self.hass.track_state_change(
-            'light.Bowl', lambda a, b, c: wildcard_runs.append(1),
-            ha.MATCH_ALL, ha.MATCH_ALL)
-
-        # Set same state should not trigger a state change/listener
-        self.hass.states.set('light.Bowl', 'on')
-        self.hass._pool.block_till_done()
-        self.assertEqual(0, len(specific_runs))
-        self.assertEqual(0, len(wildcard_runs))
-
-        # State change off -> on
-        self.hass.states.set('light.Bowl', 'off')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-
-        # State change off -> off
-        self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-
-        # State change off -> on
-        self.hass.states.set('light.Bowl', 'on')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-
-    def test_listen_once_event(self):
-        """ Test listen_once_event method. """
-        runs = []
-
-        self.hass.listen_once_event('test_event', lambda x: runs.append(1))
-
-        self.hass.bus.fire('test_event')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(runs))
-
-        # Second time it should not increase runs
-        self.hass.bus.fire('test_event')
-        self.hass._pool.block_till_done()
-        self.assertEqual(1, len(runs))
 
     def test_track_point_in_time(self):
         """ Test track point in time. """
@@ -139,23 +76,23 @@ class TestHomeAssistant(unittest.TestCase):
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(before_birthday)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(0, len(runs))
 
         self._send_time_changed(birthday_paulus)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
         # A point in time tracker will only fire once, this should do nothing
         self._send_time_changed(birthday_paulus)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
         self.hass.track_point_in_time(
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(after_birthday)
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(2, len(runs))
 
     def test_track_time_change(self):
@@ -168,17 +105,17 @@ class TestHomeAssistant(unittest.TestCase):
             lambda x: specific_runs.append(1), second=[0, 30])
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 
@@ -234,6 +171,21 @@ class TestEventBus(unittest.TestCase):
         # Try deleting listener while category doesn't exist either
         self.bus.remove_listener('test', listener)
 
+    def test_listen_once_event(self):
+        """ Test listen_once_event method. """
+        runs = []
+
+        self.bus.listen_once('test_event', lambda x: runs.append(1))
+
+        self.bus.fire('test_event')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(runs))
+
+        # Second time it should not increase runs
+        self.bus.fire('test_event')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(runs))
+
 
 class TestState(unittest.TestCase):
     """ Test EventBus methods. """
@@ -276,14 +228,75 @@ class TestStateMachine(unittest.TestCase):
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
 
+    def test_entity_ids(self):
+        """ Test get_entity_ids method. """
+        ent_ids = self.states.entity_ids()
+        self.assertEqual(2, len(ent_ids))
+        self.assertTrue('light.Bowl' in ent_ids)
+        self.assertTrue('switch.AC' in ent_ids)
+
+        ent_ids = self.states.entity_ids('light')
+        self.assertEqual(1, len(ent_ids))
+        self.assertTrue('light.Bowl' in ent_ids)
+
     def test_remove(self):
         """ Test remove method. """
-        self.assertTrue('light.Bowl' in self.states.entity_ids)
+        self.assertTrue('light.Bowl' in self.states.entity_ids())
         self.assertTrue(self.states.remove('light.Bowl'))
-        self.assertFalse('light.Bowl' in self.states.entity_ids)
+        self.assertFalse('light.Bowl' in self.states.entity_ids())
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))
+
+    def test_track_change(self):
+        """ Test states.track_change. """
+        # 2 lists to track how often our callbacks got called
+        specific_runs = []
+        wildcard_runs = []
+
+        self.states.track_change(
+            'light.Bowl', lambda a, b, c: specific_runs.append(1), 'on', 'off')
+
+        self.states.track_change(
+            'light.Bowl', lambda a, b, c: wildcard_runs.append(1),
+            ha.MATCH_ALL, ha.MATCH_ALL)
+
+        # Set same state should not trigger a state change/listener
+        self.states.set('light.Bowl', 'on')
+        self.bus._pool.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+        self.assertEqual(0, len(wildcard_runs))
+
+        # State change off -> on
+        self.states.set('light.Bowl', 'off')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+
+        # State change off -> off
+        self.states.set('light.Bowl', 'off', {"some_attr": 1})
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(2, len(wildcard_runs))
+
+        # State change off -> on
+        self.states.set('light.Bowl', 'on')
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(3, len(wildcard_runs))
+
+    def test_case_insensitivty(self):
+        runs = []
+
+        self.states.track_change(
+            'light.BoWl', lambda a, b, c: runs.append(1),
+            ha.MATCH_ALL, ha.MATCH_ALL)
+
+        self.states.set('light.BOWL', 'off')
+        self.bus._pool.block_till_done()
+
+        self.assertTrue(self.states.is_state('light.bowl', 'off'))
+        self.assertEqual(1, len(runs))
 
 
 class TestServiceCall(unittest.TestCase):

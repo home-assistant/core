@@ -1,14 +1,15 @@
 """ Supports scanning a Tomato router. """
 import logging
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 import threading
 
 import requests
 
-import homeassistant as ha
-import homeassistant.util as util
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers import validate_config
+from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
@@ -22,10 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a Tomato scanner. """
-    if not util.validate_config(config,
-                                {DOMAIN: [ha.CONF_HOST, ha.CONF_USERNAME,
-                                          ha.CONF_PASSWORD, CONF_HTTP_ID]},
-                                _LOGGER):
+    if not validate_config(config,
+                           {DOMAIN: [CONF_HOST, CONF_USERNAME,
+                                     CONF_PASSWORD, CONF_HTTP_ID]},
+                           _LOGGER):
         return None
 
     return TomatoDeviceScanner(config[DOMAIN])
@@ -40,8 +41,8 @@ class TomatoDeviceScanner(object):
     """
 
     def __init__(self, config):
-        host, http_id = config[ha.CONF_HOST], config[CONF_HTTP_ID]
-        username, password = config[ha.CONF_USERNAME], config[ha.CONF_PASSWORD]
+        host, http_id = config[CONF_HOST], config[CONF_HTTP_ID]
+        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
         self.req = requests.Request('POST',
                                     'http://{}/update.cgi'.format(host),
@@ -55,7 +56,6 @@ class TomatoDeviceScanner(object):
         self.logger = logging.getLogger("{}.{}".format(__name__, "Tomato"))
         self.lock = threading.Lock()
 
-        self.date_updated = None
         self.last_results = {"wldev": [], "dhcpd_lease": []}
 
         self.success_init = self._update_tomato_info()
@@ -71,10 +71,6 @@ class TomatoDeviceScanner(object):
     def get_device_name(self, device):
         """ Returns the name of the given device or None if we don't know. """
 
-        # Make sure there are results
-        if not self.date_updated:
-            self._update_tomato_info()
-
         filter_named = [item[0] for item in self.last_results['dhcpd_lease']
                         if item[2] == device]
 
@@ -83,16 +79,12 @@ class TomatoDeviceScanner(object):
         else:
             return filter_named[0]
 
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_tomato_info(self):
         """ Ensures the information from the Tomato router is up to date.
             Returns boolean if scanning successful. """
 
-        self.lock.acquire()
-
-        # if date_updated is None or the date is too old we scan for new data
-        if not self.date_updated or \
-           datetime.now() - self.date_updated > MIN_TIME_BETWEEN_SCANS:
-
+        with self.lock:
             self.logger.info("Scanning")
 
             try:
@@ -110,8 +102,6 @@ class TomatoDeviceScanner(object):
                         if param == 'wldev' or param == 'dhcpd_lease':
                             self.last_results[param] = \
                                 json.loads(value.replace("'", '"'))
-
-                    self.date_updated = datetime.now()
 
                     return True
 
@@ -146,13 +136,3 @@ class TomatoDeviceScanner(object):
                     "Failed to parse response from router")
 
                 return False
-
-            finally:
-                self.lock.release()
-
-        else:
-            # We acquired the lock before the IF check,
-            # release it before we return True
-            self.lock.release()
-
-            return True

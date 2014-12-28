@@ -8,11 +8,12 @@ import random
 
 import homeassistant as ha
 import homeassistant.loader as loader
-from homeassistant.components import (SERVICE_TURN_ON, SERVICE_TURN_OFF,
-                                      STATE_ON, STATE_OFF, ATTR_ENTITY_PICTURE,
-                                      extract_entity_ids)
-from homeassistant.components.light import (ATTR_XY_COLOR, ATTR_BRIGHTNESS,
-                                            GROUP_NAME_ALL_LIGHTS)
+from homeassistant.helpers import extract_entity_ids
+from homeassistant.const import (
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF,
+    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.components.light import (
+    ATTR_XY_COLOR, ATTR_BRIGHTNESS, GROUP_NAME_ALL_LIGHTS)
 from homeassistant.util import split_entity_id
 
 DOMAIN = "demo"
@@ -23,6 +24,9 @@ DEPENDENCIES = []
 def setup(hass, config):
     """ Setup a demo environment. """
     group = loader.get_component('group')
+
+    config.setdefault(ha.DOMAIN, {})
+    config.setdefault(DOMAIN, {})
 
     if config[DOMAIN].get('hide_demo_state') != '1':
         hass.states.set('a.Demo_Mode', 'Enabled')
@@ -35,7 +39,12 @@ def setup(hass, config):
 
     def mock_turn_on(service):
         """ Will fake the component has been turned on. """
-        for entity_id in extract_entity_ids(hass, service):
+        if service.data and ATTR_ENTITY_ID in service.data:
+            entity_ids = extract_entity_ids(hass, service)
+        else:
+            entity_ids = hass.states.entity_ids(service.domain)
+
+        for entity_id in entity_ids:
             domain, _ = split_entity_id(entity_id)
 
             if domain == "light":
@@ -48,15 +57,20 @@ def setup(hass, config):
 
     def mock_turn_off(service):
         """ Will fake the component has been turned off. """
-        for entity_id in extract_entity_ids(hass, service):
+        if service.data and ATTR_ENTITY_ID in service.data:
+            entity_ids = extract_entity_ids(hass, service)
+        else:
+            entity_ids = hass.states.entity_ids(service.domain)
+
+        for entity_id in entity_ids:
             hass.states.set(entity_id, STATE_OFF)
 
     # Setup sun
-    if ha.CONF_LATITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][ha.CONF_LATITUDE] = '32.87336'
+    if CONF_LATITUDE not in config[ha.DOMAIN]:
+        config[ha.DOMAIN][CONF_LATITUDE] = '32.87336'
 
-    if ha.CONF_LONGITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][ha.CONF_LONGITUDE] = '-117.22743'
+    if CONF_LONGITUDE not in config[ha.DOMAIN]:
+        config[ha.DOMAIN][CONF_LONGITUDE] = '-117.22743'
 
     loader.get_component('sun').setup(hass, config)
 

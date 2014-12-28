@@ -1,6 +1,6 @@
 """
-test.test_component_sun
-~~~~~~~~~~~~~~~~~~~~~~~
+ha_test.test_component_sun
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Sun component.
 """
@@ -11,6 +11,7 @@ import datetime as dt
 import ephem
 
 import homeassistant as ha
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 import homeassistant.components.sun as sun
 
 
@@ -22,7 +23,7 @@ class TestSun(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass._pool.stop()
+        self.hass.stop()
 
     def test_is_on(self):
         """ Test is_on method. """
@@ -37,8 +38,8 @@ class TestSun(unittest.TestCase):
         self.assertTrue(sun.setup(
             self.hass,
             {ha.DOMAIN: {
-                ha.CONF_LATITUDE: '32.87336',
-                ha.CONF_LONGITUDE: '117.22743'
+                CONF_LATITUDE: '32.87336',
+                CONF_LONGITUDE: '117.22743'
             }}))
 
         observer = ephem.Observer()
@@ -76,8 +77,8 @@ class TestSun(unittest.TestCase):
         self.assertTrue(sun.setup(
             self.hass,
             {ha.DOMAIN: {
-                ha.CONF_LATITUDE: '32.87336',
-                ha.CONF_LONGITUDE: '117.22743'
+                CONF_LATITUDE: '32.87336',
+                CONF_LONGITUDE: '117.22743'
             }}))
 
         if sun.is_on(self.hass):
@@ -92,7 +93,7 @@ class TestSun(unittest.TestCase):
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
                            {ha.ATTR_NOW: test_time + dt.timedelta(seconds=5)})
 
-        self.hass._pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         self.assertEqual(test_state, self.hass.states.get(sun.ENTITY_ID).state)
 
@@ -101,24 +102,24 @@ class TestSun(unittest.TestCase):
         self.assertFalse(sun.setup(self.hass, {}))
         self.assertFalse(sun.setup(self.hass, {sun.DOMAIN: {}}))
         self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {ha.CONF_LATITUDE: '32.87336'}}))
+            self.hass, {ha.DOMAIN: {CONF_LATITUDE: '32.87336'}}))
         self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {ha.CONF_LONGITUDE: '117.22743'}}))
+            self.hass, {ha.DOMAIN: {CONF_LONGITUDE: '117.22743'}}))
         self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {ha.CONF_LATITUDE: 'hello'}}))
+            self.hass, {ha.DOMAIN: {CONF_LATITUDE: 'hello'}}))
         self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {ha.CONF_LONGITUDE: 'how are you'}}))
+            self.hass, {ha.DOMAIN: {CONF_LONGITUDE: 'how are you'}}))
         self.assertFalse(sun.setup(
             self.hass, {ha.DOMAIN: {
-                ha.CONF_LATITUDE: 'wrong', ha.CONF_LONGITUDE: '117.22743'
+                CONF_LATITUDE: 'wrong', CONF_LONGITUDE: '117.22743'
             }}))
         self.assertFalse(sun.setup(
             self.hass, {ha.DOMAIN: {
-                ha.CONF_LATITUDE: '32.87336', ha.CONF_LONGITUDE: 'wrong'
+                CONF_LATITUDE: '32.87336', CONF_LONGITUDE: 'wrong'
             }}))
 
         # Test with correct config
         self.assertTrue(sun.setup(
             self.hass, {ha.DOMAIN: {
-                ha.CONF_LATITUDE: '32.87336', ha.CONF_LONGITUDE: '117.22743'
+                CONF_LATITUDE: '32.87336', CONF_LONGITUDE: '117.22743'
             }}))

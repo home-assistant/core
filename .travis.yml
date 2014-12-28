@@ -7,6 +7,6 @@ install:
 script:
   - flake8 homeassistant --exclude bower_components,external
   - pylint homeassistant
-  - coverage run --source=homeassistant -m unittest discover test
+  - coverage run --source=homeassistant -m unittest discover ha_test
 after_success:
   - coveralls
