@@ -1,0 +1,21 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="more-info-default.html">
+<link rel="import" href="more-info-light.html">
+
+<polymer-element name="more-info-content" attributes="api stateObj" noscript>
+<template>
+  <template id="more-info-light">
+    <more-info-light
+      api="{{api}}"
+      stateObj="{{stateObj}}">
+    </more-info-light>
+  </template>
+
+  <template id="more-info-default">
+    <more-info-default stateObj="{{stateObj}}"></more-info-default>
+  </template>
+
+  <template bind ref="{{'more-info-' + stateObj.moreInfoType}}"></template>
+</template>
+</polymer-element>

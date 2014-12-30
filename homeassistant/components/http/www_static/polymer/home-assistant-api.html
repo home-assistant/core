@@ -72,6 +72,17 @@
           return "display";
         }
       }
+    },
+
+    // how to render the more info of this state
+    moreInfoType: {
+      get: function() {
+        if(this.domain === 'light') {
+          return 'light';
+        } else {
+          return 'default';
+        }
+      }
     }
   });
 

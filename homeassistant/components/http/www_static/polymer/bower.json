@@ -33,6 +33,7 @@
     "paper-dropdown": "polymer/paper-dropdown#~0.5.2",
     "paper-item": "polymer/paper-item#~0.5.2",
     "moment": "~2.8.4",
-    "core-style": "polymer/core-style#~0.5.2"
+    "core-style": "polymer/core-style#~0.5.2",
+    "paper-slider": "polymer/paper-slider#~0.5.2"
   }
 }

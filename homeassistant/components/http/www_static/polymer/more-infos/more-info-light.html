@@ -1,0 +1,53 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+
+<polymer-element name="more-info-light" attributes="stateObj api">
+<template>
+  <style>
+    .brightness paper-slider::shadow #sliderKnobInner,
+    .brightness paper-slider::shadow #sliderBar::shadow #activeProgress {
+      background-color: #039be5;
+    }
+  </style>
+  <div>
+    <div center horizontal layout class='brightness'>
+      <div>Brightness</div>
+      <paper-slider
+        max="255" flex
+        on-core-change="{{brightnessSliderChanged}}"
+        value="{{brightnessValue}}">
+      </paper-slider>
+    </div>
+  </div>
+</template>
+<script>
+Polymer({
+
+  brightnessValue: 0,
+
+  observe: {
+    'stateObj.attributes.brightness': 'brightnessChanged'
+  },
+
+  brightnessChanged: function(oldVal, newVal) {
+    this.brightnessValue = newVal;
+  },
+
+  brightnessSliderChanged: function(ev, details, target) {
+    var bri = parseInt(target.value);
+
+    if(isNaN(bri)) return;
+
+    if(bri === 0) {
+      this.api.turn_off(this.stateObj.entity_id);
+    } else {
+      this.api.call_service("light", "turn_on", {
+        entity_id: this.stateObj.entity_id,
+        brightness: bri
+      });
+    }
+  }
+
+});
+</script>
+</polymer-element>
