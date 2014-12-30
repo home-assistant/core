@@ -1,9 +1,15 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-slider/paper-slider.html">
 
+<link rel="import" href="../bower_components/color-picker-element/dist/color-picker.html">
+
 <polymer-element name="more-info-light" attributes="stateObj api">
 <template>
   <style>
+    .brightness {
+      margin-bottom: 8px;
+    }
+
     .brightness paper-slider::shadow #sliderKnobInner,
     .brightness paper-slider::shadow #sliderBar::shadow #activeProgress {
       background-color: #039be5;
@@ -18,19 +24,32 @@
         value="{{brightnessValue}}">
       </paper-slider>
     </div>
+    <color-picker id="colorpicker"
+      width="350" height="200" color="{{colorValue}}">
+    </color-picker>
   </div>
 </template>
 <script>
 Polymer({
 
+  colorValue: 0,
   brightnessValue: 0,
 
   observe: {
-    'stateObj.attributes.brightness': 'brightnessChanged'
+    'stateObj.attributes.brightness': 'brightnessChanged',
+    'stateObj.attributes.xy_color': 'colorChanged'
   },
 
   brightnessChanged: function(oldVal, newVal) {
     this.brightnessValue = newVal;
+  },
+
+  colorChanged: function(oldVal, newVal) {
+    console.log(newVal);
+  },
+
+  domReady: function() {
+    this.$.colorpicker.addEventListener('colorselected', this.colorPicked.bind(this));
   },
 
   brightnessSliderChanged: function(ev, details, target) {
@@ -46,6 +65,15 @@ Polymer({
         brightness: bri
       });
     }
+  },
+
+  colorPicked: function(ev) {
+    var color = ev.detail.rgb;
+
+    this.api.call_service("light", "turn_on", {
+      entity_id: this.stateObj.entity_id,
+      rgb_color: [color.r, color.g, color.b]
+    });
   }
 
 });
