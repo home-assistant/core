@@ -127,15 +127,15 @@ Do not use development mode in production. Home Assistant uses aggresive caching
 
 <p>After that you can run <a href="https://github.com/balloob/home-assistant/blob/master/build_frontend"><code>./build_frontend</code></a> from the project directory. This will take all the used webcomponents and &lsquo;vulcanize&rsquo; it into a single file to be served by Home Assistant. The script also updates <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/frontend.py"><code>homeassistant/components/http/frontend.py</code></a> with an MD5 hash of the frontend.</p>
 
-<h1>Adding new state cards</h1>
+<h1>Adding state cards</h1>
 
 <p>The main interface of Home Assistant is a list of current states in the State Machine. It will filter out the group states and offers options to filter by groups on the top.</p>
 
 <p>Currently there are two supported card types:</p>
 
 <ul>
-<li>Display: shows the state in the card</li>
-<li>Toggle: allows the user to toggle a device on/off from its state</li>
+<li>Display: shows the state on the card</li>
+<li>Toggle: allows the user to toggle a device on/off from the card</li>
 </ul>
 
 
@@ -143,8 +143,27 @@ Do not use development mode in production. Home Assistant uses aggresive caching
 
 <ol>
 <li>Adjust the cardType property of the State class in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/home-assistant-api.html">home-assistant-api.html</a> to return your new card type when appropriate.</li>
-<li>Create a new component following the naming convention state-card-CARDTYPE.html.</li>
-<li>Import your new component and add a template for it in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/states-cards.html">states-cards.html</a>.</li>
+<li>Create a new component following the naming convention state-card-CARDTYPE.html in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/cards/">/cards/</a>.</li>
+<li>Import your new component and add a template for it in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/cards/state-card-content.html">/cards/state-card-content.html</a>.</li>
+</ol>
+
+
+<h1>More info screens for custom types</h1>
+
+<p>When you click on a card, the more info dialog will open for that card. This will allow you to see more information and more options to control that entity.</p>
+
+<p class='img' style='max-width: 300px; margin-left: auto; margin-right: auto;'>
+  <img src='/images/screenshots/more-info-dialog-light.png'>
+  The more info dialog for a light allows us to control the color and the brightness.
+</p>
+
+
+<p>To add your own more info dialog, follow the following steps:</p>
+
+<ol>
+<li>Adjust the moreInfoType property of the State class in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/home-assistant-api.html">home-assistant-api.html</a> to return your new more info type when appropriate.</li>
+<li>Create a new component following the naming convention more-info-CARDTYPE.html in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/more-infos/">/more-infos/</a>.</li>
+<li>Import your new component and add a template for it in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/more-infos/more-info-content.html">/more-infos/more-info-content.html</a>.</li>
 </ol>
 
 
