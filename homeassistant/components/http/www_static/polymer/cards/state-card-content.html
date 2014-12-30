@@ -5,19 +5,19 @@
 
 <polymer-element name="state-card-content" attributes="api stateObj" noscript>
 <template>
-  <template id="display">
+  <template id="state-card-display">
     <state-card-display
       stateObj="{{stateObj}}">
     </state-card-display>
   </template>
 
-  <template id="toggle">
+  <template id="state-card-toggle">
     <state-card-toggle
       stateObj="{{stateObj}}"
       api="{{api}}">
     </state-card-display>
   </template>
 
-  <template bind ref="{{stateObj.cardType}}"></template>
+  <template bind ref="{{'state-card-' + stateObj.cardType}}"></template>
 </template>
 </polymer-element>
