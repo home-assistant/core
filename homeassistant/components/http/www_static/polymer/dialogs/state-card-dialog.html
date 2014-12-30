@@ -1,0 +1,39 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<link rel="import" href="../cards/state-card-content.html">
+
+<polymer-element name="state-card-dialog" attributes="api">
+<template>
+  <paper-action-dialog
+      id="dialog"
+      transition="core-transition-bottom"
+      backdrop="true" layered="false">
+
+    <core-style ref='ha-dialog'></core-style>
+
+    <div>
+      <state-card-content stateObj="{{stateObj}}" api="{{api}}"></state-card-content>
+    </div>
+
+    <paper-button dismissive>Dismiss</paper-button>
+    <paper-button affirmative on-click={{editClicked}}>Edit State</paper-button>
+  </paper-action-dialog>
+
+</template>
+<script>
+Polymer({
+  stateObj: {},
+
+  show: function(stateObj) {
+    this.stateObj = stateObj;
+    this.$.dialog.toggle();
+  },
+
+  editClicked: function(ev) {
+    this.api.showEditStateDialog(this.stateObj.entity_id);
+  }
+
+});
+</script>
+</polymer-element>

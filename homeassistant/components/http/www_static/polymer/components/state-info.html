@@ -1,21 +1,15 @@
-<script src="bower_components/moment/moment.js"></script>
-<link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/core-tooltip/core-tooltip.html">
-<link rel="import" href="bower_components/core-style/core-style.html">
+<script src="../bower_components/moment/moment.js"></script>
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-tooltip/core-tooltip.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
 
 <link rel="import" href="state-badge.html">
 
-<polymer-element name="state-info"
-                 attributes="stateObj cb_edit">
+<polymer-element name="state-info" attributes="stateObj">
   <template>
     <style>
     state-badge {
       float: left;
-      cursor: pointer;
-    }
-
-    state-badge:hover {
-      background-color: #039be5;
     }
 
     .name {
@@ -35,10 +29,7 @@
     </style>
 
     <div>
-      <state-badge
-        stateObj="{{stateObj}}"
-        on-click="{{editClicked}}">
-      </state-badge>
+      <state-badge stateObj="{{stateObj}}"></state-badge>
 
       <div class='info'>
         <div class='name'>
@@ -57,17 +48,10 @@
 
   <script>
   Polymer({
-    stateObj: {},
 
     lastChangedFromNow: function(lastChanged) {
       return moment(lastChanged, "HH:mm:ss DD-MM-YYYY").fromNow();
-    },
-
-    editClicked: function() {
-      if(this.cb_edit) {
-        this.cb_edit(this.stateObj.entity_id);
-      }
-    },
+    }
 
   });
   </script>

@@ -1,0 +1,23 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="state-card-display.html">
+<link rel="import" href="state-card-toggle.html">
+
+<polymer-element name="state-card-content" attributes="api stateObj" noscript>
+<template>
+  <template id="display">
+    <state-card-display
+      stateObj="{{stateObj}}">
+    </state-card-display>
+  </template>
+
+  <template id="toggle">
+    <state-card-toggle
+      stateObj="{{stateObj}}"
+      api="{{api}}">
+    </state-card-display>
+  </template>
+
+  <template bind ref="{{stateObj.cardType}}"></template>
+</template>
+</polymer-element>

@@ -1,16 +1,18 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/paper-toast/paper-toast.html">
 
-<link rel="import" href="event-fire-dialog.html">
-<link rel="import" href="service-call-dialog.html">
-<link rel="import" href="state-set-dialog.html">
+<link rel="import" href="dialogs/event-fire-dialog.html">
+<link rel="import" href="dialogs/service-call-dialog.html">
+<link rel="import" href="dialogs/state-set-dialog.html">
+<link rel="import" href="dialogs/state-card-dialog.html">
 
 <polymer-element name="home-assistant-api" attributes="auth">
   <template>
     <paper-toast id="toast" role="alert" text=""></paper-toast>
     <event-fire-dialog id="eventDialog" api={{api}}></event-fire-dialog>
     <service-call-dialog id="serviceDialog" api={{api}}></service-call-dialog>
-    <state-set-dialog id="stateDialog" api={{api}}></state-set-dialog>
+    <state-set-dialog id="stateSetDialog" api={{api}}></state-set-dialog>
+    <state-card-dialog id="stateCardDialog" api={{api}}></state-card-dialog>
   </template>
   <script>
 
@@ -22,12 +24,12 @@
       this.entity_id = json.entity_id;
       var parts = json.entity_id.split(".");
       this.domain = parts[0];
-      this.entity = parts[1];
+      this.object_id = parts[1];
 
       if(this.attributes.friendly_name) {
         this.entityDisplay = this.attributes.friendly_name;
       } else {
-        this.entityDisplay = this.entity.replace(/_/g, " ");
+        this.entityDisplay = this.object_id.replace(/_/g, " ");
       }
 
       this.state = json.state;
@@ -330,6 +332,10 @@
     },
 
     // show dialogs
+    showStateCardDialog: function(entityId) {
+      this.$.stateCardDialog.show(this.getState(entityId));
+    },
+
     showEditStateDialog: function(entityId) {
       var state = this.getState(entityId);
 
@@ -341,7 +347,7 @@
       state = state || "";
       stateAttributes = stateAttributes || null;
 
-      this.$.stateDialog.show(entityId, state, stateAttributes);
+      this.$.stateSetDialog.show(entityId, state, stateAttributes);
     },
 
     showFireEventDialog: function(eventType, eventData) {

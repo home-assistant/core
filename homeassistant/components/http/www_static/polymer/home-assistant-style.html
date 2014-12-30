@@ -1,0 +1,39 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/core-style/core-style.html">
+
+<polymer-element name="home-assistant-style" noscript>
+  <template>
+    <core-style id="ha-dialog">
+      paper-action-dialog, paper-dialog {
+        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+
+        min-width: 350px;
+      }
+
+      paper-action-dialog .sidebar, paper-dialog .sidebar {
+        margin-left: 30px;
+      }
+
+      @media all and (max-width: 620px) {
+        paper-action-dialog, paper-dialog {
+          margin: 0;
+          width: 100%;
+          height: calc(100% - 64px);
+          top: 64px;
+        }
+
+        paper-action-dialog .sidebar, paper-dialog .sidebar {
+          display: none;
+        }
+      }
+
+      .ha-form paper-input {
+        display: block;
+      }
+
+      .ha-form paper-input:first-child {
+        padding-top: 0;
+      }
+    </core-style>  
+  </template>
+</polymer-element>

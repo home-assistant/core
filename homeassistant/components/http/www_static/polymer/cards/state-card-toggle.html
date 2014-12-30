@@ -1,19 +1,12 @@
-<script src="bower_components/moment/moment.js"></script>
-<link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/paper-toggle-button/paper-toggle-button.html">
-<link rel="import" href="bower_components/core-style/core-style.html">
+<script src="../bower_components/moment/moment.js"></script>
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
 
-<link rel="import" href="state-badge.html">
+<link rel="import" href="../components/state-info.html">
 
-<polymer-element name="state-card-toggle"
-                 attributes="stateObj cb_turn_on, cb_turn_off cb_edit">
+<polymer-element name="state-card-toggle" attributes="stateObj api">
   <template>
-    <core-style ref='state-card'></core-style>
     <style>
-    .state {
-      text-align: right;
-    }
-
     /* the splash while enabling */
     paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
       color: #0091ea;
@@ -30,35 +23,27 @@
     }    
     </style>
 
-    <div horizontal justified layout>
-      
-      <state-info
-        stateObj="{{stateObj}}"
-        cb_edit="{{cb_edit}}">
-      </state-info>
+    <div horizontal justified layout>      
+      <state-info flex stateObj="{{stateObj}}"></state-info>
 
-      <div class='state toggle' self-center flex>
-        <paper-toggle-button checked="{{toggleChecked}}">
-        </paper-toggle-button>
-      </div>
+      <paper-toggle-button self-center
+        checked="{{toggleChecked}}"
+        on-click="{{toggleClicked}}">
+      </paper-toggle-button>
     </div>
 
   </template>
   <script>
   Polymer({
-    stateObj: {},
-
-    cb_turn_on: null,
-    cb_turn_off: null,
-    cb_edit: null,
     toggleChecked: -1,
 
     observe: {
       'stateObj.state': 'stateChanged'
     },
 
-    lastChangedFromNow: function(lastChanged) {
-      return moment(lastChanged, "HH:mm:ss DD-MM-YYYY").fromNow();
+    // prevent the event from propegating
+    toggleClicked: function(ev) {
+      ev.stopPropagation();
     },
 
     toggleCheckedChanged: function(oldVal, newVal) {
@@ -83,13 +68,11 @@
       // with the state. It will be out of sync if our service call did not
       // result in the entity to be turned on. Since the state is not changing,
       // the resync is not called automatic.
-      if(this.cb_turn_on) {
-        this.cb_turn_on(this.stateObj.entity_id, {
-          success: function() {
-            this.stateChanged(this.stateObj.state, this.stateObj.state);
-          }.bind(this)
-        });
-      }
+      this.api.turn_on(this.stateObj.entity_id, {
+        success: function() {
+          this.stateChanged(this.stateObj.state, this.stateObj.state);
+        }.bind(this)
+      });
     },
 
     turn_off: function() {
@@ -97,19 +80,11 @@
       // with the state. It will be out of sync if our service call did not
       // result in the entity to be turned on. Since the state is not changing,
       // the resync is not called automatic.
-      if(this.cb_turn_off) {
-        this.cb_turn_off(this.stateObj.entity_id, {
-          success: function() {
-            this.stateChanged(this.stateObj.state, this.stateObj.state);
-          }.bind(this)
-        });
-      }
-    },
-
-    editClicked: function() {
-      if(this.cb_edit) {
-        this.cb_edit(this.stateObj.entity_id);
-      }
+      this.api.turn_off(this.stateObj.entity_id, {
+        success: function() {
+          this.stateChanged(this.stateObj.state, this.stateObj.state);
+        }.bind(this)
+      });
     },
 
   });
