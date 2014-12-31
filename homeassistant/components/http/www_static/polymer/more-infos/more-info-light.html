@@ -14,26 +14,31 @@
     .brightness paper-slider::shadow #sliderBar::shadow #activeProgress {
       background-color: #039be5;
     }
+
+    color-picker {
+      display: block;
+      width: 350px;
+      margin: 0 auto;
+    }
   </style>
   <div>
     <div center horizontal layout class='brightness'>
       <div>Brightness</div>
       <paper-slider
-        max="255" flex
-        on-core-change="{{brightnessSliderChanged}}"
-        value="{{brightnessValue}}">
+        max="255" flex id='brightness'
+        on-core-change="{{brightnessSliderChanged}}">
       </paper-slider>
     </div>
-    <color-picker id="colorpicker"
-      width="350" height="200" color="{{colorValue}}">
+    <color-picker id="colorpicker" width="350" height="200">
     </color-picker>
   </div>
 </template>
 <script>
 Polymer({
 
-  colorValue: 0,
-  brightnessValue: 0,
+  // on-change is unpredictable so using on-core-change this has side effect
+  // that it fires if changed by brightnessChanged(), thus an ignore boolean.
+  ignoreNextBrightnessEvent: false,
 
   observe: {
     'stateObj.attributes.brightness': 'brightnessChanged',
@@ -41,11 +46,9 @@ Polymer({
   },
 
   brightnessChanged: function(oldVal, newVal) {
-    this.brightnessValue = newVal;
-  },
+    this.ignoreNextBrightnessEvent = true;
 
-  colorChanged: function(oldVal, newVal) {
-    console.log(newVal);
+    this.$.brightness.value = newVal;
   },
 
   domReady: function() {
@@ -53,6 +56,11 @@ Polymer({
   },
 
   brightnessSliderChanged: function(ev, details, target) {
+    if(this.ignoreNextBrightnessEvent) {
+      this.ignoreNextBrightnessEvent = false;
+      return;
+    }
+
     var bri = parseInt(target.value);
 
     if(isNaN(bri)) return;
