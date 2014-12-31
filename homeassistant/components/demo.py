@@ -50,11 +50,18 @@ def setup(hass, config):
             if domain == "light":
                 rgb_color = service.data.get(ATTR_RGB_COLOR)
 
-                if rgb_color is None:
-                    color = random.choice(light_colors)
-                else:
+                if rgb_color:
                     color = color_RGB_to_xy(
                         rgb_color[0], rgb_color[1], rgb_color[2])
+
+                else:
+                    cur_state = hass.states.get(entity_id)
+
+                    # Use current color if available
+                    if cur_state and cur_state.attributes.get(ATTR_XY_COLOR):
+                        color = cur_state.attributes.get(ATTR_XY_COLOR)
+                    else:
+                        color = random.choice(light_colors)
 
                 data = {
                     ATTR_BRIGHTNESS: service.data.get(ATTR_BRIGHTNESS, 200),
