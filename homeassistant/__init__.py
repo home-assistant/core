@@ -412,7 +412,14 @@ class EventBus(object):
 
 
 class State(object):
-    """ Object to represent a state within the state machine. """
+    """
+    Object to represent a state within the state machine.
+
+    entity_id: the entity that is represented.
+    state: the state of the entity
+    attributes: extra information on entity and state
+    last_changed: last time the state was changed, not the attributes.
+    """
 
     __slots__ = ['entity_id', 'state', 'attributes', 'last_changed']
 
@@ -420,7 +427,7 @@ class State(object):
         if not ENTITY_ID_PATTERN.match(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
-                "Format should be <domain>.<entity>").format(entity_id))
+                "Format should be <domain>.<object_id>").format(entity_id))
 
         self.entity_id = entity_id
         self.state = state
@@ -467,17 +474,17 @@ class State(object):
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and
+                self.entity_id == other.entity_id and
                 self.state == other.state and
                 self.attributes == other.attributes)
 
     def __repr__(self):
-        if self.attributes:
-            return "<state {}:{} @ {}>".format(
-                self.state, util.repr_helper(self.attributes),
-                util.datetime_to_str(self.last_changed))
-        else:
-            return "<state {} @ {}>".format(
-                self.state, util.datetime_to_str(self.last_changed))
+        attr = "; {}".format(util.repr_helper(self.attributes)) \
+               if self.attributes else ""
+
+        return "<state {}={}{} @ {}>".format(
+            self.entity_id, self.state, attr,
+            util.datetime_to_str(self.last_changed))
 
 
 class StateMachine(object):
@@ -538,20 +545,27 @@ class StateMachine(object):
     def set(self, entity_id, new_state, attributes=None):
         """ Set the state of an entity, add entity if it does not exist.
 
-        Attributes is an optional dict to specify attributes of this state. """
+        Attributes is an optional dict to specify attributes of this state.
+
+        If you just update the attributes and not the state, last changed will
+        not be affected.
+        """
 
         attributes = attributes or {}
 
         with self._lock:
             old_state = self._states.get(entity_id)
 
+            is_existing = old_state is not None
+            same_state = is_existing and old_state.state == new_state
+            same_attr = is_existing and old_state.attributes == attributes
+
             # If state did not exist or is different, set it
-            if not old_state or \
-               old_state.state != new_state or \
-               old_state.attributes != attributes:
+            if not (same_state and same_attr):
+                last_changed = old_state.last_changed if same_state else None
 
                 state = self._states[entity_id] = \
-                    State(entity_id, new_state, attributes)
+                    State(entity_id, new_state, attributes, last_changed)
 
                 event_data = {'entity_id': entity_id, 'new_state': state}
 
