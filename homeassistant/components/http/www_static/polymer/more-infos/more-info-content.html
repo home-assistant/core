@@ -5,7 +5,7 @@
 <link rel="import" href="more-info-group.html">
 <link rel="import" href="more-info-sun.html">
 
-<polymer-element name="more-info-content" attributes="api stateObj" noscript>
+<polymer-element name="more-info-content" attributes="api stateObj">
 <template>
   <style>
     :host {
@@ -13,31 +13,20 @@
     }
   </style>
 
-  <template id="more-info-light">
-    <more-info-light
-      api="{{api}}"
-      stateObj="{{stateObj}}">
-    </more-info-light>
-  </template>
-
-  <template id="more-info-group">
-    <more-info-group
-      api="{{api}}"
-      stateObj="{{stateObj}}">
-    </more-info-group>
-  </template>
-
-  <template id="more-info-sun">
-    <more-info-sun
-      api="{{api}}"
-      stateObj="{{stateObj}}">
-    </more-info-sun>
-  </template>
-
-  <template id="more-info-default">
-    <more-info-default stateObj="{{stateObj}}"></more-info-default>
-  </template>
-
-  <template bind ref="{{'more-info-' + stateObj.moreInfoType}}"></template>
+  <div id='moreInfo'></div>
 </template>
+<script>
+Polymer({
+  stateObjChanged: function() {
+    while (this.$.moreInfo.lastChild) {
+      this.$.moreInfo.removeChild(this.$.moreInfo.lastChild);
+    }
+
+    var moreInfo = document.createElement("more-info-" + this.stateObj.moreInfoType);
+    moreInfo.api = this.api;
+    moreInfo.stateObj = this.stateObj;
+    this.$.moreInfo.appendChild(moreInfo);    
+  }
+});
+</script>
 </polymer-element>

@@ -46,11 +46,7 @@
 <script>
 Polymer({
 
-  observe: {
-    'stateObj.attributes': 'setOrder'
-  },
-
-  setOrder: function() {
+  stateObjChanged: function() {
     var rising = ha.util.parseTime(this.stateObj.attributes.next_rising);
     var setting = ha.util.parseTime(this.stateObj.attributes.next_setting);
 

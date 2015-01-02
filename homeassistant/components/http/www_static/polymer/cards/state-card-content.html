@@ -3,7 +3,7 @@
 <link rel="import" href="state-card-display.html">
 <link rel="import" href="state-card-toggle.html">
 
-<polymer-element name="state-card-content" attributes="api stateObj" noscript>
+<polymer-element name="state-card-content" attributes="api stateObj">
 <template>
   <style>
     :host {
@@ -11,19 +11,20 @@
     }
   </style>
 
-  <template id="state-card-display">
-    <state-card-display
-      stateObj="{{stateObj}}">
-    </state-card-display>
-  </template>
-
-  <template id="state-card-toggle">
-    <state-card-toggle
-      stateObj="{{stateObj}}"
-      api="{{api}}">
-    </state-card-display>
-  </template>
-
-  <template bind ref="{{'state-card-' + stateObj.cardType}}"></template>
+  <div id='card'></div>
 </template>
+<script>
+Polymer({
+  stateObjChanged: function() {
+    while (this.$.card.lastChild) {
+      this.$.card.removeChild(this.$.card.lastChild);
+    }
+
+    var stateCard = document.createElement("state-card-" + this.stateObj.cardType);
+    stateCard.api = this.api;
+    stateCard.stateObj = this.stateObj;
+    this.$.card.appendChild(stateCard);    
+  }
+});
+</script>
 </polymer-element>

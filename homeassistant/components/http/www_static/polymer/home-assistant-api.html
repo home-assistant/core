@@ -25,7 +25,7 @@
   };
 
   PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
-    return timeString.split(' ')[0];
+    return (timeString || "").split(' ')[0];
   };
 
 </script>
