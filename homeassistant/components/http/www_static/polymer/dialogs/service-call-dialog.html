@@ -1,21 +1,16 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
-<link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
-<link rel="import" href="../bower_components/paper-dialog/paper-dialog-transition.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
 <link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
 
+<link rel="import" href="ha-action-dialog.html">
 <link rel="import" href="../components/services-list.html">
 
 <polymer-element name="service-call-dialog" attributes="api">
 <template>
 
-  <paper-action-dialog
-      id="dialog" heading="Call Service"
-      transition="core-transition-bottom"
-      backdrop="true" layered="false">
+  <ha-action-dialog id="dialog" heading="Call Service">
 
     <core-style ref='ha-dialog'></core-style>
 
@@ -43,7 +38,7 @@
 
     <paper-button dismissive>Cancel</paper-button>
     <paper-button affirmative on-click={{clickCallService}}>Call Service</paper-button>
-  </paper-action-dialog>
+  </ha-action-dialog>
 
 </template>
 <script>

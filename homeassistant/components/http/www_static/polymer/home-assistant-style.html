@@ -4,34 +4,43 @@
 <polymer-element name="home-assistant-style" noscript>
   <template>
     <core-style id="ha-dialog">
-      paper-action-dialog, paper-dialog {
+      :host {
         font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
 
         min-width: 350px;
       }
 
-      paper-action-dialog .sidebar, paper-dialog .sidebar {
+      :host .sidebar {
         margin-left: 30px;
       }
 
       @media all and (max-width: 620px) {
-        paper-action-dialog, paper-dialog {
+        :host.two-column {
           margin: 0;
           width: 100%;
           height: calc(100% - 64px);
           top: 64px;
         }
 
-        paper-action-dialog .sidebar, paper-dialog .sidebar {
+        :host .sidebar {
           display: none;
         }
       }
 
-      .ha-form paper-input {
+      @media all and (max-width: 464px) {
+        :host {
+          margin: 0;
+          width: 100%;
+          height: calc(100% - 64px);
+          top: 64px;
+        }
+      }
+
+      html /deep/ .ha-form paper-input {
         display: block;
       }
 
-      .ha-form paper-input:first-child {
+      html /deep/ .ha-form paper-input:first-child {
         padding-top: 0;
       }
     </core-style>  

@@ -1,22 +1,16 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
-<link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
 <link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
 
+<link rel="import" href="ha-action-dialog.html">
 <link rel="import" href="../components/events-list.html">
 
 <polymer-element name="event-fire-dialog" attributes="api">
 <template>
 
-  <paper-action-dialog
-      id="dialog" heading="Fire Event"
-      transition="core-transition-bottom"
-      backdrop="true" layered="false">
-
-    <core-style ref='ha-dialog'></core-style>
+  <ha-action-dialog id="dialog" heading="Fire Event" class='two-column'>
 
     <div layout horizontal>
       <div class='ha-form'>
@@ -43,7 +37,7 @@
 
     <paper-button dismissive>Cancel</paper-button>
     <paper-button affirmative on-click={{clickFireEvent}}>Fire Event</paper-button>
-  </paper-dialog>
+  </ha-action-dialog>
 
 </template>
 <script>

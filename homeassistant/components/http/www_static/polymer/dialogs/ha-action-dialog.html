@@ -1,0 +1,24 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog-transition.html">
+
+<polymer-element name="ha-action-dialog" extends="paper-action-dialog">
+<template>
+  <core-style ref='ha-dialog'></core-style>
+  <shadow></shadow>
+</template>
+<script>
+  Polymer({
+    layered: true,
+    backdrop: true,
+    transition: 'core-transition-bottom',
+
+    domReady: function() {
+      this.addEventListener('core-overlay-open-completed', function() {
+        this.resizeHandler();
+      }.bind(this));
+    },
+  });
+</script>
+</polymer-element>
