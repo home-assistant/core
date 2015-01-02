@@ -1,3 +1,5 @@
+<script src="bower_components/moment/moment.js"></script>
+
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/paper-toast/paper-toast.html">
 
@@ -5,6 +7,28 @@
 <link rel="import" href="dialogs/service-call-dialog.html">
 <link rel="import" href="dialogs/state-set-dialog.html">
 <link rel="import" href="dialogs/state-card-dialog.html">
+
+<script>
+  var ha = {};
+  ha.util = {};
+
+  ha.util.parseTime = function(timeString) {
+    return moment(timeString, "HH:mm:ss DD-MM-YYYY");
+  };
+
+  ha.util.relativeTime = function(timeString) {
+    return ha.util.parseTime(timeString).fromNow();    
+  };
+
+  PolymerExpressions.prototype.relativeHATime = function(timeString) {
+    return ha.util.relativeTime(timeString);
+  };
+
+  PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
+    return timeString.split(' ')[0];
+  };
+
+</script>
 
 <polymer-element name="home-assistant-api" attributes="auth">
   <template>
@@ -15,6 +39,7 @@
     <state-card-dialog id="stateCardDialog" api={{api}}></state-card-dialog>
   </template>
   <script>
+  var domainsWithMoreInfo = ['light', 'group', 'sun'];
 
   State = function(json, api) {
       this.api = api;
@@ -77,13 +102,20 @@
     // how to render the more info of this state
     moreInfoType: {
       get: function() {
-        if(this.domain === 'light' || this.domain === 'group') {
+        if(domainsWithMoreInfo.indexOf(this.domain) !== -1) {
           return this.domain;
         } else {
           return 'default';
         }
       }
-    }
+    },
+
+    relativeLastChanged: {
+      get: function() {
+        return ha.util.relativeTime(this.last_changed);
+      }
+    },
+
   });
 
   Polymer({

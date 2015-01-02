@@ -3,6 +3,7 @@
 <link rel="import" href="more-info-default.html">
 <link rel="import" href="more-info-light.html">
 <link rel="import" href="more-info-group.html">
+<link rel="import" href="more-info-sun.html">
 
 <polymer-element name="more-info-content" attributes="api stateObj" noscript>
 <template>
@@ -24,6 +25,13 @@
       api="{{api}}"
       stateObj="{{stateObj}}">
     </more-info-group>
+  </template>
+
+  <template id="more-info-sun">
+    <more-info-sun
+      api="{{api}}"
+      stateObj="{{stateObj}}">
+    </more-info-sun>
   </template>
 
   <template id="more-info-default">

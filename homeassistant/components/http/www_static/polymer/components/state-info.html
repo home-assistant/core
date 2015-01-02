@@ -1,11 +1,10 @@
-<script src="../bower_components/moment/moment.js"></script>
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/core-tooltip/core-tooltip.html">
 <link rel="import" href="../bower_components/core-style/core-style.html">
 
 <link rel="import" href="state-badge.html">
 
-<polymer-element name="state-info" attributes="stateObj">
+<polymer-element name="state-info" attributes="stateObj" noscript>
   <template>
     <style>
     state-badge {
@@ -38,21 +37,11 @@
 
         <div class="time-ago">
           <core-tooltip label="{{stateObj.last_changed}}" position="bottom">
-            {{lastChangedFromNow(stateObj.last_changed)}}
+            {{stateObj.relativeLastChanged}}
           </core-tooltip>
         </div>
         
       </div>
     </div>
   </template>
-
-  <script>
-  Polymer({
-
-    lastChangedFromNow: function(lastChanged) {
-      return moment(lastChanged, "HH:mm:ss DD-MM-YYYY").fromNow();
-    }
-
-  });
-  </script>
 </polymer-element>
