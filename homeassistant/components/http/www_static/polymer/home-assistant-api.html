@@ -131,6 +131,10 @@
       return found.length > 0;
     },
 
+    getCustomGroups: function() {
+      return this.states.filter(function(state) { return state.isCustomGroup;});
+    },
+
     _laterFetchStates: function() {
       if(this.stateUpdateTimeout) {
         clearTimeout(this.stateUpdateTimeout);

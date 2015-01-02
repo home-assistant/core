@@ -141,7 +141,7 @@ def setup(hass, config):
                     })
 
     # Setup chromecast
-    hass.states.set("chromecast.Living_Rm", "Netflix",
+    hass.states.set("chromecast.Living_Rm", "Plex",
                     {'friendly_name': 'Living Room',
                      ATTR_ENTITY_PICTURE:
                      'http://graph.facebook.com/KillBillMovie/picture'})

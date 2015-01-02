@@ -37,7 +37,7 @@
 
     <div horizontal layout wrap>
 
-      <template repeat="{{state in getStates(api.states, filter)}}">
+      <template repeat="{{states as state}}">
         <state-card class="state-card" stateObj={{state}} api={{api}}></state-card>
       </template>
 
@@ -46,27 +46,20 @@
   <script>
   Polymer({
     filter: null,
+    states: [],
 
-    getStates: function(states, filter) {
-      if(!states) {
-        return [];
-      }
+    observe: {
+      'api.states': 'filterChanged'
+    },
 
-      if(!filter) {
+    filterChanged: function() {
+      if(this.filter === 'customgroup') {
+        this.states = this.api.getCustomGroups();
+      } else {
         // if no filter, return all non-group states
-        return states.filter(function(state) {
+        this.states = this.api.states.filter(function(state) {
           return state.domain != 'group';
         });
-      } else {
-        // we have a filter, return the parent filter and its children
-        var filter_state = this.api.getState(this.filter);
-
-        var map_states = function(entity_id) {
-          return this.api.getState(entity_id);
-        }.bind(this);
-
-        return [filter_state].concat(
-          filter_state.attributes.entity_id.map(map_states));
       }
     },
 

@@ -99,12 +99,7 @@
                         selected="0" on-core-select="{{tabClicked}}">
             
               <paper-tab>ALL</paper-tab>
-
-              <template repeat="{{group in customGroups}}">
-                <paper-tab data-entity="{{group.entity_id}}">
-                  {{group.entityDisplay}}
-                </paper-tab>
-              </template>
+              <paper-tab data-filter='customgroup'>GROUPS</paper-tab>
                 
             </paper-tabs>
         </div>
@@ -112,7 +107,7 @@
 
       <state-cards
         api="{{api}}"
-        filter="{{selectedTab}}"
+        filter="{{selectedFilter}}"
         class="content"></state-cards>
 
     </core-header-panel>
@@ -120,17 +115,21 @@
   </template>
   <script>
   Polymer({
-    selectedTab: null,
+    selectedFilter: null,
+    hasCustomGroups: false,
 
-    computed: {
-      customGroups: "getCustomGroups(api.states)",
-      hasCustomGroups: "customGroups.length > 0"
+    observe: {
+      'api.states': 'updateHasCustomGroup'
     },
+
+    // computed: {
+    //   hasCustomGroups: "api.getCustomGroups().length > 0"
+    // },
 
     tabClicked: function(ev) {
       if(ev.detail.isSelected) {
         // will be null for ALL tab
-        this.selectedTab = ev.detail.item.getAttribute('data-entity');
+        this.selectedFilter = ev.detail.item.getAttribute('data-filter');
       }
     },
 
@@ -154,9 +153,8 @@
       this.api.logOut();
     },
 
-    getCustomGroups: function(states) {
-      return states ?
-        states.filter(function(state) { return state.isCustomGroup;}) : [];
+    updateHasCustomGroup: function() {
+      this.hasCustomGroups = this.api.getCustomGroups().length > 0;
     }
 
   });
