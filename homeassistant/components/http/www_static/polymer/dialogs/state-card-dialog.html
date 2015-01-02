@@ -14,12 +14,14 @@
     <core-style ref='ha-dialog'></core-style>
 
     <style>
-
+    .title-card {
+      margin-bottom: 24px;
+    }
     </style>
 
     <div>
-      <state-card-content stateObj="{{stateObj}}" api="{{api}}"></state-card-content>
-      <br />
+      <state-card-content stateObj="{{stateObj}}" api="{{api}}" class='title-card'>
+      </state-card-content>
       <more-info-content stateObj="{{stateObj}}" api="{{api}}"></more-info-content>
     </div>
 

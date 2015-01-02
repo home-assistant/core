@@ -77,8 +77,8 @@
     // how to render the more info of this state
     moreInfoType: {
       get: function() {
-        if(this.domain === 'light') {
-          return 'light';
+        if(this.domain === 'light' || this.domain === 'group') {
+          return this.domain;
         } else {
           return 'default';
         }
@@ -108,6 +108,19 @@
       }, this);
 
       return found.length > 0 ? found[0] : null;
+    },
+
+    getStates: function(entityIds) {
+      var states = [];
+      var state;
+      for(var i = 0; i < entityIds.length; i++) {
+        state = this.getState(entityIds[i]);
+
+        if(state !== null) {
+          states.push(state);
+        }
+      }
+      return states;
     },
 
     hasService: function(domain, service) {

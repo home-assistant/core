@@ -2,14 +2,28 @@
 
 <link rel="import" href="more-info-default.html">
 <link rel="import" href="more-info-light.html">
+<link rel="import" href="more-info-group.html">
 
 <polymer-element name="more-info-content" attributes="api stateObj" noscript>
 <template>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+
   <template id="more-info-light">
     <more-info-light
       api="{{api}}"
       stateObj="{{stateObj}}">
     </more-info-light>
+  </template>
+
+  <template id="more-info-group">
+    <more-info-group
+      api="{{api}}"
+      stateObj="{{stateObj}}">
+    </more-info-group>
   </template>
 
   <template id="more-info-default">

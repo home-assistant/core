@@ -5,6 +5,12 @@
 
 <polymer-element name="state-card-content" attributes="api stateObj" noscript>
 <template>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+
   <template id="state-card-display">
     <state-card-display
       stateObj="{{stateObj}}">
