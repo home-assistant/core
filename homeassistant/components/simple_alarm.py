@@ -34,6 +34,7 @@ def setup(hass, config):
 
     device_tracker = loader.get_component('device_tracker')
     light = loader.get_component('light')
+    notify = loader.get_component('notify')
 
     light_ids = []
 
@@ -66,6 +67,10 @@ def setup(hass, config):
         light.turn_on(
             hass, unknown_light_id,
             flash=light.FLASH_LONG, rgb_color=[255, 0, 0])
+
+        # Send a message to the user
+        notify.send_message(
+            hass, "The lights just got turned on while no one was home.")
 
     # Setup services to test the effect
     hass.services.register(
