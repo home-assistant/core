@@ -16,7 +16,7 @@ DEPENDENCIES = []
 
 # Title of notification
 ATTR_TITLE = "title"
-ATTR_TITLE_DEFAULT = "Message from Home Assistant"
+ATTR_TITLE_DEFAULT = "Home Assistant"
 
 # Text to notify user of
 ATTR_MESSAGE = "message"
