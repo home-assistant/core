@@ -6,12 +6,12 @@ reports=no
 # locally-disabled - it spams too much
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
-# file-ignored - we ignore a file to work around a pylint bug
+# abstract-class-little-used - Prevents from setting right foundation
 disable=
   locally-disabled,
   duplicate-code,
   cyclic-import,
-  file-ignored
+  abstract-class-little-used
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError

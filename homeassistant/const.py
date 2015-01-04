@@ -14,6 +14,7 @@ CONF_HOST = "host"
 CONF_HOSTS = "hosts"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_API_KEY = "api_key"
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"

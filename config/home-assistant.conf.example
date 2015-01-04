@@ -36,6 +36,10 @@ platform=wemo
 [downloader]
 download_dir=downloads
 
+[notify]
+platform=pushbullet
+api_key=ABCDEFGHJKLMNOPQRSTUVXYZ
+
 [device_sun_light_trigger]
 # Optional: specify a specific light/group of lights that has to be turned on
 light_group=group.living_room
