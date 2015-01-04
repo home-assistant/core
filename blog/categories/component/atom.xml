@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: component | Home Assistant]]></title>
+  <link href="https://home-assistant.io/blog/categories/component/atom.xml" rel="self"/>
+  <link href="https://home-assistant.io/"/>
+  <updated>2015-01-04T14:21:10-08:00</updated>
+  <id>https://home-assistant.io/</id>
+  <author>
+    <name><![CDATA[Paulus Schoutsen]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Hello PushBullet, nice talking to you]]></title>
+    <link href="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"/>
+    <updated>2015-01-04T13:29:07-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you</id>
+    <content type="html"><![CDATA[<p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn&rsquo;t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
+
+<p>The new notify component will take in messages and tells them to the user. For now this will be powered by the very awesome <a href="https://www.pushbullet.com/">PushBullet</a> but any other messaging platform can be easily added.</p>
+
+<p class='img'>
+  <img src='/images/screenshots/pushbullet_moto360.png' />
+  A message triggered by the simple_alarm component is shown by PushBullet on the Moto360.
+</p>
+
+
+<p>Read on to learn how to enable the notify component and integrate it with other components.</p>
+
+<!--more-->
+
+
+<h3>Enabling the notify component</h3>
+
+<p>To enable the new notify component, add the following to your <code>home-assistant.conf</code>:</p>
+
+<pre><code>[notify]
+platform=pushbullet
+api_key=ABCDEFGHJKLMNOPQRSTUVXYZ
+</code></pre>
+
+<p>You can get your api key from <a href="https://www.pushbullet.com/account">your account page on PushBullet.com</a>.</p>
+
+<h3>Sending messages from your component</h3>
+
+<p>To be able to send messages, the notify component has to be loaded and initialized successfully.</p>
+
+<pre><code class="python">import homeassistant.loader as loader
+
+def setup(hass, config):
+    notify = loader.get_component('notify')
+    notify.send_message(hass, "Hello from my component!")
+</code></pre>
+]]></content>
+  </entry>
+  
+</feed>

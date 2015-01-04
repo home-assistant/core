@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Home Assistant]]></title>
-  <link href="https://home-assistant.io/atom.xml" rel="self"/>
+  <title><![CDATA[Category: architecture | Home Assistant]]></title>
+  <link href="https://home-assistant.io/blog/categories/architecture/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
   <updated>2015-01-04T14:21:10-08:00</updated>
   <id>https://home-assistant.io/</id>
@@ -12,59 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[Hello PushBullet, nice talking to you]]></title>
-    <link href="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"/>
-    <updated>2015-01-04T13:29:07-08:00</updated>
-    <id>https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you</id>
-    <content type="html"><![CDATA[<p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn&rsquo;t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
-
-<p>The new notify component will take in messages and tells them to the user. For now this will be powered by the very awesome <a href="https://www.pushbullet.com/">PushBullet</a> but any other messaging platform can be easily added.</p>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/screenshots/pushbullet_moto360.png' />
-  A message triggered by the simple_alarm component is shown by PushBullet on the Moto360.
-</p>
-
-
-<p>Read on to learn how to enable the notify component and integrate it with other components.</p>
-
-<!--more-->
-
-
-<h3>Enabling the notify component</h3>
-
-<p>To enable the new notify component, add the following to your <code>home-assistant.conf</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[notify]
-</span><span class='line'>platform=pushbullet
-</span><span class='line'>api_key=ABCDEFGHJKLMNOPQRSTUVXYZ</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You can get your api key from <a href="https://www.pushbullet.com/account">your account page on PushBullet.com</a>.</p>
-
-<h3>Sending messages from your component</h3>
-
-<p>To be able to send messages, the notify component has to be loaded and initialized successfully.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.loader</span> <span class="kn">as</span> <span class="nn">loader</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">notify</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_component</span><span class="p">(</span><span class="s">&#39;notify&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">notify</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&quot;Hello from my component!&quot;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[Home Control, Automation &amp; the Smart Home]]></title>
@@ -81,9 +28,9 @@ This article will try to explain how they all relate.</p>
 <p>As a bare minimum a hub has to keep track of the state of each device and should be able to control them if possible. For example, it has to know which lights are on or off and offer a way to control the lights. For a sensor it only has to know the value. A hub with these capabilities offers <strong>home control</strong>.</p>
 
 <p class='img'>
-  <a href='https://home-assistant.io/images/screenshots/nexus_7_dashboard.png'>
+  <a href='/images/screenshots/nexus_7_dashboard.png'>
     <img alt='Hub dashboard example'
-         src='https://home-assistant.io/images/screenshots/nexus_7_dashboard.png' />
+         src='/images/screenshots/nexus_7_dashboard.png' />
   </a>
   Example of a hub&#8217;s dashboard. Showing the state of 2 persons, 4 lights and the sun.
 </p>
@@ -105,9 +52,9 @@ This article will try to explain how they all relate.</p>
 <p>All this results in the following overview of Home Automation.</p>
 
 <p class='img'>
-  <a href='https://home-assistant.io/images/architecture/home_automation_landscape.png'>
+  <a href='/images/architecture/home_automation_landscape.png'>
     <img alt='Home Automation landscape'
-         src='https://home-assistant.io/images/architecture/home_automation_landscape.png' />
+         src='/images/architecture/home_automation_landscape.png' />
   </a>
   Overview of the home automation landscape.
 </p>
@@ -134,15 +81,6 @@ This article will try to explain how they all relate.</p>
 <p>Home Assistant is trying to be this software. It is not there yet but trying hard. Device discovery and a user interface for configuring home automation are problems we hope to tackle in 2015 while not sacrificing any modularity or usability.</p>
 
 <p>Happy new year!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Website launched!]]></title>
-    <link href="https://home-assistant.io/blog/2014/12/18/website-launched/"/>
-    <updated>2014-12-18T23:24:45-08:00</updated>
-    <id>https://home-assistant.io/blog/2014/12/18/website-launched</id>
-    <content type="html"><![CDATA[<p>I finally took the time to setup a simple website to help people getting started with Home Assistant. The process was super smooth thanks to the great tools <a href="http://jekyllrb.com">Jekyll</a> and <a href="http://octopress.org">Octopress</a> and the great services <a href="https://pages.github.com">GitHub Pages</a> and <a href="https://cloudflare.com">CloudFlare</a>.</p>
 ]]></content>
   </entry>
   
