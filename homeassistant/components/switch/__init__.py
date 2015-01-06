@@ -55,29 +55,11 @@ def setup(hass, config):
     """ Track states and offer events for switches. """
     logger = logging.getLogger(__name__)
 
-    switches = platform_devices_from_config(config, DOMAIN, hass, logger)
+    switches = platform_devices_from_config(
+        config, DOMAIN, hass, ENTITY_ID_FORMAT, logger)
 
     if not switches:
         return False
-
-    # Setup a dict mapping entity IDs to devices
-    ent_to_switch = {}
-
-    no_name_count = 1
-
-    for switch in switches:
-        name = switch.get_name()
-
-        if name is None:
-            name = "Switch #{}".format(no_name_count)
-            no_name_count += 1
-
-        entity_id = util.ensure_unique_string(
-            ENTITY_ID_FORMAT.format(util.slugify(name)),
-            ent_to_switch.keys())
-
-        switch.entity_id = entity_id
-        ent_to_switch[entity_id] = switch
 
     # pylint: disable=unused-argument
     @util.Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -86,21 +68,21 @@ def setup(hass, config):
 
         logger.info("Updating switch states")
 
-        for switch in switches:
+        for switch in switches.values():
             switch.update_ha_state(hass)
 
     update_states(None)
 
     def handle_switch_service(service):
         """ Handles calls to the switch services. """
-        devices = [ent_to_switch[entity_id] for entity_id
-                   in extract_entity_ids(hass, service)
-                   if entity_id in ent_to_switch]
+        target_switches = [switches[entity_id] for entity_id
+                           in extract_entity_ids(hass, service)
+                           if entity_id in switches]
 
-        if not devices:
-            devices = switches
+        if not target_switches:
+            target_switches = switches.values()
 
-        for switch in devices:
+        for switch in target_switches:
             if service.service == SERVICE_TURN_ON:
                 switch.turn_on()
             else:
@@ -110,7 +92,7 @@ def setup(hass, config):
 
     # Track all switches in a group
     group.setup_group(hass, GROUP_NAME_ALL_SWITCHES,
-                      ent_to_switch.keys(), False)
+                      switches.keys(), False)
 
     # Update state every 30 seconds
     hass.track_time_change(update_states, second=[0, 30])
