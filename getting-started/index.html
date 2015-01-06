@@ -115,7 +115,7 @@
 <p>If you&rsquo;re using Docker, you can use</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d --name<span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro -p 8123:8123 balloob/home-assistant
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d --name<span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro --net<span class="o">=</span>host balloob/home-assistant
 </span></code></pre></td></tr></table></div></figure>
 
 
