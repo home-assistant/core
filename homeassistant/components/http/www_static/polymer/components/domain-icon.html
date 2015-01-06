@@ -5,6 +5,8 @@
 <link rel="import" href="../bower_components/core-icons/image-icons.html">
 <link rel="import" href="../bower_components/core-icons/hardware-icons.html">
 
+<link rel="import" href="../resources/home-assistant-icons.html">
+
 <polymer-element name="domain-icon"
   attributes="domain state" constructor="DomainIcon">
   <template>
@@ -53,6 +55,12 @@
 
         case "notify":
           return "announcement";
+
+        case "thermostat":
+          return "homeassistant:nest-thermostat";
+
+        case "smokedetector":
+          return "homeassistant:nest-protect";
 
         default:
           return "bookmark-outline";
