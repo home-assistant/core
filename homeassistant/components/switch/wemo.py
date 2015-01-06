@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.helpers import ToggleDevice
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOSTS
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.components.switch import (
     ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
 
@@ -23,13 +23,8 @@ def get_devices(hass, config):
 
         return []
 
-    if CONF_HOSTS in config:
-        switches = (pywemo.device_from_host(host) for host
-                    in config[CONF_HOSTS].split(","))
-
-    else:
-        logging.getLogger(__name__).info("Scanning for WeMo devices")
-        switches = pywemo.discover_devices()
+    logging.getLogger(__name__).info("Scanning for WeMo devices")
+    switches = pywemo.discover_devices()
 
     # Filter out the switches and wrap in WemoSwitch object
     return [WemoSwitch(switch) for switch in switches
