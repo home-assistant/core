@@ -163,40 +163,23 @@ def setup(hass, config):
 
                     return False
 
-    lights = platform_devices_from_config(config, DOMAIN, hass, _LOGGER)
+    lights = platform_devices_from_config(
+        config, DOMAIN, hass, ENTITY_ID_FORMAT, _LOGGER)
 
     if not lights:
         return False
 
-    ent_to_light = {}
-
-    no_name_count = 1
-
-    for light in lights:
-        name = light.get_name()
-
-        if name is None:
-            name = "Light #{}".format(no_name_count)
-            no_name_count += 1
-
-        entity_id = util.ensure_unique_string(
-            ENTITY_ID_FORMAT.format(util.slugify(name)),
-            ent_to_light.keys())
-
-        light.entity_id = entity_id
-        ent_to_light[entity_id] = light
-
     # pylint: disable=unused-argument
     def update_lights_state(now):
         """ Update the states of all the lights. """
-        for light in lights:
+        for light in lights.values():
             light.update_ha_state(hass)
 
     update_lights_state(None)
 
     # Track all lights in a group
     group.setup_group(
-        hass, GROUP_NAME_ALL_LIGHTS, ent_to_light.keys(), False)
+        hass, GROUP_NAME_ALL_LIGHTS, lights.keys(), False)
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
@@ -204,12 +187,12 @@ def setup(hass, config):
         dat = service.data
 
         # Convert the entity ids to valid light ids
-        lights = [ent_to_light[entity_id] for entity_id
-                  in extract_entity_ids(hass, service)
-                  if entity_id in ent_to_light]
+        target_lights = [lights[entity_id] for entity_id
+                         in extract_entity_ids(hass, service)
+                         if entity_id in lights]
 
-        if not lights:
-            lights = list(ent_to_light.values())
+        if not target_lights:
+            target_lights = lights.values()
 
         params = {}
 
@@ -219,7 +202,7 @@ def setup(hass, config):
             params[ATTR_TRANSITION] = transition
 
         if service.service == SERVICE_TURN_OFF:
-            for light in lights:
+            for light in target_lights:
                 # pylint: disable=star-args
                 light.turn_off(**params)
 
@@ -277,11 +260,11 @@ def setup(hass, config):
                 elif dat[ATTR_FLASH] == FLASH_LONG:
                     params[ATTR_FLASH] = FLASH_LONG
 
-            for light in lights:
+            for light in target_lights:
                 # pylint: disable=star-args
                 light.turn_on(**params)
 
-        for light in lights:
+        for light in target_lights:
             light.update_ha_state(hass, True)
 
     # Update light state every 30 seconds
