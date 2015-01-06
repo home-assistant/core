@@ -53,6 +53,9 @@ ATTR_ENTITY_PICTURE = "entity_picture"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
+# New target temperature for thermostats
+ATTR_NEW_TARGET_TEMPERATURE = "temp"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
@@ -67,6 +70,8 @@ SERVICE_MEDIA_PLAY = "media_play"
 SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
+
+SERVICE_SET_TARGET_TEMPERATURE = "set_target_temperature"
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
