@@ -289,19 +289,24 @@ class Throttle(object):
         def wrapper(*args, **kwargs):
             """
             Wrapper that allows wrapped to be called only once per min_time.
+            If we cannot acquire the lock, it is running so return None.
             """
-            with lock:
-                last_call = wrapper.last_call
-                # Check if method is never called or no_throttle is given
-                force = last_call is None or kwargs.pop('no_throttle', False)
+            if lock.acquire(False):
+                try:
+                    last_call = wrapper.last_call
 
-                if force or datetime.now() - last_call > self.min_time:
+                    # Check if method is never called or no_throttle is given
+                    force = not last_call or kwargs.pop('no_throttle', False)
 
-                    result = method(*args, **kwargs)
-                    wrapper.last_call = datetime.now()
-                    return result
-                else:
-                    return None
+                    if force or datetime.now() - last_call > self.min_time:
+
+                        result = method(*args, **kwargs)
+                        wrapper.last_call = datetime.now()
+                        return result
+                    else:
+                        return None
+                finally:
+                    lock.release()
 
         wrapper.last_call = None
 
