@@ -39,6 +39,7 @@
     <state-card-dialog id="stateCardDialog" api={{api}}></state-card-dialog>
   </template>
   <script>
+  var domainsWithCard = ['thermostat'];
   var domainsWithMoreInfo = ['light', 'group', 'sun'];
 
   State = function(json, api) {
@@ -91,7 +92,9 @@
     // how to render the card for this state
     cardType: {
       get: function() {
-        if(this.canToggle) {
+        if(domainsWithCard.indexOf(this.domain) !== -1) {
+          return this.domain;
+        } else if(this.canToggle) {
           return "toggle";
         } else {
           return "display";
