@@ -33,6 +33,11 @@ platform=wemo
 # Optional: hard code the hosts (comma seperated) to avoid scanning the network
 # hosts=192.168.1.9,192.168.1.12
 
+[nest]
+# Required: username and password that are used to login to the Nest thermostat.
+username=myemail@mydomain.com
+password=mypassword
+
 [downloader]
 download_dir=downloads
 
