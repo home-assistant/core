@@ -51,6 +51,7 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
+        self.components = []
 
         self.config_dir = os.path.join(os.getcwd(), 'config')
 

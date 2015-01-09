@@ -79,12 +79,3 @@ class TestChromecast(unittest.TestCase):
             self.assertEqual(service_name, call.service)
             self.assertEqual(self.test_entity,
                              call.data.get(ATTR_ENTITY_ID))
-
-    def test_setup(self):
-        """
-        Test Chromecast setup.
-        We do not have access to a Chromecast while testing so test errors.
-        In an ideal world we would create a mock pychromecast API..
-        """
-        self.assertFalse(chromecast.setup(
-            self.hass, {chromecast.DOMAIN: {CONF_HOSTS: '127.0.0.1'}}))

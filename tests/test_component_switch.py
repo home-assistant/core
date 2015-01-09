@@ -7,7 +7,6 @@ Tests switch component.
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-import homeassistant as ha
 import homeassistant.loader as loader
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 import homeassistant.components.switch as switch
@@ -82,29 +81,12 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.is_on(self.hass, self.switch_2.entity_id))
         self.assertTrue(switch.is_on(self.hass, self.switch_3.entity_id))
 
-    def test_setup(self):
-        # Bogus config
-        self.assertFalse(switch.setup(self.hass, {}))
-
-        self.assertFalse(switch.setup(self.hass, {switch.DOMAIN: {}}))
-
-        # Test with non-existing component
-        self.assertFalse(switch.setup(
-            self.hass, {switch.DOMAIN: {CONF_PLATFORM: 'nonexisting'}}
-        ))
-
+    def test_setup_two_platforms(self):
+        """ Test with bad config. """
         # Test if switch component returns 0 switches
         test_platform = loader.get_component('switch.test')
         test_platform.init(True)
 
-        self.assertEqual(
-            [], test_platform.get_switches(None, None))
-
-        self.assertFalse(switch.setup(
-            self.hass, {switch.DOMAIN: {CONF_PLATFORM: 'test'}}
-        ))
-
-        # Test if we can load 2 platforms
         loader.set_component('switch.test2', test_platform)
         test_platform.init(False)
 

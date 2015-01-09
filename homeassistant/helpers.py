@@ -179,7 +179,7 @@ class Device(object):
 
     def get_name(self):
         """ Returns the name of the device if any. """
-        return None
+        return "No Name"
 
     def get_state(self):
         """ Returns state of the device. """

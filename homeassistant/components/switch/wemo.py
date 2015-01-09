@@ -11,16 +11,9 @@ from homeassistant.components.switch import (
 def get_devices(hass, config):
     """ Find and return WeMo switches. """
 
-    try:
-        # Pylint does not play nice if not every folders has an __init__.py
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.external.pywemo.pywemo as pywemo
-    except ImportError:
-        logging.getLogger(__name__).exception((
-            "Failed to import pywemo. "
-            "Did you maybe not run `git submodule init` "
-            "and `git submodule update`?"))
+    pywemo, _ = get_pywemo()
 
+    if pywemo is None:
         return []
 
     logging.getLogger(__name__).info("Scanning for WeMo devices")
@@ -29,6 +22,36 @@ def get_devices(hass, config):
     # Filter out the switches and wrap in WemoSwitch object
     return [WemoSwitch(switch) for switch in switches
             if isinstance(switch, pywemo.Switch)]
+
+
+def device_discovered(hass, config, info):
+    """ Called when a device is discovered. """
+    _, discovery = get_pywemo()
+
+    if discovery is None:
+        return
+
+    device = discovery.device_from_description(info)
+
+    return None if device is None else WemoSwitch(device)
+
+
+def get_pywemo():
+    """ Tries to import PyWemo. """
+    try:
+        # pylint: disable=no-name-in-module, import-error
+        import homeassistant.external.pywemo.pywemo as pywemo
+        import homeassistant.external.pywemo.pywemo.discovery as discovery
+
+        return pywemo, discovery
+
+    except ImportError:
+        logging.getLogger(__name__).exception((
+            "Failed to import pywemo. "
+            "Did you maybe not run `git submodule init` "
+            "and `git submodule update`?"))
+
+        return None, None
 
 
 class WemoSwitch(ToggleDevice):

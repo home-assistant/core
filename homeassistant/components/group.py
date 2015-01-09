@@ -132,8 +132,7 @@ class Group(object):
     def update_tracked_entity_ids(self, entity_ids):
         """ Update the tracked entity IDs. """
         self.stop()
-
-        self.tracking = list(entity_ids)
+        self.tracking = tuple(entity_ids)
         self.group_on, self.group_off = None, None
 
         self.force_update()
@@ -150,7 +149,8 @@ class Group(object):
 
         # If parsing the entitys did not result in a state, set UNKNOWN
         if self.state is None:
-            self.hass.states.set(self.entity_id, STATE_UNKNOWN)
+            self.hass.states.set(
+                self.entity_id, STATE_UNKNOWN, self.state_attr)
 
     def start(self):
         """ Starts the tracking. """
@@ -182,25 +182,25 @@ class Group(object):
 
         # There is already a group state
         cur_gr_state = self.hass.states.get(self.entity_id).state
+        group_on, group_off = self.group_on, self.group_off
 
         # if cur_gr_state = OFF and new_state = ON: set ON
         # if cur_gr_state = ON and new_state = OFF: research
         # else: ignore
 
-        if cur_gr_state == self.group_off and new_state.state == self.group_on:
+        if cur_gr_state == group_off and new_state.state == group_on:
 
             self.hass.states.set(
-                self.entity_id, self.group_on, self.state_attr)
+                self.entity_id, group_on, self.state_attr)
 
-        elif (cur_gr_state == self.group_on and
-              new_state.state == self.group_off):
+        elif (cur_gr_state == group_on and
+              new_state.state == group_off):
 
             # Check if any of the other states is still on
-            if not any([self.hass.states.is_state(ent_id, self.group_on)
-                        for ent_id in self.tracking
-                        if entity_id != ent_id]):
+            if not any(self.hass.states.is_state(ent_id, group_on)
+                       for ent_id in self.tracking if entity_id != ent_id):
                 self.hass.states.set(
-                    self.entity_id, self.group_off, self.state_attr)
+                    self.entity_id, group_off, self.state_attr)
 
 
 def setup_group(hass, name, entity_ids, user_defined=True):
