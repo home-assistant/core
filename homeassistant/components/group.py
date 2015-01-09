@@ -8,8 +8,8 @@ Provides functionality to group devices that can be turned on or off.
 import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME,
-    STATE_UNKNOWN)
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF,
+    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN)
 
 DOMAIN = "group"
 DEPENDENCIES = []
@@ -91,9 +91,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 def setup(hass, config):
     """ Sets up all groups found definded in the configuration. """
     for name, entity_ids in config.get(DOMAIN, {}).items():
-        entity_ids = entity_ids.split(",")
-
-        setup_group(hass, name, entity_ids)
+        setup_group(hass, name, entity_ids.split(","))
 
     return True
 
@@ -104,13 +102,18 @@ class Group(object):
         self.hass = hass
         self.name = name
         self.user_defined = user_defined
-        self.entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
+
+        self.entity_id = util.ensure_unique_string(
+            ENTITY_ID_FORMAT.format(util.slugify(name)),
+            hass.states.entity_ids(DOMAIN))
 
         self.tracking = []
         self.group_on, self.group_off = None, None
 
         if entity_ids is not None:
             self.update_tracked_entity_ids(entity_ids)
+        else:
+            self.force_update()
 
     @property
     def state(self):
@@ -122,7 +125,8 @@ class Group(object):
         """ State attributes of this group. """
         return {
             ATTR_ENTITY_ID: self.tracking,
-            ATTR_AUTO: not self.user_defined
+            ATTR_AUTO: not self.user_defined,
+            ATTR_FRIENDLY_NAME: self.name
         }
 
     def update_tracked_entity_ids(self, entity_ids):

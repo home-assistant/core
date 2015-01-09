@@ -162,3 +162,10 @@ class TestComponentsGroup(unittest.TestCase):
 
         self.assertEqual(STATE_ON, group_state.state)
         self.assertFalse(group_state.attributes[group.ATTR_AUTO])
+
+    def test_groups_get_unique_names(self):
+        """ Two groups with same name should both have a unique entity id. """
+        grp1 = group.Group(self.hass, 'Je suis Charlie')
+        grp2 = group.Group(self.hass, 'Je suis Charlie')
+
+        self.assertNotEqual(grp1.entity_id, grp2.entity_id)
