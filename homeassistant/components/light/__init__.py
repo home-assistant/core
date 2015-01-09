@@ -178,8 +178,7 @@ def setup(hass, config):
     update_lights_state(None)
 
     # Track all lights in a group
-    group.setup_group(
-        hass, GROUP_NAME_ALL_LIGHTS, lights.keys(), False)
+    group.Group(hass, GROUP_NAME_ALL_LIGHTS, lights.keys(), False)
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """

@@ -111,19 +111,16 @@ class DeviceTracker(object):
             """ Triggers update of the device states. """
             self.update_devices(now)
 
+        dev_group = group.Group(hass, GROUP_NAME_ALL_DEVICES)
+
         # pylint: disable=unused-argument
         def reload_known_devices_service(service):
             """ Reload known devices file. """
-            group.remove_group(self.hass, GROUP_NAME_ALL_DEVICES)
-
             self._read_known_devices_file()
 
             self.update_devices(datetime.now())
 
-            if self.tracked:
-                group.setup_group(
-                    self.hass, GROUP_NAME_ALL_DEVICES,
-                    self.device_entity_ids, False)
+            dev_group.update_tracked_entity_ids(self.device_entity_ids)
 
         reload_known_devices_service(None)
 

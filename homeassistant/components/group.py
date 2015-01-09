@@ -5,12 +5,11 @@ homeassistant.components.groups
 Provides functionality to group devices that can be turned on or off.
 """
 
-import logging
-
 import homeassistant as ha
 import homeassistant.util as util
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME)
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME,
+    STATE_UNKNOWN)
 
 DOMAIN = "group"
 DEPENDENCIES = []
@@ -21,8 +20,6 @@ ATTR_AUTO = "auto"
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME)]
-
-_GROUPS = {}
 
 
 def _get_group_on_off(state):
@@ -101,114 +98,109 @@ def setup(hass, config):
     return True
 
 
-def setup_group(hass, name, entity_ids, user_defined=True):
-    """ Sets up a group state that is the combined state of
-        several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
-    logger = logging.getLogger(__name__)
+class Group(object):
+    """ Tracks a group of entity ids. """
+    def __init__(self, hass, name, entity_ids=None, user_defined=True):
+        self.hass = hass
+        self.name = name
+        self.user_defined = user_defined
+        self.entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
 
-    # In case an iterable is passed in
-    entity_ids = list(entity_ids)
+        self.tracking = []
+        self.group_on, self.group_off = None, None
 
-    if not entity_ids:
-        logger.error(
-            'Error setting up group %s: no entities passed in to track', name)
+        if entity_ids is not None:
+            self.update_tracked_entity_ids(entity_ids)
 
-        return False
+    @property
+    def state(self):
+        """ Return the current state from the group. """
+        return self.hass.states.get(self.entity_id)
 
-    # Loop over the given entities to:
-    #  - determine which group type this is (on_off, device_home)
-    #  - determine which states exist and have groupable states
-    #  - determine the current state of the group
-    warnings = []
-    group_ids = []
-    group_on, group_off = None, None
-    group_state = False
+    @property
+    def state_attr(self):
+        """ State attributes of this group. """
+        return {
+            ATTR_ENTITY_ID: self.tracking,
+            ATTR_AUTO: not self.user_defined
+        }
 
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
+    def update_tracked_entity_ids(self, entity_ids):
+        """ Update the tracked entity IDs. """
+        self.stop()
 
-        # Try to determine group type if we didn't yet
-        if group_on is None and state:
-            group_on, group_off = _get_group_on_off(state.state)
+        self.tracking = list(entity_ids)
+        self.group_on, self.group_off = None, None
 
-            if group_on is None:
-                # We did not find a matching group_type
-                warnings.append(
-                    "Entity {} has ungroupable state '{}'".format(
-                        name, state.state))
+        self.force_update()
 
-                continue
+        self.start()
 
-        # Check if entity exists
-        if not state:
-            warnings.append("Entity {} does not exist".format(entity_id))
+    def force_update(self):
+        """ Query all the tracked states and update group state. """
+        for entity_id in self.tracking:
+            state = self.hass.states.get(entity_id)
 
-        # Check if entity is invalid state
-        elif state.state != group_off and state.state != group_on:
+            if state is not None:
+                self._update_group_state(state.entity_id, None, state)
 
-            warnings.append("State of {} is {} (expected: {} or {})".format(
-                entity_id, state.state, group_off, group_on))
+        # If parsing the entitys did not result in a state, set UNKNOWN
+        if self.state is None:
+            self.hass.states.set(self.entity_id, STATE_UNKNOWN)
 
-        # We have a valid group state
-        else:
-            group_ids.append(entity_id)
+    def start(self):
+        """ Starts the tracking. """
+        self.hass.states.track_change(self.tracking, self._update_group_state)
 
-            # Keep track of the group state to init later on
-            group_state = group_state or state.state == group_on
+    def stop(self):
+        """ Unregisters the group from Home Assistant. """
+        self.hass.states.remove(self.entity_id)
 
-    # If none of the entities could be found during setup
-    if not group_ids:
-        logger.error('Unable to find any entities to track for group %s', name)
-
-        return False
-
-    elif warnings:
-        logger.warning(
-            'Warnings during setting up group %s: %s',
-            name, ", ".join(warnings))
-
-    group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
-    state = group_on if group_state else group_off
-    state_attr = {ATTR_ENTITY_ID: group_ids, ATTR_AUTO: not user_defined}
+        self.hass.bus.remove_listener(
+            ha.EVENT_STATE_CHANGED, self._update_group_state)
 
     # pylint: disable=unused-argument
-    def update_group_state(entity_id, old_state, new_state):
+    def _update_group_state(self, entity_id, old_state, new_state):
         """ Updates the group state based on a state change by
             a tracked entity. """
 
-        cur_gr_state = hass.states.get(group_entity_id).state
+        # We have not determined type of group yet
+        if self.group_on is None:
+            self.group_on, self.group_off = _get_group_on_off(new_state.state)
+
+            if self.group_on is not None:
+                # New state of the group is going to be based on the first
+                # state that we can recognize
+                self.hass.states.set(
+                    self.entity_id, new_state.state, self.state_attr)
+
+            return
+
+        # There is already a group state
+        cur_gr_state = self.hass.states.get(self.entity_id).state
 
         # if cur_gr_state = OFF and new_state = ON: set ON
         # if cur_gr_state = ON and new_state = OFF: research
         # else: ignore
 
-        if cur_gr_state == group_off and new_state.state == group_on:
+        if cur_gr_state == self.group_off and new_state.state == self.group_on:
 
-            hass.states.set(group_entity_id, group_on, state_attr)
+            self.hass.states.set(
+                self.entity_id, self.group_on, self.state_attr)
 
-        elif cur_gr_state == group_on and new_state.state == group_off:
+        elif (cur_gr_state == self.group_on and
+              new_state.state == self.group_off):
 
             # Check if any of the other states is still on
-            if not any([hass.states.is_state(ent_id, group_on)
-                        for ent_id in group_ids
+            if not any([self.hass.states.is_state(ent_id, self.group_on)
+                        for ent_id in self.tracking
                         if entity_id != ent_id]):
-                hass.states.set(group_entity_id, group_off, state_attr)
-
-    _GROUPS[group_entity_id] = hass.states.track_change(
-        group_ids, update_group_state)
-
-    hass.states.set(group_entity_id, state, state_attr)
-
-    return True
+                self.hass.states.set(
+                    self.entity_id, self.group_off, self.state_attr)
 
 
-def remove_group(hass, name):
-    """ Remove a group and its state listener from Home Assistant. """
-    group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
+def setup_group(hass, name, entity_ids, user_defined=True):
+    """ Sets up a group state that is the combined state of
+        several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
 
-    if hass.states.get(group_entity_id) is not None:
-        hass.states.remove(group_entity_id)
-
-    if group_entity_id in _GROUPS:
-        hass.bus.remove_listener(
-            ha.EVENT_STATE_CHANGED, _GROUPS.pop(group_entity_id))
+    return Group(hass, name, entity_ids, user_defined)

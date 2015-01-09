@@ -91,8 +91,7 @@ def setup(hass, config):
             switch.update_ha_state(hass)
 
     # Track all switches in a group
-    group.setup_group(hass, GROUP_NAME_ALL_SWITCHES,
-                      switches.keys(), False)
+    group.Group(hass, GROUP_NAME_ALL_SWITCHES, switches.keys(), False)
 
     # Update state every 30 seconds
     hass.track_time_change(update_states, second=[0, 30])
