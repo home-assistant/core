@@ -3,6 +3,9 @@ requests>=2.0
 
 # optional, needed for specific components
 
+# discovery
+zeroconf>=0.16.0
+
 # sun
 pyephem>=3.7
 
