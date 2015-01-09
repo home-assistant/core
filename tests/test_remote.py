@@ -1,5 +1,5 @@
 """
-ha_test.remote
+tests.remote
 ~~~~~~~~~~~~~~
 
 Tests Home Assistant remote methods and classes.

@@ -1,5 +1,5 @@
 """
-ha_test.helper
+tests.helper
 ~~~~~~~~~~~~~
 
 Helper method for writing tests.

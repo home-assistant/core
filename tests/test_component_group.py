@@ -1,5 +1,5 @@
 """
-ha_test.test_component_group
+tests.test_component_group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the group compoments.

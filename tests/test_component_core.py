@@ -1,5 +1,5 @@
 """
-ha_test.test_component_core
+tests.test_component_core
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests core compoments.

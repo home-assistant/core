@@ -1,5 +1,5 @@
 """
-ha_test.test_util
+tests.test_util
 ~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant util methods.

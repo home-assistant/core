@@ -1,5 +1,5 @@
 """
-ha_test.test_component_http
+tests.test_component_http
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant HTTP component does what it should do.

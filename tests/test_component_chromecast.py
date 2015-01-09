@@ -1,5 +1,5 @@
 """
-ha_test.test_component_chromecast
+tests.test_component_chromecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Chromecast component.
