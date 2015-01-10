@@ -113,6 +113,11 @@ def media_prev_track(hass, entity_id=None):
 
 def setup_chromecast(casts, host):
     """ Tries to convert host to Chromecast object and set it up. """
+
+    # Check if already setup
+    if any(cast.host == host for cast in casts.values()):
+        return
+
     try:
         cast = pychromecast.PyChromecast(host)
 

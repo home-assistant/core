@@ -59,6 +59,11 @@ class WemoSwitch(ToggleDevice):
     def __init__(self, wemo):
         self.wemo = wemo
 
+    @property
+    def unique_id(self):
+        """ Returns the id of this WeMo switch """
+        return "{}.{}".format(self.__class__, self.wemo.serialnumber)
+
     def get_name(self):
         """ Returns the name of the switch if any. """
         return self.wemo.name

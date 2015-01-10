@@ -146,9 +146,6 @@ def platform_devices_from_config(config, domain, hass,
 
             devices.extend(p_devices)
 
-    if len(devices) == 0:
-        logger.error("No devices found for %s", domain)
-
     # Setup entity IDs for each device
     no_name_count = 1
 
@@ -176,6 +173,11 @@ class Device(object):
     # pylint: disable=no-self-use
 
     entity_id = None
+
+    @property
+    def unique_id(self):
+        """ Returns a unique id. """
+        return "{}.{}".format(self.__class__, id(self))
 
     def get_name(self):
         """ Returns the name of the device if any. """
@@ -207,6 +209,10 @@ class Device(object):
 
         return hass.states.set(self.entity_id, self.get_state(),
                                self.get_state_attributes())
+
+    def __eq__(self, other):
+        return (isinstance(other, Device) and
+                other.unique_id == self.unique_id)
 
 
 class ToggleDevice(Device):

@@ -81,6 +81,12 @@ class HueLight(ToggleDevice):
         """ Get the mame of the Hue light. """
         return self.info['name']
 
+    @property
+    def unique_id(self):
+        """ Returns the id of this Hue light """
+        return "{}.{}".format(
+            self.__class__, self.info.get('uniqueid', self.get_name()))
+
     def turn_on(self, **kwargs):
         """ Turn the specified or all lights on. """
         command = {'on': True}
