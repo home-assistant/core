@@ -130,6 +130,54 @@ Platform logic should not interface directly with the devices but use a third-pa
 </p>
 
 
+<h2>Allowing your platform to be discovered</h2>
+
+<p>Home Assistant has a discovery service running in the background to discover new devices. Whenever a new device is discovered, an <code>SERVICE_DISCOVERED</code> event will be fired with the found service and the information. The <code>discovery</code> component has some knowledge about which components handle which type of services and will ensure those are loaded and listening before firing the <code>SERVICE_DISCOVERED</code> event.</p>
+
+<h3>Add discovery instructions</h3>
+
+<p>Device discovery  for Home Assistant has been extracted into an external library called <a href="https://github.com/balloob/netdisco">NetDisco</a>. This library is integrated using <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/components/discovery.py">the <code>discovery</code> component</a> and scans the network in intervals for uPnP and zeroconf/mDNS services.</p>
+
+<p>To have your device be discovered, you will have to extend the NetDisco library to be able to find your device. This is done by adding a new discoverable. <a href="https://github.com/balloob/netdisco/tree/master/netdisco/discoverables">See the repository for examples of existing discoverables.</a></p>
+
+<h3>Listening to <code>SERVICE_DISCOVERED</code> events</h3>
+
+<p>From your component, you will have to set up the listening for specific services. Below an example how one would listen for discovered Chromecasts:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">homeassistant.loader</span> <span class="kn">import</span> <span class="n">get_component</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">discovery</span> <span class="o">=</span> <span class="n">get_component</span><span class="p">(</span><span class="s">&#39;discovery&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">chromecast_discovered</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+</span><span class='line'>        <span class="sd">&quot;&quot;&quot; Called when a Chromecast has been discovered. &quot;&quot;&quot;</span>
+</span><span class='line'>        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Discovered a new Chromecast: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">discovery</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span>
+</span><span class='line'>        <span class="n">hass</span><span class="p">,</span> <span class="n">discovery</span><span class="o">.</span><span class="n">services</span><span class="o">.</span><span class="n">GOOGLE_CAST</span><span class="p">,</span> <span class="n">chromecast_discovered</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Auto-loading your component upon discovery</h3>
+
+<p>The Discovery component is capable of setting up your components before firing the <code>SERVICE_DISCOVERD</code> event. To do this you will have to update the <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/components/discovery.py#L29"><code>SERVICE_HANDLERS</code></a> constant in <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/components/discovery.py">the <code>discovery</code> component</a>.</p>
+
+<p class='note warning'>
+This option is currently limited to built-in components.
+</p>
+
+
 
 </article>
 
