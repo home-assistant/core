@@ -22,16 +22,22 @@ def get_service(hass, config):
 
     try:
         # pylint: disable=unused-variable
-        from pushbullet import PushBullet  # noqa
+        from pushbullet import PushBullet, InvalidKeyError  # noqa
 
     except ImportError:
         _LOGGER.exception(
             "Unable to import pushbullet. "
-            "Did you maybe not install the 'pushbullet' package?")
+            "Did you maybe not install the 'pushbullet.py' package?")
 
         return None
 
-    return PushBulletNotificationService(config[DOMAIN][CONF_API_KEY])
+    try:
+        return PushBulletNotificationService(config[DOMAIN][CONF_API_KEY])
+
+    except InvalidKeyError:
+        _LOGGER.error(
+            "Wrong API key supplied. "
+            "Get it at https://www.pushbullet.com/account")
 
 
 # pylint: disable=too-few-public-methods

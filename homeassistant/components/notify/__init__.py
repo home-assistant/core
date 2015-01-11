@@ -50,7 +50,7 @@ def setup(hass, config):
     notify_service = notify_implementation.get_service(hass, config)
 
     if notify_service is None:
-        _LOGGER.error("Failed to initialize notificatino service %s",
+        _LOGGER.error("Failed to initialize notification service %s",
                       platform)
 
         return False
