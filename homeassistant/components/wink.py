@@ -35,9 +35,9 @@ def setup(hass, config):
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
             ('switch', pywink.get_switches, DISCOVER_SWITCHES)):
 
-        component = get_component(component_name)
-
         if func_exists():
+            component = get_component(component_name)
+
             # Ensure component is loaded
             if component.DOMAIN not in hass.components:
                 # Add a worker on succesfull setup
@@ -49,3 +49,5 @@ def setup(hass, config):
                 ATTR_SERVICE: discovery_type,
                 ATTR_DISCOVERED: {}
             })
+
+    return True

@@ -191,7 +191,7 @@ def setup(hass, config):
         platform = get_component(
             "{}.{}".format(DOMAIN, DISCOVERY_PLATFORMS[service]))
 
-        discovered = platform.device_discovered(hass, config, info)
+        discovered = platform.devices_discovered(hass, config, info)
 
         for light in discovered:
             if light is not None and light not in lights.values():

@@ -37,8 +37,10 @@ def listen(hass, service, callback):
     Service can be a string or a list/tuple.
     """
 
-    if not isinstance(service, str):
+    if isinstance(service, str):
         service = (service,)
+    else:
+        service = tuple(service)
 
     def discovery_event_listener(event):
         """ Listens for discovery events. """
