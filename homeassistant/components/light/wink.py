@@ -1,72 +1,51 @@
 """ Support for Hue lights. """
 import logging
 
-from datetime import timedelta
+import homeassistant.external.wink.pywink as pywink
 
-import homeassistant.util as util
 from homeassistant.helpers import ToggleDevice
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_PLATFORM
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HUE, ATTR_SATURATION, ATTR_KELVIN)
+from homeassistant.const import ATTR_FRIENDLY_NAME
 
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 # pylint: disable=unused-argument
 def get_devices(hass, config):
-    """ Find and return WeMo switches. """
+    """ Find and return Wink lights. """
+    token = config.get('access_token')
 
-    try:
-        # Pylint does not play nice if not every folders has an __init__.py
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.components.hubs.pywink.pywink as pywink
-    except ImportError:
-        logging.getLogger(__name__).exception((
-            "Failed to import pywink. "
-            "Did you maybe not run `git submodule init` "
-            "and `git submodule update`?"))
+    if token is None:
+        logging.getLogger(__name__).error(
+            "Missing wink access_token - "
+            "get one at https://winkbearertoken.appspot.com/")
+        return False
 
-        return []
-    token = config["access_token"]
     pywink.set_bearer_token(token)
 
-    switches = pywink.get_bulbs()
-
-
-
-    # Filter out the switches and wrap in WemoSwitch object
-    return [WinkLight(switch) for switch in switches]
+    return [WinkLight(light) for light in pywink.get_bulbs()]
 
 
 class WinkLight(ToggleDevice):
-    """
-    Represents a Lifx light
-    http://lifx.com
-
-     """
+    """ Represents a Wink light """
 
     def __init__(self, wink):
         self.wink = wink
         self.state_attr = {ATTR_FRIENDLY_NAME: wink.name()}
 
     def get_name(self):
-        """ Returns the name of the switch if any. """
+        """ Returns the name of the light if any. """
         return self.wink.name()
 
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
+        """ Turns the light on. """
         self.wink.setState(True)
 
     def turn_off(self):
-        """ Turns the switch off. """
+        """ Turns the light off. """
         self.wink.setState(False)
 
     def is_on(self):
-        """ True if switch is on. """
+        """ True if light is on. """
         return self.wink.state()
 
     def get_state_attributes(self):
         """ Returns optional state attributes. """
         return self.state_attr
-

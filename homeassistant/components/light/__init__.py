@@ -87,7 +87,6 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
-
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 _LOGGER = logging.getLogger(__name__)
