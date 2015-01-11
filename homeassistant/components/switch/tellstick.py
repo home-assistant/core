@@ -36,9 +36,23 @@ class TellstickSwitch(ToggleDevice):
         self.tellstick = tellstick
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick.name}
 
-    def get_name(self):
+    @property
+    def name(self):
         """ Returns the name of the switch if any. """
         return self.tellstick.name
+
+    @property
+    def state_attributes(self):
+        """ Returns optional state attributes. """
+        return self.state_attr
+
+    @property
+    def is_on(self):
+        """ True if switch is on. """
+        last_command = self.tellstick.last_sent_command(
+            self.last_sent_command_mask)
+
+        return last_command == tc_constants.TELLSTICK_TURNON
 
     # pylint: disable=unused-argument
     def turn_on(self, **kwargs):
@@ -49,14 +63,3 @@ class TellstickSwitch(ToggleDevice):
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         self.tellstick.turn_off()
-
-    def is_on(self):
-        """ True if switch is on. """
-        last_command = self.tellstick.last_sent_command(
-            self.last_sent_command_mask)
-
-        return last_command == tc_constants.TELLSTICK_TURNON
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr

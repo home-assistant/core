@@ -77,15 +77,36 @@ class HueLight(ToggleDevice):
         self.bridge = bridge
         self.update_lights = update_lights
 
-    def get_name(self):
-        """ Get the mame of the Hue light. """
-        return self.info['name']
-
     @property
     def unique_id(self):
         """ Returns the id of this Hue light """
         return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.get_name()))
+            self.__class__, self.info.get('uniqueid', self.name))
+
+    @property
+    def name(self):
+        """ Get the mame of the Hue light. """
+        return self.info.get('name', 'No name')
+
+    @property
+    def state_attributes(self):
+        """ Returns optional state attributes. """
+        attr = {
+            ATTR_FRIENDLY_NAME: self.name
+        }
+
+        if self.is_on:
+            attr[ATTR_BRIGHTNESS] = self.info['state']['bri']
+            attr[ATTR_XY_COLOR] = self.info['state']['xy']
+
+        return attr
+
+    @property
+    def is_on(self):
+        """ True if device is on. """
+        self.update_lights()
+
+        return self.info['state']['reachable'] and self.info['state']['on']
 
     def turn_on(self, **kwargs):
         """ Turn the specified or all lights on. """
@@ -123,24 +144,6 @@ class HueLight(ToggleDevice):
             command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
 
         self.bridge.set_light(self.light_id, command)
-
-    def is_on(self):
-        """ True if device is on. """
-        self.update_lights()
-
-        return self.info['state']['reachable'] and self.info['state']['on']
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        attr = {
-            ATTR_FRIENDLY_NAME: self.get_name()
-        }
-
-        if self.is_on():
-            attr[ATTR_BRIGHTNESS] = self.info['state']['bri']
-            attr[ATTR_XY_COLOR] = self.info['state']['xy']
-
-        return attr
 
     def update(self):
         """ Synchronize state with bridge. """

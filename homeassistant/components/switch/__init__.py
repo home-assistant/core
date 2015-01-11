@@ -88,7 +88,7 @@ def setup(hass, config):
 
         if switch is not None and switch not in switches.values():
             switch.entity_id = util.ensure_unique_string(
-                ENTITY_ID_FORMAT.format(util.slugify(switch.get_name())),
+                ENTITY_ID_FORMAT.format(util.slugify(switch.name)),
                 switches.keys())
 
             switches[switch.entity_id] = switch

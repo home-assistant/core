@@ -64,23 +64,13 @@ class WemoSwitch(ToggleDevice):
         """ Returns the id of this WeMo switch """
         return "{}.{}".format(self.__class__, self.wemo.serialnumber)
 
-    def get_name(self):
+    @property
+    def name(self):
         """ Returns the name of the switch if any. """
         return self.wemo.name
 
-    def turn_on(self, **kwargs):
-        """ Turns the switch on. """
-        self.wemo.on()
-
-    def turn_off(self):
-        """ Turns the switch off. """
-        self.wemo.off()
-
-    def is_on(self):
-        """ True if switch is on. """
-        return self.wemo.get_state(True)
-
-    def get_state_attributes(self):
+    @property
+    def state_attributes(self):
         """ Returns optional state attributes. """
         if self.wemo.model.startswith('Belkin Insight'):
             cur_info = self.wemo.insight_params
@@ -92,3 +82,16 @@ class WemoSwitch(ToggleDevice):
             }
         else:
             return {ATTR_FRIENDLY_NAME: self.wemo.name}
+
+    @property
+    def is_on(self):
+        """ True if switch is on. """
+        return self.wemo.get_state(True)
+
+    def turn_on(self, **kwargs):
+        """ Turns the switch on. """
+        self.wemo.on()
+
+    def turn_off(self):
+        """ Turns the switch off. """
+        self.wemo.off()

@@ -8,7 +8,7 @@ import os
 
 import homeassistant as ha
 from homeassistant.helpers import ToggleDevice
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
 
 def get_test_home_assistant():
@@ -45,29 +45,37 @@ class MockModule(object):
 class MockToggleDevice(ToggleDevice):
     """ Provides a mock toggle device. """
     def __init__(self, name, state):
-        self.name = name
-        self.state = state
+        self._name = name or DEVICE_DEFAULT_NAME
+        self._state = state
         self.calls = []
 
-    def get_name(self):
+    @property
+    def name(self):
         """ Returns the name of the device if any. """
-        self.calls.append(('get_name', {}))
-        return self.name
+        self.calls.append(('name', {}))
+        return self._name
+
+    @property
+    def state(self):
+        """ Returns the name of the device if any. """
+        self.calls.append(('state', {}))
+        return self._state
+
+    @property
+    def is_on(self):
+        """ True if device is on. """
+        self.calls.append(('is_on', {}))
+        return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
         self.calls.append(('turn_on', kwargs))
-        self.state = STATE_ON
+        self._state = STATE_ON
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
         self.calls.append(('turn_off', kwargs))
-        self.state = STATE_OFF
-
-    def is_on(self):
-        """ True if device is on. """
-        self.calls.append(('is_on', {}))
-        return self.state == STATE_ON
+        self._state = STATE_OFF
 
     def last_call(self, method=None):
         if method is None:
