@@ -7,7 +7,8 @@ from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.loader import get_component
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM, CONF_TYPE)
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM, CONF_TYPE,
+    DEVICE_DEFAULT_NAME)
 from homeassistant.util import ensure_unique_string, slugify
 
 
@@ -146,20 +147,17 @@ def platform_devices_from_config(config, domain, hass,
 
             devices.extend(p_devices)
 
-    if len(devices) == 0:
-        logger.error("No devices found for %s", domain)
-
     # Setup entity IDs for each device
-    no_name_count = 1
-
     device_dict = {}
 
-    for device in devices:
-        name = device.get_name()
+    no_name_count = 0
 
-        if name is None:
-            name = "{} #{}".format(domain, no_name_count)
+    for device in devices:
+        name = device.name
+
+        if name == DEVICE_DEFAULT_NAME:
             no_name_count += 1
+            name = "{} #{}".format(domain, no_name_count)
 
         entity_id = ensure_unique_string(
             entity_id_format.format(slugify(name)),
@@ -177,9 +175,34 @@ class Device(object):
 
     entity_id = None
 
+    @property
+    def unique_id(self):
+        """ Returns a unique id. """
+        return "{}.{}".format(self.__class__, id(self))
+
+    @property
+    def name(self):
+        """ Returns the name of the device. """
+        return self.get_name()
+
+    @property
+    def state(self):
+        """ Returns the state of the device. """
+        return self.get_state()
+
+    @property
+    def state_attributes(self):
+        """ Returns the state attributes. """
+        return {}
+
+    # DEPRECATION NOTICE:
+    # Device is moving from getters to properties.
+    # For now the new properties will call the old functions
+    # This will be removed in the future.
+
     def get_name(self):
         """ Returns the name of the device if any. """
-        return None
+        return DEVICE_DEFAULT_NAME
 
     def get_state(self):
         """ Returns state of the device. """
@@ -200,22 +223,32 @@ class Device(object):
         """
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity specified for device {}".format(self.get_name()))
+                "No entity specified for device {}".format(self.name))
 
         if force_refresh:
             self.update()
 
-        return hass.states.set(self.entity_id, self.get_state(),
-                               self.get_state_attributes())
+        return hass.states.set(self.entity_id, self.state,
+                               self.state_attributes)
+
+    def __eq__(self, other):
+        return (isinstance(other, Device) and
+                other.unique_id == self.unique_id)
 
 
 class ToggleDevice(Device):
     """ ABC for devices that can be turned on and off. """
     # pylint: disable=no-self-use
 
-    def get_state(self):
+    @property
+    def state(self):
         """ Returns the state. """
-        return STATE_ON if self.is_on() else STATE_OFF
+        return STATE_ON if self.is_on else STATE_OFF
+
+    @property
+    def is_on(self):
+        """ True if device is on. """
+        return False
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
@@ -224,7 +257,3 @@ class ToggleDevice(Device):
     def turn_off(self, **kwargs):
         """ Turn the device off. """
         pass
-
-    def is_on(self):
-        """ True if device is on. """
-        return False

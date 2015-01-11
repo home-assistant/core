@@ -1,5 +1,5 @@
 """
-ha_test.test_helpers
+tests.test_helpers
 ~~~~~~~~~~~~~~~~~~~~
 
 Tests component helpers.

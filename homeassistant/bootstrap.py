@@ -19,6 +19,33 @@ import homeassistant.loader as loader
 import homeassistant.components as core_components
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
+def setup_component(hass, domain, config=None):
+    """ Setup a component for Home Assistant. """
+    if config is None:
+        config = defaultdict(dict)
+
+    component = loader.get_component(domain)
+
+    try:
+        if component.setup(hass, config):
+            hass.components.append(component.DOMAIN)
+
+            _LOGGER.info("component %s initialized", domain)
+
+            return True
+
+        else:
+            _LOGGER.error("component %s failed to initialize", domain)
+
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error during setup of component %s", domain)
+
+    return False
+
+
 # pylint: disable=too-many-branches, too-many-statements
 def from_config_dict(config, hass=None):
     """
@@ -28,8 +55,6 @@ def from_config_dict(config, hass=None):
     """
     if hass is None:
         hass = homeassistant.HomeAssistant()
-
-    logger = logging.getLogger(__name__)
 
     loader.prepare(hass)
 
@@ -42,12 +67,12 @@ def from_config_dict(config, hass=None):
                   if ' ' not in key and key != homeassistant.DOMAIN)
 
     if not core_components.setup(hass, config):
-        logger.error(("Home Assistant core failed to initialize. "
-                      "Further initialization aborted."))
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "Further initialization aborted.")
 
         return hass
 
-    logger.info("Home Assistant core initialized")
+    _LOGGER.info("Home Assistant core initialized")
 
     # Setup the components
 
@@ -57,22 +82,11 @@ def from_config_dict(config, hass=None):
     add_worker = True
 
     for domain in loader.load_order_components(components):
-        component = loader.get_component(domain)
+        if setup_component(hass, domain, config):
+            add_worker = add_worker and domain != "group"
 
-        try:
-            if component.setup(hass, config):
-                logger.info("component %s initialized", domain)
-
-                add_worker = add_worker and domain != "group"
-
-                if add_worker:
-                    hass.pool.add_worker()
-
-            else:
-                logger.error("component %s failed to initialize", domain)
-
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Error during setup of component %s", domain)
+            if add_worker:
+                hass.pool.add_worker()
 
     return hass
 
@@ -112,7 +126,7 @@ def from_config_file(config_path, hass=None, enable_logging=True):
             logging.getLogger('').addHandler(err_handler)
 
         else:
-            logging.getLogger(__name__).error(
+            _LOGGER.error(
                 "Unable to setup error log %s (access denied)", err_log_path)
 
     # Read config

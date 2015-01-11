@@ -1,5 +1,5 @@
 """
-ha_test.test_component_demo
+tests.test_component_demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests demo component.

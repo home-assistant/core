@@ -1,5 +1,5 @@
 """
-ha_test.test_component_group
+tests.test_component_group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the group compoments.
@@ -9,7 +9,7 @@ import unittest
 import logging
 
 import homeassistant as ha
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN
 import homeassistant.components.group as group
 
 
@@ -40,38 +40,41 @@ class TestComponentsGroup(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_setup_group(self):
-        """ Test setup_group method. """
-        # Try to setup a group with mixed groupable states
+    def test_setup_group_with_mixed_groupable_states(self):
+        """ Try to setup a group with mixed groupable states """
         self.hass.states.set('device_tracker.Paulus', STATE_HOME)
-        self.assertTrue(group.setup_group(
+        group.setup_group(
             self.hass, 'person_and_light',
-            ['light.Bowl', 'device_tracker.Paulus']))
+            ['light.Bowl', 'device_tracker.Paulus'])
+
         self.assertEqual(
             STATE_ON,
             self.hass.states.get(
                 group.ENTITY_ID_FORMAT.format('person_and_light')).state)
 
-        # Try to setup a group with a non existing state
-        self.assertNotIn('non.existing', self.hass.states.entity_ids())
-        self.assertTrue(group.setup_group(
+    def test_setup_group_with_a_non_existing_state(self):
+        """ Try to setup a group with a non existing state """
+        grp = group.setup_group(
             self.hass, 'light_and_nothing',
-            ['light.Bowl', 'non.existing']))
-        self.assertEqual(
-            STATE_ON,
-            self.hass.states.get(
-                group.ENTITY_ID_FORMAT.format('light_and_nothing')).state)
+            ['light.Bowl', 'non.existing'])
 
-        # Try to setup a group with non groupable states
+        self.assertEqual(STATE_ON, grp.state.state)
+
+    def test_setup_group_with_non_groupable_states(self):
         self.hass.states.set('cast.living_room', "Plex")
         self.hass.states.set('cast.bedroom', "Netflix")
-        self.assertFalse(
-            group.setup_group(
-                self.hass, 'chromecasts',
-                ['cast.living_room', 'cast.bedroom']))
 
-        # Try to setup an empty group
-        self.assertFalse(group.setup_group(self.hass, 'nothing', []))
+        grp = group.setup_group(
+            self.hass, 'chromecasts',
+            ['cast.living_room', 'cast.bedroom'])
+
+        self.assertEqual(STATE_UNKNOWN, grp.state.state)
+
+    def test_setup_empty_group(self):
+        """ Try to setup an empty group. """
+        grp = group.setup_group(self.hass, 'nothing', [])
+
+        self.assertEqual(STATE_UNKNOWN, grp.state.state)
 
     def test_monitor_group(self):
         """ Test if the group keeps track of states. """
@@ -159,3 +162,10 @@ class TestComponentsGroup(unittest.TestCase):
 
         self.assertEqual(STATE_ON, group_state.state)
         self.assertFalse(group_state.attributes[group.ATTR_AUTO])
+
+    def test_groups_get_unique_names(self):
+        """ Two groups with same name should both have a unique entity id. """
+        grp1 = group.Group(self.hass, 'Je suis Charlie')
+        grp2 = group.Group(self.hass, 'Je suis Charlie')
+
+        self.assertNotEqual(grp1.entity_id, grp2.entity_id)

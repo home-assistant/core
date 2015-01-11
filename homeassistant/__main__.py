@@ -18,19 +18,8 @@ except ImportError:
     from homeassistant import bootstrap
 
 
-def main():
-    """ Starts Home Assistant. Will create demo config if no config found. """
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-c', '--config',
-        metavar='path_to_config_dir',
-        default="config",
-        help="Directory that contains the Home Assistant configuration")
-
-    args = parser.parse_args()
-
-    # Validate that all core dependencies are installed
+def validate_dependencies():
+    """ Validate all dependencies that HA uses. """
     import_fail = False
 
     for module in ['requests']:
@@ -44,11 +33,14 @@ def main():
     if import_fail:
         print(("Install dependencies by running: "
                "pip3 install -r requirements.txt"))
-        exit()
+        sys.exit()
+
+
+def ensure_config_path(config_dir):
+    """ Gets the path to the configuration file.
+        Creates one if it not exists. """
 
     # Test if configuration directory exists
-    config_dir = os.path.join(os.getcwd(), args.config)
-
     if not os.path.isdir(config_dir):
         print(('Fatal Error: Unable to find specified configuration '
                'directory {} ').format(config_dir))
@@ -67,6 +59,27 @@ def main():
             print(('Fatal Error: No configuration file found and unable '
                    'to write a default one to {}').format(config_path))
             sys.exit()
+
+    return config_path
+
+
+def main():
+    """ Starts Home Assistant. Will create demo config if no config found. """
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-c', '--config',
+        metavar='path_to_config_dir',
+        default="config",
+        help="Directory that contains the Home Assistant configuration")
+
+    args = parser.parse_args()
+
+    validate_dependencies()
+
+    config_dir = os.path.join(os.getcwd(), args.config)
+
+    config_path = ensure_config_path(config_dir)
 
     hass = bootstrap.from_config_file(config_path)
     hass.start()

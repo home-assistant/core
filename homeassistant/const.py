@@ -2,6 +2,9 @@
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 
+# If no name is specified
+DEVICE_DEFAULT_NAME = "Unnamed Device"
+
 # #### CONFIG ####
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
@@ -29,6 +32,7 @@ STATE_ON = 'on'
 STATE_OFF = 'off'
 STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
+STATE_UNKNOWN = "unknown"
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event

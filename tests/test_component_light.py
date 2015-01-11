@@ -1,5 +1,5 @@
 """
-ha_test.test_component_switch
+tests.test_component_switch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests switch component.

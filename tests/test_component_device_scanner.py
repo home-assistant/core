@@ -1,5 +1,5 @@
 """
-ha_test.test_component_group
+tests.test_component_group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the group compoments.
@@ -75,7 +75,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
         }))
 
-    def test_device_tracker(self):
+    def test_writing_known_devices_file(self):
         """ Test the device tracker class. """
         scanner = loader.get_component(
             'device_tracker.test').get_scanner(None, None)
@@ -117,7 +117,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         dev3 = device_tracker.ENTITY_ID_FORMAT.format('DEV3')
 
         now = datetime.now()
-        nowNext = now + timedelta(seconds=ha.TIMER_INTERVAL)
         nowAlmostMinGone = (now + device_tracker.TIME_DEVICE_NOT_FOUND -
                             timedelta(seconds=1))
         nowMinGone = nowAlmostMinGone + timedelta(seconds=2)
