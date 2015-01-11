@@ -223,7 +223,7 @@ def _process_match_param(parameter):
     elif isinstance(parameter, list):
         return parameter
     else:
-        return [parameter]
+        return (parameter,)
 
 
 def _matcher(subject, pattern):
@@ -589,7 +589,7 @@ class StateMachine(object):
 
         # Ensure it is a lowercase list with entity ids we want to match on
         if isinstance(entity_ids, str):
-            entity_ids = [entity_ids.lower()]
+            entity_ids = (entity_ids.lower(),)
         else:
             entity_ids = [entity_id.lower() for entity_id in entity_ids]
 
