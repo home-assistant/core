@@ -11,6 +11,10 @@ api_password=mypass
 [light]
 platform=hue
 
+[wink]
+# Get your token at https://winkbearertoken.appspot.com
+token=YOUR_TOKEN
+
 [device_tracker]
 # The following types are available: netgear, tomato, luci, nmap_tracker
 platform=netgear

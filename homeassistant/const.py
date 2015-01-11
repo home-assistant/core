@@ -15,6 +15,7 @@ CONF_HOSTS = "hosts"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
+CONF_ACCESS_TOKEN = "access_token"
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -23,6 +24,7 @@ EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 EVENT_CALL_SERVICE = "call_service"
 EVENT_SERVICE_EXECUTED = "service_executed"
+EVENT_SERVICE_DISCOVERED = "service_discovered"
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -53,6 +55,9 @@ ATTR_ENTITY_PICTURE = "entity_picture"
 
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+
+# Contains the information that is discovered
+ATTR_DISCOVERED = "discovered"
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"

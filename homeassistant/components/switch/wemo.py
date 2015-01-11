@@ -24,16 +24,16 @@ def get_devices(hass, config):
             if isinstance(switch, pywemo.Switch)]
 
 
-def device_discovered(hass, config, info):
+def devices_discovered(hass, config, info):
     """ Called when a device is discovered. """
     _, discovery = get_pywemo()
 
     if discovery is None:
-        return
+        return []
 
     device = discovery.device_from_description(info)
 
-    return None if device is None else WemoSwitch(device)
+    return [] if device is None else [WemoSwitch(device)]
 
 
 def get_pywemo():

@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.helpers import (
     extract_entity_ids, platform_devices_from_config)
-from homeassistant.components import group, discovery
+from homeassistant.components import group, discovery, wink
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -29,8 +29,9 @@ ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 # Maps discovered services to their platforms
-DISCOVERY = {
-    discovery.services.BELKIN_WEMO: 'wemo'
+DISCOVERY_PLATFORMS = {
+    discovery.services.BELKIN_WEMO: 'wemo',
+    wink.DISCOVER_SWITCHES: 'wink',
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,22 +83,24 @@ def setup(hass, config):
 
     def switch_discovered(service, info):
         """ Called when a switch is discovered. """
-        platform = get_component("{}.{}".format(DOMAIN, DISCOVERY[service]))
+        platform = get_component("{}.{}".format(
+            DOMAIN, DISCOVERY_PLATFORMS[service]))
 
-        switch = platform.device_discovered(hass, config, info)
+        discovered = platform.device_discovered(hass, config, info)
 
-        if switch is not None and switch not in switches.values():
-            switch.entity_id = util.ensure_unique_string(
-                ENTITY_ID_FORMAT.format(util.slugify(switch.get_name())),
-                switches.keys())
+        for switch in discovered:
+            if switch is not None and switch not in switches.values():
+                switch.entity_id = util.ensure_unique_string(
+                    ENTITY_ID_FORMAT.format(util.slugify(switch.get_name())),
+                    switches.keys())
 
-            switches[switch.entity_id] = switch
+                switches[switch.entity_id] = switch
 
-            switch.update_ha_state(hass)
+                switch.update_ha_state(hass)
 
-            switch_group.update_tracked_entity_ids(switches.keys())
+        switch_group.update_tracked_entity_ids(switches.keys())
 
-    discovery.listen(hass, discovery.services.BELKIN_WEMO, switch_discovered)
+    discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), switch_discovered)
 
     def handle_switch_service(service):
         """ Handles calls to the switch services. """
