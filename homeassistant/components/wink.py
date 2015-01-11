@@ -23,8 +23,6 @@ def setup(hass, config):
     """ Sets up the Wink component. """
     logger = logging.getLogger(__name__)
 
-    print(config)
-
     if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, logger):
         return False
 
