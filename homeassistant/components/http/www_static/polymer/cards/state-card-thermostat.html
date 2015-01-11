@@ -1,0 +1,40 @@
+<script src="../bower_components/moment/moment.js"></script>
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../components/state-info.html">
+
+<polymer-element name="state-card-thermostat" attributes="stateObj api">
+<template>
+  <style>
+  .state {
+    margin-left: 16px;
+    text-transform: capitalize;  
+    font-weight: 300;
+    font-size: 1.3rem;
+    text-align: right;
+  }
+
+  .extra {
+    text-transform: none;
+    font-size: 1rem;
+  }
+  </style>
+
+  <div horizontal justified layout> 
+    <state-info stateObj="{{stateObj}}"></state-info>
+    <div class='state'>
+      {{stateObj.stateDisplay}}
+      <template if="{{stateObj.attributes.target_temperature && stateObj.attributes.target_temperature != stateObj.state}}">
+        -> {{stateObj.attributes.target_temperature}} {{stateObj.attributes.unit_of_measurement}}
+      </template>
+
+      <div class='extra'>
+        Away mode is {{stateObj.attributes.away_mode}}
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+Polymer({});
+</script>
+</polymer-element>

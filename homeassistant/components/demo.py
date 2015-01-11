@@ -14,6 +14,8 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.components.light import (
     ATTR_XY_COLOR, ATTR_RGB_COLOR, ATTR_BRIGHTNESS, GROUP_NAME_ALL_LIGHTS)
+from homeassistant.components.thermostat import (
+    ATTR_TARGET_TEMPERATURE, ATTR_AWAY_MODE)
 from homeassistant.util import split_entity_id, color_RGB_to_xy
 
 DOMAIN = "demo"
@@ -156,6 +158,14 @@ def setup(hass, config):
                     {
                         'friendly_name': 'Outside humidity',
                         'unit_of_measurement': '%'
+                    })
+
+    # Nest demo
+    hass.states.set("thermostat.Nest", "15.6",
+                    {
+                        'unit_of_measurement': '°C',
+                        ATTR_TARGET_TEMPERATURE: '23.6',
+                        ATTR_AWAY_MODE: STATE_OFF
                     })
 
     return True

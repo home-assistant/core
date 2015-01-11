@@ -57,6 +57,13 @@ ATTR_ENTITY_PICTURE = "entity_picture"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
+# Temperature attribute
+ATTR_TEMPERATURE = "temperature"
+
+# #### MISC ####
+TEMP_CELCIUS = "°C"
+TEMP_FAHRENHEIT = "°F"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
