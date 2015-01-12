@@ -15,14 +15,12 @@ from homeassistant.external.netdisco.netdisco import DiscoveryService
 import homeassistant.external.netdisco.netdisco.const as services
 
 from homeassistant import bootstrap
-from homeassistant.const import EVENT_HOMEASSISTANT_START, ATTR_SERVICE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_SERVICE_DISCOVERED,
+    ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "discovery"
 DEPENDENCIES = []
-
-EVENT_SERVICE_DISCOVERED = "service_discovered"
-
-ATTR_DISCOVERED = "discovered"
 
 SCAN_INTERVAL = 300  # seconds
 
@@ -39,8 +37,10 @@ def listen(hass, service, callback):
     Service can be a string or a list/tuple.
     """
 
-    if not isinstance(service, str):
+    if isinstance(service, str):
         service = (service,)
+    else:
+        service = tuple(service)
 
     def discovery_event_listener(event):
         """ Listens for discovery events. """

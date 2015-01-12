@@ -214,28 +214,6 @@ class TestLight(unittest.TestCase):
              light.ATTR_XY_COLOR: [prof_x, prof_y]},
             data)
 
-    def test_setup(self):
-        """ Test the setup method. """
-        # Bogus config
-        self.assertFalse(light.setup(self.hass, {}))
-
-        self.assertFalse(light.setup(self.hass, {light.DOMAIN: {}}))
-
-        # Test with non-existing component
-        self.assertFalse(light.setup(
-            self.hass, {light.DOMAIN: {CONF_TYPE: 'nonexisting'}}
-        ))
-
-        # Test if light component returns 0 lightes
-        platform = loader.get_component('light.test')
-        platform.init(True)
-
-        self.assertEqual([], platform.get_lights(None, None))
-
-        self.assertFalse(light.setup(
-            self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
-        ))
-
     def test_light_profiles(self):
         """ Test light profiles. """
         platform = loader.get_component('light.test')

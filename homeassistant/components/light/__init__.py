@@ -52,12 +52,13 @@ import logging
 import os
 import csv
 
+from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.helpers import (
     extract_entity_ids, platform_devices_from_config)
-from homeassistant.components import group
+from homeassistant.components import group, discovery, wink
 
 
 DOMAIN = "light"
@@ -87,8 +88,12 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
-
 LIGHT_PROFILES_FILE = "light_profiles.csv"
+
+# Maps discovered services to their platforms
+DISCOVERY_PLATFORMS = {
+    wink.DISCOVER_LIGHTS: 'wink',
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,19 +171,41 @@ def setup(hass, config):
     lights = platform_devices_from_config(
         config, DOMAIN, hass, ENTITY_ID_FORMAT, _LOGGER)
 
-    if not lights:
-        return False
-
     # pylint: disable=unused-argument
     def update_lights_state(now):
         """ Update the states of all the lights. """
-        for light in lights.values():
-            light.update_ha_state(hass)
+        if lights:
+            _LOGGER.info("Updating light states")
+
+            for light in lights.values():
+                light.update_ha_state(hass)
 
     update_lights_state(None)
 
     # Track all lights in a group
-    group.Group(hass, GROUP_NAME_ALL_LIGHTS, lights.keys(), False)
+    light_group = group.Group(
+        hass, GROUP_NAME_ALL_LIGHTS, lights.keys(), False)
+
+    def light_discovered(service, info):
+        """ Called when a light is discovered. """
+        platform = get_component(
+            "{}.{}".format(DOMAIN, DISCOVERY_PLATFORMS[service]))
+
+        discovered = platform.devices_discovered(hass, config, info)
+
+        for light in discovered:
+            if light is not None and light not in lights.values():
+                light.entity_id = util.ensure_unique_string(
+                    ENTITY_ID_FORMAT.format(util.slugify(light.get_name())),
+                    lights.keys())
+
+                lights[light.entity_id] = light
+
+                light.update_ha_state(hass)
+
+        light_group.update_tracked_entity_ids(lights.keys())
+
+    discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), light_discovered)
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
