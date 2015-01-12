@@ -46,7 +46,7 @@ class NestThermostat(ThermostatDevice):
     @property
     def name(self):
         """ Returns the name of the nest, if any. """
-        return "Nest"  # TODO Possible to get actual name from Nest device?
+        return "Nest"
 
     @property
     def unit_of_measurement(self):
