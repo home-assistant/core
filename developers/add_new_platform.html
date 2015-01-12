@@ -130,6 +130,8 @@ Platform logic should not interface directly with the devices but use a third-pa
 </p>
 
 
+<p><a name='discovery'></a></p>
+
 <h2>Allowing your platform to be discovered</h2>
 
 <p>Home Assistant has a discovery service running in the background to discover new devices. Whenever a new device is discovered, an <code>SERVICE_DISCOVERED</code> event will be fired with the found service and the information. The <code>discovery</code> component has some knowledge about which components handle which type of services and will ensure those are loaded and listening before firing the <code>SERVICE_DISCOVERED</code> event.</p>

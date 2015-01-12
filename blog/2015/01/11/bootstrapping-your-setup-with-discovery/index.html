@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Category: component - Home Assistant</title>
+    <title>Bootstrapping your setup with Discovery - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Category: component">
+    <meta name="description" content="Home Assistant can now auto detect and setup certain devices in your network.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Category: component">
+    <meta property="og:title" content="Bootstrapping your setup with Discovery">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/categories/component/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Category: component">
+    <meta property="og:description" content="Home Assistant can now auto detect and setup certain devices in your network.">
     
     
     
@@ -84,39 +84,34 @@
         <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
-          <article class="page">
-
-  
+          <article class="post">
   <header>
-    <h1 class="title indent">
-      Category: Component
-    </h1>
-  </header>
-  <hr class="divider">
+  
+  <h1 class="title indent">Bootstrapping your setup with Discovery</h1>
   
 
-  <div id="archive-list">
   
-  
-  
+  <div class="meta clearfix">
     
-    <h2>2015</h2>
+
+
+
+
+
+
+
+
   
-    <article>
-      
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-11T21:49:08-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>11</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/">Bootstrapping your setup with Discovery</a></h1>
+<time datetime="2015-01-11T21:49:08-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 11, 2015</time>
     
-    <footer class="meta">
-      
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> less than one minute reading time</span>
+    
 
   <span>
     <i class="icon-tags"></i>
@@ -129,55 +124,41 @@
     </ul>
   </span>
 
-    </footer>
     
-    <hr class="divider">
+      <a class='comments'
+         href="#disqus_thread"
+         >Comments</a>
+    
   </div>
-
-</div>
-    </article>
   
-  
-  
-    <article>
-      
+</header>
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-04T13:29:07-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>04</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/">Hello PushBullet, nice talking to you</a></h1>
-    
-    <footer class="meta">
-      
 
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
 
-    </footer>
-    
-    <hr class="divider">
-  </div>
+  <p>Most people do not like configuring things. Things just have to work, out of the box. Reaching this scenario is the goal of what we are about to introduce: our new discovery component.</p>
 
-</div>
-    </article>
-  
-</div>
+<p>The discovery component will scan the WiFi network from time to time for connected zeroconf/mDNS and uPnP devices. The intial introduction is mainly focussed on getting the right architecture in place and discovers Belkin WeMo switches and Google Chromecasts connected to your network. When found, it will load and notify the appropritate component and it will be ready to use within seconds.</p>
+
+<p>Most devices still require some sort of interaction from the user after being discovered - be it a button being pressed or some sort of authentication. This is a challenge that will be solved in the future.</p>
+
+<p>To enable the discovery component, add the following to your <code>home-assistant.conf</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[discovery]</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A new <a href="/developers/add_new_platform.html#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
 
 
 </article>
+
+ 
+<section id="disqus">
+  <h3 class="indent title">Comments</h3>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
 
 
         </div>
@@ -194,15 +175,15 @@
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/categories/component/index.html"
-     data-counturl="https://home-assistant.io/blog/categories/component/index.html" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/"
+     data-counturl="https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/categories/component/index.html"
+         data-href="https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/"
          data-layout="button_count">
     </div>
   
@@ -233,10 +214,6 @@
   <h1 class="title delta">Other Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/">Bootstrapping your setup with Discovery</a>
-        </li>
       
     
       
@@ -303,7 +280,10 @@
   var disqus_shortname = 'home-assistant';
   
     
-    var disqus_script = 'count.js';
+    // var disqus_developer = 1;
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/';
+    var disqus_script = 'embed.js';
   
   (function () {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
