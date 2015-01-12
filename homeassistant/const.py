@@ -27,7 +27,7 @@ EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 EVENT_CALL_SERVICE = "call_service"
 EVENT_SERVICE_EXECUTED = "service_executed"
-EVENT_SERVICE_DISCOVERED = "service_discovered"
+EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 
 # #### STATES ####
 STATE_ON = 'on'

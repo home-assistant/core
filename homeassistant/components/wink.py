@@ -10,7 +10,8 @@ from homeassistant import bootstrap
 from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
-    EVENT_SERVICE_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED, CONF_ACCESS_TOKEN)
+    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED,
+    CONF_ACCESS_TOKEN)
 
 DOMAIN = "wink"
 DEPENDENCIES = []
@@ -43,7 +44,7 @@ def setup(hass, config):
                     hass.pool.add_worker()
 
             # Fire discovery event
-            hass.bus.fire(EVENT_SERVICE_DISCOVERED, {
+            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
                 ATTR_SERVICE: discovery_type,
                 ATTR_DISCOVERED: {}
             })

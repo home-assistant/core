@@ -1,10 +1,10 @@
 """
 Starts a service to scan in intervals for new devices.
 
-Will emit EVENT_SERVICE_DISCOVERED whenever a new service has been discovered.
+Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
 
 Knows which components handle certain types, will make sure they are
-loaded before the EVENT_SERVICE_DISCOVERED is fired.
+loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 
 """
 import logging
@@ -16,7 +16,7 @@ import homeassistant.external.netdisco.netdisco.const as services
 
 from homeassistant import bootstrap
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_SERVICE_DISCOVERED,
+    EVENT_HOMEASSISTANT_START, EVENT_PLATFORM_DISCOVERED,
     ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "discovery"
@@ -47,7 +47,7 @@ def listen(hass, service, callback):
         if event.data[ATTR_SERVICE] in service:
             callback(event.data[ATTR_SERVICE], event.data[ATTR_DISCOVERED])
 
-    hass.bus.listen(EVENT_SERVICE_DISCOVERED, discovery_event_listener)
+    hass.bus.listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
 
 
 def setup(hass, config):
@@ -71,7 +71,7 @@ def setup(hass, config):
                 if bootstrap.setup_component(hass, component, config):
                     hass.pool.add_worker()
 
-            hass.bus.fire(EVENT_SERVICE_DISCOVERED, {
+            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
                 ATTR_SERVICE: service,
                 ATTR_DISCOVERED: info
             })
