@@ -10,12 +10,14 @@ import homeassistant as ha
 import homeassistant.loader as loader
 from homeassistant.helpers import extract_entity_ids
 from homeassistant.const import (
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF,
-    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, CONF_LATITUDE, CONF_LONGITUDE)
+    SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    STATE_ON, STATE_OFF, TEMP_CELCIUS,
+    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.components.light import (
     ATTR_XY_COLOR, ATTR_RGB_COLOR, ATTR_BRIGHTNESS, GROUP_NAME_ALL_LIGHTS)
 from homeassistant.components.thermostat import (
-    ATTR_TARGET_TEMPERATURE, ATTR_AWAY_MODE)
+    ATTR_CURRENT_TEMPERATURE, ATTR_AWAY_MODE)
 from homeassistant.util import split_entity_id, color_RGB_to_xy
 
 DOMAIN = "demo"
@@ -161,10 +163,10 @@ def setup(hass, config):
                     })
 
     # Nest demo
-    hass.states.set("thermostat.Nest", "15.6",
+    hass.states.set("thermostat.Nest", "23",
                     {
-                        'unit_of_measurement': '°C',
-                        ATTR_TARGET_TEMPERATURE: '23.6',
+                        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELCIUS,
+                        ATTR_CURRENT_TEMPERATURE: '18',
                         ATTR_AWAY_MODE: STATE_OFF
                     })
 

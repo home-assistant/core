@@ -8,28 +8,30 @@
   <style>
   .state {
     margin-left: 16px;
-    text-transform: capitalize;  
-    font-weight: 300;
-    font-size: 1.3rem;
     text-align: right;
   }
 
-  .extra {
-    text-transform: none;
-    font-size: 1rem;
+  .target {
+      text-transform: capitalize;  
+      font-weight: 300;
+      font-size: 1.3rem;
+  }
+
+  .current {
+      color: darkgrey;
+      margin-top: -2px;
   }
   </style>
 
   <div horizontal justified layout> 
     <state-info stateObj="{{stateObj}}"></state-info>
     <div class='state'>
-      {{stateObj.stateDisplay}}
-      <template if="{{stateObj.attributes.target_temperature && stateObj.attributes.target_temperature != stateObj.state}}">
-        -> {{stateObj.attributes.target_temperature}} {{stateObj.attributes.unit_of_measurement}}
-      </template>
+      <div class='target'>
+        {{stateObj.stateDisplay}}
+      </div>
 
-      <div class='extra'>
-        Away mode is {{stateObj.attributes.away_mode}}
+      <div class='current'>
+        Currently: {{stateObj.attributes.current_temperature}} {{stateObj.attributes.unit_of_measurement}}
       </div>
     </div>
   </div>

@@ -26,7 +26,7 @@ SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
 SERVICE_TURN_AWAY_MODE_OFF = "turn_away_mode_off"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
-ATTR_TARGET_TEMPERATURE = "target_temperature"
+ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +59,8 @@ def set_temperature(hass, temperature, entity_id=None):
 def setup(hass, config):
     """ Setup thermostats. """
 
+    logger = logging.getLogger(__name__)
+
     thermostats = platform_devices_from_config(
         config, DOMAIN, hass, ENTITY_ID_FORMAT, _LOGGER)
 
@@ -69,7 +71,7 @@ def setup(hass, config):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_state(now):
         """ Update thermostat state. """
-        logging.getLogger(__name__).info("Update nest state")
+        logger.info("Updating nest state")
 
         for thermostat in thermostats.values():
             thermostat.update_ha_state(hass, True)
@@ -126,6 +128,59 @@ class ThermostatDevice(Device):
 
     # pylint: disable=no-self-use
 
+    @property
+    def state(self):
+        """ Returns the current state. """
+        return self.target_temperature
+
+    @property
+    def unit_of_measurement(self):
+        """ Returns the unit of measurement. """
+        return ""
+
+    @property
+    def device_state_attributes(self):
+        """ Returns device specific state attributes. """
+        return None
+
+    @property
+    def state_attributes(self):
+        """ Returns optional state attributes. """
+        data = {
+            ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
+            ATTR_CURRENT_TEMPERATURE: self.current_temperature
+        }
+
+        is_away = self.is_away_mode_on
+
+        if is_away is not None:
+            data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
+
+        device_attr = self.device_state_attributes
+
+        if device_attr is not None:
+            data.update(device_attr)
+
+        return data
+
+    @property
+    def current_temperature(self):
+        """ Returns the current temperature. """
+        raise NotImplementedError
+
+    @property
+    def target_temperature(self):
+        """ Returns the temperature we try to reach. """
+        raise NotImplementedError
+
+    @property
+    def is_away_mode_on(self):
+        """
+        Returns if away mode is on.
+        Return None if no away mode available.
+        """
+        return None
+
     def set_temperate(self, temperature):
         """ Set new target temperature. """
         pass
@@ -137,33 +192,3 @@ class ThermostatDevice(Device):
     def turn_away_mode_off(self):
         """ Turns away mode off. """
         pass
-
-    def is_away_mode_on(self):
-        """ Returns if away mode is on. """
-        return False
-
-    def get_target_temperature(self):
-        """ Returns the temperature we try to reach. """
-        return None
-
-    def get_unit_of_measurement(self):
-        """ Returns the unit of measurement. """
-        return ""
-
-    def get_device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return {}
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        data = {
-            ATTR_UNIT_OF_MEASUREMENT: self.get_unit_of_measurement(),
-            ATTR_AWAY_MODE: STATE_ON if self.is_away_mode_on() else STATE_OFF
-        }
-
-        target_temp = self.get_target_temperature()
-
-        if target_temp is not None:
-            data[ATTR_TARGET_TEMPERATURE] = target_temp
-
-        return data

@@ -29,9 +29,7 @@ def get_devices(hass, config):
 
         return []
 
-    thermostat = NestThermostat(username, password)
-
-    return [thermostat]
+    return [NestThermostat(username, password)]
 
 
 class NestThermostat(ThermostatDevice):
@@ -41,16 +39,39 @@ class NestThermostat(ThermostatDevice):
         # pylint: disable=no-name-in-module, import-error
         import homeassistant.external.pynest.nest as pynest
 
-        self.nest = pynest.Nest(username, password, None)
+        self.nest = pynest.Nest(username, password)
         self.nest.login()
+        self.update()
 
-    def get_name(self):
+    @property
+    def name(self):
         """ Returns the name of the nest, if any. """
         return "Nest"  # TODO Possible to get actual name from Nest device?
 
-    def get_state(self):
+    @property
+    def unit_of_measurement(self):
+        """ Returns the unit of measurement. """
+        return TEMP_FAHRENHEIT if self.nest.units == 'F' else TEMP_CELCIUS
+
+    @property
+    def device_state_attributes(self):
+        """ Returns device specific state attributes. """
+        return None
+
+    @property
+    def current_temperature(self):
         """ Returns the current temperature. """
         return self.nest.get_curtemp()
+
+    @property
+    def target_temperature(self):
+        """ Returns the temperature we try to reach. """
+        return self.nest.get_tartemp()
+
+    @property
+    def is_away_mode_on(self):
+        """ Returns if away mode is on. """
+        return self.nest.is_away()
 
     def set_temperature(self, temperature):
         """ Set new target temperature """
@@ -64,18 +85,6 @@ class NestThermostat(ThermostatDevice):
         """ Turns away off. """
         self.nest.set_away("here")
 
-    def is_away_mode_on(self):
-        """ Returns if away mode is on. """
-        return self.nest.is_away()
-
-    def get_target_temperature(self):
-        """ Returns the temperature we try to reach. """
-        return self.nest.get_tartemp()
-
-    def get_unit_of_measurement(self):
-        """ Returns the unit of measurement. """
-        return TEMP_FAHRENHEIT if self.nest.units == 'F' else TEMP_CELCIUS
-
-    def get_device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return {}
+    def update(self):
+        """ Update nest. """
+        self.nest.get_status()
