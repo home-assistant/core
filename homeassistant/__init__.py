@@ -552,6 +552,7 @@ class StateMachine(object):
         not be affected.
         """
 
+        new_state = str(new_state)
         attributes = attributes or {}
 
         with self._lock:

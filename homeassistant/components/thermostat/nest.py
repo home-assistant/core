@@ -22,69 +22,77 @@ def get_devices(hass, config):
         return []
 
     try:
-        # pylint: disable=no-name-in-module, unused-variable
-        import homeassistant.external.pynest.nest as pynest  # noqa
+        import nest
     except ImportError:
-        logger.exception("Error while importing dependency phue.")
+        logger.exception(
+            "Error while importing dependency nest. "
+            "Did you maybe not install the python-nest dependency?")
 
         return []
 
-    return [NestThermostat(username, password)]
+    napi = nest.Nest(username, password)
+
+    return [
+        NestThermostat(structure, device)
+        for structure in napi.structures
+        for device in structure.devices]
 
 
 class NestThermostat(ThermostatDevice):
     """ Represents a Nest thermostat within Home Assistant. """
 
-    def __init__(self, username, password):
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.external.pynest.nest as pynest
-
-        self.nest = pynest.Nest(username, password)
-        self.nest.login()
-        self.update()
+    def __init__(self, structure, device):
+        self.structure = structure
+        self.device = device
 
     @property
     def name(self):
         """ Returns the name of the nest, if any. """
-        return "Nest"
+        return self.device.name
 
     @property
     def unit_of_measurement(self):
         """ Returns the unit of measurement. """
-        return TEMP_FAHRENHEIT if self.nest.units == 'F' else TEMP_CELCIUS
+        return TEMP_CELCIUS
 
     @property
     def device_state_attributes(self):
         """ Returns device specific state attributes. """
-        return None
+        # Move these to Thermostat Device and make them global
+        return {
+            "humidity": self.device.humidity,
+            "target_humidity": self.device.target_humidity,
+            "fan": self.device.fan,
+            "mode": self.device.mode
+        }
 
     @property
     def current_temperature(self):
         """ Returns the current temperature. """
-        return self.nest.get_curtemp()
+        return round(self.device.temperature, 1)
 
     @property
     def target_temperature(self):
         """ Returns the temperature we try to reach. """
-        return self.nest.get_tartemp()
+        return round(self.device.target, 1)
 
     @property
     def is_away_mode_on(self):
         """ Returns if away mode is on. """
-        return self.nest.is_away()
+        return self.structure.away
 
     def set_temperature(self, temperature):
         """ Set new target temperature """
-        self.nest.set_temperature(temperature)
+        self.device.target = temperature
 
     def turn_away_mode_on(self):
         """ Turns away on. """
-        self.nest.set_away("away")
+        self.structure.away = True
 
     def turn_away_mode_off(self):
         """ Turns away off. """
-        self.nest.set_away("here")
+        self.structure.away = False
 
     def update(self):
-        """ Update nest. """
-        self.nest.get_status()
+        """ Python-nest has its own mechanism for staying up to date. """
+        pass
