@@ -4,8 +4,7 @@ Adds support for Nest thermostats.
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
 
 # pylint: disable=unused-argument
