@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Hello PushBullet, nice talking to you - Home Assistant</title>
+    <title>Nest in the house! - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Introducing the new notify component and PushBullet platform">
+    <meta name="description" content="Home Assistant has added Nest to its list of supported products.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Hello PushBullet, nice talking to you">
+    <meta property="og:title" content="Nest in the house!">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Introducing the new notify component and PushBullet platform">
+    <meta property="og:description" content="Home Assistant has added Nest to its list of supported products.">
     
     
     
@@ -87,7 +87,7 @@
           <article class="post">
   <header>
   
-  <h1 class="title indent">Hello PushBullet, nice talking to you</h1>
+  <h1 class="title indent">Nest in the house!</h1>
   
 
   
@@ -104,13 +104,13 @@
   
 
 
-<time datetime="2015-01-04T13:29:07-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 4, 2015</time>
+<time datetime="2015-01-13T08:29:04-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 13, 2015</time>
     
   
 
 <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
 
-    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span><i class='icon-time'></i> less than one minute reading time</span>
     
 
   <span>
@@ -136,50 +136,25 @@
 
 
 
-  <p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn&rsquo;t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
-
-<p>The new notify component will take in messages and tells them to the user. For now this will be powered by the very awesome <a href="https://www.pushbullet.com/">PushBullet</a> but any other messaging platform can be easily added.</p>
+  <p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we&rsquo;re expanding the supported devices. Today, we&rsquo;re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
 
 <p class='img'>
-  <img src='/images/screenshots/pushbullet_moto360.png' />
-  A message triggered by the simple_alarm component is shown by PushBullet on the Moto360.
+  <img src='/images/screenshots/nest-thermostat-card.png' />
 </p>
 
 
-<p>Read on to learn how to enable the notify component and integrate it with other components.</p>
+<p>The new integration exists out of two parts: a generic thermostat component and a Nest platform implementation. The initial version implements provides a read-only card and services to control it. The plan is in the future to add temperature and away mode controls from the thermostat card and more info dialog. Internally, we are using the Python package <a href="https://github.com/jkoelker/python-nest">python-nest by jkoelker</a> to talk to the Nest.</p>
 
-<a name="read-more"></a>
-
-
-<h3>Enabling the notify component</h3>
-
-<p>To enable the new notify component, add the following to your <code>home-assistant.conf</code>:</p>
+<p>If you own a Nest thermostat, add the following lines to your <code>home-assistant.conf</code>:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[notify]
-</span><span class='line'>platform=pushbullet
-</span><span class='line'>api_key=ABCDEFGHJKLMNOPQRSTUVXYZ</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You can get your api key from <a href="https://www.pushbullet.com/account">your account page on PushBullet.com</a>.</p>
-
-<h3>Sending messages from your component</h3>
-
-<p>To be able to send messages, the notify component has to be loaded and initialized successfully.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.loader</span> <span class="kn">as</span> <span class="nn">loader</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">notify</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_component</span><span class="p">(</span><span class="s">&#39;notify&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">notify</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&quot;Hello from my component!&quot;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[thermostat]
+</span><span class='line'>platform=nest
+</span><span class='line'>username=YOUR_USERNAME
+</span><span class='line'>password=YOUR_PASSWORD</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -207,15 +182,15 @@
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"
-     data-counturl="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/"
+     data-counturl="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"
+         data-href="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/"
          data-layout="button_count">
     </div>
   
@@ -247,10 +222,6 @@
   <ul class="divided">
     
       
-        <li class="post">
-          <a href="/blog/2015/01/13/nest-in-da-house/">Nest in the house!</a>
-        </li>
-      
     
       
         <li class="post">
@@ -258,6 +229,10 @@
         </li>
       
     
+      
+        <li class="post">
+          <a href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/">Hello PushBullet, nice talking to you</a>
+        </li>
       
     
       
@@ -319,8 +294,8 @@
   
     
     // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/';
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/01/13/nest-in-da-house/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/01/13/nest-in-da-house/';
     var disqus_script = 'embed.js';
   
   (function () {

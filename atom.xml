@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-01-11T22:44:18-08:00</updated>
+  <updated>2015-01-13T08:35:22-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,34 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Nest in the house!]]></title>
+    <link href="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/"/>
+    <updated>2015-01-13T08:29:04-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/01/13/nest-in-da-house</id>
+    <content type="html"><![CDATA[<p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we&rsquo;re expanding the supported devices. Today, we&rsquo;re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/screenshots/nest-thermostat-card.png' />
+</p>
+
+
+<p>The new integration exists out of two parts: a generic thermostat component and a Nest platform implementation. The initial version implements provides a read-only card and services to control it. The plan is in the future to add temperature and away mode controls from the thermostat card and more info dialog. Internally, we are using the Python package <a href="https://github.com/jkoelker/python-nest">python-nest by jkoelker</a> to talk to the Nest.</p>
+
+<p>If you own a Nest thermostat, add the following lines to your <code>home-assistant.conf</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[thermostat]
+</span><span class='line'>platform=nest
+</span><span class='line'>username=YOUR_USERNAME
+</span><span class='line'>password=YOUR_PASSWORD</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Bootstrapping your setup with Discovery]]></title>
