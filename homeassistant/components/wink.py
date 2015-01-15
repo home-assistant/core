@@ -39,9 +39,7 @@ def setup(hass, config):
 
             # Ensure component is loaded
             if component.DOMAIN not in hass.components:
-                # Add a worker on succesfull setup
-                if bootstrap.setup_component(hass, component.DOMAIN, config):
-                    hass.pool.add_worker()
+                bootstrap.setup_component(hass, component.DOMAIN, config)
 
             # Fire discovery event
             hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
