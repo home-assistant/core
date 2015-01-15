@@ -55,7 +55,9 @@ Polymer({
     this.setService(domain, service);
     this.$.inputData.value = serviceData;
     // this.$.inputDataWrapper.update();
-    this.$.dialog.toggle();
+    this.job('showDialogAfterRender', function() {
+      this.$.dialog.toggle();
+    }.bind(this));
   },
 
   setService: function(domain, service) {

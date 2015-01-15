@@ -60,7 +60,9 @@ Polymer({
     this.setState(state);
     this.setStateData(stateData);
 
-    this.$.dialog.toggle();
+    this.job('showDialogAfterRender', function() {
+      this.$.dialog.toggle();
+    }.bind(this));
   },
 
   setEntityId: function(entityId) {

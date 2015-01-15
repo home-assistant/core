@@ -29,23 +29,23 @@
 Polymer({
   stateObj: {},
 
-  // observe: {
-  //   'stateObj.attributes': 'reposition'
-  // },
+  observe: {
+    'stateObj.attributes': 'reposition'
+  },
 
   /**
    * Whenever the attributes change, the more info component can
    * hide or show elements. We will reposition the dialog.
    * DISABLED FOR NOW - BAD UX
    */
-  // reposition: function(oldVal, newVal) {
+  reposition: function(oldVal, newVal) {
     // Only resize if already open
-    // if(this.$.dialog.opened) {
-    //   this.job('resizeAfterLayoutChange', function() {
-    //     this.$.dialog.resizeHandler();
-    //   }.bind(this));
-    // }
-  // },
+    if(this.$.dialog.opened) {
+      this.job('resizeAfterLayoutChange', function() {
+        this.$.dialog.resizeHandler();
+      }.bind(this), 1000);
+    }
+  },
 
   show: function(stateObj) {
     this.stateObj = stateObj;

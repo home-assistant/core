@@ -8,6 +8,14 @@
         font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
 
         min-width: 350px;
+        max-width: 700px;
+
+        /* First two are from core-transition-bottom */
+        transition:
+          transform 0.2s ease-in-out,
+          opacity 0.2s ease-in,
+          top .3s,
+          left .3s !important;
       }
 
       :host .sidebar {

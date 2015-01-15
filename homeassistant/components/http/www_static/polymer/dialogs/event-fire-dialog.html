@@ -55,7 +55,9 @@ Polymer({
     this.setEventType(eventType);
     this.setEventData(eventData);
 
-    this.$.dialog.toggle();
+    this.job('showDialogAfterRender', function() {
+      this.$.dialog.toggle();
+    }.bind(this));
   },
 
   setEventType: function(eventType) {

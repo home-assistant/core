@@ -13,12 +13,6 @@
     layered: true,
     backdrop: true,
     transition: 'core-transition-bottom',
-
-    domReady: function() {
-      this.addEventListener('core-overlay-open-completed', function() {
-        this.resizeHandler();
-      }.bind(this));
-    },
   });
 </script>
 </polymer-element>
