@@ -4,7 +4,7 @@
 <link rel="import" href="../cards/state-card-content.html">
 <link rel="import" href="../more-infos/more-info-content.html">
 
-<polymer-element name="state-card-dialog" attributes="api">
+<polymer-element name="more-info-dialog" attributes="api">
 <template>
   <ha-action-dialog id="dialog">
 
@@ -20,20 +20,14 @@
       <more-info-content stateObj="{{stateObj}}" api="{{api}}"></more-info-content>
     </div>
 
-    <paper-button dismissive>Dismiss</paper-button>
-    <paper-button affirmative on-click={{editClicked}}>Edit State</paper-button>
+    <paper-button dismissive on-click={{editClicked}}>Debug</paper-button>
+    <paper-button affirmative>Dismiss</paper-button>
   </ha-action-dialog>
 
 </template>
 <script>
 Polymer({
   stateObj: {},
-
-  // domReady: function() {
-  //   this.$.dialog.addEventListener('core-overlay-open-completed', function() {
-  //     this.$.dialog.resizeHandler();
-  //   }.bind(this));
-  // },
 
   show: function(stateObj) {
     this.stateObj = stateObj;
