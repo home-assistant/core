@@ -10,7 +10,11 @@
 <polymer-element name="event-fire-dialog" attributes="api">
 <template>
 
-  <ha-action-dialog id="dialog" heading="Fire Event" class='two-column'>
+  <ha-action-dialog
+    id="dialog"
+    heading="Fire Event"
+    class='two-column'
+    closeSelector='[dismissive]'>
 
     <div layout horizontal>
       <div class='ha-form'>
@@ -68,15 +72,15 @@ Polymer({
   },
 
   clickFireEvent: function() {
-    var data;
-
-    if(this.$.inputData.value !== "") {
-      data = JSON.parse(this.$.inputData.value);
-    } else {
-      data = {};
+    try {
+      this.api.fire_event(
+        this.$.inputType.value,
+        this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
+      this.$.dialog.close();
+    
+    } catch (err) {
+      alert("Error parsing JSON: " + err);
     }
-
-    this.api.fire_event(this.$.inputType.value, data);
   }
 });
 </script>
