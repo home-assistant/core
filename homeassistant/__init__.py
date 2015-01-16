@@ -220,10 +220,10 @@ def _process_match_param(parameter):
     """ Wraps parameter in a list if it is not one and returns it. """
     if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL
-    elif isinstance(parameter, list):
-        return parameter
-    else:
+    elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return (parameter,)
+    else:
+        return tuple(parameter)
 
 
 def _matcher(subject, pattern):
@@ -592,7 +592,7 @@ class StateMachine(object):
         if isinstance(entity_ids, str):
             entity_ids = (entity_ids.lower(),)
         else:
-            entity_ids = [entity_id.lower() for entity_id in entity_ids]
+            entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
         @ft.wraps(action)
         def state_listener(event):

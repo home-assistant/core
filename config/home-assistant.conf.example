@@ -79,3 +79,26 @@ unknown_light=group.living_room
 [browser]
 
 [keyboard]
+
+[automation]
+platform=state
+alias=Sun starts shining
+
+state_entity_id=sun.sun
+# Next two are optional, omit to match all
+state_from=below_horizon
+state_to=above_horizon
+
+execute_service=light.turn_off
+service_entity_id=group.living_room
+
+[automation 2]
+platform=time
+alias=Beer o Clock
+
+time_hours=16
+time_minutes=0
+time_seconds=0
+
+execute_service=notify.notify
+execute_service_data={"message":"It's 4, time for beer!"}
