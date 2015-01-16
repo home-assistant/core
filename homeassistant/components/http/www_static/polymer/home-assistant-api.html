@@ -6,7 +6,7 @@
 <link rel="import" href="dialogs/event-fire-dialog.html">
 <link rel="import" href="dialogs/service-call-dialog.html">
 <link rel="import" href="dialogs/state-set-dialog.html">
-<link rel="import" href="dialogs/state-card-dialog.html">
+<link rel="import" href="dialogs/more-info-dialog.html">
 
 <script>
   var ha = {};
@@ -36,7 +36,7 @@
     <event-fire-dialog id="eventDialog" api={{api}}></event-fire-dialog>
     <service-call-dialog id="serviceDialog" api={{api}}></service-call-dialog>
     <state-set-dialog id="stateSetDialog" api={{api}}></state-set-dialog>
-    <state-card-dialog id="stateCardDialog" api={{api}}></state-card-dialog>
+    <more-info-dialog id="moreInfoDialog" api={{api}}></more-info-dialog>
   </template>
   <script>
   var domainsWithCard = ['thermostat'];
@@ -395,8 +395,8 @@
     },
 
     // show dialogs
-    showStateCardDialog: function(entityId) {
-      this.$.stateCardDialog.show(this.getState(entityId));
+    showmoreInfoDialog: function(entityId) {
+      this.$.moreInfoDialog.show(this.getState(entityId));
     },
 
     showEditStateDialog: function(entityId) {

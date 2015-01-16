@@ -73,7 +73,7 @@ def setup(hass, config):
             logger.info("Updating switch states")
 
             for switch in switches.values():
-                switch.update_ha_state(hass)
+                switch.update_ha_state(hass, True)
 
     update_states(None)
 

@@ -17,7 +17,7 @@ from collections import defaultdict
 import homeassistant
 import homeassistant.loader as loader
 import homeassistant.components as core_components
-
+import homeassistant.components.group as group
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,11 @@ def setup_component(hass, domain, config=None):
             hass.components.append(component.DOMAIN)
 
             _LOGGER.info("component %s initialized", domain)
+
+            # Assumption: if a component does not depend on groups
+            # it communicates with devices
+            if group.DOMAIN not in component.DEPENDENCIES:
+                hass.pool.add_worker()
 
             return True
 
@@ -75,18 +80,8 @@ def from_config_dict(config, hass=None):
     _LOGGER.info("Home Assistant core initialized")
 
     # Setup the components
-
-    # We assume that all components that load before the group component loads
-    # are components that poll devices. As their tasks are IO based, we will
-    # add an extra worker for each of them.
-    add_worker = True
-
     for domain in loader.load_order_components(components):
-        if setup_component(hass, domain, config):
-            add_worker = add_worker and domain != "group"
-
-            if add_worker:
-                hass.pool.add_worker()
+        setup_component(hass, domain, config)
 
     return hass
 

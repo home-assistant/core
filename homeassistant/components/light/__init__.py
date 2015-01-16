@@ -178,7 +178,7 @@ def setup(hass, config):
             _LOGGER.info("Updating light states")
 
             for light in lights.values():
-                light.update_ha_state(hass)
+                light.update_ha_state(hass, True)
 
     update_lights_state(None)
 
@@ -196,7 +196,7 @@ def setup(hass, config):
         for light in discovered:
             if light is not None and light not in lights.values():
                 light.entity_id = util.ensure_unique_string(
-                    ENTITY_ID_FORMAT.format(util.slugify(light.get_name())),
+                    ENTITY_ID_FORMAT.format(util.slugify(light.name)),
                     lights.keys())
 
                 lights[light.entity_id] = light

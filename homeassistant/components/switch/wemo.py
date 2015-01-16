@@ -86,7 +86,7 @@ class WemoSwitch(ToggleDevice):
     @property
     def is_on(self):
         """ True if switch is on. """
-        return self.wemo.get_state(True)
+        return self.wemo.get_state()
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
@@ -95,3 +95,7 @@ class WemoSwitch(ToggleDevice):
     def turn_off(self):
         """ Turns the switch off. """
         self.wemo.off()
+
+    def update(self):
+        """ Update Wemo state. """
+        self.wemo.get_state(True)

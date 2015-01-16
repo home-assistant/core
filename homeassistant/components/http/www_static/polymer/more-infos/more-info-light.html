@@ -8,6 +8,10 @@
   <style>
     .brightness {
       margin-bottom: 8px;
+
+      max-height: 0px;
+      overflow: hidden;
+      transition: max-height .5s ease-in;
     }
 
     .brightness paper-slider::shadow #sliderKnobInner,
@@ -19,16 +23,32 @@
       display: block;
       width: 350px;
       margin: 0 auto;
+
+      max-height: 0px;
+      overflow: hidden;
+      transition: max-height .5s ease-in .3s;
     }
+
+    :host-context(.has-brightness) .brightness {
+      max-height: 500px;
+    }
+
+    :host-context(.has-xy_color) color-picker {
+      max-height: 500px;
+    }
+
   </style>
   <div>
-    <div center horizontal layout class='brightness'>
-      <div>Brightness</div>
-      <paper-slider
-        max="255" flex id='brightness'
-        on-core-change="{{brightnessSliderChanged}}">
-      </paper-slider>
+    <div class='brightness'>
+      <div center horizontal layout>
+        <div>Brightness</div>
+        <paper-slider
+          max="255" flex id='brightness'
+          on-core-change="{{brightnessSliderChanged}}">
+        </paper-slider>
+      </div>
     </div>
+
     <color-picker id="colorpicker" width="350" height="200">
     </color-picker>
   </div>
@@ -48,7 +68,7 @@ Polymer({
   brightnessChanged: function(oldVal, newVal) {
     this.ignoreNextBrightnessEvent = true;
 
-    this.$.brightness.value = newVal;
+    this.$.brightness.value = newVal;  
   },
 
   domReady: function() {

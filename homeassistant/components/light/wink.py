@@ -4,8 +4,9 @@ import logging
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.wink.pywink as pywink
 
-from homeassistant.helpers import ToggleDevice
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACCESS_TOKEN
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.wink import WinkToggleDevice
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 
 # pylint: disable=unused-argument
@@ -35,29 +36,28 @@ def get_lights():
     return [WinkLight(light) for light in pywink.get_bulbs()]
 
 
-class WinkLight(ToggleDevice):
+class WinkLight(WinkToggleDevice):
     """ Represents a Wink light """
 
-    def __init__(self, wink):
-        self.wink = wink
-        self.state_attr = {ATTR_FRIENDLY_NAME: wink.name()}
-
-    def get_name(self):
-        """ Returns the name of the light if any. """
-        return self.wink.name()
-
+    # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
-        """ Turns the light on. """
-        self.wink.setState(True)
+        """ Turns the switch on. """
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-    def turn_off(self):
-        """ Turns the light off. """
-        self.wink.setState(False)
+        if brightness is not None:
+            self.wink.setState(True, brightness / 255)
 
-    def is_on(self):
-        """ True if light is on. """
-        return self.wink.state()
+        else:
+            self.wink.setState(True)
 
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr
+    @property
+    def state_attributes(self):
+        attr = super().state_attributes
+
+        if self.is_on:
+            brightness = self.wink.brightness()
+
+            if brightness is not None:
+                attr[ATTR_BRIGHTNESS] = int(brightness * 255)
+
+        return attr

@@ -9,9 +9,17 @@
 
 <polymer-element name="state-set-dialog" attributes="api">
 <template>
-  <ha-action-dialog id="dialog" heading="Set State">
+  <ha-action-dialog
+    id="dialog"
+    heading="Set State"
+    closeSelector='[dismissive]'>
 
     <core-style ref='ha-dialog'></core-style>
+
+    <p>
+      This dialog will update the representation of the device within Home Assistant.<br />
+      This will not communicate with the actual device.
+    </p>
 
     <div layout horizontal>
       <div class='ha-form'>
@@ -52,7 +60,9 @@ Polymer({
     this.setState(state);
     this.setStateData(stateData);
 
-    this.$.dialog.toggle();
+    this.job('showDialogAfterRender', function() {
+      this.$.dialog.toggle();
+    }.bind(this));
   },
 
   setEntityId: function(entityId) {
@@ -77,12 +87,18 @@ Polymer({
     this.setStateData(state.attributes);
   },
 
-  clickSetState: function() {
-    this.api.set_state(
-      this.$.inputEntityID.value,
-      this.$.inputState.value,
-      JSON.parse(this.$.inputData.value)
+  clickSetState: function(ev) {
+    try {
+      this.api.set_state(
+        this.$.inputEntityID.value,
+        this.$.inputState.value,
+        this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {}
       );
+
+      this.$.dialog.close();
+    } catch (err) {
+      alert("Error parsing JSON: " + err);
+    }
   }
 });
 </script>

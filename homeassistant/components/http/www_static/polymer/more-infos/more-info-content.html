@@ -13,10 +13,16 @@
     }
   </style>
 
-  <div id='moreInfo'></div>
+  <div id='moreInfo' class='{{classNames}}'></div>
 </template>
 <script>
 Polymer({
+  classNames: '',
+
+  observe: {
+    'stateObj.attributes': 'stateAttributesChanged',
+  },
+
   stateObjChanged: function() {
     while (this.$.moreInfo.lastChild) {
       this.$.moreInfo.removeChild(this.$.moreInfo.lastChild);
@@ -25,8 +31,14 @@ Polymer({
     var moreInfo = document.createElement("more-info-" + this.stateObj.moreInfoType);
     moreInfo.api = this.api;
     moreInfo.stateObj = this.stateObj;
-    this.$.moreInfo.appendChild(moreInfo);    
-  }
+    this.$.moreInfo.appendChild(moreInfo);
+  },
+
+  stateAttributesChanged: function(oldVal, newVal) {
+    this.classNames = Object.keys(newVal).map(
+      function(key) { return "has-" + key; }).join(' ');
+  },
+
 });
 </script>
 </polymer-element>

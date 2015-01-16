@@ -153,11 +153,12 @@ def platform_devices_from_config(config, domain, hass,
     no_name_count = 0
 
     for device in devices:
-        name = device.name
+        # Get the name or set to default if none given
+        name = device.name or DEVICE_DEFAULT_NAME
 
         if name == DEVICE_DEFAULT_NAME:
             no_name_count += 1
-            name = "{} #{}".format(domain, no_name_count)
+            name = "{} {}".format(domain, no_name_count)
 
         entity_id = ensure_unique_string(
             entity_id_format.format(slugify(name)),

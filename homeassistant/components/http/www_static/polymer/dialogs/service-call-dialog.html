@@ -10,7 +10,10 @@
 <polymer-element name="service-call-dialog" attributes="api">
 <template>
 
-  <ha-action-dialog id="dialog" heading="Call Service">
+  <ha-action-dialog
+    id="dialog"
+    heading="Call Service"
+    closeSelector='[dismissive]'>
 
     <core-style ref='ha-dialog'></core-style>
 
@@ -45,14 +48,16 @@
 Polymer({
   ready: function() {
     // to ensure callback methods work..
-    this.serviceSelected = this.serviceSelected.bind(this)
+    this.serviceSelected = this.serviceSelected.bind(this);
   },
 
   show: function(domain, service, serviceData) {
     this.setService(domain, service);
     this.$.inputData.value = serviceData;
     // this.$.inputDataWrapper.update();
-    this.$.dialog.toggle();
+    this.job('showDialogAfterRender', function() {
+      this.$.dialog.toggle();
+    }.bind(this));
   },
 
   setService: function(domain, service) {
@@ -65,16 +70,17 @@ Polymer({
   },
 
   clickCallService: function() {
-    var data;
-
-    if(this.$.inputData.value != "") {
-      data = JSON.parse(this.$.inputData.value);
-    }
-
+    try {
     this.api.call_service(
       this.$.inputDomain.value,
       this.$.inputService.value,
-      data);
+      this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
+
+      this.$.dialog.close();
+    
+    } catch (err) {
+      alert("Error parsing JSON: " + err);
+    }
   }
 });
 </script>
