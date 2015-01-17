@@ -1,3 +1,8 @@
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
 # To build the frontend, you need node, bower and vulcanize
 # npm install -g bower vulcanize
 

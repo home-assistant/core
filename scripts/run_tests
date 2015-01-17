@@ -1,0 +1,6 @@
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
+python3 -m unittest discover tests
