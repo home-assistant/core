@@ -17,6 +17,8 @@ except ImportError:
 
     from homeassistant import bootstrap
 
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+
 
 def validate_dependencies():
     """ Validate all dependencies that HA uses. """
@@ -72,6 +74,10 @@ def main():
         metavar='path_to_config_dir',
         default="config",
         help="Directory that contains the Home Assistant configuration")
+    parser.add_argument(
+        '--open-ui',
+        action='store_true',
+        help='Open the webinterface in a browser')
 
     args = parser.parse_args()
 
@@ -82,6 +88,17 @@ def main():
     config_path = ensure_config_path(config_dir)
 
     hass = bootstrap.from_config_file(config_path)
+
+    if args.open_ui:
+        # pylint: disable=unused-argument
+        def open_browser(event):
+            """ Open the webinterface in a browser. """
+            if hass.local_api is not None:
+                import webbrowser
+                webbrowser.open(hass.local_api.base_url)
+
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
+
     hass.start()
     hass.block_till_stopped()
 

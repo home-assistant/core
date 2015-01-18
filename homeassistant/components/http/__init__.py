@@ -141,10 +141,7 @@ def setup(hass, config):
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
 
-    # If no local api set, set one with known information
-    if isinstance(hass, rem.HomeAssistant) and hass.local_api is None:
-        hass.local_api = \
-            rem.API(util.get_local_ip(), api_password, server_port)
+    hass.local_api = rem.API(util.get_local_ip(), api_password, server_port)
 
     return True
 

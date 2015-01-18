@@ -51,8 +51,14 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
+
+        # List of loaded components
         self.components = []
 
+        # Remote.API object pointing at local API
+        self.local_api = None
+
+        # Directory that holds the configuration
         self.config_dir = os.path.join(os.getcwd(), 'config')
 
     def get_config_path(self, path):
