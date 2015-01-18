@@ -86,7 +86,7 @@ import homeassistant as ha
 from homeassistant.const import (
     SERVER_PORT, URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, AUTH_HEADER)
-from homeassistant.helpers import validate_config, TrackStates
+from homeassistant.helpers import TrackStates
 import homeassistant.remote as rem
 import homeassistant.util as util
 from . import frontend
@@ -117,13 +117,18 @@ DATA_API_PASSWORD = 'api_password'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config):
+def setup(hass, config=None):
     """ Sets up the HTTP API and debug interface. """
 
-    if not validate_config(config, {DOMAIN: [CONF_API_PASSWORD]}, _LOGGER):
-        return False
+    if config is None or DOMAIN not in config:
+        config = {DOMAIN: {}}
 
-    api_password = config[DOMAIN][CONF_API_PASSWORD]
+    api_password = config[DOMAIN].get(CONF_API_PASSWORD)
+
+    no_password_set = api_password is None
+
+    if no_password_set:
+        api_password = util.get_random_string()
 
     # If no server host is given, accept all incoming requests
     server_host = config[DOMAIN].get(CONF_SERVER_HOST, '0.0.0.0')
@@ -132,9 +137,9 @@ def setup(hass, config):
 
     development = config[DOMAIN].get(CONF_DEVELOPMENT, "") == "1"
 
-    server = HomeAssistantHTTPServer((server_host, server_port),
-                                     RequestHandler, hass, api_password,
-                                     development)
+    server = HomeAssistantHTTPServer(
+        (server_host, server_port), RequestHandler, hass, api_password,
+        development, no_password_set)
 
     hass.bus.listen_once(
         ha.EVENT_HOMEASSISTANT_START,
@@ -155,13 +160,14 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development=False):
+                 hass, api_password, development, no_password_set):
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
         self.hass = hass
         self.api_password = api_password
         self.development = development
+        self.no_password_set = no_password_set
 
         # We will lazy init this one if needed
         self.event_forwarder = None
@@ -270,10 +276,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        api_password = self.headers.get(AUTH_HEADER)
+        if self.server.no_password_set:
+            api_password = self.server.api_password
+        else:
+            api_password = self.headers.get(AUTH_HEADER)
 
-        if not api_password and DATA_API_PASSWORD in data:
-            api_password = data[DATA_API_PASSWORD]
+            if not api_password and DATA_API_PASSWORD in data:
+                api_password = data[DATA_API_PASSWORD]
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -357,6 +366,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         else:
             app_url = "frontend-{}.html".format(frontend.VERSION)
 
+        # auto login if no password was set, else check api_password param
+        auth = (self.server.api_password if self.server.no_password_set
+                else data.get('api_password', ''))
+
         write(("<!doctype html>"
                "<html>"
                "<head><title>Home Assistant</title>"
@@ -375,7 +388,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                "     src='/static/webcomponents.min.js'></script>"
                "<link rel='import' href='/static/{}' />"
                "<splash-login auth='{}'></splash-login>"
-               "</body></html>").format(app_url, data.get('api_password', '')))
+               "</body></html>").format(app_url, auth))
 
     # pylint: disable=unused-argument
     def _handle_get_api(self, path_match, data):

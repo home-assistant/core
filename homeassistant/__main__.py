@@ -54,9 +54,8 @@ def ensure_config_path(config_dir):
     if not os.path.isfile(config_path):
         try:
             with open(config_path, 'w') as conf:
-                conf.write("[http]\n")
-                conf.write("api_password=password\n\n")
-                conf.write("[demo]\n")
+                conf.write("[http]\n\n")
+                conf.write("[demo]\n\n")
         except IOError:
             print(('Fatal Error: No configuration file found and unable '
                    'to write a default one to {}').format(config_path))

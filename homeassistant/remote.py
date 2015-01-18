@@ -112,17 +112,11 @@ class HomeAssistant(ha.HomeAssistant):
         self.states = StateMachine(self.bus, self.remote_api)
 
     def start(self):
-        # If there is no local API setup but we do want to connect with remote
-        # We create a random password and set up a local api
+        # Ensure a local API exists to connect with remote
         if self.local_api is None:
             import homeassistant.components.http as http
-            import random
 
-            # pylint: disable=too-many-format-args
-            random_password = '{:30}'.format(random.randrange(16**30))
-
-            http.setup(
-                self, {http.DOMAIN: {http.CONF_API_PASSWORD: random_password}})
+            http.setup(self)
 
         ha.Timer(self)
 

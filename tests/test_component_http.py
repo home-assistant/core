@@ -58,11 +58,6 @@ def tearDownModule():   # pylint: disable=invalid-name
 class TestHTTP(unittest.TestCase):
     """ Test the HTTP debug interface and API. """
 
-    def test_setup(self):
-        """ Test http.setup. """
-        self.assertFalse(http.setup(hass, {}))
-        self.assertFalse(http.setup(hass, {http.DOMAIN: {}}))
-
     def test_frontend_and_static(self):
         """ Tests if we can get the frontend. """
         req = requests.get(_url(""))

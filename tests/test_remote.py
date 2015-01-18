@@ -68,12 +68,13 @@ class TestRemoteMethods(unittest.TestCase):
         """ Test Python API validate_api. """
         self.assertEqual(remote.APIStatus.OK, remote.validate_api(master_api))
 
-        self.assertEqual(remote.APIStatus.INVALID_PASSWORD,
-                         remote.validate_api(
-                             remote.API("127.0.0.1", API_PASSWORD + "A")))
+        self.assertEqual(
+            remote.APIStatus.INVALID_PASSWORD,
+            remote.validate_api(
+                remote.API("127.0.0.1", API_PASSWORD + "A", 8122)))
 
-        self.assertEqual(remote.APIStatus.CANNOT_CONNECT,
-                         remote.validate_api(broken_api))
+        self.assertEqual(
+            remote.APIStatus.CANNOT_CONNECT, remote.validate_api(broken_api))
 
     def test_get_event_listeners(self):
         """ Test Python API get_event_listeners. """

@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 import re
 import enum
 import socket
+import random
+import string
 from functools import wraps
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
@@ -134,16 +136,16 @@ def convert(value, to_type, default=None):
 def ensure_unique_string(preferred_string, current_strings):
     """ Returns a string that is not present in current_strings.
         If preferred string exists will append _2, _3, .. """
-    string = preferred_string
+    test_string = preferred_string
     current_strings = list(current_strings)
 
     tries = 1
 
-    while string in current_strings:
+    while test_string in current_strings:
         tries += 1
-        string = "{}_{}".format(preferred_string, tries)
+        test_string = "{}_{}".format(preferred_string, tries)
 
-    return string
+    return test_string
 
 
 # Taken from: http://stackoverflow.com/a/11735897
@@ -161,6 +163,15 @@ def get_local_ip():
 
     except socket.error:
         return socket.gethostbyname(socket.gethostname())
+
+
+# Taken from http://stackoverflow.com/a/23728630
+def get_random_string(length=10):
+    """ Returns a random string with letters and digits. """
+    generator = random.SystemRandom()
+    source_chars = string.ascii_letters + string.digits
+
+    return ''.join(generator.choice(source_chars) for _ in range(length))
 
 
 class OrderedEnum(enum.Enum):

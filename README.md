@@ -45,13 +45,15 @@ pip3 install -r requirements.txt
 python3 -m homeassistant --open-ui
 ```
 
-This will start the Home Assistant server and create an initial configuration file in `config/home-assistant.conf` that is setup for demo mode. It will launch its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123). The default password is 'password'.
+This will start the Home Assistant server and launch its webinterface. By default Home Assistant looks for the configuration file `config/home-assistant.conf`. A standard configuration file will be written if none exists.
 
 If you're using Docker, you can use
 
 ```bash
 docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro --net=host balloob/home-assistant
 ```
+
+After you have launched the Docker image, navigate to its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123).
 
 After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in [/config/home-assistant.conf.example](https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example).
 
