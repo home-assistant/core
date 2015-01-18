@@ -33,12 +33,27 @@
         width: calc(25% - 42px);
       }
     }
+
+    .no-states-content {
+      max-width: 500px;
+      background-color: #fff;
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+      padding: 16px;
+      margin: 0 auto;
+    }
     </style>
 
     <div horizontal layout wrap>
 
       <template repeat="{{states as state}}">
         <state-card class="state-card" stateObj={{state}} api={{api}}></state-card>
+      </template>
+
+      <template if="{{states.length == 0}}">
+        <div class='no-states-content'>
+          <content></content>
+        </div>
       </template>
 
     </div>
