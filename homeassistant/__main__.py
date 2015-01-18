@@ -18,6 +18,7 @@ except ImportError:
     from homeassistant import bootstrap
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.components import http, demo
 
 
 def validate_dependencies():
@@ -55,7 +56,7 @@ def ensure_config_path(config_dir):
         try:
             with open(config_path, 'w') as conf:
                 conf.write("[http]\n\n")
-                conf.write("[demo]\n\n")
+                conf.write("[discovery]\n\n")
         except IOError:
             print(('Fatal Error: No configuration file found and unable '
                    'to write a default one to {}').format(config_path))
@@ -74,6 +75,10 @@ def main():
         default="config",
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
+        '--demo-mode',
+        action='store_true',
+        help='Start Home Assistant in demo mode')
+    parser.add_argument(
         '--open-ui',
         action='store_true',
         help='Open the webinterface in a browser')
@@ -86,7 +91,14 @@ def main():
 
     config_path = ensure_config_path(config_dir)
 
-    hass = bootstrap.from_config_file(config_path)
+    if args.demo_mode:
+        # Demo mode only requires http and demo components.
+        hass = bootstrap.from_config_dict({
+            http.DOMAIN: {},
+            demo.DOMAIN: {}
+        })
+    else:
+        hass = bootstrap.from_config_file(config_path)
 
     if args.open_ui:
         # pylint: disable=unused-argument

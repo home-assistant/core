@@ -61,6 +61,8 @@ def from_config_dict(config, hass=None):
     if hass is None:
         hass = homeassistant.HomeAssistant()
 
+    enable_logging(hass)
+
     loader.prepare(hass)
 
     # Make a copy because we are mutating it.
@@ -86,7 +88,7 @@ def from_config_dict(config, hass=None):
     return hass
 
 
-def from_config_file(config_path, hass=None, enable_logging=True):
+def from_config_file(config_path, hass=None):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -97,32 +99,6 @@ def from_config_file(config_path, hass=None, enable_logging=True):
 
         # Set config dir to directory holding config file
         hass.config_dir = os.path.abspath(os.path.dirname(config_path))
-
-    if enable_logging:
-        # Setup the logging for home assistant.
-        logging.basicConfig(level=logging.INFO)
-
-        # Log errors to a file if we have write access to file or config dir
-        err_log_path = hass.get_config_path("home-assistant.log")
-        err_path_exists = os.path.isfile(err_log_path)
-
-        # Check if we can write to the error log if it exists or that
-        # we can create files in the containgin directory if not.
-        if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
-           (not err_path_exists and os.access(hass.config_dir, os.W_OK)):
-
-            err_handler = logging.FileHandler(
-                err_log_path, mode='w', delay=True)
-
-            err_handler.setLevel(logging.WARNING)
-            err_handler.setFormatter(
-                logging.Formatter('%(asctime)s %(name)s: %(message)s',
-                                  datefmt='%H:%M %d-%m-%y'))
-            logging.getLogger('').addHandler(err_handler)
-
-        else:
-            _LOGGER.error(
-                "Unable to setup error log %s (access denied)", err_log_path)
 
     # Read config
     config = configparser.ConfigParser()
@@ -137,3 +113,30 @@ def from_config_file(config_path, hass=None, enable_logging=True):
             config_dict[section][key] = val
 
     return from_config_dict(config_dict, hass)
+
+
+def enable_logging(hass):
+    """ Setup the logging for home assistant. """
+    logging.basicConfig(level=logging.INFO)
+
+    # Log errors to a file if we have write access to file or config dir
+    err_log_path = hass.get_config_path("home-assistant.log")
+    err_path_exists = os.path.isfile(err_log_path)
+
+    # Check if we can write to the error log if it exists or that
+    # we can create files in the containing directory if not.
+    if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
+       (not err_path_exists and os.access(hass.config_dir, os.W_OK)):
+
+        err_handler = logging.FileHandler(
+            err_log_path, mode='w', delay=True)
+
+        err_handler.setLevel(logging.WARNING)
+        err_handler.setFormatter(
+            logging.Formatter('%(asctime)s %(name)s: %(message)s',
+                              datefmt='%H:%M %d-%m-%y'))
+        logging.getLogger('').addHandler(err_handler)
+
+    else:
+        _LOGGER.error(
+            "Unable to setup error log %s (access denied)", err_log_path)
