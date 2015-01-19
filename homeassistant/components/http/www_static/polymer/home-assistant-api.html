@@ -216,9 +216,7 @@
     },
 
     _pushNewStates: function(new_states) {
-      new_states.map(function(state) {
-        this._pushNewState(state);
-      }.bind(this));
+      new_states.forEach(this._pushNewState.bind(this));
     },
 
     // call api methods
@@ -238,11 +236,7 @@
 
     fetchStates: function(onSuccess, onError) {
       var successStatesUpdate = function(newStates) {
-        this._sortStates(newStates);
-
-        this.states = newStates.map(function(json) {
-          return new State(json, this);
-        }.bind(this));
+        this._pushNewStates(newStates);
 
         this.fire('states-updated');
 
