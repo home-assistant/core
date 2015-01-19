@@ -5,6 +5,7 @@ homeassistant.components.demo
 Sets up a demo environment that mimics interaction with devices
 """
 import random
+import time
 
 import homeassistant as ha
 import homeassistant.loader as loader
@@ -28,6 +29,7 @@ DEPENDENCIES = []
 def setup(hass, config):
     """ Setup a demo environment. """
     group = loader.get_component('group')
+    configurator = loader.get_component('configurator')
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
@@ -169,5 +171,31 @@ def setup(hass, config):
                         ATTR_CURRENT_TEMPERATURE: '18',
                         ATTR_AWAY_MODE: STATE_OFF
                     })
+
+    configurator_ids = []
+
+    def hue_configuration_callback(data):
+        """ Fake callback, mark config as done. """
+        time.sleep(2)
+
+        # First time it is called, pretend it failed.
+        if len(configurator_ids) == 1:
+            configurator.notify_errors(
+                hass, configurator_ids[0],
+                "Failed to register, please try again.")
+
+            configurator_ids.append(0)
+        else:
+            configurator.request_done(hass, configurator_ids[0])
+
+    request_id = configurator.request_config(
+        hass, "Philips Hue", hue_configuration_callback,
+        description=("Press the button on the bridge to register Philips Hue "
+                     "with Home Assistant."),
+        description_image="/static/images/config_philips_hue.jpg",
+        submit_caption="I have pressed the button"
+    )
+
+    configurator_ids.append(request_id)
 
     return True

@@ -1,0 +1,87 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+
+<polymer-element name="more-info-configurator" attributes="stateObj api">
+<template>
+  <style>
+    p {
+      margin: 8px 0;
+    }
+
+    p > img {
+      max-width: 100%;
+    }
+
+    p.error {
+      color: #C62828;
+    }
+
+    p.submit {
+      text-align: center;
+      height: 41px;
+    }
+
+    p.submit paper-spinner {
+      margin-right: 16px;
+    }
+
+    p.submit span {
+      display: inline-block;
+      vertical-align: top;
+      margin-top: 6px;
+    }
+  </style>
+
+  <div layout vertical>
+    <template if="{{stateObj.state == 'configure'}}">
+
+      <p hidden?="{{!stateObj.attributes.description}}">
+        {{stateObj.attributes.description}}
+      </p>
+
+      <p class='error' hidden?="{{!stateObj.attributes.errors}}">
+        Errors: {{stateObj.attributes.errors}}
+      </p>
+
+      <p hidden?="{{!stateObj.attributes.description_image}}">
+        <img src='{{stateObj.attributes.description_image}}' />
+      </p>
+
+      <p class='submit'>
+        <paper-button raised on-click="{{submitClicked}}"
+                      hidden?="{{action !== 'display'}}">
+          {{stateObj.attributes.submit_caption || "Set configuration"}}
+        </paper-button>
+
+        <span hidden?="{{action !== 'configuring'}}">
+          <paper-spinner active="true"></paper-spinner><span>Configuring…</span>
+        </span>
+      </p>
+
+    </template>
+  </div>
+</template>
+<script>
+  Polymer({
+    action: "display",
+
+    submitClicked: function() {
+      this.action = "configuring";
+      var data = {
+        configure_id: this.stateObj.attributes.configure_id
+      };
+
+      this.api.call_service('configurator', 'configure', data, {
+        success: function() {
+          this.action = 'display';
+          this.api.fetchAll();
+        }.bind(this),
+        error: function() {
+          this.action = 'display';
+        }.bind(this)
+      });
+    }
+  });
+</script>
+</polymer-element>

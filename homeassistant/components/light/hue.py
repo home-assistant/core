@@ -2,7 +2,9 @@
 import logging
 import socket
 from datetime import timedelta
+from urllib.parse import urlparse
 
+from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.helpers import ToggleDevice
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST
@@ -16,27 +18,57 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 PHUE_CONFIG_FILE = "phue.conf"
 
 
-def get_devices(hass, config):
+# Map ip to request id for configuring
+_CONFIGURING = {}
+_LOGGER = logging.getLogger(__name__)
+
+
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
-    logger = logging.getLogger(__name__)
     try:
         import phue
     except ImportError:
-        logger.exception("Error while importing dependency phue.")
+        _LOGGER.exception("Error while importing dependency phue.")
 
-        return []
+        return
 
-    host = config.get(CONF_HOST, None)
+    if discovery_info is not None:
+        host = urlparse(discovery_info).hostname
+    else:
+        host = config.get(CONF_HOST, None)
+
+    # Only act if we are not already configuring this host
+    if host in _CONFIGURING:
+        return
+
+    setup_bridge(host, hass, add_devices_callback)
+
+
+def setup_bridge(host, hass, add_devices_callback):
+    import phue
 
     try:
         bridge = phue.Bridge(
             host, config_file_path=hass.get_config_path(PHUE_CONFIG_FILE))
-    except socket.error:  # Error connecting using Phue
-        logger.exception((
-            "Error while connecting to the bridge. "
-            "Did you follow the instructions to set it up?"))
+    except ConnectionRefusedError:  # Wrong host was given
+        _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
 
-        return []
+        return
+
+    except phue.PhueRegistrationException:
+        _LOGGER.warning("Connected to Hue at %s but not registered.", host)
+
+        request_configuration(host, hass, add_devices_callback)
+
+        return
+
+    # If we came here and configuring this host, mark as done
+    if host in _CONFIGURING:
+        request_id = _CONFIGURING.pop(host)
+
+        configurator = get_component('configurator')
+
+        configurator.request_done(hass, request_id)
 
     lights = {}
 
@@ -47,25 +79,53 @@ def get_devices(hass, config):
             api = bridge.get_api()
         except socket.error:
             # socket.error when we cannot reach Hue
-            logger.exception("Cannot reach the bridge")
+            _LOGGER.exception("Cannot reach the bridge")
             return
 
         api_states = api.get('lights')
 
         if not isinstance(api_states, dict):
-            logger.error("Got unexpected result from Hue API")
+            _LOGGER.error("Got unexpected result from Hue API")
             return
+
+        new_lights = []
 
         for light_id, info in api_states.items():
             if light_id not in lights:
                 lights[light_id] = HueLight(int(light_id), info,
                                             bridge, update_lights)
+                new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
 
+        if new_lights:
+            add_devices_callback(new_lights)
+
     update_lights()
 
-    return list(lights.values())
+
+def request_configuration(host, hass, add_devices_callback):
+    """ Request configuration steps from the user. """
+    configurator = get_component('configurator')
+
+    # If this method called while we are configuring, means we got an error
+    if host in _CONFIGURING:
+        configurator.notify_errors(
+            hass, _CONFIGURING[host], "Failed to register, please try again.")
+
+        return
+
+    def hue_configuration_callback(data):
+        """ Actions to do when our configuration callback is called. """
+        setup_bridge(host, hass, add_devices_callback)
+
+    _CONFIGURING[host] = configurator.request_config(
+        hass, "Philips Hue", hue_configuration_callback,
+        description=("Press the button on the bridge to register Philips Hue "
+                     "with Home Assistant."),
+        description_image="/static/images/config_philips_hue.jpg",
+        submit_caption="I have pressed the button"
+    )
 
 
 class HueLight(ToggleDevice):

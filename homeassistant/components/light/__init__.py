@@ -57,7 +57,7 @@ import homeassistant.util as util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.helpers import (
-    extract_entity_ids, platform_devices_from_config)
+    generate_entity_id, extract_entity_ids, config_per_platform)
 from homeassistant.components import group, discovery, wink
 
 
@@ -93,6 +93,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
+    discovery.services.PHILIPS_HUE: 'hue',
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,8 +169,32 @@ def setup(hass, config):
 
                     return False
 
-    lights = platform_devices_from_config(
-        config, DOMAIN, hass, ENTITY_ID_FORMAT, _LOGGER)
+    # Dict to track entity_id -> lights
+    lights = {}
+
+    # Track all lights in a group
+    light_group = group.Group(hass, GROUP_NAME_ALL_LIGHTS, user_defined=False)
+
+    def add_lights(new_lights):
+        """ Add lights to the component to track. """
+        for light in new_lights:
+            if light is not None and light not in lights.values():
+                light.entity_id = generate_entity_id(
+                    ENTITY_ID_FORMAT, light.name, lights.keys())
+
+                lights[light.entity_id] = light
+
+                light.update_ha_state(hass)
+
+        light_group.update_tracked_entity_ids(lights.keys())
+
+    for p_type, p_config in config_per_platform(config, DOMAIN, _LOGGER):
+        platform = get_component(ENTITY_ID_FORMAT.format(p_type))
+
+        if platform is None:
+            _LOGGER.error("Unknown type specified: %s", p_type)
+
+        platform.setup_platform(hass, p_config, add_lights)
 
     # pylint: disable=unused-argument
     def update_lights_state(now):
@@ -182,28 +207,12 @@ def setup(hass, config):
 
     update_lights_state(None)
 
-    # Track all lights in a group
-    light_group = group.Group(
-        hass, GROUP_NAME_ALL_LIGHTS, lights.keys(), False)
-
     def light_discovered(service, info):
         """ Called when a light is discovered. """
         platform = get_component(
-            "{}.{}".format(DOMAIN, DISCOVERY_PLATFORMS[service]))
+            ENTITY_ID_FORMAT.format(DISCOVERY_PLATFORMS[service]))
 
-        discovered = platform.devices_discovered(hass, config, info)
-
-        for light in discovered:
-            if light is not None and light not in lights.values():
-                light.entity_id = util.ensure_unique_string(
-                    ENTITY_ID_FORMAT.format(util.slugify(light.name)),
-                    lights.keys())
-
-                lights[light.entity_id] = light
-
-                light.update_ha_state(hass)
-
-        light_group.update_tracked_entity_ids(lights.keys())
+        platform.setup_platform(hass, {}, add_lights, info)
 
     discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), light_discovered)
 

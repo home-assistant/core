@@ -12,6 +12,17 @@ from homeassistant.const import (
 from homeassistant.util import ensure_unique_string, slugify
 
 
+def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
+    if current_ids is None:
+        if hass is None:
+            raise RuntimeError("Missing required parameter currentids or hass")
+
+        current_ids = hass.states.entity_ids()
+
+    return ensure_unique_string(
+        entity_id_format.format(slugify(name)), current_ids)
+
+
 def extract_entity_ids(hass, service):
     """
     Helper method to extract a list of entity ids from a service call.
@@ -160,9 +171,8 @@ def platform_devices_from_config(config, domain, hass,
             no_name_count += 1
             name = "{} {}".format(domain, no_name_count)
 
-        entity_id = ensure_unique_string(
-            entity_id_format.format(slugify(name)),
-            device_dict.keys())
+        entity_id = generate_entity_id(
+            entity_id_format, name, device_dict.keys())
 
         device.entity_id = entity_id
         device_dict[entity_id] = device
