@@ -426,9 +426,11 @@ class State(object):
     state: the state of the entity
     attributes: extra information on entity and state
     last_changed: last time the state was changed, not the attributes.
+    last_updated: last time this object was updated.
     """
 
-    __slots__ = ['entity_id', 'state', 'attributes', 'last_changed']
+    __slots__ = ['entity_id', 'state', 'attributes',
+                 'last_changed', 'last_updated']
 
     def __init__(self, entity_id, state, attributes=None, last_changed=None):
         if not ENTITY_ID_PATTERN.match(entity_id):
@@ -439,13 +441,14 @@ class State(object):
         self.entity_id = entity_id
         self.state = state
         self.attributes = attributes or {}
+        self.last_updated = dt.datetime.now()
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
         # This behavior occurs because to_dict uses datetime_to_str
         # which does not preserve microseconds
         self.last_changed = util.strip_microseconds(
-            last_changed or dt.datetime.now())
+            last_changed or self.last_updated)
 
     def copy(self):
         """ Creates a copy of itself. """
@@ -527,15 +530,12 @@ class StateMachine(object):
     def get_since(self, point_in_time):
         """
         Returns all states that have been changed since point_in_time.
-
-        Note: States keep track of last_changed -without- microseconds.
-        Therefore your point_in_time will also be stripped of microseconds.
         """
         point_in_time = util.strip_microseconds(point_in_time)
 
         with self._lock:
             return [state for state in self._states.values()
-                    if state.last_changed >= point_in_time]
+                    if state.last_updated >= point_in_time]
 
     def is_state(self, entity_id, state):
         """ Returns True if entity exists and is specified state. """
