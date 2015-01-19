@@ -94,15 +94,17 @@
           </paper-dropdown>
         </paper-menu-button>
 
-        <div class="bottom fit" horizontal layout>
-            <paper-tabs id="tabsHolder" noink flex
-                        selected="0" on-core-select="{{tabClicked}}">
-            
-              <paper-tab>ALL</paper-tab>
-              <paper-tab data-filter='customgroup'>GROUPS</paper-tab>
-                
-            </paper-tabs>
-        </div>
+        <template if="{{hasCustomGroups}}">
+          <div class="bottom fit" horizontal layout>
+              <paper-tabs id="tabsHolder" noink flex
+                          selected="0" on-core-select="{{tabClicked}}">
+
+                <paper-tab>ALL</paper-tab>
+                <paper-tab data-filter='customgroup'>GROUPS</paper-tab>
+
+              </paper-tabs>
+          </div>
+        </template>
       </core-toolbar>
 
       <state-cards
