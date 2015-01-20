@@ -9,9 +9,9 @@ from datetime import timedelta
 from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.const import (
-    STATE_OPEN, STATE_CLOSED, ATTR_ENTITY_ID)
+    STATE_OPEN)
 from homeassistant.helpers import (
-    extract_entity_ids, platform_devices_from_config)
+    platform_devices_from_config)
 from homeassistant.components import group, discovery, wink
 
 DOMAIN = 'sensor'
@@ -38,6 +38,7 @@ def is_on(hass, entity_id=None):
     entity_id = entity_id or ENTITY_ID_ALL_SENSORS
 
     return hass.states.is_state(entity_id, STATE_OPEN)
+
 
 def setup(hass, config):
     """ Track states and offer events for sensors. """

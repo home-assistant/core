@@ -21,6 +21,7 @@ DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
 
+
 def setup(hass, config):
     """ Sets up the Wink component. """
     logger = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ def setup(hass, config):
             })
 
     return True
+
 
 class WinkSensorDevice(Device):
     """ represents a wink sensor within home assistant. """
@@ -87,6 +89,7 @@ class WinkSensorDevice(Device):
     def is_open(self):
         """ True if door is open. """
         return self.wink.state()
+
 
 class WinkToggleDevice(ToggleDevice):
     """ represents a WeMo switch within home assistant. """
