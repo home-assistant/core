@@ -17,9 +17,8 @@ from homeassistant.components import group, discovery, wink
 DOMAIN = 'switch'
 DEPENDENCIES = []
 
-GROUP_NAME_ALL_SWITCHES = 'all_switches'
-ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format(
-    GROUP_NAME_ALL_SWITCHES)
+GROUP_NAME_ALL_SWITCHES = 'all switches'
+ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

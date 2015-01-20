@@ -64,9 +64,8 @@ from homeassistant.components import group, discovery, wink
 DOMAIN = "light"
 DEPENDENCIES = []
 
-GROUP_NAME_ALL_LIGHTS = 'all_lights'
-ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format(
-    GROUP_NAME_ALL_LIGHTS)
+GROUP_NAME_ALL_LIGHTS = 'all lights'
+ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
