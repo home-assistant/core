@@ -87,8 +87,6 @@ class wink_sensor_pod(object):
     def __init__(self, aJSonObj, objectprefix="sensor_pods"):
         self.jsonState = aJSonObj
         self.objectprefix = objectprefix
-        # Tuple (desired state, time)
-        self._last_call = (0, None)
 
     def __str__(self):
         return "%s %s %s" % (self.name(), self.deviceId(), self.state())
@@ -104,11 +102,6 @@ class wink_sensor_pod(object):
         return self.jsonState.get('name', "Unknown Name")
 
     def state(self):
-        # Optimistic approach to setState:
-        # Within 15 seconds of a call to setState we assume it worked.
-        if self._recent_state_set():
-            return self._last_call[1]
-
         return self._last_reading.get('opened', False)
 
     def deviceId(self):
@@ -134,9 +127,6 @@ class wink_sensor_pod(object):
         :return:
         """
         self.jsonState = response_json.get('data')
-
-    def _recent_state_set(self):
-        return time.time() - self._last_call[0] < 15
 
 class wink_binary_switch(object):
     """ represents a wink.py switch
