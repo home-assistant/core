@@ -114,7 +114,6 @@ class DeviceTracker(object):
         dev_group = group.Group(
             hass, GROUP_NAME_ALL_DEVICES, user_defined=False)
 
-        # pylint: disable=unused-argument
         def reload_known_devices_service(service):
             """ Reload known devices file. """
             self._read_known_devices_file()

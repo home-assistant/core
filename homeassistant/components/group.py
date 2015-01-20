@@ -163,7 +163,6 @@ class Group(object):
         self.hass.bus.remove_listener(
             ha.EVENT_STATE_CHANGED, self._update_group_state)
 
-    # pylint: disable=unused-argument
     def _update_group_state(self, entity_id, old_state, new_state):
         """ Updates the group state based on a state change by
             a tracked entity. """

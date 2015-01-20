@@ -65,7 +65,6 @@ def setup(hass, config):
     switches = platform_devices_from_config(
         config, DOMAIN, hass, ENTITY_ID_FORMAT, logger)
 
-    # pylint: disable=unused-argument
     @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_states(now):
         """ Update states of all switches. """

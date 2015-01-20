@@ -196,7 +196,6 @@ def setup(hass, config):
 
         platform.setup_platform(hass, p_config, add_lights)
 
-    # pylint: disable=unused-argument
     def update_lights_state(now):
         """ Update the states of all the lights. """
         if lights:

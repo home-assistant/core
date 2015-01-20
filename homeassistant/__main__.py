@@ -101,7 +101,6 @@ def main():
         hass = bootstrap.from_config_file(config_path)
 
     if args.open_ui:
-        # pylint: disable=unused-argument
         def open_browser(event):
             """ Open the webinterface in a browser. """
             if hass.local_api is not None:

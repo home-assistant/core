@@ -66,7 +66,6 @@ def setup(hass, config):
         else:
             return None
 
-    # pylint: disable=unused-argument
     def schedule_light_on_sun_rise(entity, old_state, new_state):
         """The moment sun sets we want to have all the lights on.
            We will schedule to have each light start after one another

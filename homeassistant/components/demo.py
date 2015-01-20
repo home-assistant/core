@@ -174,7 +174,6 @@ def setup(hass, config):
 
     configurator_ids = []
 
-    # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Fake callback, mark config as done. """
         time.sleep(2)

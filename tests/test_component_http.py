@@ -184,7 +184,7 @@ class TestHTTP(unittest.TestCase):
         """ Test if the API allows us to fire an event. """
         test_value = []
 
-        def listener(event):   # pylint: disable=unused-argument
+        def listener(event):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
@@ -203,7 +203,7 @@ class TestHTTP(unittest.TestCase):
         """ Test if the API allows us to fire an event. """
         test_value = []
 
-        def listener(event):   # pylint: disable=unused-argument
+        def listener(event):
             """ Helper method that will verify that our event got called and
                 that test if our data came through. """
             if "test" in event.data:
@@ -225,7 +225,7 @@ class TestHTTP(unittest.TestCase):
         """ Test if the API allows us to fire an event. """
         test_value = []
 
-        def listener(event):    # pylint: disable=unused-argument
+        def listener(event):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
@@ -281,7 +281,7 @@ class TestHTTP(unittest.TestCase):
         """ Test if the API allows us to call a service. """
         test_value = []
 
-        def listener(service_call):   # pylint: disable=unused-argument
+        def listener(service_call):
             """ Helper method that will verify that our service got called. """
             test_value.append(1)
 
@@ -300,7 +300,7 @@ class TestHTTP(unittest.TestCase):
         """ Test if the API allows us to call a service. """
         test_value = []
 
-        def listener(service_call):   # pylint: disable=unused-argument
+        def listener(service_call):
             """ Helper method that will verify that our service got called and
                 that test if our data came through. """
             if "test" in service_call.data:

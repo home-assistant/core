@@ -11,7 +11,6 @@ except ImportError:
     pass
 
 
-# pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Tellstick switches. """
     try:
@@ -54,12 +53,10 @@ class TellstickSwitch(ToggleDevice):
 
         return last_command == tc_constants.TELLSTICK_TURNON
 
-    # pylint: disable=unused-argument
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
         self.tellstick.turn_on()
 
-    # pylint: disable=unused-argument
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         self.tellstick.turn_off()

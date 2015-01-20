@@ -351,7 +351,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ DELETE request handler. """
         self._handle_request('DELETE')
 
-    # pylint: disable=unused-argument
     def _handle_get_root(self, path_match, data):
         """ Renders the debug interface. """
 
@@ -390,17 +389,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
                "<splash-login auth='{}'></splash-login>"
                "</body></html>").format(app_url, auth))
 
-    # pylint: disable=unused-argument
     def _handle_get_api(self, path_match, data):
         """ Renders the debug interface. """
         self._json_message("API running.")
 
-    # pylint: disable=unused-argument
     def _handle_get_api_states(self, path_match, data):
         """ Returns a dict containing all entity ids and their state. """
         self._write_json(self.server.hass.states.all())
 
-    # pylint: disable=unused-argument
     def _handle_get_api_states_entity(self, path_match, data):
         """ Returns the state of a specific entity. """
         entity_id = path_match.group('entity_id')

@@ -78,7 +78,6 @@ def setup(hass, config):
     hass.services.register(
         DOMAIN, SERVICE_TEST_UNKNOWN_ALARM, lambda call: unknown_alarm())
 
-    # pylint: disable=unused-argument
     def unknown_alarm_if_lights_on(entity_id, old_state, new_state):
         """ Called when a light has been turned on. """
         if not device_tracker.is_on(hass):
@@ -88,7 +87,6 @@ def setup(hass, config):
         light.ENTITY_ID_ALL_LIGHTS,
         unknown_alarm_if_lights_on, STATE_OFF, STATE_ON)
 
-    # pylint: disable=unused-argument
     def ring_known_alarm(entity_id, old_state, new_state):
         """ Called when a known person comes home. """
         if light.is_on(hass, known_light_id):

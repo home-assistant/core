@@ -34,7 +34,6 @@ SERVICE_FLASH = 'flash'
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """ Setup example component. """
 

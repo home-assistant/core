@@ -93,7 +93,7 @@ class TestRemoteMethods(unittest.TestCase):
         """ Test Python API fire_event. """
         test_value = []
 
-        def listener(event):   # pylint: disable=unused-argument
+        def listener(event):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 
@@ -158,7 +158,7 @@ class TestRemoteMethods(unittest.TestCase):
         """ Test Python API services.call. """
         test_value = []
 
-        def listener(service_call):   # pylint: disable=unused-argument
+        def listener(service_call):
             """ Helper method that will verify that our service got called. """
             test_value.append(1)
 
@@ -214,7 +214,7 @@ class TestRemoteClasses(unittest.TestCase):
         """ Test if events fired from the eventbus get fired. """
         test_value = []
 
-        def listener(event):   # pylint: disable=unused-argument
+        def listener(event):
             """ Helper method that will verify our event got called. """
             test_value.append(1)
 

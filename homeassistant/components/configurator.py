@@ -71,7 +71,6 @@ def request_done(request_id):
         pass
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """ Set up Configurator. """
     return True

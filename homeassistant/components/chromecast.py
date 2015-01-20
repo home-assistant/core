@@ -158,7 +158,6 @@ def setup(hass, config):
         for host in hosts:
             setup_chromecast(casts, host)
 
-    # pylint: disable=unused-argument
     def chromecast_discovered(service, info):
         """ Called when a Chromecast has been discovered. """
         logger.info("New Chromecast discovered: %s", info[0])
@@ -212,7 +211,7 @@ def setup(hass, config):
 
         hass.states.set(entity_id, state, state_attr)
 
-    def update_chromecast_states(time):  # pylint: disable=unused-argument
+    def update_chromecast_states(time):
         """ Updates all chromecast states. """
         if casts:
             logger.info("Updating Chromecast status")

@@ -117,7 +117,6 @@ def request_configuration(host, hass, add_devices_callback):
 
         return
 
-    # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
         setup_bridge(host, hass, add_devices_callback)

@@ -7,7 +7,6 @@ from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
 
-# pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Gets Nest thermostats. """
     logger = logging.getLogger(__name__)
