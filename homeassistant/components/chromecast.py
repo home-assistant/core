@@ -298,7 +298,7 @@ def setup(hass, config):
                 pychromecast.play_youtube_video(video_id, cast.host)
                 update_chromecast_state(entity_id, cast)
 
-    hass.track_time_change(update_chromecast_states)
+    hass.track_time_change(update_chromecast_states, second=[0, 15, 30, 45])
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF,
                            turn_off_service)

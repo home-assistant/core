@@ -128,7 +128,8 @@ class DeviceTracker(object):
         if self.invalid_known_devices_file:
             return
 
-        hass.track_time_change(update_device_state)
+        hass.track_time_change(
+            update_device_state, second=[0, 12, 24, 36, 48])
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,
