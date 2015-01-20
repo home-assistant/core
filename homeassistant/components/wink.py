@@ -11,6 +11,7 @@ from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config, ToggleDevice, Device
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, CONF_ACCESS_TOKEN,
+    STATE_OPEN, STATE_CLOSED,
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "wink"
@@ -57,6 +58,11 @@ class WinkSensorDevice(Device):
         self.wink = wink
 
     @property
+    def state(self):
+        """ Returns the state. """
+        return STATE_OPEN if self.is_open else STATE_CLOSED
+
+    @property
     def unique_id(self):
         """ Returns the id of this wink switch """
         return "{}.{}".format(self.__class__, self.wink.deviceId())
@@ -76,6 +82,11 @@ class WinkSensorDevice(Device):
     def update(self):
         """ Update state of the sensor. """
         self.wink.updateState()
+
+    @property
+    def is_open(self):
+        """ True if door is open. """
+        return self.wink.state()
 
 class WinkToggleDevice(ToggleDevice):
     """ represents a WeMo switch within home assistant. """
