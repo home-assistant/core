@@ -9,7 +9,7 @@ from datetime import timedelta
 from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.const import (
-    STATE_OPEN, ATTR_ENTITY_ID)
+    STATE_OPEN, STATE_CLOSED, ATTR_ENTITY_ID)
 from homeassistant.helpers import (
     extract_entity_ids, platform_devices_from_config)
 from homeassistant.components import group, discovery, wink
@@ -51,7 +51,7 @@ def setup(hass, config):
     def update_states(now):
         """ Update states of all sensors. """
         if sensors:
-            logger.info("Updating sensors states")
+            logger.info("Updating sensor states")
 
             for sensor in sensors.values():
                 sensor.update_ha_state(hass, True)
@@ -83,7 +83,6 @@ def setup(hass, config):
 
     discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), sensor_discovered)
 
-    # Update state every 30 seconds
-    hass.track_time_change(update_states, second=[0, 30])
+    hass.track_time_change(update_states)
 
     return True
