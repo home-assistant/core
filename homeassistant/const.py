@@ -35,6 +35,8 @@ STATE_OFF = 'off'
 STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = "unknown"
+STATE_OPEN = 'open'
+STATE_CLOSED = 'closed'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event

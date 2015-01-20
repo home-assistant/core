@@ -8,7 +8,7 @@ import homeassistant.external.wink.pywink as pywink
 
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
-from homeassistant.helpers import validate_config, ToggleDevice
+from homeassistant.helpers import validate_config, ToggleDevice, Device
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, CONF_ACCESS_TOKEN,
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
@@ -18,7 +18,7 @@ DEPENDENCIES = []
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
-
+DISCOVER_SENSORS = "wink.sensors"
 
 def setup(hass, config):
     """ Sets up the Wink component. """
@@ -32,7 +32,8 @@ def setup(hass, config):
     # Load components for the devices in the Wink that we support
     for component_name, func_exists, discovery_type in (
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
-            ('switch', pywink.get_switches, DISCOVER_SWITCHES)):
+            ('switch', pywink.get_switches, DISCOVER_SWITCHES),
+            ('sensor', pywink.get_sensors, DISCOVER_SENSORS)):
 
         if func_exists():
             component = get_component(component_name)
@@ -49,6 +50,32 @@ def setup(hass, config):
 
     return True
 
+class WinkSensorDevice(Device):
+    """ represents a wink sensor within home assistant. """
+
+    def __init__(self, wink):
+        self.wink = wink
+
+    @property
+    def unique_id(self):
+        """ Returns the id of this wink switch """
+        return "{}.{}".format(self.__class__, self.wink.deviceId())
+
+    @property
+    def name(self):
+        """ Returns the name of the sensor if any. """
+        return self.wink.name()
+
+    @property
+    def state_attributes(self):
+        """ Returns optional state attributes. """
+        return {
+            ATTR_FRIENDLY_NAME: self.wink.name()
+        }
+
+    def update(self):
+        """ Update state of the sensor. """
+        self.wink.updateState()
 
 class WinkToggleDevice(ToggleDevice):
     """ represents a WeMo switch within home assistant. """
