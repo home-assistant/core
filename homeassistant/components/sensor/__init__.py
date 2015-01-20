@@ -23,7 +23,7 @@ ENTITY_ID_ALL_SENSORS = group.ENTITY_ID_FORMAT.format(
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=1)
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
@@ -48,7 +48,7 @@ def setup(hass, config):
 
     # pylint: disable=unused-argument
     @util.Throttle(MIN_TIME_BETWEEN_SCANS)
-    def update_states(now):
+    def update_sensor_states(now):
         """ Update states of all sensors. """
         if sensors:
             logger.info("Updating sensor states")
@@ -56,7 +56,7 @@ def setup(hass, config):
             for sensor in sensors.values():
                 sensor.update_ha_state(hass, True)
 
-    update_states(None)
+    update_sensor_states(None)
 
     # Track all sensors in a group
     sensor_group = group.Group(
@@ -83,6 +83,6 @@ def setup(hass, config):
 
     discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), sensor_discovered)
 
-    hass.track_time_change(update_states)
+    hass.track_time_change(update_sensor_states)
 
     return True
