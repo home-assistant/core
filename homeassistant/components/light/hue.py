@@ -26,7 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
     try:
-        import phue
+        # pylint: disable=unused-variable
+        import phue  # noqa
     except ImportError:
         _LOGGER.exception("Error while importing dependency phue.")
 
@@ -45,6 +46,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 def setup_bridge(host, hass, add_devices_callback):
+    """ Setup a phue bridge based on host parameter. """
     import phue
 
     try:
@@ -68,7 +70,7 @@ def setup_bridge(host, hass, add_devices_callback):
 
         configurator = get_component('configurator')
 
-        configurator.request_done(hass, request_id)
+        configurator.request_done(request_id)
 
     lights = {}
 
@@ -108,13 +110,14 @@ def request_configuration(host, hass, add_devices_callback):
     """ Request configuration steps from the user. """
     configurator = get_component('configurator')
 
-    # If this method called while we are configuring, means we got an error
+    # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
-            hass, _CONFIGURING[host], "Failed to register, please try again.")
+            _CONFIGURING[host], "Failed to register, please try again.")
 
         return
 
+    # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
         setup_bridge(host, hass, add_devices_callback)

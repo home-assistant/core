@@ -13,6 +13,7 @@ from homeassistant.util import ensure_unique_string, slugify
 
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
+    """ Generate a unique entity ID based on given entity IDs or used ids. """
     if current_ids is None:
         if hass is None:
             raise RuntimeError("Missing required parameter currentids or hass")

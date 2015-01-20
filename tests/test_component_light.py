@@ -8,7 +8,6 @@ Tests switch component.
 import unittest
 import os
 
-import homeassistant as ha
 import homeassistant.loader as loader
 import homeassistant.util as util
 from homeassistant.const import (
@@ -104,7 +103,7 @@ class TestLight(unittest.TestCase):
         self.assertTrue(
             light.setup(self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}))
 
-        dev1, dev2, dev3 = platform.get_lights(None, None)
+        dev1, dev2, dev3 = platform.get_lights()
 
         # Test init
         self.assertTrue(light.is_on(self.hass, dev1.entity_id))
@@ -214,7 +213,7 @@ class TestLight(unittest.TestCase):
              light.ATTR_XY_COLOR: [prof_x, prof_y]},
             data)
 
-    def test_light_profiles(self):
+    def test_broken_light_profiles(self):
         """ Test light profiles. """
         platform = loader.get_component('light.test')
         platform.init()
@@ -230,8 +229,12 @@ class TestLight(unittest.TestCase):
             self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
         ))
 
-        # Clean up broken file
-        os.remove(user_light_file)
+    def test_light_profiles(self):
+        """ Test light profiles. """
+        platform = loader.get_component('light.test')
+        platform.init()
+
+        user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
 
         with open(user_light_file, 'w') as user_file:
             user_file.write('id,x,y,brightness\n')
@@ -241,7 +244,7 @@ class TestLight(unittest.TestCase):
             self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
         ))
 
-        dev1, dev2, dev3 = platform.get_lights(None, None)
+        dev1, dev2, dev3 = platform.get_lights()
 
         light.turn_on(self.hass, dev1.entity_id, profile='test')
 

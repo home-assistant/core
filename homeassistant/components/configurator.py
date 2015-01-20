@@ -1,7 +1,18 @@
+"""
+homeassistant.components.configurator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A component to allow pieces of code to request configuration from the user.
+
+Initiate a request by calling the `request_config` method with a callback.
+This will return a request id that has to be used for future calls.
+A callback has to be provided to `request_config` which will be called when
+the user has submitted configuration information.
+"""
 import logging
+import threading
 
 from homeassistant.helpers import generate_entity_id
-from homeassistant.const import EVENT_TIME_CHANGED
 
 DOMAIN = "configurator"
 DEPENDENCIES = []
@@ -19,30 +30,50 @@ ATTR_SUBMIT_CAPTION = "submit_caption"
 ATTR_FIELDS = "fields"
 ATTR_ERRORS = "errors"
 
+_REQUESTS = {}
 _INSTANCES = {}
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-arguments
 def request_config(
         hass, name, callback, description=None, description_image=None,
         submit_caption=None, fields=None):
     """ Create a new request for config.
     Will return an ID to be used for sequent calls. """
 
-    return _get_instance(hass).request_config(
+    instance = _get_instance(hass)
+
+    request_id = instance.request_config(
         name, callback,
         description, description_image, submit_caption, fields)
 
+    _REQUESTS[request_id] = instance
 
-def notify_errors(hass, request_id, error):
-    _get_instance(hass).notify_errors(request_id, error)
-
-
-def request_done(hass, request_id):
-    _get_instance(hass).request_done(request_id)
+    return request_id
 
 
+def notify_errors(request_id, error):
+    """ Add errors to a config request. """
+    try:
+        _REQUESTS[request_id].notify_errors(request_id, error)
+    except KeyError:
+        # If request_id does not exist
+        pass
+
+
+def request_done(request_id):
+    """ Mark a config request as done. """
+    try:
+        _REQUESTS.pop(request_id).request_done(request_id)
+    except KeyError:
+        # If request_id does not exist
+        pass
+
+
+# pylint: disable=unused-argument
 def setup(hass, config):
+    """ Set up Configurator. """
     return True
 
 
@@ -51,7 +82,6 @@ def _get_instance(hass):
     try:
         return _INSTANCES[hass]
     except KeyError:
-        print("Creating instance")
         _INSTANCES[hass] = Configurator(hass)
 
         if DOMAIN not in hass.components:
@@ -61,6 +91,10 @@ def _get_instance(hass):
 
 
 class Configurator(object):
+    """
+    Class to keep track of current configuration requests.
+    """
+
     def __init__(self, hass):
         self.hass = hass
         self._cur_id = 0
@@ -68,6 +102,7 @@ class Configurator(object):
         hass.services.register(
             DOMAIN, SERVICE_CONFIGURE, self.handle_service_call)
 
+    # pylint: disable=too-many-arguments
     def request_config(
             self, name, callback,
             description, description_image, submit_caption, fields):
@@ -120,25 +155,26 @@ class Configurator(object):
 
         entity_id = self._requests.pop(request_id)[0]
 
-        # If we remove the state right away, it will not be passed down
-        # with the service request (limitation current design).
-        # Instead we will set it to configured right away and remove it soon.
-        def deferred_remove(event):
-            self.hass.states.remove(entity_id)
-
-        self.hass.bus.listen_once(EVENT_TIME_CHANGED, deferred_remove)
-
         self.hass.states.set(entity_id, STATE_CONFIGURED)
 
+        # If we remove the state right away, it will not be included with
+        # the result fo the service call (limitation current design).
+        # Instead we will set it to configured to give as feedback but delete
+        # it shortly after so that it is deleted when the client updates.
+        threading.Timer(
+            .001, lambda: self.hass.states.remove(entity_id)).start()
+
     def handle_service_call(self, call):
+        """ Handle a configure service call. """
         request_id = call.data.get(ATTR_CONFIGURE_ID)
 
         if not self._validate_request_id(request_id):
             return
 
+        # pylint: disable=unused-variable
         entity_id, fields, callback = self._requests[request_id]
 
-        # TODO field validation?
+        # field validation goes here?
 
         callback(call.data.get(ATTR_FIELDS, {}))
 
@@ -148,8 +184,5 @@ class Configurator(object):
         return "{}-{}".format(id(self), self._cur_id)
 
     def _validate_request_id(self, request_id):
-        if request_id not in self._requests:
-            _LOGGER.error("Invalid configure id received: %s", request_id)
-            return False
-
-        return True
+        """ Validate that the request belongs to this instance. """
+        return request_id in self._requests

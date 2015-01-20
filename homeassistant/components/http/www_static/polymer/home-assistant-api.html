@@ -137,6 +137,14 @@
     },
 
     // local methods
+    removeState: function(entityId) {
+      var state = this.getState(entityId);
+
+      if (state !== null) {
+        this.states.splice(this.states.indexOf(state), 1);
+      }
+    },
+
     getState: function(entityId) {
       var found = this.states.filter(function(state) {
         return state.entity_id == entityId;
@@ -156,6 +164,11 @@
         }
       }
       return states;
+    },
+
+    getEntityIDs: function() {
+      return this.states.map(
+          function(state) { return state.entity_id; });
     },
 
     hasService: function(domain, service) {
@@ -179,8 +192,8 @@
       this.stateUpdateTimeout = setTimeout(this.fetchStates.bind(this), 60000);
     },
 
-    _sortStates: function(states) {
-      states.sort(function(one, two) {
+    _sortStates: function() {
+      this.states.sort(function(one, two) {
         if (one.entity_id > two.entity_id) {
           return 1;
         } else if (one.entity_id < two.entity_id) {
@@ -191,32 +204,62 @@
       });
     },
 
+    /**
+     * Pushes a new state to the state machine.
+     * Will resort the states after a push and fire states-updated event.
+     */
     _pushNewState: function(new_state) {
-      var state;
-      var stateFound = false;
-
-      for(var i = 0; i < this.states.length; i++) {
-        if(this.states[i].entity_id == new_state.entity_id) {
-          state = this.states[i];
-          state.attributes = new_state.attributes;
-          state.last_changed = new_state.last_changed;
-          state.state = new_state.state;
-
-          stateFound = true;
-          break;
-        }
-      }
-
-      if(!stateFound) {
-        this.states.push(new State(new_state, this));
-        this._sortStates(this.states);
+      if (this.__pushNewState(new_state)) {
+        this._sortStates();
       }
 
       this.fire('states-updated');
     },
 
-    _pushNewStates: function(new_states) {
-      new_states.forEach(this._pushNewState.bind(this));
+    /**
+     * Creates or updates a state. Returns if a new state was added.
+     */
+    __pushNewState: function(new_state) {
+      var curState = this.getState(new_state.entity_id);
+
+      if (curState === null) {
+        this.states.push(new State(new_state, this));
+
+        return true;
+      } else {
+        curState.attributes = new_state.attributes;
+        curState.last_changed = new_state.last_changed;
+        curState.state = new_state.state;
+
+        return false;
+      }
+    },
+
+    _pushNewStates: function(newStates, removeNonPresent) {
+      removeNonPresent = !!removeNonPresent;
+      var currentEntityIds = removeNonPresent ? this.getEntityIDs() : [];
+
+      var hasNew = newStates.reduce(function(hasNew, newState) {
+        var isNewState = this.__pushNewState(newState);
+
+        if (isNewState) {
+          return true;
+        } else if(removeNonPresent) {
+          currentEntityIds.splice(currentEntityIds.indexOf(newState.entity_id), 1);
+        }
+
+        return hasNew;
+      }.bind(this), false);
+
+      currentEntityIds.forEach(function(entityId) {
+        this.removeState(entityId);
+      }.bind(this));
+
+      if (hasNew) {
+        this._sortStates();
+      }
+
+      this.fire('states-updated');
     },
 
     // call api methods
@@ -236,9 +279,7 @@
 
     fetchStates: function(onSuccess, onError) {
       var successStatesUpdate = function(newStates) {
-        this._pushNewStates(newStates);
-
-        this.fire('states-updated');
+        this._pushNewStates(newStates, true);
 
         this._laterFetchStates();
 

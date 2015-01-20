@@ -24,6 +24,11 @@ def init(empty=False):
     ]
 
 
-def get_lights(hass, config):
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Returns mock devices. """
+    add_devices_callback(DEVICES)
+
+
+def get_lights():
+    """ Helper method to get current light objects. """
     return DEVICES
