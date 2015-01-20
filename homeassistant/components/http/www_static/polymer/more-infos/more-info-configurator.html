@@ -13,6 +13,10 @@
       max-width: 100%;
     }
 
+    p.center {
+      text-align: center;
+    }
+
     p.error {
       color: #C62828;
     }
@@ -44,7 +48,7 @@
         {{stateObj.attributes.errors}}
       </p>
 
-      <p hidden?="{{!stateObj.attributes.description_image}}">
+      <p class='center' hidden?="{{!stateObj.attributes.description_image}}">
         <img src='{{stateObj.attributes.description_image}}' />
       </p>
 

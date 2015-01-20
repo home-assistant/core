@@ -6,10 +6,10 @@ Tests Configurator component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-import time
 
 import homeassistant as ha
 import homeassistant.components.configurator as configurator
+from homeassistant.const import EVENT_TIME_CHANGED
 
 
 class TestConfigurator(unittest.TestCase):
@@ -109,7 +109,9 @@ class TestConfigurator(unittest.TestCase):
 
         self.assertEqual(1, len(self.hass.states.all()))
 
-        time.sleep(.02)
+        self.hass.bus.fire(EVENT_TIME_CHANGED)
+
+        self.hass.pool.block_till_done()
 
         self.assertEqual(0, len(self.hass.states.all()))
 

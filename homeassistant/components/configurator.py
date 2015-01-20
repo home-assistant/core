@@ -10,9 +10,9 @@ A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
 import logging
-import threading
 
 from homeassistant.helpers import generate_entity_id
+from homeassistant.const import EVENT_TIME_CHANGED
 
 DOMAIN = "configurator"
 DEPENDENCIES = []
@@ -155,14 +155,17 @@ class Configurator(object):
 
         entity_id = self._requests.pop(request_id)[0]
 
+        # If we remove the state right away, it will not be included with
+        # the result fo the service call (current design limitation).
+        # Instead, we will set it to configured to give as feedback but delete
+        # it shortly after so that it is deleted when the client updates.
         self.hass.states.set(entity_id, STATE_CONFIGURED)
 
-        # If we remove the state right away, it will not be included with
-        # the result fo the service call (limitation current design).
-        # Instead we will set it to configured to give as feedback but delete
-        # it shortly after so that it is deleted when the client updates.
-        threading.Timer(
-            .001, lambda: self.hass.states.remove(entity_id)).start()
+        def deferred_remove(event):
+            """ Remove the request state. """
+            self.hass.states.remove(entity_id)
+
+        self.hass.bus.listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
     def handle_service_call(self, call):
         """ Handle a configure service call. """
