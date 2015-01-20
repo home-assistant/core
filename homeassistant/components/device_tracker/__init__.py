@@ -111,7 +111,8 @@ class DeviceTracker(object):
             """ Triggers update of the device states. """
             self.update_devices(now)
 
-        dev_group = group.Group(hass, GROUP_NAME_ALL_DEVICES)
+        dev_group = group.Group(
+            hass, GROUP_NAME_ALL_DEVICES, user_defined=False)
 
         # pylint: disable=unused-argument
         def reload_known_devices_service(service):
