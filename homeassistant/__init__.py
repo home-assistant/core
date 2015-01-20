@@ -27,7 +27,7 @@ import homeassistant.util as util
 DOMAIN = "homeassistant"
 
 # How often time_changed event should fire
-TIMER_INTERVAL = 10  # seconds
+TIMER_INTERVAL = 3  # seconds
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds

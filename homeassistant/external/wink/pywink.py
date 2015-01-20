@@ -10,6 +10,124 @@ baseUrl = "https://winkapi.quirky.com"
 headers = {}
 
 
+class wink_sensor_pod(object):
+    """ represents a wink.py sensor
+    json_obj holds the json stat at init (and if there is a refresh it's updated
+    it's the native format for this objects methods
+    and looks like so:
+{
+    "data": {
+        "last_event": {
+            "brightness_occurred_at": None,
+            "loudness_occurred_at": None,
+            "vibration_occurred_at": None
+        },
+        "model_name": "Tripper",
+        "capabilities": {
+            "sensor_types": [
+                {
+                    "field": "opened",
+                    "type": "boolean"
+                },
+                {
+                    "field": "battery",
+                    "type": "percentage"
+                }
+            ]
+        },
+        "manufacturer_device_model": "quirky_ge_tripper",
+        "location": "",
+        "radio_type": "zigbee",
+        "manufacturer_device_id": None,
+        "gang_id": None,
+        "sensor_pod_id": "37614",
+        "subscription": {
+        },
+        "units": {
+        },
+        "upc_id": "184",
+        "hidden_at": None,
+        "last_reading": {
+            "battery_voltage_threshold_2": 0,
+            "opened": False,
+            "battery_alarm_mask": 0,
+            "opened_updated_at": 1421697092.7347496,
+            "battery_voltage_min_threshold_updated_at": 1421697092.7347229,
+            "battery_voltage_min_threshold": 0,
+            "connection": None,
+            "battery_voltage": 25,
+            "battery_voltage_threshold_1": 25,
+            "connection_updated_at": None,
+            "battery_voltage_threshold_3": 0,
+            "battery_voltage_updated_at": 1421697092.7347066,
+            "battery_voltage_threshold_1_updated_at": 1421697092.7347302,
+            "battery_voltage_threshold_3_updated_at": 1421697092.7347434,
+            "battery_voltage_threshold_2_updated_at": 1421697092.7347374,
+            "battery": 1.0,
+            "battery_updated_at": 1421697092.7347553,
+            "battery_alarm_mask_updated_at": 1421697092.734716
+        },
+        "triggers": [
+        ],
+        "name": "MasterBathroom",
+        "lat_lng": [
+            37.550773,
+            -122.279182
+        ],
+        "uuid": "a2cb868a-dda3-4211-ab73-fc08087aeed7",
+        "locale": "en_us",
+        "device_manufacturer": "quirky_ge",
+        "created_at": 1421523277,
+        "local_id": "2",
+        "hub_id": "88264"
+    },
+}
+
+     """
+    def __init__(self, aJSonObj, objectprefix="sensor_pods"):
+        self.jsonState = aJSonObj
+        self.objectprefix = objectprefix
+
+    def __str__(self):
+        return "%s %s %s" % (self.name(), self.deviceId(), self.state())
+
+    def __repr__(self):
+        return "<Wink sensor %s %s %s>" % (self.name(), self.deviceId(), self.state())
+
+    @property
+    def _last_reading(self):
+        return self.jsonState.get('last_reading') or {}
+
+    def name(self):
+        return self.jsonState.get('name', "Unknown Name")
+
+    def state(self):
+        return self._last_reading.get('opened', False)
+
+    def deviceId(self):
+        return self.jsonState.get('sensor_pod_id', self.name())
+
+    def refresh_state_at_hub(self):
+        """
+        Tell hub to query latest status from device and upload to Wink.
+        PS: Not sure if this even works..
+        """
+        urlString = baseUrl + "/%s/%s/refresh" % (self.objectprefix, self.deviceId())
+        requests.get(urlString, headers=headers)
+
+    def updateState(self):
+        """ Update state with latest info from Wink API. """
+        urlString = baseUrl + "/%s/%s" % (self.objectprefix, self.deviceId())
+        arequest = requests.get(urlString, headers=headers)
+        self._updateStateFromResponse(arequest.json())
+
+    def _updateStateFromResponse(self, response_json):
+        """
+        :param response_json: the json obj returned from query
+        :return:
+        """
+        self.jsonState = response_json.get('data')
+
 class wink_binary_switch(object):
     """ represents a wink.py switch
     json_obj holds the json stat at init (and if there is a refresh it's updated
@@ -248,53 +366,28 @@ class wink_bulb(wink_binary_switch):
             self.name(), self.deviceId(), self.state())
 
 
-def get_bulbs_and_switches():
+def get_devices(filter, constructor):
     arequestUrl = baseUrl + "/users/me/wink_devices"
     j = requests.get(arequestUrl, headers=headers).json()
 
     items = j.get('data')
 
-    switches = []
+    devices = []
     for item in items:
-        id = item.get('light_bulb_id')
-        if id != None:
-            switches.append(wink_bulb(item))
-        id = item.get('binary_switch_id')
-        if id != None:
-            switches.append(wink_binary_switch(item))
+        id = item.get(filter)
+        if id is not None:
+            devices.append(constructor(item))
 
-    return switches
-
+    return devices
 
 def get_bulbs():
-    arequestUrl = baseUrl + "/users/me/wink_devices"
-    j = requests.get(arequestUrl, headers=headers).json()
-
-    items = j.get('data')
-
-    switches = []
-    for item in items:
-        id = item.get('light_bulb_id')
-        if id is not None:
-            switches.append(wink_bulb(item))
-
-    return switches
-
+    return get_devices('light_bulb_id', wink_bulb)
 
 def get_switches():
-    arequestUrl = baseUrl + "/users/me/wink_devices"
-    j = requests.get(arequestUrl, headers=headers).json()
+    return get_devices('binary_switch_id', wink_binary_switch)
 
-    items = j.get('data')
-
-    switches = []
-    for item in items:
-        id = item.get('binary_switch_id')
-        if id is not None:
-            switches.append(wink_binary_switch(item))
-
-    return switches
-
+def get_sensors():
+    return get_devices('sensor_pod_id', wink_sensor_pod)
 
 def set_bearer_token(token):
     global headers
