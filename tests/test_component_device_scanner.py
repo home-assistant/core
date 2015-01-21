@@ -122,12 +122,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         # be every 12 seconds or else the time_changed event will be ignored.
         nowAlmostMinimumGone = now + device_tracker.TIME_DEVICE_NOT_FOUND
         nowAlmostMinimumGone -= timedelta(
-            seconds=(nowAlmostMinimumGone.second % 12))
+            seconds=12+(nowAlmostMinimumGone.second % 12))
 
         nowMinimumGone = now + device_tracker.TIME_DEVICE_NOT_FOUND
         nowMinimumGone += timedelta(seconds=12-(nowMinimumGone.second % 12))
-
-        print(now, nowAlmostMinimumGone, nowMinimumGone)
 
         # Test initial is correct
         self.assertTrue(device_tracker.is_on(self.hass))
@@ -153,10 +151,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             fil.write('dev2,Device 2,1,http://example.com/picture.jpg\n')
             fil.write('dev3,DEV3,1,\n')
 
-        # reload dev file
         scanner.come_home('dev1')
         scanner.leave_home('dev2')
 
+        # reload dev file
         self.hass.services.call(
             device_tracker.DOMAIN,
             device_tracker.SERVICE_DEVICE_TRACKER_RELOAD)
