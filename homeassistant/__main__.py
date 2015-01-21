@@ -1,24 +1,19 @@
 """ Starts home assistant. """
+from __future__ import print_function
 
 import sys
 import os
 import argparse
 import importlib
 
-try:
-    from homeassistant import bootstrap
 
-except ImportError:
-    # This is to add support to load Home Assistant using
-    # `python3 homeassistant` instead of `python3 -m homeassistant`
+def validate_python():
+    """ Validate we're running the right Python version. """
+    major, minor = sys.version_info[:2]
 
-    # Insert the parent directory of this file into the module search path
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-    from homeassistant import bootstrap
-
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.components import http, demo
+    if major < 3 or (major == 3 and minor < 4):
+        print("Home Assistant requires atleast Python 3.4")
+        sys.exit()
 
 
 def validate_dependencies():
@@ -36,6 +31,34 @@ def validate_dependencies():
     if import_fail:
         print(("Install dependencies by running: "
                "pip3 install -r requirements.txt"))
+        sys.exit()
+
+
+def ensure_path_and_load_bootstrap():
+    """ Ensure sys load path is correct and load Home Assistant bootstrap. """
+    try:
+        from homeassistant import bootstrap
+
+    except ImportError:
+        # This is to add support to load Home Assistant using
+        # `python3 homeassistant` instead of `python3 -m homeassistant`
+
+        # Insert the parent directory of this file into the module search path
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+        from homeassistant import bootstrap
+
+    return bootstrap
+
+
+def validate_git_submodules():
+    """ Validate the git submodules are cloned. """
+    try:
+        # pylint: disable=no-name-in-module, unused-variable
+        from homeassistant.external.noop import WORKING  # noqa
+    except ImportError:
+        print("Repository submodules have not been initialized")
+        print("Please run: git submodule update --init --recursive")
         sys.exit()
 
 
@@ -65,9 +88,8 @@ def ensure_config_path(config_dir):
     return config_path
 
 
-def main():
-    """ Starts Home Assistant. Will create demo config if no config found. """
-
+def get_arguments():
+    """ Get parsed passed in arguments. """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-c', '--config',
@@ -83,15 +105,26 @@ def main():
         action='store_true',
         help='Open the webinterface in a browser')
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def main():
+    """ Starts Home Assistant. """
+    validate_python()
     validate_dependencies()
 
-    config_dir = os.path.join(os.getcwd(), args.config)
+    bootstrap = ensure_path_and_load_bootstrap()
 
+    validate_git_submodules()
+
+    args = get_arguments()
+
+    config_dir = os.path.join(os.getcwd(), args.config)
     config_path = ensure_config_path(config_dir)
 
     if args.demo_mode:
+        from homeassistant.components import http, demo
+
         # Demo mode only requires http and demo components.
         hass = bootstrap.from_config_dict({
             http.DOMAIN: {},
@@ -101,6 +134,8 @@ def main():
         hass = bootstrap.from_config_file(config_path)
 
     if args.open_ui:
+        from homeassistant.const import EVENT_HOMEASSISTANT_START
+
         def open_browser(event):
             """ Open the webinterface in a browser. """
             if hass.local_api is not None:
