@@ -375,7 +375,7 @@ def get_devices(filter, constructor):
     devices = []
     for item in items:
         id = item.get(filter)
-        if id is not None:
+        if (id is not None and item.get("hidden_at") is None):
             devices.append(constructor(item))
 
     return devices
