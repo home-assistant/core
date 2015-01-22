@@ -17,7 +17,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a Luci scanner. """
     if not validate_config(config,

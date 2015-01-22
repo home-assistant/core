@@ -117,9 +117,15 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         dev3 = device_tracker.ENTITY_ID_FORMAT.format('DEV3')
 
         now = datetime.now()
-        nowAlmostMinGone = (now + device_tracker.TIME_DEVICE_NOT_FOUND -
-                            timedelta(seconds=1))
-        nowMinGone = nowAlmostMinGone + timedelta(seconds=2)
+
+        # Device scanner scans every 12 seconds. We need to sync our times to
+        # be every 12 seconds or else the time_changed event will be ignored.
+        nowAlmostMinimumGone = now + device_tracker.TIME_DEVICE_NOT_FOUND
+        nowAlmostMinimumGone -= timedelta(
+            seconds=12+(nowAlmostMinimumGone.second % 12))
+
+        nowMinimumGone = now + device_tracker.TIME_DEVICE_NOT_FOUND
+        nowMinimumGone += timedelta(seconds=12-(nowMinimumGone.second % 12))
 
         # Test initial is correct
         self.assertTrue(device_tracker.is_on(self.hass))
@@ -145,10 +151,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             fil.write('dev2,Device 2,1,http://example.com/picture.jpg\n')
             fil.write('dev3,DEV3,1,\n')
 
-        # reload dev file
         scanner.come_home('dev1')
         scanner.leave_home('dev2')
 
+        # reload dev file
         self.hass.services.call(
             device_tracker.DOMAIN,
             device_tracker.SERVICE_DEVICE_TRACKER_RELOAD)
@@ -168,7 +174,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         # Test if device leaves what happens, test the time span
         self.hass.bus.fire(
-            ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: nowAlmostMinGone})
+            ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: nowAlmostMinimumGone})
 
         self.hass.pool.block_till_done()
 
@@ -179,7 +185,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertTrue(device_tracker.is_on(self.hass, dev3))
 
         # Now test if gone for longer then error margin
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: nowMinGone})
+        self.hass.bus.fire(
+            ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: nowMinimumGone})
 
         self.hass.pool.block_till_done()
 

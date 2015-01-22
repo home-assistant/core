@@ -75,7 +75,6 @@ def setup(hass, config):
                 ATTR_DISCOVERED: info
             })
 
-    # pylint: disable=unused-argument
     def start_discovery(event):
         """ Start discovering. """
         netdisco = DiscoveryService(SCAN_INTERVAL)

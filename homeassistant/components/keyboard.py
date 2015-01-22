@@ -46,7 +46,6 @@ def media_prev_track(hass):
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREV_TRACK)
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """ Listen for keyboard events. """
     try:

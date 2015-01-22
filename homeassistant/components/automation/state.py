@@ -26,7 +26,6 @@ def register(hass, config, action):
     from_state = config.get(CONF_FROM, MATCH_ALL)
     to_state = config.get(CONF_TO, MATCH_ALL)
 
-    # pylint: disable=unused-argument
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
         action()

@@ -24,9 +24,8 @@ DEPENDENCIES = []
 
 SERVICE_DEVICE_TRACKER_RELOAD = "reload_devices_csv"
 
-GROUP_NAME_ALL_DEVICES = 'all_devices'
-ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format(
-    GROUP_NAME_ALL_DEVICES)
+GROUP_NAME_ALL_DEVICES = 'all devices'
+ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -114,7 +113,6 @@ class DeviceTracker(object):
         dev_group = group.Group(
             hass, GROUP_NAME_ALL_DEVICES, user_defined=False)
 
-        # pylint: disable=unused-argument
         def reload_known_devices_service(service):
             """ Reload known devices file. """
             self._read_known_devices_file()
@@ -128,7 +126,8 @@ class DeviceTracker(object):
         if self.invalid_known_devices_file:
             return
 
-        hass.track_time_change(update_device_state)
+        hass.track_time_change(
+            update_device_state, second=[0, 12, 24, 36, 48])
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,

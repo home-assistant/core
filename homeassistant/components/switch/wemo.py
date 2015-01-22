@@ -7,7 +7,6 @@ from homeassistant.components.switch import (
     ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
 
 
-# pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return WeMo switches. """
 

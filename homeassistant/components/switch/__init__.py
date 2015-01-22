@@ -11,15 +11,14 @@ import homeassistant.util as util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.helpers import (
-    extract_entity_ids, platform_devices_from_config)
+    generate_entity_id, extract_entity_ids, platform_devices_from_config)
 from homeassistant.components import group, discovery, wink
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
 
-GROUP_NAME_ALL_SWITCHES = 'all_switches'
-ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format(
-    GROUP_NAME_ALL_SWITCHES)
+GROUP_NAME_ALL_SWITCHES = 'all switches'
+ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -65,7 +64,6 @@ def setup(hass, config):
     switches = platform_devices_from_config(
         config, DOMAIN, hass, ENTITY_ID_FORMAT, logger)
 
-    # pylint: disable=unused-argument
     @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_states(now):
         """ Update states of all switches. """
@@ -90,9 +88,8 @@ def setup(hass, config):
 
         for switch in discovered:
             if switch is not None and switch not in switches.values():
-                switch.entity_id = util.ensure_unique_string(
-                    ENTITY_ID_FORMAT.format(util.slugify(switch.name)),
-                    switches.keys())
+                switch.entity_id = generate_entity_id(
+                    ENTITY_ID_FORMAT, switch.name, switches.keys())
 
                 switches[switch.entity_id] = switch
 

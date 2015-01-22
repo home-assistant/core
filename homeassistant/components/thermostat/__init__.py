@@ -67,7 +67,6 @@ def setup(hass, config):
     if not thermostats:
         return False
 
-    # pylint: disable=unused-argument
     @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_state(now):
         """ Update thermostat state. """

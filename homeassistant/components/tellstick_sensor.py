@@ -129,7 +129,6 @@ def setup(hass, config):
                     sensor.has_value(datatype):
                 update_sensor_value_state(sensor_name, sensor.value(datatype))
 
-    # pylint: disable=unused-argument
     def update_sensors_state(time):
         """ Update the state of all sensors """
         for sensor in sensors:

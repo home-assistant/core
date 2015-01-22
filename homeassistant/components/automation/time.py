@@ -17,7 +17,6 @@ def register(hass, config, action):
     minutes = convert(config.get(CONF_MINUTES), int)
     seconds = convert(config.get(CONF_SECONDS), int)
 
-    # pylint: disable=unused-argument
     def time_automation_listener(now):
         """ Listens for time changes and calls action. """
         action()

@@ -8,7 +8,6 @@ from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 
-# pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Wink switches. """
     token = config.get(CONF_ACCESS_TOKEN)
@@ -24,7 +23,6 @@ def get_devices(hass, config):
     return get_switches()
 
 
-# pylint: disable=unused-argument
 def devices_discovered(hass, config, info):
     """ Called when a device is discovered. """
     return get_switches()

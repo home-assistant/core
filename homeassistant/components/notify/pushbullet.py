@@ -11,7 +11,6 @@ from homeassistant.const import CONF_API_KEY
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def get_service(hass, config):
     """ Get the pushbullet notification service. """
 
