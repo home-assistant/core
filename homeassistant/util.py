@@ -14,6 +14,7 @@ import enum
 import socket
 import random
 import string
+import decimal
 from functools import wraps
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
@@ -22,6 +23,14 @@ RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
 
 DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
 
+def f_to_c(temp):
+    temp = decimal.Decimal(temp)
+    return float((temp - decimal.Decimal(32)) / (decimal.Decimal(18) / decimal.Decimal(10)))
+
+
+def c_to_f(temp):
+    temp = decimal.Decimal(temp)
+    return float(temp * (decimal.Decimal(18) / decimal.Decimal(10)) + decimal.Decimal(32))
 
 def sanitize_filename(filename):
     """ Sanitizes a filename by removing .. / and \\. """
