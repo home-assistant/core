@@ -65,5 +65,5 @@ class TimeEventListener(ServiceEventListener):
         hass.track_point_in_time(execute, next_time)
 
         _LOGGER.info(
-            'TimeEventListener scheduled for {}, will call service {}.{}'
-            .format(next_time, self.domain, self.service))
+            'TimeEventListener scheduled for %s, will call service %s.%s',
+            next_time, self.domain, self.service)

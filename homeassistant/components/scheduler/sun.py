@@ -95,8 +95,8 @@ class SunsetEventListener(SunEventListener):
         next_time = self.schedule_next_event(hass, next_setting)
 
         _LOGGER.info(
-            'SunsetEventListener scheduled for {}, will call service {}.{}'
-            .format(next_time, self.domain, self.service))
+            'SunsetEventListener scheduled for %s, will call service %s.%s',
+            next_time, self.domain, self.service)
 
 
 # pylint: disable=too-few-public-methods
@@ -110,5 +110,5 @@ class SunriseEventListener(SunEventListener):
         next_time = self.schedule_next_event(hass, next_rising)
 
         _LOGGER.info(
-            'SunriseEventListener scheduled for {}, will call service {}.{}'
-            .format(next_time, self.domain, self.service))
+            'SunriseEventListener scheduled for %s, will call service %s.%s',
+            next_time, self.domain, self.service)
