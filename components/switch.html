@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Components - Home Assistant</title>
+    <title>Lights - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="List of the built-in components of Home Assistant.">
+    <meta name="description" content="Instructions how to setup your lights with Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Components">
+    <meta property="og:title" content="Lights">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/">
+    <meta property="og:url" content="https://home-assistant.io/components/switch.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="List of the built-in components of Home Assistant.">
+    <meta property="og:description" content="Instructions how to setup your lights with Home Assistant.">
     
     
     
@@ -89,31 +89,32 @@
   
   <header>
     <h1 class="title indent">
-      Components
+      Lights
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Home Assistant consists of the following built-in components:</p>
+  <p>Keeps track which switches are in the network, their state and allows you to control them.</p>
 
 <ul>
-<li><p><a href="/components/automation.html">Automation</a></p></li>
-<li><p><a href="/components/browser.html">Browser</a></p></li>
-<li><p><a href="/components/chromecast.html">Chromecast</a></p></li>
-<li><p><a href="/components/device_sun_light_trigger.html">Device sun light trigger</a></p></li>
-<li><p><a href="/components/device_tracker.html">Device tracker</a></p></li>
-<li><p><a href="/components/discovery.html">Discovery</a></p></li>
-<li><p><a href="/components/downloader.html">Downloader</a></p></li>
-<li><p><a href="/components/keyboard.html">Keyboard</a></p></li>
-<li><p><a href="/components/light.html">Light</a></p></li>
-<li><p><a href="/components/notify.html">Notify</a></p></li>
-<li><p><a href="/components/simple_alarm.html">Simple alarm</a></p></li>
-<li><p><a href="/components/sun.html">Sun</a></p></li>
-<li><p><a href="/components/switch.html">Switch</a></p></li>
-<li><p><a href="/components/tellstick_sensor.html">Tellstick sensor</a></p></li>
-<li><p><a href="/components/thermostat.html">Thermostat</a></p></li>
-<li><p><a href="/components/wink.html">Wink</a></p></li>
+<li>Maintains a state per switch and a combined state <code>all_switches</code>.</li>
+<li>Registers services <code>switch/turn_on</code> and <code>switch/turn_off</code> to control switches.</li>
+</ul>
+
+
+<p>Optional service data:</p>
+
+<ul>
+<li><code>entity_id</code> - only act on specific switch. Else targets all.</li>
+</ul>
+
+
+<p>Supported platforms:</p>
+
+<ul>
+<li><code>wemo</code> for Belkin WeMo switches</li>
+<li><code>tellstick</code> for Tellstick switches</li>
 </ul>
 
 

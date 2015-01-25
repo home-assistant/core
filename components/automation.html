@@ -1,0 +1,356 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Automation - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to setup automation within Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Automation">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/automation.html/">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Instructions how to setup automation within Home Assistant.">
+    
+    
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li><a href="/getting-started/">Getting started</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">Rest API</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Automation
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>This page will talk about automating Home Assistant using the <code>automation</code> component. For more advanced ways of automation, see the <a href="/developers/creating_components.html">create a component</a> page.</p>
+
+<p>Each part of automation consists of two parts: the trigger part and the action part. The final result will look something like this:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[automation]
+</span><span class='line'># Optional alias that the logs will use to refer to the entry
+</span><span class='line'>alias=Sunset notification
+</span><span class='line'>
+</span><span class='line'># Type of trigger and informatino for the trigger
+</span><span class='line'>platform=state
+</span><span class='line'>state_entity_id=sun.sun
+</span><span class='line'>state_from=above_horizon
+</span><span class='line'>state_to=below_horizon
+</span><span class='line'>
+</span><span class='line'># Action to be done when trigger activated
+</span><span class='line'>execute_service=notify.notify
+</span><span class='line'>service_data={"message":"The sun has set"}</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Setting up triggers</h2>
+
+<h4>Time-based automation</h4>
+
+<p>This allows you to trigger actions whenever the time matches your filter. You can setup filters to match on hours, minutes and seconds. Any filter that you omit will match all values.</p>
+
+<p>Here are some example values:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Match at the start of every hour
+</span><span class='line'>platform=time
+</span><span class='line'>time_minutes=0
+</span><span class='line'>time_seconds=0
+</span><span class='line'>
+</span><span class='line'># Match at 4pm
+</span><span class='line'>platform=time
+</span><span class='line'>time_hours=16
+</span><span class='line'>time_minutes=0
+</span><span class='line'>time_seconds=0
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note warning'>
+Home Assistant checks your time filters every 3 seconds. That means that the value of seconds will only be 0, 3, 6, 9…60. Setting up a filter for `time_seconds=10` will never fire!
+</p>
+
+
+<h4>State-based automation</h4>
+
+<p>This allows you to trigger actions based on state changes of any entity within Home Assistant. You can omit the <code>state_from</code> and <code>state_to</code> to match all.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Match when the sun sets
+</span><span class='line'>platform=state
+</span><span class='line'>state_entity_id=sun.sun
+</span><span class='line'>state_from=above_horizon
+</span><span class='line'>state_to=below_horizon
+</span><span class='line'>
+</span><span class='line'># Match when a person comes home
+</span><span class='line'>platform=state
+</span><span class='line'>state_entity_id=device_tracker.Paulus_OnePlus_One
+</span><span class='line'>state_from=not_home
+</span><span class='line'>state_to=home
+</span><span class='line'>
+</span><span class='line'># Match when a light turns on
+</span><span class='line'>platform=state
+</span><span class='line'>state_entity_id=light.Ceiling
+</span><span class='line'>state_from=off
+</span><span class='line'>state_to=on</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Setting up the action</h2>
+
+<p>Currently the only supported action is calling a service. Services are what devices expose to be controlled, so this will allow us to control anything that Home Assistant can control.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Turn the lights Ceiling and Wall on.
+</span><span class='line'>execute_service=light.turn_on
+</span><span class='line'>service_entity_id=light.Ceiling,light.Wall
+</span><span class='line'>
+</span><span class='line'># Turn the lights Ceiling and Wall on and turn them red.
+</span><span class='line'>execute_service=light.turn_on
+</span><span class='line'>service_entity_id=light.Ceiling,light.Wall
+</span><span class='line'>service_data={"rgb_color": [255, 0, 0]}
+</span><span class='line'>
+</span><span class='line'># Notify the user
+</span><span class='line'>execute_service=notify.notify
+</span><span class='line'>service_data={"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Putting it all together</h2>
+
+<p>For every combination of a trigger and an action we will have to combine the configuration lines and add it to an <code>automation</code> component entry in <code>home-assistant.conf</code>. You can add an optional <code>alias</code> key to the configuration to make the logs more understandable. To setup multiple entries, append 2, 3 etc to the section name. An example of a <code>home-assistant.conf</code> file:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[automation]
+</span><span class='line'>alias=Sunset notification
+</span><span class='line'>
+</span><span class='line'>platform=state
+</span><span class='line'>state_entity_id=sun.sun
+</span><span class='line'>state_from=above_horizon
+</span><span class='line'>state_to=below_horizon
+</span><span class='line'>
+</span><span class='line'>execute_service=notify.notify
+</span><span class='line'>service_data={"message":"The sun has set"}
+</span><span class='line'>
+</span><span class='line'>[automation 2]
+</span><span class='line'>alias=Turn lights off at 8am in the morning
+</span><span class='line'>
+</span><span class='line'>platform=time
+</span><span class='line'>time_hours=8
+</span><span class='line'>time_minutes=0
+</span><span class='line'>time_seconds=0
+</span><span class='line'>
+</span><span class='line'>execute_service=light.turn_off
+</span><span class='line'>
+</span><span class='line'>[automation 3]
+</span><span class='line'>alias=Turn lights in study room on when Paulus comes home
+</span><span class='line'>
+</span><span class='line'>platform=state
+</span><span class='line'>state_entity_id=device_tracker.Paulus_OnePlus
+</span><span class='line'>state_from=not_home
+</span><span class='line'>state_to=home
+</span><span class='line'>
+</span><span class='line'>execute_service=homeassistant.turn_on
+</span><span class='line'>service_entity_id=group.Study_Room</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note'>
+All configuration entries have to be sequential. If you have <code>[automation]</code>, <code>[automation 2]</code> and <code>[automation 4]</code> then the last one will not be processed. 
+</p>
+
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    
+
+
+<script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+
+
+
+
+
+  </body>
+</html>

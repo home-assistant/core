@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Components - Home Assistant</title>
+    <title>Device tracking - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="List of the built-in components of Home Assistant.">
+    <meta name="description" content="Instructions how to setup device tracking within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Components">
+    <meta property="og:title" content="Device tracking">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/">
+    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="List of the built-in components of Home Assistant.">
+    <meta property="og:description" content="Instructions how to setup device tracking within Home Assistant.">
     
     
     
@@ -89,32 +89,50 @@
   
   <header>
     <h1 class="title indent">
-      Components
+      Device Tracking
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Home Assistant consists of the following built-in components:</p>
+  <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers: tomato, netgear and luci (OpenWRT). To get started add the following lines to your <code>home-assistant.conf</code> (example for Netgear):</p>
 
-<ul>
-<li><p><a href="/components/automation.html">Automation</a></p></li>
-<li><p><a href="/components/browser.html">Browser</a></p></li>
-<li><p><a href="/components/chromecast.html">Chromecast</a></p></li>
-<li><p><a href="/components/device_sun_light_trigger.html">Device sun light trigger</a></p></li>
-<li><p><a href="/components/device_tracker.html">Device tracker</a></p></li>
-<li><p><a href="/components/discovery.html">Discovery</a></p></li>
-<li><p><a href="/components/downloader.html">Downloader</a></p></li>
-<li><p><a href="/components/keyboard.html">Keyboard</a></p></li>
-<li><p><a href="/components/light.html">Light</a></p></li>
-<li><p><a href="/components/notify.html">Notify</a></p></li>
-<li><p><a href="/components/simple_alarm.html">Simple alarm</a></p></li>
-<li><p><a href="/components/sun.html">Sun</a></p></li>
-<li><p><a href="/components/switch.html">Switch</a></p></li>
-<li><p><a href="/components/tellstick_sensor.html">Tellstick sensor</a></p></li>
-<li><p><a href="/components/thermostat.html">Thermostat</a></p></li>
-<li><p><a href="/components/wink.html">Wink</a></p></li>
-</ul>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[device_tracker]
+</span><span class='line'>platform=netgear
+</span><span class='line'>host=192.168.1.1
+</span><span class='line'>username=admin
+</span><span class='line'>password=MY_PASSWORD</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note' data-title='on Tomato'>
+Tomato requires an extra config variable called `http_id`. The value can be obtained by logging in to the Tomato admin interface and search for `http_id` in the page source code.
+</p>
+
+
+
+
+<p class='note' data-title='on Luci'>
+Before the Luci scanner can be used you have to install the luci RPC package on OpenWRT: <code>opkg install luci-mod-rpc</code>.
+</p>
+
+
+<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>
+
+<p>As an alternative to the router-based device tracking, it is possible to directly scan the network for devices by using nmap. The IP addresses to scan can be specified in any format that nmap understands, including the network-prefix notation (<code>192.168.1.1/24</code>) and the range notation (<code>192.168.1.1-255</code>).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[device_tracker]
+</span><span class='line'>platform=nmap_tracker
+</span><span class='line'>hosts=192.168.1.1/24</span></code></pre></td></tr></table></div></figure>
 
 
 

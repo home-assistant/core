@@ -95,22 +95,42 @@
   <hr class="divider">
   
 
-  <p>Installing Home Assistant and running it is easy. Make sure you have <a href="https://www.python.org/downloads/">Python 3</a> installed and execute the following code in your console:</p>
+  <p>Installing and running Home Assistant is easy. Make sure you have <a href="https://www.python.org/downloads/">Python 3.4</a> and <a href="http://git-scm.com/downloads">git</a> installed and execute the following code in a console:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>git clone --recursive https://github.com/balloob/home-assistant.git
 </span><span class='line'><span class="nb">cd </span>home-assistant
-</span><span class='line'>pip3 install -r requirements.txt
-</span><span class='line'>
-</span><span class='line'>python3 -m homeassistant
+</span><span class='line'>python3 -m pip install -r requirements.txt
+</span><span class='line'>python3 -m homeassistant --open-ui
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>This will start the Home Assistant server and create an initial configuration file <code>config/home-assistant.conf</code> that is setup for demo mode. It will launch its web interface on <a href="http://127.0.0.1:8123">http://127.0.0.1:8123</a>. The default password is &lsquo;password&rsquo;.</p>
+<p>Running these commands will:</p>
+
+<ol>
+<li>Download Home Assistant</li>
+<li>Navigate to downloaded files</li>
+<li>Install the dependencies</li>
+<li>Launch Home Assistant and serve web interface on <a href="http://localhost:8123">http://localhost:8123</a></li>
+</ol>
+
+
+<p>If you run into any issues, please see the <a href="/getting-started/troubleshooting.html">troubleshooting page</a>.</p>
+
+<p class='note'>
+  You can run Home Assistant in demo mode by appending <code>--demo-mode</code> to line 4.
+</p>
+
+
+
+
+<p class='note'>
+  If you want to update to the latest version in the future, run: <code>scripts/update</code>.
+</p>
+
 
 <p>If you&rsquo;re using Docker, you can use</p>
 
@@ -119,82 +139,65 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>After you got the demo mode running it is time to customize your configuration and enable some <a href="/components/">built-in components</a>. See <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example"><code>/config/home-assistant.conf.example</code></a> for an example configuration.</p>
+<h2>Configuring Home Assistant</h2>
+
+<p>The configuration for Home Assistant lives by default in the <code>config</code> folder. The file <code>home-assistant.conf</code> is the main file that contains which components will be loaded and what their configuration is. An example configuration file is located at <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example"><code>config/home-assistant.conf.example</code></a>.</p>
+
+<p>When launched for the first time, Home Assistant will write a default configuration enabling the web interface and device discovery. It can take up to a minute for your devices to be discovered and show up in the interface.</p>
+
+<p class='note'>
+  You will have to restart Home Assistant for changes in <code>home-assistant.conf</code> to take effect.
+</p>
+
+
+<h3>Password protecting the web interface</h3>
+
+<p>The first thing you want to add is a password for the web interface. Use your favourite text editor to open the file <code>/config/home-assistant.conf</code>. Look for the line that says <code>[http]</code> and add the line <code>api_password=YOUR_PASSWORD</code> below. Your configuration should now look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>http<span class="o">]</span>
+</span><span class='line'><span class="nv">api_password</span><span class="o">=</span>YOUR_PASSWORD
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>discovery<span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
 
 <p class='note'>
 You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in automatically.
 </p>
 
 
+<h3>Adding devices and services</h3>
+
+<p>Home Assistant will be able to automatically discover and configure any Google Chromecasts, Belkin WeMo switches and Philips Hue bridges in your network if you have <a href="/components/discovery.html">the discovery component</a> enabled (which is by default).</p>
+
+<p>Not all devices can be discovered, so if you hae any of the following devices or services, please see their respective pages for installation instructions:</p>
+
+<ul>
+<li><a href="/components/thermostat.html">Nest thermostat</a></li>
+<li><a href="/components/wink.html">Wink hub</a></li>
+<li><a href="/components/notify.html">PushBullet</a></li>
+<li><a href="/components/device_tracker.html">Device tracking</a></li>
+<li><a href="/components/sun.html">Sun</a></li>
+<li><a href="/developers/add_new_platform.html">Add support for your own device or service</a></li>
+</ul>
 
 
-<p class='note'>
-For the light and switch component, you can specify multiple platforms by using sequential sections: [switch], [switch 2], [switch 3] etc
-</p>
+<h3>Setting up Home Automation</h3>
 
+<p>When all your devices are set up it&rsquo;s time to put the cherry on the pie: automation. There are many ways to automate your home with Home Assistant so we have divided it into a couple of topics:</p>
 
-<h3>Philips Hue</h3>
-
-<p>To get Philips Hue working you will have to connect Home Assistant to the Hue bridge.</p>
-
-<p>Run the following command from your config dir and follow the instructions:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>python3 -m phue --host HUE_BRIDGE_IP_ADDRESS --config-file-path phue.conf
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>After that add the following lines to your <code>home-assistant.conf</code>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>light<span class="o">]</span>
-</span><span class='line'><span class="nv">platform</span><span class="o">=</span>hue
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Wireless router</h3>
-
-<p>Your wireless router is used to track which devices are connected. Three different types of wireless routers are currently supported: tomato, netgear and luci (OpenWRT). To get started add the following lines to your <code>home-assistant.conf</code> (example for Netgear):</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>device_tracker<span class="o">]</span>
-</span><span class='line'><span class="nv">platform</span><span class="o">=</span>netgear
-</span><span class='line'><span class="nv">host</span><span class="o">=</span>192.168.1.1
-</span><span class='line'><span class="nv">username</span><span class="o">=</span>admin
-</span><span class='line'><span class="nv">password</span><span class="o">=</span>MY_PASSWORD
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<p class='note' data-title='on Tomato'>
-Tomato requires an extra config variable called `http_id`. The value can be obtained by logging in to the Tomato admin interface and search for `http_id` in the page source code.
-</p>
-
-
-
-
-<p class='note' data-title='on Luci'>
-Before the Luci scanner can be used you have to install the luci RPC package on OpenWRT: <code>opkg install luci-mod-rpc</code>.
-</p>
-
-
-<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>
-
-<p>As an alternative to the router-based device tracking, it is possible to directly scan the network for devices by using nmap. The IP addresses to scan can be specified in any format that nmap understands, including the network-prefix notation (<code>192.168.1.1/24</code>) and the range notation (<code>192.168.1.1-255</code>).</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>device_tracker<span class="o">]</span>
-</span><span class='line'><span class="nv">platform</span><span class="o">=</span>nmap_tracker
-</span><span class='line'><span class="nv">hosts</span><span class="o">=</span>192.168.1.1/24
-</span></code></pre></td></tr></table></div></figure>
+<ul>
+<li><a href="/components/device_sun_light_trigger.html">Automatic light control based on the sun and if people are home</a> (built-in component)</li>
+<li><a href="/components/simple_alarm.html">Intruder alerts</a> (built-in component)</li>
+<li><a href="/components/automation.html">Setup your own automation rules</a> (using configuration file)</li>
+<li><a href="/developers/creating_components.html">Create your own automation component</a> (writing Python code)</li>
+</ul>
 
 
 
