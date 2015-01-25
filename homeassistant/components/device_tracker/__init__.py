@@ -127,7 +127,7 @@ class DeviceTracker(object):
             return
 
         hass.track_time_change(
-            update_device_state, second=[0, 12, 24, 36, 48])
+            update_device_state, second=range(0, 60, 12))
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,

@@ -83,6 +83,7 @@ def setup(hass, config):
 
     discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), sensor_discovered)
 
-    hass.track_time_change(update_sensor_states)
+    # Fire every 3 seconds
+    hass.track_time_change(update_sensor_states, seconds=range(0, 60, 3))
 
     return True
