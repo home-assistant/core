@@ -17,7 +17,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a Luci scanner. """
     if not validate_config(config,
@@ -101,7 +100,12 @@ class LuciDeviceScanner(object):
             result = _req_json_rpc(url, 'net.arptable',
                                    params={'auth': self.token})
             if result:
-                self.last_results = [x['HW address'] for x in result]
+                self.last_results = []
+                for device_entry in result:
+                    # Check if the Flags for each device contain
+                    # NUD_REACHABLE and if so, add it to last_results
+                    if int(device_entry['Flags'], 16) & 0x2:
+                        self.last_results.append(device_entry['HW address'])
 
                 return True
 

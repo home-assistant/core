@@ -1,0 +1,8 @@
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
+git pull --recurse-submodules=yes
+git submodule update --init --recursive
+python3 -m pip install -r requirements.txt

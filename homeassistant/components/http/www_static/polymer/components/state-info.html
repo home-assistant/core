@@ -1,0 +1,47 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-tooltip/core-tooltip.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<link rel="import" href="state-badge.html">
+
+<polymer-element name="state-info" attributes="stateObj" noscript>
+  <template>
+    <style>
+    state-badge {
+      float: left;
+    }
+
+    .name {
+      text-transform: capitalize;  
+      font-weight: 300;
+      font-size: 1.3rem;
+    }
+
+    .info {
+      margin-left: 60px;
+    }
+
+    .time-ago {
+      color: darkgrey;
+      margin-top: -2px;
+    }
+    </style>
+
+    <div>
+      <state-badge stateObj="{{stateObj}}"></state-badge>
+
+      <div class='info'>
+        <div class='name'>
+          {{stateObj.entityDisplay}}
+        </div>
+
+        <div class="time-ago">
+          <core-tooltip label="{{stateObj.last_changed}}" position="bottom">
+            {{stateObj.relativeLastChanged}}
+          </core-tooltip>
+        </div>
+        
+      </div>
+    </div>
+  </template>
+</polymer-element>

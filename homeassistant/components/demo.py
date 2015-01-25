@@ -5,16 +5,21 @@ homeassistant.components.demo
 Sets up a demo environment that mimics interaction with devices
 """
 import random
+import time
 
 import homeassistant as ha
 import homeassistant.loader as loader
 from homeassistant.helpers import extract_entity_ids
 from homeassistant.const import (
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF,
-    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, CONF_LATITUDE, CONF_LONGITUDE)
+    SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    STATE_ON, STATE_OFF, TEMP_CELCIUS,
+    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.components.light import (
-    ATTR_XY_COLOR, ATTR_BRIGHTNESS, GROUP_NAME_ALL_LIGHTS)
-from homeassistant.util import split_entity_id
+    ATTR_XY_COLOR, ATTR_RGB_COLOR, ATTR_BRIGHTNESS, GROUP_NAME_ALL_LIGHTS)
+from homeassistant.components.thermostat import (
+    ATTR_CURRENT_TEMPERATURE, ATTR_AWAY_MODE)
+from homeassistant.util import split_entity_id, color_RGB_to_xy
 
 DOMAIN = "demo"
 
@@ -24,6 +29,7 @@ DEPENDENCIES = []
 def setup(hass, config):
     """ Setup a demo environment. """
     group = loader.get_component('group')
+    configurator = loader.get_component('configurator')
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
@@ -48,8 +54,25 @@ def setup(hass, config):
             domain, _ = split_entity_id(entity_id)
 
             if domain == "light":
-                data = {ATTR_BRIGHTNESS: 200,
-                        ATTR_XY_COLOR: random.choice(light_colors)}
+                rgb_color = service.data.get(ATTR_RGB_COLOR)
+
+                if rgb_color:
+                    color = color_RGB_to_xy(
+                        rgb_color[0], rgb_color[1], rgb_color[2])
+
+                else:
+                    cur_state = hass.states.get(entity_id)
+
+                    # Use current color if available
+                    if cur_state and cur_state.attributes.get(ATTR_XY_COLOR):
+                        color = cur_state.attributes.get(ATTR_XY_COLOR)
+                    else:
+                        color = random.choice(light_colors)
+
+                data = {
+                    ATTR_BRIGHTNESS: service.data.get(ATTR_BRIGHTNESS, 200),
+                    ATTR_XY_COLOR: color
+                }
             else:
                 data = None
 
@@ -124,7 +147,7 @@ def setup(hass, config):
                     })
 
     # Setup chromecast
-    hass.states.set("chromecast.Living_Rm", "Netflix",
+    hass.states.set("chromecast.Living_Rm", "Plex",
                     {'friendly_name': 'Living Room',
                      ATTR_ENTITY_PICTURE:
                      'http://graph.facebook.com/KillBillMovie/picture'})
@@ -140,5 +163,39 @@ def setup(hass, config):
                         'friendly_name': 'Outside humidity',
                         'unit_of_measurement': '%'
                     })
+
+    # Nest demo
+    hass.states.set("thermostat.Nest", "23",
+                    {
+                        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELCIUS,
+                        ATTR_CURRENT_TEMPERATURE: '18',
+                        ATTR_AWAY_MODE: STATE_OFF
+                    })
+
+    configurator_ids = []
+
+    def hue_configuration_callback(data):
+        """ Fake callback, mark config as done. """
+        time.sleep(2)
+
+        # First time it is called, pretend it failed.
+        if len(configurator_ids) == 1:
+            configurator.notify_errors(
+                configurator_ids[0],
+                "Failed to register, please try again.")
+
+            configurator_ids.append(0)
+        else:
+            configurator.request_done(configurator_ids[0])
+
+    request_id = configurator.request_config(
+        hass, "Philips Hue", hue_configuration_callback,
+        description=("Press the button on the bridge to register Philips Hue "
+                     "with Home Assistant."),
+        description_image="/static/images/config_philips_hue.jpg",
+        submit_caption="I have pressed the button"
+    )
+
+    configurator_ids.append(request_id)
 
     return True

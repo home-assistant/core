@@ -1,0 +1,62 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<polymer-element name="more-info-sun" attributes="stateObj api">
+<template>
+  <style>
+    .data-entry {
+      margin-bottom: 8px;
+    }
+
+    .data-entry:last-child {
+      margin-bottom: 0;
+    }
+
+    .data {
+      text-align: right;      
+    }
+
+    .time-ago {
+      color: darkgrey;
+      margin-top: -2px;
+    }
+  </style>
+
+  <div layout vertical id='sunData'>
+
+    <div layout justified horizontal class='data-entry' id='rising'>
+      <div>
+        Rising {{stateObj.attributes.next_rising | relativeHATime}}
+      </div>
+      <div class='data'>
+        {{stateObj.attributes.next_rising | HATimeStripDate}}
+      </div>
+    </div>
+
+    <div layout justified horizontal class='data-entry' id='setting'>
+      <div>
+        Setting {{stateObj.attributes.next_setting | relativeHATime}}
+      </div>
+      <div class='data'>
+        {{stateObj.attributes.next_setting | HATimeStripDate}}
+      </div>
+    </div>
+
+  </div>
+</template>
+<script>
+Polymer({
+
+  stateObjChanged: function() {
+    var rising = ha.util.parseTime(this.stateObj.attributes.next_rising);
+    var setting = ha.util.parseTime(this.stateObj.attributes.next_setting);
+
+    if(rising > setting) {
+      this.$.sunData.appendChild(this.$.rising);
+    } else {
+      this.$.sunData.appendChild(this.$.setting);
+    }
+  }
+
+});
+</script>
+</polymer-element>

@@ -33,25 +33,26 @@ If you run into issues while using Home Assistant or during development of a com
 
 ## Installation instructions / Quick-start guide
 
-Running Home Assistant requires that python3 and the package requests are installed.
-
-Run the following code to get up and running with the minimum setup:
+Running Home Assistant requires that python3 and the package requests are installed. Run the following code to install and start Home Assistant:
 
 ```python
 git clone --recursive https://github.com/balloob/home-assistant.git
 cd home-assistant
 pip3 install -r requirements.txt
-
-python3 -m homeassistant
+python3 -m homeassistant --open-ui
 ```
 
-This will start the Home Assistant server and create an initial configuration file in `config/home-assistant.conf` that is setup for demo mode. It will launch its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123). The default password is 'password'.
+The last command will start the Home Assistant server and launch its webinterface. By default Home Assistant looks for the configuration file `config/home-assistant.conf`. A standard configuration file will be written if none exists.
+
+If you are still exploring if you want to use Home Assistant in the first place, you can enable the demo mode by adding the `--demo-mode` argument to the last command.
 
 If you're using Docker, you can use
 
 ```bash
-docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro -p 8123:8123 balloob/home-assistant
+docker run -d --name="home-assistant" -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro --net=host balloob/home-assistant
 ```
+
+After you have launched the Docker image, navigate to its web interface on [http://127.0.0.1:8123](http://127.0.0.1:8123).
 
 After you got the demo mode running it is time to enable some real components and get started. An example configuration file has been provided in [/config/home-assistant.conf.example](https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example).
 

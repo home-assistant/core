@@ -70,7 +70,6 @@ def turn_off(hass, entity_id=None, **service_data):
     hass.services.call(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """ Setup general services related to homeassistant. """
 

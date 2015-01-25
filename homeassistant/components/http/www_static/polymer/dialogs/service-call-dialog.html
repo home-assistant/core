@@ -1,0 +1,87 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
+
+<link rel="import" href="ha-action-dialog.html">
+<link rel="import" href="../components/services-list.html">
+
+<polymer-element name="service-call-dialog" attributes="api">
+<template>
+
+  <ha-action-dialog
+    id="dialog"
+    heading="Call Service"
+    closeSelector='[dismissive]'>
+
+    <core-style ref='ha-dialog'></core-style>
+
+    <div layout horizontal>
+      <div class='ha-form'>
+        <paper-input id="inputDomain" label="Domain" floatingLabel="true" autofocus required></paper-input>
+        <paper-input id="inputService" label="Service" floatingLabel="true" required></paper-input>
+        <paper-input-decorator
+          label="Service Data (JSON, optional)"
+          floatingLabel="true">
+          <!--
+          <paper-autogrow-textarea id="inputDataWrapper">
+            <textarea id="inputData"></textarea>
+          </paper-autogrow-textarea>
+          -->
+          <textarea id="inputData" rows="5"></textarea>
+        </paper-input-decorator>
+      </div>
+
+      <div class='sidebar'>
+        <b>Available services:</b>
+        <services-list api={{api}} cbServiceClicked={{serviceSelected}}></event-list>        
+      </div>
+    </div>
+
+    <paper-button dismissive>Cancel</paper-button>
+    <paper-button affirmative on-click={{clickCallService}}>Call Service</paper-button>
+  </ha-action-dialog>
+
+</template>
+<script>
+Polymer({
+  ready: function() {
+    // to ensure callback methods work..
+    this.serviceSelected = this.serviceSelected.bind(this);
+  },
+
+  show: function(domain, service, serviceData) {
+    this.setService(domain, service);
+    this.$.inputData.value = serviceData;
+    // this.$.inputDataWrapper.update();
+    this.job('showDialogAfterRender', function() {
+      this.$.dialog.toggle();
+    }.bind(this));
+  },
+
+  setService: function(domain, service) {
+    this.$.inputDomain.value = domain;
+    this.$.inputService.value = service;
+  },
+
+  serviceSelected: function(domain, service) {
+    this.setService(domain, service);
+  },
+
+  clickCallService: function() {
+    try {
+    this.api.call_service(
+      this.$.inputDomain.value,
+      this.$.inputService.value,
+      this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
+
+      this.$.dialog.close();
+    
+    } catch (err) {
+      alert("Error parsing JSON: " + err);
+    }
+  }
+});
+</script>
+</polymer-element>

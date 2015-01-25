@@ -8,7 +8,7 @@
 <link rel="import" href="bower_components/core-menu/core-menu.html">
 <link rel="import" href="bower_components/paper-item/paper-item.html">
 
-<link rel="import" href="states-cards.html">
+<link rel="import" href="components/state-cards.html">
 
 <polymer-element name="home-assistant-main" attributes="api">
   <template>
@@ -94,43 +94,52 @@
           </paper-dropdown>
         </paper-menu-button>
 
-        <div class="bottom fit" horizontal layout>
-            <paper-tabs id="tabsHolder" noink flex
-                        selected="0" on-core-select="{{tabClicked}}">
-            
-              <paper-tab>ALL</paper-tab>
+        <template if="{{hasCustomGroups}}">
+          <div class="bottom fit" horizontal layout>
+              <paper-tabs id="tabsHolder" noink flex
+                          selected="0" on-core-select="{{tabClicked}}">
 
-              <template repeat="{{group in customGroups}}">
-                <paper-tab data-entity="{{group.entity_id}}">
-                  {{group.entityDisplay}}
-                </paper-tab>
-              </template>
-                
-            </paper-tabs>
-        </div>
+                <paper-tab>ALL</paper-tab>
+                <paper-tab data-filter='customgroup'>GROUPS</paper-tab>
+
+              </paper-tabs>
+          </div>
+        </template>
       </core-toolbar>
 
-      <states-cards
+      <state-cards
         api="{{api}}"
-        filter="{{selectedTab}}"
-        class="content"></states-cards>
+        filter="{{selectedFilter}}"
+        class="content">
+        <h3>Hi there!</h3>
+        <p>
+          It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
+        </p>
+        <p>
+          Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
+        </p>
+      </state-cards>
 
     </core-header-panel>
 
   </template>
   <script>
   Polymer({
-    selectedTab: null,
+    selectedFilter: null,
+    hasCustomGroups: false,
 
-    computed: {
-      customGroups: "getCustomGroups(api.states)",
-      hasCustomGroups: "customGroups.length > 0"
+    observe: {
+      'api.states': 'updateHasCustomGroup'
     },
+
+    // computed: {
+    //   hasCustomGroups: "api.getCustomGroups().length > 0"
+    // },
 
     tabClicked: function(ev) {
       if(ev.detail.isSelected) {
         // will be null for ALL tab
-        this.selectedTab = ev.detail.item.getAttribute('data-entity');
+        this.selectedFilter = ev.detail.item.getAttribute('data-filter');
       }
     },
 
@@ -154,9 +163,8 @@
       this.api.logOut();
     },
 
-    getCustomGroups: function(states) {
-      return states ?
-        states.filter(function(state) { return state.isCustomGroup;}) : [];
+    updateHasCustomGroup: function() {
+      this.hasCustomGroups = this.api.getCustomGroups().length > 0;
     }
 
   });

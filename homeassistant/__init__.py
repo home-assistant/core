@@ -27,7 +27,7 @@ import homeassistant.util as util
 DOMAIN = "homeassistant"
 
 # How often time_changed event should fire
-TIMER_INTERVAL = 10  # seconds
+TIMER_INTERVAL = 1  # seconds
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
@@ -52,6 +52,13 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
 
+        # List of loaded components
+        self.components = []
+
+        # Remote.API object pointing at local API
+        self.local_api = None
+
+        # Directory that holds the configuration
         self.config_dir = os.path.join(os.getcwd(), 'config')
 
     def get_config_path(self, path):
@@ -219,10 +226,10 @@ def _process_match_param(parameter):
     """ Wraps parameter in a list if it is not one and returns it. """
     if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL
-    elif isinstance(parameter, list):
-        return parameter
+    elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
+        return (parameter,)
     else:
-        return [parameter]
+        return tuple(parameter)
 
 
 def _matcher(subject, pattern):
@@ -412,26 +419,36 @@ class EventBus(object):
 
 
 class State(object):
-    """ Object to represent a state within the state machine. """
+    """
+    Object to represent a state within the state machine.
 
-    __slots__ = ['entity_id', 'state', 'attributes', 'last_changed']
+    entity_id: the entity that is represented.
+    state: the state of the entity
+    attributes: extra information on entity and state
+    last_changed: last time the state was changed, not the attributes.
+    last_updated: last time this object was updated.
+    """
+
+    __slots__ = ['entity_id', 'state', 'attributes',
+                 'last_changed', 'last_updated']
 
     def __init__(self, entity_id, state, attributes=None, last_changed=None):
         if not ENTITY_ID_PATTERN.match(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
-                "Format should be <domain>.<entity>").format(entity_id))
+                "Format should be <domain>.<object_id>").format(entity_id))
 
         self.entity_id = entity_id
         self.state = state
         self.attributes = attributes or {}
+        self.last_updated = dt.datetime.now()
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
         # This behavior occurs because to_dict uses datetime_to_str
         # which does not preserve microseconds
         self.last_changed = util.strip_microseconds(
-            last_changed or dt.datetime.now())
+            last_changed or self.last_updated)
 
     def copy(self):
         """ Creates a copy of itself. """
@@ -467,17 +484,17 @@ class State(object):
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and
+                self.entity_id == other.entity_id and
                 self.state == other.state and
                 self.attributes == other.attributes)
 
     def __repr__(self):
-        if self.attributes:
-            return "<state {}:{} @ {}>".format(
-                self.state, util.repr_helper(self.attributes),
-                util.datetime_to_str(self.last_changed))
-        else:
-            return "<state {} @ {}>".format(
-                self.state, util.datetime_to_str(self.last_changed))
+        attr = "; {}".format(util.repr_helper(self.attributes)) \
+               if self.attributes else ""
+
+        return "<state {}={}{} @ {}>".format(
+            self.entity_id, self.state, attr,
+            util.datetime_to_str(self.last_changed))
 
 
 class StateMachine(object):
@@ -513,15 +530,12 @@ class StateMachine(object):
     def get_since(self, point_in_time):
         """
         Returns all states that have been changed since point_in_time.
-
-        Note: States keep track of last_changed -without- microseconds.
-        Therefore your point_in_time will also be stripped of microseconds.
         """
         point_in_time = util.strip_microseconds(point_in_time)
 
         with self._lock:
             return [state for state in self._states.values()
-                    if state.last_changed >= point_in_time]
+                    if state.last_updated >= point_in_time]
 
     def is_state(self, entity_id, state):
         """ Returns True if entity exists and is specified state. """
@@ -538,20 +552,28 @@ class StateMachine(object):
     def set(self, entity_id, new_state, attributes=None):
         """ Set the state of an entity, add entity if it does not exist.
 
-        Attributes is an optional dict to specify attributes of this state. """
+        Attributes is an optional dict to specify attributes of this state.
 
+        If you just update the attributes and not the state, last changed will
+        not be affected.
+        """
+
+        new_state = str(new_state)
         attributes = attributes or {}
 
         with self._lock:
             old_state = self._states.get(entity_id)
 
+            is_existing = old_state is not None
+            same_state = is_existing and old_state.state == new_state
+            same_attr = is_existing and old_state.attributes == attributes
+
             # If state did not exist or is different, set it
-            if not old_state or \
-               old_state.state != new_state or \
-               old_state.attributes != attributes:
+            if not (same_state and same_attr):
+                last_changed = old_state.last_changed if same_state else None
 
                 state = self._states[entity_id] = \
-                    State(entity_id, new_state, attributes)
+                    State(entity_id, new_state, attributes, last_changed)
 
                 event_data = {'entity_id': entity_id, 'new_state': state}
 
@@ -574,9 +596,9 @@ class StateMachine(object):
 
         # Ensure it is a lowercase list with entity ids we want to match on
         if isinstance(entity_ids, str):
-            entity_ids = [entity_ids.lower()]
+            entity_ids = (entity_ids.lower(),)
         else:
-            entity_ids = [entity_id.lower() for entity_id in entity_ids]
+            entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
         @ft.wraps(action)
         def state_listener(event):

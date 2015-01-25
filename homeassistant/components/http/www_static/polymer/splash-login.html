@@ -6,6 +6,7 @@
 
 <link rel="import" href="home-assistant-main.html">
 <link rel="import" href="home-assistant-api.html">
+<link rel="import" href="resources/home-assistant-style.html">
 
 <polymer-element name="splash-login" attributes="auth">
   <template>
@@ -37,6 +38,7 @@
 
     </style>
 
+    <home-assistant-style></home-assistant-style>
     <home-assistant-api auth="{{auth}}" id="api"></home-assistant-api>
 
     <div layout horizontal center fit class='login' id="splash">

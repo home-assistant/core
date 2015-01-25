@@ -3,6 +3,9 @@ requests>=2.0
 
 # optional, needed for specific components
 
+# discovery
+zeroconf>=0.16.0
+
 # sun
 pyephem>=3.7
 
@@ -18,5 +21,11 @@ pyuserinput>=0.1.9
 # switch.tellstick, tellstick_sensor
 tellcore-py>=1.0.4
 
-# namp_tracker plugin
+# device_tracker.nmap
 python-libnmap
+
+# notify.pushbullet
+pushbullet.py>=0.7.1
+
+# thermostat.nest
+python-nest>=2.1

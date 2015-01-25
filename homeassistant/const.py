@@ -2,6 +2,9 @@
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 
+# If no name is specified
+DEVICE_DEFAULT_NAME = "Unnamed Device"
+
 # #### CONFIG ####
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
@@ -14,6 +17,8 @@ CONF_HOST = "host"
 CONF_HOSTS = "hosts"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_API_KEY = "api_key"
+CONF_ACCESS_TOKEN = "access_token"
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -22,12 +27,16 @@ EVENT_STATE_CHANGED = "state_changed"
 EVENT_TIME_CHANGED = "time_changed"
 EVENT_CALL_SERVICE = "call_service"
 EVENT_SERVICE_EXECUTED = "service_executed"
+EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 
 # #### STATES ####
 STATE_ON = 'on'
 STATE_OFF = 'off'
 STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
+STATE_UNKNOWN = "unknown"
+STATE_OPEN = 'open'
+STATE_CLOSED = 'closed'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -51,6 +60,16 @@ ATTR_ENTITY_PICTURE = "entity_picture"
 
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+
+# Temperature attribute
+ATTR_TEMPERATURE = "temperature"
+
+# #### MISC ####
+TEMP_CELCIUS = "°C"
+TEMP_FAHRENHEIT = "°F"
+
+# Contains the information that is discovered
+ATTR_DISCOVERED = "discovered"
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"

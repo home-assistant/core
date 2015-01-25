@@ -1,0 +1,60 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<polymer-element name="home-assistant-style" noscript>
+  <template>
+    <core-style id="ha-dialog">
+      :host {
+        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+
+        min-width: 350px;
+        max-width: 700px;
+
+        /* First two are from core-transition-bottom */
+        transition:
+          transform 0.2s ease-in-out,
+          opacity 0.2s ease-in,
+          top .3s,
+          left .3s !important;
+      }
+
+      :host .sidebar {
+        margin-left: 30px;
+      }
+
+      @media all and (max-width: 620px) {
+        :host.two-column {
+          margin: 0;
+          width: 100%;
+          max-height: calc(100% - 64px);
+          bottom: 0px;
+          left: 0px;
+          right: 0px;
+        }
+
+        :host .sidebar {
+          display: none;
+        }
+      }
+
+      @media all and (max-width: 464px) {
+        :host {
+          margin: 0;
+          width: 100%;
+          max-height: calc(100% - 64px);
+          bottom: 0px;
+          left: 0px;
+          right: 0px;
+        }
+      }
+
+      html /deep/ .ha-form paper-input {
+        display: block;
+      }
+
+      html /deep/ .ha-form paper-input:first-child {
+        padding-top: 0;
+      }
+    </core-style>  
+  </template>
+</polymer-element>

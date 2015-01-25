@@ -1,18 +1,46 @@
+<script src="bower_components/moment/moment.js"></script>
+
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/paper-toast/paper-toast.html">
 
-<link rel="import" href="event-fire-dialog.html">
-<link rel="import" href="service-call-dialog.html">
-<link rel="import" href="state-set-dialog.html">
+<link rel="import" href="dialogs/event-fire-dialog.html">
+<link rel="import" href="dialogs/service-call-dialog.html">
+<link rel="import" href="dialogs/state-set-dialog.html">
+<link rel="import" href="dialogs/more-info-dialog.html">
+
+<script>
+  var ha = {};
+  ha.util = {};
+
+  ha.util.parseTime = function(timeString) {
+    return moment(timeString, "HH:mm:ss DD-MM-YYYY");
+  };
+
+  ha.util.relativeTime = function(timeString) {
+    return ha.util.parseTime(timeString).fromNow();    
+  };
+
+  PolymerExpressions.prototype.relativeHATime = function(timeString) {
+    return ha.util.relativeTime(timeString);
+  };
+
+  PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
+    return (timeString || "").split(' ')[0];
+  };
+
+</script>
 
 <polymer-element name="home-assistant-api" attributes="auth">
   <template>
     <paper-toast id="toast" role="alert" text=""></paper-toast>
     <event-fire-dialog id="eventDialog" api={{api}}></event-fire-dialog>
     <service-call-dialog id="serviceDialog" api={{api}}></service-call-dialog>
-    <state-set-dialog id="stateDialog" api={{api}}></state-set-dialog>
+    <state-set-dialog id="stateSetDialog" api={{api}}></state-set-dialog>
+    <more-info-dialog id="moreInfoDialog" api={{api}}></more-info-dialog>
   </template>
   <script>
+  var domainsWithCard = ['thermostat', 'configurator'];
+  var domainsWithMoreInfo = ['light', 'group', 'sun', 'configurator'];
 
   State = function(json, api) {
       this.api = api;
@@ -22,12 +50,12 @@
       this.entity_id = json.entity_id;
       var parts = json.entity_id.split(".");
       this.domain = parts[0];
-      this.entity = parts[1];
+      this.object_id = parts[1];
 
       if(this.attributes.friendly_name) {
         this.entityDisplay = this.attributes.friendly_name;
       } else {
-        this.entityDisplay = this.entity.replace(/_/g, " ");
+        this.entityDisplay = this.object_id.replace(/_/g, " ");
       }
 
       this.state = json.state;
@@ -64,13 +92,33 @@
     // how to render the card for this state
     cardType: {
       get: function() {
-        if(this.canToggle) {
+        if(domainsWithCard.indexOf(this.domain) !== -1) {
+          return this.domain;
+        } else if(this.canToggle) {
           return "toggle";
         } else {
           return "display";
         }
       }
-    }
+    },
+
+    // how to render the more info of this state
+    moreInfoType: {
+      get: function() {
+        if(domainsWithMoreInfo.indexOf(this.domain) !== -1) {
+          return this.domain;
+        } else {
+          return 'default';
+        }
+      }
+    },
+
+    relativeLastChanged: {
+      get: function() {
+        return ha.util.relativeTime(this.last_changed);
+      }
+    },
+
   });
 
   Polymer({
@@ -89,6 +137,14 @@
     },
 
     // local methods
+    removeState: function(entityId) {
+      var state = this.getState(entityId);
+
+      if (state !== null) {
+        this.states.splice(this.states.indexOf(state), 1);
+      }
+    },
+
     getState: function(entityId) {
       var found = this.states.filter(function(state) {
         return state.entity_id == entityId;
@@ -97,12 +153,34 @@
       return found.length > 0 ? found[0] : null;
     },
 
+    getStates: function(entityIds) {
+      var states = [];
+      var state;
+      for(var i = 0; i < entityIds.length; i++) {
+        state = this.getState(entityIds[i]);
+
+        if(state !== null) {
+          states.push(state);
+        }
+      }
+      return states;
+    },
+
+    getEntityIDs: function() {
+      return this.states.map(
+          function(state) { return state.entity_id; });
+    },
+
     hasService: function(domain, service) {
       var found = this.services.filter(function(serv) {
         return serv.domain == domain && serv.services.indexOf(service) !== -1;
       }, this);
 
       return found.length > 0;
+    },
+
+    getCustomGroups: function() {
+      return this.states.filter(function(state) { return state.isCustomGroup;});
     },
 
     _laterFetchStates: function() {
@@ -114,8 +192,8 @@
       this.stateUpdateTimeout = setTimeout(this.fetchStates.bind(this), 60000);
     },
 
-    _sortStates: function(states) {
-      states.sort(function(one, two) {
+    _sortStates: function() {
+      this.states.sort(function(one, two) {
         if (one.entity_id > two.entity_id) {
           return 1;
         } else if (one.entity_id < two.entity_id) {
@@ -126,34 +204,62 @@
       });
     },
 
+    /**
+     * Pushes a new state to the state machine.
+     * Will resort the states after a push and fire states-updated event.
+     */
     _pushNewState: function(new_state) {
-      var state;
-      var stateFound = false;
-
-      for(var i = 0; i < this.states.length; i++) {
-        if(this.states[i].entity_id == new_state.entity_id) {
-          state = this.states[i];
-          state.attributes = new_state.attributes;
-          state.last_changed = new_state.last_changed;
-          state.state = new_state.state;
-
-          stateFound = true;
-          break;
-        }
-      }
-
-      if(!stateFound) {
-        this.states.push(new State(new_state, this));
-        this._sortStates(this.states);
+      if (this.__pushNewState(new_state)) {
+        this._sortStates();
       }
 
       this.fire('states-updated');
     },
 
-    _pushNewStates: function(new_states) {
-      new_states.map(function(state) {
-        this._pushNewState(state);
+    /**
+     * Creates or updates a state. Returns if a new state was added.
+     */
+    __pushNewState: function(new_state) {
+      var curState = this.getState(new_state.entity_id);
+
+      if (curState === null) {
+        this.states.push(new State(new_state, this));
+
+        return true;
+      } else {
+        curState.attributes = new_state.attributes;
+        curState.last_changed = new_state.last_changed;
+        curState.state = new_state.state;
+
+        return false;
+      }
+    },
+
+    _pushNewStates: function(newStates, removeNonPresent) {
+      removeNonPresent = !!removeNonPresent;
+      var currentEntityIds = removeNonPresent ? this.getEntityIDs() : [];
+
+      var hasNew = newStates.reduce(function(hasNew, newState) {
+        var isNewState = this.__pushNewState(newState);
+
+        if (isNewState) {
+          return true;
+        } else if(removeNonPresent) {
+          currentEntityIds.splice(currentEntityIds.indexOf(newState.entity_id), 1);
+        }
+
+        return hasNew;
+      }.bind(this), false);
+
+      currentEntityIds.forEach(function(entityId) {
+        this.removeState(entityId);
       }.bind(this));
+
+      if (hasNew) {
+        this._sortStates();
+      }
+
+      this.fire('states-updated');
     },
 
     // call api methods
@@ -173,13 +279,7 @@
 
     fetchStates: function(onSuccess, onError) {
       var successStatesUpdate = function(newStates) {
-        this._sortStates(newStates);
-
-        this.states = newStates.map(function(json) {
-          return new State(json, this);
-        }.bind(this));
-
-        this.fire('states-updated');
+        this._pushNewStates(newStates, true);
 
         this._laterFetchStates();
 
@@ -330,6 +430,10 @@
     },
 
     // show dialogs
+    showmoreInfoDialog: function(entityId) {
+      this.$.moreInfoDialog.show(this.getState(entityId));
+    },
+
     showEditStateDialog: function(entityId) {
       var state = this.getState(entityId);
 
@@ -341,7 +445,7 @@
       state = state || "";
       stateAttributes = stateAttributes || null;
 
-      this.$.stateDialog.show(entityId, state, stateAttributes);
+      this.$.stateSetDialog.show(entityId, state, stateAttributes);
     },
 
     showFireEventDialog: function(eventType, eventData) {

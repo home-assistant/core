@@ -52,20 +52,20 @@ import logging
 import os
 import csv
 
+from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.helpers import (
-    extract_entity_ids, platform_devices_from_config)
-from homeassistant.components import group
+    generate_entity_id, extract_entity_ids, config_per_platform)
+from homeassistant.components import group, discovery, wink
 
 
 DOMAIN = "light"
 DEPENDENCIES = []
 
-GROUP_NAME_ALL_LIGHTS = 'all_lights'
-ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format(
-    GROUP_NAME_ALL_LIGHTS)
+GROUP_NAME_ALL_LIGHTS = 'all lights'
+ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -87,8 +87,13 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
-
 LIGHT_PROFILES_FILE = "light_profiles.csv"
+
+# Maps discovered services to their platforms
+DISCOVERY_PLATFORMS = {
+    wink.DISCOVER_LIGHTS: 'wink',
+    discovery.services.PHILIPS_HUE: 'hue',
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -163,40 +168,51 @@ def setup(hass, config):
 
                     return False
 
-    lights = platform_devices_from_config(config, DOMAIN, hass, _LOGGER)
+    # Dict to track entity_id -> lights
+    lights = {}
 
-    if not lights:
-        return False
+    # Track all lights in a group
+    light_group = group.Group(hass, GROUP_NAME_ALL_LIGHTS, user_defined=False)
 
-    ent_to_light = {}
+    def add_lights(new_lights):
+        """ Add lights to the component to track. """
+        for light in new_lights:
+            if light is not None and light not in lights.values():
+                light.entity_id = generate_entity_id(
+                    ENTITY_ID_FORMAT, light.name, lights.keys())
 
-    no_name_count = 1
+                lights[light.entity_id] = light
 
-    for light in lights:
-        name = light.get_name()
+                light.update_ha_state(hass)
 
-        if name is None:
-            name = "Light #{}".format(no_name_count)
-            no_name_count += 1
+        light_group.update_tracked_entity_ids(lights.keys())
 
-        entity_id = util.ensure_unique_string(
-            ENTITY_ID_FORMAT.format(util.slugify(name)),
-            ent_to_light.keys())
+    for p_type, p_config in config_per_platform(config, DOMAIN, _LOGGER):
+        platform = get_component(ENTITY_ID_FORMAT.format(p_type))
 
-        light.entity_id = entity_id
-        ent_to_light[entity_id] = light
+        if platform is None:
+            _LOGGER.error("Unknown type specified: %s", p_type)
 
-    # pylint: disable=unused-argument
+        platform.setup_platform(hass, p_config, add_lights)
+
     def update_lights_state(now):
         """ Update the states of all the lights. """
-        for light in lights:
-            light.update_ha_state(hass)
+        if lights:
+            _LOGGER.info("Updating light states")
+
+            for light in lights.values():
+                light.update_ha_state(hass, True)
 
     update_lights_state(None)
 
-    # Track all lights in a group
-    group.setup_group(
-        hass, GROUP_NAME_ALL_LIGHTS, ent_to_light.keys(), False)
+    def light_discovered(service, info):
+        """ Called when a light is discovered. """
+        platform = get_component(
+            ENTITY_ID_FORMAT.format(DISCOVERY_PLATFORMS[service]))
+
+        platform.setup_platform(hass, {}, add_lights, info)
+
+    discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), light_discovered)
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
@@ -204,12 +220,12 @@ def setup(hass, config):
         dat = service.data
 
         # Convert the entity ids to valid light ids
-        lights = [ent_to_light[entity_id] for entity_id
-                  in extract_entity_ids(hass, service)
-                  if entity_id in ent_to_light]
+        target_lights = [lights[entity_id] for entity_id
+                         in extract_entity_ids(hass, service)
+                         if entity_id in lights]
 
-        if not lights:
-            lights = list(ent_to_light.values())
+        if not target_lights:
+            target_lights = lights.values()
 
         params = {}
 
@@ -219,7 +235,7 @@ def setup(hass, config):
             params[ATTR_TRANSITION] = transition
 
         if service.service == SERVICE_TURN_OFF:
-            for light in lights:
+            for light in target_lights:
                 # pylint: disable=star-args
                 light.turn_off(**params)
 
@@ -277,11 +293,11 @@ def setup(hass, config):
                 elif dat[ATTR_FLASH] == FLASH_LONG:
                     params[ATTR_FLASH] = FLASH_LONG
 
-            for light in lights:
+            for light in target_lights:
                 # pylint: disable=star-args
                 light.turn_on(**params)
 
-        for light in lights:
+        for light in target_lights:
             light.update_ha_state(hass, True)
 
     # Update light state every 30 seconds

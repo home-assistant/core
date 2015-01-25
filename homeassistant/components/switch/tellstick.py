@@ -11,7 +11,6 @@ except ImportError:
     pass
 
 
-# pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Tellstick switches. """
     try:
@@ -36,20 +35,17 @@ class TellstickSwitch(ToggleDevice):
         self.tellstick = tellstick
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick.name}
 
-    def get_name(self):
+    @property
+    def name(self):
         """ Returns the name of the switch if any. """
         return self.tellstick.name
 
-    # pylint: disable=unused-argument
-    def turn_on(self, **kwargs):
-        """ Turns the switch on. """
-        self.tellstick.turn_on()
+    @property
+    def state_attributes(self):
+        """ Returns optional state attributes. """
+        return self.state_attr
 
-    # pylint: disable=unused-argument
-    def turn_off(self, **kwargs):
-        """ Turns the switch off. """
-        self.tellstick.turn_off()
-
+    @property
     def is_on(self):
         """ True if switch is on. """
         last_command = self.tellstick.last_sent_command(
@@ -57,6 +53,10 @@ class TellstickSwitch(ToggleDevice):
 
         return last_command == tc_constants.TELLSTICK_TURNON
 
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr
+    def turn_on(self, **kwargs):
+        """ Turns the switch on. """
+        self.tellstick.turn_on()
+
+    def turn_off(self, **kwargs):
+        """ Turns the switch off. """
+        self.tellstick.turn_off()

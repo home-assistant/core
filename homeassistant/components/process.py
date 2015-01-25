@@ -30,7 +30,6 @@ def setup(hass, config):
     entities = {ENTITY_ID_FORMAT.format(util.slugify(pname)): pstring
                 for pname, pstring in config[DOMAIN].items()}
 
-    # pylint: disable=unused-argument
     def update_process_states(time):
         """ Check ps for currently running processes and update states. """
         with os.popen(PS_STRING, 'r') as psfile:

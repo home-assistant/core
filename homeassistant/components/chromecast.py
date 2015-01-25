@@ -6,13 +6,19 @@ Provides functionality to interact with Chromecasts.
 """
 import logging
 
+try:
+    import pychromecast
+except ImportError:
+    # Ignore, we will raise appropriate error later
+    pass
+
+from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.helpers import extract_entity_ids
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
     SERVICE_VOLUME_DOWN, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK,
-    CONF_HOSTS)
+    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK)
 
 
 DOMAIN = 'chromecast'
@@ -105,12 +111,35 @@ def media_prev_track(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREV_TRACK, data)
 
 
-# pylint: disable=too-many-locals, too-many-branches
-def setup(hass, config):
-    """ Listen for chromecast events. """
-    logger = logging.getLogger(__name__)
+def setup_chromecast(casts, host):
+    """ Tries to convert host to Chromecast object and set it up. """
+
+    # Check if already setup
+    if any(cast.host == host for cast in casts.values()):
+        return
 
     try:
+        cast = pychromecast.PyChromecast(host)
+
+        entity_id = util.ensure_unique_string(
+            ENTITY_ID_FORMAT.format(
+                util.slugify(cast.device.friendly_name)),
+            casts.keys())
+
+        casts[entity_id] = cast
+
+    except pychromecast.ChromecastConnectionError:
+        pass
+
+
+def setup(hass, config):
+    # pylint: disable=unused-argument,too-many-locals
+    """ Listen for chromecast events. """
+    logger = logging.getLogger(__name__)
+    discovery = get_component('discovery')
+
+    try:
+        # pylint: disable=redefined-outer-name
         import pychromecast
     except ImportError:
         logger.exception(("Failed to import pychromecast. "
@@ -119,33 +148,23 @@ def setup(hass, config):
 
         return False
 
-    if CONF_HOSTS in config[DOMAIN]:
-        hosts = config[DOMAIN][CONF_HOSTS].split(",")
+    casts = {}
 
-    # If no hosts given, scan for chromecasts
-    else:
+    # If discovery component not loaded, scan ourselves
+    if discovery.DOMAIN not in hass.components:
         logger.info("Scanning for Chromecasts")
         hosts = pychromecast.discover_chromecasts()
 
-    casts = {}
+        for host in hosts:
+            setup_chromecast(casts, host)
 
-    for host in hosts:
-        try:
-            cast = pychromecast.PyChromecast(host)
+    def chromecast_discovered(service, info):
+        """ Called when a Chromecast has been discovered. """
+        logger.info("New Chromecast discovered: %s", info[0])
+        setup_chromecast(casts, info[0])
 
-            entity_id = util.ensure_unique_string(
-                ENTITY_ID_FORMAT.format(
-                    util.slugify(cast.device.friendly_name)),
-                casts.keys())
-
-            casts[entity_id] = cast
-
-        except pychromecast.ChromecastConnectionError:
-            pass
-
-    if not casts:
-        logger.error("Could not find Chromecasts")
-        return False
+    discovery.listen(
+        hass, discovery.services.GOOGLE_CAST, chromecast_discovered)
 
     def update_chromecast_state(entity_id, chromecast):
         """ Retrieve state of Chromecast and update statemachine. """
@@ -192,12 +211,13 @@ def setup(hass, config):
 
         hass.states.set(entity_id, state, state_attr)
 
-    def update_chromecast_states(time):  # pylint: disable=unused-argument
+    def update_chromecast_states(time):
         """ Updates all chromecast states. """
-        logger.info("Updating Chromecast status")
+        if casts:
+            logger.info("Updating Chromecast status")
 
-        for entity_id, cast in casts.items():
-            update_chromecast_state(entity_id, cast)
+            for entity_id, cast in casts.items():
+                update_chromecast_state(entity_id, cast)
 
     def _service_to_entities(service):
         """ Helper method to get entities from service. """
@@ -277,7 +297,7 @@ def setup(hass, config):
                 pychromecast.play_youtube_video(video_id, cast.host)
                 update_chromecast_state(entity_id, cast)
 
-    hass.track_time_change(update_chromecast_states)
+    hass.track_time_change(update_chromecast_states, second=range(0, 60, 15))
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF,
                            turn_off_service)

@@ -11,6 +11,10 @@ api_password=mypass
 [light]
 platform=hue
 
+[wink]
+# Get your token at https://winkbearertoken.appspot.com
+access_token=YOUR_TOKEN
+
 [device_tracker]
 # The following types are available: netgear, tomato, luci, nmap_tracker
 platform=netgear
@@ -33,8 +37,18 @@ platform=wemo
 # Optional: hard code the hosts (comma seperated) to avoid scanning the network
 # hosts=192.168.1.9,192.168.1.12
 
+[thermostat]
+platform=nest
+# Required: username and password that are used to login to the Nest thermostat.
+username=myemail@mydomain.com
+password=mypassword
+
 [downloader]
 download_dir=downloads
+
+[notify]
+platform=pushbullet
+api_key=ABCDEFGHJKLMNOPQRSTUVXYZ
 
 [device_sun_light_trigger]
 # Optional: specify a specific light/group of lights that has to be turned on
@@ -65,3 +79,26 @@ unknown_light=group.living_room
 [browser]
 
 [keyboard]
+
+[automation]
+platform=state
+alias=Sun starts shining
+
+state_entity_id=sun.sun
+# Next two are optional, omit to match all
+state_from=below_horizon
+state_to=above_horizon
+
+execute_service=light.turn_off
+service_entity_id=group.living_room
+
+[automation 2]
+platform=time
+alias=Beer o Clock
+
+time_hours=16
+time_minutes=0
+time_seconds=0
+
+execute_service=notify.notify
+execute_service_data={"message":"It's 4, time for beer!"}

@@ -17,6 +17,38 @@ from collections import defaultdict
 import homeassistant
 import homeassistant.loader as loader
 import homeassistant.components as core_components
+import homeassistant.components.group as group
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def setup_component(hass, domain, config=None):
+    """ Setup a component for Home Assistant. """
+    if config is None:
+        config = defaultdict(dict)
+
+    component = loader.get_component(domain)
+
+    try:
+        if component.setup(hass, config):
+            hass.components.append(component.DOMAIN)
+
+            _LOGGER.info("component %s initialized", domain)
+
+            # Assumption: if a component does not depend on groups
+            # it communicates with devices
+            if group.DOMAIN not in component.DEPENDENCIES:
+                hass.pool.add_worker()
+
+            return True
+
+        else:
+            _LOGGER.error("component %s failed to initialize", domain)
+
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error during setup of component %s", domain)
+
+    return False
 
 
 # pylint: disable=too-many-branches, too-many-statements
@@ -29,7 +61,7 @@ def from_config_dict(config, hass=None):
     if hass is None:
         hass = homeassistant.HomeAssistant()
 
-    logger = logging.getLogger(__name__)
+    enable_logging(hass)
 
     loader.prepare(hass)
 
@@ -42,42 +74,21 @@ def from_config_dict(config, hass=None):
                   if ' ' not in key and key != homeassistant.DOMAIN)
 
     if not core_components.setup(hass, config):
-        logger.error(("Home Assistant core failed to initialize. "
-                      "Further initialization aborted."))
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "Further initialization aborted.")
 
         return hass
 
-    logger.info("Home Assistant core initialized")
+    _LOGGER.info("Home Assistant core initialized")
 
     # Setup the components
-
-    # We assume that all components that load before the group component loads
-    # are components that poll devices. As their tasks are IO based, we will
-    # add an extra worker for each of them.
-    add_worker = True
-
     for domain in loader.load_order_components(components):
-        component = loader.get_component(domain)
-
-        try:
-            if component.setup(hass, config):
-                logger.info("component %s initialized", domain)
-
-                add_worker = add_worker and domain != "group"
-
-                if add_worker:
-                    hass.pool.add_worker()
-
-            else:
-                logger.error("component %s failed to initialize", domain)
-
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Error during setup of component %s", domain)
+        setup_component(hass, domain, config)
 
     return hass
 
 
-def from_config_file(config_path, hass=None, enable_logging=True):
+def from_config_file(config_path, hass=None):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -88,32 +99,6 @@ def from_config_file(config_path, hass=None, enable_logging=True):
 
         # Set config dir to directory holding config file
         hass.config_dir = os.path.abspath(os.path.dirname(config_path))
-
-    if enable_logging:
-        # Setup the logging for home assistant.
-        logging.basicConfig(level=logging.INFO)
-
-        # Log errors to a file if we have write access to file or config dir
-        err_log_path = hass.get_config_path("home-assistant.log")
-        err_path_exists = os.path.isfile(err_log_path)
-
-        # Check if we can write to the error log if it exists or that
-        # we can create files in the containgin directory if not.
-        if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
-           (not err_path_exists and os.access(hass.config_dir, os.W_OK)):
-
-            err_handler = logging.FileHandler(
-                err_log_path, mode='w', delay=True)
-
-            err_handler.setLevel(logging.WARNING)
-            err_handler.setFormatter(
-                logging.Formatter('%(asctime)s %(name)s: %(message)s',
-                                  datefmt='%H:%M %d-%m-%y'))
-            logging.getLogger('').addHandler(err_handler)
-
-        else:
-            logging.getLogger(__name__).error(
-                "Unable to setup error log %s (access denied)", err_log_path)
 
     # Read config
     config = configparser.ConfigParser()
@@ -128,3 +113,30 @@ def from_config_file(config_path, hass=None, enable_logging=True):
             config_dict[section][key] = val
 
     return from_config_dict(config_dict, hass)
+
+
+def enable_logging(hass):
+    """ Setup the logging for home assistant. """
+    logging.basicConfig(level=logging.INFO)
+
+    # Log errors to a file if we have write access to file or config dir
+    err_log_path = hass.get_config_path("home-assistant.log")
+    err_path_exists = os.path.isfile(err_log_path)
+
+    # Check if we can write to the error log if it exists or that
+    # we can create files in the containing directory if not.
+    if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
+       (not err_path_exists and os.access(hass.config_dir, os.W_OK)):
+
+        err_handler = logging.FileHandler(
+            err_log_path, mode='w', delay=True)
+
+        err_handler.setLevel(logging.WARNING)
+        err_handler.setFormatter(
+            logging.Formatter('%(asctime)s %(name)s: %(message)s',
+                              datefmt='%H:%M %d-%m-%y'))
+        logging.getLogger('').addHandler(err_handler)
+
+    else:
+        _LOGGER.error(
+            "Unable to setup error log %s (access denied)", err_log_path)

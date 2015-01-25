@@ -1,0 +1,45 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="more-info-default.html">
+<link rel="import" href="more-info-light.html">
+<link rel="import" href="more-info-group.html">
+<link rel="import" href="more-info-sun.html">
+<link rel="import" href="more-info-configurator.html">
+
+<polymer-element name="more-info-content" attributes="api stateObj">
+<template>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+
+  <div id='moreInfo' class='{{classNames}}'></div>
+</template>
+<script>
+Polymer({
+  classNames: '',
+
+  observe: {
+    'stateObj.attributes': 'stateAttributesChanged',
+  },
+
+  stateObjChanged: function() {
+    while (this.$.moreInfo.lastChild) {
+      this.$.moreInfo.removeChild(this.$.moreInfo.lastChild);
+    }
+
+    var moreInfo = document.createElement("more-info-" + this.stateObj.moreInfoType);
+    moreInfo.api = this.api;
+    moreInfo.stateObj = this.stateObj;
+    this.$.moreInfo.appendChild(moreInfo);
+  },
+
+  stateAttributesChanged: function(oldVal, newVal) {
+    this.classNames = Object.keys(newVal).map(
+      function(key) { return "has-" + key; }).join(' ');
+  },
+
+});
+</script>
+</polymer-element>

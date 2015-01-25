@@ -1,0 +1,33 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../cards/state-card-content.html">
+
+<polymer-element name="more-info-group" attributes="stateObj api">
+<template>
+  <style>
+    .child-card {
+      margin-bottom: 8px;
+    }
+
+    .child-card:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+
+  <template repeat="{{states as state}}">
+    <state-card-content stateObj="{{state}}" api="{{api}}" class='child-card'>
+    </state-card-content>
+  </template>
+</template>
+<script>
+Polymer({
+  observe: {
+    'stateObj.attributes.entity_id': 'updateStates'
+  },
+
+  updateStates: function() {
+    this.states = this.api.getStates(this.stateObj.attributes.entity_id);
+  }
+});
+</script>
+</polymer-element>
