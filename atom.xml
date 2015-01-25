@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-01-24T18:21:07-08:00</updated>
+  <updated>2015-01-24T18:48:54-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,39 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Release notes for January 24, 2015]]></title>
+    <link href="https://home-assistant.io/blog/2015/01/24/release-notes/"/>
+    <updated>2015-01-24T18:36:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/01/24/release-notes</id>
+    <content type="html"><![CDATA[<p>I have just merged the latest version of the development branch into master. Here are some of the highlights of this release:</p>
+
+<p><strong>Configuration via the frontend</strong><br>
+Phliips Hue will now be auto discovered and uses the new <code>configurator</code> component to interact with the user to finish the setup process.</p>
+
+<p><strong>Wink Hub support</strong><br>
+Thanks to the work done by John McLaughlin and Geoff Norton we now support the lights, switches and sensors that are connected to the Wink hub.</p>
+
+<p><strong>The getting started guide and component page have been reorganized</strong><br>
+The getting started instructions have been split into separate pages per component and a general overview page. The goal is to have a page per component that describes:</p>
+
+<ul>
+<li>What it does</li>
+<li>How to set it up</li>
+<li>Which states it maintains</li>
+<li>Which services it provides</li>
+<li>Additional development tips</li>
+</ul>
+
+
+<p><strong>More reasonable errors</strong><br>
+Home Assistant should now throw better errors and offer solutions if you do not have the right version of Python 3, forgot to clone the git submodules or install the dependencies.</p>
+
+<p><strong>Streamlined first launch</strong><br>
+Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Nest in the house!]]></title>

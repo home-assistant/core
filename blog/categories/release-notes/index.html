@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Hello PushBullet, nice talking to you - Home Assistant</title>
+    <title>Category: release-notes - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Introducing the new notify component and PushBullet platform">
+    <meta name="description" content="Category: release-notes">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Hello PushBullet, nice talking to you">
+    <meta property="og:title" content="Category: release-notes">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/">
+    <meta property="og:url" content="https://home-assistant.io/blog/categories/release-notes/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Introducing the new notify component and PushBullet platform">
+    <meta property="og:description" content="Category: release-notes">
     
     
     
@@ -84,113 +84,63 @@
         <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
-          <article class="post">
+          <article class="page">
+
+  
   <header>
-  
-  <h1 class="title indent">Hello PushBullet, nice talking to you</h1>
+    <h1 class="title indent">
+      Category: Release-notes
+    </h1>
+  </header>
+  <hr class="divider">
   
 
+  <div id="archive-list">
   
-  <div class="meta clearfix">
+  
+  
     
-
-
-
-
-
-
-
-
+    <h2>2015</h2>
   
+    <article>
+      
 
+<div class="grid">
 
-<time datetime="2015-01-04T13:29:07-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 4, 2015</time>
+  <div class="grid__item one-fifth palm-one-whole">
+    <time datetime="2015-01-24T18:36:00-08:00" pubdate>
+      <span class='month'>Jan</span> <span class='day'>24</span>
+    </time>
+  </div>
+  <div class="grid__item four-fifths palm-one-whole">
+    <h1 class="gamma"><a href="/blog/2015/01/24/release-notes/">Release notes for January 24, 2015</a></h1>
     
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    
+    <footer class="meta">
+      
 
   <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
       
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
       
     
     </ul>
   </span>
 
+    </footer>
     
-      <a class='comments'
-         href="#disqus_thread"
-         >Comments</a>
-    
+    <hr class="divider">
   </div>
+
+</div>
+    </article>
   
-</header>
-
-
-
-
-  <p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn&rsquo;t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
-
-<p>The new notify component will take in messages and tells them to the user. For now this will be powered by the very awesome <a href="https://www.pushbullet.com/">PushBullet</a> but any other messaging platform can be easily added.</p>
-
-<p class='img'>
-  <img src='/images/screenshots/pushbullet_moto360.png' />
-  A message triggered by the simple_alarm component is shown by PushBullet on the Moto360.
-</p>
-
-
-<p>Read on to learn how to enable the notify component and integrate it with other components.</p>
-
-<a name="read-more"></a>
-
-
-<h3>Enabling the notify component</h3>
-
-<p>To enable the new notify component, add the following to your <code>home-assistant.conf</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[notify]
-</span><span class='line'>platform=pushbullet
-</span><span class='line'>api_key=ABCDEFGHJKLMNOPQRSTUVXYZ</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You can get your api key from <a href="https://www.pushbullet.com/account">your account page on PushBullet.com</a>.</p>
-
-<h3>Sending messages from your component</h3>
-
-<p>To be able to send messages, the notify component has to be loaded and initialized successfully.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.loader</span> <span class="kn">as</span> <span class="nn">loader</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">notify</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_component</span><span class="p">(</span><span class="s">&#39;notify&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">notify</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&quot;Hello from my component!&quot;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
+</div>
 
 
 </article>
-
- 
-<section id="disqus">
-  <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
-</section>
 
 
         </div>
@@ -207,15 +157,15 @@
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"
-     data-counturl="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/categories/release-notes/index.html"
+     data-counturl="https://home-assistant.io/blog/categories/release-notes/index.html" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"
+         data-href="https://home-assistant.io/blog/categories/release-notes/index.html"
          data-layout="button_count">
     </div>
   
@@ -264,6 +214,10 @@
         </li>
       
     
+      
+        <li class="post">
+          <a href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/">Hello PushBullet, nice talking to you</a>
+        </li>
       
     
       
@@ -318,10 +272,7 @@
   var disqus_shortname = 'home-assistant';
   
     
-    // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/';
-    var disqus_script = 'embed.js';
+    var disqus_script = 'count.js';
   
   (function () {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
