@@ -20,7 +20,7 @@ from homeassistant.components.scheduler import ServiceEventListener
 _LOGGER = logging.getLogger(__name__)
 
 
-def create(schedule, event_listener_data):
+def create_event_listener(schedule, event_listener_data):
     """ Create a TimeEvent based on the description """
 
     service = event_listener_data['service']

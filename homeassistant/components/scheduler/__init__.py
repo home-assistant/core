@@ -25,9 +25,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 # The domain of your component. Should be equal to the name of your component
 DOMAIN = 'scheduler'
 
-# List of component names (string) your component depends upon
-# If you are setting up a group but not using a group for anything,
-# don't depend on group
 DEPENDENCIES = ['sun']
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +36,16 @@ _SCHEDULE_FILE = 'schedule.json'
 def setup(hass, config):
     """ Create the schedules """
 
+    def setup_listener(schedule, event_data):
+        type = event_data['type']
+        component = type
+
+        if type in ('time'):
+            component = 'scheduler.{}'.format(type)
+
+        return get_component(component).create_event_listener(schedule,
+                                                              event_data)
+
     def setup_schedule(schedule_data):
         """ setup a schedule based on the description """
 
@@ -49,9 +56,7 @@ def setup(hass, config):
                             days=schedule_data['days'])
 
         for event_data in schedule_data['events']:
-            event_listener_type = \
-                get_component('scheduler.{}'.format(event_data['type']))
-            event_listener = event_listener_type.create(schedule, event_data)
+            event_listener = setup_listener(schedule, event_data)
             schedule.add_event_listener(event_listener)
 
         schedule.schedule(hass)
