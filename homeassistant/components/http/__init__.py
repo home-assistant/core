@@ -89,6 +89,7 @@ from homeassistant.const import (
 from homeassistant.helpers import TrackStates
 import homeassistant.remote as rem
 import homeassistant.util as util
+import homeassistant.components.recorder as recorder
 from . import frontend
 
 DOMAIN = "http"
@@ -234,6 +235,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
         ('POST', URL_API_EVENT_FORWARD, '_handle_post_api_event_forward'),
         ('DELETE', URL_API_EVENT_FORWARD,
          '_handle_delete_api_event_forward'),
+
+        # Query the recorder
+        ('GET',
+         re.compile('/api/component/recorder/(?P<entity_id>[a-zA-Z\._0-9]+)/last_5_states'),
+         '_handle_component_recorder_5_states'),
+        ('GET',
+         re.compile('/api/component/recorder/last_5_events'),
+         '_handle_component_recorder_5_events'),
 
         # Static files
         ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
@@ -494,6 +503,22 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.server.hass.services.call(domain, service, data, True)
 
         self._write_json(changed_states)
+
+    # pylint: disable=invalid-name
+    def _handle_component_recorder_5_states(self, path_match, data):
+        if recorder.DOMAIN not in self.server.hass.components:
+            return self._write_json([])
+
+        entity_id = path_match.group('entity_id')
+
+        self._write_json(recorder.last_5_states(entity_id))
+
+    # pylint: disable=invalid-name
+    def _handle_component_recorder_5_events(self, path_match, data):
+        if recorder.DOMAIN not in self.server.hass.components:
+            return self._write_json([])
+
+        self._write_json(recorder.last_5_events())
 
     # pylint: disable=invalid-name
     def _handle_post_api_event_forward(self, path_match, data):

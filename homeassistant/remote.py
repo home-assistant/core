@@ -257,7 +257,7 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         """ Converts Home Assistant objects and hands
             other objects to the original method. """
-        if isinstance(obj, ha.State):
+        if isinstance(obj, (ha.State, ha.Event)):
             return obj.as_dict()
 
         return json.JSONEncoder.default(self, obj)

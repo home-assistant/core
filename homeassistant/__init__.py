@@ -314,6 +314,14 @@ class Event(object):
         self.data = data or {}
         self.origin = origin
 
+    def as_dict(self):
+        """ Returns a dict representation of this Event. """
+        return {
+            'event_type': self.event_type,
+            'data': dict(self.data),
+            'origin': str(self.origin)
+        }
+
     def __repr__(self):
         # pylint: disable=maybe-no-member
         if self.data:
@@ -355,7 +363,8 @@ class EventBus(object):
 
             event = Event(event_type, event_data, origin)
 
-            _LOGGER.info("Bus:Handling %s", event)
+            if event_type != EVENT_TIME_CHANGED:
+                _LOGGER.info("Bus:Handling %s", event)
 
             if not listeners:
                 return

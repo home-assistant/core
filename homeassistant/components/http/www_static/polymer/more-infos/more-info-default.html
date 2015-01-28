@@ -1,5 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../components/recent-states.html">
+
 <polymer-element name="more-info-default" attributes="stateObj">
 <template>
   <style>
@@ -29,8 +31,10 @@
         <div class='data'>
           {{stateObj.attributes[key]}}
         </div>
-      </div>      
+      </div>
     </template>
+
+    <recent-states api="{{api}}" stateObj="{{stateObj}}"></recent-states>
 
   </div>
 </template>

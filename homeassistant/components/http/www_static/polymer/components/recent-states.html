@@ -1,0 +1,31 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<polymer-element name="recent-states" attributes="api stateObj">
+  <template>
+    <style>
+
+    </style>
+
+    <h3>State history</h3>
+
+    <template repeat="{{recentStates as state}}">
+      <p>{{state.state}} - {{state.last_changed | relativeHATime}}</p>
+    </template>
+
+  </template>
+  <script>
+  Polymer({
+    recentStates: [],
+
+    stateObjChanged: function() {
+      this.recentStates = [];
+
+      this.api.call_api('GET', 'component/recorder/' + this.stateObj.entity_id + '/last_5_states', {}, this.newStates.bind(this));
+    },
+
+    newStates: function(states) {
+      this.recentStates = states.slice(1);
+    }
+  });
+  </script>
+</polymer-element>
