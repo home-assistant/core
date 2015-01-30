@@ -1,9 +1,14 @@
+"""
+homeassistant.components.frontend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides a frontend for Home Assistant.
+"""
 import re
 import os
-import time
-import gzip
+import logging
 
-from . import frontend
+from . import version
 import homeassistant.util as util
 
 DOMAIN = 'frontend'
@@ -21,10 +26,13 @@ HTTP_UNPROCESSABLE_ENTITY = 422
 
 URL_ROOT = "/"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass, config):
     """ Setup serving the frontend. """
     if 'http' not in hass.components:
+        _LOGGER.error('Dependency http is not loaded')
         return False
 
     hass.http.register_path('GET', URL_ROOT, _handle_get_root, False)
@@ -52,7 +60,7 @@ def _handle_get_root(handler, path_match, data):
     if handler.server.development:
         app_url = "polymer/splash-login.html"
     else:
-        app_url = "frontend-{}.html".format(frontend.VERSION)
+        app_url = "frontend-{}.html".format(version.VERSION)
 
     # auto login if no password was set, else check api_password param
     auth = (handler.server.api_password if handler.server.no_password_set
@@ -80,7 +88,7 @@ def _handle_get_root(handler, path_match, data):
 
 
 def _handle_get_static(handler, path_match, data):
-    """ Returns a static file. """
+    """ Returns a static file for the frontend. """
     req_file = util.sanitize_path(path_match.group('file'))
 
     # Strip md5 hash out of frontend filename
@@ -89,54 +97,4 @@ def _handle_get_static(handler, path_match, data):
 
     path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
 
-    inp = None
-
-    try:
-        inp = open(path, 'rb')
-
-        do_gzip = 'gzip' in handler.headers.get('accept-encoding', '')
-
-        handler.send_response(HTTP_OK)
-
-        ctype = handler.guess_type(path)
-        handler.send_header("Content-Type", ctype)
-
-        # Add cache if not development
-        if not handler.server.development:
-            # 1 year in seconds
-            cache_time = 365 * 86400
-
-            handler.send_header(
-                "Cache-Control", "public, max-age={}".format(cache_time))
-            handler.send_header(
-                "Expires", handler.date_time_string(time.time()+cache_time))
-
-        if do_gzip:
-            gzip_data = gzip.compress(inp.read())
-
-            handler.send_header("Content-Encoding", "gzip")
-            handler.send_header("Vary", "Accept-Encoding")
-            handler.send_header("Content-Length", str(len(gzip_data)))
-
-        else:
-            fs = os.fstat(inp.fileno())
-            handler.send_header("Content-Length", str(fs[6]))
-
-        handler.end_headers()
-
-        if handler.command == 'HEAD':
-            return
-
-        elif do_gzip:
-            handler.wfile.write(gzip_data)
-
-        else:
-            handler.copyfile(inp, handler.wfile)
-
-    except IOError:
-        handler.send_response(HTTP_NOT_FOUND)
-        handler.end_headers()
-
-    finally:
-        if inp:
-            inp.close()
+    handler.write_file(path)

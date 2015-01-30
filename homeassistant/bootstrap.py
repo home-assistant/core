@@ -147,6 +147,7 @@ def enable_logging(hass):
         _LOGGER.error(
             "Unable to setup error log %s (access denied)", err_log_path)
 
+
 def _ensure_loader_prepared(hass):
     """ Ensure Home Assistant loader is prepared. """
     if not loader.PREPARED:

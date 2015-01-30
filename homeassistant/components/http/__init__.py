@@ -74,18 +74,17 @@ Example result:
 import json
 import threading
 import logging
-import re
+import time
+import gzip
+import os
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant as ha
-from homeassistant.const import (
-    SERVER_PORT, URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
-    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, AUTH_HEADER)
+from homeassistant.const import SERVER_PORT, AUTH_HEADER
 import homeassistant.remote as rem
 import homeassistant.util as util
-from . import frontend
 
 DOMAIN = "http"
 DEPENDENCIES = []
@@ -220,12 +219,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
             try:
                 data.update(json.loads(body_content))
             except (TypeError, ValueError):
-                # TypeError is JSON object is not a dict
+                # TypeError if JSON object is not a dict
                 # ValueError if we could not parse JSON
-                _LOGGER.exception("Exception parsing JSON: %s",
-                                  body_content)
-
-                self._json_message(
+                _LOGGER.exception(
+                    "Exception parsing JSON: %s", body_content)
+                self.write_json_message(
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
@@ -271,7 +269,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             # For some calls we need a valid password
             if require_auth and api_password != self.server.api_password:
-                self._json_message(
+                self.write_json_message(
                     "API password missing or incorrect.", HTTP_UNAUTHORIZED)
 
             else:
@@ -305,11 +303,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ DELETE request handler. """
         self._handle_request('DELETE')
 
-    def _json_message(self, message, status_code=HTTP_OK):
+    def write_json_message(self, message, status_code=HTTP_OK):
         """ Helper method to return a message to the caller. """
-        self._write_json({'message': message}, status_code=status_code)
+        self.write_json({'message': message}, status_code=status_code)
 
-    def _write_json(self, data=None, status_code=HTTP_OK, location=None):
+    def write_json(self, data=None, status_code=HTTP_OK, location=None):
         """ Helper method to return JSON to the caller. """
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
@@ -323,3 +321,56 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(
                 json.dumps(data, indent=4, sort_keys=True,
                            cls=rem.JSONEncoder).encode("UTF-8"))
+
+    def write_file(self, path):
+        """ Returns a file to the user. """
+        try:
+            with open(path, 'rb') as inp:
+                self.write_file_pointer(self.guess_type(path), inp)
+
+        except IOError:
+            self.send_response(HTTP_NOT_FOUND)
+            self.end_headers()
+            _LOGGER.exception("Unable to serve %s", path)
+
+    def write_file_pointer(self, content_type, inp):
+        """
+        Helper function to write a file pointer to the user.
+        Does not do error handling.
+        """
+        do_gzip = 'gzip' in self.headers.get('accept-encoding', '')
+
+        self.send_response(HTTP_OK)
+        self.send_header("Content-Type", content_type)
+
+        # Add cache if not development
+        if not self.server.development:
+            # 1 year in seconds
+            cache_time = 365 * 86400
+
+            self.send_header(
+                "Cache-Control", "public, max-age={}".format(cache_time))
+            self.send_header(
+                "Expires", self.date_time_string(time.time()+cache_time))
+
+        if do_gzip:
+            gzip_data = gzip.compress(inp.read())
+
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Vary", "Accept-Encoding")
+            self.send_header("Content-Length", str(len(gzip_data)))
+
+        else:
+            fst = os.fstat(inp.fileno())
+            self.send_header("Content-Length", str(fst[6]))
+
+        self.end_headers()
+
+        if self.command == 'HEAD':
+            return
+
+        elif do_gzip:
+            self.wfile.write(gzip_data)
+
+        else:
+            self.copyfile(inp, self.wfile)

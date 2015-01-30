@@ -1,11 +1,18 @@
+"""
+homeassistant.components.api
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides a Rest API for Home Assistant.
+"""
 import re
+import logging
 
 import homeassistant as ha
 from homeassistant.helpers import TrackStates
 import homeassistant.remote as rem
 from homeassistant.const import (
-    SERVER_PORT, URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
-    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, AUTH_HEADER)
+    URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
+    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY)
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -20,14 +27,16 @@ HTTP_UNPROCESSABLE_ENTITY = 422
 DOMAIN = 'api'
 DEPENDENCIES = ['http']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass, config):
-    """ """
+    """ Register the API with the HTTP interface. """
 
     if 'http' not in hass.components:
+        _LOGGER.error('Dependency http is not loaded')
         return False
 
-    # TODO register with hass.http
     # /api - for validation purposes
     hass.http.register_path('GET', URL_API, _handle_get_api)
 
@@ -66,14 +75,15 @@ def setup(hass, config):
 
     return True
 
+
 def _handle_get_api(handler, path_match, data):
     """ Renders the debug interface. """
-    handler._json_message("API running.")
+    handler.write_json_message("API running.")
 
 
 def _handle_get_api_states(handler, path_match, data):
     """ Returns a dict containing all entity ids and their state. """
-    handler._write_json(handler.server.hass.states.all())
+    handler.write_json(handler.server.hass.states.all())
 
 
 def _handle_get_api_states_entity(handler, path_match, data):
@@ -83,9 +93,9 @@ def _handle_get_api_states_entity(handler, path_match, data):
     state = handler.server.hass.states.get(entity_id)
 
     if state:
-        handler._write_json(state)
+        handler.write_json(state)
     else:
-        handler._json_message("State does not exist.", HTTP_NOT_FOUND)
+        handler.write_json_message("State does not exist.", HTTP_NOT_FOUND)
 
 
 def _handle_post_state_entity(handler, path_match, data):
@@ -99,7 +109,7 @@ def _handle_post_state_entity(handler, path_match, data):
     try:
         new_state = data['state']
     except KeyError:
-        handler._json_message("state not specified", HTTP_BAD_REQUEST)
+        handler.write_json_message("state not specified", HTTP_BAD_REQUEST)
         return
 
     attributes = data['attributes'] if 'attributes' in data else None
@@ -113,7 +123,7 @@ def _handle_post_state_entity(handler, path_match, data):
 
     status_code = HTTP_CREATED if is_new_state else HTTP_OK
 
-    handler._write_json(
+    handler.write_json(
         state.as_dict(),
         status_code=status_code,
         location=URL_API_STATES_ENTITY.format(entity_id))
@@ -121,9 +131,9 @@ def _handle_post_state_entity(handler, path_match, data):
 
 def _handle_get_api_events(handler, path_match, data):
     """ Handles getting overview of event listeners. """
-    handler._write_json([{"event": key, "listener_count": value}
-                         for key, value
-                         in handler.server.hass.bus.listeners.items()])
+    handler.write_json([{"event": key, "listener_count": value}
+                        for key, value
+                        in handler.server.hass.bus.listeners.items()])
 
 
 def _handle_api_post_events_event(handler, path_match, event_data):
@@ -137,8 +147,8 @@ def _handle_api_post_events_event(handler, path_match, event_data):
     event_type = path_match.group('event_type')
 
     if event_data is not None and not isinstance(event_data, dict):
-        handler._json_message("event_data should be an object",
-                              HTTP_UNPROCESSABLE_ENTITY)
+        handler.write_json_message(
+            "event_data should be an object", HTTP_UNPROCESSABLE_ENTITY)
 
     event_origin = ha.EventOrigin.remote
 
@@ -153,12 +163,12 @@ def _handle_api_post_events_event(handler, path_match, event_data):
 
     handler.server.hass.bus.fire(event_type, event_data, event_origin)
 
-    handler._json_message("Event {} fired.".format(event_type))
+    handler.write_json_message("Event {} fired.".format(event_type))
 
 
 def _handle_get_api_services(handler, path_match, data):
     """ Handles getting overview of services. """
-    handler._write_json(
+    handler.write_json(
         [{"domain": key, "services": value}
          for key, value
          in handler.server.hass.services.services.items()])
@@ -177,7 +187,7 @@ def _handle_post_api_services_domain_service(handler, path_match, data):
     with TrackStates(handler.server.hass) as changed_states:
         handler.server.hass.services.call(domain, service, data, True)
 
-    handler._write_json(changed_states)
+    handler.write_json(changed_states)
 
 
 # pylint: disable=invalid-name
@@ -188,21 +198,21 @@ def _handle_post_api_event_forward(handler, path_match, data):
         host = data['host']
         api_password = data['api_password']
     except KeyError:
-        handler._json_message("No host or api_password received.",
-                              HTTP_BAD_REQUEST)
+        handler.write_json_message(
+            "No host or api_password received.", HTTP_BAD_REQUEST)
         return
 
     try:
         port = int(data['port']) if 'port' in data else None
     except ValueError:
-        handler._json_message(
+        handler.write_json_message(
             "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
         return
 
     api = rem.API(host, api_password, port)
 
     if not api.validate_api():
-        handler._json_message(
+        handler.write_json_message(
             "Unable to validate API", HTTP_UNPROCESSABLE_ENTITY)
         return
 
@@ -212,7 +222,7 @@ def _handle_post_api_event_forward(handler, path_match, data):
 
     handler.server.event_forwarder.connect(api)
 
-    handler._json_message("Event forwarding setup.")
+    handler.write_json_message("Event forwarding setup.")
 
 
 def _handle_delete_api_event_forward(handler, path_match, data):
@@ -221,13 +231,13 @@ def _handle_delete_api_event_forward(handler, path_match, data):
     try:
         host = data['host']
     except KeyError:
-        handler._json_message("No host received.", HTTP_BAD_REQUEST)
+        handler.write_json_message("No host received.", HTTP_BAD_REQUEST)
         return
 
     try:
         port = int(data['port']) if 'port' in data else None
     except ValueError:
-        handler._json_message(
+        handler.write_json_message(
             "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
         return
 
@@ -236,4 +246,4 @@ def _handle_delete_api_event_forward(handler, path_match, data):
 
         handler.server.event_forwarder.disconnect(api)
 
-    handler._json_message("Event forwarding cancelled.")
+    handler.write_json_message("Event forwarding cancelled.")
