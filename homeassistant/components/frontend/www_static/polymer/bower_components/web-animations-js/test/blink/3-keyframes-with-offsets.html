@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<script src="testharness/testharness.js"></script>
+<script src="testharness/testharnessreport.js"></script>
+<script src="resources/keyframes-test.js"></script>
+<script>
+var keyframeA = {opacity: '0.5', left: '50px'};
+var keyframeB = {opacity: '0', left: '0px'};
+var keyframeC = {opacity: '0.75', left: '75px'};
+
+var keyframeBExpectations = {
+  0: {opacity: '0.5', left: '50px'},
+  0.25: {opacity: '0.25', left: '25px'},
+  0.5: {opacity: '0', left: '0px'}, // Corresponds to keyframeB (offset unspecified).
+  0.75: {opacity: '0.375', left: '37.5px'},
+  1: {opacity: '0.75', left: '75px'},
+};
+
+var offsetKeyframeA = {opacity: keyframeA.opacity, left: keyframeA.left, offset: 0};
+var offsetKeyframeB = {opacity: keyframeB.opacity, left: keyframeB.left, offset: 0.25};
+var offsetKeyframeC = {opacity: keyframeC.opacity, left: keyframeC.left, offset: 1};
+
+var offsetKeyframeBExpectations = {
+  0: {opacity: '0.5', left: '50px'},
+  0.125: {opacity: '0.25', left: '25px'},
+  0.25: {opacity: '0', left: '0px'}, // Corresponds to offsetKeyframeB (offset 0.25).
+  0.5: {opacity: '0.25', left: '25px'},
+  0.75: {opacity: '0.5', left: '50px'},
+  1: {opacity: '0.75', left: '75px'},
+};
+
+test(function() {
+  assertAnimationStyles([
+    offsetKeyframeA,
+    keyframeB,
+    keyframeC,
+  ], keyframeBExpectations, 'with first offset specified');
+  assertAnimationStyles([
+    keyframeA,
+    offsetKeyframeB,
+    keyframeC,
+  ], offsetKeyframeBExpectations, 'with second offset specified');
+  assertAnimationStyles([
+    keyframeA,
+    keyframeB,
+    offsetKeyframeC,
+  ], keyframeBExpectations, 'with third offset specified');
+},
+'element.animate() with 3 keyframes and 1 offset specified',
+{
+  help: 'http://dev.w3.org/fxtf/web-animations/#keyframe-animation-effects',
+  assert: [
+    'element.animate() should start an animation when three keyframes',
+    'are provided with matching properties and one offset specified.',
+    'The keyframes must maintain their ordering and get distributed',
+    'correctly.',
+  ],
+  author: 'Alan Cutter',
+});
+
+test(function() {
+  assertAnimationStyles([
+    keyframeA,
+    offsetKeyframeB,
+    offsetKeyframeC,
+  ], offsetKeyframeBExpectations, 'with first offset unspecified');
+  assertAnimationStyles([
+    offsetKeyframeA,
+    keyframeB,
+    offsetKeyframeC,
+  ], keyframeBExpectations, 'with second offset unspecified');
+  assertAnimationStyles([
+    offsetKeyframeA,
+    offsetKeyframeB,
+    keyframeC,
+  ], offsetKeyframeBExpectations, 'with third offset unspecified');
+},
+'element.animate() with 3 keyframes and 2 offsets specified',
+{
+  help: 'http://dev.w3.org/fxtf/web-animations/#keyframe-animation-effects',
+  assert: [
+    'element.animate() should start an animation when three keyframes',
+    'are provided with matching properties and two offsets specified.',
+    'The keyframes must maintain their ordering and get distributed',
+    'correctly.',
+  ],
+  author: 'Alan Cutter',
+});
+
+test(function() {
+  assertAnimationStyles([
+    offsetKeyframeA,
+    offsetKeyframeB,
+    offsetKeyframeC,
+  ], offsetKeyframeBExpectations, 'with ordered offsets');
+
+  assert_throws('InvalidModificationError', function() {
+    assertAnimationStyles([
+      offsetKeyframeA,
+      offsetKeyframeC,
+      offsetKeyframeB,
+    ], offsetKeyframeBExpectations, 'with unordered offsets (1)');
+  });
+
+  assert_throws('InvalidModificationError', function() {
+    assertAnimationStyles([
+      offsetKeyframeB,
+      offsetKeyframeA,
+      offsetKeyframeC,
+    ], offsetKeyframeBExpectations, 'with unordered offsets (2)');
+  });
+
+  assert_throws('InvalidModificationError', function() {
+    assertAnimationStyles([
+      offsetKeyframeB,
+      offsetKeyframeC,
+      offsetKeyframeA,
+    ], offsetKeyframeBExpectations, 'with unordered offsets (3)');
+  });
+
+  assert_throws('InvalidModificationError', function() {
+    assertAnimationStyles([
+      offsetKeyframeC,
+      offsetKeyframeA,
+      offsetKeyframeB,
+    ], offsetKeyframeBExpectations, 'with unordered offsets (4)');
+  });
+
+  assert_throws('InvalidModificationError', function() {
+    assertAnimationStyles([
+      offsetKeyframeC,
+      offsetKeyframeB,
+      offsetKeyframeA,
+    ], offsetKeyframeBExpectations, 'with unordered offsets (5)');
+  });
+},
+'element.animate() with 3 keyframes and 3 offsets specified',
+{
+  help: 'http://dev.w3.org/fxtf/web-animations/#keyframe-animation-effects',
+  assert: [
+    'element.animate() should start an animation when three keyframes',
+    'are provided with matching properties and all offsets specified.',
+    'The keyframes must maintain their ordering and get distributed',
+    'correctly.',
+  ],
+  author: 'Alan Cutter',
+});
+</script>

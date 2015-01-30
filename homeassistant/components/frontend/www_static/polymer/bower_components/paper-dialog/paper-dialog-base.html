@@ -1,0 +1,81 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+
+Material Design: <a href="http://www.google.com/design/spec/components/dialogs.html">Dialogs</a>
+
+`paper-dialog-base` is a base class used to implement Material Design styled
+dialogs.
+
+@group Paper Elements
+@element paper-dialog-base
+@extends core-overlay
+@homepage github.io
+@status unstable
+-->
+<link href="../polymer/polymer.html" rel="import">
+<link href="../core-overlay/core-overlay.html" rel="import">
+<link href="../core-transition/core-transition-css.html" rel="import">
+
+<polymer-element name="paper-dialog-base" extends="core-overlay" role="dialog" on-core-overlay-open="{{openAction}}">
+
+<script>
+
+  Polymer({
+
+    publish: {
+
+      /**
+       * The title of the dialog.
+       *
+       * @attribute heading
+       * @type string
+       * @default ''
+       */
+      heading: '',
+
+      /**
+       * @attribute transition
+       * @type string
+       * @default ''
+       */
+      transition: '',
+
+      /**
+       * @attribute layered
+       * @type boolean
+       * @default true
+       */
+      layered: true
+    },
+
+    ready: function() {
+      this.super();
+      this.sizingTarget = this.$.scroller;
+    },
+
+    headingChanged: function(old) {
+      var label = this.getAttribute('aria-label');
+      if (!label || label === old) {
+        this.setAttribute('aria-label', this.heading);
+      }
+    },
+
+    openAction: function() {
+      if (this.$.scroller.scrollTop) {
+        this.$.scroller.scrollTop = 0;
+      }
+    }
+
+  });
+
+</script>
+
+</polymer-element>

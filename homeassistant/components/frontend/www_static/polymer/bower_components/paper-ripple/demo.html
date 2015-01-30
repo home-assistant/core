@@ -1,0 +1,414 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+  <title>paper-ripple</title>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  
+  <link rel="import" href="../core-icons/core-icons.html">
+  <link rel="import" href="paper-ripple.html">
+  <link rel="import" href="../font-roboto/roboto.html">
+  <link rel="import" href="../core-icon/core-icon.html">
+  
+  <style shim-shadowdom>
+  
+    body {
+      background-color: #f9f9f9;
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+    }
+    
+    section {
+      padding: 30px 25px;
+    }
+    
+    section > * {
+      margin: 10px
+    }
+    
+    /* Button */
+    .button {
+      display: inline-block;
+      position: relative;
+      width: 120px;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 2px;
+      font-size: 0.9em;
+      background-color: #fff;
+      color: #646464;
+    }
+    
+    .button > paper-ripple {
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .button.narrow {
+      width: 60px;
+    }
+    
+    .button.grey {
+      background-color: #eee;
+    }
+    
+    .button.blue {
+      background-color: #4285f4;
+      color: #fff;
+    }
+    
+    .button.green {
+      background-color: #0f9d58;
+      color: #fff;
+    }
+    
+    .button.raised {
+      transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition-delay: 0.2s;
+      box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+    }
+    
+    .button.raised:active {
+      box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2);
+      transition-delay: 0s;
+    }
+    
+    /* Icon Button */
+    .icon-button {
+      position: relative;
+      display: inline-block;
+      width: 56px;
+      height: 56px;
+    }
+    
+    .icon-button > core-icon {
+      margin: 16px;
+      transition: -webkit-transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .icon-button:hover > core-icon {
+      -webkit-transform: scale(1.2);
+      transform: scale(1.2);
+    }
+    
+    .icon-button > paper-ripple {
+      overflow: hidden;
+      color: #646464;
+    }
+    
+    .icon-button.red > core-icon::shadow path {
+      fill: #db4437;
+    }
+    
+    .icon-button.red > paper-ripple {
+      color: #db4437;
+    }
+    
+    .icon-button.blue > core-icon::shadow path {
+      fill: #4285f4;
+    }
+    
+    .icon-button.blue > paper-ripple {
+      color: #4285f4;
+    }
+    
+    /* FAB */
+    .fab {
+      position: relative;
+      display: inline-block;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      color: #fff;
+      overflow: hidden;
+      transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition-delay: 0.2s;
+      box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+    }
+    
+    .fab.red {
+      background-color: #d23f31;
+    }
+    
+    .fab.blue {
+      background-color: #4285f4;
+    }
+    
+    .fab.green {
+      background-color: #0f9d58;
+    }
+    
+    .fab:active {
+      box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2);
+      transition-delay: 0s;
+    }
+    
+    .fab > core-icon {
+      margin: 16px;
+    }
+    
+    .fab > core-icon::shadow path {
+      fill: #fff;
+    }
+    
+    /* Menu */
+    .menu {
+      display: inline-block;
+      width: 180px;
+      background-color: #fff;
+      box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2);
+    }
+    
+    .item {
+      position: relative;
+      height: 48px;
+      line-height: 48px;
+      color: #646464;
+      font-size: 0.9em;
+    }
+    
+    .menu.blue > .item {
+      color: #4285f4;
+    }
+    
+    /* Card, Dialog */
+    .card, .dialog {
+      position: relative;
+      display: inline-block;
+      width: 300px;
+      height: 240px;
+      vertical-align: top;
+      background-color: #fff;
+      box-shadow: 0 12px 15px 0 rgba(0, 0, 0, 0.24);
+    }
+    
+    .dialog {
+      box-sizing: border-box;
+      padding: 16px;
+    }
+    
+    .dialog > .content {
+      height: 170px;
+      font-size: 0.9em;
+    }
+    
+    .dialog > .content > .title {
+      font-size: 1.3em;
+    }
+    
+    .dialog > .button {
+      width: 90px;
+      float: right;
+    }
+    
+    .card.image {
+      background: url(http://lorempixel.com/300/240/nature/);
+      color: #fff;
+    }
+    
+    /* Misc */
+    .center {
+      text-align: center;
+    }
+    
+    .label {
+      padding: 0 16px;
+    }
+    
+    .label-blue {
+      color: #4285f4; 
+    }
+    
+    .label-red {
+      color: #d23f31; 
+    }
+    
+  </style>
+  
+</head>
+<body unresolved>
+
+  <section>
+  
+    <div class="button raised">
+      <div class="center" fit>SUBMIT</div>
+      <paper-ripple fit></paper-ripple>
+    </div>
+    
+    <div class="button raised grey">
+      <div class="center" fit>CANCEL</div>
+      <paper-ripple fit></paper-ripple>
+    </div>
+    
+    <div class="button raised blue">
+      <div class="center" fit>COMPOSE</div>
+      <paper-ripple fit></paper-ripple>
+    </div>
+    
+    <div class="button raised green">
+      <div class="center" fit>OK</div>
+      <paper-ripple fit></paper-ripple>
+    </div>
+    
+  </section>
+  
+  <section>
+    
+    <div class="button raised grey narrow">
+      <div class="center" fit>+1</div>
+      <paper-ripple fit></paper-ripple>
+    </div>
+    
+    <div class="button raised grey narrow label-blue">
+      <div class="center" fit>+1</div>
+      <paper-ripple fit></paper-ripple>
+    </div>
+    
+    <div class="button raised grey narrow label-red">
+      <div class="center" fit>+1</div>
+      <paper-ripple fit></paper-ripple>
+    </div>
+    
+  </section>
+  
+  <section>
+    
+    <div class="icon-button">
+      <core-icon icon="menu"></core-icon>
+      <paper-ripple class="circle recenteringTouch" fit></paper-ripple>
+    </div>
+    
+    <div class="icon-button">
+      <core-icon icon="more-vert"></core-icon>
+      <paper-ripple class="circle recenteringTouch" fit></paper-ripple>
+    </div>
+    
+    <div class="icon-button red">
+      <core-icon icon="delete"></core-icon>
+      <paper-ripple class="circle recenteringTouch" fit></paper-ripple>
+    </div>
+    
+    <div class="icon-button blue">
+      <core-icon icon="account-box"></core-icon>
+      <paper-ripple class="circle recenteringTouch" fit></paper-ripple>
+    </div>
+    
+  </section>
+  
+  <section>
+  
+    <div class="fab red">
+      <core-icon icon="add"></core-icon>
+      <paper-ripple class="circle recenteringTouch" fit></paper-ripple>
+    </div>
+    
+    <div class="fab blue">
+      <core-icon icon="mail"></core-icon>
+      <paper-ripple class="circle recenteringTouch" fit></paper-ripple>
+    </div>
+    
+    <div class="fab green">
+      <core-icon icon="create"></core-icon>
+      <paper-ripple class="circle recenteringTouch" fit></paper-ripple>
+    </div>
+  
+  </section>
+  
+  <section>
+  
+    <div class="menu">
+    
+      <div class="item">
+        <div class="label" fit>Mark as unread</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      <div class="item">
+        <div class="label" fit>Mark as important</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      <div class="item">
+        <div class="label" fit>Add to Tasks</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      <div class="item">
+        <div class="label" fit>Create event</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      
+    </div>
+    
+    <div class="menu blue">
+    
+      <div class="item">
+        <div class="label" fit>Import</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      <div class="item">
+        <div class="label" fit>Export</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      <div class="item">
+        <div class="label" fit>Print</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      <div class="item">
+        <div class="label" fit>Restore contacts</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      
+    </div>
+  
+  </section>
+  
+  <section>
+  
+    <div class="dialog">
+    
+      <div class="content">
+        <div class="title">Permission</div><br>
+        <div>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</div>
+      </div>
+    
+      <div class="button label-blue">
+        <div class="center" fit>ACCEPT</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+      
+      <div class="button">
+        <div class="center" fit>DECLINE</div>
+        <paper-ripple fit></paper-ripple>
+      </div>
+    
+    </div>
+  
+    <div class="card">
+    
+      <paper-ripple class="recenteringTouch" fit></paper-ripple>
+    
+    </div>
+    
+    <div class="card image">
+    
+      <paper-ripple class="recenteringTouch" fit></paper-ripple>
+    
+    </div>
+  
+  </section>
+  
+</body>
+</html>

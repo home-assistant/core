@@ -1,0 +1,79 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!--
+
+`paper-menu-button` works together with a button and a `paper-dropdown` to
+implement a button that displays a drop-down when tapped on.
+
+The child element with the class `dropdown` will be used as the drop-down
+menu. It should be a `paper-dropdown` or other overlay element.
+
+Example:
+
+    <paper-menu-button>
+        <paper-icon-button icon="menu" noink></paper-icon-button>
+        <paper-dropdown class="dropdown">
+            <core-menu class="menu">
+                <paper-item>Share</paper-item>
+                <paper-item>Settings</paper-item>
+                <paper-item>Help</paper-item>
+            </core-menu>
+        </paper-dropdown>
+    </paper-menu-button>
+
+@group Paper Elements
+@element paper-menu-button
+@extends core-dropdown-base
+@status unstable
+-->
+<link href="../polymer/polymer.html" rel="import">
+<link href="../core-a11y-keys/core-a11y-keys.html" rel="import">
+<link href="../core-dropdown/core-dropdown-base.html" rel="import">
+
+<polymer-element name="paper-menu-button" extends="core-dropdown-base" relative>
+<template>
+
+  <style>
+    :host {
+      display: inline-block;
+    }
+
+    :host([disabled]) {
+      pointer-events: none;
+      color: #a8a8a8;
+    }
+
+    polyfill-next-selector { content: ':host([disabled]) *'; }
+    :host([disabled]) ::content * {
+      pointer-events: none;
+    }
+  </style>
+
+  <core-a11y-keys target="{{}}" keys="enter space" on-keys-pressed="{{toggleOverlay}}"></core-a11y-keys>
+
+  <content></content>
+
+</template>
+<script>
+
+  Polymer({
+
+    overlayListeners: {
+      'core-overlay-open': 'openAction',
+      'core-activate': 'activateAction'
+    },
+
+    activateAction: function() {
+      this.opened = false;
+    }
+
+  });
+
+</script>
+</polymer-element>

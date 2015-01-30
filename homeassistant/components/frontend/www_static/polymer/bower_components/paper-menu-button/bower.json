@@ -1,0 +1,17 @@
+{
+  "name": "paper-menu-button",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5",
+    "core-a11y-keys": "Polymer/core-a11y-keys#^0.5",
+    "core-collapse": "Polymer/core-collapse#^0.5",
+    "core-dropdown": "Polymer/core-dropdown#^0.5",
+    "core-icons": "Polymer/core-icons#^0.5",
+    "core-menu": "Polymer/core-menu#^0.5",
+    "paper-button": "Polymer/paper-button#^0.5",
+    "paper-dropdown": "Polymer/paper-dropdown#^0.5",
+    "paper-icon-button": "Polymer/paper-icon-button#^0.5",
+    "paper-item": "Polymer/paper-item#^0.5"
+  },
+  "version": "0.5.4"
+}

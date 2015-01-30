@@ -1,0 +1,146 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+
+Material Design: <a href="http://www.google.com/design/spec/components/menus.html">Menus</a>
+
+`paper-item` is a simple item object for use in menus. When the user touches the item, a ripple
+effect emanates from the point of contact. If used in a `core-selector`, the selected item will
+be highlighted.
+
+Example:
+
+    <core-menu>
+        <paper-item>Cut</paper-item>
+        <paper-item>Copy</paper-item>
+        <paper-item>Paste</paper-item>
+    </core-menu>
+
+Links
+-----
+
+To use as a link, put an `<a>` element in the item. You may also use the `noink` attribute to
+prevent the ripple from "freezing" during a page navigation.
+
+Example:
+
+    <paper-item noink>
+        <a href="http://www.polymer-project.org" layout horizontal center>Polymer</a>
+    </paper-item>
+
+@group Paper Elements
+@element paper-item
+@extends paper-button-base
+@status unstable
+-->
+
+<link href="../polymer/polymer.html" rel="import">
+<link href="../paper-button/paper-button-base.html" rel="import">
+<link href="../paper-ripple/paper-ripple.html" rel="import">
+
+<polymer-element name="paper-item" extends="paper-button-base">
+
+  <template>
+
+    <style>
+
+      :host {
+        display: block;
+        position: relative;
+        font-size: 16px;
+        box-sizing: border-box;
+        min-width: 7em;
+        outline: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: pointer;
+        z-index: 0;
+      }
+
+      :host([disabled]) {
+        color: #a8a8a8;
+        cursor: auto;
+        pointer-events: none;
+      }
+
+      :host(.core-selected) {
+        background-color: #eaeaea;
+      }
+
+      #ripple {
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .button-content {
+        padding: 0.9em 1em;
+      }
+
+      polyfill-next-selector { content: '.button-content > a'; }
+      ::content > a {
+        height: 100%;
+        /* flex */
+        -ms-flex: 1 1 0.000000001px;
+        -webkit-flex: 1;
+        flex: 1;
+        -webkit-flex-basis: 0.000000001px;
+        flex-basis: 0.000000001px;
+      }
+
+    </style>
+
+    <!-- this div is needed to position the ripple behind text content -->
+    <div class="button-content" relative layout horizontal center>
+      <content></content>
+    </div>
+
+  </template>
+
+  <script>
+    Polymer({
+
+      publish: {
+
+        /**
+         * If true, the button will be styled with a shadow.
+         *
+         * @attribute raised
+         * @type boolean
+         * @default false
+         */
+        raised: false,
+
+        /**
+         * By default the ripple emanates from where the user touched the button.
+         * Set this to true to always center the ripple.
+         *
+         * @attribute recenteringTouch
+         * @type boolean
+         * @default false
+         */
+        recenteringTouch: false,
+
+        /**
+         * By default the ripple expands to fill the button. Set this to false to
+         * constrain the ripple to a circle within the button.
+         *
+         * @attribute fill
+         * @type boolean
+         * @default true
+         */
+        fill: true
+
+      }
+
+    });
+  </script>
+</polymer-element>

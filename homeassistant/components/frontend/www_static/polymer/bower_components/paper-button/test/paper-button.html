@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>paper-button basic tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <script src="../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../polymer-gestures/test/js/fake.js"></script>
+
+  <link href="../paper-button.html" rel="import">
+
+</head>
+<body>
+
+  <paper-button id="button1">button</paper-button>
+
+  <paper-button id="button2">button</paper-button>
+
+  <paper-button id="disabled" disabled>disabled</paper-button>
+
+  <script>
+
+    var fake = new Fake();
+
+    var b1 = document.getElementById('button1');
+
+    test('can set raised imperatively', function(done) {
+      assert.ok(!b1.shadowRoot.querySelector('paper-shadow'));
+      b1.raised = true;
+      flush(function() {
+        setTimeout(function() {
+          var shadow = b1.shadowRoot.querySelector('paper-shadow');
+          assert.ok(shadow);
+          done();
+        }, 600);
+      });
+    });
+
+    test('can set noink dynamically', function(done) {
+      var button = document.getElementById('button2');
+      button.lastEvent = {x: 100, y: 100};
+      button.$.ripple = {
+        downAction: function() {
+          assert.ok(false);
+        },
+        upAction: function() {
+          assert.ok(false);
+        }
+      };
+      button.setAttribute('noink', '');
+      fake.downOnNode(button);
+      fake.upOnNode(button);
+      // would throw if it tries to ripple
+      setTimeout(done, 10);
+    });
+
+    suite('a11y', function() {
+
+      test('aria role is a button', function() {
+        assert.strictEqual('button', b1.getAttribute('role'));
+      });
+
+      test('aria-disabled is set', function(done) {
+        var button = document.getElementById('disabled');
+        assert.ok(button.hasAttribute('aria-disabled'));
+        button.removeAttribute('disabled');
+        flush(function() {
+          assert.ok(!button.hasAttribute('aria-disabled'));
+          done();
+        });
+      });
+
+      test('space triggers the button', function() {
+        var ev = new CustomEvent('keydown', {detail: {key: 'space'}});
+        var sawClick = false;
+        function clickListener() {
+          sawClick = true;
+        }
+        b1.addEventListener('click', clickListener);
+        b1.dispatchEvent(ev);
+        assert.ok(sawClick);
+        b1.removeEventListener(clickListener);
+      });
+
+      test('enter triggers the button', function() {
+        var ev = new CustomEvent('keydown', {detail: {key: 'enter'}});
+        var sawClick = false;
+        function clickListener() {
+          sawClick = true;
+        }
+        b1.addEventListener('click', clickListener);
+        b1.dispatchEvent(ev);
+        assert.ok(sawClick);
+        b1.removeEventListener(clickListener);
+      });
+
+    });
+
+  </script>
+
+</body>
+</html>

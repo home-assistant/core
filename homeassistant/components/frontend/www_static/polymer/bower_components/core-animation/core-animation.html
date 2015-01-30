@@ -1,0 +1,525 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="web-animations.html">
+
+<!--
+@group Polymer Core Elements
+
+`core-animation` is a convenience element to use web animations with Polymer elements. It
+allows you to create a web animation declaratively. You can extend this class to create
+new types of animations and combine them with `core-animation-group`.
+
+Example to create animation to fade out an element over 500ms:
+
+    <core-animation id="fadeout" duration="500">
+      <core-animation-keyframe>
+        <core-animation-prop name="opacity" value="1"></core-animation-prop>
+      </core-animation-keyframe>
+      <core-animation-keyframe>
+        <core-animation-prop name="opacity" value="0"></core-animation-prop>
+      </core-animation-keyframe>
+    </core-animation>
+
+    <div id="el">Fade me out</div>
+
+    <script>
+      var animation = document.getElementById('fadeout');
+      animation.target = document.getElementById('el');
+      animation.play();
+    </script>
+
+Or do the same imperatively:
+
+    var animation = new CoreAnimation();
+    animation.duration = 500;
+    animation.keyframes = [
+      {opacity: 1},
+      {opacity: 0}
+    ];
+    animation.target = document.getElementById('el');
+    animation.play();
+
+You can also provide a javascript function instead of keyframes to the animation. This
+behaves essentially the same as `requestAnimationFrame`:
+
+    var animation = new CoreAnimation();
+    animation.customEffect = function(timeFraction, target, animation) {
+      // do something custom
+    };
+    animation.play();
+
+Elements that are targets to a `core-animation` are given the `core-animation-target` class.
+
+@element core-animation
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation" constructor="CoreAnimation" attributes="target keyframes customEffect composite duration fill easing iterationStart iterationCount delay direction autoplay targetSelector">
+  <script>
+    (function() {
+
+      function toNumber(value, allowInfinity) {
+        return (allowInfinity && value === 'Infinity') ? Number.POSITIVE_INFINITY : Number(value);
+      };
+
+      Polymer({
+       /**
+        * Fired when the animation completes.
+        *
+        * @event core-animation-finish
+        */
+
+       /**
+        *
+        * Fired when the web animation object changes.
+        *
+        * @event core-animation-change
+        */
+
+        publish: {
+
+          /**
+           * One or more nodes to animate.
+           *
+           * @property target
+           * @type HTMLElement|Node|Array<HTMLElement|Node>
+           */
+          target: {value: null, reflect: true},
+
+          /**
+           * Animation keyframes specified as an array of dictionaries of
+           * &lt;css properties&gt;:&lt;array of values&gt; pairs. For example,
+           *
+           * @property keyframes
+           * @type Object
+           */
+          keyframes: {value: null, reflect: true},
+
+          /**
+           * A custom animation function. Either provide this or `keyframes`. The signature
+           * of the callback is `EffectsCallback(timeFraction, target, animation)`
+           *
+           * @property customEffect
+           * @type Function(number, Object, Object)
+           */
+          customEffect: {value: null, reflect: true},
+
+          /**
+           * Controls the composition behavior. If set to "replace", the effect overrides
+           * the underlying value for the target. If set the "add", the effect is added to
+           * the underlying value for the target. If set to "accumulate", the effect is
+           * accumulated to the underlying value for the target.
+           *
+           * In cases such as numbers or lengths, "add" and "accumulate" produce the same
+           * value. In list values, "add" is appending to the list, while "accumulate" is
+           * adding the individual components of the list.
+           *
+           * For example, adding `translateX(10px)` and `translateX(25px)` produces
+           * `translateX(10px) translateX(25px)` and accumulating produces `translateX(35px)`.
+           *
+           * @property composite
+           * @type "replace"|"add"|"accumulate"
+           * @default "replace"
+           */
+          composite: {value: 'replace', reflect: true},
+
+          /**
+           * Animation duration in milliseconds, "Infinity", or "auto". "auto" is
+           * equivalent to 0.
+           *
+           * @property duration
+           * @type number|"Infinity"
+           * @default "auto"
+           */
+          duration: {value: 'auto', reflect: true},
+
+          /**
+           * Controls the effect the animation has on the target when it's not playing.
+           * The possible values are "none", "forwards", "backwards", "both" or "auto".
+           *
+           * "none" means the animation has no effect when it's not playing.
+           *
+           * "forwards" applies the value at the end of the animation after it's finished.
+           *
+           * "backwards" applies the value at the start of the animation to the target
+           * before it starts playing and has no effect when the animation finishes.
+           *
+           * "both" means "forwards" and "backwards". "auto" is equivalent to "none".
+           *
+           * @property fill
+           * @type "none"|"forwards"|"backwards"|"both"|"auto"
+           * @default "auto"
+           */
+          fill: {value: 'auto', reflect: true},
+
+          /**
+           * A transition timing function. The values are equivalent to the CSS
+           * counterparts.
+           *
+           * @property easing
+           * @type string
+           * @default "linear"
+           */
+          easing: {value: 'linear', reflect: true},
+
+          /**
+           * The number of milliseconds to delay before beginning the animation.
+           *
+           * @property delay
+           * @type Number
+           * @default 0
+           */
+          delay: {value: 0, reflect: true},
+
+          /**
+           * The number of milliseconds to wait after the animation finishes. This is
+           * useful, for example, in an animation group to wait for some time before
+           * beginning the next item in the animation group.
+           *
+           * @property endDelay
+           * @type number
+           * @default 0
+           */
+          endDelay: {value: 0, reflect: true},
+
+          /**
+           * The number of iterations this animation should run for.
+           *
+           * @property iterations
+           * @type Number|'Infinity'
+           * @default 1
+           */
+          iterations: {value: 1, reflect: true},
+
+          /**
+           * Number of iterations into the animation in which to begin the effect.
+           * For example, setting this property to 0.5 and `iterations` to 2 will
+           * cause the animation to begin halfway through the first iteration but still
+           * run twice.
+           *
+           * @property iterationStart
+           * @type Number
+           * @default 0
+           */
+          iterationStart: {value: 0, reflect: true},
+
+          /**
+           * (not working in web animations polyfill---do not use)
+           *
+           * Controls the iteration composition behavior. If set to "replace", the effect for
+           * every iteration is independent of each other. If set to "accumulate", the effect
+           * for iterations of the animation will build upon the value in the previous iteration.
+           *
+           * Example:
+           *
+           *    // Moves the target 50px on the x-axis over 5 iterations.
+           *    <core-animation iterations="5" iterationComposite="accumulate">
+           *      <core-animation-keyframe>
+           *        <core-animation-prop name="transform" value="translateX(10px)"></core-animation-prop>
+           *      </core-animation-keyframe>
+           *    </core-animation>
+           *
+           * @property iterationComposite
+           * @type "replace"|"accumulate"
+           * @default false
+           */
+          iterationComposite: {value: 'replace', reflect: true},
+
+          /**
+           * The playback direction of the animation. "normal" plays the animation in the
+           * normal direction. "reverse" plays it in the reverse direction. "alternate"
+           * alternates the playback direction every iteration such that even iterations are
+           * played normally and odd iterations are reversed. "alternate-reverse" plays
+           * even iterations in the reverse direction and odd iterations in the normal
+           * direction.
+           *
+           * @property direction
+           * @type "normal"|"reverse"|"alternate"|"alternate-reverse"
+           * @default "normal"
+           */
+          direction: {value: 'normal', reflect: true},
+
+          /**
+           * A multiplier to the playback rate to the animation.
+           *
+           * @property playbackRate
+           * @type number
+           * @default 1
+           */
+          playbackRate: {value: 1, reflect: true},
+
+          /**
+           * If set to true, play the animation when it is created or a property is updated.
+           *
+           * @property autoplay
+           * @type boolean
+           * @default false
+           */
+          autoplay: {value: false, reflect: true}
+
+        },
+
+        animation: false,
+
+        observe: {
+          target: 'apply',
+          keyframes: 'apply',
+          customEffect: 'apply',
+          composite: 'apply',
+          duration: 'apply',
+          fill: 'apply',
+          easing: 'apply',
+          iterations: 'apply',
+          iterationStart: 'apply',
+          iterationComposite: 'apply',
+          delay: 'apply',
+          endDelay: 'apply',
+          direction: 'apply',
+          playbackRate: 'apply',
+          autoplay: 'apply'
+        },
+
+        ready: function() {
+          this.apply();
+        },
+
+        /**
+         * Plays the animation. If the animation is currently paused, seeks the animation
+         * to the beginning before starting playback.
+         *
+         * @method play
+         * @return AnimationPlayer The animation player.
+         */
+        play: function() {
+          this.apply();
+          if (this.animation && !this.autoplay) {
+            this.player = document.timeline.play(this.animation);
+            this.player.onfinish = this.animationFinishHandler.bind(this);
+            return this.player;
+          }
+        },
+
+        /**
+         * Stops the animation and clears all effects on the target.
+         *
+         * @method cancel
+         */
+        cancel: function() {
+          if (this.player) {
+            this.player.cancel();
+          }
+        },
+
+        /**
+         * Seeks the animation to the end.
+         *
+         * @method finish
+         */
+        finish: function() {
+          if (this.player) {
+            this.player.finish();
+          }
+        },
+
+        /**
+         * Pauses the animation.
+         *
+         * @method pause
+         */
+        pause: function() {
+          if (this.player) {
+            this.player.pause();
+          }
+        },
+
+        /**
+         * @method hasTarget
+         * @return boolean True if `target` is defined.
+         */
+        hasTarget: function() {
+          return this.target !== null;
+        },
+
+        /**
+         * Creates a web animations object based on this object's properties, and
+         * plays it if autoplay is true.
+         *
+         * @method apply
+         * @return Object A web animation.
+         */
+        apply: function() {
+          this.animation = this.makeAnimation();
+          if (this.autoplay && this.animation) {
+            this.play();
+          }
+          return this.animation;
+        },
+
+        makeSingleAnimation: function(target) {
+          // XXX(yvonne): for selecting all the animated elements.
+          target.classList.add('core-animation-target');
+          return new Animation(target, this.animationEffect, this.timingProps);
+        },
+
+        makeAnimation: function() {
+          if (!this.target) {
+            return null;
+          }
+          var animation;
+          if (Array.isArray(this.target)) {
+            var array = [];
+            this.target.forEach(function(t) {
+              array.push(this.makeSingleAnimation(t));
+            }.bind(this));
+            animation = new AnimationGroup(array);
+          } else {
+            animation = this.makeSingleAnimation(this.target);
+          }
+          return animation;
+        },
+
+        animationChanged: function() {
+          // Sending 'this' with the event so you can always get the animation object
+          // that fired the event, due to event retargetting in shadow DOM.
+          this.fire('core-animation-change', this);
+        },
+
+        targetChanged: function(old) {
+          if (old) {
+            old.classList.remove('core-animation-target');
+          }
+        },
+
+        get timingProps() {
+          var props = {};
+          var timing = {
+            delay: {isNumber: true},
+            endDelay: {isNumber: true},
+            fill: {},
+            iterationStart: {isNumber: true},
+            iterations: {isNumber: true, allowInfinity: true},
+            duration: {isNumber: true},
+            playbackRate: {isNumber: true},
+            direction: {},
+            easing: {}
+          };
+          for (t in timing) {
+            if (this[t] !== null) {
+              var name = timing[t].property || t;
+              props[name] = timing[t].isNumber && this[t] !== 'auto' ?
+                  toNumber(this[t], timing[t].allowInfinity) : this[t];
+            }
+          }
+          return props;
+        },
+
+        get animationEffect() {
+          var props = {};
+          var frames = [];
+          var effect;
+          if (this.keyframes) {
+            frames = this.keyframes;
+          } else if (!this.customEffect) {
+            var children = this.querySelectorAll('core-animation-keyframe');
+            if (children.length === 0 && this.shadowRoot) {
+              children = this.shadowRoot.querySelectorAll('core-animation-keyframe');
+            }
+            Array.prototype.forEach.call(children, function(c) {
+              frames.push(c.properties);
+            });
+          }
+          if (this.customEffect) {
+            effect = this.customEffect;
+          } else {
+            // effect = new KeyframeEffect(frames, this.composite);
+            effect = frames;
+          }
+          return effect;
+        },
+
+        animationFinishHandler: function() {
+          this.fire('core-animation-finish');
+        }
+
+      });
+    })();
+  </script>
+</polymer-element>
+
+<!--
+`core-animation-keyframe` represents a keyframe in a `core-animation`. Use them as children of
+`core-animation` elements to create web animations declaratively. If the `offset` property is
+unset, the keyframes will be distributed evenly within the animation duration. Use
+`core-animation-prop` elements as children of this element to specify the CSS properties for
+the animation.
+
+@element core-animation-keyframe
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation-keyframe" attributes="offset">
+  <script>
+    Polymer({
+      publish: {
+        /**
+         * An offset from 0 to 1.
+         *
+         * @property offset
+         * @type Number
+         */
+        offset: {value: null, reflect: true}
+      },
+      get properties() {
+        var props = {};
+        var children = this.querySelectorAll('core-animation-prop');
+        Array.prototype.forEach.call(children, function(c) {
+          props[c.name] = c.value;
+        });
+        if (this.offset !== null) {
+          props.offset = this.offset;
+        }
+        return props;
+      }
+    });
+  </script>
+</polymer-element>
+
+<!--
+`core-animation-prop` represents a CSS property and value pair to use with
+`core-animation-keyframe`.
+
+@element core-animation-prop
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation-prop" attributes="name value">
+  <script>
+    Polymer({
+      publish: {
+        /**
+         * A CSS property name.
+         *
+         * @property name
+         * @type string
+         */
+        name: {value: '', reflect: true},
+
+        /**
+         * The value for the CSS property.
+         *
+         * @property value
+         * @type string|number
+         */
+        value: {value: '', reflect: true}
+      }
+    });
+  </script>
+</polymer-element>

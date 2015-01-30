@@ -1,0 +1,98 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<html>
+<head>
+
+  <title>core-icons</title>
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  <!-- load default set -->
+  <link rel="import" href="core-icons.html">
+  <!-- load the rest -->
+  <link rel="import" href="av-icons.html">
+  <link rel="import" href="communication-icons.html">
+  <link rel="import" href="device-icons.html">
+  <link rel="import" href="editor-icons.html">
+  <link rel="import" href="hardware-icons.html">
+  <link rel="import" href="image-icons.html">
+  <link rel="import" href="maps-icons.html">
+  <link rel="import" href="notification-icons.html">
+  <link rel="import" href="social-icons.html">
+  <!-- load roboto font -->
+  <link href='//fonts.googleapis.com/css?family=RobotoDraft:regular,bold&amp;lang=en' rel='stylesheet'>
+  <style>
+    body {
+      font-family: 'RobotoDraft', sans-serif;
+    }
+
+    h2 {
+      text-transform: capitalize;
+    }
+
+    core-icon {
+      transition: all 0.2s;
+      -webkit-transition: all 0.2s;
+    }
+
+    core-icon:hover {
+      fill: #fb8c00;
+    }
+
+    .set {
+      padding: 1em 0;
+      border-bottom: 1px solid silver;
+    }
+
+    .set:nth-of-type(4n-3) {
+      color: #656565;
+    }
+
+    .set:nth-of-type(4n-2) {
+      color: #FDD835;
+    }
+
+    .set:nth-of-type(4n-1) {
+      color: #0D904F;
+    }
+
+    .set:nth-of-type(4n) {
+      color: #3B78E7;
+    }
+
+    .container {
+      min-width: 10em;
+      padding: 1em;
+    }
+
+    .container > div {
+      color: black;
+    }
+  </style>
+</head>
+<body unresolved>
+
+  <template is="auto-binding">
+    <template repeat="{{iconset in $.meta.metaArray}}">
+      <h2>{{iconset.id}}</h2>
+      <h5>{{iconset.id === 'icons' ? 'The Default Set' : 'Import ' + iconset.id + '-icons.html'}}</h5>
+      <div class="set" horizontal wrap justified layout>
+        <template repeat="{{ icon in iconset.iconNames }}">
+          <span class="container" vertical center layout>
+            <core-icon icon="{{ iconset.id }}:{{ icon }}"></core-icon>
+            <div>{{ icon }}</div>
+          </span>
+        </template>
+      </div>
+    </template>
+    <core-iconset id="meta"></core-iconset>
+  </template>
+
+</body>
+</html>

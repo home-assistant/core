@@ -1,0 +1,157 @@
+<!doctype html>
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <title>paper-button</title>
+
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+
+  <link href="../font-roboto/roboto.html" rel="import">
+  <link href="../core-icon/core-icon.html" rel="import">
+  <link href="../core-icons/core-icons.html" rel="import">
+  <link href="paper-button.html" rel="import">
+
+  <style shim-shadowdom>
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      font-size: 14px;
+      margin: 0;
+      padding: 24px;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+    }
+
+    section {
+      padding: 20px 0;
+    }
+
+    section > div {
+      padding: 14px;
+      font-size: 16px;
+    }
+
+    paper-button.colored {
+      color: #4285f4;
+    }
+
+    paper-button[raised].colored {
+      background: #4285f4;
+      color: #fff;
+    }
+
+    paper-button.custom > core-icon {
+      margin-right: 4px;
+    }
+
+    paper-button.hover:hover {
+      background: #eee;
+    }
+
+    paper-button.blue-ripple::shadow #ripple {
+      color: #4285f4;
+    }
+
+  </style>
+</head>
+<body unresolved>
+
+  <template is="auto-binding">
+    <div id="clicker" on-tap="{{clickAction}}">
+  <section>
+
+    <div>Flat buttons</div>
+
+    <paper-button>button</paper-button>
+    <paper-button class="colored">colored</paper-button>
+    <paper-button disabled>disabled</paper-button>
+    <paper-button noink>noink</paper-button>
+
+  </section>
+
+  <br>
+
+  <section>
+
+    <div>Raised buttons</div>
+
+    <paper-button raised>button</paper-button>
+    <paper-button raised class="colored">colored</paper-button>
+    <paper-button raised disabled>disabled</paper-button>
+    <paper-button raised noink>noink</paper-button>
+
+  </section>
+
+  <section>
+
+    <div>Custom button content</div>
+
+    <paper-button class="colored custom">
+      <core-icon icon="check"></core-icon>
+      ok
+    </paper-button>
+    <paper-button class="custom">
+      <core-icon icon="clear"></core-icon>
+      cancel
+    </paper-button>
+    <br>
+    <paper-button>
+      <a href="https://www.polymer-project.org" target="_blank">link</a>
+    </paper-button>
+
+  </section>
+
+  <section>
+
+    <div>Toggle buttons</div>
+
+    <paper-button toggle>button</paper-button>
+
+    <paper-button toggle raised noink>noink</paper-button>
+
+    <paper-button toggle active class="colored">active</paper-button>
+
+    <paper-button toggle raised active class="colored">active</paper-button>
+
+  </section>
+
+  <section>
+
+    <div>Styling options</div>
+
+    <paper-button class="hover">hover</paper-button>
+    <paper-button class="blue-ripple">custom ripple</paper-button>
+
+  </section>
+</div>
+</template>
+
+  <script>
+
+    function clickAction(e) {
+      var t = e.target;
+      if (t.localName === 'paper-button') {
+        if (t.hasAttribute('disabled')) {
+          console.error('should not be able to click disabled button', t);
+        } else {
+          console.log('click', t);
+        }
+      }
+    }
+
+    addEventListener('template-bound', function(e) {
+      e.target.clickAction = clickAction;
+    });
+
+  </script>
+
+</body>
+</html>

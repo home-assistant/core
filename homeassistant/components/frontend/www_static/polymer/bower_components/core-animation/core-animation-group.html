@@ -1,0 +1,169 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="core-animation.html">
+
+<!--
+@group Polymer Core Elements
+
+`core-animation-group` combines `core-animation` or `core-animation-group` elements to
+create a grouped web animation. The group may be parallel (type is `par`) or sequential
+(type is `seq`). Parallel groups play all the children elements simultaneously, and
+sequential groups play the children one after another.
+
+Example of an animation group to rotate and then fade an element:
+
+    <core-animation-group type="seq">
+      <core-animation id="fadeout" duration="500">
+        <core-animation-keyframe>
+          <core-animation-prop name="transform" value="rotate(0deg)"></core-animation-prop>
+          <core-animation-prop name="transform" value="rotate(45deg)"></core-animation-prop>
+        </core-animation-keyframe>
+      </core-animation>
+      <core-animation id="fadeout" duration="500">
+        <core-animation-keyframe>
+          <core-animation-prop name="opacity" value="1"></core-animation-prop>
+        </core-animation-keyframe>
+        <core-animation-keyframe>
+          <core-animation-prop name="opacity" value="0"></core-animation-prop>
+        </core-animation-keyframe>
+      </core-animation>
+    </core-animation-group>
+
+@element core-animation-group
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation-group" constructor="CoreAnimationGroup" extends="core-animation" attributes="type">
+  <script>
+    (function() {
+
+      var ANIMATION_GROUPS = {
+        'par': AnimationGroup,
+        'seq': AnimationSequence
+      };
+
+      Polymer({
+
+        publish: {
+          /**
+           * If target is set, any children without a target will be assigned the group's
+           * target when this property is set.
+           *
+           * @property target
+           * @type HTMLElement|Node|Array|Array<HTMLElement|Node>
+           */
+
+          /**
+           * For a `core-animation-group`, a duration of "auto" means the duration should
+           * be the specified duration of its children. If set to anything other than
+           * "auto", any children without a set duration will be assigned the group's duration.
+           *
+           * @property duration
+           * @type number
+           * @default "auto"
+           */
+          duration: {value: 'auto', reflect: true},
+
+          /**
+           * The type of the animation group. 'par' creates a parallel group and 'seq' creates
+           * a sequential group.
+           *
+           * @property type
+           * @type String
+           * @default 'par'
+           */
+          type: {value: 'par', reflect: true}
+        },
+
+        typeChanged: function() {
+          this.apply();
+        },
+
+        targetChanged: function() {
+          // Only propagate target to children animations if it's defined.
+          if (this.target) {
+            this.doOnChildren(function(c) {
+              c.target = this.target;
+            }.bind(this));
+          }
+        },
+
+        durationChanged: function() {
+          if (this.duration && this.duration !== 'auto') {
+            this.doOnChildren(function(c) {
+              // Propagate to children that is not a group and has no
+              // duration specified.
+              if (!c.type && (!c.duration || c.duration === 'auto')) {
+                c.duration = this.duration;
+              }
+            }.bind(this));
+          }
+        },
+
+        doOnChildren: function(inFn) {
+          var children = this.children;
+          if (!children.length) {
+            children = this.shadowRoot ? this.shadowRoot.childNodes : [];
+          }
+          Array.prototype.forEach.call(children, function(c) {
+            // TODO <template> in the way
+            c.apply && inFn(c);
+          }, this);
+        },
+
+        makeAnimation: function() {
+          return new ANIMATION_GROUPS[this.type](this.childAnimations, this.timingProps);
+        },
+
+        hasTarget: function() {
+          var ht = this.target !== null;
+          if (!ht) {
+            this.doOnChildren(function(c) {
+              ht = ht || c.hasTarget();
+            }.bind(this));
+          }
+          return ht;
+        },
+
+        apply: function() {
+          // Propagate target and duration to child animations first.
+          this.durationChanged();
+          this.targetChanged();
+          this.doOnChildren(function(c) {
+            c.apply();
+          });
+          return this.super();
+        },
+
+        get childAnimationElements() {
+          var list = [];
+          this.doOnChildren(function(c) {
+            if (c.makeAnimation) {
+              list.push(c);
+            }
+          });
+          return list;
+        },
+
+        get childAnimations() {
+          var list = [];
+          this.doOnChildren(function(c) {
+            if (c.animation) {
+              list.push(c.animation);
+            }
+          });
+          return list;
+        }
+      });
+
+    })();
+  </script>
+</polymer-element>

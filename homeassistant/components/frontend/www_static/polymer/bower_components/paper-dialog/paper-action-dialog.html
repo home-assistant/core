@@ -1,0 +1,104 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+
+Material Design: <a href="http://www.google.com/design/spec/components/dialogs.html">Dialogs</a>
+
+`paper-action-dialog` is a `paper-dialog` with a row of buttons at the bottom that
+indicate user action. The action buttons do not scroll with the dialog body.
+
+The buttons should have either the `affirmative` or `dismissive` attribute. See
+the Material Design spec for more info.
+
+Example:
+
+    <paper-action-dialog heading="Dialog Title">
+      <p>Some content</p>
+      <paper-button dismissive>More Info</paper-button>
+      <paper-button affirmative>Decline</paper-button>
+      <paper-button affirmative>Accept</paper-button>
+    </paper-action-dialog>
+
+@group Paper Elements
+@element paper-action-dialog
+@extends paper-dialog-base
+@homepage github.io
+@status unstable
+-->
+<link href="../polymer/polymer.html" rel="import">
+<link href="../paper-shadow/paper-shadow.html" rel="import">
+
+<link href="paper-dialog-base.html" rel="import">
+
+<polymer-element name="paper-action-dialog" extends="paper-dialog-base" role="dialog" layout vertical>
+
+<template>
+
+  <style>
+    :host {
+      background: #fff;
+      color: rgba(0, 0, 0, 0.87);
+      margin: 32px;
+      overflow: visible !important;
+    }
+
+    h1 {
+      font-size: 20px;
+    }
+
+    #scroller {
+      overflow: auto;
+      box-sizing: border-box;
+      padding: 24px 24px 0 24px;
+    }
+
+    #actions {
+      padding: 16px;
+    }
+  </style>
+
+  <paper-shadow z="3" fit></paper-shadow>
+
+  <!-- need this because the host needs to be overflow: visible -->
+  <div id="scroller" relative flex auto>
+    <template if="{{heading}}">
+      <h1>{{heading}}</h1>
+    </template>
+
+    <content select=":not([affirmative]):not([dismissive])"></content>
+  </div>
+
+  <div id="actions" relative layout horizontal>
+    <content select="[dismissive]"></content>
+    <div flex></div>
+    <content select="[affirmative]"></content>
+  </div>
+
+</template>
+
+<script>
+
+  Polymer({
+
+    publish: {
+
+      /**
+       * @attribute closeSelector
+       * @type string
+       * @default '[affirmative],[dismissive]'
+       */
+      closeSelector: '[affirmative],[dismissive]'
+    }
+
+  });
+
+</script>
+
+</polymer-element>

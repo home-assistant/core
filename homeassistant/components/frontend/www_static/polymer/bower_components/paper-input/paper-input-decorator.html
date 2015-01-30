@@ -1,0 +1,533 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
+The complete set of authors may be found at http://polymer.github.io/AUTHORS
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
+-->
+
+<!--
+
+Material Design: <a href="http://www.google.com/design/spec/components/text-fields.html">Text fields</a>
+
+`paper-input-decorator` adds Material Design input field styling and animations to an element.
+
+Example:
+
+    <paper-input-decorator label="Your Name">
+        <input is="core-input">
+    </paper-input-decorator>
+
+    <paper-input-decorator floatingLabel label="Your address">
+        <textarea></textarea>
+    </paper-input-decorator>
+
+Theming
+-------
+
+`paper-input-decorator` uses `core-style` for global theming. The following options are available:
+
+- `CoreStyle.g.paperInput.labelColor` - The inline label, floating label, error message and error icon color when the input does not have focus.
+- `CoreStyle.g.paperInput.focusedColor` - The floating label and the underline color when the input has focus.
+- `CoreStyle.g.paperInput.invalidColor` - The error message, the error icon, the floating label and the underline's color when the input is invalid and has focus.
+
+To add custom styling to only some elements, use these selectors:
+
+    paper-input-decorator /deep/ .label-text,
+    paper-input-decorator /deep/ .error {
+        /* inline label,  floating label, error message and error icon color when the input is unfocused */
+        color: green;
+    }
+
+    paper-input-decorator /deep/ ::-webkit-input-placeholder {
+        /* platform specific rules for placeholder text */
+        color: green;
+    }
+    paper-input-decorator /deep/ ::-moz-placeholder {
+        color: green;
+    }
+    paper-input-decorator /deep/ :-ms-input-placeholder {
+        color: green;
+    }
+
+    paper-input-decorator /deep/ .unfocused-underline {
+        /* line color when the input is unfocused */
+        background-color: green;
+    }
+
+    paper-input-decorator[focused] /deep/ .floating-label .label-text {
+        /* floating label color when the input is focused */
+        color: orange;
+    }
+
+    paper-input-decorator /deep/ .focused-underline {
+        /* line color when the input is focused */
+        background-color: orange;
+    }
+
+    paper-input-decorator.invalid[focused] /deep/ .floated-label .label-text,
+    paper-input-decorator[focused] /deep/ .error {
+        /* floating label, error message nad error icon color when the input is invalid and focused */
+        color: salmon;
+    }
+
+    paper-input-decorator.invalid /deep/ .focused-underline {
+        /* line and color when the input is invalid and focused */
+        background-color: salmon;
+    }
+
+Form submission
+---------------
+
+You can use inputs decorated with this element in a `form` as usual.
+
+Validation
+----------
+
+Because you provide the `input` element to `paper-input-decorator`, you can use any validation library
+or the <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation">HTML5 Constraints Validation API</a>
+to implement validation. Set the `isInvalid` attribute when the input is validated, and provide an
+error message in the `error` attribute.
+
+Example:
+
+    <paper-input-decorator id="paper1" error="Value must start with a number!">
+        <input id="input1" is="core-input" pattern="^[0-9].*">
+    </paper-input-decorator>
+    <button onclick="validate()"></button>
+    <script>
+        function validate() {
+            var decorator = document.getElementById('paper1');
+            var input = document.getElementById('input1');
+            decorator.isInvalid = !input.validity.valid;
+        }
+    </script>
+
+Example to validate as the user types:
+
+    <template is="auto-binding">
+        <paper-input-decorator id="paper2" error="Value must start with a number!" isInvalid="{{!$.input2.validity.valid}}">
+            <input id="input2" is="core-input" pattern="^[0-9].*">
+        </paper-input-decorator>
+    </template>
+
+Accessibility
+-------------
+
+`paper-input-decorator` will automatically set the `aria-label` attribute on the nested input
+to the value of `label`. Do not set the `placeholder` attribute on the nested input, as it will
+conflict with this element.
+
+@group Paper Elements
+@element paper-input-decorator
+@homepage github.io
+-->
+<link href="../polymer/polymer.html" rel="import">
+<link href="../core-icon/core-icon.html" rel="import">
+<link href="../core-icons/core-icons.html" rel="import">
+<link href="../core-input/core-input.html" rel="import">
+<link href="../core-style/core-style.html" rel="import">
+
+<core-style id="paper-input-decorator">
+
+.label-text,
+.error {
+  color: {{g.paperInput.labelColor}};
+}
+
+::-webkit-input-placeholder {
+  color: {{g.paperInput.labelColor}};
+}
+
+::-moz-placeholder {
+  color: {{g.paperInput.labelColor}};
+}
+
+:-ms-input-placeholder {
+  color: {{g.paperInput.labelColor}};
+}
+
+.unfocused-underline {
+  background-color: {{g.paperInput.labelColor}};
+}
+
+:host([focused]) .floated-label .label-text {
+  color: {{g.paperInput.focusedColor}};
+}
+
+.focused-underline {
+  background-color: {{g.paperInput.focusedColor}};
+}
+
+:host(.invalid) .floated-label .label-text,
+.error {
+  color: {{g.paperInput.invalidColor}};
+}
+
+:host(.invalid) .unfocused-underline,
+:host(.invalid) .focused-underline {
+  background-color: {{g.paperInput.invalidColor}};
+}
+
+</core-style>
+
+<polymer-element name="paper-input-decorator" layout vertical
+  on-transitionEnd="{{transitionEndAction}}" on-webkitTransitionEnd="{{transitionEndAction}}"
+  on-input="{{inputAction}}"
+  on-down="{{downAction}}"
+  on-tap="{{tapAction}}">
+
+  <template>
+
+    <link href="paper-input-decorator.css" rel="stylesheet">
+    <core-style ref="paper-input-decorator"></core-style>
+
+    <div class="floated-label" aria-hidden="true" hidden?="{{!floatingLabel}}" invisible?="{{!floatingLabelVisible || labelAnimated}}">
+      <!-- needed for floating label animation measurement -->
+      <span id="floatedLabelText" class="label-text">{{label}}</span>
+    </div>
+
+    <div class="input-body" flex auto relative>
+
+      <div class="label" fit invisible aria-hidden="true">
+        <!-- needed for floating label animation measurement -->
+        <span id="labelText" class="label-text" invisible?="{{!_labelVisible}}" animated?="{{labelAnimated}}">{{label}}</span>
+      </div>
+
+      <content></content>
+
+    </div>
+
+    <div id="underline" class="underline" relative>
+      <div class="unfocused-underline" fit invisible?="{{disabled}}"></div>
+      <div id="focusedUnderline" class="focused-underline" fit invisible?="{{!underlineVisible}}" animated?="{{underlineAnimated}}"></div>
+    </div>
+
+    <div class="error" layout horizontal center hidden?="{{!isInvalid}}">
+      <div class="error-text" flex auto role="alert" aria-hidden="{{!isInvalid}}">{{error}}</div>
+      <core-icon class="error-icon" icon="warning"></core-icon>
+    </div>
+
+  </template>
+
+  <script>
+
+  (function() {
+
+    var paperInput = CoreStyle.g.paperInput = CoreStyle.g.paperInput || {};
+
+    paperInput.labelColor = '#757575';
+    paperInput.focusedColor = '#4059a9';
+    paperInput.invalidColor = '#d34336';
+
+    Polymer({
+
+      publish: {
+
+        /**
+         * The label for this input. It normally appears as grey text inside
+         * the text input and disappears once the user enters text.
+         *
+         * @attribute label
+         * @type string
+         * @default ''
+         */
+        label: '',
+
+        /**
+         * If true, the label will "float" above the text input once the
+         * user enters text instead of disappearing.
+         *
+         * @attribute floatingLabel
+         * @type boolean
+         * @default false
+         */
+        floatingLabel: false,
+
+        /**
+         * Set to true to style the element as disabled.
+         *
+         * @attribute disabled
+         * @type boolean
+         * @default false
+         */
+        disabled: {value: false, reflect: true},
+
+        /**
+         * Use this property to override the automatic label visibility.
+         * If this property is set to `true` or `false`, the label visibility
+         * will respect this value instead of be based on whether there is
+         * a non-null value in the input.
+         *
+         * @attribute labelVisible
+         * @type boolean
+         * @default false
+         */
+        labelVisible: null,
+
+        /**
+         * Set this property to true to show the error message.
+         *
+         * @attribute isInvalid
+         * @type boolean
+         * @default false
+         */
+        isInvalid: false,
+
+        /**
+         * Set this property to true to validate the input as the user types.
+         * This will not validate when changing the input programmatically; call
+         * `validate()` instead.
+         *
+         * @attribute autoValidate
+         * @type boolean
+         * @default false
+         */
+        autoValidate: false,
+
+        /**
+         * The message to display if the input value fails validation. If this
+         * is unset or the empty string, a default message is displayed depending
+         * on the type of validation error.
+         *
+         * @attribute error
+         * @type string
+         */
+        error: '',
+
+        focused: {value: false, reflect: true}
+
+      },
+
+      computed: {
+        floatingLabelVisible: 'floatingLabel && !_labelVisible',
+        _labelVisible: '(labelVisible === true || labelVisible === false) ? labelVisible : _autoLabelVisible'
+      },
+
+      ready: function() {
+        // Delegate focus/blur events
+        Polymer.addEventListener(this, 'focus', this.focusAction.bind(this), true);
+        Polymer.addEventListener(this, 'blur', this.blurAction.bind(this), true);
+      },
+
+      attached: function() {
+        this.input = this.querySelector('input,textarea');
+
+        this.mo = new MutationObserver(function() {
+          this.input = this.querySelector('input,textarea');
+        }.bind(this));
+        this.mo.observe(this, {childList: true});
+      },
+
+      detached: function() {
+        this.mo.disconnect();
+        this.mo = null;
+      },
+
+      prepareLabelTransform: function() {
+        var toRect = this.$.floatedLabelText.getBoundingClientRect();
+        var fromRect = this.$.labelText.getBoundingClientRect();
+        if (toRect.width !== 0) {
+          var sy = toRect.height / fromRect.height;
+          this.$.labelText.cachedTransform =
+            'scale3d(' + (toRect.width / fromRect.width) + ',' + sy + ',1) ' +
+            'translate3d(0,' + (toRect.top - fromRect.top) / sy + 'px,0)';
+        }
+      },
+
+      animateFloatingLabel: function() {
+        if (!this.floatingLabel || this.labelAnimated) {
+          return false;
+        }
+
+        if (!this.$.labelText.cachedTransform) {
+          this.prepareLabelTransform();
+        }
+
+        // If there's still no cached transform, the input is invisible so don't
+        // do the animation.
+        if (!this.$.labelText.cachedTransform) {
+          return false;
+        }
+
+        this.labelAnimated = true;
+        // Handle interrupted animation
+        this.async(function() {
+          this.transitionEndAction();
+        }, null, 250);
+
+        if (this._labelVisible) {
+          // Handle if the label started out floating
+          if (!this.$.labelText.style.webkitTransform && !this.$.labelText.style.transform) {
+            this.$.labelText.style.webkitTransform = this.$.labelText.cachedTransform;
+            this.$.labelText.style.transform = this.$.labelText.cachedTransform;
+            this.$.labelText.offsetTop;
+          }
+          this.$.labelText.style.webkitTransform = '';
+          this.$.labelText.style.transform = '';
+        } else {
+          this.$.labelText.style.webkitTransform = this.$.labelText.cachedTransform;
+          this.$.labelText.style.transform = this.$.labelText.cachedTransform;
+          this.input.placeholder = '';
+        }
+
+        return true;
+      },
+
+      animateUnderline: function(e) {
+        if (this.focused) {
+          var rect = this.$.underline.getBoundingClientRect();
+          var right = e.x - rect.left;
+          this.$.focusedUnderline.style.mozTransformOrigin = right + 'px';
+          this.$.focusedUnderline.style.webkitTransformOrigin = right + 'px ';
+          this.$.focusedUnderline.style.transformOriginX = right + 'px';
+
+          // Animations only run when the user interacts with the input
+          this.underlineAnimated = true;
+        }
+      },
+
+      /**
+       * Validate the input using HTML5 Constraints.
+       *
+       * @method validate
+       * @return {boolean} True if the input is valid.
+       */
+      validate: function() {
+        this.isInvalid = !this.input.validity.valid;
+        return this.input.validity.valid;
+      },
+
+      _labelVisibleChanged: function(old) {
+        // do not do the animation on first render
+        if (old !== undefined) {
+          if (!this.animateFloatingLabel()) {
+            this.updateInputLabel(this.input, this.label);
+          }
+        }
+      },
+
+      labelVisibleChanged: function() {
+        if (this.labelVisible === 'true') {
+          this.labelVisible = true;
+        } else if (this.labelVisible === 'false') {
+          this.labelVisible = false;
+        }
+      },
+
+      labelChanged: function() {
+        if (this.input) {
+          this.updateInputLabel(this.input, this.label);
+        }
+      },
+
+      isInvalidChanged: function() {
+        this.classList.toggle('invalid', this.isInvalid);
+      },
+
+      focusedChanged: function() {
+        this.updateLabelVisibility(this.input && this.input.value);
+        if (this.lastEvent) {
+          this.animateUnderline(this.lastEvent);
+          this.lastEvent = null;
+        }
+        this.underlineVisible = this.focused;
+      },
+
+      inputChanged: function(old) {
+        if (this.input) {
+          this.updateLabelVisibility(this.input.value);
+          this.updateInputLabel(this.input, this.label);
+
+          if (this.autoValidate) {
+            this.validate();
+          }
+        }
+        if (old) {
+          this.updateInputLabel(old, '');
+        }
+      },
+
+      focusAction: function() {
+        this.focused = true;
+      },
+
+      blurAction: function() {
+        this.focused = false;
+      },
+
+      /**
+       * Updates the label visibility based on a value. This is handled automatically
+       * if the user is typing, but if you imperatively set the input value you need
+       * to call this function.
+       *
+       * @method updateLabelVisibility
+       * @param {string} value
+       */
+      updateLabelVisibility: function(value) {
+        var v = (value !== null && value !== undefined) ? String(value) : value;
+        this._autoLabelVisible = (!this.focused && !v) || (!this.floatingLabel && !v);
+      },
+
+      updateInputLabel: function(input, label) {
+        if (this._labelVisible) {
+          this.input.placeholder = this.label;
+        } else {
+          this.input.placeholder = '';
+        }
+        if (label) {
+          input.setAttribute('aria-label', label);
+        } else {
+          input.removeAttribute('aria-label');
+        }
+      },
+
+      inputAction: function() {
+        this.updateLabelVisibility(this.input.value);
+        if (this.autoValidate) {
+          this.validate();
+        }
+      },
+
+      downAction: function(e) {
+        // eat the event and do nothing if already focused
+        if (e.target !== this.input && this.focused) {
+          e.preventDefault();
+          return;
+        }
+        // cache the event here because "down" fires before "focus" when tapping on
+        // the input and the underline animation runs on focus change
+        this.lastEvent = e;
+      },
+
+      tapAction: function(e) {
+        if (this.disabled) {
+          return;
+        }
+
+        if (this.focused) {
+          return;
+        }
+
+        if (this.input) {
+          this.input.focus();
+          e.preventDefault();
+        }
+      },
+
+      transitionEndAction: function() {
+        this.underlineAnimated = false;
+        this.labelAnimated = false;
+        if (this._labelVisible) {
+          this.input.placeholder = this.label;
+        }
+      }
+
+    });
+
+  }());
+
+  </script>
+
+</polymer-element>

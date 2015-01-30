@@ -1,0 +1,157 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+Element providing material design circular spinner.
+
+##### Example
+
+    <paper-spinner active></paper-spinner>
+
+The default spinner cycles between blue, red, yellow and green. It can be customized so
+that it uses one color only.
+
+##### Example
+
+    <style shim-shadowdom>
+      paper-spinner.blue::shadow .circle {
+        border-color: #4285f4;
+      }
+    </style>
+
+    <paper-spinner class="blue" active></paper-spinner>
+
+Alt attribute should be set to provide adequate context for accessibility. If not provided,
+it defaults to 'loading'.
+Empty alt can be provided to mark the element as decorative if alternative content is provided
+in another form (e.g. a text block following the spinner).
+
+##### Example
+  <paper-spinner alt="Loading contacts list" active></paper-spinner>
+
+@element paper-spinner
+@blurb Element providing material design circular spinner.
+@status alpha
+@homepage http://polymerlabs.github.io/paper-spinner
+-->
+
+<polymer-element name="paper-spinner" attributes="active alt" role="progressbar">
+  <template>
+    <link rel="stylesheet" href="paper-spinner.css">
+
+    <div id="spinnerContainer">
+      <div class="spinner-layer blue">
+        <div class="circle-clipper left">
+          <div class="circle" fit></div>
+        </div><div class="gap-patch">
+          <div class="circle" fit></div>
+        </div><div class="circle-clipper right">
+          <div class="circle" fit></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer red">
+        <div class="circle-clipper left">
+          <div class="circle" fit></div>
+        </div><div class="gap-patch">
+          <div class="circle" fit></div>
+        </div><div class="circle-clipper right">
+          <div class="circle" fit></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer yellow">
+        <div class="circle-clipper left">
+          <div class="circle" fit></div>
+        </div><div class="gap-patch">
+          <div class="circle" fit></div>
+        </div><div class="circle-clipper right">
+          <div class="circle" fit></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer green">
+        <div class="circle-clipper left">
+          <div class="circle" fit></div>
+        </div><div class="gap-patch">
+          <div class="circle" fit></div>
+        </div><div class="circle-clipper right">
+          <div class="circle" fit></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      eventDelegates: {
+        'animationend': 'reset',
+        'webkitAnimationEnd': 'reset'
+      },
+      publish: {
+        /**
+         * Displays the spinner.
+         *
+         * @attribute active
+         * @type boolean
+         * @default false
+         */
+        active: {value: false, reflect: true},
+
+        /**
+         * Alternative text content for accessibility support.
+         * If alt is present, it will add an aria-label whose content matches alt when active.
+         * If alt is not present, it will default to 'loading' as the alt value.
+         * @attribute alt
+         * @type string
+         * @default 'loading'
+         */
+        alt: {value: 'loading', reflect: true}
+      },
+
+      ready: function() {
+        // Allow user-provided `aria-label` take preference to any other text alternative.
+        if (this.hasAttribute('aria-label')) {
+          this.alt = this.getAttribute('aria-label');
+        } else {
+          this.setAttribute('aria-label', this.alt);
+        }
+        if (!this.active) {
+          this.setAttribute('aria-hidden', 'true');
+        }
+      },
+
+      activeChanged: function() {
+        if (this.active) {
+          this.$.spinnerContainer.classList.remove('cooldown');
+          this.$.spinnerContainer.classList.add('active');
+          this.removeAttribute('aria-hidden');
+        } else {
+          this.$.spinnerContainer.classList.add('cooldown');
+          this.setAttribute('aria-hidden', 'true');
+        }
+      },
+
+      altChanged: function() {
+        if (this.alt === '') {
+          this.setAttribute('aria-hidden', 'true');
+        } else {
+          this.removeAttribute('aria-hidden');
+        }
+        this.setAttribute('aria-label', this.alt);
+      },
+
+      reset: function() {
+        this.$.spinnerContainer.classList.remove('active', 'cooldown');
+      }
+    });
+  </script>
+</polymer-element>

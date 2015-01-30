@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<style>
+.target {
+  display: inline-block;
+  -webkit-perspective: 50;
+  perspective: 50;
+  margin-top: 50px;
+  margin-bottom: 25px;
+}
+.transformed {
+  width: 50px;
+  height: 50px;
+  background: black;
+  transform: rotateY(45deg);
+}
+.replica .transformed {
+  background: green;
+}
+.replica {
+  position: relative;
+  left: -50px;
+  opacity: 0.75;
+}
+</style>
+<body>
+<template id="target-template">
+<div><div class="transformed"></div></div>
+</template>
+<script src="../testharness/testharness.js"></script>
+<script src="../testharness/testharnessreport.js"></script>
+<script src="resources/interpolation-test.js"></script>
+<script>
+assertInterpolation({
+  property: 'perspective-origin',
+  prefixedProperty: ['-webkit-perspective-origin'],
+  from: '0% 50%',
+  to: '100% 150%'
+}, [
+  {at: -0.3, is: '-30% 20%'},
+  {at: 0, is: '0% 50%'},
+  {at: 0.3, is: '30% 80%'},
+  {at: 0.6, is: '60% 110%'},
+  {at: 1, is: '100% 150%'},
+  {at: 1.5, is: '150% 200%'}
+]);
+</script>
+</body>

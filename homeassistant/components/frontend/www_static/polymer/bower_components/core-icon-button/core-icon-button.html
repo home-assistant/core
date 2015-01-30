@@ -1,0 +1,81 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`core-icon-button` is an icon with button behaviors.
+
+    <core-icon-button src="star.png"></core-icon-button>
+
+`core-icon-button` includes a default icon set.  Use `icon` to specify 
+which icon from the icon set to use.
+
+    <core-icon-button icon="menu"></core-icon-button>
+
+See [`core-iconset`](#core-iconset) for more information about 
+how to use a custom icon set.
+
+@group Polymer Core Elements
+@element core-icon-button
+@homepage github.io
+-->
+
+<link rel="import" href="../core-icon/core-icon.html">
+<link rel="import" href="../core-icons/core-icons.html">
+
+<polymer-element name="core-icon-button" attributes="src icon active">
+
+  <template>
+    <link rel="stylesheet" href="core-icon-button.css">
+    <core-icon src="{{src}}" icon="{{icon}}"></core-icon><content></content>
+  </template>
+
+  <script>
+
+    Polymer('core-icon-button', {
+
+      /**
+       * The URL of an image for the icon.  Should not use `icon` property
+       * if you are using this property.
+       *
+       * @attribute src
+       * @type string
+       * @default ''
+       */
+      src: '',
+
+      /**
+       * If true, border is placed around the button to indicate it's
+       * active state.
+       *
+       * @attribute active
+       * @type boolean
+       * @default false
+       */
+      active: false,
+
+      /**
+       * Specifies the icon name or index in the set of icons available in
+       * the icon set.  Should not use `src` property if you are using this
+       * property.
+       *
+       * @attribute icon
+       * @type string
+       * @default ''
+       */
+      icon: '',
+
+      activeChanged: function() {
+        this.classList.toggle('selected', this.active);
+      }
+
+    });
+
+  </script>
+
+</polymer-element>

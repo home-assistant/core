@@ -7,7 +7,7 @@ fi
 # npm install -g bower vulcanize
 
 # Install dependencies
-cd homeassistant/components/http/www_static/polymer
+cd homeassistant/components/frontend/www_static/polymer
 bower install
 cd ..
 cp polymer/bower_components/webcomponentsjs/webcomponents.min.js .

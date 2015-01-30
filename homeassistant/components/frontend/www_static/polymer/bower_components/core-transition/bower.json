@@ -1,0 +1,9 @@
+{
+  "name": "core-transition",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5",
+    "core-meta": "Polymer/core-meta#^0.5"
+  },
+  "version": "0.5.4"
+}

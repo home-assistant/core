@@ -1,0 +1,74 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+  <head>
+    <title>core-range</title>
+    
+    <script src="../webcomponentsjs/webcomponents.js"></script>
+    
+    <link rel="import" href="core-range.html">
+    <link rel="import" href="../core-input/core-input.html">
+    
+    <style>
+    
+      body {
+        font-family: sans-serif;
+      }
+    
+    </style>
+  </head>
+  
+  <body unresolved>
+    
+    <polymer-element name="x-progressbar" noscript attributes="value min max">
+    
+      <template>
+      
+        <style>
+          
+          :host {
+            display: block;
+            height: 40px;
+            background-color: #555;
+            border-radius: 4px;
+            padding: 8px;
+            box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.5);
+          }
+          
+          .progress {
+            background-color: #999;
+            height: 100%;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+          }
+          
+          .progress-value {
+            padding: 0 8px;
+            font-size: 18px;
+            color: #fff;
+          }
+          
+        </style>
+        
+        <core-range min="{{min}}" max="{{max}}" value="{{value}}" ratio="{{ratio}}"></core-range>
+        
+        <div class="progress" horizontal center layout _style="width: {{ratio}}%;">
+          <div class="progress-value">{{ratio}}%</div>
+        </div>
+        
+      </template>
+      
+    </polymer-element>
+    
+    <x-progressbar min="0" max="200" value="120"></x-progressbar>
+    
+  </body>
+</html>

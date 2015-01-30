@@ -1,0 +1,15 @@
+{
+  "name": "paper-tabs",
+  "private": true,
+  "dependencies": {
+    "core-icons": "Polymer/core-icons#^0.5",
+    "core-selector": "Polymer/core-selector#^0.5",
+    "core-toolbar": "Polymer/core-toolbar#^0.5",
+    "core-media-query": "Polymer/core-media-query#^0.5",
+    "font-roboto": "Polymer/font-roboto#^0.5",
+    "paper-icon-button": "Polymer/paper-icon-button#^0.5",
+    "paper-ripple": "Polymer/paper-ripple#^0.5",
+    "core-resizable": "Polymer/core-resizable#^0.5"
+  },
+  "version": "0.5.4"
+}

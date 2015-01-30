@@ -1,0 +1,113 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+  <title>paper-progress</title>
+  
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  
+  <link rel="import" href="paper-progress.html">
+  <link rel="import" href="../paper-button/paper-button.html">
+  
+  <style shim-shadowdom>
+  
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      margin: 0;
+      padding: 24px;
+    }
+    
+    paper-progress {
+      display: block;
+      width: 100%;
+      padding: 25px 0;
+    }
+    
+    paper-progress.pink::shadow #activeProgress {
+      background-color: #e91e63;
+    }
+    
+    paper-progress.pink::shadow #secondaryProgress {
+      background-color: #f8bbd0;
+    }
+    
+  </style>
+  
+</head>
+<body unresolved>
+
+  <paper-progress></paper-progress>
+
+  <paper-button raised onclick="startProgress();">Start</paper-button>
+  
+  <br><br><br>
+  
+  <paper-progress></paper-progress><br>
+  
+  <paper-progress value="40"></paper-progress><br>
+  
+  <paper-progress value="800" min="100" max="1000"></paper-progress><br>
+  
+  <paper-progress value="40" secondaryProgress="80"></paper-progress><br>
+  
+  <paper-progress value="200" max="200"></paper-progress><br>
+  
+  <paper-progress indeterminate></paper-progress><br>
+
+  <paper-progress class="pink" value="80"></paper-progress><br>
+  
+  <paper-progress class="pink" value="40" secondaryProgress="80"></paper-progress><br>
+  
+  <paper-progress class="pink" indeterminate></paper-progress><br>
+
+  <script>
+    
+    var progress = document.querySelector('paper-progress');
+    var button = document.querySelector('paper-button');
+    
+    var repeat, maxRepeat = 5, animating = false;
+    
+    function nextProgress() {
+      animating = true;
+      if (progress.value < progress.max) {
+        progress.value += (progress.step || 1);
+      } else {
+        if (++repeat >= maxRepeat) {
+          animating = false;
+          button.disabled = false;
+          return;
+        }
+        progress.value = progress.min;
+      }
+      progress.async(nextProgress);
+    }
+    
+    function startProgress() {
+      repeat = 0;
+      progress.value = progress.min;
+      button.disabled = true;
+      if (!animating) {
+        nextProgress();
+      }
+    }
+    
+    addEventListener('polymer-ready', function() {
+      startProgress();
+    });
+    
+  </script>
+  
+</body>
+</html>

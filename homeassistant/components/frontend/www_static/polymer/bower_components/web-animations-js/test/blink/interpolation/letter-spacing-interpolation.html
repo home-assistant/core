@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<style>
+.target {
+  display: inline-block;
+  font: 100px sans-serif;
+}
+.replica {
+  color: green;
+  margin-right: 30px;
+}
+</style>
+<body>
+<template id="target-template">TT</template>
+<script src="../testharness/testharness.js"></script>
+<script src="../testharness/testharnessreport.js"></script>
+<script src="resources/interpolation-test.js"></script>
+<script>
+assertInterpolation({
+  property: 'letter-spacing',
+  from: '-10px',
+  to: '10px'
+}, [
+  {at: -0.3, is: '-16px'},
+  {at: 0, is: '-10px'},
+  {at: 0.3, is: '-4px'},
+  {at: 0.6, is: '2px'},
+  {at: 1, is: '10px'},
+  {at: 1.5, is: '20px'},
+]);
+</script>
+</body>

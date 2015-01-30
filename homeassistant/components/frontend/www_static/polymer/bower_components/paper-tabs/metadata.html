@@ -1,0 +1,58 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<x-meta id="paper-tabs" label="Tabs" group="Paper" isContainer>
+
+  <template>
+    <paper-tabs selected="0" style="width: 480px; background-color: #00bcd4; color: #fff; box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.2);">
+      <paper-tab>ITEM ONE</paper-tab>
+      <paper-tab>ITEM TWO</paper-tab>
+      <paper-tab>ITEM THREE</paper-tab>
+      <paper-tab>ITEM FOUR</paper-tab>
+      <paper-tab>ITEM FIVE</paper-tab>
+    </paper-tabs>
+  </template>
+  
+  <template id="imports">
+    <link rel="import" href="paper-tabs.html">
+  </template>
+  
+</x-meta>
+
+
+<x-meta id="paper-tab" label="Tab" group="Paper">
+
+  <template>
+    <paper-tab style="width: 120px; height: 40px;">TAB</paper-tab>
+  </template>
+  
+  <template id="imports">
+    <link rel="import" href="paper-tab.html">
+  </template>
+  
+</x-meta>
+
+<x-meta id="paper-tab-panel" label="Panel with Tabs" group="Paper" isContainer>
+
+	<template>
+		<section layout vertical style="width:420px;height:630px;border:5px solid #ccc;">
+      <paper-tabs selected="0" noink nobar style="background-color:#00bcd4; color:#fff;box-shadow:0px 3px 2px rgba(0, 0, 0, 0.2);">
+        <paper-tab>ITEM ONE</paper-tab>
+        <paper-tab>ITEM TWO</paper-tab>
+      </paper-tabs>
+      <section flex relative>
+      </section>
+		</section>
+	</template>
+
+  <template id="imports">
+    <link rel="import" href="paper-tabs.html">
+  </template>
+
+</x-meta>

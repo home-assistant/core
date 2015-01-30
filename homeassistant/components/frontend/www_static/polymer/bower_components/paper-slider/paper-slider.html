@@ -1,0 +1,372 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`paper-slider` allows user to select a value from a range of values by
+moving the slider thumb.  The interactive nature of the slider makes it a 
+great choice for settings that reflect intensity levels, such as volume, 
+brightness, or color saturation.
+
+Example:
+
+    <paper-slider></paper-slider>
+
+Use `min` and `max` to specify the slider range.  Default is 0 to 100.
+
+Example:
+
+    <paper-slider min="10" max="200" value="110"></paper-slider>
+
+Styling slider:
+
+To change the slider progress bar color:
+
+    paper-slider::shadow #sliderBar::shadow #activeProgress {
+      background-color: #0f9d58;
+    }
+
+To change the slider knob color:
+
+    paper-slider::shadow #sliderKnobInner {
+      background-color: #0f9d58;
+    }
+
+To change the slider pin color:
+
+    paper-slider::shadow #sliderKnobInner::before {
+      background-color: #0f9d58;
+    }
+
+To change the slider pin's font color:
+
+    paper-slider::shadow #sliderKnob > #sliderKnobInner::after {
+      color: #0f9d58
+    }
+
+To change the slider secondary progress bar color:
+
+    paper-slider::shadow #sliderBar::shadow #secondaryProgress {
+      background-color: #0f9d58;
+    }
+
+@group Paper Elements
+@element paper-slider
+@extends core-range
+@homepage github.io
+-->
+
+<link rel="import" href="../core-a11y-keys/core-a11y-keys.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+<link rel="import" href="../paper-input/paper-input.html">
+
+<polymer-element name="paper-slider" extends="core-range" attributes="snaps pin disabled secondaryProgress editable immediateValue" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100">
+<template>
+
+  <link rel="stylesheet" href="paper-slider.css">
+
+  <template if="{{!disabled}}">
+    <core-a11y-keys target="{{}}" keys="left down pagedown home" on-keys-pressed="{{decrementKey}}"></core-a11y-keys>
+    <core-a11y-keys target="{{}}" keys="right up pageup end" on-keys-pressed="{{incrementKey}}"></core-a11y-keys>
+  </template>
+
+  <div id="sliderContainer" class="{{ {disabled: disabled, pin: pin, snaps: snaps, ring: immediateValue <= min, expand: expand, dragging: dragging, transiting: transiting, editable: editable} | tokenList }}">
+
+    <div class="bar-container">
+      <paper-progress id="sliderBar" aria-hidden="true" min="{{min}}" max="{{max}}" value="{{immediateValue}}" secondaryProgress="{{secondaryProgress}}"
+          on-down="{{bardown}}" on-up="{{resetKnob}}" 
+          on-trackstart="{{trackStart}}" on-trackx="{{trackx}}" on-trackend="{{trackEnd}}"></paper-progress>
+    </div>
+
+    <template if="{{snaps && !disabled}}">
+      <div class="slider-markers" horizontal layout>
+        <template repeat="{{markers}}">
+          <div flex class="slider-marker"></div>
+        </template>
+      </div>
+    </template>
+
+    <div id="sliderKnob" on-down="{{knobdown}}" on-up="{{resetKnob}}"
+        on-trackstart="{{trackStart}}" on-trackx="{{trackx}}" on-trackend="{{trackEnd}}"
+        on-transitionend="{{knobTransitionEnd}}"
+        center-justified center horizontal layout>
+
+      <div id="sliderKnobInner" value="{{immediateValue}}"></div>
+
+    </div>
+
+  </div>
+
+  <template if="{{editable}}">
+    <paper-input id="input" class="slider-input" value="{{immediateValue}}" disabled?="{{disabled}}" on-change="{{inputChange}}"></paper-input>
+  </template>
+
+</template>
+<script>
+
+  Polymer('paper-slider', {
+
+    /**
+     * Fired when the slider's value changes.
+     *
+     * @event core-change
+     */
+     
+    /**
+     * Fired when the slider's immediateValue changes.
+     *
+     * @event immediate-value-change
+     */
+
+    /**
+     * Fired when the slider's value changes due to user interaction.
+     *
+     * Changes to the slider's value due to changes in an underlying
+     * bound variable will not trigger this event.
+     *
+     * @event change
+     */
+
+    /**
+     * If true, the slider thumb snaps to tick marks evenly spaced based
+     * on the `step` property value.
+     *
+     * @attribute snaps
+     * @type boolean
+     * @default false
+     */
+    snaps: false,
+
+    /**
+     * If true, a pin with numeric value label is shown when the slider thumb 
+     * is pressed.  Use for settings for which users need to know the exact 
+     * value of the setting.
+     *
+     * @attribute pin
+     * @type boolean
+     * @default false
+     */
+    pin: false,
+
+    /**
+     * If true, this slider is disabled.  A disabled slider cannot be tapped
+     * or dragged to change the slider value.
+     *
+     * @attribute disabled
+     * @type boolean
+     * @default false
+     */
+    disabled: false,
+
+    /**
+     * The number that represents the current secondary progress.
+     *
+     * @attribute secondaryProgress
+     * @type number
+     * @default 0
+     */
+    secondaryProgress: 0,
+
+    /**
+     * If true, an input is shown and user can use it to set the slider value.
+     *
+     * @attribute editable
+     * @type boolean
+     * @default false
+     */
+    editable: false,
+
+    /**
+     * The immediate value of the slider.  This value is updated while the user
+     * is dragging the slider.
+     *
+     * @attribute immediateValue
+     * @type number
+     * @default 0
+     */
+    maxMarkers: 100,
+
+    /**
+     * True when the user is dragging the slider.
+     *
+     * @attribute dragging
+     * @type boolean
+     * @default false
+     */
+    dragging: false,
+
+    observe: {
+      'step snaps': 'update'
+    },
+
+    ready: function() {
+      this.update();
+    },
+
+    update: function() {
+      this.positionKnob(this.calcRatio(this.value));
+      this.updateMarkers();
+    },
+
+    minChanged: function() {
+      this.update();
+      this.setAttribute('aria-valuemin', this.min);
+    },
+
+    maxChanged: function() {
+      this.update();
+      this.setAttribute('aria-valuemax', this.max);
+    },
+
+    valueChanged: function() {
+      this.update();
+      this.setAttribute('aria-valuenow', this.value);
+      this.fire('core-change');
+    },
+
+    disabledChanged: function() {
+      if (this.disabled) {
+        this.removeAttribute('tabindex');
+      } else {
+        this.tabIndex = 0;
+      }
+    },
+
+    immediateValueChanged: function() {
+      if (!this.dragging) {
+        this.value = this.immediateValue;
+      }
+      this.fire('immediate-value-change');
+    },
+
+    expandKnob: function() {
+      this.expand = true;
+    },
+
+    resetKnob: function() {
+      this.expandJob && this.expandJob.stop();
+      this.expand = false;
+    },
+
+    positionKnob: function(ratio) {
+      this.immediateValue = this.calcStep(this.calcKnobPosition(ratio)) || 0;
+      this._ratio = this.snaps ? this.calcRatio(this.immediateValue) : ratio;
+      this.$.sliderKnob.style.left = this._ratio * 100 + '%';
+    },
+
+    inputChange: function() {
+      this.value = this.$.input.value;
+      this.fire('change');
+    },
+
+    calcKnobPosition: function(ratio) {
+      return (this.max - this.min) * ratio + this.min;
+    },
+
+    trackStart: function(e) {
+      this._w = this.$.sliderBar.offsetWidth;
+      this._x = this._ratio * this._w;
+      this._startx = this._x || 0;
+      this._minx = - this._startx;
+      this._maxx = this._w - this._startx;
+      this.$.sliderKnob.classList.add('dragging');
+      this.dragging = true;
+      e.preventTap();
+    },
+
+    trackx: function(e) {
+      var x = Math.min(this._maxx, Math.max(this._minx, e.dx));
+      this._x = this._startx + x;
+      this.immediateValue = this.calcStep(
+          this.calcKnobPosition(this._x / this._w)) || 0;
+      var s =  this.$.sliderKnob.style;
+      s.transform = s.webkitTransform = 'translate3d(' + (this.snaps ? 
+          (this.calcRatio(this.immediateValue) * this._w) - this._startx : x) + 'px, 0, 0)';
+    },
+
+    trackEnd: function() {
+      var s =  this.$.sliderKnob.style;
+      s.transform = s.webkitTransform = '';
+      this.$.sliderKnob.classList.remove('dragging');
+      this.dragging = false;
+      this.resetKnob();
+      this.value = this.immediateValue;
+      this.fire('change');
+    },
+    
+    knobdown: function(e) {
+      e.preventDefault();
+      this.expandKnob();
+    },
+
+    bardown: function(e) {
+      e.preventDefault();
+      this.transiting = true;
+      this._w = this.$.sliderBar.offsetWidth;
+      var rect = this.$.sliderBar.getBoundingClientRect();
+      var ratio = (e.x - rect.left) / this._w;
+      this.positionKnob(ratio);
+      this.expandJob = this.job(this.expandJob, this.expandKnob, 60);
+      this.asyncFire('change');
+    },
+
+    knobTransitionEnd: function(e) {
+      if (e.target === this.$.sliderKnob) {
+        this.transiting = false;
+      }
+    },
+
+    updateMarkers: function() {
+      this.markers = [];
+      var l = (this.max - this.min) / this.step;
+      if (!this.snaps && l > this.maxMarkers) {
+        return;
+      }
+      for (var i = 0; i < l; i++) {
+        this.markers.push('');
+      }
+    },
+
+    /**
+     * Increases value by `step` but not above `max`.
+     * @method increment
+     */
+    increment: function() {
+      this.value = this.clampValue(this.value + this.step);
+    },
+
+    /**
+     * Decreases value by `step` but not below `min`.
+     * @method decrement
+     */
+    decrement: function() {
+      this.value = this.clampValue(this.value - this.step);
+    },
+
+    incrementKey: function(ev, keys) {
+      if (keys.key === "end") {
+        this.value = this.max;
+      } else {
+        this.increment();
+      }
+      this.fire('change');
+    },
+
+    decrementKey: function(ev, keys) {
+      if (keys.key === "home") {
+        this.value = this.min;
+      } else {
+        this.decrement();
+      }
+      this.fire('change');
+    }
+
+  });
+
+</script>
+</polymer-element>
