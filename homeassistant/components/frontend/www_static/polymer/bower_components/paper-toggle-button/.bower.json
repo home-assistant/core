@@ -14,6 +14,6 @@
     "commit": "b4cc158803ac87b1571f8c07c0d862ec89b10786"
   },
   "_source": "git://github.com/polymer/paper-toggle-button.git",
-  "_target": "~0.5.2",
+  "_target": "~0.5.4",
   "_originalSource": "polymer/paper-toggle-button"
 }

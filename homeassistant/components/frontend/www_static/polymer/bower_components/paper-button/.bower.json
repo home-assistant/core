@@ -21,6 +21,6 @@
     "commit": "f3f3657c008b745f1f24e952544c18e587bf56a3"
   },
   "_source": "git://github.com/Polymer/paper-button.git",
-  "_target": "~0.5.2",
+  "_target": "^0.5",
   "_originalSource": "Polymer/paper-button"
 }

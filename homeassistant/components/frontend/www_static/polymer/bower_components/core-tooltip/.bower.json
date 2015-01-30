@@ -18,6 +18,6 @@
     "commit": "a4f51665a74582c4f3b4dd882eb361cfeedeb4bf"
   },
   "_source": "git://github.com/Polymer/core-tooltip.git",
-  "_target": "~0.5.2",
+  "_target": "~0.5.4",
   "_originalSource": "Polymer/core-tooltip"
 }

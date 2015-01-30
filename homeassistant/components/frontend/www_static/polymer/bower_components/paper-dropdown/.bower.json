@@ -16,14 +16,14 @@
     "web-component-tester": "web-component-tester#master"
   },
   "version": "0.5.4",
-  "homepage": "https://github.com/polymer/paper-dropdown",
+  "homepage": "https://github.com/Polymer/paper-dropdown",
   "_release": "0.5.4",
   "_resolution": {
     "type": "version",
     "tag": "0.5.4",
     "commit": "0142d7ab1acd714b608afead2a622dc2e9b494b8"
   },
-  "_source": "git://github.com/polymer/paper-dropdown.git",
-  "_target": "~0.5.2",
-  "_originalSource": "polymer/paper-dropdown"
+  "_source": "git://github.com/Polymer/paper-dropdown.git",
+  "_target": "^0.5",
+  "_originalSource": "Polymer/paper-dropdown"
 }

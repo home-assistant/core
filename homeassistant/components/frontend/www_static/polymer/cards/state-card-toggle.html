@@ -7,20 +7,17 @@
 <polymer-element name="state-card-toggle" attributes="stateObj api">
   <template>
     <style>
-    /* the splash while enabling */
-    paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
-      color: #0091ea;
+    paper-toggle-button::shadow .toggle-ink {
+      color: #039be5;
     }
 
-    /* filling of circle when checked */
-    paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
+    paper-toggle-button::shadow [checked] .toggle-bar {
       background-color: #039be5;
     }
 
-    /* line when checked */
-    paper-toggle-button::shadow #toggleBar[checked] {
+    paper-toggle-button::shadow [checked] .toggle-button {
       background-color: #039be5;
-    }    
+    }
     </style>
 
     <div horizontal justified layout>      

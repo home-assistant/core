@@ -12,14 +12,14 @@
     "paper-shadow": "Polymer/paper-shadow#^0.5"
   },
   "version": "0.5.4",
-  "homepage": "https://github.com/polymer/paper-item",
+  "homepage": "https://github.com/Polymer/paper-item",
   "_release": "0.5.4",
   "_resolution": {
     "type": "version",
     "tag": "0.5.4",
     "commit": "381b33c228588681dbe28650ca5214e0c11035b2"
   },
-  "_source": "git://github.com/polymer/paper-item.git",
-  "_target": "~0.5.2",
-  "_originalSource": "polymer/paper-item"
+  "_source": "git://github.com/Polymer/paper-item.git",
+  "_target": "^0.5",
+  "_originalSource": "Polymer/paper-item"
 }

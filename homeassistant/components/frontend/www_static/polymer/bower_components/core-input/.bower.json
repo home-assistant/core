@@ -15,6 +15,6 @@
     "commit": "655564c7c5f777147751307cd605a16beabfdae7"
   },
   "_source": "git://github.com/Polymer/core-input.git",
-  "_target": "~0.5.2",
+  "_target": "^0.5",
   "_originalSource": "Polymer/core-input"
 }

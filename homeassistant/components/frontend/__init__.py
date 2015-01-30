@@ -3,7 +3,7 @@ import os
 import time
 import gzip
 
-from homeassistant.components.http import frontend
+from . import frontend
 import homeassistant.util as util
 
 DOMAIN = 'frontend'
