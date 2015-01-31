@@ -85,6 +85,7 @@ import homeassistant as ha
 from homeassistant.const import SERVER_PORT, AUTH_HEADER
 import homeassistant.remote as rem
 import homeassistant.util as util
+import homeassistant.bootstrap as bootstrap
 
 DOMAIN = "http"
 DEPENDENCIES = []
@@ -181,6 +182,11 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         _LOGGER.info(
             "Starting web interface at http://%s:%d", *self.server_address)
 
+        # 31-1-2015: Refactored frontend/api components out of this component
+        # To prevent stuff from breaking, load the two extracted components
+        bootstrap.setup_component(self.hass, 'api')
+        bootstrap.setup_component(self.hass, 'frontend')
+
         self.serve_forever()
 
     def register_path(self, method, url, callback, require_auth=True):
@@ -188,7 +194,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.paths.append((method, url, callback, require_auth))
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods,too-many-locals
 class RequestHandler(SimpleHTTPRequestHandler):
     """
     Handles incoming HTTP requests
