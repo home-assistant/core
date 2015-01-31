@@ -1,0 +1,43 @@
+/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
+The complete set of authors may be found at http://polymer.github.io/AUTHORS
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
+*/
+
+:host { 
+  display: block;
+  height: auto;
+}
+
+:host(.core-selected, [active]) {
+  font-weight: initial;
+}
+
+core-item {
+  cursor: default;
+}
+
+::content > core-item {
+ cursor: default; 
+}
+
+:host(.font-scalable) > core-item {
+  min-height: 2.5em;
+}
+
+:host(.font-scalable) > core-item::shadow core-icon {
+  margin: 0 1em 0 0.25em;
+  height: 1.5em;
+  width: 1.5em;
+}
+
+#submenu {
+  margin: 0 0 0 44px;
+}
+
+:host(.font-scalable) > #submenu {
+  margin: 0 0 0 2.75em;
+}

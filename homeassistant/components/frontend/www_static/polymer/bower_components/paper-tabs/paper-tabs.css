@@ -1,0 +1,75 @@
+/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  height: 48px;
+  overflow: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+#tabsContainer {
+  position: relative;
+  height: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#tabsContent {
+  height: 100%;
+}
+
+#tabsContainer.scrollable > #tabsContent {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.scroll-button {
+  width: 40px;
+  padding: 0 12px;
+}
+
+.scroll-button > paper-icon-button {
+  transition: opacity 0.18s;
+}
+
+.scroll-button > .hidden {
+  opacity: 0;
+}
+
+#selectionBar {
+  position: absolute;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  background-color: #ffff8d;
+  transition: width, left;
+}
+
+#selectionBar.expand {
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+#selectionBar.contract {
+  transition-duration: 0.18s;
+  transition-timing-function: cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+
+polyfill-next-selector { content: '#tabsContent > *:not(#selectionBar)'; }
+::content > * {
+  height: 100%;
+}

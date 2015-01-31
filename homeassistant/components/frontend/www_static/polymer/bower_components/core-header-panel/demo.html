@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>core-header-panel</title>
+
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  
+  <link rel="import" href="core-header-panel.html">
+
+  <style shim-shadowdom>
+
+    body {
+      font-family: sans-serif;
+    }
+
+    core-header-panel {
+      float: left;
+      width: 360px;
+      height: 400px;
+      margin: 5px;
+    }
+    
+    core-header-panel[mode=cover]::shadow #mainContainer {
+      left: 70px;
+    }
+
+    .core-header {
+      height: 60px;
+      line-height: 60px;
+      font-size: 18px;
+      padding: 0 10px;
+      background-color: #4F7DC9;
+      color: #FFF;
+      transition: height 0.2s;
+    }
+    
+    .core-header.tall {
+      height: 180px;
+    }
+    
+    .core-header.medium-tall {
+      height: 120px;
+    }
+
+    .content {
+      height: 2000px;
+      background: linear-gradient(rgb(214, 227, 231), lightblue);
+    }
+
+  </style>
+
+</head>
+
+<body unresolved>
+
+  <core-header-panel>
+    <div class="core-header">standard</div>
+    <div class="content"></div>
+  </core-header-panel>
+  
+  <core-header-panel mode="seamed">
+    <div class="core-header">seamed</div>
+    <div class="content"></div>
+  </core-header-panel>
+
+  <core-header-panel mode="waterfall">
+    <div class="core-header">waterfall</div>
+    <div class="content"></div>
+  </core-header-panel>
+
+  <core-header-panel mode="waterfall-tall">
+    <div class="core-header">waterfall-tall</div>
+    <div class="content"></div>
+  </core-header-panel>
+  
+  <core-header-panel mode="waterfall-tall" tallClass="medium-tall">
+    <div class="core-header">waterfall-tall (tallClass: medium-tall)</div>
+    <div class="content"></div>
+  </core-header-panel>
+
+  <core-header-panel mode="scroll">
+    <div class="core-header">scroll</div>
+    <div class="content"></div>
+  </core-header-panel>
+  
+  <core-header-panel mode="cover">
+    <div class="core-header tall">cover</div>
+    <div class="content" style="margin: 60px 60px 60px 0;"></div>
+  </core-header-panel>
+  
+</body>
+</html>

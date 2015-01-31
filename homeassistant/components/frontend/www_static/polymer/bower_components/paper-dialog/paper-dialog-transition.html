@@ -1,0 +1,27 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link href="../core-transition/core-transition-css.html" rel="import">
+
+<polymer-element name="paper-dialog-transition" extends="core-transition-css">
+
+<template>
+  <link no-shim href="paper-dialog-transition.css" rel="stylesheet">
+</template>
+
+<script>
+  Polymer({
+    baseClass: 'paper-dialog-transition'
+  });
+</script>
+
+</polymer-element>
+
+<paper-dialog-transition id="paper-dialog-transition-bottom" transitionType="bottom"></paper-dialog-transition>
+<paper-dialog-transition id="paper-dialog-transition-center" transitionType="center"></paper-dialog-transition>

@@ -74,23 +74,18 @@ Example result:
 import json
 import threading
 import logging
-import re
-import os
 import time
 import gzip
+import os
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant as ha
-from homeassistant.const import (
-    SERVER_PORT, URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
-    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, AUTH_HEADER)
-from homeassistant.helpers import TrackStates
+from homeassistant.const import SERVER_PORT, AUTH_HEADER
 import homeassistant.remote as rem
 import homeassistant.util as util
-import homeassistant.components.recorder as recorder
-from . import frontend
+import homeassistant.bootstrap as bootstrap
 
 DOMAIN = "http"
 DEPENDENCIES = []
@@ -147,6 +142,7 @@ def setup(hass, config=None):
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
 
+    hass.http = server
     hass.local_api = rem.API(util.get_local_ip(), api_password, server_port)
 
     return True
@@ -169,12 +165,13 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.api_password = api_password
         self.development = development
         self.no_password_set = no_password_set
+        self.paths = []
 
         # We will lazy init this one if needed
         self.event_forwarder = None
 
         if development:
-            _LOGGER.info("running frontend in development mode")
+            _LOGGER.info("running http in development mode")
 
     def start(self):
         """ Starts the server. """
@@ -185,10 +182,19 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         _LOGGER.info(
             "Starting web interface at http://%s:%d", *self.server_address)
 
+        # 31-1-2015: Refactored frontend/api components out of this component
+        # To prevent stuff from breaking, load the two extracted components
+        bootstrap.setup_component(self.hass, 'api')
+        bootstrap.setup_component(self.hass, 'frontend')
+
         self.serve_forever()
 
+    def register_path(self, method, url, callback, require_auth=True):
+        """ Regitsters a path wit the server. """
+        self.paths.append((method, url, callback, require_auth))
 
-# pylint: disable=too-many-public-methods
+
+# pylint: disable=too-many-public-methods,too-many-locals
 class RequestHandler(SimpleHTTPRequestHandler):
     """
     Handles incoming HTTP requests
@@ -199,66 +205,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     server_version = "HomeAssistant/1.0"
 
-    PATHS = [  # debug interface
-        ('GET', URL_ROOT, '_handle_get_root'),
-
-        # /api - for validation purposes
-        ('GET', URL_API, '_handle_get_api'),
-
-        # /states
-        ('GET', URL_API_STATES, '_handle_get_api_states'),
-        ('GET',
-         re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-         '_handle_get_api_states_entity'),
-        ('POST',
-         re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-         '_handle_post_state_entity'),
-        ('PUT',
-         re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-         '_handle_post_state_entity'),
-
-        # /events
-        ('GET', URL_API_EVENTS, '_handle_get_api_events'),
-        ('POST',
-         re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
-         '_handle_api_post_events_event'),
-
-        # /services
-        ('GET', URL_API_SERVICES, '_handle_get_api_services'),
-        ('POST',
-         re.compile((r'/api/services/'
-                     r'(?P<domain>[a-zA-Z\._0-9]+)/'
-                     r'(?P<service>[a-zA-Z\._0-9]+)')),
-         '_handle_post_api_services_domain_service'),
-
-        # /event_forwarding
-        ('POST', URL_API_EVENT_FORWARD, '_handle_post_api_event_forward'),
-        ('DELETE', URL_API_EVENT_FORWARD,
-         '_handle_delete_api_event_forward'),
-
-        # Query the recorder
-        ('GET',
-         re.compile('/api/component/recorder/(?P<entity_id>[a-zA-Z\._0-9]+)/last_5_states'),
-         '_handle_component_recorder_5_states'),
-        ('GET',
-         re.compile('/api/component/recorder/last_5_events'),
-         '_handle_component_recorder_5_events'),
-
-        # Static files
-        ('GET', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
-         '_handle_get_static'),
-        ('HEAD', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
-         '_handle_get_static')
-    ]
-
-    use_json = False
-
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
-
-        if url.path.startswith('/api/'):
-            self.use_json = True
 
         # Read query input
         data = parse_qs(url.query)
@@ -276,12 +225,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
             try:
                 data.update(json.loads(body_content))
             except (TypeError, ValueError):
-                # TypeError is JSON object is not a dict
+                # TypeError if JSON object is not a dict
                 # ValueError if we could not parse JSON
-                _LOGGER.exception("Exception parsing JSON: %s",
-                                  body_content)
-
-                self._json_message(
+                _LOGGER.exception(
+                    "Exception parsing JSON: %s", body_content)
+                self.write_json_message(
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
@@ -302,10 +250,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         # Var to hold the handler for this path and method if found
         handle_request_method = False
+        require_auth = True
 
         # Check every handler to find matching result
-        for t_method, t_path, t_handler in RequestHandler.PATHS:
-
+        for t_method, t_path, t_handler, t_auth in self.server.paths:
             # we either do string-comparison or regular expression matching
             # pylint: disable=maybe-no-member
             if isinstance(t_path, str):
@@ -315,7 +263,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             if path_match and method == t_method:
                 # Call the method
-                handle_request_method = getattr(self, t_handler)
+                handle_request_method = t_handler
+                require_auth = t_auth
                 break
 
             elif path_match:
@@ -324,13 +273,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # Did we find a handler for the incoming request?
         if handle_request_method:
 
-            # For API calls we need a valid password
-            if self.use_json and api_password != self.server.api_password:
-                self._json_message(
+            # For some calls we need a valid password
+            if require_auth and api_password != self.server.api_password:
+                self.write_json_message(
                     "API password missing or incorrect.", HTTP_UNAUTHORIZED)
 
             else:
-                handle_request_method(path_match, data)
+                handle_request_method(self, path_match, data)
 
         elif path_matched_but_not_method:
             self.send_response(HTTP_METHOD_NOT_ALLOWED)
@@ -360,291 +309,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ DELETE request handler. """
         self._handle_request('DELETE')
 
-    def _handle_get_root(self, path_match, data):
-        """ Renders the debug interface. """
-
-        write = lambda txt: self.wfile.write((txt + "\n").encode("UTF-8"))
-
-        self.send_response(HTTP_OK)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.end_headers()
-
-        if self.server.development:
-            app_url = "polymer/splash-login.html"
-        else:
-            app_url = "frontend-{}.html".format(frontend.VERSION)
-
-        # auto login if no password was set, else check api_password param
-        auth = (self.server.api_password if self.server.no_password_set
-                else data.get('api_password', ''))
-
-        write(("<!doctype html>"
-               "<html>"
-               "<head><title>Home Assistant</title>"
-               "<meta name='mobile-web-app-capable' content='yes'>"
-               "<link rel='shortcut icon' href='/static/favicon.ico' />"
-               "<link rel='icon' type='image/png' "
-               "     href='/static/favicon-192x192.png' sizes='192x192'>"
-               "<meta name='viewport' content='width=device-width, "
-               "      user-scalable=no, initial-scale=1.0, "
-               "      minimum-scale=1.0, maximum-scale=1.0' />"
-               "<meta name='theme-color' content='#03a9f4'>"
-               "</head>"
-               "<body fullbleed>"
-               "<h3 id='init' align='center'>Initializing Home Assistant</h3>"
-               "<script"
-               "     src='/static/webcomponents.min.js'></script>"
-               "<link rel='import' href='/static/{}' />"
-               "<splash-login auth='{}'></splash-login>"
-               "</body></html>").format(app_url, auth))
-
-    def _handle_get_api(self, path_match, data):
-        """ Renders the debug interface. """
-        self._json_message("API running.")
-
-    def _handle_get_api_states(self, path_match, data):
-        """ Returns a dict containing all entity ids and their state. """
-        self._write_json(self.server.hass.states.all())
-
-    def _handle_get_api_states_entity(self, path_match, data):
-        """ Returns the state of a specific entity. """
-        entity_id = path_match.group('entity_id')
-
-        state = self.server.hass.states.get(entity_id)
-
-        if state:
-            self._write_json(state)
-        else:
-            self._json_message("State does not exist.", HTTP_NOT_FOUND)
-
-    def _handle_post_state_entity(self, path_match, data):
-        """ Handles updating the state of an entity.
-
-        This handles the following paths:
-        /api/states/<entity_id>
-        """
-        entity_id = path_match.group('entity_id')
-
-        try:
-            new_state = data['state']
-        except KeyError:
-            self._json_message("state not specified", HTTP_BAD_REQUEST)
-            return
-
-        attributes = data['attributes'] if 'attributes' in data else None
-
-        is_new_state = self.server.hass.states.get(entity_id) is None
-
-        # Write state
-        self.server.hass.states.set(entity_id, new_state, attributes)
-
-        state = self.server.hass.states.get(entity_id)
-
-        status_code = HTTP_CREATED if is_new_state else HTTP_OK
-
-        self._write_json(
-            state.as_dict(),
-            status_code=status_code,
-            location=URL_API_STATES_ENTITY.format(entity_id))
-
-    def _handle_get_api_events(self, path_match, data):
-        """ Handles getting overview of event listeners. """
-        self._write_json([{"event": key, "listener_count": value}
-                          for key, value
-                          in self.server.hass.bus.listeners.items()])
-
-    def _handle_api_post_events_event(self, path_match, event_data):
-        """ Handles firing of an event.
-
-        This handles the following paths:
-        /api/events/<event_type>
-
-        Events from /api are threated as remote events.
-        """
-        event_type = path_match.group('event_type')
-
-        if event_data is not None and not isinstance(event_data, dict):
-            self._json_message("event_data should be an object",
-                               HTTP_UNPROCESSABLE_ENTITY)
-
-        event_origin = ha.EventOrigin.remote
-
-        # Special case handling for event STATE_CHANGED
-        # We will try to convert state dicts back to State objects
-        if event_type == ha.EVENT_STATE_CHANGED and event_data:
-            for key in ('old_state', 'new_state'):
-                state = ha.State.from_dict(event_data.get(key))
-
-                if state:
-                    event_data[key] = state
-
-        self.server.hass.bus.fire(event_type, event_data, event_origin)
-
-        self._json_message("Event {} fired.".format(event_type))
-
-    def _handle_get_api_services(self, path_match, data):
-        """ Handles getting overview of services. """
-        self._write_json(
-            [{"domain": key, "services": value}
-             for key, value
-             in self.server.hass.services.services.items()])
-
-    # pylint: disable=invalid-name
-    def _handle_post_api_services_domain_service(self, path_match, data):
-        """ Handles calling a service.
-
-        This handles the following paths:
-        /api/services/<domain>/<service>
-        """
-        domain = path_match.group('domain')
-        service = path_match.group('service')
-
-        with TrackStates(self.server.hass) as changed_states:
-            self.server.hass.services.call(domain, service, data, True)
-
-        self._write_json(changed_states)
-
-    # pylint: disable=invalid-name
-    def _handle_component_recorder_5_states(self, path_match, data):
-        if recorder.DOMAIN not in self.server.hass.components:
-            return self._write_json([])
-
-        entity_id = path_match.group('entity_id')
-
-        self._write_json(recorder.last_5_states(entity_id))
-
-    # pylint: disable=invalid-name
-    def _handle_component_recorder_5_events(self, path_match, data):
-        if recorder.DOMAIN not in self.server.hass.components:
-            return self._write_json([])
-
-        self._write_json(recorder.last_5_events())
-
-    # pylint: disable=invalid-name
-    def _handle_post_api_event_forward(self, path_match, data):
-        """ Handles adding an event forwarding target. """
-
-        try:
-            host = data['host']
-            api_password = data['api_password']
-        except KeyError:
-            self._json_message("No host or api_password received.",
-                               HTTP_BAD_REQUEST)
-            return
-
-        try:
-            port = int(data['port']) if 'port' in data else None
-        except ValueError:
-            self._json_message(
-                "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
-            return
-
-        api = rem.API(host, api_password, port)
-
-        if not api.validate_api():
-            self._json_message(
-                "Unable to validate API", HTTP_UNPROCESSABLE_ENTITY)
-            return
-
-        if self.server.event_forwarder is None:
-            self.server.event_forwarder = \
-                rem.EventForwarder(self.server.hass)
-
-        self.server.event_forwarder.connect(api)
-
-        self._json_message("Event forwarding setup.")
-
-    def _handle_delete_api_event_forward(self, path_match, data):
-        """ Handles deleting an event forwarding target. """
-
-        try:
-            host = data['host']
-        except KeyError:
-            self._json_message("No host received.",
-                               HTTP_BAD_REQUEST)
-            return
-
-        try:
-            port = int(data['port']) if 'port' in data else None
-        except ValueError:
-            self._json_message(
-                "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
-            return
-
-        if self.server.event_forwarder is not None:
-            api = rem.API(host, None, port)
-
-            self.server.event_forwarder.disconnect(api)
-
-        self._json_message("Event forwarding cancelled.")
-
-    def _handle_get_static(self, path_match, data):
-        """ Returns a static file. """
-        req_file = util.sanitize_path(path_match.group('file'))
-
-        # Strip md5 hash out of frontend filename
-        if re.match(r'^frontend-[A-Za-z0-9]{32}\.html$', req_file):
-            req_file = "frontend.html"
-
-        path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
-
-        inp = None
-
-        try:
-            inp = open(path, 'rb')
-
-            do_gzip = 'gzip' in self.headers.get('accept-encoding', '')
-
-            self.send_response(HTTP_OK)
-
-            ctype = self.guess_type(path)
-            self.send_header("Content-Type", ctype)
-
-            # Add cache if not development
-            if not self.server.development:
-                # 1 year in seconds
-                cache_time = 365 * 86400
-
-                self.send_header(
-                    "Cache-Control", "public, max-age={}".format(cache_time))
-                self.send_header(
-                    "Expires", self.date_time_string(time.time()+cache_time))
-
-            if do_gzip:
-                gzip_data = gzip.compress(inp.read())
-
-                self.send_header("Content-Encoding", "gzip")
-                self.send_header("Vary", "Accept-Encoding")
-                self.send_header("Content-Length", str(len(gzip_data)))
-
-            else:
-                fs = os.fstat(inp.fileno())
-                self.send_header("Content-Length", str(fs[6]))
-
-            self.end_headers()
-
-            if self.command == 'HEAD':
-                return
-
-            elif do_gzip:
-                self.wfile.write(gzip_data)
-
-            else:
-                self.copyfile(inp, self.wfile)
-
-        except IOError:
-            self.send_response(HTTP_NOT_FOUND)
-            self.end_headers()
-
-        finally:
-            if inp:
-                inp.close()
-
-    def _json_message(self, message, status_code=HTTP_OK):
+    def write_json_message(self, message, status_code=HTTP_OK):
         """ Helper method to return a message to the caller. """
-        self._write_json({'message': message}, status_code=status_code)
+        self.write_json({'message': message}, status_code=status_code)
 
-    def _write_json(self, data=None, status_code=HTTP_OK, location=None):
+    def write_json(self, data=None, status_code=HTTP_OK, location=None):
         """ Helper method to return JSON to the caller. """
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
@@ -658,3 +327,56 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(
                 json.dumps(data, indent=4, sort_keys=True,
                            cls=rem.JSONEncoder).encode("UTF-8"))
+
+    def write_file(self, path):
+        """ Returns a file to the user. """
+        try:
+            with open(path, 'rb') as inp:
+                self.write_file_pointer(self.guess_type(path), inp)
+
+        except IOError:
+            self.send_response(HTTP_NOT_FOUND)
+            self.end_headers()
+            _LOGGER.exception("Unable to serve %s", path)
+
+    def write_file_pointer(self, content_type, inp):
+        """
+        Helper function to write a file pointer to the user.
+        Does not do error handling.
+        """
+        do_gzip = 'gzip' in self.headers.get('accept-encoding', '')
+
+        self.send_response(HTTP_OK)
+        self.send_header("Content-Type", content_type)
+
+        # Add cache if not development
+        if not self.server.development:
+            # 1 year in seconds
+            cache_time = 365 * 86400
+
+            self.send_header(
+                "Cache-Control", "public, max-age={}".format(cache_time))
+            self.send_header(
+                "Expires", self.date_time_string(time.time()+cache_time))
+
+        if do_gzip:
+            gzip_data = gzip.compress(inp.read())
+
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Vary", "Accept-Encoding")
+            self.send_header("Content-Length", str(len(gzip_data)))
+
+        else:
+            fst = os.fstat(inp.fileno())
+            self.send_header("Content-Length", str(fst[6]))
+
+        self.end_headers()
+
+        if self.command == 'HEAD':
+            return
+
+        elif do_gzip:
+            self.wfile.write(gzip_data)
+
+        else:
+            self.copyfile(inp, self.wfile)

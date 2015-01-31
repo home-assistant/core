@@ -1,0 +1,15 @@
+{
+  "name": "paper-item",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5",
+    "core-icon": "Polymer/core-icon#^0.5",
+    "core-icons": "Polymer/core-icons#^0.5",
+    "core-selector": "Polymer/core-selector#^0.5",
+    "font-roboto": "Polymer/font-roboto#^0.5",
+    "paper-button": "Polymer/paper-button#^0.5",
+    "paper-ripple": "Polymer/paper-ripple#^0.5",
+    "paper-shadow": "Polymer/paper-shadow#^0.5"
+  },
+  "version": "0.5.4"
+}

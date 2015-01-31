@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>paper-fab a11y tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <script src="../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+
+  <link href="../../core-icons/core-icons.html" rel="import">
+  <link href="../paper-fab.html" rel="import">
+
+</head>
+<body>
+
+  <paper-fab id="fab1" icon="add"></paper-fab>
+
+  <paper-fab id="fab2" icon="add" disabled></paper-fab>
+
+  <paper-fab id="fab3" icon="add" aria-label="custom"></paper-fab>
+
+  <script>
+
+    var f1 = document.getElementById('fab1');
+    var f2 = document.getElementById('fab2');
+    var f3 = document.getElementById('fab3');
+
+    test('aria role is a button', function() {
+      assert.strictEqual(f1.getAttribute('role'), 'button');
+    });
+
+    test('aria-disabled is set', function(done) {
+      assert.ok(f2.hasAttribute('aria-disabled'));
+      f2.removeAttribute('disabled');
+      flush(function() {
+        assert.ok(!f2.hasAttribute('aria-disabled'));
+        done();
+      });
+    });
+
+    test('aria-label is set', function() {
+      assert.strictEqual(f1.getAttribute('aria-label'), 'add');
+    });
+
+    test('user-defined aria-label is preserved', function(done) {
+      assert.strictEqual(f3.getAttribute('aria-label'), 'custom');
+      f3.icon = 'arrow-forward';
+      flush(function() {
+        assert.strictEqual(f3.getAttribute('aria-label'), 'custom');
+        done();
+      });
+    });
+
+  </script>
+
+</body>
+</html>

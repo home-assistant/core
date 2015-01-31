@@ -1,0 +1,162 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
+The complete set of authors may be found at http://polymer.github.io/AUTHORS
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
+-->
+
+<!--
+`paper-autogrow-textarea` is an element containing a textarea that grows in height as more
+lines of input are entered. Unless an explicit height or the `maxRows` property is set, it will
+never scroll.
+
+Example:
+
+    <paper-autogrow-textarea id="a1">
+        <textarea id="t1"></textarea>
+    <paper-autogrow-textarea>
+
+Because the `textarea`'s `value` property is not observable, if you set the `value` imperatively
+you must call `update` to notify this element the value has changed.
+
+Example:
+
+    /* using example HTML above */
+    t1.value = 'some\ntext';
+    a1.update();
+
+@group Paper Elements
+@element paper-autogrow-textarea
+@status unstable
+-->
+
+<link href="../polymer/polymer.html" rel="import">
+
+<polymer-element name="paper-autogrow-textarea" on-input="{{inputAction}}">
+<template>
+
+  <style>
+    :host {
+      display: inline-block;
+      position: relative;
+      width: 400px;
+    }
+
+    .mirror-text {
+      visibility: hidden;
+      word-wrap: break-word;
+    }
+
+    ::content textarea {
+      padding: 0;
+      margin: 0;
+      border: none;
+      outline: none;
+      resize: none;
+      /* see comments in template */
+      width: 100%;
+      height: 100%;
+    }
+
+    ::content textarea:invalid {
+      box-shadow: none;
+    }
+  </style>
+
+  <!-- the mirror sizes the input/textarea so it grows with typing -->
+  <div id="mirror" class="mirror-text" aria-hidden="true">&nbsp;</div>
+
+  <!-- size the input/textarea with a div, because the textarea has intrinsic size in ff -->
+  <div class="textarea-container" fit>
+    <content></content>
+  </div>
+
+</template>
+<script>
+
+  Polymer({
+
+    publish: {
+
+        /**
+         * The textarea that should auto grow.
+         *
+         * @attribute target
+         * @type HTMLTextAreaElement
+         * @default null
+         */
+        target: null,
+
+        /**
+         * The initial number of rows.
+         *
+         * @attribute rows
+         * @type number
+         * @default 1
+         */
+        rows: 1,
+
+        /**
+         * The maximum number of rows this element can grow to until it
+         * scrolls. 0 means no maximum.
+         *
+         * @attribute maxRows
+         * @type number
+         * @default 0
+         */
+        maxRows: 0
+    },
+
+    tokens: null,
+
+    observe: {
+      rows: 'updateCached',
+      maxRows: 'updateCached'
+    },
+
+    constrain: function(tokens) {
+      var _tokens;
+      tokens = tokens || [''];
+      // Enforce the min and max heights for a multiline input to avoid measurement
+      if (this.maxRows > 0 && tokens.length > this.maxRows) {
+        _tokens = tokens.slice(0, this.maxRows);
+      } else {
+        _tokens = tokens.slice(0);
+      }
+      while (this.rows > 0 && _tokens.length < this.rows) {
+        _tokens.push('');
+      }
+      return _tokens.join('<br>') + '&nbsp;';
+    },
+
+    valueForMirror: function(input) {
+      this.tokens = (input && input.value) ? input.value.replace(/&/gm, '&amp;').replace(/"/gm, '&quot;').replace(/'/gm, '&#39;').replace(/</gm, '&lt;').replace(/>/gm, '&gt;').split('\n') : [''];
+      return this.constrain(this.tokens);
+    },
+
+    /**
+     * Sizes this element to fit the input value. This function is automatically called
+     * when the user types in new input, but you must call this function if the value
+     * is updated imperatively.
+     *
+     * @method update
+     * @param Element The input
+     */
+    update: function(input) {
+      this.$.mirror.innerHTML = this.valueForMirror(input);
+    },
+
+    updateCached: function() {
+      this.$.mirror.innerHTML = this.constrain(this.tokens);
+    },
+
+    inputAction: function(e) {
+      this.update(e.target);
+    }
+
+  });
+
+</script>
+</polymer-element>

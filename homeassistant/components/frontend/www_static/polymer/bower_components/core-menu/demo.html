@@ -1,0 +1,101 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+
+  <title>core-menu</title>
+
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+
+  <link rel="import" href="../core-icons/core-icons.html">
+  <link rel="import" href="core-menu.html">
+  <link rel="import" href="core-submenu.html">
+  <link rel="import" href="../core-item/core-item.html">
+
+  <style>
+
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+
+    section {
+      width: 300px;
+    }
+
+    .dark {
+      background-color: #333;
+    }
+
+    .dark core-item {
+      color: #fafafa;
+      fill: #fafafa;
+    }
+
+  </style>
+
+</head>
+<body>
+
+  <h2>simple menu:</h2>
+
+  <section>
+
+    <core-menu selected="0">
+
+      <core-item icon="settings" label="Settings"></core-item>
+      <core-item icon="favorite" label="Favorite"></core-item>
+      <core-item icon="account-box" label="Account"></core-item>
+
+    </core-menu>
+
+  </section>
+
+  <h2>simple menu:</h2>
+
+  <section class="dark">
+
+    <core-menu selected="0">
+
+      <core-item icon="settings" label="Settings"></core-item>
+      <core-item icon="favorite" label="Favorite"></core-item>
+      <core-item icon="account-box" label="Account"></core-item>
+
+    </core-menu>
+
+  </section>
+
+  <h2>submenu:</h2>
+
+  <section>
+
+    <core-menu selected="0">
+
+      <core-submenu icon="settings" label="Topics">
+
+        <core-item label="Topic 1"></core-item>
+        <core-item label="Topic 2"></core-item>
+
+      </core-submenu>
+
+      <core-submenu icon="settings" label="Favorites">
+
+        <core-item label="Favorite 1"></core-item>
+        <core-item label="Favorite 2"></core-item>
+        <core-item label="Favorite 3"></core-item>
+
+      </core-submenu>
+
+    </core-menu>
+
+  </section>
+
+</body>
+</html>

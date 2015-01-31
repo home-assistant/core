@@ -1,0 +1,296 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`paper-toast` provides lightweight feedback about an operation in a small popup 
+at the base of the screen on mobile and at the lower left on desktop. Toasts are 
+above all other elements on screen, including the FAB.
+
+Toasts automatically disappear after a timeout or after user interaction 
+elsewhere on the screen, whichever comes first. Toasts can be swiped off 
+screen.  There can be only one on the screen at a time.
+
+Example:
+
+    <paper-toast text="Your draft has been discarded." onclick="discardDraft(el)"></paper-toast>
+    
+    <script>
+      function discardDraft(el) {
+        el.show();
+      }
+    </script>
+    
+An action button can be presented in the toast.
+
+Example (using Polymer's data-binding features):
+
+    <paper-toast id="toast2" text="Connection timed out. Showing limited messages.">
+      <div style="color: blue;" on-tap="{{retry}}">Retry</div>
+    </paper-toast>
+    
+Positioning toast:
+
+A standard toast appears near the lower left of the screen.  You can change the
+position by overriding bottom and left positions.
+
+    paper-toast {
+      bottom: 40px;
+      left: 10px;
+    }
+    
+To position the toast to the right:
+
+    paper-toast {
+      right: 10px;
+      left: auto;
+    } 
+  
+To make it fit at the bottom of the screen:
+
+    paper-toast {
+      bottom: 0;
+      left: 0;
+      width: 100%;
+    }
+  
+When the screen size is smaller than the `responsiveWidth` (default to 480px),
+the toast will automatically fits at the bottom of the screen.
+
+@group Paper Elements
+@element paper-toast
+@homepage github.io
+-->
+<!--
+Fired when the `paper-toast`'s `opened` property changes.
+
+@event core-overlay-open
+@param {boolean} detail the opened state
+-->
+<!--
+Fired when the `paper-toast` has completely opened.
+
+@event core-overlay-open-completed
+-->
+<!--
+Fired when the `paper-toast` has completely closed.
+
+@event core-overlay-close-completed
+-->
+<link rel="import" href="../core-overlay/core-overlay.html">
+<link rel="import" href="../core-transition/core-transition-css.html">
+<link rel="import" href="../core-media-query/core-media-query.html">
+
+<polymer-element name="paper-toast" attributes="text duration opened responsiveWidth swipeDisabled autoCloseDisabled" role="status">
+
+<template>
+
+  <link rel="stylesheet" href="paper-toast.css" >
+
+  <core-overlay id="overlay" autoFocusDisabled autoCloseDisabled="{{autoCloseDisabled}}" opened="{{opened}}" target="{{}}" transition="core-transition-bottom"></core-overlay>
+
+  <div class="toast-container" horizontal layout>
+
+    <div class="toast-text" flex>{{text}}</div>
+    
+    <div class="toast-text toast-action" on-tap="{{dismiss}}">
+      <content></content>
+    </div>
+
+  </div>
+  
+  <core-media-query query="max-width: {{responsiveWidth}}" queryMatches="{{narrowMode}}"></core-media-query>
+
+</template>
+<script>
+
+  (function() {
+  
+    var currentToast;
+  
+    Polymer('paper-toast', {
+  
+      /**
+       * The text shows in a toast.
+       *
+       * @attribute text
+       * @type string
+       * @default ''
+       */
+      text: '',
+      
+      /**
+       * The duration in milliseconds to show the toast.
+       *
+       * @attribute duration
+       * @type number
+       * @default 3000
+       */
+      duration: 3000,
+      
+      /**
+       * Set opened to true to show the toast and to false to hide it.
+       *
+       * @attribute opened
+       * @type boolean
+       * @default false
+       */
+      opened: false,
+      
+      /**
+       * Min-width when the toast changes to narrow layout.  In narrow layout,
+       * the toast fits at the bottom of the screen when opened.
+       *
+       * @attribute responsiveWidth
+       * @type string
+       * @default '480px'
+       */
+      responsiveWidth: '480px',
+      
+      /**
+       * If true, the toast can't be swiped.
+       *
+       * @attribute swipeDisabled
+       * @type boolean
+       * @default false
+       */
+      swipeDisabled: false,
+      
+      /**
+       * By default, the toast will close automatically if the user taps
+       * outside it or presses the escape key. Disable this behavior by setting
+       * the `autoCloseDisabled` property to true.
+       *
+       * @attribute autoCloseDisabled
+       * @type boolean
+       * @default false
+       */
+      autoCloseDisabled: false,
+      
+      narrowMode: false,
+      
+      eventDelegates: {
+        trackstart: 'trackStart',
+        track: 'track',
+        trackend: 'trackEnd',
+        transitionend: 'transitionEnd'
+      },
+      
+      narrowModeChanged: function() {
+        this.classList.toggle('fit-bottom', this.narrowMode);
+        if (this.opened) {
+          this.$.overlay.resizeHandler();
+        }
+      },
+      
+      openedChanged: function() {
+        if (this.opened) {
+          this.dismissJob = this.job(this.dismissJob, this.dismiss, this.duration);
+        } else {
+          this.dismissJob && this.dismissJob.stop();
+          this.dismiss();
+        }
+      },
+      
+      /** 
+       * Toggle the opened state of the toast.
+       * @method toggle
+       */
+      toggle: function() {
+        this.opened = !this.opened;
+      },
+      
+      /** 
+       * Show the toast for the specified duration
+       * @method show
+       */
+      show: function() {
+        if (currentToast) {
+          currentToast.dismiss();
+        }
+        currentToast = this;
+        this.opened = true;
+      },
+      
+      /** 
+       * Dismiss the toast and hide it.
+       * @method dismiss
+       */
+      dismiss: function() {
+        if (this.dragging) {
+          this.shouldDismiss = true;
+        } else {
+          this.opened = false;
+          if (currentToast === this) {
+            currentToast = null;
+          }
+        }
+      },
+      
+      trackStart: function(e) {
+        if (!this.swipeDisabled) {
+          e.preventTap();
+          this.vertical = e.yDirection;
+          this.w = this.offsetWidth;
+          this.h = this.offsetHeight;
+          this.dragging = true;
+          this.classList.add('dragging');
+        }
+      },
+      
+      track: function(e) {
+        if (this.dragging) {
+          var s = this.style;
+          if (this.vertical) {
+            var y = e.dy;
+            s.opacity = (this.h - Math.abs(y)) / this.h;
+            s.transform = s.webkitTransform = 'translate3d(0, ' + y + 'px, 0)';
+          } else {
+            var x = e.dx;
+            s.opacity = (this.w - Math.abs(x)) / this.w;
+            s.transform = s.webkitTransform = 'translate3d(' + x + 'px, 0, 0)';
+          }
+        }
+      },
+      
+      trackEnd: function(e) {
+        if (this.dragging) {
+          this.classList.remove('dragging');
+          this.style.opacity = '';
+          this.style.transform = this.style.webkitTransform = '';
+          var cl = this.classList;
+          if (this.vertical) {
+            cl.toggle('fade-out-down', e.yDirection === 1 && e.dy > 0);
+            cl.toggle('fade-out-up', e.yDirection === -1 && e.dy < 0);
+          } else {
+            cl.toggle('fade-out-right', e.xDirection === 1 && e.dx > 0);
+            cl.toggle('fade-out-left', e.xDirection === -1 && e.dx < 0);
+          }
+          this.dragging = false;
+        }
+      },
+      
+      transitionEnd: function() {
+        var cl = this.classList;
+        if (cl.contains('fade-out-right') || cl.contains('fade-out-left') || 
+            cl.contains('fade-out-down') || cl.contains('fade-out-up')) {
+          this.dismiss();
+          cl.remove('fade-out-right', 'fade-out-left', 
+              'fade-out-down', 'fade-out-up');
+        } else if (this.shouldDismiss) {
+          this.dismiss();
+        }
+        this.shouldDismiss = false;
+      }
+  
+    });
+    
+  })();
+
+</script>
+</polymer-element>

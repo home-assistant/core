@@ -1,0 +1,45 @@
+/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: block;
+  position: relative;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+:host(.font-scalable) {
+  min-height: 2.5em;
+}
+
+:host(.core-selected) {
+  font-weight: bold;
+}
+
+#icon {
+  margin: 0 16px 0 4px;
+}
+
+:host(.font-scalable) #icon {
+  margin: 0 1em 0 0.25em;
+  height: 1.5em;
+  width: 1.5em;
+}
+
+polyfill-next-selector { content: ':host > a'; }
+::content > a {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* IE10 styling to ensure link is clickable. Cannot be completely
+  transparent or minifiers change it to `transparent` which does not work. */
+  background-color: rgba(0, 0, 0, 0.000001);
+}

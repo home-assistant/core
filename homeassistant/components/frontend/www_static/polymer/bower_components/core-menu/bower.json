@@ -1,0 +1,11 @@
+{
+  "name": "core-menu",
+  "private": true,
+  "dependencies": {
+    "core-selector": "Polymer/core-selector#^0.5",
+    "core-collapse": "Polymer/core-collapse#^0.5",
+    "core-a11y-keys": "Polymer/core-a11y-keys#^0.5",
+    "core-item": "Polymer/core-item#^0.5"
+  },
+  "version": "0.5.4"
+}

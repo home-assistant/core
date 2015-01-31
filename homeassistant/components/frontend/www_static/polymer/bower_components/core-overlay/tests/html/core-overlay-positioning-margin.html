@@ -1,0 +1,153 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>core-overlay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <script src="../../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../../polymer-test-tools/chai/chai.js"></script>
+  <script src="../../../polymer-test-tools/htmltest.js"></script>
+  <link rel="import" href="../../../core-transition/core-transition-css.html">
+  <link rel="import" href="../../core-overlay.html">
+  <style>
+    body {
+      margin: 0;
+      height: 100%;
+    }
+    
+    .sized {
+      height: 200px;
+      width: 300px;
+      border: 1px solid black;
+      padding: 10px;
+      margin: 16px;
+    }
+
+    .positioned {
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body unresolved>
+
+<core-overlay class="sized" id="basic">
+  Sized Overlay
+</core-overlay>
+
+<core-overlay class="sized positioned" id="overlay">
+  Positioned Overlay
+</core-overlay>
+
+<template>
+  <div>"Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"</div>
+</template>
+
+<script>
+  document.addEventListener('polymer-ready', function() {
+    // setup
+    var basic = document.querySelector('#basic');
+    var overlay = document.querySelector('#overlay');
+    var template = document.querySelector('template');
+
+    function testWhenOpen(element, test, next) {
+      var l1 = function() {
+        test();
+        element.async(function() {
+          element.opened = false;
+        }, 1);
+      };
+      var l2 = function() {
+        element.removeEventListener('core-overlay-open-completed', l1);
+        element.removeEventListener('core-overlay-close-completed', l2);
+        next();
+      };
+      element.addEventListener('core-overlay-open-completed', l1);
+      element.addEventListener('core-overlay-close-completed', l2);
+      element.opened = true;
+    }
+
+    asyncSeries([
+      // centered overlay
+      function(next) {
+        testWhenOpen(basic, function() {
+          var rect = basic.getBoundingClientRect();
+          chai.assert.ok(Math.abs(rect.left - (window.innerWidth - rect.right)) < 5, 'overlay centered horizontally');
+          chai.assert.ok(Math.abs(rect.top - (window.innerHeight - rect.bottom)) < 5, 'overlay centered vertically');
+        }, next);
+      },
+      // css positioned overlay
+      function(next) {
+        testWhenOpen(overlay, function() {
+          var rect = overlay.getBoundingClientRect();
+          chai.assert.equal(rect.left, 16, 'positions via css');
+          chai.assert.equal(rect.top, 16, 'positions via css');
+        }, next);
+      },
+      // manual positioned overlay
+      function(next) {
+        overlay.style.left = overlay.style.top = 'auto';
+        overlay.style.right = '0px';
+        testWhenOpen(overlay, function() {
+          var rect = overlay.getBoundingClientRect();
+          chai.assert.equal(rect.right, window.innerWidth - 16, 'positioned manually');
+          chai.assert.ok(Math.abs(rect.top - (window.innerHeight - rect.bottom)) <= 16, 'overlay centered vertically');
+        }, next);
+      },
+      // overflow, position top, left
+      function(next) {
+        overlay.style.left = overlay.style.top = '0px';
+        overlay.style.right = 'auto';
+        overlay.style.width = overlay.style.height = 'auto';
+        for (var i=0; i<20; i++) {
+          overlay.appendChild(template.content.cloneNode(true));  
+        }
+        testWhenOpen(overlay, function() {
+          var rect = overlay.getBoundingClientRect();
+          chai.assert.ok(window.innerWidth >= rect.right, 'overlay constrained to window size');
+          chai.assert.ok(window.innerHeight >= rect.bottom, 'overlay constrained to window size');
+        }, next);
+      },
+      // overflow, position, bottom, right
+      function(next) {
+        overlay.style.right = overlay.style.bottom = '0px';
+        overlay.style.left = overlay.style.top = 'auto';
+        testWhenOpen(overlay, function() {
+          var rect = overlay.getBoundingClientRect();
+          chai.assert.ok(window.innerWidth >= rect.right, 'overlay constrained to window size');
+          chai.assert.ok(window.innerHeight >= rect.bottom, 'overlay constrained to window size');
+        }, next);
+      },
+      // overflow, unpositioned
+      function(next) {
+        overlay.style.right = overlay.style.bottom = 'auto';
+        overlay.style.left = overlay.style.top = 'auto';
+        testWhenOpen(overlay, function() {
+          var rect = overlay.getBoundingClientRect();
+          chai.assert.ok(window.innerWidth >= rect.right, 'overlay constrained to window size');
+          chai.assert.ok(window.innerHeight >= rect.bottom, 'overlay constrained to window size');
+        }, next);
+      },
+      // overflow, unpositioned, layered
+      function(next) {
+        overlay.layered = true;
+        testWhenOpen(overlay, function() {
+          var rect = overlay.getBoundingClientRect();
+          chai.assert.ok(window.innerWidth >= rect.right, 'overlay constrained to window size');
+          chai.assert.ok(window.innerHeight >= rect.bottom, 'overlay constrained to window size');
+        }, next);
+      },
+    ], done);
+  });
+
+</script>
+
+</body>
+</html>

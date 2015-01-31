@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>core-selection-basic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <script src="../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+
+  <link rel="import" href="../core-selection.html">
+
+</head>
+<body>
+
+  <core-selection></core-selection>
+
+  <script>
+
+    var s = document.querySelector('core-selection');
+
+    suite('basic', function() {
+
+      test('select item', function(done) {
+        var func = function(event) {
+          assert.isTrue(event.detail.isSelected);
+          assert.equal(event.detail.item, '(item)');
+          assert.isTrue(s.isSelected(event.detail.item));
+          assert.isFalse(s.isSelected('(some_item_not_selected)'));
+          s.removeEventListener('core-select', func);
+          done();
+        }
+        s.addEventListener('core-select', func);
+        s.select('(item)');
+      });
+
+      test('select null', function(done) {
+        var func = function(event) {
+          assert.isFalse(event.detail.isSelected);
+          assert.equal(event.detail.item, '(item)');
+          assert.isFalse(s.isSelected(event.detail.item));
+          s.removeEventListener("core-select", func);
+          done();
+        }
+        s.addEventListener("core-select", func);
+        s.select(null);
+      });
+
+    });
+
+  </script>
+
+</body>
+</html>

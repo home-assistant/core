@@ -1,0 +1,55 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="core-style.html">
+
+<core-style id="my-toolbar">
+  :host {
+    height: 54px;
+    font-size: 1.3rem;
+    background-color: steelblue;
+    color: white;
+  }
+
+  polyfill-next-selector {
+    content: ':host > *';
+  }
+  ::content > * {
+    margin: 8px;
+  }
+</core-style>
+
+<polymer-element name="my-toolbar" horizontal center layout noscript>
+  <template>
+    <core-style ref="my-toolbar"></core-style>
+    <content></content>
+  </template>
+</polymer-element>
+
+<core-style id="my-panel">
+  :host {
+    display: inline-block;
+    height: 200px;
+    width: calc({{ 100 / g.columns }}% - 16px);
+    font-size: 50px;
+    background: gray;
+    margin: 8px;
+  }
+</core-style>
+
+<script>
+  CoreStyle.g.columns = 3;
+</script>
+
+<polymer-element name="my-panel" vertical center center-justified layout noscript>
+  <template>
+    <core-style ref="my-panel"></core-style>
+    <content></content>
+  </template>
+</polymer-element>

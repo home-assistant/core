@@ -1,0 +1,68 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>paper-input tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <script src="../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../polymer-gestures/test/js/fake.js"></script>
+
+  <script src="util.js"></script>
+
+  <link href="../paper-input.html" rel="import">
+
+  <style>
+    paper-input {
+      width: 400px;
+    }
+  </style>
+
+</head>
+<body>
+
+  <paper-input id="default"></paper-input>
+
+  <paper-input id="disabled" disabled label="disabled"></paper-input>
+
+  <script>
+
+  var fake = new Fake();
+
+  test('change event bubbles', function(done) {
+    var node = document.getElementById('default');
+    var changeAction = function() {
+      done();
+      node.removeEventListener('change', changeAction);
+    };
+    node.addEventListener('change', changeAction);
+    var input = node.shadowRoot.querySelector('input');
+    var e = new Event('change', {
+      bubbles: true
+    });
+    input.dispatchEvent(e);
+  });
+
+  test('cannot tap on disabled input', function(done) {
+    var node = document.getElementById('disabled');
+    fake.downOnNode(node);
+    fake.upOnNode(node);
+    setTimeout(function() {
+      assert.notStrictEqual(activeElement(), node.shadowRoot.querySelector('input'));
+      done();
+    }, 10);
+  });
+
+  </script>
+
+</body>
+</html>

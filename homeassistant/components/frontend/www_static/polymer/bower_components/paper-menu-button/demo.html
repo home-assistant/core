@@ -1,0 +1,211 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+  <title>paper-menu-button</title>
+
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+
+  <link href="../core-collapse/core-collapse.html" rel="import">
+  <link href="../core-icons/core-icons.html" rel="import">
+  <link href="../core-menu/core-menu.html" rel="import">
+  <link href="../paper-button/paper-button.html" rel="import">
+  <link href="../paper-dropdown/paper-dropdown.html" rel="import">
+  <link href="../paper-icon-button/paper-icon-button.html" rel="import">
+  <link href="../paper-item/paper-item.html" rel="import">
+
+  <link href="paper-menu-button.html" rel="import">
+
+  <style shim-shadowdom>
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      font-size: 14px;
+      margin: 0;
+      padding: 24px;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+    }
+
+    section {
+      padding: 20px 0;
+    }
+
+    section > div {
+      padding: 14px;
+      font-size: 16px;
+    }
+
+    paper-item {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    html /deep/ core-collapse {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+
+    .constrained-height {
+      height: 150px;
+    }
+
+    .colored {
+      color: #0f9d58;
+    }
+
+    .dropdown.colored::shadow #ripple,
+    .dropdown.colored::shadow #background {
+      border: 1px solid #0f9d58;
+      background-color: #b7e1cd;
+    }
+
+  </style>
+
+</head>
+<body>
+
+  <template is="auto-binding">
+
+    <section>
+
+      <div>Absolutely positioned menu buttons</div>
+
+      <paper-menu-button>
+        <paper-icon-button icon="menu" noink></paper-icon-button>
+        <paper-dropdown class="dropdown">
+          <core-menu class="menu">
+            <template repeat="{{pastries}}">
+              <paper-item>{{}}</paper-item>
+            </template>
+          </core-menu>
+        </paper-dropdown>
+      </paper-menu-button>
+
+      <paper-menu-button>
+        <paper-icon-button icon="menu"></paper-icon-button>
+        <paper-dropdown class="dropdown" transition="">
+          <core-menu class="menu">
+            <paper-item>No Transition</paper-item>
+            <template repeat="{{pastries}}">
+              <paper-item>{{}}</paper-item>
+            </template>
+          </core-menu>
+        </paper-dropdown>
+      </paper-menu-button>
+
+      <paper-menu-button disabled>
+        <paper-icon-button icon="menu"></paper-icon-button>
+        <paper-dropdown class="dropdown">
+          <core-menu>
+            <paper-item>Should not see this</paper-item>
+          </core-menu>
+        </paper-dropdown>
+      </paper-menu-button>
+
+      <br><br>
+
+      <paper-menu-button>
+        <paper-button noink>
+          <core-icon icon="add"></core-icon>
+          <span style="vertical-align:middle;">add</span>
+        </paper-button>
+        <paper-dropdown class="dropdown">
+          <core-menu class="menu">
+            <template repeat="{{pastries}}">
+              <paper-item>{{}}</paper-item>
+            </template>
+          </core-menu>
+        </paper-dropdown>
+      </paper-menu-button>
+
+    </section>
+
+    <section>
+
+      <div>Layered menu buttons</div>
+
+      <button onclick="document.getElementById('collapse').toggle()">toggle core-collapse</button>
+
+      <br>
+
+      <core-collapse id="collapse">
+
+        <paper-menu-button>
+          <paper-icon-button icon="menu"></paper-icon-button>
+          <paper-dropdown layered class="dropdown">
+            <core-menu class="menu">
+              <template repeat="{{pastries}}">
+                <paper-item>{{}}</paper-item>
+              </template>
+            </core-menu>
+          </paper-dropdown>
+        </paper-menu-button>
+
+      </core-collapse>
+
+    </section>
+
+    <section>
+
+      <div>Custom styling</div>
+
+      <paper-menu-button label="Constrained height">
+        <paper-icon-button icon="menu"></paper-icon-button>
+        <paper-dropdown class="dropdown constrained-height">
+          <core-menu class="menu">
+            <template repeat="{{pastries}}">
+              <paper-item>{{}}</paper-item>
+            </template>
+          </core-menu>
+        </paper-dropdown>
+      </paper-menu-button>
+
+      <paper-menu-button label="Colored">
+        <paper-icon-button icon="menu" class="colored"></paper-icon-button>
+        <paper-dropdown class="dropdown colored">
+          <core-menu class="menu">
+            <template repeat="{{pastries}}">
+              <paper-item>{{}}</paper-item>
+            </template>
+          </core-menu>
+        </paper-dropdown>
+      </paper-menu-button>
+
+    </section>
+
+  </template>
+
+  <script>
+
+    scope = document.querySelector('template[is=auto-binding]');
+
+    scope.pastries = [
+      'Apple fritter',
+      'Croissant',
+      'Donut',
+      'Financier',
+      'Jello',
+      'Madeleine',
+      'Pound cake',
+      'Pretzel',
+      'Sfogliatelle'
+    ];
+
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Polymer match media</title>
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  <link rel="import" href="core-media-query.html" />
+</head>
+<body>
+
+  <polymer-element name="match-example">
+    <template>
+      <core-media-query query="{{query}}" queryMatches="{{qMatches}}"></core-media-query>
+      My query of "{{query}}" {{qMatches ? "matches" : "doesn't match"}}
+    </template>
+    <script>
+      Polymer('match-example', {
+        query: 'min-width: 600px'
+      });
+    </script>
+  </polymer-element>
+
+  <match-example id="me"></match-example>
+  <pre id="output">
+  Log of 'mediachange' events on document, from polymer-match-media:
+  </pre>
+
+  <script>
+    var output = document.querySelector('#output');
+    // on-mediachange would give true or false as second param to the handler
+    document.addEventListener('core-media-change', function(e) {
+      output.textContent += '\nevent: ' + e.type + ' query: ' + e.detail.media + ' matches: ' + e.detail.matches;
+    });
+  </script>
+</body>
+</html>

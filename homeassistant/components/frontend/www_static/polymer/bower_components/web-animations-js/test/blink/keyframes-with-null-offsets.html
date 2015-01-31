@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<script src="testharness/testharness.js"></script>
+<script src="testharness/testharnessreport.js"></script>
+<script src="resources/keyframes-test.js"></script>
+<script>
+test(function() {
+  assertAnimationStyles([
+    {opacity: '0.5', left: '50px'},
+    {opacity: '0', left: '0px', offset: null},
+    {opacity: '0.75', left: '75px', offset: null},
+  ], {
+    0: {opacity: '0.5', left: '50px'},
+    0.25: {opacity: '0.25', left: '25px'},
+    0.5: {opacity: '0', left: '0px'},
+    0.75: {opacity: '0.375', left: '37.5px'},
+    1: {opacity: '0.75', left: '75px'},
+  }, 'case A');
+
+  assertAnimationStyles([
+    {opacity: '0.5', left: '50px', offset: null},
+    {opacity: '0', left: '0px', offset: 0.25},
+    {opacity: '0.75', left: '75px', offset: null},
+  ], {
+    0: {opacity: '0.5', left: '50px'},
+    0.125: {opacity: '0.25', left: '25px'},
+    0.25: {opacity: '0', left: '0px'},
+    0.5: {opacity: '0.25', left: '25px'},
+    0.75: {opacity: '0.5', left: '50px'},
+    1: {opacity: '0.75', left: '75px'},
+  }, 'case B');
+},
+'element.animate() with null offsets specified',
+{
+  help: 'http://dev.w3.org/fxtf/web-animations/#the-keyframe-dictionary',
+  assert: [
+    'element.animate() should start an animation when keyframes are specified with',
+    'null offsets. The behaviour should be identical to not specifying the offsets.',
+  ],
+  author: 'Alan Cutter',
+});
+</script>

@@ -1,0 +1,66 @@
+<polymer-element name="core-resizer-parent">
+  <script>
+    Polymer(Polymer.mixin({
+      eventDelegates: {
+        'core-resize': 'resizeHandler'
+      },
+      attached: function() {
+        this.resizerAttachedHandler();
+      },
+      detached: function() {
+        this.resizerDetachedHandler();
+      }
+    }, Polymer.CoreResizer));
+  </script>
+</polymer-element>
+
+<polymer-element name="core-resizer-parent-filtered" extends="core-resizer-parent">
+  <script>
+    Polymer({
+      active: null,
+      resizerShouldNotify: function(el) {
+        return (el == this.active);
+      }
+    });
+  </script>
+</polymer-element>
+
+<polymer-element name="core-resizer-peer" extends="core-resizer-parent">
+  <script>
+    Polymer({
+      resizerIsPeer: true     
+    });
+  </script>
+</polymer-element>
+
+<polymer-element name="core-resizer-peer-filtered" extends="core-resizer-parent-filtered">
+  <script>
+    Polymer({
+      resizerIsPeer: true     
+    });
+  </script>
+</polymer-element>
+
+<polymer-element name="core-resizable">
+  <script>
+    Polymer(Polymer.mixin({
+      eventDelegates: {
+        'core-resize': 'resizeHandler'
+      },
+      attached: function() {
+        this.resizableAttachedHandler();
+      },
+      detached: function() {
+        this.resizableDetachedHandler();
+      }
+    }, Polymer.CoreResizable));
+  </script>
+</polymer-element>
+
+<polymer-element name="core-resizable-in-shadow" noscript>
+  <template>
+    <div>
+      <core-resizable id="resizable"></core-resizable>
+    </div>
+  </template>
+</polymer-element>

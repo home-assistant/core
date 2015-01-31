@@ -1,0 +1,132 @@
+/*
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
+:host {
+  display: inline-block;
+  outline: none;
+  text-align: inherit;
+  padding: 0.75em 0;
+}
+
+polyfill-next-selector {
+  content: '.input-body > :not(.label)';
+}
+::content > *,
+::content > input[is="core-input"] {
+  padding: 0;
+  margin: 0.5em 0 0.25em;
+  width: 100%;
+}
+
+polyfill-next-selector {
+  content: 'input, textarea';
+}
+::content input,
+::content input[is=core-input],
+::content textarea {
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+polyfill-next-selector {
+  content: ':invalid';
+}
+::content input:invalid,
+::content textarea:invalid {
+  box-shadow: none;
+}
+
+polyfill-next-selector {
+  content: 'textarea';
+}
+::content textarea {
+  resize: none;
+}
+
+[invisible] {
+  visibility: hidden;
+}
+
+[animated] {
+  visibility: visible !important;
+  -webkit-transition: -webkit-transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floated-label {
+  font-size: 0.75em;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.mirror-text {
+  padding: 0.5em 0 0.25em;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+:host([multiline]) .mirror-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.label {
+  padding: 0.5em 0 0.25em;
+  background: transparent;
+  pointer-events: none;
+}
+
+.label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  max-width: 100%;
+  -moz-transform-origin: 0% 0%;
+  -webkit-transform-origin: 0% 0%;
+  transform-origin: 0% 0%;
+}
+
+.underline {
+  height: 0px;
+  overflow: visible;
+}
+
+:host([disabled]) .underline {
+  border-bottom: 1px dashed #757575;
+}
+
+.unfocused-underline {
+  height: 1px;
+}
+
+.focused-underline {
+  height: 2px;
+  -webkit-transform: none;
+  transform: none;
+}
+
+.focused-underline[invisible] {
+  -webkit-transform: scale3d(0,1,1);
+  transform: scale3d(0,1,1);
+}
+
+.error-text {
+  font-size: 0.75em;
+  padding: 0.5em 0;
+}
+
+.error-icon {
+  height: 20px;
+  width: 20px;
+}

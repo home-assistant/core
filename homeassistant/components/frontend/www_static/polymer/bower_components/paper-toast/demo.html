@@ -1,0 +1,63 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+  <title>paper-toast</title>
+  
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  
+  <link rel="import" href="paper-toast.html">
+  <link rel="import" href="../font-roboto/roboto.html" >
+  <link rel="import" href="../paper-button/paper-button.html" >
+  
+  <style>
+  
+    html, body {
+      height: 100%;
+    }
+    
+    body {
+      overflow: hidden;
+      margin: 0;
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+    }
+    
+    paper-button {
+      margin: 20px;
+    }
+    
+  </style>
+  
+</head>
+<body unresolved>
+
+  <paper-button raised onclick="document.querySelector('#toast1').show()">Discard Draft</paper-button>
+  
+  <paper-button raised onclick="document.querySelector('#toast2').show()">Get Messages</paper-button>
+  
+  <paper-button raised onclick="document.querySelector('#toast3').show()">Send Message</paper-button>
+
+  <paper-toast id="toast1" text="Your draft has been discarded."></paper-toast>
+  
+  <paper-toast id="toast2" role="alert" text="Connection timed out. Showing limited messages.">
+    <div style="color: #eeff41;" onclick="console.log('RETRY')">Retry</div>
+  </paper-toast>
+  
+  <paper-toast id="toast3" class="capsule" text="Message sent" style="padding-right: 60px;"></paper-toast>
+  
+</body>
+</html>

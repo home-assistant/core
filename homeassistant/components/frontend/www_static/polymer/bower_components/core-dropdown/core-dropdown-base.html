@@ -1,0 +1,117 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+
+`core-dropdown-base` is a base class for implementing controls that displays
+an overlay when tapped on.
+
+The child element with the class `dropdown` will be used as the drop-down. It
+should be a `core-dropdown` or other overlay element.
+
+@group Polymer Core Elements
+@element core-dropdown-base
+@status unstable
+@homepage github.io
+-->
+
+<link href="../polymer/polymer.html" rel="import">
+
+<polymer-element name="core-dropdown-base" tabindex="0">
+<script>
+
+  Polymer({
+
+    publish: {
+
+      /**
+       * True if the menu is open.
+       *
+       * @attribute opened
+       * @type boolean
+       * @default false
+       */
+      opened: false
+
+    },
+
+    eventDelegates: {
+      'tap': 'toggleOverlay'
+    },
+
+    overlayListeners: {
+      'core-overlay-open': 'openAction'
+    },
+
+    get dropdown() {
+      if (!this._dropdown) {
+        this._dropdown = this.querySelector('.dropdown');
+        for (var l in this.overlayListeners) {
+          this.addElementListener(this._dropdown, l, this.overlayListeners[l]);
+        }
+      }
+      return this._dropdown;
+    },
+
+    attached: function() {
+      // find the dropdown on attach
+      // FIXME: Support MO?
+      this.dropdown;
+    },
+
+    addElementListener: function(node, event, methodName, capture) {
+      var fn = this._makeBoundListener(methodName);
+      if (node && fn) {
+        Polymer.addEventListener(node, event, fn, capture);
+      }
+    },
+
+    removeElementListener: function(node, event, methodName, capture) {
+      var fn = this._makeBoundListener(methodName);
+      if (node && fn) {
+        Polymer.removeEventListener(node, event, fn, capture);
+      }
+    },
+
+    _makeBoundListener: function(methodName) {
+      var self = this, method = this[methodName];
+      if (!method) {
+        return;
+      }
+      var bound = '_bound' + methodName;
+      if (!this[bound]) {
+        this[bound] = function(e) {
+          method.call(self, e);
+        };
+      }
+      return this[bound];
+    },
+
+    openedChanged: function() {
+      if (this.disabled) {
+        return;
+      }
+      var dropdown = this.dropdown;
+      if (dropdown) {
+        dropdown.opened = this.opened;
+      }
+    },
+
+    openAction: function(e) {
+      this.opened = !!e.detail;
+    },
+
+    toggleOverlay: function() {
+      this.opened = !this.opened;
+    }
+
+  });
+
+</script>
+</polymer-element>

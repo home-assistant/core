@@ -10,6 +10,7 @@ Uses port 8125 as a port that nothing runs on
 import unittest
 
 import homeassistant as ha
+import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http
 
@@ -36,9 +37,12 @@ def setUpModule():   # pylint: disable=invalid-name
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
 
-    http.setup(hass,
-               {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-                              http.CONF_SERVER_PORT: 8122}})
+    bootstrap.setup_component(
+        hass, http.DOMAIN,
+        {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
+         http.CONF_SERVER_PORT: 8122}})
+
+    bootstrap.setup_component(hass, 'api')
 
     hass.start()
 

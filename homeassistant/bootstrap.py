@@ -24,6 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_component(hass, domain, config=None):
     """ Setup a component for Home Assistant. """
+    # Check if already loaded
+    if domain in hass.components:
+        return
+
+    _ensure_loader_prepared(hass)
+
     if config is None:
         config = defaultdict(dict)
 
@@ -63,7 +69,7 @@ def from_config_dict(config, hass=None):
 
     enable_logging(hass)
 
-    loader.prepare(hass)
+    _ensure_loader_prepared(hass)
 
     # Make a copy because we are mutating it.
     # Convert it to defaultdict so components can always have config dict
@@ -140,3 +146,9 @@ def enable_logging(hass):
     else:
         _LOGGER.error(
             "Unable to setup error log %s (access denied)", err_log_path)
+
+
+def _ensure_loader_prepared(hass):
+    """ Ensure Home Assistant loader is prepared. """
+    if not loader.PREPARED:
+        loader.prepare(hass)

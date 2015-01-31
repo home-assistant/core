@@ -1,0 +1,46 @@
+/* Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt */
+
+:host(.core-transition) {
+  outline: none;
+  overflow: auto;
+  opacity: 0;
+  -webkit-transition: -webkit-transform 0.2s ease-in-out, opacity 0.2s ease-in;
+  transition: transform 0.2s ease-in-out, opacity 0.2s ease-in;
+}
+
+
+:host(.core-transition.core-opened) {
+  opacity: 1;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+:host(.core-transition-center) {
+  -webkit-transform: scale(0.5);
+  transform: scale(0.5);
+}
+
+:host(.core-transition-top) {
+  -webkit-transform: translateY(-200%);
+  transform: translateY(-200%);
+}
+
+:host(.core-transition-bottom) {
+  -webkit-transform: translateY(200%);
+  transform: translateY(200%);
+}
+
+:host(.core-transition-left) {
+  -webkit-transform: translateX(-200%);
+  transform: translateX(-200%);
+}
+
+:host(.core-transition-right) {
+  -webkit-transform: translateX(200%);
+  transform: translateX(200%);
+}

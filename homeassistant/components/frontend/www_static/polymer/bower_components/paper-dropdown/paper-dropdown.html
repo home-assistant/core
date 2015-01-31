@@ -1,0 +1,117 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+
+`paper-dropdown` is a `core-dropdown` with a `paper-shadow`. By default, it
+is animated on open with `paper-dropdown-transition`. Use this element with
+`paper-dropdown-menu` or `paper-menu-button` to implement UI controls that
+open a drop-down.
+
+Example:
+
+    <paper-dropdown>
+      Hi!
+    </paper-dropdown>
+
+Theming
+-------
+
+Style the background color of the dropdown with these selectors:
+
+    paper-dropdown::shadow #ripple,
+    paper-dropdown::shadow #background {
+        background-color: green;
+    }
+
+@group Paper Elements
+@element paper-dropdown
+@extends core-dropdown
+@status unstable
+-->
+
+<link href="../polymer/polymer.html" rel="import">
+<link href="../core-dropdown/core-dropdown.html" rel="import">
+<link href="../paper-shadow/paper-shadow.html" rel="import">
+
+<link href="paper-dropdown-transition.html" rel="import">
+
+<style shim-shadowdom>
+  html /deep/ paper-dropdown {
+    position: absolute;
+    overflow: visible;
+    min-height: 40px;
+  }
+</style>
+
+<polymer-element name="paper-dropdown" extends="core-dropdown">
+<template>
+
+  <style>
+    #ripple {
+      background-color: #fff;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.26);
+      opacity: 0;
+    }
+
+    :host([halign=right]) #ripple {
+      left: auto;
+      right: 0;
+    }
+
+    :host([valign=bottom]) #ripple {
+      top: auto;
+      bottom: 0;
+    }
+
+    #background {
+      background-color: #fff;
+      border-radius: inherit;
+    }
+
+    #scroller {
+      overflow: auto;
+      box-sizing: border-box;
+    }
+  </style>
+
+  <div id="ripple"></div>
+
+  <div id="background" fit>
+    <paper-shadow fit></paper-shadow>
+  </div>
+
+  <div id="scroller" relative>
+    <content></content>
+  </div>
+
+</template>
+<script>
+
+  Polymer({
+
+    publish: {
+      transition: 'paper-dropdown-transition'
+    },
+
+    ready: function() {
+      this.super();
+      this.sizingTarget = this.$.scroller;
+    }
+
+  });
+
+</script>
+</polymer-element>

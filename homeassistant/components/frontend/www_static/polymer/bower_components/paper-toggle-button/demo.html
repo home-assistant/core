@@ -1,0 +1,97 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+  <title>paper-toggle-button</title>
+  
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  
+  <link rel="import" href="paper-toggle-button.html">
+  <link rel="import" href="../font-roboto/roboto.html">
+  
+  <style shim-shadowdom>
+  
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      margin: 0;
+      padding: 24px;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+    }
+    
+    section {
+      width: 200px;
+    }
+
+    paper-toggle-button.bluetooth::shadow [checked] .toggle-ink {
+      color: #4285f4;
+    }
+
+    paper-toggle-button.bluetooth::shadow [checked] .toggle {
+      background-color: #4285f4;
+    }
+    
+    paper-toggle-button.fun::shadow .toggle-ink {
+      color: #009688;
+    }
+
+    paper-toggle-button.fun::shadow .toggle-bar {
+      background-color: #5677fc;
+    }
+
+    paper-toggle-button.fun::shadow .toggle-button {
+      background-color: #9c27b0;
+    }
+    
+  </style>
+  
+</head>
+<body unresolved>
+
+  <section>
+  
+    <div center horizontal layout>
+      <div flex>Wi-Fi</div>
+      <paper-toggle-button checked></paper-toggle-button>
+    </div>
+    
+    <br>
+    <br>
+    
+    <div center horizontal layout>
+      <div flex>Bluetooth</div>
+      <paper-toggle-button class="bluetooth"></paper-toggle-button>
+    </div>
+    
+    <br>
+    <br>
+  
+    <div center horizontal layout>
+      <div flex>Custom Colors</div>
+      <paper-toggle-button class="fun"></paper-toggle-button>
+    </div>
+    
+    <br>
+    <br>
+    
+    <div center horizontal layout>
+      <div flex>Disabled</div>
+      <paper-toggle-button disabled></paper-toggle-button>
+    </div>
+    
+  </section>
+  
+</body>
+</html>

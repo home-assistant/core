@@ -1,0 +1,24 @@
+{
+  "name": "core-icons",
+  "private": true,
+  "dependencies": {
+    "core-icon": "Polymer/core-icon#^0.5",
+    "core-iconset-svg": "Polymer/core-iconset-svg#^0.5",
+    "polymer": "Polymer/polymer#^0.5"
+  },
+  "ignore": [
+    "util",
+    "update-icons.sh"
+  ],
+  "version": "0.5.4",
+  "homepage": "https://github.com/polymer/core-icons",
+  "_release": "0.5.4",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.5.4",
+    "commit": "20f9d9665af6a1556d0fb44cd45e3b46e4a15efa"
+  },
+  "_source": "git://github.com/polymer/core-icons.git",
+  "_target": "~0.5.4",
+  "_originalSource": "polymer/core-icons"
+}

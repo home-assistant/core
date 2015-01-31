@@ -18,6 +18,7 @@ import urllib.parse
 import requests
 
 import homeassistant as ha
+import homeassistant.bootstrap as bootstrap
 
 from homeassistant.const import (
     SERVER_PORT, AUTH_HEADER, URL_API, URL_API_STATES, URL_API_STATES_ENTITY,
@@ -110,13 +111,13 @@ class HomeAssistant(ha.HomeAssistant):
         self.bus = EventBus(remote_api, pool)
         self.services = ha.ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus, self.remote_api)
+        self.components = []
 
     def start(self):
         # Ensure a local API exists to connect with remote
         if self.local_api is None:
-            import homeassistant.components.http as http
-
-            http.setup(self)
+            bootstrap.setup_component(self, 'http')
+            bootstrap.setup_component(self, 'api')
 
         ha.Timer(self)
 

@@ -20,32 +20,40 @@ _INSTANCE = None
 _LOGGER = logging.getLogger(__name__)
 
 
-def last_5_states(entity_id):
-    """ Return the last 5 states for entity_id. """
+def query(query, arguments):
+    """ Query the database. """
     verify_instance()
 
-    return [
-        _row_to_state(row) for row in _INSTANCE.query(
-            "SELECT * FROM states WHERE entity_id=? AND "
-            "last_changed=last_updated "
-            "ORDER BY last_changed DESC LIMIT 0, 5", (entity_id, ))]
+    return _INSTANCE.query(query, arguments)
 
 
-def last_5_events():
-    """ Return the last 5 events (dev method). """
-    verify_instance()
-
-    return [
-        _row_to_event(row) for row in _INSTANCE.query(
-            "SELECT * FROM events ORDER BY created DESC LIMIT 0, 5")]
+def query_states(state_query, arguments):
+    """ Query the database and return a list of states. """
+    return filter(None, (row_to_state(row) for row in query(state_query, arguments)))
 
 
-def states_history(point_in_time):
-    """ Return states at a specific point in time. """
-    # Find homeassistant.start before point_in_time
-    # Find last state for each entity after homeassistant.start
-    # Ignore all states where state == ''
-    pass
+def query_events(event_query, arguments):
+    """ Query the database and return a list of states. """
+    return filter(None, (row_to_event(row) for row in query(event_query, arguments)))
+
+
+def row_to_state(row):
+    """ Convert a databsae row to a state. """
+    try:
+        return State(
+            row[1], row[2], json.loads(row[3]), datetime.fromtimestamp(row[4]))
+    except ValueError:
+        # When json.loads fails
+        return None
+
+
+def row_to_event(row):
+    """ Convert a databse row to an event. """
+    try:
+        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()])
+    except ValueError:
+        # When json.oads fails
+        return None
 
 
 def verify_instance():
@@ -156,7 +164,7 @@ class Recorder(threading.Thread):
                 return cur.fetchall()
 
         except sqlite3.IntegrityError:
-            _LOGGER.exception("Error querying the database")
+            _LOGGER.exception("Error querying the database using: %s", query)
             return []
 
     def _setup_connection(self):
@@ -204,25 +212,6 @@ class Recorder(threading.Thread):
     def _close_connection(self):
         _LOGGER.info("Closing database")
         self.conn.close()
-
-
-def _row_to_state(row):
-    """ Convert a databsae row to a state. """
-    try:
-        return State(
-            row[1], row[2], json.loads(row[3]), datetime.fromtimestamp(row[4]))
-    except ValueError:
-        # When json.loads fails
-        return None
-
-
-def _row_to_event(row):
-    """ Convert a databse row to an event. """
-    try:
-        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()])
-    except ValueError:
-        # When json.oads fails
-        return None
 
 
 # Setup datetime to save as a integer

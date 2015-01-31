@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<html>
+<head>
+
+  <title>core-iconset-svg</title>
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  <link rel="import" href="svg-sample-icons.html">
+  <style shim-shadowdom>
+    .embiggen core-icon {
+      height: 128px;
+      width: 128px;
+    }
+
+    core-icon:nth-of-type(1) {
+      fill: orange;
+    }
+
+    core-icon:nth-of-type(2) {
+      fill: green;
+      stroke: orange;
+    }
+
+    core-icon:nth-of-type(3) {
+      fill: navy;
+    }
+
+    core-icon {
+      transition: all 0.5s;
+      -webkit-transition: all 0.5s;
+    }
+
+    core-icon:hover {
+      -webkit-filter: drop-shadow( 2px 2px 2px #333 );
+      filter: drop-shadow( 2px 2px 2px #333 );
+    }
+  </style>
+</head>
+<body unresolved>
+
+  <template is="auto-binding">
+    <div class="embiggen">
+      <template repeat="{{icon in icons}}">
+        <core-icon icon="{{icon}}"></core-icon>
+      </template>
+    </div>
+    <core-meta id="meta" type="iconset"></core-meta>
+  </template>
+  <script>
+    addEventListener('template-bound', function(e) {
+      var template = e.target;
+      var setName = 'svg-sample-icons';
+      var icons = template.$.meta.byId(setName).iconNames;
+      template.icons = icons.map(function(ic){ return setName + ':' +ic });
+    });
+  </script>
+</body>
+</html>
