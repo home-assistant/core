@@ -1,42 +1,26 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
 
 <polymer-element name="more-info-sun" attributes="stateObj api">
 <template>
-  <style>
-    .data-entry {
-      margin-bottom: 8px;
-    }
-
-    .data-entry:last-child {
-      margin-bottom: 0;
-    }
-
-    .data {
-      text-align: right;      
-    }
-
-    .time-ago {
-      color: darkgrey;
-      margin-top: -2px;
-    }
-  </style>
+  <core-style ref='ha-key-value-table'></core-style>
 
   <div layout vertical id='sunData'>
 
     <div layout justified horizontal class='data-entry' id='rising'>
-      <div>
+      <div class='key'>
         Rising {{stateObj.attributes.next_rising | relativeHATime}}
       </div>
-      <div class='data'>
+      <div class='value'>
         {{stateObj.attributes.next_rising | HATimeStripDate}}
       </div>
     </div>
 
     <div layout justified horizontal class='data-entry' id='setting'>
-      <div>
+      <div class='key'>
         Setting {{stateObj.attributes.next_setting | relativeHATime}}
       </div>
-      <div class='data'>
+      <div class='value'>
         {{stateObj.attributes.next_setting | HATimeStripDate}}
       </div>
     </div>

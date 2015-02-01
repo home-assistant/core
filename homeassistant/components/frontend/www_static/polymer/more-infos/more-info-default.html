@@ -1,22 +1,13 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
 
 <link rel="import" href="../components/recent-states.html">
 
-<polymer-element name="more-info-default" attributes="stateObj">
+<polymer-element name="more-info-default" attributes="stateObj api">
 <template>
+  <core-style ref='ha-key-value-table'></core-style>
   <style>
-    .data-entry {
-      margin-bottom: 8px;
-    }
-
-    .data-entry:last-child {
-      margin-bottom: 0;
-    }
-
-    .data {
-      padding-left: 10px;
-      text-align: right;
-      word-break: break-all;
+    .data-entry .value {
       max-width: 200px;
     }
   </style>
@@ -25,24 +16,32 @@
 
     <template repeat="{{key in stateObj.attributes | getKeys}}">
       <div layout justified horizontal class='data-entry'>
-        <div>
+        <div class='key'>
           {{key}}
         </div>
-        <div class='data'>
+        <div class='value'>
           {{stateObj.attributes[key]}}
         </div>
       </div>
     </template>
 
-    <recent-states api="{{api}}" stateObj="{{stateObj}}"></recent-states>
-
+    <template if="{{hasHistoryComponent}}">
+      <h4>Recent states</h4>
+      <recent-states api="{{api}}" stateObj="{{stateObj}}"></recent-states>
+    </template>
   </div>
 </template>
 <script>
   Polymer({
+    hasHistoryComponent: false,
+
     getKeys: function(obj) {
       return Object.keys(obj || {});
     },
+
+    apiChanged: function(oldVal, newVal) {
+      this.hasHistoryComponent = this.api && this.api.hasComponent('history');
+    }
   });
 </script>
 </polymer-element>
