@@ -147,6 +147,7 @@ def load_order_components(components):
     Takes in a list of components we want to load:
      - filters out components we cannot load
      - filters out components that have invalid/circular dependencies
+     - Will make sure the recorder component is loaded first
      - Will ensure that all components that do not directly depend on
        the group component will be loaded before the group component.
      - returns an OrderedSet load order.
@@ -154,6 +155,7 @@ def load_order_components(components):
     _check_prepared()
 
     group = get_component('group')
+    recorder = get_component('recorder')
 
     load_order = OrderedSet()
 
@@ -170,6 +172,10 @@ def load_order_components(components):
                                   key=lambda order:
                                   group and group.DOMAIN in order):
         load_order.update(comp_load_order)
+
+    # Push recorder to first place in load order
+    if recorder.DOMAIN in load_order:
+        load_order.promote(recorder.DOMAIN)
 
     return load_order
 

@@ -216,11 +216,20 @@ class OrderedSet(collections.MutableSet):
         return key in self.map
 
     def add(self, key):
-        """ Add an element to the set. """
+        """ Add an element to the end of the set. """
         if key not in self.map:
             end = self.end
             curr = end[1]
             curr[2] = end[1] = self.map[key] = [key, curr, end]
+
+    def promote(self, key):
+        """ Promote element to beginning of the set, add if not there. """
+        if key in self.map:
+            self.discard(key)
+
+        begin = self.end[2]
+        curr = begin[1]
+        curr[2] = begin[1] = self.map[key] = [key, curr, begin]
 
     def discard(self, key):
         """ Discard an element from the set. """
