@@ -127,8 +127,9 @@
       this.$.hideKeyboardOnFocus.focus();
 
       var passwordValid = function(result) {
-        this.$.validatemessage.innerHTML = "Loading data...";
+        this.$.validatemessage.innerHTML = "Loading data…";
         this.api.fetchEvents();
+        this.api.fetchComponents();
 
         this.api.fetchStates(function() {
           this.state = "valid_auth";

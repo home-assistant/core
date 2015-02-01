@@ -12,7 +12,7 @@ from homeassistant.helpers import TrackStates
 import homeassistant.remote as rem
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES,
-    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY)
+    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS)
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -72,6 +72,10 @@ def setup(hass, config):
         'POST', URL_API_EVENT_FORWARD, _handle_post_api_event_forward)
     hass.http.register_path(
         'DELETE', URL_API_EVENT_FORWARD, _handle_delete_api_event_forward)
+
+    # /components
+    hass.http.register_path(
+        'GET', URL_API_COMPONENTS, _handle_get_api_components)
 
     return True
 
@@ -247,3 +251,9 @@ def _handle_delete_api_event_forward(handler, path_match, data):
         handler.server.event_forwarder.disconnect(api)
 
     handler.write_json_message("Event forwarding cancelled.")
+
+
+def _handle_get_api_components(handler, path_match, data):
+    """ Returns all the loaded components. """
+
+    handler.write_json(handler.server.hass.components)

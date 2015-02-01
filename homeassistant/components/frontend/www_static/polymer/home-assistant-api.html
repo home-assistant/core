@@ -179,6 +179,10 @@
       return found.length > 0;
     },
 
+    hasComponent: function(component) {
+      return this.components.indexOf(component) !== -1;
+    },
+
     getCustomGroups: function() {
       return this.states.filter(function(state) { return state.isCustomGroup;});
     },
@@ -267,6 +271,7 @@
       this.fetchStates();
       this.fetchServices();
       this.fetchEvents();
+      this.fetchComponents();
     },
 
     fetchState: function(entityId) {
@@ -320,6 +325,22 @@
 
       this.call_api(
         "GET", "services", null, successServicesUpdated.bind(this), onError);
+    },
+
+    fetchComponents: function(onSuccess, onError) {
+      var successComponentsUpdated = function(components) {
+        this.components = components;
+
+        this.fire('components-updated');
+
+        if(onSuccess) {
+          onSuccess(this.components);
+        }
+      };
+
+      this.call_api(
+        "GET", "components", null,
+        successComponentsUpdated.bind(this), onError);
     },
 
     turn_on: function(entity_id, options) {
