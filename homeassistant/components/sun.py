@@ -225,8 +225,6 @@ class SunsetEventListener(SunEventListener):
         """ Schedule the event """
         next_setting_dt = next_setting(hass)
 
-        print("------------", hass, "-------------")
-
         next_time_dt = self.schedule_next_event(hass, next_setting_dt)
 
         _LOGGER.info(

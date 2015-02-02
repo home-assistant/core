@@ -18,14 +18,14 @@ entity_ids, and events.
 import logging
 import json
 
+from homeassistant import bootstrap
 from homeassistant.loader import get_component
-
 from homeassistant.const import ATTR_ENTITY_ID
 
 # The domain of your component. Should be equal to the name of your component
 DOMAIN = 'scheduler'
 
-DEPENDENCIES = ['sun']
+DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,12 +36,21 @@ _SCHEDULE_FILE = 'schedule.json'
 def setup(hass, config):
     """ Create the schedules """
 
+    if DOMAIN in hass.components:
+        return True
+
     def setup_listener(schedule, event_data):
-        type = event_data['type']
+        event_type = event_data['type']
         component = type
 
-        if type in ('time'):
+        if event_type in ('time'):
             component = 'scheduler.{}'.format(type)
+
+        elif component not in hass.components and \
+                not bootstrap.setup_component(hass, component, config):
+
+            _LOGGER.warn("Could setup event listener for %s", component)
+            return None
 
         return get_component(component).create_event_listener(schedule,
                                                               event_data)
@@ -57,7 +66,9 @@ def setup(hass, config):
 
         for event_data in schedule_data['events']:
             event_listener = setup_listener(schedule, event_data)
-            schedule.add_event_listener(event_listener)
+
+            if event_listener:
+                schedule.add_event_listener(event_listener)
 
         schedule.schedule(hass)
         return True
