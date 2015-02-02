@@ -1,0 +1,128 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/google-apis/google-jsapi.html">
+
+<polymer-element name="state-timeline" attributes="stateObj api">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+
+    <google-jsapi on-api-load="{{googleApiLoaded}}"></google-jsapi>
+    <div id="timeline" style='width: 100%; height: auto;'></div>
+
+  </template>
+  <script>
+  Polymer({
+    apiLoaded: false,
+    stateData: null,
+
+    googleApiLoaded: function() {
+      google.load("visualization", "1", {
+        packages: ["timeline"],
+        callback: function() {
+          this.apiLoaded = true;
+          this.drawChart();
+        }.bind(this)
+      });
+    },
+
+    stateObjChanged: function(oldVal, newVal) {
+      // update data if we get a new stateObj
+      if (!oldVal || (newVal && oldVal.entity_id === newVal.entity_id)) {
+        this.drawChart();
+      } else {
+        this.fetchData();
+      }
+    },
+
+    fetchData: function() {
+      if (!this.api) {
+        return;
+      }
+
+      this.stateData = null;
+
+      var url = 'history/period';
+
+      if (this.stateObj) {
+        url += '?filter_entity_id=' + this.stateObj.entity_id;
+      }
+
+      this.api.call_api('GET', url, {}, function(stateData) {
+          this.stateData = stateData;
+          this.drawChart();
+        }.bind(this)
+      );
+    },
+
+    drawChart: function() {
+      if (!this.apiLoaded || this.stateData === null) {
+        return;
+      }
+
+      var container = this.$.timeline;
+      var chart = new google.visualization.Timeline(container);
+      var dataTable = new google.visualization.DataTable();
+
+      dataTable.addColumn({ type: 'string', id: 'Entity' });
+      dataTable.addColumn({ type: 'string', id: 'State' });
+      dataTable.addColumn({ type: 'date', id: 'Start' });
+      dataTable.addColumn({ type: 'date', id: 'End' });
+
+      var stateTimeToDate = function(time) {
+        if (!time) return new Date();
+
+        return ha.util.parseTime(time).toDate();
+      };
+
+      var addRow = function(baseState, state, tillState) {
+        tillState = tillState || {};
+
+        dataTable.addRow([
+          baseState.entityDisplay, state.state,
+          stateTimeToDate(state.last_changed),
+          stateTimeToDate(tillState.last_changed)]);
+      };
+
+      // this.stateData is a list of lists of sorted state objects
+      this.stateData.forEach(function(stateInfo) {
+        var baseState = new this.api.State(stateInfo[0], this.api);
+
+        var prevRow = null;
+
+        stateInfo.forEach(function(state) {
+          if (prevRow !== null && state.state !== prevRow.state) {
+            addRow(baseState, prevRow, state);
+            prevRow = state;
+          } else if (prevRow === null) {
+            prevRow = state;
+          }
+        });
+
+        addRow(baseState, prevRow, null);
+      }.bind(this));
+
+      chart.draw(dataTable, {
+        height: 55 + this.stateData.length * 42,
+
+        // interactive properties require CSS, the JS api puts it on the document
+        // instead of inside our Shadow DOM.
+        enableInteractivity: false,
+
+        timeline: {
+          showRowLabels: this.stateData.length > 1
+        },
+
+        hAxis: {
+          format: 'H:mm'
+        },
+        // colors: ['#CCC', '#03a9f4']
+      });
+    },
+
+  });
+  </script>
+</polymer-element>

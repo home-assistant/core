@@ -7,6 +7,7 @@
 <link rel="import" href="dialogs/service-call-dialog.html">
 <link rel="import" href="dialogs/state-set-dialog.html">
 <link rel="import" href="dialogs/more-info-dialog.html">
+<link rel="import" href="dialogs/history-dialog.html">
 
 <script>
   var ha = {};
@@ -37,6 +38,7 @@
     <service-call-dialog id="serviceDialog" api={{api}}></service-call-dialog>
     <state-set-dialog id="stateSetDialog" api={{api}}></state-set-dialog>
     <more-info-dialog id="moreInfoDialog" api={{api}}></more-info-dialog>
+    <history-dialog id="historyDialog" api={{api}}></history-dialog>
   </template>
   <script>
   var domainsWithCard = ['thermostat', 'configurator'];
@@ -128,6 +130,10 @@
     events: [],
     stateUpdateTimeout: null,
 
+    // available classes
+    State: State,
+
+    // Polymer lifecycle methods
     created: function() {
       this.api = this;
 
@@ -451,6 +457,10 @@
     },
 
     // show dialogs
+    showHistoryDialog: function() {
+      this.$.historyDialog.show();
+    },
+
     showmoreInfoDialog: function(entityId) {
       this.$.moreInfoDialog.show(this.getState(entityId));
     },

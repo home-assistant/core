@@ -1,0 +1,37 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="ha-action-dialog.html">
+<link rel="import" href="../components/state-timeline.html">
+
+<polymer-element name="history-dialog" attributes="api">
+<template>
+  <ha-action-dialog id="dialog" heading="History">
+    <style>
+      #timeline {
+        width: 614px;
+        height: auto;
+        display: block;
+      }
+    </style>
+
+    <state-timeline id='timeline' api="{{api}}"></state-timeline>
+  </ha-action-dialog>
+
+</template>
+<script>
+Polymer({
+  show: function() {
+    this.$.dialog.toggle();
+
+    this.job('repositionDialogAfterRender', function() {
+
+      this.$.timeline.fetchData();
+
+      this.job('repositionDialogAfterRender', function() {
+        this.$.dialog.resizeHandler();
+      }.bind(this), 1000);
+
+    }.bind(this));
+  },
+});
+</script>
+</polymer-element>

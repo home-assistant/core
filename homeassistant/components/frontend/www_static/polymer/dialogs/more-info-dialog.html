@@ -2,6 +2,7 @@
 
 <link rel="import" href="ha-action-dialog.html">
 <link rel="import" href="../cards/state-card-content.html">
+<link rel="import" href="../components/state-timeline.html">
 <link rel="import" href="../more-infos/more-info-content.html">
 
 <polymer-element name="more-info-dialog" attributes="api">
@@ -17,6 +18,7 @@
     <div>
       <state-card-content stateObj="{{stateObj}}" api="{{api}}" class='title-card'>
       </state-card-content>
+      <state-timeline stateObj="{{stateObj}}" api="{{api}}"></state-timeline>
       <more-info-content stateObj="{{stateObj}}" api="{{api}}"></more-info-content>
     </div>
 

@@ -21,6 +21,7 @@
     "core-input": "Polymer/core-input#~0.5.4",
     "core-icons": "polymer/core-icons#~0.5.4",
     "core-image": "polymer/core-image#~0.5.4",
+    "core-style": "polymer/core-style#~0.5.4",
     "paper-toast": "Polymer/paper-toast#~0.5.4",
     "paper-dialog": "Polymer/paper-dialog#~0.5.4",
     "paper-spinner": "Polymer/paper-spinner#~0.5.4",
@@ -32,9 +33,9 @@
     "paper-menu-button": "polymer/paper-menu-button#~0.5.4",
     "paper-dropdown": "polymer/paper-dropdown#~0.5.4",
     "paper-item": "polymer/paper-item#~0.5.4",
-    "moment": "~2.8.4",
-    "core-style": "polymer/core-style#~0.5.4",
     "paper-slider": "polymer/paper-slider#~0.5.4",
-    "color-picker-element": "~0.0.2"
+    "moment": "~2.8.4",
+    "color-picker-element": "~0.0.2",
+    "google-apis": "GoogleWebComponents/google-apis#~0.4.2"
   }
 }

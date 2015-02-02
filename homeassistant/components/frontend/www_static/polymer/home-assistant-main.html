@@ -1,5 +1,6 @@
 <link rel="import" href="bower_components/core-header-panel/core-header-panel.html">
 <link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="bower_components/core-icon/core-icon.html">
 <link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="bower_components/paper-tabs/paper-tab.html">
 <link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
@@ -74,21 +75,34 @@
         <div flex>Home Assistant</div>
         <paper-icon-button icon="refresh"
           on-click="{{handleRefreshClick}}"></paper-icon-button>
-        <paper-icon-button icon="settings-remote"
-          on-click="{{handleServiceClick}}"></paper-icon-button>
+        <paper-icon-button icon="assessment"
+          on-click="{{handleHistoryClick}}"></paper-icon-button>
 
         <paper-menu-button>
           <paper-icon-button icon="more-vert" noink></paper-icon-button>
           <paper-dropdown halign="right" duration="200" class="dropdown">
             <core-menu class="menu">
               <paper-item>
-                <a on-click={{handleAddStateClick}}>Set State</a>
+                <a on-click={{handleServiceClick}}>
+                  <!-- <core-icon icon="settings-remote"></core-icon> -->
+                  Call Service
+                </a>
               </paper-item>
               <paper-item>
-                <a on-click={{handleEventClick}}>Trigger Event</a>
+                <a on-click={{handleAddStateClick}}>
+                  Set State
+                </a>
               </paper-item>
               <paper-item>
-                <a on-click={{handleLogOutClick}}>Log Out</a>
+                <a on-click={{handleEventClick}}>
+                  Trigger Event
+                </a>
+              </paper-item>
+              <paper-item>
+                <a on-click={{handleLogOutClick}}>
+                  <!-- <core-icon icon="exit-to-app"></core-icon> -->
+                  Log Out
+                </a>
               </paper-item>
             </core-menu>
           </paper-dropdown>
@@ -145,6 +159,10 @@
 
     handleRefreshClick: function() {
       this.api.fetchAll();
+    },
+
+    handleHistoryClick: function() {
+      this.api.showHistoryDialog();
     },
 
     handleEventClick: function() {

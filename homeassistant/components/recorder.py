@@ -84,32 +84,19 @@ def limit_to_run(point_in_time=None):
     """
     _verify_instance()
 
-    end_event = None
-
     # Targetting current run
     if point_in_time is None:
-        return "created >= {}".format(
+        return "created >= {} ".format(
             _adapt_datetime(_INSTANCE.recording_start))
 
-    start_event = query(
-        ("SELECT * FROM events WHERE event_type = ? AND created < ? "
-         "ORDER BY created DESC LIMIT 0, 1"),
-        (EVENT_HOMEASSISTANT_START, point_in_time))[0]
+    raise NotImplementedError()
 
-    end_query = query(
-        ("SELECT * FROM events WHERE event_type = ? AND created > ? "
-         "ORDER BY created ASC LIMIT 0, 1"),
-        (EVENT_HOMEASSISTANT_START, point_in_time))
 
-    if end_query:
-        end_event = end_query[0]
+def recording_start():
+    """ Return when the recorder started. """
+    _verify_instance()
 
-    where_part = "created >= {}".format(start_event['created'])
-
-    if end_event is None:
-        return where_part
-    else:
-        return "{} and created < {}".format(where_part, end_event['created'])
+    return _INSTANCE.recording_start
 
 
 def setup(hass, config):
@@ -183,13 +170,13 @@ class Recorder(threading.Thread):
             info = (entity_id, '', "{}", now, now, now)
         else:
             info = (
-                entity_id, state.state, json.dumps(state.attributes),
+                entity_id.lower(), state.state, json.dumps(state.attributes),
                 state.last_changed, state.last_updated, now)
 
         self.query(
-            "insert into states ("
+            "INSERT INTO states ("
             "entity_id, state, attributes, last_changed, last_updated,"
-            "created) values (?, ?, ?, ?, ?, ?)", info)
+            "created) VALUES (?, ?, ?, ?, ?, ?)", info)
 
     def record_event(self, event):
         """ Save an event to the database. """
@@ -199,9 +186,9 @@ class Recorder(threading.Thread):
         )
 
         self.query(
-            "insert into events ("
+            "INSERT INTO events ("
             "event_type, event_data, origin, created"
-            ") values (?, ?, ?, ?)", info)
+            ") VALUES (?, ?, ?, ?)", info)
 
     def query(self, sql_query, data=None, return_value=None):
         """ Query the database. """

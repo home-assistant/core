@@ -261,7 +261,17 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, (ha.State, ha.Event)):
             return obj.as_dict()
 
-        return json.JSONEncoder.default(self, obj)
+        try:
+            return json.JSONEncoder.default(self, obj)
+        except TypeError:
+            # If the JSON serializer couldn't serialize it
+            # it might be a generator, convert it to a list
+            try:
+                return [json.JSONEncoder.default(self, child_obj)
+                        for child_obj in obj]
+            except TypeError:
+                # Ok, we're lost, cause the original error
+                return json.JSONEncoder.default(self, obj)
 
 
 def validate_api(api):

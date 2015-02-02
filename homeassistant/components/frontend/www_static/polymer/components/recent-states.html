@@ -36,7 +36,7 @@
     stateObjChanged: function() {
       this.recentStates = null;
 
-      this.api.call_api('GET', 'history/' + this.stateObj.entity_id + '/recent_states', {}, this.newStates.bind(this));
+      this.api.call_api('GET', 'history/entity/' + this.stateObj.entity_id + '/recent_states', {}, this.newStates.bind(this));
     },
 
     newStates: function(states) {
