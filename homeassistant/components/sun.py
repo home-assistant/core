@@ -26,6 +26,7 @@ STATE_ATTR_NEXT_SETTING = "next_setting"
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def is_on(hass, entity_id=None):
     """ Returns if the sun is currently up based on the statemachine. """
     entity_id = entity_id or ENTITY_ID
@@ -156,6 +157,7 @@ which event (sunset or sunrise) and the offset.
 
 """
 
+
 def create_event_listener(schedule, event_listener_data):
     """ Create a sun event listener based on the description. """
 
@@ -176,6 +178,7 @@ def create_event_listener(schedule, event_listener_data):
         return SunsetEventListener(schedule, service, offset, negative_offset)
 
     return SunriseEventListener(schedule, service, offset, negative_offset)
+
 
 # pylint: disable=too-few-public-methods
 class SunEventListener(ServiceEventListener):
