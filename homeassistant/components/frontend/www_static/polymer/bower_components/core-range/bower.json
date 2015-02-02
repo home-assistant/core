@@ -1,9 +1,0 @@
-{
-  "name": "core-range",
-  "private": true,
-  "dependencies": {
-    "polymer": "Polymer/polymer#^0.5",
-    "core-input": "Polymer/core-input#^0.5"
-  },
-  "version": "0.5.4"
-}

@@ -1,8 +1,0 @@
-{
-  "name": "core-resizable",
-  "private": true,
-  "devDependencies": {
-    "web-component-tester": "Polymer/web-component-tester#master"
-  },
-  "version": "0.5.4"
-}

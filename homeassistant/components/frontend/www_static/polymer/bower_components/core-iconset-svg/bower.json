@@ -1,9 +1,0 @@
-{
-  "name": "core-iconset-svg",
-  "private": true,
-  "dependencies": {
-    "polymer": "Polymer/polymer#^0.5",
-    "core-iconset": "Polymer/core-iconset#^0.5"
-  },
-  "version": "0.5.4"
-}

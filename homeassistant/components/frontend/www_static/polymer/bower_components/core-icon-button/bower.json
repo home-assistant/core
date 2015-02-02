@@ -1,8 +1,0 @@
-{
-  "name": "core-icon-button",
-  "private": true,
-  "dependencies": {
-    "core-icons": "Polymer/core-icons#^0.5"
-  },
-  "version": "0.5.4"
-}
