@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 _SCHEDULE_FILE = 'schedule.json'
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """ Create the schedules """
 
@@ -40,11 +39,13 @@ def setup(hass, config):
         return True
 
     def setup_listener(schedule, event_data):
+        """ Creates the event listener based on event_data """
         event_type = event_data['type']
-        component = type
+        component = event_type
 
-        if event_type in ('time'):
-            component = 'scheduler.{}'.format(type)
+        # if the event isn't part of a component
+        if event_type in ['time']:
+            component = 'scheduler.{}'.format(event_type)
 
         elif component not in hass.components and \
                 not bootstrap.setup_component(hass, component, config):

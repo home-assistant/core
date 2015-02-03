@@ -3,6 +3,23 @@ homeassistant.components.sun
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to keep track of the sun.
+
+
+Event listener
+--------------
+The suns event listener will call the service
+when the sun rises or sets with an offset.
+The sun evnt need to have the type 'sun', which service to call,
+which event (sunset or sunrise) and the offset.
+
+{
+    "type": "sun",
+    "service": "switch.turn_on",
+    "event": "sunset",
+    "offset": "-01:00:00"
+}
+
+
 """
 import logging
 from datetime import datetime, timedelta
@@ -141,21 +158,6 @@ def setup(hass, config):
     update_sun_state(datetime.now())
 
     return True
-
-"""
-An event in the scheduler component that will call the service
-when the sun rises or sets with an offset.
-The sun evnt need to have the type 'sun', which service to call,
-which event (sunset or sunrise) and the offset.
-
-{
-    "type": "sun",
-    "service": "switch.turn_on",
-    "event": "sunset",
-    "offset": "-01:00:00"
-}
-
-"""
 
 
 def create_event_listener(schedule, event_listener_data):
