@@ -92,3 +92,4 @@ class TellstickLight(ToggleDevice):
             last_sent_value = self.tellstick.last_sent_value()
             if not last_sent_value is None:
                 self.brightness = last_sent_value
+        self.tellstick.dim(self.brightness)
