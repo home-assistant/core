@@ -25,7 +25,7 @@
 Polymer({
 
   cardClicked: function() {
-    this.api.showmoreInfoDialog(this.stateObj.entity_id);
+    window.hass.uiActions.showMoreInfoDialog(this.stateObj.entity_id);
   },
 
 });

@@ -34,7 +34,6 @@
     "paper-dropdown": "polymer/paper-dropdown#~0.5.4",
     "paper-item": "polymer/paper-item#~0.5.4",
     "paper-slider": "polymer/paper-slider#~0.5.4",
-    "moment": "~2.8.4",
     "color-picker-element": "~0.0.2",
     "google-apis": "GoogleWebComponents/google-apis#~0.4.2"
   }

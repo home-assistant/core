@@ -35,13 +35,18 @@
     cbEventClicked: null,
     states: [],
 
-    domReady: function() {
-      this.api.addEventListener('states-updated', this.statesUpdated.bind(this))
-      this.statesUpdated()
+    ready: function() {
+      this.statesUpdated = this.statesUpdated.bind(this);
+      window.hass.stateStore.addChangeListener(this.statesUpdated);
+      this.statesUpdated();
+    },
+
+    detached: function() {
+      window.hass.stateStore.removeChangeListener(this.statesUpdated);
     },
 
     statesUpdated: function() {
-      this.states = this.api.states;
+      this.states = window.hass.stateStore.all();
     },
 
     handleClick: function(ev) {

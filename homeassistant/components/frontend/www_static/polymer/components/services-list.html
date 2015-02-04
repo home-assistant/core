@@ -51,18 +51,22 @@
     services: [],
     cbServiceClicked: null,
 
-    domReady: function() {
-      this.services = this.api.services
+    ready: function() {
+      this.servicesUpdated = this.servicesUpdated.bind(this);
+      window.hass.serviceStore.addChangeListener(this.servicesUpdated);
+      this.servicesUpdated();
+    },
 
-      this.api.addEventListener('services-updated', this.servicesUpdated.bind(this))
+    detached: function() {
+      window.hass.serviceStore.removeChangeListener(this.servicesUpdated);
     },
 
     getIcon: function(domain) {
-      return (new DomainIcon).icon(domain);
+      return (new DomainIcon()).icon(domain);
     },
 
     servicesUpdated: function() {
-      this.services = this.api.services;
+      this.services = window.hass.serviceStore.all();
     },
 
     serviceClicked: function(ev) {

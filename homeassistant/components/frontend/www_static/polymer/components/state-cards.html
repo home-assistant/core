@@ -2,7 +2,7 @@
 
 <link rel="import" href="../cards/state-card.html">
 
-<polymer-element name="state-cards" attributes="api filter">
+<polymer-element name="state-cards" attributes="states">
   <template>
     <style>
     :host {
@@ -47,7 +47,7 @@
     <div horizontal layout wrap>
 
       <template repeat="{{states as state}}">
-        <state-card class="state-card" stateObj={{state}} api={{api}}></state-card>
+        <state-card class="state-card" stateObj={{state}}></state-card>
       </template>
 
       <template if="{{states.length == 0}}">
@@ -60,24 +60,6 @@
   </template>
   <script>
   Polymer({
-    filter: null,
-    states: [],
-
-    observe: {
-      'api.states': 'filterChanged'
-    },
-
-    filterChanged: function() {
-      if(this.filter === 'customgroup') {
-        this.states = this.api.getCustomGroups();
-      } else {
-        // if no filter, return all non-group states
-        this.states = this.api.states.filter(function(state) {
-          return state.domain != 'group';
-        });
-      }
-    },
-
   });
   </script>
 </polymer-element>

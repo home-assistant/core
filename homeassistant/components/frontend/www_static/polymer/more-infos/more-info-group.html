@@ -2,7 +2,7 @@
 
 <link rel="import" href="../cards/state-card-content.html">
 
-<polymer-element name="more-info-group" attributes="stateObj api">
+<polymer-element name="more-info-group" attributes="stateObj">
 <template>
   <style>
     .child-card {
@@ -15,7 +15,7 @@
   </style>
 
   <template repeat="{{states as state}}">
-    <state-card-content stateObj="{{state}}" api="{{api}}" class='child-card'>
+    <state-card-content stateObj="{{state}}" class='child-card'>
     </state-card-content>
   </template>
 </template>
@@ -26,7 +26,7 @@ Polymer({
   },
 
   updateStates: function() {
-    this.states = this.api.getStates(this.stateObj.attributes.entity_id);
+    this.states = window.hass.stateStore.gets(this.stateObj.attributes.entity_id);
   }
 });
 </script>

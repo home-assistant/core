@@ -53,7 +53,7 @@ Polymer({
 
   show: function(domain, service, serviceData) {
     this.setService(domain, service);
-    this.$.inputData.value = serviceData;
+    this.$.inputData.value = serviceData || "";
     // this.$.inputDataWrapper.update();
     this.job('showDialogAfterRender', function() {
       this.$.dialog.toggle();
@@ -71,10 +71,10 @@ Polymer({
 
   clickCallService: function() {
     try {
-    this.api.call_service(
-      this.$.inputDomain.value,
-      this.$.inputService.value,
-      this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
+      window.hass.serviceActions.callService(
+        this.$.inputDomain.value,
+        this.$.inputService.value,
+        this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
 
       this.$.dialog.close();
     

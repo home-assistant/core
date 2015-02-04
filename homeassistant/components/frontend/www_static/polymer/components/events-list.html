@@ -1,6 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
-<polymer-element name="events-list" attributes="api cbEventClicked">
+<polymer-element name="events-list" attributes="cbEventClicked">
   <template>
     <style>
     :host {
@@ -37,14 +37,18 @@
     cbEventClicked: null,
     events: [],
 
-    domReady: function() {
-      this.events = this.api.events
+    ready: function() {
+      this.eventsUpdated = this.eventsUpdated.bind(this);
+      window.hass.eventStore.addChangeListener(this.eventsUpdated);
+      this.eventsUpdated();
+    },
 
-      this.api.addEventListener('events-updated', this.eventsUpdated.bind(this))
+    detached: function() {
+      window.hass.eventStore.removeChangeListener(this.eventsUpdated);
     },
 
     eventsUpdated: function() {
-      this.events = this.api.events;
+      this.events = window.hass.eventStore.all();
     },
 
     handleClick: function(ev) {

@@ -56,9 +56,8 @@
 <script>
 Polymer({
 
-  // on-change is unpredictable so using on-core-change this has side effect
-  // that it fires if changed by brightnessChanged(), thus an ignore boolean.
-  ignoreNextBrightnessEvent: false,
+  // initial change should be ignored
+  ignoreNextBrightnessEvent: true,
 
   observe: {
     'stateObj.attributes.brightness': 'brightnessChanged',
@@ -68,7 +67,7 @@ Polymer({
   brightnessChanged: function(oldVal, newVal) {
     this.ignoreNextBrightnessEvent = true;
 
-    this.$.brightness.value = newVal;  
+    this.$.brightness.value = newVal;
   },
 
   domReady: function() {
@@ -86,9 +85,9 @@ Polymer({
     if(isNaN(bri)) return;
 
     if(bri === 0) {
-      this.api.turn_off(this.stateObj.entity_id);
+      window.hass.serviceActions.callTurnOff(this.stateObj.entity_id);
     } else {
-      this.api.call_service("light", "turn_on", {
+      window.hass.serviceActions.callService("light", "turn_on", {
         entity_id: this.stateObj.entity_id,
         brightness: bri
       });
@@ -98,7 +97,7 @@ Polymer({
   colorPicked: function(ev) {
     var color = ev.detail.rgb;
 
-    this.api.call_service("light", "turn_on", {
+    window.hass.serviceActions.callService("light", "turn_on", {
       entity_id: this.stateObj.entity_id,
       rgb_color: [color.r, color.g, color.b]
     });

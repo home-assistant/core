@@ -58,7 +58,7 @@ def _handle_get_root(handler, path_match, data):
     handler.end_headers()
 
     if handler.server.development:
-        app_url = "polymer/splash-login.html"
+        app_url = "polymer/home-assistant.html"
     else:
         app_url = "frontend-{}.html".format(version.VERSION)
 
@@ -83,7 +83,7 @@ def _handle_get_root(handler, path_match, data):
            "<script"
            "     src='/static/webcomponents.min.js'></script>"
            "<link rel='import' href='/static/{}' />"
-           "<splash-login auth='{}'></splash-login>"
+           "<home-assistant auth='{}'></home-assistant>"
            "</body></html>").format(app_url, auth))
 
 

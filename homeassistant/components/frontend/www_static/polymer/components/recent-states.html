@@ -2,7 +2,7 @@
 <link rel="import" href="../bower_components/core-style/core-style.html">
 <link rel="import" href="./loading-box.html">
 
-<polymer-element name="recent-states" attributes="api stateObj">
+<polymer-element name="recent-states" attributes="stateObj">
   <template>
     <core-style ref='ha-data-table'></core-style>
 
@@ -36,13 +36,12 @@
     stateObjChanged: function() {
       this.recentStates = null;
 
-      this.api.call_api('GET', 'history/entity/' + this.stateObj.entity_id + '/recent_states', {}, this.newStates.bind(this));
+      window.hass.callApi(
+        'GET', 'history/entity/' + this.stateObj.entity_id + '/recent_states').then(
+          function(states) {
+            this.recentStates = states.slice(1);
+          }.bind(this));
     },
-
-    newStates: function(states) {
-      // cut off the first one (which is the current)
-      this.recentStates = states.slice(1);
-    }
   });
   </script>
 </polymer-element>

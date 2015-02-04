@@ -16,10 +16,10 @@
     </style>
 
     <div>
-      <state-card-content stateObj="{{stateObj}}" api="{{api}}" class='title-card'>
+      <state-card-content stateObj="{{stateObj}}" class='title-card'>
       </state-card-content>
-      <state-timeline stateObj="{{stateObj}}" api="{{api}}"></state-timeline>
-      <more-info-content stateObj="{{stateObj}}" api="{{api}}"></more-info-content>
+      <state-timeline stateObj="{{stateObj}}"></state-timeline>
+      <more-info-content stateObj="{{stateObj}}"></more-info-content>
     </div>
 
     <paper-button dismissive on-click={{editClicked}}>Debug</paper-button>
@@ -56,7 +56,7 @@ Polymer({
   },
 
   editClicked: function(ev) {
-    this.api.showEditStateDialog(this.stateObj.entity_id);
+    window.hass.uiActions.showSetStateDialog(this.stateObj.entity_id);
   }
 
 });

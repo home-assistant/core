@@ -82,14 +82,14 @@ Polymer({
   entitySelected: function(entityId) {
     this.setEntityId(entityId);
 
-    var state = this.api.getState(entityId);
+    var state = window.hass.stateStore.get(entityId);
     this.setState(state.state);
     this.setStateData(state.attributes);
   },
 
   clickSetState: function(ev) {
     try {
-      this.api.set_state(
+      window.hass.stateActions.set(
         this.$.inputEntityID.value,
         this.$.inputState.value,
         this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {}

@@ -1,4 +1,3 @@
-<script src="../bower_components/moment/moment.js"></script>
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
 
@@ -38,6 +37,10 @@
       'stateObj.state': 'stateChanged'
     },
 
+    ready: function() {
+      this.forceStateChange = this.forceStateChange.bind(this);
+    },
+
     // prevent the event from propegating
     toggleClicked: function(ev) {
       ev.stopPropagation();
@@ -60,16 +63,17 @@
       this.toggleChecked = newVal === "on";
     },
 
+    forceStateChange: function() {
+      this.stateChanged(this.stateObj.state, this.stateObj.state);
+    },
+
     turn_on: function() {
       // We call stateChanged after a successful call to re-sync the toggle
       // with the state. It will be out of sync if our service call did not
       // result in the entity to be turned on. Since the state is not changing,
       // the resync is not called automatic.
-      this.api.turn_on(this.stateObj.entity_id, {
-        success: function() {
-          this.stateChanged(this.stateObj.state, this.stateObj.state);
-        }.bind(this)
-      });
+      window.hass.serviceActions.callTurnOn(this.stateObj.entity_id)
+        .then(this.forceStateChange);
     },
 
     turn_off: function() {
@@ -77,11 +81,8 @@
       // with the state. It will be out of sync if our service call did not
       // result in the entity to be turned on. Since the state is not changing,
       // the resync is not called automatic.
-      this.api.turn_off(this.stateObj.entity_id, {
-        success: function() {
-          this.stateChanged(this.stateObj.state, this.stateObj.state);
-        }.bind(this)
-      });
+      window.hass.serviceActions.callTurnOff(this.stateObj.entity_id)
+        .then(this.forceStateChange);
     },
 
   });

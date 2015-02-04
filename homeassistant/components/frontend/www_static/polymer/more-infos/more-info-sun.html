@@ -31,8 +31,8 @@
 Polymer({
 
   stateObjChanged: function() {
-    var rising = ha.util.parseTime(this.stateObj.attributes.next_rising);
-    var setting = ha.util.parseTime(this.stateObj.attributes.next_setting);
+    var rising = window.hass.parseTime(this.stateObj.attributes.next_rising);
+    var setting = window.hass.parseTime(this.stateObj.attributes.next_setting);
 
     if(rising > setting) {
       this.$.sunData.appendChild(this.$.rising);

@@ -76,15 +76,16 @@
         configure_id: this.stateObj.attributes.configure_id
       };
 
-      this.api.call_service('configurator', 'configure', data, {
-        success: function() {
+      window.hass.serviceActions.callService('configurator', 'configure', data).then(
+
+        function() {
           this.action = 'display';
-          this.api.fetchAll();
+          window.hass.syncActions.sync();
         }.bind(this),
-        error: function() {
+
+        function() {
           this.action = 'display';
-        }.bind(this)
-      });
+        }.bind(this));
     }
   });
 </script>

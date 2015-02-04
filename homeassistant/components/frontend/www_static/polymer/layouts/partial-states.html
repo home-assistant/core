@@ -1,0 +1,38 @@
+<link rel="import" href="../components/state-cards.html">
+
+<polymer-element name="partial-states">
+<template>
+    <state-cards states="{{states}}">
+      <h3>Hi there!</h3>
+      <p>
+        It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
+      </p>
+      <p>
+        Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
+      </p>
+    </state-cards>
+
+</template>
+<script>
+  Polymer({
+    states: [],
+
+    ready: function() {
+      this.stateStoreChanged = this.stateStoreChanged.bind(this);
+      window.hass.stateStore.addChangeListener(this.stateStoreChanged);
+
+      this.stateStoreChanged();
+    },
+
+    detached: function() {
+      window.hass.stateStore.removeChangeListener(this.stateStoreChanged);
+    },
+
+    stateStoreChanged: function() {
+      this.states = _.filter(window.hass.stateStore.all(), function(state) {
+        return state.domain !== 'group';
+      });
+    },
+  });
+</script>
+</polymer>

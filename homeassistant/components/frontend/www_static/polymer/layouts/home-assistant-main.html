@@ -1,15 +1,15 @@
-<link rel="import" href="bower_components/core-header-panel/core-header-panel.html">
-<link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
-<link rel="import" href="bower_components/core-icon/core-icon.html">
-<link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
-<link rel="import" href="bower_components/paper-tabs/paper-tab.html">
-<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="bower_components/paper-menu-button/paper-menu-button.html">
-<link rel="import" href="bower_components/paper-dropdown/paper-dropdown.html">
-<link rel="import" href="bower_components/core-menu/core-menu.html">
-<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../bower_components/core-icon/core-icon.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../bower_components/paper-dropdown/paper-dropdown.html">
+<link rel="import" href="../bower_components/core-menu/core-menu.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
 
-<link rel="import" href="components/state-cards.html">
+<link rel="import" href="../layouts/partial-states.html">
 
 <polymer-element name="home-assistant-main" attributes="api">
   <template>
@@ -69,7 +69,7 @@
 
     </style>
 
-    <core-header-panel fit mode="{{hasCustomGroups && 'waterfall-tall'}}">
+    <core-header-panel fit>
 
       <core-toolbar>
         <div flex>Home Assistant</div>
@@ -107,83 +107,38 @@
             </core-menu>
           </paper-dropdown>
         </paper-menu-button>
-
-        <template if="{{hasCustomGroups}}">
-          <div class="bottom fit" horizontal layout>
-              <paper-tabs id="tabsHolder" noink flex
-                          selected="0" on-core-select="{{tabClicked}}">
-
-                <paper-tab>ALL</paper-tab>
-                <paper-tab data-filter='customgroup'>GROUPS</paper-tab>
-
-              </paper-tabs>
-          </div>
-        </template>
       </core-toolbar>
 
-      <state-cards
-        api="{{api}}"
-        filter="{{selectedFilter}}"
-        class="content">
-        <h3>Hi there!</h3>
-        <p>
-          It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
-        </p>
-        <p>
-          Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
-        </p>
-      </state-cards>
-
+      <partial-states></partial-states>
     </core-header-panel>
 
   </template>
   <script>
   Polymer({
-    selectedFilter: null,
-    hasCustomGroups: false,
-
-    observe: {
-      'api.states': 'updateHasCustomGroup'
-    },
-
-    // computed: {
-    //   hasCustomGroups: "api.getCustomGroups().length > 0"
-    // },
-
-    tabClicked: function(ev) {
-      if(ev.detail.isSelected) {
-        // will be null for ALL tab
-        this.selectedFilter = ev.detail.item.getAttribute('data-filter');
-      }
-    },
 
     handleRefreshClick: function() {
-      this.api.fetchAll();
+      window.hass.syncActions.sync();
     },
 
     handleHistoryClick: function() {
-      this.api.showHistoryDialog();
+      window.hass.uiActions.showHistoryDialog();
     },
 
     handleEventClick: function() {
-      this.api.showFireEventDialog();
+      window.hass.uiActions.showFireEventDialog();
     },
 
     handleServiceClick: function() {
-      this.api.showCallServiceDialog();
+      window.hass.uiActions.showCallServiceDialog();
     },
 
     handleAddStateClick: function() {
-      this.api.showSetStateDialog();
+      window.hass.uiActions.showSetStateDialog();
     },
 
     handleLogOutClick: function() {
-      this.api.logOut();
+      window.hass.authActions.logOut();
     },
-
-    updateHasCustomGroup: function() {
-      this.hasCustomGroups = this.api.getCustomGroups().length > 0;
-    }
 
   });
   </script>  

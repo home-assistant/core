@@ -39,10 +39,6 @@
     },
 
     fetchData: function() {
-      if (!this.api) {
-        return;
-      }
-
       this.stateData = null;
 
       var url = 'history/period';
@@ -51,11 +47,10 @@
         url += '?filter_entity_id=' + this.stateObj.entity_id;
       }
 
-      this.api.call_api('GET', url, {}, function(stateData) {
+      window.hass.callApi('GET', url).then(function(stateData) {
           this.stateData = stateData;
           this.drawChart();
-        }.bind(this)
-      );
+        }.bind(this));
     },
 
     drawChart: function() {
@@ -75,7 +70,7 @@
       var stateTimeToDate = function(time) {
         if (!time) return new Date();
 
-        return ha.util.parseTime(time).toDate();
+        return window.hass.util.parseTime(time).toDate();
       };
 
       var addRow = function(baseState, state, tillState) {
@@ -89,7 +84,7 @@
 
       // this.stateData is a list of lists of sorted state objects
       this.stateData.forEach(function(stateInfo) {
-        var baseState = new this.api.State(stateInfo[0], this.api);
+        var baseState = new window.hass.stateModel(stateInfo[0]);
 
         var prevRow = null;
 

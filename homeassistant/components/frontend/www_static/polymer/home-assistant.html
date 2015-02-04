@@ -1,0 +1,48 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/font-roboto/roboto.html">
+
+<link rel="import" href="home-assistant-api.html">
+<link rel="import" href="layouts/login-form.html">
+<link rel="import" href="layouts/home-assistant-main.html">
+<link rel="import" href="resources/home-assistant-style.html">
+
+<polymer-element name="home-assistant" attributes="auth">
+  <template>
+    <style>
+
+      :host {
+        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      }
+
+    </style>
+
+    <home-assistant-style></home-assistant-style>
+    <home-assistant-api auth="{{auth}}"></home-assistant-api>
+
+    <template if="{{!loaded}}">
+      <login-form></login-form>
+    </template>
+
+    <template if="{{loaded}}">
+      <home-assistant-main></home-assistant-main>
+    </template>
+
+  </template>
+  <script>
+  Polymer({
+    loaded: window.hass.syncStore.initialLoadDone(),
+
+    ready: function() {
+      // remove the HTML init message
+      document.getElementById('init').remove();
+
+      // listen if we are fully loaded
+      window.hass.syncStore.addChangeListener(this.updateLoadStatus.bind(this));
+    },
+
+    updateLoadStatus: function() {
+      this.loaded = window.hass.syncStore.initialLoadDone();
+    },
+  });
+  </script>  
+</polymer-element>

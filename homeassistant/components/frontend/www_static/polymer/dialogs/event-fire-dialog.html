@@ -65,7 +65,7 @@ Polymer({
   },
 
   setEventData: function(eventData) {
-    this.$.inputData.value = eventData;
+    this.$.inputData.value = eventData || "";
     // this.$.inputDataWrapper.update();
   },
 
@@ -75,7 +75,7 @@ Polymer({
 
   clickFireEvent: function() {
     try {
-      this.api.fire_event(
+      window.hass.eventActions.fire(
         this.$.inputType.value,
         this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
       this.$.dialog.close();
