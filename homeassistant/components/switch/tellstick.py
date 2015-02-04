@@ -1,18 +1,24 @@
 """ Support for Tellstick switches. """
 import logging
 
-from homeassistant.helpers import ToggleDevice
-from homeassistant.const import ATTR_FRIENDLY_NAME
 
-try:
-    import tellcore.constants as tc_constants
-except ImportError:
-    # Don't care for now. Warning will come when get_switches is called.
-    pass
+from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.helpers import ToggleDevice
+import tellcore.constants as tellcore_constants
 
 
 def get_devices(hass, config):
     """ Find and return Tellstick switches. """
+    return get_switches()
+
+
+def devices_discovered(hass, config, info):
+    """ Called when a device is discovered. """
+    return get_switches()
+
+
+def get_switches():
+    """ Returns the Wink switches. """
     try:
         import tellcore.telldus as telldus
     except ImportError:
@@ -21,15 +27,21 @@ def get_devices(hass, config):
         return []
 
     core = telldus.TelldusCore()
-    switches = core.devices()
+    switches_and_lights = core.devices()
 
-    return [TellstickSwitch(switch) for switch in switches]
+    switches = []
+
+    for switch in switches_and_lights:
+        if not switch.methods(tellcore_constants.TELLSTICK_DIM):
+            switches.append(TellstickSwitchDevice(switch))
+
+    return switches
 
 
-class TellstickSwitch(ToggleDevice):
+class TellstickSwitchDevice(ToggleDevice):
     """ represents a Tellstick switch within home assistant. """
-    last_sent_command_mask = (tc_constants.TELLSTICK_TURNON |
-                              tc_constants.TELLSTICK_TURNOFF)
+    last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
+                              tellcore_constants.TELLSTICK_TURNOFF)
 
     def __init__(self, tellstick):
         self.tellstick = tellstick
@@ -51,7 +63,7 @@ class TellstickSwitch(ToggleDevice):
         last_command = self.tellstick.last_sent_command(
             self.last_sent_command_mask)
 
-        return last_command == tc_constants.TELLSTICK_TURNON
+        return last_command == tellcore_constants.TELLSTICK_TURNON
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
