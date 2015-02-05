@@ -9,16 +9,6 @@ import tellcore.constants as tellcore_constants
 
 def get_devices(hass, config):
     """ Find and return Tellstick switches. """
-    return get_switches()
-
-
-def devices_discovered(hass, config, info):
-    """ Called when a device is discovered. """
-    return get_switches()
-
-
-def get_switches():
-    """ Returns the Wink switches. """
     try:
         import tellcore.telldus as telldus
     except ImportError:

@@ -90,5 +90,5 @@ class TellstickLight(ToggleDevice):
               last_command == tellcore_constants.TELLSTICK_UP or
               last_command == tellcore_constants.TELLSTICK_DOWN):
             last_sent_value = self.tellstick.last_sent_value()
-            if not last_sent_value is None:
+            if last_sent_value is not None:
                 self.brightness = last_sent_value
