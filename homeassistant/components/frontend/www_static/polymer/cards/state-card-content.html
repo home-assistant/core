@@ -22,6 +22,8 @@ Polymer({
       this.$.card.removeChild(this.$.card.lastChild);
     }
 
+    if (!this.stateObj.cardType) return;
+
     var stateCard = document.createElement("state-card-" + this.stateObj.cardType);
     stateCard.api = this.api;
     stateCard.stateObj = this.stateObj;

@@ -1,10 +1,6 @@
 <link rel="import" href="./bower_components/paper-toast/paper-toast.html">
 
-<link rel="import" href="./dialogs/event-fire-dialog.html">
-<link rel="import" href="./dialogs/service-call-dialog.html">
-<link rel="import" href="./dialogs/state-set-dialog.html">
 <link rel="import" href="./dialogs/more-info-dialog.html">
-<link rel="import" href="./dialogs/history-dialog.html">
 
 <script src="./home-assistant-js/dist/homeassistant.min.js"></script>
 
@@ -21,11 +17,7 @@
 <polymer-element name="home-assistant-api" attributes="auth">
   <template>
     <paper-toast id="toast" role="alert" text=""></paper-toast>
-    <event-fire-dialog id="eventDialog"></event-fire-dialog>
-    <service-call-dialog id="serviceDialog"></service-call-dialog>
-    <state-set-dialog id="stateSetDialog"></state-set-dialog>
     <more-info-dialog id="moreInfoDialog"></more-info-dialog>
-    <history-dialog id="historyDialog"></history-dialog>
   </template>
   <script>
   Polymer({
@@ -36,41 +28,12 @@
 
       var uiActions = window.hass.uiActions = {
         ACTION_SHOW_TOAST: actions.ACTION_SHOW_TOAST,
-        ACTION_SHOW_DIALOG_CALL_SERVICE: 'ACTION_SHOW_DIALOG_CALL_SERVICE',
-        ACTION_SHOW_DIALOG_FIRE_EVENT: 'ACTION_SHOW_DIALOG_FIRE_EVENT',
-        ACTION_SHOW_DIALOG_SET_STATE: 'ACTION_SHOW_DIALOG_SET_STATE',
-        ACTION_SHOW_DIALOG_HISTORY: 'ACTION_SHOW_DIALOG_HISTORY',
         ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
 
         showMoreInfoDialog: function(entityId) {
           dispatcher.dispatch({
             actionType: this.ACTION_SHOW_DIALOG_MORE_INFO,
             entityId: entityId,
-          });
-        },
-
-        showSetStateDialog: function(entityId) {
-          dispatcher.dispatch({
-            actionType: this.ACTION_SHOW_DIALOG_SET_STATE,
-            entityId: entityId
-          });
-        },
-
-        showFireEventDialog: function() {
-          dispatcher.dispatch({
-            actionType: this.ACTION_SHOW_DIALOG_FIRE_EVENT,
-          });
-        },
-
-        showCallServiceDialog: function() {
-          dispatcher.dispatch({
-            actionType: this.ACTION_SHOW_DIALOG_CALL_SERVICE,
-          });
-        },
-
-        showHistoryDialog: function() {
-          dispatcher.dispatch({
-            actionType: this.ACTION_SHOW_DIALOG_HISTORY,
           });
         },
 
@@ -87,35 +50,11 @@
             this.$.toast.show();
             break;
 
-          case uiActions.ACTION_SHOW_DIALOG_HISTORY:
-            this.$.historyDialog.show();
-            break;
-
           case uiActions.ACTION_SHOW_DIALOG_MORE_INFO:
             state = getState(payload.entityId);
 
             this.$.moreInfoDialog.show(state);
             break;
-
-          case uiActions.ACTION_SHOW_DIALOG_SET_STATE:
-            if (payload.entityId) {
-              state = getState(payload.entityId);
-
-              this.$.stateSetDialog.show(
-                state.entity_id, state.state, state.attributes);
-            } else {
-              this.$.stateSetDialog.show("", "");              
-            }
-            break;
-
-          case uiActions.ACTION_SHOW_DIALOG_FIRE_EVENT:
-            this.$.eventDialog.show();
-            break;
-
-          case uiActions.ACTION_SHOW_DIALOG_CALL_SERVICE:
-            this.$.serviceDialog.show();
-            break;
-
         }  
       }.bind(this));
 

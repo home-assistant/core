@@ -4,33 +4,37 @@
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
 <link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
 
-<link rel="import" href="ha-action-dialog.html">
+<link rel="import" href="./partial-base.html">
+
 <link rel="import" href="../components/events-list.html">
 
-<polymer-element name="event-fire-dialog" attributes="api">
+<polymer-element name="partial-dev-fire-event" attributes="narrow togglePanel">
 <template>
 
-  <ha-action-dialog
-    id="dialog"
-    heading="Fire Event"
-    class='two-column'
-    closeSelector='[dismissive]'>
+  <style>
+  .form {
+    padding: 24px;
+  }
+  </style>
 
-    <div layout horizontal>
-      <div class='ha-form'>
+  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
+    <span header-title>Fire Event</span>
+
+    <div layout horizontal?="{{!narrow}}" vertical?="{{narrow}}" class='form' flex>
+      <div class='ha-form'  flex?="{{!narrow}}">
         <paper-input
           id="inputType" label="Event Type" floatingLabel="true"
           autofocus required></paper-input>
         <paper-input-decorator
           label="Event Data (JSON, optional)"
           floatingLabel="true">
-          <!--
+          
           <paper-autogrow-textarea id="inputDataWrapper">
             <textarea id="inputData"></textarea>
           </paper-autogrow-textarea>
-          -->
-          <textarea id="inputData" rows="5"></textarea>
         </paper-input-decorator>
+
+        <paper-button on-click={{clickFireEvent}}>Fire Event</paper-button>
       </div>
 
       <div class='sidebar'>
@@ -39,9 +43,7 @@
       </div>
     </div>
 
-    <paper-button dismissive>Cancel</paper-button>
-    <paper-button affirmative on-click={{clickFireEvent}}>Fire Event</paper-button>
-  </ha-action-dialog>
+  </partial-base>
 
 </template>
 <script>
@@ -51,26 +53,8 @@ Polymer({
     this.eventSelected = this.eventSelected.bind(this);
   },
 
-  show: function(eventType, eventData) {
-    this.setEventType(eventType);
-    this.setEventData(eventData);
-
-    this.job('showDialogAfterRender', function() {
-      this.$.dialog.toggle();
-    }.bind(this));
-  },
-
-  setEventType: function(eventType) {
-    this.$.inputType.value = eventType;
-  },
-
-  setEventData: function(eventData) {
-    this.$.inputData.value = eventData || "";
-    // this.$.inputDataWrapper.update();
-  },
-
   eventSelected: function(eventType) {
-    this.setEventType(eventType);
+    this.$.inputType.value = eventType;
   },
 
   clickFireEvent: function() {
@@ -78,7 +62,6 @@ Polymer({
       window.hass.eventActions.fire(
         this.$.inputType.value,
         this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
-      this.$.dialog.close();
     
     } catch (err) {
       alert("Error parsing JSON: " + err);

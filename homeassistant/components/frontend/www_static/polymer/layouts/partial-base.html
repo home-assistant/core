@@ -1,0 +1,34 @@
+<link rel="import" href="../bower_components/core-scroll-header-panel/core-scroll-header-panel.html">
+<link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<polymer-element name="partial-base" attributes="narrow togglePanel" noscript>
+<template>
+  <core-style ref="ha-headers"></core-style>
+
+  <style>
+    .content {
+      background-color: white;
+    }
+  </style>
+
+  <core-scroll-header-panel fit fixed="{{!narrow}}">
+    <core-toolbar>
+      <paper-icon-button
+        id="navicon" icon="menu" hidden?="{{!narrow}}"
+        on-click="{{togglePanel}}"></paper-icon-button>
+      <div flex>
+        <content select="[header-title]"></content>
+      </div>
+      <content select="[header-buttons]"></content>
+    </core-toolbar>
+
+    <div class='content'>
+      <content></content>
+    </div>
+
+  </core-scroll-header-panel>
+</template>
+</polymer>

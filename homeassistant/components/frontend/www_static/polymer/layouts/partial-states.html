@@ -1,7 +1,17 @@
+<link rel="import" href="./partial-base.html">
+
 <link rel="import" href="../components/state-cards.html">
 
-<polymer-element name="partial-states">
+<polymer-element name="partial-states" attributes="narrow togglePanel filter">
 <template>
+  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
+    <span header-title>States</span>
+
+    <span header-buttons>
+      <paper-icon-button icon="refresh"
+        on-click="{{handleRefreshClick}}"></paper-icon-button>
+    </span>
+
     <state-cards states="{{states}}">
       <h3>Hi there!</h3>
       <p>
@@ -11,7 +21,7 @@
         Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
       </p>
     </state-cards>
-
+  </partial-base>
 </template>
 <script>
   Polymer({
@@ -21,7 +31,7 @@
       this.stateStoreChanged = this.stateStoreChanged.bind(this);
       window.hass.stateStore.addChangeListener(this.stateStoreChanged);
 
-      this.stateStoreChanged();
+      this.refreshStates();
     },
 
     detached: function() {
@@ -29,9 +39,27 @@
     },
 
     stateStoreChanged: function() {
-      this.states = _.filter(window.hass.stateStore.all(), function(state) {
-        return state.domain !== 'group';
-      });
+      this.refreshStates();
+    },
+
+    filterChanged: function() {
+      this.refreshStates();
+    },
+
+    refreshStates: function() {
+      if (this.filter == 'group') {
+        this.states = _.filter(window.hass.stateStore.all(), function(state) {
+          return state.domain === 'group';
+        });
+      } else {
+        this.states = _.filter(window.hass.stateStore.all(), function(state) {
+          return state.domain !== 'group';
+        });
+      }
+    },
+
+    handleRefreshClick: function() {
+      window.hass.syncActions.sync();
     },
   });
 </script>

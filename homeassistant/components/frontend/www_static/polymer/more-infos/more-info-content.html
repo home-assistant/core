@@ -29,6 +29,10 @@ Polymer({
       this.$.moreInfo.removeChild(this.$.moreInfo.lastChild);
     }
 
+    if (!this.stateObj.moreInfoType) {
+      return;
+    }
+
     var moreInfo = document.createElement("more-info-" + this.stateObj.moreInfoType);
     moreInfo.stateObj = this.stateObj;
     this.$.moreInfo.appendChild(moreInfo);

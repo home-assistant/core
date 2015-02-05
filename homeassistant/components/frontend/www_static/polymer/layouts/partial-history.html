@@ -1,0 +1,49 @@
+<link rel="import" href="./partial-base.html">
+
+<link rel="import" href="../components/state-timeline.html">
+
+<polymer-element name="partial-history" attributes="narrow togglePanel">
+<template>
+  <style>
+    state-timeline {
+      background-color: white;
+    }
+  </style>
+  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
+    <span header-title>History</span>
+
+    <span header-buttons>
+      <paper-icon-button icon="refresh"
+        on-click="{{handleRefreshClick}}"></paper-icon-button>
+    </span>
+
+    <state-timeline id='timeline'></state-timeline>
+  </partial-base>
+</template>
+<script>
+  Polymer({
+    ready: function() {
+      this.$.timeline.fetchData();
+
+      // this.stateStoreChanged = this.stateStoreChanged.bind(this);
+      // window.hass.stateStore.addChangeListener(this.stateStoreChanged);
+
+      // this.stateStoreChanged();
+    },
+
+    detached: function() {
+      // window.hass.stateStore.removeChangeListener(this.stateStoreChanged);
+    },
+
+    stateStoreChanged: function() {
+      // this.states = _.filter(window.hass.stateStore.all(), function(state) {
+      //   return state.domain !== 'group';
+      // });
+    },
+
+    handleRefreshClick: function() {
+      this.$.timeline.fetchData();
+    },
+  });
+</script>
+</polymer>

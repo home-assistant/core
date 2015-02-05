@@ -13,10 +13,10 @@
   "dependencies": {
     "webcomponentsjs": "Polymer/webcomponentsjs#~0.5.4",
     "font-roboto": "Polymer/font-roboto#~0.5.4",
-    "core-header-panel": "Polymer/core-header-panel#~0.5.4",
-    "core-toolbar": "Polymer/core-toolbar#~0.5.4",
+    "core-header-panel": "polymer/core-header-panel#~0.5.4",
+    "core-toolbar": "polymer/core-toolbar#~0.5.4",
     "core-tooltip": "Polymer/core-tooltip#~0.5.4",
-    "core-menu": "Polymer/core-menu#~0.5.4",
+    "core-menu": "polymer/core-menu#~0.5.4",
     "core-item": "Polymer/core-item#~0.5.4",
     "core-input": "Polymer/core-input#~0.5.4",
     "core-icons": "polymer/core-icons#~0.5.4",
@@ -35,6 +35,8 @@
     "paper-item": "polymer/paper-item#~0.5.4",
     "paper-slider": "polymer/paper-slider#~0.5.4",
     "color-picker-element": "~0.0.2",
-    "google-apis": "GoogleWebComponents/google-apis#~0.4.2"
+    "google-apis": "GoogleWebComponents/google-apis#~0.4.2",
+    "core-drawer-panel": "polymer/core-drawer-panel#~0.5.4",
+    "core-scroll-header-panel": "polymer/core-scroll-header-panel#~0.5.4"
   }
 }
