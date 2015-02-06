@@ -447,7 +447,7 @@ class State(object):
                 "Invalid entity id encountered: {}. "
                 "Format should be <domain>.<object_id>").format(entity_id))
 
-        self.entity_id = entity_id
+        self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
         self.last_updated = dt.datetime.now()
