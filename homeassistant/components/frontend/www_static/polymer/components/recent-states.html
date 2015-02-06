@@ -37,7 +37,7 @@
       this.recentStates = null;
 
       window.hass.callApi(
-        'GET', 'history/entity/' + this.stateObj.entity_id + '/recent_states').then(
+        'GET', 'history/entity/' + this.stateObj.entityId + '/recent_states').then(
           function(states) {
             this.recentStates = states.slice(1);
           }.bind(this));
