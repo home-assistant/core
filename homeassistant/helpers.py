@@ -21,7 +21,7 @@ def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
         current_ids = hass.states.entity_ids()
 
     return ensure_unique_string(
-        entity_id_format.format(slugify(name)), current_ids)
+        entity_id_format.format(slugify(name.lower())), current_ids)
 
 
 def extract_entity_ids(hass, service):

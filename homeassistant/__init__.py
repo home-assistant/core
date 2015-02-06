@@ -15,8 +15,6 @@ import re
 import datetime as dt
 import functools as ft
 
-from requests.structures import CaseInsensitiveDict
-
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
@@ -510,7 +508,7 @@ class StateMachine(object):
     """ Helper class that tracks the state of different entities. """
 
     def __init__(self, bus):
-        self._states = CaseInsensitiveDict()
+        self._states = {}
         self._bus = bus
         self._lock = threading.Lock()
 
@@ -520,7 +518,7 @@ class StateMachine(object):
             domain_filter = domain_filter.lower()
 
             return [state.entity_id for key, state
-                    in self._states.lower_items()
+                    in self._states.items()
                     if util.split_entity_id(key)[0] == domain_filter]
         else:
             return list(self._states.keys())
@@ -531,7 +529,7 @@ class StateMachine(object):
 
     def get(self, entity_id):
         """ Returns the state of the specified entity. """
-        state = self._states.get(entity_id)
+        state = self._states.get(entity_id.lower())
 
         # Make a copy so people won't mutate the state
         return state.copy() if state else None
@@ -548,6 +546,8 @@ class StateMachine(object):
 
     def is_state(self, entity_id, state):
         """ Returns True if entity exists and is specified state. """
+        entity_id = entity_id.lower()
+
         return (entity_id in self._states and
                 self._states[entity_id].state == state)
 
@@ -555,6 +555,8 @@ class StateMachine(object):
         """ Removes an entity from the state machine.
 
         Returns boolean to indicate if an entity was removed. """
+        entity_id = entity_id.lower()
+
         with self._lock:
             return self._states.pop(entity_id, None) is not None
 
@@ -566,7 +568,7 @@ class StateMachine(object):
         If you just update the attributes and not the state, last changed will
         not be affected.
         """
-
+        entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
 
@@ -581,8 +583,8 @@ class StateMachine(object):
             if not (same_state and same_attr):
                 last_changed = old_state.last_changed if same_state else None
 
-                state = self._states[entity_id] = \
-                    State(entity_id, new_state, attributes, last_changed)
+                state = State(entity_id, new_state, attributes, last_changed)
+                self._states[entity_id] = state
 
                 event_data = {'entity_id': entity_id, 'new_state': state}
 
@@ -612,7 +614,7 @@ class StateMachine(object):
         @ft.wraps(action)
         def state_listener(event):
             """ The listener that listens for specific state changes. """
-            if event.data['entity_id'].lower() in entity_ids and \
+            if event.data['entity_id'] in entity_ids and \
                     'old_state' in event.data and \
                     _matcher(event.data['old_state'].state, from_state) and \
                     _matcher(event.data['new_state'].state, to_state):
