@@ -7,8 +7,12 @@
 <polymer-element name="partial-history" attributes="narrow togglePanel">
 <template>
   <style>
-    state-timeline {
+    .content {
       background-color: white;
+    }
+
+    .content.wide {
+      padding: 8px;
     }
   </style>
   <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
@@ -19,32 +23,37 @@
         on-click="{{handleRefreshClick}}"></paper-icon-button>
     </span>
 
-    <state-timeline id='timeline'></state-timeline>
+    <div flex class="{{ {content: true, narrow: narrow, wide: !narrow} | tokenList }}">
+      <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
+    </div>
   </partial-base>
 </template>
 <script>
   Polymer({
+    stateHistory: null,
+
     ready: function() {
-      this.$.timeline.fetchData();
+      this.stateHistoryStoreChanged = this.stateHistoryStoreChanged.bind(this);
 
-      // this.stateStoreChanged = this.stateStoreChanged.bind(this);
-      // window.hass.stateStore.addChangeListener(this.stateStoreChanged);
+      window.hass.stateHistoryStore.addChangeListener(this.stateHistoryStoreChanged);
 
-      // this.stateStoreChanged();
+      if (window.hass.stateHistoryStore.isStale()) {
+        window.hass.stateHistoryActions.fetchAll();
+      }
+
+      this.stateHistoryStoreChanged();
     },
 
     detached: function() {
-      // window.hass.stateStore.removeChangeListener(this.stateStoreChanged);
+      window.hass.stateHistoryStore.removeChangeListener(this.stateHistoryStoreChanged);
     },
 
-    stateStoreChanged: function() {
-      // this.states = _.filter(window.hass.stateStore.all(), function(state) {
-      //   return state.domain !== 'group';
-      // });
+    stateHistoryStoreChanged: function() {
+      this.stateHistory = window.hass.stateHistoryStore.all();
     },
 
     handleRefreshClick: function() {
-      this.$.timeline.fetchData();
+      window.hass.stateHistoryActions.fetchAll();
     },
   });
 </script>

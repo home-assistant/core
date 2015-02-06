@@ -17,7 +17,7 @@
     <div>
       <state-card-content stateObj="{{stateObj}}" class='title-card'>
       </state-card-content>
-      <state-timeline stateObj="{{stateObj}}"></state-timeline>
+      <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
       <more-info-content stateObj="{{stateObj}}"></more-info-content>
     </div>
   </ha-action-dialog>
@@ -26,9 +26,37 @@
 <script>
 Polymer({
   stateObj: {},
+  stateHistory: null,
 
   observe: {
     'stateObj.attributes': 'reposition'
+  },
+
+  ready: function() {
+    this.stateHistoryStoreChanged = this.stateHistoryStoreChanged.bind(this);
+
+    window.hass.stateHistoryStore.addChangeListener(this.stateHistoryStoreChanged);
+  },
+
+  detached: function() {
+    window.hass.stateHistoryStore.removeChangeListener(this.stateHistoryStoreChanged);
+  },
+
+  stateHistoryStoreChanged: function() {
+    if (this.stateObj.entityId) {
+      this.stateHistory = window.hass.stateHistoryStore.get(this.stateObj.entityId);
+    } else {
+      this.stateHistory = null;
+    }
+  },
+
+  stateObjChanged: function() {
+    if (this.stateObj.entityId &&
+        window.hass.stateHistoryStore.isStale(this.stateObj.entityId)) {
+      window.hass.stateHistoryActions.fetch(this.stateObj.entityId);
+    }
+
+    this.stateHistoryStoreChanged();
   },
 
   /**

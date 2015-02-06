@@ -2,7 +2,7 @@
 
 <link rel="import" href="../bower_components/google-apis/google-jsapi.html">
 
-<polymer-element name="state-timeline" attributes="stateObj api">
+<polymer-element name="state-timeline" attributes="stateHistory">
   <template>
     <style>
     :host {
@@ -17,7 +17,7 @@
   <script>
   Polymer({
     apiLoaded: false,
-    stateData: null,
+    stateHistory: null,
 
     googleApiLoaded: function() {
       google.load("visualization", "1", {
@@ -29,32 +29,12 @@
       });
     },
 
-    stateObjChanged: function(oldVal, newVal) {
-      // update data if we get a new stateObj
-      if (!oldVal || (newVal && oldVal.entity_id === newVal.entity_id)) {
-        this.drawChart();
-      } else {
-        this.fetchData();
-      }
-    },
-
-    fetchData: function() {
-      this.stateData = null;
-
-      var url = 'history/period';
-
-      if (this.stateObj) {
-        url += '?filter_entity_id=' + this.stateObj.entity_id;
-      }
-
-      window.hass.callApi('GET', url).then(function(stateData) {
-          this.stateData = stateData;
-          this.drawChart();
-        }.bind(this));
+    stateHistoryChanged: function() {
+      this.drawChart();
     },
 
     drawChart: function() {
-      if (!this.apiLoaded || this.stateData === null) {
+      if (!this.apiLoaded || !this.stateHistory) {
         return;
       }
 
@@ -82,8 +62,12 @@
           stateTimeToDate(tillState.last_changed)]);
       };
 
-      // this.stateData is a list of lists of sorted state objects
-      this.stateData.forEach(function(stateInfo) {
+      // people can pass in history of 1 entityId or a collection.
+      var stateHistory = _.isArray(this.stateHistory[0]) ?
+                           this.stateHistory : [this.stateHistory];
+
+      // stateHistory is a list of lists of sorted state objects
+      stateHistory.forEach(function(stateInfo) {
         var baseState = new window.hass.stateModel(stateInfo[0]);
 
         var prevRow = null;
@@ -101,20 +85,19 @@
       }.bind(this));
 
       chart.draw(dataTable, {
-        height: 55 + this.stateData.length * 42,
+        height: 55 + stateHistory.length * 42,
 
         // interactive properties require CSS, the JS api puts it on the document
         // instead of inside our Shadow DOM.
         enableInteractivity: false,
 
         timeline: {
-          showRowLabels: this.stateData.length > 1
+          showRowLabels: stateHistory.length > 1
         },
 
         hAxis: {
           format: 'H:mm'
         },
-        // colors: ['#CCC', '#03a9f4']
       });
     },
 
