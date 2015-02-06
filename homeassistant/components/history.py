@@ -49,8 +49,22 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
 
     states = recorder.query_states(query, data)
 
-    return [list(group) for _, group in
-            groupby(states, lambda state: state.entity_id)]
+    result = []
+
+    for entity_id, group in groupby(states, lambda state: state.entity_id):
+        # Query the state of the entity ID before `start_time` so the returned
+        # set will cover everything between `start_time` and `end_time`.
+        old_state = list(recorder.query_states(
+            "SELECT * FROM states WHERE entity_id = ? AND last_changed <= ? "
+            "AND last_changed=last_updated ORDER BY last_changed DESC "
+            "LIMIT 0, 1", (entity_id, start_time)))
+
+        if old_state:
+            old_state[0].last_changed = start_time
+
+        result.append(old_state + list(group))
+
+    return result
 
 
 def setup(hass, config):
