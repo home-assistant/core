@@ -1,3 +1,5 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
 <link rel="import" href="../bower_components/core-scroll-header-panel/core-scroll-header-panel.html">
 <link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
@@ -7,12 +9,6 @@
 <polymer-element name="partial-base" attributes="narrow togglePanel" noscript>
 <template>
   <core-style ref="ha-headers"></core-style>
-
-  <style>
-    .content {
-      background-color: white;
-    }
-  </style>
 
   <core-scroll-header-panel fit fixed="{{!narrow}}">
     <core-toolbar>
@@ -25,9 +21,7 @@
       <content select="[header-buttons]"></content>
     </core-toolbar>
 
-    <div class='content'>
-      <content></content>
-    </div>
+    <content></content>
 
   </core-scroll-header-panel>
 </template>

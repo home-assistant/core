@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
 <link rel="import" href="../bower_components/core-input/core-input.html">
@@ -69,7 +70,6 @@
     spinnerMessage: "",
 
     ready: function() {
-      this.syncStore = window.hass.syncStore;
       this.authStore = window.hass.authStore;
 
       this.authChangeListener = this.authChangeListener.bind(this);

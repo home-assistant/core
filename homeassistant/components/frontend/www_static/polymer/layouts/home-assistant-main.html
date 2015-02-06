@@ -1,15 +1,11 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
 <link rel="import" href="../bower_components/core-drawer-panel/core-drawer-panel.html">
 <link rel="import" href="../bower_components/core-header-panel/core-header-panel.html">
 <link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
 <link rel="import" href="../bower_components/core-menu/core-menu.html">
-
 <link rel="import" href="../bower_components/core-style/core-style.html">
-
 <link rel="import" href="../bower_components/core-icon/core-icon.html">
-<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
-<link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
-<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html">
-<link rel="import" href="../bower_components/paper-dropdown/paper-dropdown.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 
 <link rel="import" href="../layouts/partial-states.html">
@@ -18,7 +14,7 @@
 <link rel="import" href="../layouts/partial-dev-call-service.html">
 <link rel="import" href="../layouts/partial-dev-set-state.html">
 
-<polymer-element name="home-assistant-main" attributes="api">
+<polymer-element name="home-assistant-main">
 <template>
   <core-style ref="ha-headers"></core-style>
 
@@ -58,8 +54,8 @@
       border-top: 1px solid #e0e0e0; 
     }
 
-    .seperator ~ paper-item {
-
+    .dev-tools {
+      padding: 0 8px;
     }
   </style>
 
@@ -68,7 +64,7 @@
       <core-toolbar>
         Home Assistant
       </core-toolbar>
-      <core-menu
+      <core-menu id="menu"
         selected="0" excludedLocalNames="div" on-core-select="{{menuSelect}}"
         layout vertical>
         <paper-item data-panel="states">
@@ -92,28 +88,30 @@
         </paper-item>
 
         <div class='seperator'>Developer Tools</div>
-        <paper-item data-panel="call-service">
-          <core-icon icon="settings-remote"></core-icon>
-          Call Service
-        </paper-item>
-        <paper-item data-panel="set-state">
-          <core-icon icon="settings-ethernet"></core-icon>
-          Set State
-        </paper-item>
-        <paper-item data-panel="fire-event">
-          <core-icon icon="settings-input-antenna"></core-icon>
-          Fire Event
-        </paper-item>
+        <div class='dev-tools' layout horizontal justified>
+          <paper-icon-button
+            icon="settings-remote" data-panel='call-service'
+            on-click="{{handleDevClick}}"></paper-icon-button>
+          <paper-icon-button
+            icon="settings-ethernet" data-panel='set-state'
+            on-click="{{handleDevClick}}"></paper-icon-button>
+          <paper-icon-button
+            icon="settings-input-antenna" data-panel='fire-event'
+            on-click="{{handleDevClick}}"></paper-icon-button>
+        </div>
       </core-menu>
     </core-header-panel>
 
-    <template if="{{selected == 'states' || selected == 'group'}}">
-      <partial-states
-        main narrow="{{narrow}}"
-        togglePanel="{{togglePanel}}"
-        filter="{{selected == 'group' ? 'group' : null}}">
-      </partial-states>
-    </template>
+    <!--
+        This is the main partial, never remove it from the DOM but hide it
+        to speed up when people click on states.
+    -->
+    <partial-states hidden?="{{selected != 'states' && selected != 'group'}}"
+      main narrow="{{narrow}}"
+      togglePanel="{{togglePanel}}"
+      filter="{{selected == 'group' ? 'group' : null}}">
+    </partial-states>
+
     <template if="{{selected == 'history'}}">
       <partial-history main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-history>
     </template>
@@ -140,12 +138,21 @@ Polymer({
 
   menuSelect: function(ev, detail, sender) {
     if (detail.isSelected) {
-      var newChoice = detail.item.dataset.panel;
+      this.selectPanel(detail.item);
+    }
+  },
 
-      if(newChoice !== this.selected) {
-        this.togglePanel();
-        this.selected = newChoice;
-      }
+  handleDevClick: function(ev, detail, sender) {
+    this.$.menu.selected = -1;
+    this.selectPanel(ev.target);
+  },
+
+  selectPanel: function(element) {
+    var newChoice = element.dataset.panel;
+
+    if(newChoice !== this.selected) {
+      this.togglePanel();
+      this.selected = newChoice;
     }
   },
 

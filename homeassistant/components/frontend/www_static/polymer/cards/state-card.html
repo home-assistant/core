@@ -2,7 +2,7 @@
 
 <link rel="import" href="state-card-content.html">
 
-<polymer-element name="state-card" attributes="api stateObj" on-click="cardClicked">
+<polymer-element name="state-card" attributes="stateObj" on-click="cardClicked">
 <template>
   <style>
     :host {
@@ -19,7 +19,7 @@
     }
   </style>
 
-  <state-card-content stateObj={{stateObj}} api={{api}}></state-card-content>
+  <state-card-content stateObj={{stateObj}}></state-card-content>
 </template>
 <script>
 Polymer({

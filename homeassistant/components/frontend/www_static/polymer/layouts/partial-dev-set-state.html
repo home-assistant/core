@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
@@ -14,15 +15,16 @@
   <style>
   .form {
     padding: 24px;
+    background-color: white;
   }
   </style>
 
   <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
     <span header-title>Set State</span>
 
-    <div class='form'>
+    <div class='form' fit>
       <div>
-        This dialog will update the representation of the device within Home Assistant.<br />
+        Set the representation of a device within Home Assistant.<br />
         This will not communicate with the actual device.
       </div>
 
@@ -45,7 +47,7 @@
 
         <div class='sidebar'>
           <b>Current entities:</b>
-          <entity-list api={{api}} cbEntityClicked={{entitySelected}}></entity-list>
+          <entity-list cbEntityClicked={{entitySelected}}></entity-list>
         </div>
       </div>
 

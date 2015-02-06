@@ -13,22 +13,35 @@
     }
   </style>
 
-  <div id='card'></div>
+  <div id='cardContainer'></div>
 </template>
 <script>
 Polymer({
-  stateObjChanged: function() {
-    while (this.$.card.lastChild) {
-      this.$.card.removeChild(this.$.card.lastChild);
+  stateObjChanged: function(oldVal, newVal) {
+    var cardContainer = this.$.cardContainer;
+
+    if (!newVal) {
+      if (cardContainer.lastChild) {
+        cardContainer.removeChild(cardContainer.lastChild);
+      }
+      return;
     }
 
-    if (!this.stateObj.cardType) return;
+    if (!oldVal || oldVal.cardType != newVal.cardType) {
+      if (cardContainer.lastChild) {
+        cardContainer.removeChild(cardContainer.lastChild);
+      }
 
-    var stateCard = document.createElement("state-card-" + this.stateObj.cardType);
-    stateCard.api = this.api;
-    stateCard.stateObj = this.stateObj;
-    this.$.card.appendChild(stateCard);    
-  }
+      var stateCard = document.createElement("state-card-" + newVal.cardType);
+      stateCard.stateObj = newVal;
+      cardContainer.appendChild(stateCard);
+
+    } else {
+
+      cardContainer.lastChild.stateObj = newVal;
+
+    }
+  },
 });
 </script>
 </polymer-element>

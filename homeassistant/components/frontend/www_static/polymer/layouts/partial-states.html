@@ -1,14 +1,18 @@
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/state-cards.html">
 
 <polymer-element name="partial-states" attributes="narrow togglePanel filter">
 <template>
+  <core-style ref="ha-animations"></core-style>
+
   <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
-    <span header-title>States</span>
+    <span header-title>{{headerTitle}}</span>
 
     <span header-buttons>
-      <paper-icon-button icon="refresh"
+      <paper-icon-button icon="refresh" class="{{isFetching && 'ha-spin'}}"
         on-click="{{handleRefreshClick}}"></paper-icon-button>
     </span>
 
@@ -25,25 +29,45 @@
 </template>
 <script>
   Polymer({
+    headerTitle: "States",
     states: [],
+    isFetching: false,
 
     ready: function() {
       this.stateStoreChanged = this.stateStoreChanged.bind(this);
       window.hass.stateStore.addChangeListener(this.stateStoreChanged);
+
+      this.syncStoreChanged = this.syncStoreChanged.bind(this);
+      window.hass.syncStore.addChangeListener(this.syncStoreChanged);
 
       this.refreshStates();
     },
 
     detached: function() {
       window.hass.stateStore.removeChangeListener(this.stateStoreChanged);
+      window.hass.syncStore.removeChangeListener(this.syncStoreChanged);
     },
 
     stateStoreChanged: function() {
       this.refreshStates();
     },
 
+    syncStoreChanged: function() {
+      this.isFetching = window.hass.syncStore.isFetching();
+    },
+
     filterChanged: function() {
       this.refreshStates();
+
+      switch (this.filter) {
+        case "group":
+          this.headerTitle = "Groups";
+          break;
+
+        default:
+          this.headerTitle = "States";
+          break;
+      }
     },
 
     refreshStates: function() {

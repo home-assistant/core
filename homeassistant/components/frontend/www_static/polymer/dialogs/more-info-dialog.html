@@ -5,10 +5,9 @@
 <link rel="import" href="../components/state-timeline.html">
 <link rel="import" href="../more-infos/more-info-content.html">
 
-<polymer-element name="more-info-dialog" attributes="api">
+<polymer-element name="more-info-dialog">
 <template>
   <ha-action-dialog id="dialog">
-
     <style>
     .title-card {
       margin-bottom: 24px;
@@ -21,9 +20,6 @@
       <state-timeline stateObj="{{stateObj}}"></state-timeline>
       <more-info-content stateObj="{{stateObj}}"></more-info-content>
     </div>
-
-<!--     <paper-button dismissive on-click={{editClicked}}>Debug</paper-button>
-    <paper-button affirmative>Dismiss</paper-button> -->
   </ha-action-dialog>
 
 </template>
@@ -54,10 +50,6 @@ Polymer({
       this.$.dialog.toggle();
     }.bind(this));
   },
-
-  editClicked: function(ev) {
-    window.hass.uiActions.showSetStateDialog(this.stateObj.entity_id);
-  }
 
 });
 </script>

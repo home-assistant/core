@@ -14,7 +14,7 @@
     }
   </style>
 
-  <div id='moreInfo' class='{{classNames}}'></div>
+  <div id='moreInfoContainer' class='{{classNames}}'></div>
 </template>
 <script>
 Polymer({
@@ -24,18 +24,30 @@ Polymer({
     'stateObj.attributes': 'stateAttributesChanged',
   },
 
-  stateObjChanged: function() {
-    while (this.$.moreInfo.lastChild) {
-      this.$.moreInfo.removeChild(this.$.moreInfo.lastChild);
-    }
+  stateObjChanged: function(oldVal, newVal) {
+    var moreInfoContainer = this.$.moreInfoContainer;
 
-    if (!this.stateObj.moreInfoType) {
+    if (!newVal) {
+      if (moreInfoContainer.lastChild) {
+        moreInfoContainer.removeChild(moreInfoContainer.lastChild);
+      }
       return;
     }
 
-    var moreInfo = document.createElement("more-info-" + this.stateObj.moreInfoType);
-    moreInfo.stateObj = this.stateObj;
-    this.$.moreInfo.appendChild(moreInfo);
+    if (!oldVal || oldVal.moreInfoType != newVal.moreInfoType) {
+      if (moreInfoContainer.lastChild) {
+        moreInfoContainer.removeChild(moreInfoContainer.lastChild);
+      }
+
+      var moreInfo = document.createElement("more-info-" + newVal.moreInfoType);
+      moreInfo.stateObj = newVal;
+      moreInfoContainer.appendChild(moreInfo);
+
+    } else {
+
+      moreInfoContainer.lastChild.stateObj = newVal;
+
+    }
   },
 
   stateAttributesChanged: function(oldVal, newVal) {

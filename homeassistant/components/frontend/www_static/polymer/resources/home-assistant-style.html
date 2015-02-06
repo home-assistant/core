@@ -1,91 +1,113 @@
-<link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/core-style/core-style.html">
 
-<polymer-element name="home-assistant-style" noscript>
-  <template>
-    <core-style id="ha-headers">
-      core-scroll-header-panel, core-header-panel {
-        background-color: #E5E5E5;
-      }
+<core-style id='ha-animations'>
+  @-webkit-keyframes ha-spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(359deg);
+      transform: rotate(359deg);
+    }
+  }
+  @keyframes ha-spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(359deg);
+      transform: rotate(359deg);
+    }
+  }
 
-      core-toolbar {
-        background: #03a9f4;
-        color: white;
-        font-weight: normal;
-      }    
-    </core-style>
+  .ha-spin {
+    -webkit-animation: ha-spin 2s infinite linear;
+    animation: ha-spin 2s infinite linear;
+  }
+</core-style>
+<core-style id="ha-headers">
+  core-scroll-header-panel, core-header-panel {
+    background-color: #E5E5E5;
+  }
 
-    <core-style id="ha-dialog">
-      :host {
-        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+  core-toolbar {
+    background: #03a9f4;
+    color: white;
+    font-weight: normal;
+  }
+</core-style>
 
-        min-width: 350px;
-        max-width: 700px;
+<core-style id="ha-dialog">
+  :host {
+    font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
 
-        /* First two are from core-transition-bottom */
-        transition:
-          transform 0.2s ease-in-out,
-          opacity 0.2s ease-in,
-          top .3s,
-          left .3s !important;
-      }
+    min-width: 350px;
+    max-width: 700px;
 
-      :host .sidebar {
-        margin-left: 30px;
-      }
+    /* First two are from core-transition-bottom */
+    transition:
+      transform 0.2s ease-in-out,
+      opacity 0.2s ease-in,
+      top .3s,
+      left .3s !important;
+  }
 
-      @media all and (max-width: 620px) {
-        :host.two-column {
-          margin: 0;
-          width: 100%;
-          max-height: calc(100% - 64px);
-          bottom: 0px;
-          left: 0px;
-          right: 0px;
-        }
+  :host .sidebar {
+    margin-left: 30px;
+  }
 
-        :host .sidebar {
-          display: none;
-        }
-      }
+  @media all and (max-width: 620px) {
+    :host.two-column {
+      margin: 0;
+      width: 100%;
+      max-height: calc(100% - 64px);
+      bottom: 0px;
+      left: 0px;
+      right: 0px;
+    }
 
-      @media all and (max-width: 464px) {
-        :host {
-          margin: 0;
-          width: 100%;
-          max-height: calc(100% - 64px);
-          bottom: 0px;
-          left: 0px;
-          right: 0px;
-        }
-      }
+    :host .sidebar {
+      display: none;
+    }
+  }
 
-      html /deep/ .ha-form paper-input {
-        display: block;
-      }
+  @media all and (max-width: 464px) {
+    :host {
+      margin: 0;
+      width: 100%;
+      max-height: calc(100% - 64px);
+      bottom: 0px;
+      left: 0px;
+      right: 0px;
+    }
+  }
 
-      html /deep/ .ha-form paper-input:first-child {
-        padding-top: 0;
-      }
-    </core-style>
+  html /deep/ .ha-form paper-input {
+    display: block;
+  }
 
-    <core-style id='ha-key-value-table'>
-      .data-entry {
-        margin-bottom: 8px;
-      }
+  html /deep/ .ha-form paper-input:first-child {
+    padding-top: 0;
+  }
+</core-style>
 
-      .data-entry:last-child {
-        margin-bottom: 0;
-      }
+<core-style id='ha-key-value-table'>
+  .data-entry {
+    margin-bottom: 8px;
+  }
 
-      .data-entry .key {
-        margin-right: 8px;
-      }
+  .data-entry:last-child {
+    margin-bottom: 0;
+  }
 
-      .data-entry .value {
-        text-align: right;
-        word-break: break-all;
-      }    
-    </core-style>
-  </template>
-</polymer-element>
+  .data-entry .key {
+    margin-right: 8px;
+  }
+
+  .data-entry .value {
+    text-align: right;
+    word-break: break-all;
+  }
+</core-style>

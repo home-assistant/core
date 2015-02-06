@@ -3,6 +3,8 @@ if [ ${PWD##*/} == "scripts" ]; then
     cd ..
 fi
 
+scripts/build_js
+
 # To build the frontend, you need node, bower and vulcanize
 # npm install -g bower vulcanize
 

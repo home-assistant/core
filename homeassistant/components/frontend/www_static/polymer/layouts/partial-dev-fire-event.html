@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
@@ -14,35 +15,41 @@
   <style>
   .form {
     padding: 24px;
+    background-color: white;
   }
   </style>
 
   <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
     <span header-title>Fire Event</span>
 
-    <div layout horizontal?="{{!narrow}}" vertical?="{{narrow}}" class='form' flex>
-      <div class='ha-form'  flex?="{{!narrow}}">
-        <paper-input
-          id="inputType" label="Event Type" floatingLabel="true"
-          autofocus required></paper-input>
-        <paper-input-decorator
-          label="Event Data (JSON, optional)"
-          floatingLabel="true">
-          
-          <paper-autogrow-textarea id="inputDataWrapper">
-            <textarea id="inputData"></textarea>
-          </paper-autogrow-textarea>
-        </paper-input-decorator>
+    <div class='form' fit>
+      <p>
+        Fire an event on the event bus.
+      </p>
 
-        <paper-button on-click={{clickFireEvent}}>Fire Event</paper-button>
-      </div>
+      <div layout horizontal?="{{!narrow}}" vertical?="{{narrow}}">
+        <div class='ha-form'  flex?="{{!narrow}}">
+          <paper-input
+            id="inputType" label="Event Type" floatingLabel="true"
+            autofocus required></paper-input>
+          <paper-input-decorator
+            label="Event Data (JSON, optional)"
+            floatingLabel="true">
 
-      <div class='sidebar'>
-        <b>Available events:</b>
-        <events-list api={{api}} cbEventClicked={{eventSelected}}></event-list>        
+            <paper-autogrow-textarea id="inputDataWrapper">
+              <textarea id="inputData"></textarea>
+            </paper-autogrow-textarea>
+          </paper-input-decorator>
+
+          <paper-button on-click={{clickFireEvent}}>Fire Event</paper-button>
+        </div>
+
+        <div class='sidebar'>
+          <b>Available events:</b>
+          <events-list cbEventClicked={{eventSelected}}></event-list>
+        </div>
       </div>
     </div>
-
   </partial-base>
 
 </template>
