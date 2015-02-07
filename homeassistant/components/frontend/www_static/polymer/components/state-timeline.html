@@ -68,6 +68,8 @@
 
       // stateHistory is a list of lists of sorted state objects
       stateHistory.forEach(function(stateInfo) {
+        if(stateInfo.length === 0) return;
+
         var baseState = new window.hass.stateModel(stateInfo[0]);
 
         var prevRow = null;
