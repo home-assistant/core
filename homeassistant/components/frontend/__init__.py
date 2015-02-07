@@ -51,7 +51,9 @@ def setup(hass, config):
 def _handle_get_root(handler, path_match, data):
     """ Renders the debug interface. """
 
-    write = lambda txt: handler.wfile.write((txt + "\n").encode("UTF-8"))
+    def write(txt):
+        """ Helper to write text to the output. """
+        handler.wfile.write((txt + "\n").encode("UTF-8"))
 
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/html; charset=utf-8')

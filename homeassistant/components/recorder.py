@@ -78,6 +78,8 @@ def row_to_event(row):
 
 
 def run_information(point_in_time=None):
+    """ Returns information about current run or the run that
+        covers point_in_time. """
     _verify_instance()
 
     if point_in_time is None:
@@ -131,6 +133,8 @@ class RecorderRun(object):
 
     @property
     def where_after_start_run(self):
+        """ Returns SQL WHERE clause to select rows
+            created after the start of the run. """
         return "created >= {} ".format(_adapt_datetime(self.start))
 
     @property
