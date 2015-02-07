@@ -42,18 +42,18 @@ def query(sql_query, arguments=None):
 
 def query_states(state_query, arguments=None):
     """ Query the database and return a list of states. """
-    return (
+    return [
         row for row in
         (row_to_state(row) for row in query(state_query, arguments))
-        if row is not None)
+        if row is not None]
 
 
 def query_events(event_query, arguments=None):
     """ Query the database and return a list of states. """
-    return (
+    return [
         row for row in
         (row_to_event(row) for row in query(event_query, arguments))
-        if row is not None)
+        if row is not None]
 
 
 def row_to_state(row):
@@ -77,26 +77,17 @@ def row_to_event(row):
         return None
 
 
-def limit_to_run(point_in_time=None):
-    """
-    Returns a WHERE partial that will limit query to a run.
-    A run starts when Home Assistant starts and ends when it stops.
-    """
+def run_information(point_in_time=None):
     _verify_instance()
 
-    # Targetting current run
     if point_in_time is None:
-        return "created >= {} ".format(
-            _adapt_datetime(_INSTANCE.recording_start))
+        return RecorderRun()
 
-    raise NotImplementedError()
+    run = _INSTANCE.query(
+        "SELECT * FROM recorder_runs WHERE start>? AND END IS NULL OR END<?",
+        (point_in_time, point_in_time), return_value=RETURN_ONE_ROW)
 
-
-def recording_start():
-    """ Return when the recorder started. """
-    _verify_instance()
-
-    return _INSTANCE.recording_start
+    return RecorderRun(run) if run else None
 
 
 def setup(hass, config):
@@ -107,6 +98,50 @@ def setup(hass, config):
     _INSTANCE = Recorder(hass)
 
     return True
+
+
+class RecorderRun(object):
+    """ Represents a recorder run. """
+    def __init__(self, row=None):
+        if row is None:
+            self.start = _INSTANCE.recording_start
+            self.end = None
+            self.closed_incorrect = False
+        else:
+            self.start = datetime.fromtimestamp(row[1])
+            self.end = datetime.fromtimestamp(row[2])
+            self.closed_incorrect = bool(row[3])
+
+    def entity_ids(self, point_in_time=None):
+        """
+        Return the entity ids that existed in this run.
+        Specify point_in_time if you want to know which existed at that point
+        in time inside the run.
+        """
+        where = self.where_after_start_run
+        where_data = []
+
+        if point_in_time is not None or self.end is not None:
+            where += "AND created < ? "
+            where_data.append(point_in_time or self.end)
+
+        return [row[0] for row in query(
+            "SELECT entity_id FROM states WHERE {}"
+            "GROUP BY entity_id".format(where), where_data)]
+
+    @property
+    def where_after_start_run(self):
+        return "created >= {} ".format(_adapt_datetime(self.start))
+
+    @property
+    def where_limit_to_run(self):
+        """ Return a SQL WHERE clause to limit results to this run. """
+        where = self.where_after_start_run
+
+        if self.end is not None:
+            where += "AND created < {} ".format(_adapt_datetime(self.end))
+
+        return where
 
 
 class Recorder(threading.Thread):
