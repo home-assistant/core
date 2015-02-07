@@ -267,7 +267,7 @@ class JSONEncoder(json.JSONEncoder):
             # If the JSON serializer couldn't serialize it
             # it might be a generator, convert it to a list
             try:
-                return [json.JSONEncoder.default(self, child_obj)
+                return [self.default(child_obj)
                         for child_obj in obj]
             except TypeError:
                 # Ok, we're lost, cause the original error
