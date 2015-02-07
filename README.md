@@ -17,7 +17,7 @@ It offers the following functionality through built-in components:
  * Turn off all lights and devices when everybody leaves the house
  * Offers web interface to monitor and control Home Assistant
  * Offers a [REST API](#API) for easy integration with other projects ([see related projects for Android and Ruby support](#related_projects))
- * [Ability to have multiple instances of Home Assistant work together](#connected_instances)
+ * [Ability to have multiple instances of Home Assistant work together](https://home-assistant.io/developers/architecture.html)
 
 Home Assistant also includes functionality for controlling HTPCs:
 
