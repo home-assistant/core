@@ -4,7 +4,7 @@
   <title><![CDATA[Category: component | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/component/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-02-03T23:38:57-08:00</updated>
+  <updated>2015-02-08T09:04:38-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,55 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Looking at the past]]></title>
+    <link href="https://home-assistant.io/blog/2015/02/08/looking-at-the-past/"/>
+    <updated>2015-02-08T09:01:23-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/02/08/looking-at-the-past</id>
+    <content type="html"><![CDATA[<p>Ever since the launch of Home Assistant you have been able to track the state of your house. But the view has always been limited to what the current state is. Not what it was. Today we are going to change that by introducing two brand new components:</p>
+
+<ul>
+<li>Recorder component that will record every event to a SQLite database</li>
+<li>History component that will query and aggregate the recorded events</li>
+</ul>
+
+
+<p>By adding this view into the past, we are adding an extra dimension into the state of your house. This brings great new possibilities for future features. The focus of todays release is on getting the recording component to you to start recording and getting some data. To show what is being recorded a view has been added that shows the last 24 hours of your house. Expect more extensive tools to explore your history in the future.</p>
+
+<p>Adding history to the UI was a challenge on itself because the old UI did not support easy navigation. So to add to the awesomeness of this release, Home Assistant also got a face lift.</p>
+
+<p>The history component will be enabled for new users by default. For current users, run <code>scripts/update</code> to upgrade to the latest version and add <code>[history]</code> to your <code>home-assistant.conf</code> file.</p>
+
+<p class='img'>
+  <a href='/images/screenshots/component_history_24h.png'>
+    <img src='/images/screenshots/component_history_24h.png' />
+  </a>
+</p>
+
+
+
+
+<p class='note'>
+Events are saved in a local database. Google Graphs is used to draw the graph. Drawing is happening 100% in your browser - no data is transfered to anyone at any time.
+</p>
+
+
+
+
+<!--more-->
+
+
+<p>Tracking history is an exciting next step for Home Assistant and will power the next generation of features. Here a list of some of the cool things that can now be build:</p>
+
+<ul>
+<li>Time Machine: explore the state of your house at any point in the past</li>
+<li>Smart Home: analyze behavior and use it to automate your house</li>
+<li>Summarize usage of the different components of your house</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Nest in the house!]]></title>

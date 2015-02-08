@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Category: component - Home Assistant</title>
+    <title>Looking at the past - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Category: component">
+    <meta name="description" content="Introducing history tracking for Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Category: component">
+    <meta property="og:title" content="Looking at the past">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/categories/component/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/02/08/looking-at-the-past/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Category: component">
+    <meta property="og:description" content="Introducing history tracking for Home Assistant.">
     
     
     
@@ -84,39 +84,34 @@
         <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
-          <article class="page">
-
-  
+          <article class="post">
   <header>
-    <h1 class="title indent">
-      Category: Component
-    </h1>
-  </header>
-  <hr class="divider">
+  
+  <h1 class="title indent">Looking at the past</h1>
   
 
-  <div id="archive-list">
   
-  
-  
+  <div class="meta clearfix">
     
-    <h2>2015</h2>
+
+
+
+
+
+
+
+
   
-    <article>
-      
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-02-08T09:01:23-08:00" pubdate>
-      <span class='month'>Feb</span> <span class='day'>08</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/02/08/looking-at-the-past/">Looking at the past</a></h1>
+<time datetime="2015-02-08T09:01:23-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> February 8, 2015</time>
     
-    <footer class="meta">
-      
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> 1 minute reading time</span>
+    
 
   <span>
     <i class="icon-tags"></i>
@@ -129,129 +124,69 @@
     </ul>
   </span>
 
-    </footer>
     
-    <hr class="divider">
+      <a class='comments'
+         href="#disqus_thread"
+         >Comments</a>
+    
   </div>
-
-</div>
-    </article>
   
-  
-  
-    <article>
-      
+</header>
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-13T08:29:04-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>13</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/13/nest-in-da-house/">Nest in the house!</a></h1>
-    
-    <footer class="meta">
-      
 
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
 
-    </footer>
-    
-    <hr class="divider">
-  </div>
+  <p>Ever since the launch of Home Assistant you have been able to track the state of your house. But the view has always been limited to what the current state is. Not what it was. Today we are going to change that by introducing two brand new components:</p>
 
-</div>
-    </article>
-  
-  
-  
-    <article>
-      
+<ul>
+<li>Recorder component that will record every event to a SQLite database</li>
+<li>History component that will query and aggregate the recorded events</li>
+</ul>
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-11T21:49:08-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>11</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/">Bootstrapping your setup with Discovery</a></h1>
-    
-    <footer class="meta">
-      
+<p>By adding this view into the past, we are adding an extra dimension into the state of your house. This brings great new possibilities for future features. The focus of todays release is on getting the recording component to you to start recording and getting some data. To show what is being recorded a view has been added that shows the last 24 hours of your house. Expect more extensive tools to explore your history in the future.</p>
 
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
+<p>Adding history to the UI was a challenge on itself because the old UI did not support easy navigation. So to add to the awesomeness of this release, Home Assistant also got a face lift.</p>
 
-    </footer>
-    
-    <hr class="divider">
-  </div>
+<p>The history component will be enabled for new users by default. For current users, run <code>scripts/update</code> to upgrade to the latest version and add <code>[history]</code> to your <code>home-assistant.conf</code> file.</p>
 
-</div>
-    </article>
-  
-  
-  
-    <article>
-      
+<p class='img'>
+  <a href='/images/screenshots/component_history_24h.png'>
+    <img src='/images/screenshots/component_history_24h.png' />
+  </a>
+</p>
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-04T13:29:07-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>04</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/">Hello PushBullet, nice talking to you</a></h1>
-    
-    <footer class="meta">
-      
 
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
 
-    </footer>
-    
-    <hr class="divider">
-  </div>
+<p class='note'>
+Events are saved in a local database. Google Graphs is used to draw the graph. Drawing is happening 100% in your browser - no data is transfered to anyone at any time.
+</p>
 
-</div>
-    </article>
-  
-</div>
+
+
+
+<a name="read-more"></a>
+
+
+<p>Tracking history is an exciting next step for Home Assistant and will power the next generation of features. Here a list of some of the cool things that can now be build:</p>
+
+<ul>
+<li>Time Machine: explore the state of your house at any point in the past</li>
+<li>Smart Home: analyze behavior and use it to automate your house</li>
+<li>Summarize usage of the different components of your house</li>
+</ul>
+
 
 
 </article>
+
+ 
+<section id="disqus">
+  <h3 class="indent title">Comments</h3>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
 
 
         </div>
@@ -268,15 +203,15 @@
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/categories/component/index.html"
-     data-counturl="https://home-assistant.io/blog/categories/component/index.html" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/02/08/looking-at-the-past/"
+     data-counturl="https://home-assistant.io/blog/2015/02/08/looking-at-the-past/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/categories/component/index.html"
+         data-href="https://home-assistant.io/blog/2015/02/08/looking-at-the-past/"
          data-layout="button_count">
     </div>
   
@@ -307,10 +242,6 @@
   <h1 class="title delta">Other Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2015/02/08/looking-at-the-past/">Looking at the past</a>
-        </li>
       
     
       
@@ -383,7 +314,10 @@
   var disqus_shortname = 'home-assistant';
   
     
-    var disqus_script = 'count.js';
+    // var disqus_developer = 1;
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/02/08/looking-at-the-past/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/02/08/looking-at-the-past/';
+    var disqus_script = 'embed.js';
   
   (function () {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
