@@ -75,10 +75,13 @@
           <core-icon icon="homeassistant-24:group"></core-icon>
           Groups
         </paper-item>
-        <paper-item data-panel="history">
-          <core-icon icon="assessment"></core-icon>
-          History
-        </paper-item>
+
+        <template if="{{hasHistoryComponent}}">
+          <paper-item data-panel="history">
+            <core-icon icon="assessment"></core-icon>
+            History
+          </paper-item>
+        </template>
 
         <div flex></div>
 
@@ -131,9 +134,23 @@
 Polymer({
   selected: "states",
   narrow: false,
+  hasHistoryComponent: false,
 
   ready: function() {
     this.togglePanel = this.togglePanel.bind(this);
+    this.componentStoreChanged = this.componentStoreChanged.bind(this);
+
+    window.hass.componentStore.addChangeListener(this.componentStoreChanged);
+
+    this.componentStoreChanged();
+  },
+
+  detached: function() {
+    window.hass.componentStore.removeChangeListener(this.componentStoreChanged);
+  },
+
+  componentStoreChanged: function() {
+    this.hasHistoryComponent = window.hass.componentStore.isLoaded('history');
   },
 
   menuSelect: function(ev, detail, sender) {
