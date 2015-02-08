@@ -11,8 +11,11 @@
 
   // Register some polymer filters
   PolymerExpressions.prototype.relativeHATime = function(timeString) {
-    return window.hass.util.relativeTime(timeString);
+    if (!timeString) return;
+
+    return moment(window.hass.util.parseDateTime(timeString)).fromNow();
   };
+
   PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
     return (timeString || "").split(' ')[0];
   };

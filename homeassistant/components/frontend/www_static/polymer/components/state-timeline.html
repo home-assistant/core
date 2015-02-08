@@ -47,43 +47,45 @@
       dataTable.addColumn({ type: 'date', id: 'Start' });
       dataTable.addColumn({ type: 'date', id: 'End' });
 
-      var stateTimeToDate = function(time) {
-        if (!time) return new Date();
-
-        return window.hass.util.parseTime(time).toDate();
+      var addRow = function(entityDisplay, stateStr, start, end) {
+        dataTable.addRow([entityDisplay, stateStr, start, end]);
       };
 
-      var addRow = function(baseState, state, tillState) {
-        tillState = tillState || {};
-
-        dataTable.addRow([
-          baseState.entityDisplay, state.state,
-          stateTimeToDate(state.last_changed),
-          stateTimeToDate(tillState.last_changed)]);
-      };
+      if (this.stateHistory.length === 0) {
+        return;
+      }
 
       // people can pass in history of 1 entityId or a collection.
-      var stateHistory = _.isArray(this.stateHistory[0]) ?
-                           this.stateHistory : [this.stateHistory];
+
+      var stateHistory;
+      if (_.isArray(this.stateHistory[0])) {
+        stateHistory = this.stateHistory;
+      } else {
+        stateHistory = [this.stateHistory];
+      }
 
       // stateHistory is a list of lists of sorted state objects
       stateHistory.forEach(function(stateInfo) {
         if(stateInfo.length === 0) return;
 
-        var baseState = new window.hass.stateModel(stateInfo[0]);
-
-        var prevRow = null;
+        var entityDisplay = stateInfo[0].entityDisplay;
+        var newLastChanged, prevState = null, prevLastChanged = null;
 
         stateInfo.forEach(function(state) {
-          if (prevRow !== null && state.state !== prevRow.state) {
-            addRow(baseState, prevRow, state);
-            prevRow = state;
-          } else if (prevRow === null) {
-            prevRow = state;
+          if (prevState !== null && state.state !== prevState) {
+            newLastChanged = state.lastChangedAsDate;
+
+            addRow(entityDisplay, prevState, prevLastChanged, newLastChanged);
+
+            prevState = state.state;
+            prevLastChanged = newLastChanged;
+          } else if (prevState === null) {
+            prevState = state.state;
+            prevLastChanged = state.lastChangedAsDate;
           }
         });
 
-        addRow(baseState, prevRow, null);
+        addRow(entityDisplay, prevState, prevLastChanged, new Date());
       }.bind(this));
 
       chart.draw(dataTable, {
