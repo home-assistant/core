@@ -16,7 +16,7 @@ It offers the following functionality through built-in components:
  * Turn on lights slowly during sun set to compensate for light loss
  * Turn off all lights and devices when everybody leaves the house
  * Offers web interface to monitor and control Home Assistant
- * Offers a [REST API](#API) for easy integration with other projects ([see related projects for Android and Ruby support](#related_projects))
+ * Offers a [REST API](https://home-assistant.io/developers/api.html) for easy integration with other projects ([see related projects for Android and Ruby support](#related_projects))
  * [Ability to have multiple instances of Home Assistant work together](https://home-assistant.io/developers/architecture.html)
 
 Home Assistant also includes functionality for controlling HTPCs:
@@ -27,7 +27,7 @@ Home Assistant also includes functionality for controlling HTPCs:
 
 [![screenshot-states](https://raw.github.com/balloob/home-assistant/master/docs/screenshots.png)](https://home-assistant.io/demo/)
 
-The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](#architecture) and the [section on customizing](#customizing).
+The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](https://home-assistant.io/developers/architecture.html) and the [section on creating your own components](https://home-assistant.io/developers/creating_components.html).
 
 If you run into issues while using Home Assistant or during development of a component, reach out to the [Home Assistant developer community](https://groups.google.com/forum/#!forum/home-assistant-dev).
 
