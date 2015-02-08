@@ -1,0 +1,110 @@
+<link rel="import" href="./bower_components/paper-toast/paper-toast.html">
+
+<link rel="import" href="./dialogs/more-info-dialog.html">
+
+<script src="./home-assistant-js/dist/homeassistant.min.js"></script>
+<script src="./bower_components/moment/moment.js"></script>
+
+<script>
+  var DOMAINS_WITH_CARD = ['thermostat', 'configurator'];
+  var DOMAINS_WITH_MORE_INFO = ['light', 'group', 'sun', 'configurator'];
+
+  // Register some polymer filters
+  PolymerExpressions.prototype.relativeHATime = function(timeString) {
+    if (!timeString) return;
+
+    return moment(window.hass.util.parseDateTime(timeString)).fromNow();
+  };
+
+  PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
+    return (timeString || "").split(' ')[0];
+  };
+
+  // Add some frontend specific helpers to the models
+  Object.defineProperties(window.hass.stateModel.prototype, {
+    // how to render the card for this state
+    cardType: {
+      get: function() {
+        if(DOMAINS_WITH_CARD.indexOf(this.domain) !== -1) {
+          return this.domain;
+        } else if(this.canToggle) {
+          return "toggle";
+        } else {
+          return "display";
+        }
+      }
+    },
+
+    // how to render the more info of this state
+    moreInfoType: {
+      get: function() {
+        if(DOMAINS_WITH_MORE_INFO.indexOf(this.domain) !== -1) {
+          return this.domain;
+        } else {
+          return 'default';
+        }
+      }
+    },
+
+    relativeLastChanged: {
+      get: function() {
+        return moment(this.lastChangedAsDate).fromNow();
+      }
+    },
+
+  });
+</script>
+
+<polymer-element name="home-assistant-api" attributes="auth">
+  <template>
+    <paper-toast id="toast" role="alert" text=""></paper-toast>
+    <more-info-dialog id="moreInfoDialog"></more-info-dialog>
+  </template>
+  <script>
+  Polymer({
+    ready: function() {
+      var state,
+          actions = window.hass.actions,
+          dispatcher = window.hass.dispatcher;
+
+      var uiActions = window.hass.uiActions = {
+        ACTION_SHOW_TOAST: actions.ACTION_SHOW_TOAST,
+        ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
+
+        showMoreInfoDialog: function(entityId) {
+          dispatcher.dispatch({
+            actionType: this.ACTION_SHOW_DIALOG_MORE_INFO,
+            entityId: entityId,
+          });
+        },
+
+      };
+
+      var getState = function(entityId) {
+        return window.hass.stateStore.get(entityId);
+      };
+
+      dispatcher.register(function(payload) {
+        switch (payload.actionType) {
+          case actions.ACTION_SHOW_TOAST:
+            this.$.toast.text = payload.message;
+            this.$.toast.show();
+            break;
+
+          case uiActions.ACTION_SHOW_DIALOG_MORE_INFO:
+            state = getState(payload.entityId);
+
+            this.$.moreInfoDialog.show(state);
+            break;
+        }  
+      }.bind(this));
+
+      // if auth was given, tell the backend
+      if(this.auth) {
+        window.hass.authActions.validate(this.auth);
+      }
+    },
+
+  });
+  </script>
+</polymer-element>

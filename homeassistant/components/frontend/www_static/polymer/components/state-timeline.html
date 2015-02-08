@@ -1,0 +1,110 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/google-apis/google-jsapi.html">
+
+<polymer-element name="state-timeline" attributes="stateHistory">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+
+    <google-jsapi on-api-load="{{googleApiLoaded}}"></google-jsapi>
+    <div id="timeline" style='width: 100%; height: auto;'></div>
+
+  </template>
+  <script>
+  Polymer({
+    apiLoaded: false,
+    stateHistory: null,
+
+    googleApiLoaded: function() {
+      google.load("visualization", "1", {
+        packages: ["timeline"],
+        callback: function() {
+          this.apiLoaded = true;
+          this.drawChart();
+        }.bind(this)
+      });
+    },
+
+    stateHistoryChanged: function() {
+      this.drawChart();
+    },
+
+    drawChart: function() {
+      if (!this.apiLoaded || !this.stateHistory) {
+        return;
+      }
+
+      var container = this.$.timeline;
+      var chart = new google.visualization.Timeline(container);
+      var dataTable = new google.visualization.DataTable();
+
+      dataTable.addColumn({ type: 'string', id: 'Entity' });
+      dataTable.addColumn({ type: 'string', id: 'State' });
+      dataTable.addColumn({ type: 'date', id: 'Start' });
+      dataTable.addColumn({ type: 'date', id: 'End' });
+
+      var addRow = function(entityDisplay, stateStr, start, end) {
+        dataTable.addRow([entityDisplay, stateStr, start, end]);
+      };
+
+      if (this.stateHistory.length === 0) {
+        return;
+      }
+
+      // people can pass in history of 1 entityId or a collection.
+
+      var stateHistory;
+      if (_.isArray(this.stateHistory[0])) {
+        stateHistory = this.stateHistory;
+      } else {
+        stateHistory = [this.stateHistory];
+      }
+
+      // stateHistory is a list of lists of sorted state objects
+      stateHistory.forEach(function(stateInfo) {
+        if(stateInfo.length === 0) return;
+
+        var entityDisplay = stateInfo[0].entityDisplay;
+        var newLastChanged, prevState = null, prevLastChanged = null;
+
+        stateInfo.forEach(function(state) {
+          if (prevState !== null && state.state !== prevState) {
+            newLastChanged = state.lastChangedAsDate;
+
+            addRow(entityDisplay, prevState, prevLastChanged, newLastChanged);
+
+            prevState = state.state;
+            prevLastChanged = newLastChanged;
+          } else if (prevState === null) {
+            prevState = state.state;
+            prevLastChanged = state.lastChangedAsDate;
+          }
+        });
+
+        addRow(entityDisplay, prevState, prevLastChanged, new Date());
+      }.bind(this));
+
+      chart.draw(dataTable, {
+        height: 55 + stateHistory.length * 42,
+
+        // interactive properties require CSS, the JS api puts it on the document
+        // instead of inside our Shadow DOM.
+        enableInteractivity: false,
+
+        timeline: {
+          showRowLabels: stateHistory.length > 1
+        },
+
+        hAxis: {
+          format: 'H:mm'
+        },
+      });
+    },
+
+  });
+  </script>
+</polymer-element>

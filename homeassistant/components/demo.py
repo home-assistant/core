@@ -123,7 +123,7 @@ def setup(hass, config):
                                  {'entity_id': switches[1:]}))
 
     # Setup room groups
-    group.setup_group(hass, 'living_room', lights[0:3] + switches[0:1])
+    group.setup_group(hass, 'living room', lights[0:3] + switches[0:1])
     group.setup_group(hass, 'bedroom', [lights[3]] + switches[1:])
 
     # Setup process

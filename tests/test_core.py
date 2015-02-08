@@ -233,18 +233,18 @@ class TestStateMachine(unittest.TestCase):
         """ Test get_entity_ids method. """
         ent_ids = self.states.entity_ids()
         self.assertEqual(2, len(ent_ids))
-        self.assertTrue('light.Bowl' in ent_ids)
-        self.assertTrue('switch.AC' in ent_ids)
+        self.assertTrue('light.bowl' in ent_ids)
+        self.assertTrue('switch.ac' in ent_ids)
 
         ent_ids = self.states.entity_ids('light')
         self.assertEqual(1, len(ent_ids))
-        self.assertTrue('light.Bowl' in ent_ids)
+        self.assertTrue('light.bowl' in ent_ids)
 
     def test_remove(self):
         """ Test remove method. """
-        self.assertTrue('light.Bowl' in self.states.entity_ids())
-        self.assertTrue(self.states.remove('light.Bowl'))
-        self.assertFalse('light.Bowl' in self.states.entity_ids())
+        self.assertTrue('light.bowl' in self.states.entity_ids())
+        self.assertTrue(self.states.remove('light.bowl'))
+        self.assertFalse('light.bowl' in self.states.entity_ids())
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))

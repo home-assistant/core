@@ -18,6 +18,7 @@ import urllib.parse
 import requests
 
 import homeassistant as ha
+import homeassistant.bootstrap as bootstrap
 
 from homeassistant.const import (
     SERVER_PORT, AUTH_HEADER, URL_API, URL_API_STATES, URL_API_STATES_ENTITY,
@@ -110,13 +111,13 @@ class HomeAssistant(ha.HomeAssistant):
         self.bus = EventBus(remote_api, pool)
         self.services = ha.ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus, self.remote_api)
+        self.components = []
 
     def start(self):
         # Ensure a local API exists to connect with remote
         if self.local_api is None:
-            import homeassistant.components.http as http
-
-            http.setup(self)
+            bootstrap.setup_component(self, 'http')
+            bootstrap.setup_component(self, 'api')
 
         ha.Timer(self)
 
@@ -257,10 +258,20 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         """ Converts Home Assistant objects and hands
             other objects to the original method. """
-        if isinstance(obj, ha.State):
+        if isinstance(obj, (ha.State, ha.Event)):
             return obj.as_dict()
 
-        return json.JSONEncoder.default(self, obj)
+        try:
+            return json.JSONEncoder.default(self, obj)
+        except TypeError:
+            # If the JSON serializer couldn't serialize it
+            # it might be a generator, convert it to a list
+            try:
+                return [self.default(child_obj)
+                        for child_obj in obj]
+            except TypeError:
+                # Ok, we're lost, cause the original error
+                return json.JSONEncoder.default(self, obj)
 
 
 def validate_api(api):

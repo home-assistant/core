@@ -10,3 +10,6 @@
 [submodule "homeassistant/external/noop"]
 	path = homeassistant/external/noop
 	url = https://github.com/balloob/noop.git
+[submodule "homeassistant/components/frontend/www_static/polymer/home-assistant-js"]
+	path = homeassistant/components/frontend/www_static/polymer/home-assistant-js
+	url = https://github.com/balloob/home-assistant-js.git

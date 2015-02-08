@@ -1,0 +1,129 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="../bower_components/core-input/core-input.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+
+<polymer-element name="login-form">
+  <template>
+    <style>
+      paper-input {
+        display: block;
+      }
+
+      .login paper-button {
+        margin-left: 242px;
+      }
+
+      .login .interact {
+        height: 125px;
+      }
+
+      #validatebox {
+        text-align: center;
+      }
+
+      .validatemessage {
+        margin-top: 10px;
+      }
+    </style>
+
+    <div layout horizontal center fit class='login' id="splash">
+      <div layout vertical center flex>
+
+        <img src="/static/favicon-192x192.png" />
+        <h1>Home Assistant</h1>
+
+        <a href="#" id="hideKeyboardOnFocus"></a>
+
+        <div class='interact' layout vertical>
+
+          <div id='loginform' hidden?="{{isValidating || isLoggedIn}}">
+            <paper-input-decorator label="Password" id="passwordDecorator">
+              <input is="core-input" type="password" id="passwordInput"
+                     value="{{authToken}}" on-keyup="{{passwordKeyup}}">
+            </paper-input-decorator>
+            <paper-button on-click={{validatePassword}}>Log In</paper-button>
+          </div>
+
+          <div id="validatebox" hidden?="{{!(isValidating || isLoggedIn)}}">
+            <paper-spinner active="true"></paper-spinner><br />
+            <div class="validatemessage">{{spinnerMessage}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </template>
+
+  <script>
+  Polymer({
+    MSG_VALIDATING: "Validating password…",
+    MSG_LOADING_DATA: "Loading data…",
+
+    authToken: "",
+
+    isValidating: false,
+    isLoggedIn: false,
+
+    spinnerMessage: "",
+
+    ready: function() {
+      this.authStore = window.hass.authStore;
+
+      this.authChangeListener = this.authChangeListener.bind(this);
+
+      this.authStore.addChangeListener(this.authChangeListener);
+
+      this.authChangeListener();
+    },
+
+    attached: function() {
+      this.focusPassword();
+    },
+
+    detached: function() {
+      this.authStore.removeChangeListener(this.authChangeListener);
+    },
+
+    authChangeListener: function() {
+      this.isValidating = this.authStore.isValidating();
+      this.isLoggedIn = this.authStore.isLoggedIn();
+      this.spinnerMessage = this.isValidating ? this.MSG_VALIDATING : this.MSG_LOADING_DATA;
+
+      if (this.authStore.wasLastAttemptInvalid()) {
+        this.$.passwordDecorator.error = this.authStore.getLastAttemptMessage();
+        this.$.passwordDecorator.isInvalid = true;
+      }
+
+      if (!(this.isValidating && this.isLoggedIn)) {
+        this.job('focusPasswordBox', this.focusPassword.bind(this));
+      }
+    },
+
+    focusPassword: function() {
+      this.$.passwordInput.focus();
+    },
+
+    passwordKeyup: function(ev) {
+      // validate on enter
+      if(ev.keyCode === 13) {
+        this.validatePassword();
+
+      // clear error after we start typing again
+      } else if(this.$.passwordDecorator.isInvalid) {
+        this.$.passwordDecorator.isInvalid = false;
+      }
+    },
+
+    validatePassword: function() {
+      this.$.hideKeyboardOnFocus.focus();
+
+      window.hass.authActions.validate(this.authToken);
+    },
+
+  });
+  </script>
+</polymer-element>
+

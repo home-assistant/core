@@ -6,6 +6,7 @@ Provides functionality to group devices that can be turned on or off.
 """
 
 import homeassistant as ha
+from homeassistant.helpers import generate_entity_id
 import homeassistant.util as util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF,
@@ -103,9 +104,7 @@ class Group(object):
         self.name = name
         self.user_defined = user_defined
 
-        self.entity_id = util.ensure_unique_string(
-            ENTITY_ID_FORMAT.format(util.slugify(name)),
-            hass.states.entity_ids(DOMAIN))
+        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
         self.tracking = []
         self.group_on, self.group_off = None, None

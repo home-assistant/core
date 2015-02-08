@@ -1,0 +1,84 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="ha-action-dialog.html">
+<link rel="import" href="../cards/state-card-content.html">
+<link rel="import" href="../components/state-timeline.html">
+<link rel="import" href="../more-infos/more-info-content.html">
+
+<polymer-element name="more-info-dialog">
+<template>
+  <ha-action-dialog id="dialog">
+    <style>
+    .title-card {
+      margin-bottom: 24px;
+    }
+    </style>
+
+    <div>
+      <state-card-content stateObj="{{stateObj}}" class='title-card'>
+      </state-card-content>
+      <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
+      <more-info-content stateObj="{{stateObj}}"></more-info-content>
+    </div>
+  </ha-action-dialog>
+
+</template>
+<script>
+Polymer({
+  stateObj: {},
+  stateHistory: null,
+
+  observe: {
+    'stateObj.attributes': 'reposition'
+  },
+
+  ready: function() {
+    this.stateHistoryStoreChanged = this.stateHistoryStoreChanged.bind(this);
+
+    window.hass.stateHistoryStore.addChangeListener(this.stateHistoryStoreChanged);
+  },
+
+  detached: function() {
+    window.hass.stateHistoryStore.removeChangeListener(this.stateHistoryStoreChanged);
+  },
+
+  stateHistoryStoreChanged: function() {
+    if (this.stateObj.entityId) {
+      this.stateHistory = window.hass.stateHistoryStore.get(this.stateObj.entityId);
+    } else {
+      this.stateHistory = null;
+    }
+  },
+
+  stateObjChanged: function() {
+    if (this.stateObj.entityId &&
+        window.hass.stateHistoryStore.isStale(this.stateObj.entityId)) {
+      window.hass.stateHistoryActions.fetch(this.stateObj.entityId);
+    }
+
+    this.stateHistoryStoreChanged();
+  },
+
+  /**
+   * Whenever the attributes change, the more info component can
+   * hide or show elements. We will reposition the dialog.
+   */
+  reposition: function(oldVal, newVal) {
+    // Only resize if already open
+    if(this.$.dialog.opened) {
+      this.job('resizeAfterLayoutChange', function() {
+        this.$.dialog.resizeHandler();
+      }.bind(this), 1000);
+    }
+  },
+
+  show: function(stateObj) {
+    this.stateObj = stateObj;
+    this.job('showDialogAfterRender', function() {
+      this.$.dialog.toggle();
+    }.bind(this));
+  },
+
+});
+</script>
+</polymer-element>

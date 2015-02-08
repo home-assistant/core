@@ -1,0 +1,60 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="./partial-base.html">
+
+<link rel="import" href="../components/state-timeline.html">
+
+<polymer-element name="partial-history" attributes="narrow togglePanel">
+<template>
+  <style>
+    .content {
+      background-color: white;
+    }
+
+    .content.wide {
+      padding: 8px;
+    }
+  </style>
+  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
+    <span header-title>History</span>
+
+    <span header-buttons>
+      <paper-icon-button icon="refresh"
+        on-click="{{handleRefreshClick}}"></paper-icon-button>
+    </span>
+
+    <div flex class="{{ {content: true, narrow: narrow, wide: !narrow} | tokenList }}">
+      <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
+    </div>
+  </partial-base>
+</template>
+<script>
+  Polymer({
+    stateHistory: null,
+
+    ready: function() {
+      this.stateHistoryStoreChanged = this.stateHistoryStoreChanged.bind(this);
+
+      window.hass.stateHistoryStore.addChangeListener(this.stateHistoryStoreChanged);
+
+      if (window.hass.stateHistoryStore.isStale()) {
+        window.hass.stateHistoryActions.fetchAll();
+      }
+
+      this.stateHistoryStoreChanged();
+    },
+
+    detached: function() {
+      window.hass.stateHistoryStore.removeChangeListener(this.stateHistoryStoreChanged);
+    },
+
+    stateHistoryStoreChanged: function() {
+      this.stateHistory = window.hass.stateHistoryStore.all();
+    },
+
+    handleRefreshClick: function() {
+      window.hass.stateHistoryActions.fetchAll();
+    },
+  });
+</script>
+</polymer>

@@ -1,0 +1,41 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../components/state-info.html">
+
+<polymer-element name="state-card-thermostat" attributes="stateObj api">
+<template>
+  <style>
+  .state {
+    margin-left: 16px;
+    text-align: right;
+  }
+
+  .target {
+      text-transform: capitalize;  
+      font-weight: 300;
+      font-size: 1.3rem;
+  }
+
+  .current {
+      color: darkgrey;
+      margin-top: -2px;
+  }
+  </style>
+
+  <div horizontal justified layout> 
+    <state-info stateObj="{{stateObj}}"></state-info>
+    <div class='state'>
+      <div class='target'>
+        {{stateObj.stateDisplay}}
+      </div>
+
+      <div class='current'>
+        Currently: {{stateObj.attributes.current_temperature}} {{stateObj.attributes.unit_of_measurement}}
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+Polymer({});
+</script>
+</polymer-element>
