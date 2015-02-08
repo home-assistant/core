@@ -124,7 +124,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 <p>The api supports the following actions:</p>
 
-<h4>GET /api</h4>
+<h4><a class='title-link' name='get-api' href='#get-api'></a> GET /api</h4>
 
 <p>Returns message if API is up and running.</p>
 
@@ -137,7 +137,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>GET /api/events</h4>
+<h4><a class='title-link' name='get-apievents' href='#get-apievents'></a> GET /api/events</h4>
 
 <p>Returns an array of event objects. Each event object contain event name and listener count.</p>
 
@@ -164,7 +164,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>GET /api/services</h4>
+<h4><a class='title-link' name='get-apiservices' href='#get-apiservices'></a> GET /api/services</h4>
 
 <p>Returns an array of service objects. Each object contains the domain and which services it contains.</p>
 
@@ -201,7 +201,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>GET /api/states</h4>
+<h4><a class='title-link' name='get-apistates' href='#get-apistates'></a> GET /api/states</h4>
 
 <p>Returns an array of state objects. Each state has the following attributes: entity_id, state, last_changed and attributes.</p>
 
@@ -242,7 +242,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>GET /api/states/&lt;entity_id></h4>
+<h4><a class='title-link' name='get-apistatesltentity_id' href='#get-apistatesltentity_id'></a> GET /api/states/&lt;entity_id></h4>
 
 <p>Returns a state object for specified entity_id. Returns 404 if not found.</p>
 
@@ -267,7 +267,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>POST /api/states/&lt;entity_id></h4>
+<h4><a class='title-link' name='post-apistatesltentity_id' href='#post-apistatesltentity_id'></a> POST /api/states/&lt;entity_id></h4>
 
 <p>Updates or creates the current state of an entity.</p>
 
@@ -309,7 +309,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>POST /api/events/&lt;event_type></h4>
+<h4><a class='title-link' name='post-apieventsltevent_type' href='#post-apieventsltevent_type'></a> POST /api/events/&lt;event_type></h4>
 
 <p>Fires an event with event_type</p>
 
@@ -335,7 +335,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>POST /api/services/&lt;domain>/&lt;service></h4>
+<h4><a class='title-link' name='post-apiservicesltdomainltservice' href='#post-apiservicesltdomainltservice'></a> POST /api/services/&lt;domain>/&lt;service></h4>
 
 <p>Calls a service within a specific domain. Will return when the service has been executed or 10 seconds has past, whichever comes first.</p>
 
@@ -396,7 +396,7 @@ The result will include any changed states that changed while the service was be
 </p>
 
 
-<h4>POST /api/event_forwarding</h4>
+<h4><a class='title-link' name='post-apievent_forwarding' href='#post-apievent_forwarding'></a> POST /api/event_forwarding</h4>
 
 <p>Setup event forwarding to another Home Assistant instance.</p>
 
@@ -426,7 +426,7 @@ The result will include any changed states that changed while the service was be
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>DELETE /api/event_forwarding</h4>
+<h4><a class='title-link' name='delete-apievent_forwarding' href='#delete-apievent_forwarding'></a> DELETE /api/event_forwarding</h4>
 
 <p>Cancel event forwarding to another Home Assistant instance.<br></p>
 

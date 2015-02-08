@@ -136,7 +136,7 @@
 <p>We can differentiate between two different types of
 components within Home Assistant.</p>
 
-<h4>Components that interact with an Internet of Things domain</h4>
+<h4><a class='title-link' name='components-that-interact-with-an-internet-of-things-domain' href='#components-that-interact-with-an-internet-of-things-domain'></a> Components that interact with an Internet of Things domain</h4>
 
 <p>These components will track devices within a specific domain and exist of a core part and platform specific logic. These components make their information available via the State Machine and the Event Bus. The component will also register services in the Service Registry to expose control of the devices.</p>
 
@@ -144,7 +144,7 @@ components within Home Assistant.</p>
 
 <p>If you are planning to add support for a new platform, please check out the <a href="/developers/add_new_platform.html">add new platform section</a>.</p>
 
-<h4>Components that respond to events that happen within Home Assistant</h4>
+<h4><a class='title-link' name='components-that-respond-to-events-that-happen-within-home-assistant' href='#components-that-respond-to-events-that-happen-within-home-assistant'></a> Components that respond to events that happen within Home Assistant</h4>
 
 <p>These components provide small pieces of home automation logic or services that do common tasks within your house.</p>
 
@@ -173,7 +173,7 @@ components within Home Assistant.</p>
 
 <p>Another example of a home automation component can be found in <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py"><code>/config/custom_components/example.py</code></a>.</p>
 
-<h3>The full picture</h3>
+<h3><a class='title-link' name='the-full-picture' href='#the-full-picture'></a> The full picture</h3>
 
 <p>When we put all the different pieces of Home Assistant together we see that we match pretty close to the initial sketched home automation overview. The smart home AI is not implemented yet and therefor ommitted from the following picture.</p>
 
@@ -187,7 +187,7 @@ components within Home Assistant.</p>
 
 <p>Component&rsquo;s platform logic uses 3rd party Python libraries to communicate with the devices. This is done so that we can leverage great device libraries that are out there in the Python community.</p>
 
-<h2>Multiple connected instances</h2>
+<h2><a class='title-link' name='multiple-connected-instances' href='#multiple-connected-instances'></a> Multiple connected instances</h2>
 
 <p>Home Assistant supports running multiple synchronzied instances using a master-slave model. Whenever <code>events.fire</code> or <code>states.set</code> is called on the salve it will forward it to the master. The master will replicate all events and changed states to its slaves.</p>
 

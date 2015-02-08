@@ -114,7 +114,7 @@ is easy to built your own. If you are the kind of person that likes to learn fro
 
 <p><code>TARGET_ENTITY</code> should be one of your devices that can be turned on and off, ie a light or a switch. Example value could be <code>light.Ceiling</code> or <code>switch.AC</code> (if you have these devices with those names).</p>
 
-<h2>Loading components</h2>
+<h2><a class='title-link' name='loading-components' href='#loading-components'></a> Loading components</h2>
 
 <p>A component will be loaded on start if a section (ie. <code>[light]</code>) for it exists in the config file. A component can also be loaded if another component is loaded that depends on it. When loading a component Home Assistant will check the following paths:</p>
 
@@ -138,7 +138,7 @@ Home Assistant will use the directory that contains your config file as the dire
 </p>
 
 
-<h2>Initializing components</h2>
+<h2><a class='title-link' name='initializing-components' href='#initializing-components'></a> Initializing components</h2>
 
 <p>After loading, the bootstrapper will call <code>setup(hass, config)</code> method on the component to initialize it. The following parameters are passed in:</p>
 
@@ -162,7 +162,7 @@ Home Assistant will use the directory that contains your config file as the dire
 </table>
 
 
-<h3>Guidance on using the Home Assistant object</h3>
+<h3><a class='title-link' name='guidance-on-using-the-home-assistant-object' href='#guidance-on-using-the-home-assistant-object'></a> Guidance on using the Home Assistant object</h3>
 
 <p>The Home Assistant object contains three objects to help you interact with the system.</p>
 
@@ -190,7 +190,7 @@ Home Assistant will use the directory that contains your config file as the dire
 </table>
 
 
-<h3>Example on using the configuration parameter</h3>
+<h3><a class='title-link' name='example-on-using-the-configuration-parameter' href='#example-on-using-the-configuration-parameter'></a> Example on using the configuration parameter</h3>
 
 <p>If your configuration file containes the following lines:</p>
 
