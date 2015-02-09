@@ -78,8 +78,13 @@ class MockToggleDevice(ToggleDevice):
         self._state = STATE_OFF
 
     def last_call(self, method=None):
-        if method is None:
+        if not self.calls:
+            return None
+        elif method is None:
             return self.calls[-1]
         else:
-            return next(call for call in reversed(self.calls)
-                        if call[0] == method)
+            try:
+                return next(call for call in reversed(self.calls)
+                            if call[0] == method)
+            except StopIteration:
+                return None
