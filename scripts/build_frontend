@@ -1,9 +1,11 @@
+# Call 'build_frontend demo' to build a demo frontend.
+
 # If current pwd is scripts, go 1 up.
 if [ ${PWD##*/} == "scripts" ]; then
     cd ..
 fi
 
-scripts/build_js
+scripts/build_js $1
 
 # To build the frontend, you need node, bower and vulcanize
 # npm install -g bower vulcanize
