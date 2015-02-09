@@ -614,13 +614,19 @@ class StateMachine(object):
         @ft.wraps(action)
         def state_listener(event):
             """ The listener that listens for specific state changes. """
-            if event.data['entity_id'] in entity_ids and \
-                    'old_state' in event.data and \
-                    _matcher(event.data['old_state'].state, from_state) and \
-                    _matcher(event.data['new_state'].state, to_state):
+            if event.data['entity_id'] not in entity_ids:
+                return
+
+            if 'old_state' in event.data:
+                old_state = event.data['old_state'].state
+            else:
+                old_state = None
+
+            if _matcher(old_state, from_state) and \
+               _matcher(event.data['new_state'].state, to_state):
 
                 action(event.data['entity_id'],
-                       event.data['old_state'],
+                       event.data.get('old_state'),
                        event.data['new_state'])
 
         self._bus.listen(EVENT_STATE_CHANGED, state_listener)

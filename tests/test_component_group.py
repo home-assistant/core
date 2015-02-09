@@ -146,6 +146,32 @@ class TestComponentsGroup(unittest.TestCase):
         # Test with non-group state
         self.assertEqual([], group.get_entity_ids(self.hass, 'switch.AC'))
 
+    def test_group_being_init_before_first_tracked_state_is_set_to_on(self):
+        """ Test if the group turns on if no states existed and now a state it is
+            tracking is being added as ON. """
+        test_group = group.Group(
+            self.hass, 'test group', ['light.not_there_1'])
+
+        self.hass.states.set('light.not_there_1', STATE_ON)
+
+        self.hass.pool.block_till_done()
+
+        group_state = self.hass.states.get(test_group.entity_id)
+        self.assertEqual(STATE_ON, group_state.state)
+
+    def test_group_being_init_before_first_tracked_state_is_set_to_off(self):
+        """ Test if the group turns off if no states existed and now a state it is
+            tracking is being added as OFF. """
+        test_group = group.Group(
+            self.hass, 'test group', ['light.not_there_1'])
+
+        self.hass.states.set('light.not_there_1', STATE_OFF)
+
+        self.hass.pool.block_till_done()
+
+        group_state = self.hass.states.get(test_group.entity_id)
+        self.assertEqual(STATE_OFF, group_state.state)
+
     def test_setup(self):
         """ Test setup method. """
         self.assertTrue(
