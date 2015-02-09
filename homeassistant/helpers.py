@@ -29,24 +29,18 @@ def extract_entity_ids(hass, service):
     Helper method to extract a list of entity ids from a service call.
     Will convert group entity ids to the entity ids it represents.
     """
-    entity_ids = []
+    if not (service.data and ATTR_ENTITY_ID in service.data):
+        return []
 
-    if service.data and ATTR_ENTITY_ID in service.data:
-        group = get_component('group')
+    group = get_component('group')
 
-        # Entity ID attr can be a list or a string
-        service_ent_id = service.data[ATTR_ENTITY_ID]
-        if isinstance(service_ent_id, list):
-            ent_ids = service_ent_id
-        else:
-            ent_ids = [service_ent_id]
+    # Entity ID attr can be a list or a string
+    service_ent_id = service.data[ATTR_ENTITY_ID]
 
-        entity_ids.extend(
-            ent_id for ent_id
-            in group.expand_entity_ids(hass, ent_ids)
-            if ent_id not in entity_ids)
+    if isinstance(service_ent_id, str):
+        return group.expand_entity_ids(hass, [service_ent_id.lower()])
 
-    return entity_ids
+    return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
 
 
 # pylint: disable=too-few-public-methods, attribute-defined-outside-init

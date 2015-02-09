@@ -39,11 +39,11 @@ class TestComponentsCore(unittest.TestCase):
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'light.Bowl'})
 
-        self.assertEqual(['light.Bowl'],
+        self.assertEqual(['light.bowl'],
                          extract_entity_ids(self.hass, call))
 
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'group.test'})
 
-        self.assertEqual(['light.Ceiling', 'light.Kitchen'],
+        self.assertEqual(['light.ceiling', 'light.kitchen'],
                          extract_entity_ids(self.hass, call))

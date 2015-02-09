@@ -51,6 +51,11 @@ def expand_entity_ids(hass, entity_ids):
     found_ids = []
 
     for entity_id in entity_ids:
+        if not isinstance(entity_id, str):
+            continue
+
+        entity_id = entity_id.lower()
+
         try:
             # If entity_id points at a group, expand it
             domain, _ = util.split_entity_id(entity_id)
@@ -74,10 +79,14 @@ def expand_entity_ids(hass, entity_ids):
 
 def get_entity_ids(hass, entity_id, domain_filter=None):
     """ Get the entity ids that make up this group. """
+    entity_id = entity_id.lower()
+
     try:
         entity_ids = hass.states.get(entity_id).attributes[ATTR_ENTITY_ID]
 
         if domain_filter:
+            domain_filter = domain_filter.lower()
+
             return [ent_id for ent_id in entity_ids
                     if ent_id.startswith(domain_filter)]
         else:
@@ -131,7 +140,7 @@ class Group(object):
     def update_tracked_entity_ids(self, entity_ids):
         """ Update the tracked entity IDs. """
         self.stop()
-        self.tracking = tuple(entity_ids)
+        self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         self.group_on, self.group_off = None, None
 
         self.force_update()
