@@ -82,7 +82,7 @@ def run_information(point_in_time=None):
         covers point_in_time. """
     _verify_instance()
 
-    if point_in_time is None:
+    if point_in_time is None or point_in_time > _INSTANCE.recording_start:
         return RecorderRun()
 
     run = _INSTANCE.query(
@@ -105,13 +105,17 @@ def setup(hass, config):
 class RecorderRun(object):
     """ Represents a recorder run. """
     def __init__(self, row=None):
+        self.end = None
+
         if row is None:
             self.start = _INSTANCE.recording_start
-            self.end = None
             self.closed_incorrect = False
         else:
             self.start = datetime.fromtimestamp(row[1])
-            self.end = datetime.fromtimestamp(row[2])
+
+            if row[2] is not None:
+                self.end = datetime.fromtimestamp(row[2])
+
             self.closed_incorrect = bool(row[3])
 
     def entity_ids(self, point_in_time=None):
