@@ -58,7 +58,9 @@
   </template>
 
   <script>
-  Polymer({
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
     MSG_VALIDATING: "Validating password…",
     MSG_LOADING_DATA: "Loading data…",
 
@@ -70,13 +72,7 @@
     spinnerMessage: "",
 
     ready: function() {
-      this.authStore = window.hass.authStore;
-
-      this.authChangeListener = this.authChangeListener.bind(this);
-
-      this.authStore.addChangeListener(this.authChangeListener);
-
-      this.authChangeListener();
+      this.listenToStores(true);
     },
 
     attached: function() {
@@ -84,7 +80,7 @@
     },
 
     detached: function() {
-      this.authStore.removeChangeListener(this.authChangeListener);
+      this.stopListeningToStores();
     },
 
     authChangeListener: function() {
@@ -120,10 +116,10 @@
     validatePassword: function() {
       this.$.hideKeyboardOnFocus.focus();
 
-      window.hass.authActions.validate(this.authToken);
+      window.hass.uiActions.validateAuth(this.authToken);
     },
 
-  });
+  }, storeListenerMixIn));
   </script>
 </polymer-element>
 

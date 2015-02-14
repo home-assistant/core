@@ -27,6 +27,7 @@
 Polymer({
   stateObj: {},
   stateHistory: null,
+  hasHistoryComponent: false,
 
   observe: {
     'stateObj.attributes': 'reposition'
@@ -42,6 +43,10 @@ Polymer({
     window.hass.stateHistoryStore.removeChangeListener(this.stateHistoryStoreChanged);
   },
 
+  componentStoreChanged: function() {
+    this.hasHistoryComponent = componentStore.isLoaded('history');
+  },
+
   stateHistoryStoreChanged: function() {
     if (this.stateObj.entityId) {
       this.stateHistory = window.hass.stateHistoryStore.get(this.stateObj.entityId);
@@ -53,7 +58,7 @@ Polymer({
   stateObjChanged: function() {
     if (this.stateObj.entityId &&
         window.hass.stateHistoryStore.isStale(this.stateObj.entityId)) {
-      window.hass.stateHistoryActions.fetch(this.stateObj.entityId);
+      // window.hass.stateHistoryActions.fetch(this.stateObj.entityId);
     }
 
     this.stateHistoryStoreChanged();

@@ -1,4 +1,6 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/core-style/core-style.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="./partial-base.html">
 
@@ -13,7 +15,7 @@
 
     <span header-buttons>
       <paper-icon-button icon="refresh" class="{{isFetching && 'ha-spin'}}"
-        on-click="{{handleRefreshClick}}"></paper-icon-button>
+        on-click="{{handleRefreshClick}}" hidden?="{{isStreaming}}"></paper-icon-button>
     </span>
 
     <state-cards states="{{states}}">
@@ -28,24 +30,20 @@
   </partial-base>
 </template>
 <script>
-  Polymer({
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
     headerTitle: "States",
     states: [],
     isFetching: false,
+    isStreaming: false,
 
     ready: function() {
-      this.stateStoreChanged = this.stateStoreChanged.bind(this);
-      window.hass.stateStore.addChangeListener(this.stateStoreChanged);
-
-      this.syncStoreChanged = this.syncStoreChanged.bind(this);
-      window.hass.syncStore.addChangeListener(this.syncStoreChanged);
-
-      this.refreshStates();
+      this.listenToStores(true);
     },
 
     detached: function() {
-      window.hass.stateStore.removeChangeListener(this.stateStoreChanged);
-      window.hass.syncStore.removeChangeListener(this.syncStoreChanged);
+      this.stopListeningToStores();
     },
 
     stateStoreChanged: function() {
@@ -54,6 +52,10 @@
 
     syncStoreChanged: function() {
       this.isFetching = window.hass.syncStore.isFetching();
+    },
+
+    streamStoreChanged: function(streamStore) {
+      this.isStreaming = streamStore.isStreaming();
     },
 
     filterChanged: function() {
@@ -85,6 +87,6 @@
     handleRefreshClick: function() {
       window.hass.syncActions.sync();
     },
-  });
+  }, storeListenerMixIn));
 </script>
 </polymer>

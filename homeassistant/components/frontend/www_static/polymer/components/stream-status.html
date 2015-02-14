@@ -1,0 +1,60 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<link rel="import" href="../bower_components/core-icons/notification-icons.html">
+
+<polymer-element name="stream-status">
+<template>
+  <style>
+  :host {
+    display: inline-block;
+    height: 24px;
+  }
+
+  paper-toggle-button {
+    vertical-align: middle;
+  }
+  </style>
+  <core-style ref='ha-paper-toggle'></core-style>
+
+  <core-icon icon="warning" hidden?="{{!hasError}}"></core-icon>
+  <paper-toggle-button id="toggle" on-change={{toggleChanged}} hidden?="{{hasError}}"></paper-toggle-button>
+</template>
+<script>
+  var streamActions = window.hass.streamActions;
+  var authStore = window.hass.authStore;
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
+    isStreaming: false,
+    hasError: false,
+
+    icon: "swap-vert-circle",
+    color: 'red',
+
+    ready: function() {
+      this.listenToStores(true);
+    },
+
+    detached: function() {
+      this.stopListeningToStores();
+    },
+
+    streamStoreChanged: function(streamStore) {
+      this.isStreaming = streamStore.isStreaming();
+      this.hasError = streamStore.hasError();
+
+      this.$.toggle.checked = this.isStreaming;
+    },
+
+    toggleChanged: function(ev) {
+      if (this.isStreaming) {
+        streamActions.stop();
+      } else {
+        streamActions.start(authStore.getAuthToken());
+      }
+    },
+  }, storeListenerMixIn));
+</script>
+</polymer-element>

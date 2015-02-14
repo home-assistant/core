@@ -1,23 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
 
 <link rel="import" href="../components/state-info.html">
 
 <polymer-element name="state-card-toggle" attributes="stateObj api">
   <template>
-    <style>
-    paper-toggle-button::shadow .toggle-ink {
-      color: #039be5;
-    }
-
-    paper-toggle-button::shadow [checked] .toggle-bar {
-      background-color: #039be5;
-    }
-
-    paper-toggle-button::shadow [checked] .toggle-button {
-      background-color: #039be5;
-    }
-    </style>
+    <core-style ref='ha-paper-toggle'></core-style>
 
     <div horizontal justified layout>      
       <state-info flex stateObj="{{stateObj}}"></state-info>

@@ -14,6 +14,8 @@
 <link rel="import" href="../layouts/partial-dev-call-service.html">
 <link rel="import" href="../layouts/partial-dev-set-state.html">
 
+<link rel="import" href="../components/stream-status.html">
+
 <polymer-element name="home-assistant-main">
 <template>
   <core-style ref="ha-headers"></core-style>
@@ -48,10 +50,13 @@
       min-height: 53px;
     }
 
-    .seperator {
+    .text {
       padding: 16px;
-      font-size: 14px;
       border-top: 1px solid #e0e0e0; 
+    }
+
+    .label {
+      font-size: 14px;
     }
 
     .dev-tools {
@@ -85,12 +90,17 @@
 
         <div flex></div>
 
-        <paper-item id="logout" on-click="{{handleLogOutClick}}">
+        <paper-item on-click="{{handleLogOutClick}}">
           <core-icon icon="exit-to-app"></core-icon>
           Log Out
         </paper-item>
 
-        <div class='seperator'>Developer Tools</div>
+        <div class='text' horizontal layout center>
+          <div flex>Streaming updates</div>
+          <stream-status></stream-status>
+        </div>
+
+        <div class='text label'>Developer Tools</div>
         <div class='dev-tools' layout horizontal justified>
           <paper-icon-button
             icon="settings-remote" data-panel='call-service'
@@ -131,26 +141,37 @@
 
 </template>
 <script>
-Polymer({
+var componentStore = window.hass.componentStore;
+var streamStore = window.hass.streamStore;
+var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+Polymer(Polymer.mixin({
   selected: "states",
   narrow: false,
   hasHistoryComponent: false,
 
+  isStreaming: false,
+  hasStreamError: false,
+
   ready: function() {
     this.togglePanel = this.togglePanel.bind(this);
-    this.componentStoreChanged = this.componentStoreChanged.bind(this);
 
-    window.hass.componentStore.addChangeListener(this.componentStoreChanged);
-
-    this.componentStoreChanged();
+    this.listenToStores(true);
   },
 
   detached: function() {
-    window.hass.componentStore.removeChangeListener(this.componentStoreChanged);
+    this.stopListeningToStores();
   },
 
   componentStoreChanged: function() {
-    this.hasHistoryComponent = window.hass.componentStore.isLoaded('history');
+    this.hasHistoryComponent = componentStore.isLoaded('history');
+  },
+
+  streamStoreChanged: function() {
+    var state = streamStore.getState();
+
+    this.isStreaming = state === streamStore.STATE_CONNECTED;
+    this.hasStreamError = state === streamStore.STATE_ERROR;
   },
 
   menuSelect: function(ev, detail, sender) {
@@ -185,6 +206,6 @@ Polymer({
     window.hass.authActions.logOut();
   },
 
-});
+}, storeListenerMixIn));
 </script>  
 </polymer-element>

@@ -51,8 +51,29 @@
         return moment(this.lastChangedAsDate).fromNow();
       }
     },
-
   });
+
+  var state,
+      constants = window.hass.constants,
+      dispatcher = window.hass.dispatcher,
+      preferenceStore = window.hass.preferenceStore;
+
+  var uiActions = window.hass.uiActions = {
+    ACTION_SHOW_TOAST: constants.ACTION_SHOW_TOAST,
+    ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
+
+    showMoreInfoDialog: function(entityId) {
+      dispatcher.dispatch({
+        actionType: this.ACTION_SHOW_DIALOG_MORE_INFO,
+        entityId: entityId,
+      });
+    },
+
+    validateAuth: function(authToken) {
+      window.hass.authActions.validate(authToken, preferenceStore.useStreaming());  
+    },
+
+  };
 </script>
 
 <polymer-element name="home-assistant-api" attributes="auth">
@@ -63,30 +84,11 @@
   <script>
   Polymer({
     ready: function() {
-      var state,
-          actions = window.hass.actions,
-          dispatcher = window.hass.dispatcher;
-
-      var uiActions = window.hass.uiActions = {
-        ACTION_SHOW_TOAST: actions.ACTION_SHOW_TOAST,
-        ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
-
-        showMoreInfoDialog: function(entityId) {
-          dispatcher.dispatch({
-            actionType: this.ACTION_SHOW_DIALOG_MORE_INFO,
-            entityId: entityId,
-          });
-        },
-
-      };
-
-      var getState = function(entityId) {
-        return window.hass.stateStore.get(entityId);
-      };
+      var getState = window.hass.stateStore.get;
 
       dispatcher.register(function(payload) {
         switch (payload.actionType) {
-          case actions.ACTION_SHOW_TOAST:
+          case constants.ACTION_SHOW_TOAST:
             this.$.toast.text = payload.message;
             this.$.toast.show();
             break;
@@ -101,10 +103,9 @@
 
       // if auth was given, tell the backend
       if(this.auth) {
-        window.hass.authActions.validate(this.auth);
+        window.hass.uiActions.validateAuth(this.auth);    
       }
     },
-
   });
   </script>
 </polymer-element>

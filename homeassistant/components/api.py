@@ -6,6 +6,8 @@ Provides a Rest API for Home Assistant.
 """
 import re
 import logging
+import threading
+import json
 
 import homeassistant as ha
 from homeassistant.helpers import TrackStates
@@ -33,6 +35,9 @@ def setup(hass, config):
 
     # /api - for validation purposes
     hass.http.register_path('GET', URL_API, _handle_get_api)
+
+    # /api/stream
+    hass.http.register_path('GET', URL_API_STREAM, _handle_get_api_stream)
 
     # /states
     hass.http.register_path('GET', URL_API_STATES, _handle_get_api_states)
@@ -77,6 +82,40 @@ def setup(hass, config):
 def _handle_get_api(handler, path_match, data):
     """ Renders the debug interface. """
     handler.write_json_message("API running.")
+
+
+def _handle_get_api_stream(handler, path_match, data):
+    """ Provide a streaming interface for the event bus. """
+    hass = handler.server.hass
+    wfile = handler.wfile
+    block = threading.Event()
+
+    def event_sourcer(event):
+        """ Forwards events to the open request. """
+        if block.is_set() or event.event_type == EVENT_TIME_CHANGED:
+            return
+        elif event.event_type == EVENT_HOMEASSISTANT_STOP:
+            block.set()
+            return
+
+        msg = "data: {}\n\n".format(
+            json.dumps(event.as_dict(), cls=rem.JSONEncoder))
+
+        try:
+            wfile.write(msg.encode("UTF-8"))
+            wfile.flush()
+        except IOError:
+            block.set()
+
+    handler.send_response(HTTP_OK)
+    handler.send_header('Content-type', 'text/event-stream')
+    handler.end_headers()
+
+    hass.bus.listen(MATCH_ALL, event_sourcer)
+
+    block.wait()
+
+    hass.bus.remove_listener(MATCH_ALL, event_sourcer)
 
 
 def _handle_get_api_states(handler, path_match, data):
