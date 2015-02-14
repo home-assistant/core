@@ -1,4 +1,4 @@
-<link rel="import" href="./bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="./bower_components/polymer/polymer.html">
 
 <link rel="import" href="./dialogs/more-info-dialog.html">
 
@@ -78,7 +78,6 @@
 
 <polymer-element name="home-assistant-api" attributes="auth">
   <template>
-    <paper-toast id="toast" role="alert" text=""></paper-toast>
     <more-info-dialog id="moreInfoDialog"></more-info-dialog>
   </template>
   <script>
@@ -88,11 +87,6 @@
 
       dispatcher.register(function(payload) {
         switch (payload.actionType) {
-          case constants.ACTION_SHOW_TOAST:
-            this.$.toast.text = payload.message;
-            this.$.toast.show();
-            break;
-
           case uiActions.ACTION_SHOW_DIALOG_MORE_INFO:
             state = getState(payload.entityId);
 

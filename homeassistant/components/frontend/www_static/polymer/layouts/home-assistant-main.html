@@ -14,6 +14,7 @@
 <link rel="import" href="../layouts/partial-dev-call-service.html">
 <link rel="import" href="../layouts/partial-dev-set-state.html">
 
+<link rel="import" href="../components/ha-notifications.html">
 <link rel="import" href="../components/stream-status.html">
 
 <polymer-element name="home-assistant-main">
@@ -63,6 +64,8 @@
       padding: 0 8px;
     }
   </style>
+
+  <ha-notifications></ha-notifications>
 
   <core-drawer-panel id="drawer" on-core-responsive-change="{{responsiveChanged}}">
     <core-header-panel mode="scroll" drawer>
@@ -141,8 +144,6 @@
 
 </template>
 <script>
-var componentStore = window.hass.componentStore;
-var streamStore = window.hass.streamStore;
 var storeListenerMixIn = window.hass.storeListenerMixIn;
 
 Polymer(Polymer.mixin({
@@ -163,11 +164,11 @@ Polymer(Polymer.mixin({
     this.stopListeningToStores();
   },
 
-  componentStoreChanged: function() {
+  componentStoreChanged: function(componentStore) {
     this.hasHistoryComponent = componentStore.isLoaded('history');
   },
 
-  streamStoreChanged: function() {
+  streamStoreChanged: function(streamStore) {
     var state = streamStore.getState();
 
     this.isStreaming = state === streamStore.STATE_CONNECTED;
