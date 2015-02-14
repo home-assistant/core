@@ -10,21 +10,10 @@ import logging
 
 from . import version
 import homeassistant.util as util
+from homeassistant.const import URL_ROOT, HTTP_OK
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
-
-HTTP_OK = 200
-HTTP_CREATED = 201
-HTTP_MOVED_PERMANENTLY = 301
-HTTP_BAD_REQUEST = 400
-HTTP_UNAUTHORIZED = 401
-HTTP_NOT_FOUND = 404
-HTTP_METHOD_NOT_ALLOWED = 405
-HTTP_UNPROCESSABLE_ENTITY = 422
-
-
-URL_ROOT = "/"
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -82,26 +82,18 @@ from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant as ha
-from homeassistant.const import SERVER_PORT, AUTH_HEADER
+from homeassistant.const import (
+    SERVER_PORT, CONTENT_TYPE_JSON,
+    HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
+    HTTP_HEADER_CONTENT_ENCODING, HTTP_HEADER_VARY, HTTP_HEADER_CONTENT_LENGTH,
+    HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_EXPIRES, HTTP_OK, HTTP_UNAUTHORIZED,
+    HTTP_NOT_FOUND, HTTP_METHOD_NOT_ALLOWED, HTTP_UNPROCESSABLE_ENTITY)
 import homeassistant.remote as rem
 import homeassistant.util as util
 import homeassistant.bootstrap as bootstrap
 
 DOMAIN = "http"
 DEPENDENCIES = []
-
-HTTP_OK = 200
-HTTP_CREATED = 201
-HTTP_MOVED_PERMANENTLY = 301
-HTTP_BAD_REQUEST = 400
-HTTP_UNAUTHORIZED = 401
-HTTP_NOT_FOUND = 404
-HTTP_METHOD_NOT_ALLOWED = 405
-HTTP_UNPROCESSABLE_ENTITY = 422
-
-URL_ROOT = "/"
-
-URL_STATIC = "/static/{}"
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
@@ -217,7 +209,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             data[key] = data[key][-1]
 
         # Did we get post input ?
-        content_length = int(self.headers.get('Content-Length', 0))
+        content_length = int(self.headers.get(HTTP_HEADER_CONTENT_LENGTH, 0))
 
         if content_length:
             body_content = self.rfile.read(content_length).decode("UTF-8")
@@ -236,7 +228,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if self.server.no_password_set:
             api_password = self.server.api_password
         else:
-            api_password = self.headers.get(AUTH_HEADER)
+            api_password = self.headers.get(HTTP_HEADER_HA_AUTH)
 
             if not api_password and DATA_API_PASSWORD in data:
                 api_password = data[DATA_API_PASSWORD]
@@ -316,7 +308,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def write_json(self, data=None, status_code=HTTP_OK, location=None):
         """ Helper method to return JSON to the caller. """
         self.send_response(status_code)
-        self.send_header('Content-type', 'application/json')
+        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 
         if location:
             self.send_header('Location', location)
@@ -344,10 +336,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         Helper function to write a file pointer to the user.
         Does not do error handling.
         """
-        do_gzip = 'gzip' in self.headers.get('accept-encoding', '')
+        do_gzip = 'gzip' in self.headers.get(HTTP_HEADER_ACCEPT_ENCODING, '')
 
         self.send_response(HTTP_OK)
-        self.send_header("Content-Type", content_type)
+        self.send_header(HTTP_HEADER_CONTENT_TYPE, content_type)
 
         # Add cache if not development
         if not self.server.development:
@@ -355,20 +347,22 @@ class RequestHandler(SimpleHTTPRequestHandler):
             cache_time = 365 * 86400
 
             self.send_header(
-                "Cache-Control", "public, max-age={}".format(cache_time))
+                HTTP_HEADER_CACHE_CONTROL,
+                "public, max-age={}".format(cache_time))
             self.send_header(
-                "Expires", self.date_time_string(time.time()+cache_time))
+                HTTP_HEADER_EXPIRES,
+                self.date_time_string(time.time()+cache_time))
 
         if do_gzip:
             gzip_data = gzip.compress(inp.read())
 
-            self.send_header("Content-Encoding", "gzip")
-            self.send_header("Vary", "Accept-Encoding")
-            self.send_header("Content-Length", str(len(gzip_data)))
+            self.send_header(HTTP_HEADER_CONTENT_ENCODING, "gzip")
+            self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
+            self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(gzip_data)))
 
         else:
             fst = os.fstat(inp.fileno())
-            self.send_header("Content-Length", str(fst[6]))
+            self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(fst[6]))
 
         self.end_headers()
 

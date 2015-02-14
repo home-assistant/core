@@ -12,9 +12,8 @@ import requests
 
 import homeassistant as ha
 import homeassistant.bootstrap as bootstrap
-import homeassistant.remote as remote
 import homeassistant.components.http as http
-import homeassistant.components.frontend as frontend
+from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 API_PASSWORD = "test1234"
 
@@ -25,7 +24,7 @@ SERVER_PORT = 8121
 
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
-HA_HEADERS = {remote.AUTH_HEADER: API_PASSWORD}
+HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 hass = None
 

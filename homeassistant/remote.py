@@ -21,9 +21,9 @@ import homeassistant as ha
 import homeassistant.bootstrap as bootstrap
 
 from homeassistant.const import (
-    SERVER_PORT, AUTH_HEADER, URL_API, URL_API_STATES, URL_API_STATES_ENTITY,
-    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
-    URL_API_SERVICES_SERVICE, URL_API_EVENT_FORWARD)
+    SERVER_PORT, HTTP_HEADER_HA_AUTH, URL_API, URL_API_STATES,
+    URL_API_STATES_ENTITY, URL_API_EVENTS, URL_API_EVENTS_EVENT,
+    URL_API_SERVICES, URL_API_SERVICES_SERVICE, URL_API_EVENT_FORWARD)
 
 METHOD_GET = "get"
 METHOD_POST = "post"
@@ -55,7 +55,7 @@ class API(object):
         self.api_password = api_password
         self.base_url = "http://{}:{}".format(host, self.port)
         self.status = None
-        self._headers = {AUTH_HEADER: api_password}
+        self._headers = {HTTP_HEADER_HA_AUTH: api_password}
 
     def validate_api(self, force_validate=False):
         """ Tests if we can communicate with the API. """
@@ -308,7 +308,7 @@ def connect_remote_events(from_api, to_api):
             return True
         else:
             _LOGGER.error(
-                "Error settign up event forwarding: %s - %s",
+                "Error setting up event forwarding: %s - %s",
                 req.status_code, req.text)
 
             return False

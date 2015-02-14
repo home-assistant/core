@@ -13,12 +13,13 @@ import homeassistant as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http
+from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 API_PASSWORD = "test1234"
 
 HTTP_BASE_URL = "http://127.0.0.1:8122"
 
-HA_HEADERS = {remote.AUTH_HEADER: API_PASSWORD}
+HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 hass, slave, master_api, broken_api = None, None, None, None
 
