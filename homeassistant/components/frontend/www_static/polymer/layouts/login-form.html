@@ -83,12 +83,12 @@
       this.stopListeningToStores();
     },
 
-    authChangeListener: function() {
-      this.isValidating = this.authStore.isValidating();
-      this.isLoggedIn = this.authStore.isLoggedIn();
+    authStoreChanged: function(authStore) {
+      this.isValidating = authStore.isValidating();
+      this.isLoggedIn = authStore.isLoggedIn();
       this.spinnerMessage = this.isValidating ? this.MSG_VALIDATING : this.MSG_LOADING_DATA;
 
-      if (this.authStore.wasLastAttemptInvalid()) {
+      if (authStore.wasLastAttemptInvalid()) {
         this.$.passwordDecorator.error = this.authStore.getLastAttemptMessage();
         this.$.passwordDecorator.isInvalid = true;
       }

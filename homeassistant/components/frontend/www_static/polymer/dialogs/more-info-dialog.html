@@ -1,13 +1,13 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
-<link rel="import" href="ha-action-dialog.html">
+<link rel="import" href="ha-dialog.html">
 <link rel="import" href="../cards/state-card-content.html">
 <link rel="import" href="../components/state-timeline.html">
 <link rel="import" href="../more-infos/more-info-content.html">
 
 <polymer-element name="more-info-dialog">
 <template>
-  <ha-action-dialog id="dialog">
+  <ha-dialog id="dialog">
     <style>
     .title-card {
       margin-bottom: 24px;
@@ -20,7 +20,7 @@
       <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
       <more-info-content stateObj="{{stateObj}}"></more-info-content>
     </div>
-  </ha-action-dialog>
+  </ha-dialog>
 
 </template>
 <script>
