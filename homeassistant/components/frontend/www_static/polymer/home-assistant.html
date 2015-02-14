@@ -30,20 +30,25 @@
 
   </template>
   <script>
-  Polymer({
-    loaded: window.hass.syncStore.initialLoadDone(),
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
+    loaded: false,
 
     ready: function() {
       // remove the HTML init message
       document.getElementById('init').remove();
 
-      // listen if we are fully loaded
-      window.hass.syncStore.addChangeListener(this.updateLoadStatus.bind(this));
+      this.listenToStores(true);
     },
 
-    updateLoadStatus: function() {
-      this.loaded = window.hass.syncStore.initialLoadDone();
+    detached: function() {
+      this.stopListeningToStores();
     },
-  });
+
+    syncStoreChanged: function(syncStore) {
+      this.loaded = syncStore.initialLoadDone();
+    },
+  }, storeListenerMixIn));
   </script>  
 </polymer-element>

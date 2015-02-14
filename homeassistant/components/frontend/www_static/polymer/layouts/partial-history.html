@@ -31,32 +31,31 @@
   </partial-base>
 </template>
 <script>
-  Polymer({
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var stateHistoryActions = window.hass.stateHistoryActions;
+
+  Polymer(Polymer.mixin({
     stateHistory: null,
 
     ready: function() {
-      this.stateHistoryStoreChanged = this.stateHistoryStoreChanged.bind(this);
-
-      window.hass.stateHistoryStore.addChangeListener(this.stateHistoryStoreChanged);
-
-      if (window.hass.stateHistoryStore.isStale()) {
-        window.hass.stateHistoryActions.fetchAll();
-      }
-
-      this.stateHistoryStoreChanged();
+      this.listenToStores(true);
     },
 
     detached: function() {
-      window.hass.stateHistoryStore.removeChangeListener(this.stateHistoryStoreChanged);
+      this.stopListeningToStores();
     },
 
-    stateHistoryStoreChanged: function() {
-      this.stateHistory = window.hass.stateHistoryStore.all();
+    stateHistoryStoreChanged: function(stateHistoryStore) {
+      if (stateHistoryStore.isStale()) {
+        stateHistoryActions.fetchAll();
+      }
+
+      this.stateHistory = stateHistoryStore.all();
     },
 
     handleRefreshClick: function() {
-      window.hass.stateHistoryActions.fetchAll();
+      stateHistoryActions.fetchAll();
     },
-  });
+  }, storeListenerMixIn));
 </script>
 </polymer>
