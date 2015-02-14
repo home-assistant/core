@@ -40,7 +40,7 @@ Polymer(Polymer.mixin({
   },
 
   ready: function() {
-    this.listenToStores();
+    this.listenToStores(true);
   },
 
   detached: function() {
@@ -52,18 +52,9 @@ Polymer(Polymer.mixin({
   },
 
   stateStoreChanged: function() {
-    var newState;
-
-    if (!this.entityId) {
-      newState = null;
-    } else {
-      newState = stateStore.get(this.entityId);
-    }
-
-    console.log('state store changed');
+    var newState = this.entityId ? stateStore.get(this.entityId) : null;
 
     if (newState !== this.stateObj) {
-      console.log("Setting new stateobj");
       this.stateObj = newState;
     }
   },
@@ -84,12 +75,6 @@ Polymer(Polymer.mixin({
 
   changeEntityId: function(entityId) {
     this.entityId = entityId;
-
-    if (!entityId) {
-      this.stateObj = null;
-      this.stateHistory = null;
-      return;
-    }
 
     this.stateStoreChanged();
     this.stateHistoryStoreChanged();
