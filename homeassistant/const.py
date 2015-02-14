@@ -28,6 +28,8 @@ EVENT_TIME_CHANGED = "time_changed"
 EVENT_CALL_SERVICE = "call_service"
 EVENT_SERVICE_EXECUTED = "service_executed"
 EVENT_PLATFORM_DISCOVERED = "platform_discovered"
+EVENT_COMPONENT_LOADED = "component_loaded"
+EVENT_SERVICE_REGISTERED = "service_registered"
 
 # #### STATES ####
 STATE_ON = 'on'

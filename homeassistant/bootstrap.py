@@ -18,8 +18,11 @@ import homeassistant
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
+from homeassistant.const import EVENT_COMPONENT_LOADED
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_COMPONENT = "component"
 
 
 def setup_component(hass, domain, config=None):
@@ -39,12 +42,13 @@ def setup_component(hass, domain, config=None):
         if component.setup(hass, config):
             hass.components.append(component.DOMAIN)
 
-            _LOGGER.info("component %s initialized", domain)
-
             # Assumption: if a component does not depend on groups
             # it communicates with devices
             if group.DOMAIN not in component.DEPENDENCIES:
                 hass.pool.add_worker()
+
+            hass.bus.fire(
+                EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
 
             return True
 

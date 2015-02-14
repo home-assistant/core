@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
-    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID)
+    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED)
 import homeassistant.util as util
 
 DOMAIN = "homeassistant"
@@ -682,6 +682,10 @@ class ServiceRegistry(object):
                 self._services[domain][service] = service_func
             else:
                 self._services[domain] = {service: service_func}
+
+            self._bus.fire(
+                EVENT_SERVICE_REGISTERED,
+                {ATTR_DOMAIN: domain, ATTR_SERVICE: service})
 
     def call(self, domain, service, service_data=None, blocking=False):
         """
