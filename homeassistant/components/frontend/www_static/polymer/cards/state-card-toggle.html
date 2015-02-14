@@ -4,7 +4,7 @@
 
 <link rel="import" href="../components/state-info.html">
 
-<polymer-element name="state-card-toggle" attributes="stateObj api">
+<polymer-element name="state-card-toggle" attributes="stateObj">
   <template>
     <core-style ref='ha-paper-toggle'></core-style>
 
@@ -13,6 +13,7 @@
 
       <paper-toggle-button self-center
         checked="{{toggleChecked}}"
+        on-change="{{toggleChanged}}"
         on-click="{{toggleClicked}}">
       </paper-toggle-button>
     </div>
@@ -20,7 +21,7 @@
   </template>
   <script>
   Polymer({
-    toggleChecked: -1,
+    toggleChecked: false,
 
     observe: {
       'stateObj.state': 'stateChanged'
@@ -30,21 +31,23 @@
       this.forceStateChange = this.forceStateChange.bind(this);
     },
 
-    // prevent the event from propegating
     toggleClicked: function(ev) {
       ev.stopPropagation();
     },
 
-    toggleCheckedChanged: function(oldVal, newVal) {
-      // to filter out init
-      if(oldVal === -1) {
-        return;
-      }
+    toggleChanged: function(ev) {
+      var newVal = ev.target.checked;
 
-      if(newVal && this.stateObj.state == "off") {
+      if(newVal && this.stateObj.state === "off") {
         this.turn_on();
-      } else if(!newVal && this.stateObj.state == "on") {
+      } else if(!newVal && this.stateObj.state === "on") {
         this.turn_off();
+      }
+    },
+
+    stateObjChanged: function(oldVal, newVal) {
+      if (newVal) {
+        this.toggleChecked = newVal.state === 'on';  
       }
     },
 

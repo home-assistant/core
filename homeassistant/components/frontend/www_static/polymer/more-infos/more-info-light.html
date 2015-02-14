@@ -3,7 +3,7 @@
 
 <link rel="import" href="../bower_components/color-picker-element/dist/color-picker.html">
 
-<polymer-element name="more-info-light" attributes="stateObj api">
+<polymer-element name="more-info-light" attributes="stateObj">
 <template>
   <style>
     .brightness {
@@ -43,8 +43,8 @@
       <div center horizontal layout>
         <div>Brightness</div>
         <paper-slider
-          max="255" flex id='brightness'
-          on-core-change="{{brightnessSliderChanged}}">
+          max="255" flex id='brightness' value='{{brightnessSliderValue}}'
+          on-change="{{brightnessSliderChanged}}">
         </paper-slider>
       </div>
     </div>
@@ -55,19 +55,20 @@
 </template>
 <script>
 Polymer({
-
-  // initial change should be ignored
-  ignoreNextBrightnessEvent: true,
+  brightnessSliderValue: 0,
 
   observe: {
-    'stateObj.attributes.brightness': 'brightnessChanged',
-    'stateObj.attributes.xy_color': 'colorChanged'
+    'stateObj.attributes.brightness': 'stateObjBrightnessChanged',
   },
 
-  brightnessChanged: function(oldVal, newVal) {
-    this.ignoreNextBrightnessEvent = true;
+  stateObjChanged: function(oldVal, newVal) {
+    if (newVal && newVal.state === 'on') {
+      this.brightnessSliderValue = newVal.attributes.brightness;
+    }    
+  },
 
-    this.$.brightness.value = newVal;
+  stateObjBrightnessChanged: function(oldVal, newVal) {
+    this.brightnessSliderValue = newVal;
   },
 
   domReady: function() {
@@ -75,11 +76,6 @@ Polymer({
   },
 
   brightnessSliderChanged: function(ev, details, target) {
-    if(this.ignoreNextBrightnessEvent) {
-      this.ignoreNextBrightnessEvent = false;
-      return;
-    }
-
     var bri = parseInt(target.value);
 
     if(isNaN(bri)) return;

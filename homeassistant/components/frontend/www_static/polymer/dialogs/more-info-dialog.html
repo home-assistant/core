@@ -24,7 +24,9 @@
 
 </template>
 <script>
-Polymer({
+var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+Polymer(Polymer.mixin({
   stateObj: {},
   stateHistory: null,
   hasHistoryComponent: false,
@@ -34,34 +36,34 @@ Polymer({
   },
 
   ready: function() {
-    this.stateHistoryStoreChanged = this.stateHistoryStoreChanged.bind(this);
-
-    window.hass.stateHistoryStore.addChangeListener(this.stateHistoryStoreChanged);
+    this.listenToStores(true);
   },
 
   detached: function() {
-    window.hass.stateHistoryStore.removeChangeListener(this.stateHistoryStoreChanged);
+    this.stopListeningToStores();
   },
 
-  componentStoreChanged: function() {
+  componentStoreChanged: function(componentStore) {
     this.hasHistoryComponent = componentStore.isLoaded('history');
   },
 
-  stateHistoryStoreChanged: function() {
-    if (this.stateObj.entityId) {
-      this.stateHistory = window.hass.stateHistoryStore.get(this.stateObj.entityId);
+  stateHistoryStoreChanged: function(stateHistoryStore) {
+    if (this.hasHistoryComponent && this.stateObj && this.stateObj.entityId) {
+      this.stateHistory = stateHistoryStore.get(this.stateObj.entityId);
     } else {
       this.stateHistory = null;
     }
   },
 
   stateObjChanged: function() {
-    if (this.stateObj.entityId &&
-        window.hass.stateHistoryStore.isStale(this.stateObj.entityId)) {
-      // window.hass.stateHistoryActions.fetch(this.stateObj.entityId);
-    }
+    if (this.hasHistoryComponent) {
+      if (this.stateObj && this.stateObj.entityId &&
+          window.hass.stateHistoryStore.isStale(this.stateObj.entityId)) {
+        window.hass.stateHistoryActions.fetch(this.stateObj.entityId);
+      }
 
-    this.stateHistoryStoreChanged();
+      this.stateHistoryStoreChanged();
+    }
   },
 
   /**
@@ -84,6 +86,6 @@ Polymer({
     }.bind(this));
   },
 
-});
+}, storeListenerMixIn));
 </script>
 </polymer-element>
