@@ -1,6 +1,8 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/core-style/core-style.html">
 
+<link rel="import" href="../components/relative-ha-datetime.html">
+
 <polymer-element name="more-info-sun" attributes="stateObj">
 <template>
   <core-style ref='ha-key-value-table'></core-style>
@@ -9,7 +11,7 @@
 
     <div layout justified horizontal class='data-entry' id='rising'>
       <div class='key'>
-        Rising {{stateObj.attributes.next_rising | relativeHATime}}
+        Rising <relative-ha-datetime datetime="{{stateObj.attributes.next_rising}}"></relative-ha-datetime>
       </div>
       <div class='value'>
         {{stateObj.attributes.next_rising | HATimeStripDate}}
@@ -18,7 +20,7 @@
 
     <div layout justified horizontal class='data-entry' id='setting'>
       <div class='key'>
-        Setting {{stateObj.attributes.next_setting | relativeHATime}}
+        Setting <relative-ha-datetime datetime="{{stateObj.attributes.next_setting}}"></relative-ha-datetime>
       </div>
       <div class='value'>
         {{stateObj.attributes.next_setting | HATimeStripDate}}

@@ -1,7 +1,6 @@
 <link rel="import" href="./bower_components/polymer/polymer.html">
 
 <script src="./home-assistant-js/dist/homeassistant.min.js"></script>
-<script src="./bower_components/moment/moment.js"></script>
 
 <link rel="import" href="./dialogs/more-info-dialog.html">
 
@@ -10,10 +9,11 @@
   var DOMAINS_WITH_MORE_INFO = ['light', 'group', 'sun', 'configurator'];
 
   // Register some polymer filters
-  PolymerExpressions.prototype.relativeHATime = function(timeString) {
+
+  PolymerExpressions.prototype.HATimeToDate = function(timeString) {
     if (!timeString) return;
 
-    return moment(window.hass.util.parseDateTime(timeString)).fromNow();
+    return window.hass.util.parseDateTime(timeString);
   };
 
   PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
@@ -43,12 +43,6 @@
         } else {
           return 'default';
         }
-      }
-    },
-
-    relativeLastChanged: {
-      get: function() {
-        return moment(this.lastChangedAsDate).fromNow();
       }
     },
   });
