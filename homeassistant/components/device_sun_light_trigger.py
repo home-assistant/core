@@ -147,8 +147,8 @@ def setup(hass, config):
 
         # Did all devices leave the house?
         elif (entity == device_group and
-              new_state.state == STATE_NOT_HOME and lights_are_on
-              and not disable_turn_off):
+              new_state.state == STATE_NOT_HOME and lights_are_on and
+              not disable_turn_off):
 
             logger.info(
                 "Everyone has left but there are lights on. Turning them off")

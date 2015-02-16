@@ -51,8 +51,8 @@ def setup(hass, config):
     """ Sets up the device tracker. """
 
     # CONF_TYPE is deprecated for CONF_PLATOFRM. We keep supporting it for now.
-    if not (validate_config(config, {DOMAIN: [CONF_PLATFORM]}, _LOGGER)
-            or validate_config(config, {DOMAIN: [CONF_TYPE]}, _LOGGER)):
+    if not (validate_config(config, {DOMAIN: [CONF_PLATFORM]}, _LOGGER) or
+            validate_config(config, {DOMAIN: [CONF_TYPE]}, _LOGGER)):
 
         return False
 
@@ -200,8 +200,8 @@ class DeviceTracker(object):
                         for device in new_devices:
                             # See if the device scanner knows the name
                             # else defaults to unknown device
-                            name = (self.device_scanner.get_device_name(device)
-                                    or "unknown_device")
+                            dname = self.device_scanner.get_device_name(device)
+                            name = dname or "unknown device"
 
                             writer.writerow((device, name, 0, ""))
 

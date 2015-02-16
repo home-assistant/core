@@ -93,7 +93,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         # To ensure all the three expected lines are there, we sort the file
         with open(self.known_dev_path) as fil:
             self.assertEqual(
-                ['dev1,unknown_device,0,\n', 'dev2,DEV2,0,\n',
+                ['dev1,unknown device,0,\n', 'dev2,DEV2,0,\n',
                  'device,name,track,picture\n'],
                 sorted(fil))
 
