@@ -115,6 +115,8 @@ def _handle_get_api_stream(handler, path_match, data):
 
     block.wait()
 
+    _LOGGER.info("Found broken event stream to %s, cleaning up",
+                 handler.client_address[0])
     hass.bus.remove_listener(MATCH_ALL, event_sourcer)
 
 
