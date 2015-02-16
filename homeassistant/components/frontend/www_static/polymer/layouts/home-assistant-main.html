@@ -15,6 +15,7 @@
 <link rel="import" href="../layouts/partial-dev-set-state.html">
 
 <link rel="import" href="../components/ha-notifications.html">
+<link rel="import" href="../components/ha-modals.html">
 <link rel="import" href="../components/stream-status.html">
 
 <polymer-element name="home-assistant-main">
@@ -66,6 +67,7 @@
   </style>
 
   <ha-notifications></ha-notifications>
+  <ha-modals></ha-modals>
 
   <core-drawer-panel id="drawer" on-core-responsive-change="{{responsiveChanged}}">
     <core-header-panel mode="scroll" drawer>

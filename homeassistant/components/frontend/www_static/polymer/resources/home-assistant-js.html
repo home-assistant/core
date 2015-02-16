@@ -1,0 +1,67 @@
+<script src="../home-assistant-js/dist/homeassistant.min.js"></script>
+
+<script>
+  (function() {
+    var DOMAINS_WITH_CARD = ['thermostat', 'configurator'];
+    var DOMAINS_WITH_MORE_INFO = ['light', 'group', 'sun', 'configurator'];
+
+    // Register some polymer filters
+
+    PolymerExpressions.prototype.HATimeToDate = function(timeString) {
+      if (!timeString) return;
+
+      return window.hass.util.parseDateTime(timeString);
+    };
+
+    PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
+      return (timeString || "").split(' ')[0];
+    };
+
+    // Add some frontend specific helpers to the models
+    Object.defineProperties(window.hass.stateModel.prototype, {
+      // how to render the card for this state
+      cardType: {
+        get: function() {
+          if(DOMAINS_WITH_CARD.indexOf(this.domain) !== -1) {
+            return this.domain;
+          } else if(this.canToggle) {
+            return "toggle";
+          } else {
+            return "display";
+          }
+        }
+      },
+
+      // how to render the more info of this state
+      moreInfoType: {
+        get: function() {
+          if(DOMAINS_WITH_MORE_INFO.indexOf(this.domain) !== -1) {
+            return this.domain;
+          } else {
+            return 'default';
+          }
+        }
+      },
+    });
+
+    var dispatcher = window.hass.dispatcher,
+        constants = window.hass.constants,
+        preferenceStore = window.hass.preferenceStore,
+        authActions = window.hass.authActions;
+
+    window.hass.uiActions = {
+      ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
+
+      showMoreInfoDialog: function(entityId) {
+        dispatcher.dispatch({
+          actionType: this.ACTION_SHOW_DIALOG_MORE_INFO,
+          entityId: entityId,
+        });
+      },
+
+      validateAuth: function(authToken) {
+        authActions.validate(authToken, preferenceStore.useStreaming());  
+      },
+    };
+  })();
+</script>

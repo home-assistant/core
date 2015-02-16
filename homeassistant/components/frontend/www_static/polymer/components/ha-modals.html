@@ -1,0 +1,25 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../dialogs/more-info-dialog.html">
+
+<polymer-element name="ha-modals">
+  <template>
+    <more-info-dialog id="moreInfoDialog"></more-info-dialog>
+  </template>
+  <script>
+  var uiActions = window.hass.uiActions,
+      dispatcher = window.hass.dispatcher;
+
+  Polymer({
+    ready: function() {
+      dispatcher.register(function(payload) {
+        switch (payload.actionType) {
+          case uiActions.ACTION_SHOW_DIALOG_MORE_INFO:
+            this.$.moreInfoDialog.show(payload.entityId);
+            break;
+        }  
+      }.bind(this));
+    },
+  });
+  </script>
+</polymer-element>
