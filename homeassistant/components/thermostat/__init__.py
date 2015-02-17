@@ -70,7 +70,7 @@ def setup(hass, config):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS)
     def update_state(now):
         """ Update thermostat state. """
-        logger.info("Updating nest state")
+        logger.info("Updating thermostat state")
 
         for thermostat in thermostats.values():
             thermostat.update_ha_state(hass, True)
@@ -81,6 +81,7 @@ def setup(hass, config):
 
     def thermostat_service(service):
         """ Handles calls to the services. """
+
         # Convert the entity ids to valid light ids
         target_thermostats = [thermostats[entity_id] for entity_id
                               in extract_entity_ids(hass, service)
@@ -105,7 +106,7 @@ def setup(hass, config):
                 return
 
             for thermostat in target_thermostats:
-                thermostat.nest.set_temperature(temperature)
+                thermostat.set_temperature(temperature)
 
         for thermostat in target_thermostats:
             thermostat.update_ha_state(hass, True)
