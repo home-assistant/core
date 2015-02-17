@@ -51,6 +51,8 @@ Polymer({
   },
 
   stateAttributesChanged: function(oldVal, newVal) {
+    if (!newVal) return;
+
     this.classNames = Object.keys(newVal).map(
       function(key) { return "has-" + key; }).join(' ');
   },
