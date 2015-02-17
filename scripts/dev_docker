@@ -1,0 +1,28 @@
+# Optional: pass in a timezone as first argument
+# If not given will attempt to mount /etc/localtime
+
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
+docker build -t home-assistant-dev .
+
+if [ $# -gt 0 ]
+then
+  docker run \
+    --net=host \
+    -e "TZ=$1" \
+    -v `pwd`:/usr/src/app \
+    -v `pwd`/config:/config \
+    -t -i home-assistant-dev
+
+else
+  docker run \
+    --net=host \
+    -v /etc/localtime:/etc/localtime:ro \
+    -v `pwd`:/usr/src/app \
+    -v `pwd`/config:/config \
+    -t -i home-assistant-dev
+
+fi
