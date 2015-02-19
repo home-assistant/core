@@ -1,5 +1,26 @@
 """
-Adds support for a heat control.
+Adds support for a thermostat.
+
+Specify a start time, end time and a target temperature.
+If the the current temperature is lower than the target temperature,
+and the time is between start time and end time, the heater will
+be turned on. Opposite if the the temperature is higher than the
+target temperature the heater will be turned off.
+
+If away mode is activated the target temperature is sat to a min
+temperature (min_temp in config). The min temperature is also used
+as target temperature when no other temperature is specified.
+
+If the heater is manually turned on, the target temperature will
+be sat to 100*C. Meaning
+the thermostat probably will never turn off the heater.
+If the heater is manually turned off, the target temperature will
+be sat according to normal rules. (Based on target temperature
+for given time intervals and the min temperature.)
+
+A target temperature sat with the set_temperature function will
+override all other rules for the target temperature.
+
 
 Config:
 
@@ -28,6 +49,12 @@ target_sensor = tellstick_sensor.Stue_temperature
 time_temp = 0700-0745:17,1500-1850:20
 min_temp = 10
 
+For the example the heater will turn on at 0700 if the temperature
+is lower than 17*C away mode is false. Between 0700 and 0745 the
+target temperature will be 17*C. Between 0745 and 1500 no temperature
+is specified. so the min_temp of 10*C will be used. From 1500 to 1850
+the target temperature is 20*, but if away mode is true the target
+temperature will be sat to 10*C
 
 """
 
@@ -75,6 +102,7 @@ class HeatControl(ThermostatDevice):
         self.min_temp = float(config.get("min_temp"))
 
         self._manual_sat_temp = None
+        self._away = False
         self._heater_manual_changed = True
 
         hass.states.track_change(self.heater_entity_id,
@@ -108,6 +136,8 @@ class HeatControl(ThermostatDevice):
         """ Returns the temperature we try to reach. """
         if self._manual_sat_temp:
             return self._manual_sat_temp
+        elif self._away:
+            return self.min_temp
         else:
             now = datetime.datetime.time(datetime.datetime.now())
             for (start_time, end_time, temp) in self.time_temp:
@@ -159,8 +189,8 @@ class HeatControl(ThermostatDevice):
 
     def turn_away_mode_on(self):
         """ Turns away mode on. """
-        self.set_temperature(None)
+        self._away = True
 
     def turn_away_mode_off(self):
         """ Turns away mode off. """
-        self.set_temperature(self.min_temp)
+        self._away = False
