@@ -23,6 +23,9 @@ from homeassistant.const import (
 DOMAIN = 'api'
 DEPENDENCIES = ['http']
 
+STREAM_PING_PAYLOAD = "ping"
+STREAM_PING_INTERVAL = 50  # seconds
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -86,38 +89,55 @@ def _handle_get_api(handler, path_match, data):
 
 def _handle_get_api_stream(handler, path_match, data):
     """ Provide a streaming interface for the event bus. """
+    gracefully_closed = False
     hass = handler.server.hass
     wfile = handler.wfile
+    write_lock = threading.Lock()
     block = threading.Event()
 
-    def event_sourcer(event):
+    def write_message(payload):
+        """ Writes a message to the output. """
+        with write_lock:
+            msg = "data: {}\n\n".format(payload)
+
+            try:
+                wfile.write(msg.encode("UTF-8"))
+                wfile.flush()
+            except IOError:
+                block.set()
+
+    def forward_events(event):
         """ Forwards events to the open request. """
+        nonlocal gracefully_closed
+
         if block.is_set() or event.event_type == EVENT_TIME_CHANGED:
             return
         elif event.event_type == EVENT_HOMEASSISTANT_STOP:
+            gracefully_closed = True
             block.set()
             return
 
-        msg = "data: {}\n\n".format(
-            json.dumps(event.as_dict(), cls=rem.JSONEncoder))
-
-        try:
-            wfile.write(msg.encode("UTF-8"))
-            wfile.flush()
-        except IOError:
-            block.set()
+        write_message(json.dumps(event, cls=rem.JSONEncoder))
 
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/event-stream')
     handler.end_headers()
 
-    hass.bus.listen(MATCH_ALL, event_sourcer)
+    hass.bus.listen(MATCH_ALL, forward_events)
 
-    block.wait()
+    while True:
+        block.wait(STREAM_PING_INTERVAL)
 
-    _LOGGER.info("Found broken event stream to %s, cleaning up",
-                 handler.client_address[0])
-    hass.bus.remove_listener(MATCH_ALL, event_sourcer)
+        if block.is_set():
+            break
+
+        write_message(STREAM_PING_PAYLOAD)
+
+    if not gracefully_closed:
+        _LOGGER.info("Found broken event stream to %s, cleaning up",
+                     handler.client_address[0])
+
+    hass.bus.remove_listener(MATCH_ALL, forward_events)
 
 
 def _handle_get_api_states(handler, path_match, data):
