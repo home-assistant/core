@@ -8,20 +8,13 @@
 <polymer-element name="more-info-dialog">
 <template>
   <ha-dialog id="dialog">
-    <style>
-    .title-card {
-      margin-bottom: 24px;
-    }
-    </style>
-
     <div>
-      <state-card-content stateObj="{{stateObj}}" class='title-card'>
+      <state-card-content stateObj="{{stateObj}}" style='margin-bottom: 24px;'>
       </state-card-content>
       <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
       <more-info-content stateObj="{{stateObj}}"></more-info-content>
     </div>
   </ha-dialog>
-
 </template>
 <script>
 var storeListenerMixIn = window.hass.storeListenerMixIn;
@@ -39,7 +32,7 @@ Polymer(Polymer.mixin({
     'stateObj.attributes': 'reposition'
   },
 
-  ready: function() {
+  attached: function() {
     this.listenToStores(true);
   },
 
@@ -104,7 +97,6 @@ Polymer(Polymer.mixin({
       this.$.dialog.toggle();
     }.bind(this));
   },
-
 }, storeListenerMixIn));
 </script>
 </polymer-element>

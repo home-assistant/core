@@ -156,7 +156,7 @@ Polymer(Polymer.mixin({
   isStreaming: false,
   hasStreamError: false,
 
-  ready: function() {
+  attached: function() {
     this.togglePanel = this.togglePanel.bind(this);
 
     this.listenToStores(true);

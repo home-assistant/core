@@ -71,12 +71,9 @@
 
     spinnerMessage: "",
 
-    ready: function() {
-      this.listenToStores(true);
-    },
-
     attached: function() {
       this.focusPassword();
+      this.listenToStores(true);
     },
 
     detached: function() {

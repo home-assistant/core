@@ -33,22 +33,22 @@
     </div>
   </template>
   <script>
-  Polymer({
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
     cbEventClicked: null,
     events: [],
 
-    ready: function() {
-      this.eventsUpdated = this.eventsUpdated.bind(this);
-      window.hass.eventStore.addChangeListener(this.eventsUpdated);
-      this.eventsUpdated();
+    attached: function() {
+      this.listenToStores(true);
     },
 
     detached: function() {
-      window.hass.eventStore.removeChangeListener(this.eventsUpdated);
+      this.stopListeningToStores();
     },
 
-    eventsUpdated: function() {
-      this.events = window.hass.eventStore.all();
+    eventStoreChanged: function(eventStore) {
+      this.events = eventStore.all();
     },
 
     handleClick: function(ev) {
@@ -57,6 +57,6 @@
       }
     },
 
-  });
+  }, storeListenerMixIn));
   </script>
 </polymer-element>

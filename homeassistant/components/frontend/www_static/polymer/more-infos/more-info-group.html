@@ -20,14 +20,33 @@
   </template>
 </template>
 <script>
-Polymer({
-  observe: {
-    'stateObj.attributes.entity_id': 'updateStates'
+var storeListenerMixIn = window.hass.storeListenerMixIn;
+var stateStore = window.hass.stateStore;
+
+Polymer(Polymer.mixin({
+  attached: function() {
+    this.listenToStores(true);
+  },
+
+  detached: function() {
+    this.stopListeningToStores();
+  },
+
+  stateStoreChanged: function() {
+    this.updateStates();
+  },
+
+  stateObjChanged: function() {
+    this.updateStates();
   },
 
   updateStates: function() {
-    this.states = window.hass.stateStore.gets(this.stateObj.attributes.entity_id);
-  }
-});
+    if (this.stateObj && this.stateObj.attributes.entity_id) {
+      this.states = stateStore.gets(this.stateObj.attributes.entity_id);
+    } else {
+      this.states = [];
+    }
+  },
+}, storeListenerMixIn));
 </script>
 </polymer-element>

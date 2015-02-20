@@ -13,7 +13,6 @@
       display: block;
     }
   </style>
-
   <div id='moreInfoContainer' class='{{classNames}}'></div>
 </template>
 <script>
@@ -56,7 +55,6 @@ Polymer({
     this.classNames = Object.keys(newVal).map(
       function(key) { return "has-" + key; }).join(' ');
   },
-
 });
 </script>
 </polymer-element>

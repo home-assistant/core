@@ -31,22 +31,22 @@
     </div>
   </template>
   <script>
-  Polymer({
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
     cbEventClicked: null,
     states: [],
 
-    ready: function() {
-      this.statesUpdated = this.statesUpdated.bind(this);
-      window.hass.stateStore.addChangeListener(this.statesUpdated);
-      this.statesUpdated();
+    attached: function() {
+      this.listenToStores(true);
     },
 
     detached: function() {
-      window.hass.stateStore.removeChangeListener(this.statesUpdated);
+      this.stopListeningToStores();
     },
 
-    statesUpdated: function() {
-      this.states = window.hass.stateStore.all();
+    stateStoreChanged: function(stateStore) {
+      this.states = stateStore.all();
     },
 
     handleClick: function(ev) {
@@ -55,6 +55,6 @@
       }
     },
 
-  });
+  }, storeListenerMixIn));
   </script>
 </polymer-element>

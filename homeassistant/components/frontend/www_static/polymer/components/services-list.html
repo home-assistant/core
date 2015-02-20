@@ -47,26 +47,26 @@
     </div>
   </template>
   <script>
-  Polymer({
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
     services: [],
     cbServiceClicked: null,
 
-    ready: function() {
-      this.servicesUpdated = this.servicesUpdated.bind(this);
-      window.hass.serviceStore.addChangeListener(this.servicesUpdated);
-      this.servicesUpdated();
+    attached: function() {
+      this.listenToStores(true);
     },
 
     detached: function() {
-      window.hass.serviceStore.removeChangeListener(this.servicesUpdated);
+      this.stopListeningToStores();
     },
 
     getIcon: function(domain) {
       return (new DomainIcon()).icon(domain);
     },
 
-    servicesUpdated: function() {
-      this.services = window.hass.serviceStore.all();
+    serviceStoreChanged: function(serviceStore) {
+      this.services = serviceStore.all();
     },
 
     serviceClicked: function(ev) {
@@ -79,6 +79,6 @@
       }
     }
 
-  });
+  }, storeListenerMixIn));
   </script>
 </polymer-element>
