@@ -31,6 +31,8 @@
 </template>
 <script>
   var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var syncActions = window.hass.syncActions;
+  var stateStore = window.hass.stateStore;
 
   Polymer(Polymer.mixin({
     headerTitle: "States",
@@ -50,8 +52,8 @@
       this.refreshStates();
     },
 
-    syncStoreChanged: function() {
-      this.isFetching = window.hass.syncStore.isFetching();
+    syncStoreChanged: function(syncStore) {
+      this.isFetching = syncStore.isFetching();
     },
 
     streamStoreChanged: function(streamStore) {
@@ -74,18 +76,18 @@
 
     refreshStates: function() {
       if (this.filter == 'group') {
-        this.states = _.filter(window.hass.stateStore.all(), function(state) {
+        this.states = _.filter(stateStore.all(), function(state) {
           return state.domain === 'group';
         });
       } else {
-        this.states = _.filter(window.hass.stateStore.all(), function(state) {
+        this.states = _.filter(stateStore.all(), function(state) {
           return state.domain !== 'group';
         });
       }
     },
 
     handleRefreshClick: function() {
-      window.hass.syncActions.sync();
+      syncActions.fetchAll();
     },
   }, storeListenerMixIn));
 </script>

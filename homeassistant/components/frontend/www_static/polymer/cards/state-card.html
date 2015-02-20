@@ -22,12 +22,12 @@
   <state-card-content stateObj={{stateObj}}></state-card-content>
 </template>
 <script>
+var uiActions = window.hass.uiActions;
+
 Polymer({
-
   cardClicked: function() {
-    window.hass.uiActions.showMoreInfoDialog(this.stateObj.entityId);
+    uiActions.showMoreInfoDialog(this.stateObj.entityId);
   },
-
 });
 </script>
 </polymer-element>

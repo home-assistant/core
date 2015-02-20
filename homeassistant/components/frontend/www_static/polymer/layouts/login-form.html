@@ -59,6 +59,7 @@
 
   <script>
   var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var uiActions = window.hass.uiActions;
 
   Polymer(Polymer.mixin({
     MSG_VALIDATING: "Validating password…",
@@ -113,9 +114,8 @@
     validatePassword: function() {
       this.$.hideKeyboardOnFocus.focus();
 
-      window.hass.uiActions.validateAuth(this.authToken);
+      uiActions.validateAuth(this.authToken);
     },
-
   }, storeListenerMixIn));
   </script>
 </polymer-element>

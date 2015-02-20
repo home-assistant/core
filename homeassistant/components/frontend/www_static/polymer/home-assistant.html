@@ -31,6 +31,7 @@
   </template>
   <script>
   var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var uiActions = window.hass.uiActions;
 
   Polymer(Polymer.mixin({
     loaded: false,
@@ -39,12 +40,14 @@
       // remove the HTML init message
       document.getElementById('init').remove();
 
-      this.listenToStores(true);
-
       // if auth was given, tell the backend
       if(this.auth) {
-        window.hass.uiActions.validateAuth(this.auth);    
+        uiActions.validateAuth(this.auth);    
       }
+    },
+
+    attached: function() {
+      this.listenToStores(true);
     },
 
     detached: function() {

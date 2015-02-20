@@ -30,11 +30,12 @@
   </div>
 </template>
 <script>
-Polymer({
+var parseDateTime = window.hass.util.parseDateTime;
 
+Polymer({
   stateObjChanged: function() {
-    var rising = window.hass.util.parseDateTime(this.stateObj.attributes.next_rising);
-    var setting = window.hass.util.parseDateTime(this.stateObj.attributes.next_setting);
+    var rising = parseDateTime(this.stateObj.attributes.next_rising);
+    var setting = parseDateTime(this.stateObj.attributes.next_setting);
 
     if(rising > setting) {
       this.$.sunData.appendChild(this.$.rising);
@@ -42,7 +43,6 @@ Polymer({
       this.$.sunData.appendChild(this.$.setting);
     }
   }
-
 });
 </script>
 </polymer-element>

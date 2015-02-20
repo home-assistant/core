@@ -54,6 +54,8 @@
   </div>
 </template>
 <script>
+var serviceActions = window.hass.serviceActions;
+
 Polymer({
   brightnessSliderValue: 0,
 
@@ -81,9 +83,9 @@ Polymer({
     if(isNaN(bri)) return;
 
     if(bri === 0) {
-      window.hass.serviceActions.callTurnOff(this.stateObj.entityId);
+      serviceActions.callTurnOff(this.stateObj.entityId);
     } else {
-      window.hass.serviceActions.callService("light", "turn_on", {
+      serviceActions.callService("light", "turn_on", {
         entity_id: this.stateObj.entityId,
         brightness: bri
       });
@@ -93,7 +95,7 @@ Polymer({
   colorPicked: function(ev) {
     var color = ev.detail.rgb;
 
-    window.hass.serviceActions.callService("light", "turn_on", {
+    serviceActions.callService("light", "turn_on", {
       entity_id: this.stateObj.entityId,
       rgb_color: [color.r, color.g, color.b]
     });

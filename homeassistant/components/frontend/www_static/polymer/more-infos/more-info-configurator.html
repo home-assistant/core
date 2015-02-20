@@ -68,6 +68,8 @@
 </template>
 <script>
   var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var syncActions = window.hass.syncActions;
+  var serviceActions = window.hass.serviceActions;
 
   Polymer(Polymer.mixin({
     action: "display",
@@ -91,13 +93,13 @@
         configure_id: this.stateObj.attributes.configure_id
       };
 
-      window.hass.serviceActions.callService('configurator', 'configure', data).then(
+      serviceActions.callService('configurator', 'configure', data).then(
 
         function() {
           this.action = 'display';
 
           if (!this.isStreaming) {
-            window.hass.syncActions.start();
+            syncActions.fetchAll();
           }
         }.bind(this),
 

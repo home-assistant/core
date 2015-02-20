@@ -147,6 +147,7 @@
 </template>
 <script>
 var storeListenerMixIn = window.hass.storeListenerMixIn;
+var authActions = window.hass.authActions;
 
 Polymer(Polymer.mixin({
   selected: "states",
@@ -206,9 +207,8 @@ Polymer(Polymer.mixin({
   },
 
   handleLogOutClick: function() {
-    window.hass.authActions.logOut();
+    authActions.logOut();
   },
-
 }, storeListenerMixIn));
 </script>  
 </polymer-element>

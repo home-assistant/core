@@ -56,6 +56,9 @@
 
 </template>
 <script>
+var stateStore = window.hass.stateStore;
+var stateActions = window.hass.stateActions;
+
 Polymer({
   ready: function() {
     // to ensure callback methods work..
@@ -82,14 +85,14 @@ Polymer({
   entitySelected: function(entityId) {
     this.setEntityId(entityId);
 
-    var state = window.hass.stateStore.get(entityId);
+    var state = stateStore.get(entityId);
     this.setState(state.state);
     this.setStateData(state.attributes);
   },
 
   clickSetState: function(ev) {
     try {
-      window.hass.stateActions.set(
+      stateActions.set(
         this.$.inputEntityID.value,
         this.$.inputState.value,
         this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {}

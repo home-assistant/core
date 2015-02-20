@@ -55,6 +55,8 @@
 
 </template>
 <script>
+var serviceActions = window.hass.serviceActions;
+
 Polymer({
   ready: function() {
     // to ensure callback methods work..
@@ -72,7 +74,7 @@ Polymer({
 
   clickCallService: function() {
     try {
-      window.hass.serviceActions.callService(
+      serviceActions.callService(
         this.$.inputDomain.value,
         this.$.inputService.value,
         this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});

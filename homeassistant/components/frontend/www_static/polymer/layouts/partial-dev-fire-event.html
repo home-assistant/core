@@ -54,6 +54,8 @@
 
 </template>
 <script>
+var eventActions = window.hass.eventActions;
+
 Polymer({
   ready: function() {
     // to ensure callback methods work..
@@ -66,10 +68,9 @@ Polymer({
 
   clickFireEvent: function() {
     try {
-      window.hass.eventActions.fire(
+      eventActions.fire(
         this.$.inputType.value,
         this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
-    
     } catch (err) {
       alert("Error parsing JSON: " + err);
     }
