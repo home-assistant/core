@@ -126,12 +126,12 @@ def _handle_get_api_stream(handler, path_match, data):
     hass.bus.listen(MATCH_ALL, forward_events)
 
     while True:
+        write_message(STREAM_PING_PAYLOAD)
+
         block.wait(STREAM_PING_INTERVAL)
 
         if block.is_set():
             break
-
-        write_message(STREAM_PING_PAYLOAD)
 
     if not gracefully_closed:
         _LOGGER.info("Found broken event stream to %s, cleaning up",

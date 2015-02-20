@@ -67,8 +67,23 @@
   </div>
 </template>
 <script>
-  Polymer({
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer(Polymer.mixin({
     action: "display",
+    isStreaming: false,
+
+    attached: function() {
+      this.listenToStores(true);
+    },
+
+    detached: function() {
+      this.stopListeningToStores();
+    },
+
+    streamStoreChanged: function(streamStore) {
+      this.isStreaming = streamStore.isStreaming();
+    },
 
     submitClicked: function() {
       this.action = "configuring";
@@ -80,13 +95,16 @@
 
         function() {
           this.action = 'display';
-          window.hass.syncActions.sync();
+
+          if (!this.isStreaming) {
+            window.hass.syncActions.start();
+          }
         }.bind(this),
 
         function() {
           this.action = 'display';
         }.bind(this));
-    }
-  });
+    },
+  }, storeListenerMixIn));
 </script>
 </polymer-element>
