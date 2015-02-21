@@ -36,6 +36,9 @@ TIME_DEVICE_NOT_FOUND = timedelta(minutes=3)
 # Filename to save known devices to
 KNOWN_DEVICES_FILE = "known_devices.csv"
 
+CONF_SECONDS = "interval_seconds"
+
+DEFAULT_CONF_SECONDS = 12
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +84,10 @@ def setup(hass, config):
 
         return False
 
-    tracker = DeviceTracker(hass, device_scanner)
+    seconds = util.convert(config[DOMAIN].get(CONF_SECONDS), int,
+                           DEFAULT_CONF_SECONDS)
+
+    tracker = DeviceTracker(hass, device_scanner, seconds)
 
     # We only succeeded if we got to parse the known devices file
     return not tracker.invalid_known_devices_file
@@ -90,7 +96,7 @@ def setup(hass, config):
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
-    def __init__(self, hass, device_scanner):
+    def __init__(self, hass, device_scanner, seconds):
         self.hass = hass
 
         self.device_scanner = device_scanner
@@ -126,8 +132,10 @@ class DeviceTracker(object):
         if self.invalid_known_devices_file:
             return
 
-        hass.track_time_change(
-            update_device_state, second=range(0, 60, 12))
+        seconds = range(0, 60, seconds)
+
+        _LOGGER.info("Device tracker interval second=%s", seconds)
+        hass.track_time_change(update_device_state, second=seconds)
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,
