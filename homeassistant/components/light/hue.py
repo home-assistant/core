@@ -159,7 +159,8 @@ class HueLight(ToggleDevice):
 
         if self.is_on:
             attr[ATTR_BRIGHTNESS] = self.info['state']['bri']
-            attr[ATTR_XY_COLOR] = self.info['state']['xy']
+            if 'xy' in self.info['state']:
+                attr[ATTR_XY_COLOR] = self.info['state']['xy']
 
         return attr
 
