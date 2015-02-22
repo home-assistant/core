@@ -8,14 +8,18 @@ fi
 
 docker build -t home-assistant-dev .
 
+# TODO set device via command line, remove /bin/bash
+
 if [ $# -gt 0 ]
 then
   docker run \
     --net=host \
     -e "TZ=$1" \
+    --device=/dev/bus/usb/002:/usbstick:rwm \
     -v `pwd`:/usr/src/app \
     -v `pwd`/config:/config \
-    -t -i home-assistant-dev
+    -t -i home-assistant-dev \
+    /bin/bash
 
 else
   docker run \
