@@ -14,8 +14,8 @@ if [ $# -gt 0 ]
 then
   docker run \
     --net=host \
+    --device=/dev/ttyUSB0:/zwaveusbstick:rwm \
     -e "TZ=$1" \
-    --device=/dev/bus/usb/002:/usbstick:rwm \
     -v `pwd`:/usr/src/app \
     -v `pwd`/config:/config \
     -t -i home-assistant-dev \

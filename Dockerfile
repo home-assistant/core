@@ -12,11 +12,10 @@ RUN apt-get update && \
     cd louie && \
     python setup.py install && \
     cd .. && \
-    hg clone https://code.google.com/p/python-openzwave/ && \
-    cd python-openzwave && \
+    hg clone https://code.google.com/r/balloob-python-openzwave/ && \
+    cd balloob-python-openzwave && \
     ./update.sh && \
     sed -i '253s/.*//' openzwave/cpp/src/value_classes/ValueID.h && \
-    2to3 --no-diffs -w -n api examples && \
     ./compile.sh && \
     ./install.sh
 
