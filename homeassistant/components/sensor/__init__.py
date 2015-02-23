@@ -8,18 +8,12 @@ from datetime import timedelta
 
 from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.const import (
-    STATE_OPEN)
 from homeassistant.helpers import (
-    platform_devices_from_config)
-from homeassistant.components import group, discovery, wink
+    platform_devices_from_config, generate_entity_id)
+from homeassistant.components import discovery, wink, zwave
 
 DOMAIN = 'sensor'
 DEPENDENCIES = []
-
-GROUP_NAME_ALL_SENSORS = 'all_sensors'
-ENTITY_ID_ALL_SENSORS = group.ENTITY_ID_FORMAT.format(
-    GROUP_NAME_ALL_SENSORS)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -28,16 +22,10 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=1)
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_SENSORS: 'wink',
+    zwave.DISCOVER_SENSORS: 'zwave',
 }
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def is_on(hass, entity_id=None):
-    """ Returns if the sensor is open based on the statemachine. """
-    entity_id = entity_id or ENTITY_ID_ALL_SENSORS
-
-    return hass.states.is_state(entity_id, STATE_OPEN)
 
 
 def setup(hass, config):
@@ -58,10 +46,6 @@ def setup(hass, config):
 
     update_sensor_states(None)
 
-    # Track all sensors in a group
-    sensor_group = group.Group(
-        hass, GROUP_NAME_ALL_SENSORS, sensors.keys(), False)
-
     def sensor_discovered(service, info):
         """ Called when a sensor is discovered. """
         platform = get_component("{}.{}".format(
@@ -71,15 +55,12 @@ def setup(hass, config):
 
         for sensor in discovered:
             if sensor is not None and sensor not in sensors.values():
-                sensor.entity_id = util.ensure_unique_string(
-                    ENTITY_ID_FORMAT.format(util.slugify(sensor.name)),
-                    sensors.keys())
+                sensor.entity_id = generate_entity_id(
+                    ENTITY_ID_FORMAT, sensor.name, sensors.keys())
 
                 sensors[sensor.entity_id] = sensor
 
                 sensor.update_ha_state(hass)
-
-        sensor_group.update_tracked_entity_ids(sensors.keys())
 
     discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), sensor_discovered)
 
