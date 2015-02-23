@@ -39,8 +39,6 @@ def setup(hass, config):
     def update_sensor_states(now):
         """ Update states of all sensors. """
         if sensors:
-            logger.info("Updating sensor states")
-
             for sensor in sensors.values():
                 sensor.update_ha_state(hass, True)
 
