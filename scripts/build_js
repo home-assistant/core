@@ -1,3 +1,5 @@
+# Builds the JS for production
+
 # If current pwd is scripts, go 1 up.
 if [ ${PWD##*/} == "scripts" ]; then
     cd ..
