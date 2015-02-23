@@ -71,6 +71,13 @@ TEMP_FAHRENHEIT = "°F"
 # Contains the information that is discovered
 ATTR_DISCOVERED = "discovered"
 
+# Location of the device/sensor
+ATTR_LOCATION = "location"
+
+ATTR_BATTERY_LEVEL = "battery_level"
+
+LIGHT_LUX = "LUX"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 

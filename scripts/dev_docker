@@ -1,3 +1,5 @@
+# Build and run Home Assinstant in Docker
+
 # Optional: pass in a timezone as first argument
 # If not given will attempt to mount /etc/localtime
 
@@ -8,8 +10,6 @@ fi
 
 docker build -t home-assistant-dev .
 
-# TODO set device via command line, remove /bin/bash
-
 if [ $# -gt 0 ]
 then
   docker run \
@@ -18,8 +18,7 @@ then
     -e "TZ=$1" \
     -v `pwd`:/usr/src/app \
     -v `pwd`/config:/config \
-    -t -i home-assistant-dev \
-    /bin/bash
+    -t -i home-assistant-dev
 
 else
   docker run \
