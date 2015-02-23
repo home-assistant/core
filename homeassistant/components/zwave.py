@@ -27,6 +27,32 @@ def get_node_value(node, key):
     return node.values[key].data if key in node.values else None
 
 
+def nice_print_node(node):
+    """ Prints a nice formatted node to the output """
+    from pprint import pprint
+
+    print("")
+    print("")
+    print("")
+    print("FOUND NODE", node.product_name)
+    pprint({key: getattr(node, key) for key
+            in dir(node)
+            if key != 'values' and
+            not hasattr(getattr(node, key), '__call__')})
+    print("")
+    print("")
+    print("VALUES")
+    pprint({
+        value_id: {key: getattr(value, key) for key
+                   in dir(value)
+                   if key[0] != '_' and
+                   not hasattr(getattr(value, key), '__call__')}
+        for value_id, value in node.values.items()})
+
+    print("")
+    print("")
+
+
 def setup(hass, config):
     """
     Setup Z-wave.
@@ -38,27 +64,26 @@ def setup(hass, config):
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
 
+    use_debug = config[DOMAIN].get(CONF_DEBUG) == '1'
+
     # Setup options
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
         user_path=hass.config_dir)
 
-    if config[DOMAIN].get(CONF_DEBUG) == '1':
-        options.set_console_output(True)
-
+    options.set_associate(True)
+    options.set_console_output(use_debug)
     options.lock()
 
     NETWORK = ZWaveNetwork(options, autostart=False)
 
-    def log_all(signal):
-        print("")
-        print("LOG ALL")
-        print(signal)
-        print("")
-        print("")
-        print("")
+    if use_debug:
+        def log_all(signal):
+            print("")
+            print("LOUIE SIGNAL *****", signal)
+            print("")
 
-    connect(log_all, weak=False)
+        connect(log_all, weak=False)
 
     def zwave_init_done(network):
         """ Called when Z-Wave has initialized. """
@@ -66,6 +91,9 @@ def setup(hass, config):
 
         # This should be rewritten more efficient when supporting more types
         for node in network.nodes.values():
+            if use_debug:
+                nice_print_node(node)
+
             if get_node_value(node, VALUE_SENSOR) and not init_sensor:
                 init_sensor = True
 

@@ -4,46 +4,11 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_BATTERY_LEVEL, ATTR_UNIT_OF_MEASUREMENT,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, LIGHT_LUX, ATTR_LOCATION)
 
-
-def devices_discovered(hass, config, info):
-    """ """
-    from louie import connect
-    from openzwave.network import ZWaveNetwork
-
-    VALUE_CLASS_MAP = {
-        zwave.VALUE_TEMPERATURE: ZWaveTemperatureSensor,
-        zwave.VALUE_LUMINANCE: ZWaveLuminanceSensor,
-        zwave.VALUE_RELATIVE_HUMIDITY: ZWaveRelativeHumiditySensor,
-    }
-
-    sensors = []
-
-    for node in zwave.NETWORK.nodes.values():
-        for value, klass in VALUE_CLASS_MAP.items():
-            if value in node.values:
-                sensors.append(klass(node))
-
-                if sensors[-1] is None:
-                    print("")
-                    print("WTF BBQ")
-                    print(node, klass)
-                    print("")
-                    continue
-
-    def value_changed(network, node, value):
-        """ """
-        print("")
-        print("")
-        print("")
-        print("ValueChanged in sensor !!", node, value)
-        print("")
-        print("")
-        print("")
-
-    # triggered when sensors have updated
-    connect(value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED, weak=False)
-
-    return sensors
+VALUE_REPORT = 72057594081707603
+REPORT_BATTERY = 1
+REPORT_TEMPERATURE = 1 << 5
+REPORT_HUMIDITY = 1 << 6
+REPORT_LUMINOSITY = 1 << 7
 
 
 class ZWaveSensor(Device):
@@ -115,7 +80,7 @@ class ZWaveTemperatureSensor(ZWaveSensor):
     @property
     def state(self):
         """ Returns the state of the sensor. """
-        return round(self._value.data/1000, 1)
+        return round(self._value.data, 1)
 
     @property
     def unit(self):
@@ -152,3 +117,33 @@ class ZWaveLuminanceSensor(ZWaveSensor):
     def unit(self):
         """ Unit of this sensor. """
         return LIGHT_LUX
+
+
+VALUE_CLASS_MAP = [
+    (zwave.VALUE_TEMPERATURE, ZWaveTemperatureSensor, REPORT_TEMPERATURE),
+    (zwave.VALUE_LUMINANCE, ZWaveLuminanceSensor, REPORT_LUMINOSITY),
+    (zwave.VALUE_RELATIVE_HUMIDITY, ZWaveRelativeHumiditySensor,
+     REPORT_HUMIDITY),
+]
+
+
+def devices_discovered(hass, config, info):
+    """ """
+    # from louie import connect
+    # from openzwave.network import ZWaveNetwork
+
+    sensors = []
+
+    for node in zwave.NETWORK.nodes.values():
+        report_mask = REPORT_BATTERY
+
+        for value, klass, sensor_report_mask in VALUE_CLASS_MAP:
+
+            if value in node.get_sensors():
+                sensors.append(klass(node))
+                report_mask |= sensor_report_mask
+
+        if report_mask != REPORT_BATTERY and VALUE_REPORT in node.values:
+            node.values[VALUE_REPORT].data = report_mask
+
+    return sensors
