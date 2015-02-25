@@ -28,14 +28,9 @@ password=PASSWORD
 # hosts=192.168.1.1-255 # address range
 
 [chromecast]
-# Optional: hard code the hosts (comma seperated) to find chromecasts
-# instead of scanning the network
-# hosts=192.168.1.9,192.168.1.12
 
 [switch]
 platform=wemo
-# Optional: hard code the hosts (comma seperated) to avoid scanning the network
-# hosts=192.168.1.9,192.168.1.12
 
 [thermostat]
 platform=nest
