@@ -95,8 +95,18 @@
   <hr class="divider">
   
 
-  <p>Installing and running Home Assistant is easy. Make sure you have <a href="https://www.python.org/downloads/">Python 3.4</a> and <a href="http://git-scm.com/downloads">git</a> installed and execute the following code in a console:</p>
+  <div class='install-instructions-container'>
+<input name='install-instructions' type='radio' id='normal-install' checked>
+<input name='install-instructions' type='radio' id='raspberry-install'>
+<input name='install-instructions' type='radio' id='docker-install'>
+<label class='menu-selector normal' for='normal-install'>Install on local machine</label>
+<label class='menu-selector raspberry' for='raspberry-install'>Install on a Raspberry Pi</label>
+<label class='menu-selector docker' for='docker-install'>Install using Docker</label>
+<div class='install-instructions normal'>
 
+Installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/'>Python 3.4</a> and <a href='http://git-scm.com/downloads'>git</a> installed and execute the following code in a console:
+
+<p>
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -106,37 +116,125 @@
 </span><span class='line'>python3 -m pip install -r requirements.txt
 </span><span class='line'>python3 -m homeassistant --open-ui
 </span></code></pre></td></tr></table></div></figure>
-
-
+</p>
 <p>Running these commands will:</p>
-
 <ol>
 <li>Download Home Assistant</li>
 <li>Navigate to downloaded files</li>
 <li>Install the dependencies</li>
-<li>Launch Home Assistant and serve web interface on <a href="http://localhost:8123">http://localhost:8123</a></li>
+<li>Launch Home Assistant and serve web interface on <a href='http://localhost:8123'>http://localhost:8123</a></li>
 </ol>
-
-
-<p>If you run into any issues, please see the <a href="/getting-started/troubleshooting.html">troubleshooting page</a>.</p>
+<p>If you run into any issues, please see the <a href='/getting-started/troubleshooting.html'>troubleshooting page</a>.</p>
 
 <p class='note'>
   You can run Home Assistant in demo mode by appending <code>--demo-mode</code> to line 4.
 </p>
 
+<p class='note'>
+  If you want to update to the latest version in the future, run: <code>scripts/update</code>.
+</p>
 
+</div>
 
+<div class='install-instructions docker'>
+<p>Installation with Docker is straightforward. Adjust the following command so that <code>/path/to/your/config/</code> points at the folder where you want to store your config and run it:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d --name<span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/your/config:/config -v /etc/localtime:/etc/localtime:ro --net<span class="o">=</span>host balloob/home-assistant
+</span></code></pre></td></tr></table></div></figure>
+
+<p>This will launch Home Assistant and serve its web interface from port 8123 on your Docker host.</p>
+
+<p class='note'>
+When using boot2docker on OS X you are unable to map the local time to your Docker container. Replace <code>-v /etc/localtime:/etc/localtime:ro</code> with <code>-e "TZ=America/Los_Angeles"</code> (replacing America/Los_Angeles with <a href='http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'>your timezone</a>)
+</p>
+</div>
+
+<div class='install-instructions raspberry'>
+
+<p>Home Assistant uses Python 3.4. This makes installation on a Raspberry Pi a bit more difficult as it is not available in the package repository. Please follow the following instructions to get it up and running.</p>
+
+<p><b>Step 1. Install pyenv</b></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer <span class="p">|</span> bash
+</span></code></pre></td></tr></table></div></figure>
+
+<p>After the installation is done, run:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>nano ~/.bashrc
+</span></code></pre></td></tr></table></div></figure>
+ 
+<p>Then add these lines to the end of the file and save:</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;$HOME/.pyenv/bin:$PATH&quot;</span>
+</span><span class='line'><span class="nb">eval</span> <span class="s2">&quot;$(pyenv init -)&quot;</span>
+</span><span class='line'><span class="nb">eval</span> <span class="s2">&quot;$(pyenv virtualenv-init -)&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p><b>Step 2. Install requirements</b></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo apt-get install python3-dev
+</span><span class='line'>sudo apt-get install libsqlite3-dev libreadline-dev
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Log out and then back in so your bashrc is reloaded.</p>
+
+<p class='note'>
+NOTE: the rest of the commands are not being run as sudo and will install python etc under you user&#8217;s home directory.
+</p>
+
+<p><b>Step 3. Install python 3.4.2 (this will take a few hours)</b></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>pyenv install 3.4.2
+</span></code></pre></td></tr></table></div></figure>
+
+<p><b>Step 4. Create Python Virtual Environment</b></p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>pyenv virtualenv 3.4.2 homeassistant
+</span></code></pre></td></tr></table></div></figure>
+
+<p><b>Step 5. Clone the source</b></p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>git clone --recursive https://github.com/balloob/home-assistant.git
+</span></code></pre></td></tr></table></div></figure>
+
+<p><b>Step 6. Set the virtual environment</b></p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd </span>home-assistant
+</span><span class='line'>pyenv <span class="nb">local </span>homeassistant
+</span></code></pre></td></tr></table></div></figure>
+
+<p><b>Step 6. Finish the install</b></p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>python3 -m pip install -r requirements.txt
+</span></code></pre></td></tr></table></div></figure>
+
+<p><b>Step 7. Start it up</b></p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>python3 -m homeassistant
+</span></code></pre></td></tr></table></div></figure>
+
+<p>It will be up and running on port 8123</p>
+
+<p class='note'>
+  You can run Home Assistant in demo mode by appending <code>--demo-mode</code> to line 4.
+</p>
 
 <p class='note'>
   If you want to update to the latest version in the future, run: <code>scripts/update</code>.
 </p>
 
+</div>
 
-<p>If you&rsquo;re using Docker, you can use</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d --name<span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/homeassistant/config:/config -v /etc/localtime:/etc/localtime:ro --net<span class="o">=</span>host balloob/home-assistant
-</span></code></pre></td></tr></table></div></figure>
+</div>
 
 
 <h2><a class='title-link' name='configuring-home-assistant' href='#configuring-home-assistant'></a> Configuring Home Assistant</h2>
