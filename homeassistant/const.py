@@ -76,8 +76,6 @@ ATTR_LOCATION = "location"
 
 ATTR_BATTERY_LEVEL = "battery_level"
 
-LIGHT_LUX = "lux"
-
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 

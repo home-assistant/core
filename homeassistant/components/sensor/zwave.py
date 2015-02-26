@@ -1,25 +1,26 @@
+"""
+homeassistant.components.sensor.zwave
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Interfaces with Z-Wave sensors.
+"""
 import homeassistant.components.zwave as zwave
 from homeassistant.helpers import Device
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_BATTERY_LEVEL, ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, LIGHT_LUX, ATTR_LOCATION)
-
-VALUE_REPORT = 72057594081707603
-REPORT_BATTERY = 1
-REPORT_TEMPERATURE = 1 << 5
-REPORT_HUMIDITY = 1 << 6
-REPORT_LUMINOSITY = 1 << 7
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION, STATE_ON, STATE_OFF)
 
 
 class ZWaveSensor(Device):
-    def __init__(self, node, sensor_value):
-        self._node = node
-        self._value = node.values[sensor_value]
+    """ Represents a Z-Wave sensor. """
+    def __init__(self, sensor_value):
+        self._value = sensor_value
+        self._node = sensor_value.node
 
     @property
     def unique_id(self):
         """ Returns a unique id. """
-        return "ZWAVE-{}-{}".format(self._node.node_id, self._value)
+        return "ZWAVE-{}-{}".format(self._node.node_id, self._value.object_id)
 
     @property
     def name(self):
@@ -38,18 +39,18 @@ class ZWaveSensor(Device):
     def state_attributes(self):
         """ Returns the state attributes. """
         attrs = {
-            ATTR_FRIENDLY_NAME: self.name
+            ATTR_FRIENDLY_NAME: self.name,
+            zwave.ATTR_NODE_ID: self._node.node_id,
         }
 
-        battery_level = zwave.get_node_value(
-            self._node, zwave.VALUE_BATTERY_LEVEL)
+        battery_level = self._node.get_battery_level()
 
         if battery_level is not None:
             attrs[ATTR_BATTERY_LEVEL] = battery_level
 
         unit = self.unit
 
-        if unit is not None:
+        if unit:
             attrs[ATTR_UNIT_OF_MEASUREMENT] = unit
 
         location = self._node.location
@@ -57,30 +58,36 @@ class ZWaveSensor(Device):
         if location:
             attrs[ATTR_LOCATION] = location
 
-        attrs.update(self.get_sensor_attributes())
-
         return attrs
 
     @property
     def unit(self):
         """ Unit if sensor has one. """
-        return None
-
-    def get_sensor_attributes(self):
-        """ Get sensor attributes. """
-        return {}
+        return self._value.units
 
 
-class ZWaveTemperatureSensor(ZWaveSensor):
-    """ Represents a ZWave Temperature Sensor. """
-
-    def __init__(self, node):
-        super().__init__(node, zwave.VALUE_TEMPERATURE)
+# pylint: disable=too-few-public-methods
+class ZWaveBinarySensor(ZWaveSensor):
+    """ Represents a binary sensor within Z-Wave. """
 
     @property
     def state(self):
         """ Returns the state of the sensor. """
-        return round(self._value.data, 1)
+        return STATE_ON if self._value.data else STATE_OFF
+
+
+class ZWaveMultilevelSensor(ZWaveSensor):
+    """ Represents a multi level sensor Z-Wave sensor. """
+
+    @property
+    def state(self):
+        """ Returns the state of the sensor. """
+        value = self._value.data
+
+        if self._value.units in ('C', 'F'):
+            return round(value, 1)
+
+        return value
 
     @property
     def unit(self):
@@ -92,58 +99,21 @@ class ZWaveTemperatureSensor(ZWaveSensor):
         elif unit == 'F':
             return TEMP_FAHRENHEIT
         else:
-            return None
-
-
-class ZWaveRelativeHumiditySensor(ZWaveSensor):
-    """ Represents a ZWave Relative Humidity Sensor. """
-
-    def __init__(self, node):
-        super().__init__(node, zwave.VALUE_RELATIVE_HUMIDITY)
-
-    @property
-    def unit(self):
-        """ Unit of this sensor. """
-        return '%'
-
-
-class ZWaveLuminanceSensor(ZWaveSensor):
-    """ Represents a ZWave luminance Sensor. """
-
-    def __init__(self, node):
-        super().__init__(node, zwave.VALUE_LUMINANCE)
-
-    @property
-    def unit(self):
-        """ Unit of this sensor. """
-        return LIGHT_LUX
-
-
-VALUE_CLASS_MAP = [
-    (zwave.VALUE_TEMPERATURE, ZWaveTemperatureSensor, REPORT_TEMPERATURE),
-    (zwave.VALUE_LUMINANCE, ZWaveLuminanceSensor, REPORT_LUMINOSITY),
-    (zwave.VALUE_RELATIVE_HUMIDITY, ZWaveRelativeHumiditySensor,
-     REPORT_HUMIDITY),
-]
+            return unit
 
 
 def devices_discovered(hass, config, info):
-    """ """
-    # from louie import connect
-    # from openzwave.network import ZWaveNetwork
+    """ Called when a device is discovered. """
+    node = zwave.NETWORK.nodes[info[zwave.ATTR_NODE_ID]]
+    value = node.values[info[zwave.ATTR_VALUE_ID]]
 
-    sensors = []
+    value.set_change_verified(False)
 
-    for node in zwave.NETWORK.nodes.values():
-        report_mask = REPORT_BATTERY
+    if zwave.NETWORK.controller.node_id not in node.groups[1].associations:
+        node.groups[1].add_association(zwave.NETWORK.controller.node_id)
 
-        for value, klass, sensor_report_mask in VALUE_CLASS_MAP:
+    if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
+        return [ZWaveBinarySensor(value)]
 
-            if value in node.get_sensors():
-                sensors.append(klass(node))
-                report_mask |= sensor_report_mask
-
-        if report_mask != REPORT_BATTERY and VALUE_REPORT in node.values:
-            node.values[VALUE_REPORT].data = report_mask
-
-    return sensors
+    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
+        return [ZWaveMultilevelSensor(value)]
