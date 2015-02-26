@@ -1,5 +1,12 @@
+"""
+homeassistant.components.zwave
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Connects Home Assistant to a Z-Wave network.
+"""
+from pprint import pprint
+
 from homeassistant import bootstrap
-from homeassistant.loader import get_component
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
@@ -13,44 +20,39 @@ CONF_DEBUG = "debug"
 
 DISCOVER_SENSORS = "zwave.sensors"
 
-VALUE_SENSOR = 72057594076463104
-VALUE_TEMPERATURE = 72057594076479506
-VALUE_LUMINANCE = 72057594076479538
-VALUE_RELATIVE_HUMIDITY = 72057594076479570
-VALUE_BATTERY_LEVEL = 72057594077773825
+COMMAND_CLASS_SENSOR_BINARY = 48
+COMMAND_CLASS_SENSOR_MULTILEVEL = 49
+COMMAND_CLASS_BATTERY = 128
+
+# list of tuple (DOMAIN, discovered service, supported command classes)
+DISCOVERY_COMPONENTS = [
+    ('sensor', DISCOVER_SENSORS,
+     [COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL]),
+]
+
+ATTR_NODE_ID = "node_id"
+ATTR_VALUE_ID = "value_id"
 
 NETWORK = None
 
 
-def get_node_value(node, key):
-    """ Helper function to get a node value. """
-    return node.values[key].data if key in node.values else None
+def _obj_to_dict(obj):
+    """ Converts an obj into a hash for debug. """
+    return {key: getattr(obj, key) for key
+            in dir(obj)
+            if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
 def nice_print_node(node):
-    """ Prints a nice formatted node to the output """
-    from pprint import pprint
+    """ Prints a nice formatted node to the output (debug method) """
+    node_dict = _obj_to_dict(node)
+    node_dict['values'] = {value_id: _obj_to_dict(value)
+                           for value_id, value in node.values.items()}
 
-    print("")
-    print("")
-    print("")
+    print("\n\n\n")
     print("FOUND NODE", node.product_name)
-    pprint({key: getattr(node, key) for key
-            in dir(node)
-            if key != 'values' and
-            not hasattr(getattr(node, key), '__call__')})
-    print("")
-    print("")
-    print("VALUES")
-    pprint({
-        value_id: {key: getattr(value, key) for key
-                   in dir(value)
-                   if key[0] != '_' and
-                   not hasattr(getattr(value, key), '__call__')}
-        for value_id, value in node.values.items()})
-
-    print("")
-    print("")
+    pprint(node_dict)
+    print("\n\n\n")
 
 
 def setup(hass, config):
@@ -58,6 +60,7 @@ def setup(hass, config):
     Setup Z-wave.
     Will automatically load components to support devices found on the network.
     """
+    # pylint: disable=global-statement, import-error
     global NETWORK
 
     from louie import connect
@@ -71,46 +74,42 @@ def setup(hass, config):
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
         user_path=hass.config_dir)
 
-    options.set_associate(True)
     options.set_console_output(use_debug)
     options.lock()
 
     NETWORK = ZWaveNetwork(options, autostart=False)
 
     if use_debug:
-        def log_all(signal):
+        def log_all(signal, value=None):
+            """ Log all the louie signals. """
             print("")
             print("LOUIE SIGNAL *****", signal)
+            if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
+                                    ZWaveNetwork.SIGNAL_VALUE_ADDED):
+                pprint(_obj_to_dict(value))
             print("")
 
         connect(log_all, weak=False)
 
-    def zwave_init_done(network):
-        """ Called when Z-Wave has initialized. """
-        init_sensor = False
-
-        # This should be rewritten more efficient when supporting more types
-        for node in network.nodes.values():
-            if use_debug:
-                nice_print_node(node)
-
-            if get_node_value(node, VALUE_SENSOR) and not init_sensor:
-                init_sensor = True
-
-                component = get_component('sensor')
-
+    def value_added(node, value):
+        """ Called when a value is added to a node on the network. """
+        for component, discovery_service, command_ids in DISCOVERY_COMPONENTS:
+            if value.command_class in command_ids:
                 # Ensure component is loaded
-                if component.DOMAIN not in hass.components:
-                    bootstrap.setup_component(hass, component.DOMAIN, config)
+                if component not in hass.components:
+                    bootstrap.setup_component(hass, component, config)
 
                 # Fire discovery event
                 hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                    ATTR_SERVICE: DISCOVER_SENSORS,
-                    ATTR_DISCOVERED: {}
+                    ATTR_SERVICE: discovery_service,
+                    ATTR_DISCOVERED: {
+                        ATTR_NODE_ID: node.node_id,
+                        ATTR_VALUE_ID: value.value_id,
+                    }
                 })
 
     connect(
-        zwave_init_done, ZWaveNetwork.SIGNAL_NETWORK_READY, weak=False)
+        value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
 
     def stop_zwave(event):
         """ Stop Z-wave. """
