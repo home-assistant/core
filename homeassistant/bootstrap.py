@@ -79,7 +79,8 @@ def from_config_dict(config, hass=None):
 
     # Make a copy because we are mutating it.
     # Convert it to defaultdict so components can always have config dict
-    config = defaultdict(dict, config)
+    # Convert values to dictionaries if they are None
+    config = defaultdict(dict, {key: value or {} for key, value in config.items()})
 
     # Filter out the repeating and common config section [homeassistant]
     components = (key for key in config.keys()
