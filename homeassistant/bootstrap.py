@@ -112,6 +112,7 @@ def from_config_file(config_path, hass=None):
         # Set config dir to directory holding config file
         hass.config_dir = os.path.abspath(os.path.dirname(config_path))
 
+    config_dict = {}
     # check config file type
     if(os.path.splitext(config_path)[1] == '.yaml'):
         # Read yaml
