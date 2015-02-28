@@ -169,7 +169,8 @@ class DeviceTracker(object):
         """ Update device states based on the found devices. """
         self.lock.acquire()
 
-        found_devices = set(self.device_scanner.scan_devices())
+        found_devices = set(dev.upper() for dev in
+                            self.device_scanner.scan_devices())
 
         for device in self.tracked:
             is_home = device in found_devices
