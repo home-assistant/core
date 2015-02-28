@@ -8,13 +8,14 @@ if [ ${PWD##*/} == "scripts" ]; then
     cd ..
 fi
 
-cd ..
+mkdir build
+cd build
 
 # We need to install louie here or else python-openzwave install
 # will download louie from PIP and that one is not compatible with Python 3
 git clone https://github.com/balloob/louie.git
 cd louie
-python setup.py install
+python3 setup.py install
 cd ..
 
 hg clone https://code.google.com/r/balloob-python-openzwave/
