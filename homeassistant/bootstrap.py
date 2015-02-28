@@ -114,7 +114,7 @@ def from_config_file(config_path, hass=None):
 
     config_dict = {}
     # check config file type
-    if(os.path.splitext(config_path)[1] == '.yaml'):
+    if os.path.splitext(config_path)[1] == '.yaml':
         # Read yaml
         config_dict = yaml.load(io.open(config_path, 'r'))
     else:
