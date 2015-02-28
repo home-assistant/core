@@ -37,6 +37,8 @@ platform=nest
 # Required: username and password that are used to login to the Nest thermostat.
 username=myemail@mydomain.com
 password=mypassword
+# Optional: C for Celsius (default), F for Fahrenheit
+# unit=F
 
 [downloader]
 download_dir=downloads
