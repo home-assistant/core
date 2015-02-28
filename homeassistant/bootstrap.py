@@ -11,6 +11,8 @@ start by calling homeassistant.start_home_assistant(bus)
 
 import os
 import configparser
+import yaml
+import io
 import logging
 from collections import defaultdict
 
@@ -77,7 +79,9 @@ def from_config_dict(config, hass=None):
 
     # Make a copy because we are mutating it.
     # Convert it to defaultdict so components can always have config dict
-    config = defaultdict(dict, config)
+    # Convert values to dictionaries if they are None
+    config = defaultdict(
+        dict, {key: value or {} for key, value in config.items()})
 
     # Filter out the repeating and common config section [homeassistant]
     components = (key for key in config.keys()
@@ -110,17 +114,21 @@ def from_config_file(config_path, hass=None):
         # Set config dir to directory holding config file
         hass.config_dir = os.path.abspath(os.path.dirname(config_path))
 
-    # Read config
-    config = configparser.ConfigParser()
-    config.read(config_path)
-
     config_dict = {}
+    # check config file type
+    if os.path.splitext(config_path)[1] == '.yaml':
+        # Read yaml
+        config_dict = yaml.load(io.open(config_path, 'r'))
+    else:
+        # Read config
+        config = configparser.ConfigParser()
+        config.read(config_path)
 
-    for section in config.sections():
-        config_dict[section] = {}
+        for section in config.sections():
+            config_dict[section] = {}
 
-        for key, val in config.items(section):
-            config_dict[section][key] = val
+            for key, val in config.items(section):
+                config_dict[section][key] = val
 
     return from_config_dict(config_dict, hass)
 
