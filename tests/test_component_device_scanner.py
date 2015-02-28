@@ -80,8 +80,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner = loader.get_component(
             'device_tracker.test').get_scanner(None, None)
 
-        scanner.come_home('dev1')
-        scanner.come_home('dev2')
+        scanner.come_home('DEV1')
+        scanner.come_home('DEV2')
 
         self.assertTrue(device_tracker.setup(self.hass, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
@@ -93,18 +93,18 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         # To ensure all the three expected lines are there, we sort the file
         with open(self.known_dev_path) as fil:
             self.assertEqual(
-                ['dev1,unknown device,0,\n', 'dev2,DEV2,0,\n',
+                ['DEV1,unknown device,0,\n', 'DEV2,dev2,0,\n',
                  'device,name,track,picture\n'],
                 sorted(fil))
 
         # Write one where we track dev1, dev2
         with open(self.known_dev_path, 'w') as fil:
             fil.write('device,name,track,picture\n')
-            fil.write('dev1,Device 1,1,http://example.com/dev1.jpg\n')
-            fil.write('dev2,Device 2,1,http://example.com/dev2.jpg\n')
+            fil.write('DEV1,device 1,1,http://example.com/dev1.jpg\n')
+            fil.write('DEV2,device 2,1,http://example.com/dev2.jpg\n')
 
-        scanner.leave_home('dev1')
-        scanner.come_home('dev3')
+        scanner.leave_home('DEV1')
+        scanner.come_home('DEV3')
 
         self.hass.services.call(
             device_tracker.DOMAIN,
@@ -112,8 +112,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.hass.pool.block_till_done()
 
-        dev1 = device_tracker.ENTITY_ID_FORMAT.format('Device_1')
-        dev2 = device_tracker.ENTITY_ID_FORMAT.format('Device_2')
+        dev1 = device_tracker.ENTITY_ID_FORMAT.format('device_1')
+        dev2 = device_tracker.ENTITY_ID_FORMAT.format('device_2')
         dev3 = device_tracker.ENTITY_ID_FORMAT.format('DEV3')
 
         now = datetime.now()
@@ -142,17 +142,17 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         # Test if dev3 got added to known dev file
         with open(self.known_dev_path) as fil:
-            self.assertEqual('dev3,DEV3,0,\n', list(fil)[-1])
+            self.assertEqual('DEV3,dev3,0,\n', list(fil)[-1])
 
         # Change dev3 to track
         with open(self.known_dev_path, 'w') as fil:
             fil.write("device,name,track,picture\n")
-            fil.write('dev1,Device 1,1,http://example.com/picture.jpg\n')
-            fil.write('dev2,Device 2,1,http://example.com/picture.jpg\n')
-            fil.write('dev3,DEV3,1,\n')
+            fil.write('DEV1,Device 1,1,http://example.com/picture.jpg\n')
+            fil.write('DEV2,Device 2,1,http://example.com/picture.jpg\n')
+            fil.write('DEV3,DEV3,1,\n')
 
-        scanner.come_home('dev1')
-        scanner.leave_home('dev2')
+        scanner.come_home('DEV1')
+        scanner.leave_home('DEV2')
 
         # reload dev file
         self.hass.services.call(

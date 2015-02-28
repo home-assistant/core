@@ -36,6 +36,6 @@ class MockScanner(object):
         Returns a name for a mock device.
         Returns None for dev1 for testing.
         """
-        return None if device == 'dev1' else device.upper()
+        return None if device == 'DEV1' else device.lower()
 
 SCANNER = MockScanner()
