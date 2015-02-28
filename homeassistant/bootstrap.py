@@ -11,6 +11,8 @@ start by calling homeassistant.start_home_assistant(bus)
 
 import os
 import configparser
+import yaml
+import io
 import logging
 from collections import defaultdict
 
