@@ -22,8 +22,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 DEPENDENCIES = []
 
-SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
-SERVICE_TURN_AWAY_MODE_OFF = "turn_away_mode_off"
+SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
@@ -34,16 +33,26 @@ _LOGGER = logging.getLogger(__name__)
 
 def turn_away_mode_on(hass, entity_id=None):
     """ Turn all or specified thermostat away mode on. """
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {
+        ATTR_AWAY_MODE: True
+    }
 
-    hass.services.call(DOMAIN, SERVICE_TURN_AWAY_MODE_ON, data)
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
 
 
 def turn_away_mode_off(hass, entity_id=None):
     """ Turn all or specified thermostat away mode off. """
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {
+        ATTR_AWAY_MODE: False
+    }
 
-    hass.services.call(DOMAIN, SERVICE_TURN_AWAY_MODE_OFF, data)
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
 
 
 def set_temperature(hass, temperature, entity_id=None):
@@ -90,13 +99,20 @@ def setup(hass, config):
         if not target_thermostats:
             target_thermostats = thermostats.values()
 
-        if service.service == SERVICE_TURN_AWAY_MODE_ON:
-            for thermostat in target_thermostats:
-                thermostat.turn_away_mode_on()
+        if service.service == SERVICE_SET_AWAY_MODE:
+            away_mode = service.data.get(ATTR_AWAY_MODE)
 
-        elif service.service == SERVICE_TURN_AWAY_MODE_OFF:
-            for thermostat in target_thermostats:
-                thermostat.turn_away_mode_off()
+            if away_mode is None:
+                _LOGGER.error(
+                    "Received call to %s without attribute %s",
+                    SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
+
+            elif away_mode:
+                for thermostat in target_thermostats:
+                    thermostat.turn_away_mode_on()
+            else:
+                for thermostat in target_thermostats:
+                    thermostat.turn_away_mode_off()
 
         elif service.service == SERVICE_SET_TEMPERATURE:
             temperature = util.convert(
@@ -112,10 +128,7 @@ def setup(hass, config):
             thermostat.update_ha_state(hass, True)
 
     hass.services.register(
-        DOMAIN, SERVICE_TURN_AWAY_MODE_OFF, thermostat_service)
-
-    hass.services.register(
-        DOMAIN, SERVICE_TURN_AWAY_MODE_ON, thermostat_service)
+        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service)
