@@ -29,3 +29,6 @@ pushbullet.py>=0.7.1
 
 # thermostat.nest
 python-nest>=2.1
+
+# pyyaml
+pyyaml

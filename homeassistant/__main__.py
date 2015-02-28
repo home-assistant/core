@@ -72,15 +72,19 @@ def ensure_config_path(config_dir):
                'directory {} ').format(config_dir))
         sys.exit()
 
-    config_path = os.path.join(config_dir, 'home-assistant.conf')
+    # Try to use yaml configuration first
+    config_path = os.path.join(config_dir, 'configuration.yaml')
+    if not os.path.isfile(config_path):
+        config_path = os.path.join(config_dir, 'home-assistant.conf')
 
     # Ensure a config file exists to make first time usage easier
     if not os.path.isfile(config_path):
+        config_path = os.path.join(config_dir, 'configuration.yaml')
         try:
             with open(config_path, 'w') as conf:
-                conf.write("[frontend]\n\n")
-                conf.write("[discovery]\n\n")
-                conf.write("[history]\n\n")
+                conf.write("frontend:\n\n")
+                conf.write("discovery:\n\n")
+                conf.write("history:\n\n")
         except IOError:
             print(('Fatal Error: No configuration file found and unable '
                    'to write a default one to {}').format(config_path))
