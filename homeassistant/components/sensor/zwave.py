@@ -4,11 +4,14 @@ homeassistant.components.sensor.zwave
 
 Interfaces with Z-Wave sensors.
 """
+from openzwave.network import ZWaveNetwork
+from pydispatch import dispatcher
+
 import homeassistant.components.zwave as zwave
 from homeassistant.helpers import Device
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_BATTERY_LEVEL, ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION, STATE_ON, STATE_OFF)
+    ATTR_BATTERY_LEVEL, ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF,
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
 
 
 class ZWaveSensor(Device):
@@ -16,6 +19,14 @@ class ZWaveSensor(Device):
     def __init__(self, sensor_value):
         self._value = sensor_value
         self._node = sensor_value.node
+
+        dispatcher.connect(
+            self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
+
+    @property
+    def should_poll(self):
+        """ False because we will push our own state to HA when changed. """
+        return False
 
     @property
     def unique_id(self):
@@ -39,7 +50,6 @@ class ZWaveSensor(Device):
     def state_attributes(self):
         """ Returns the state attributes. """
         attrs = {
-            ATTR_FRIENDLY_NAME: self.name,
             zwave.ATTR_NODE_ID: self._node.node_id,
         }
 
@@ -64,6 +74,11 @@ class ZWaveSensor(Device):
     def unit(self):
         """ Unit if sensor has one. """
         return self._value.units
+
+    def _value_changed(self, value):
+        """ Called when a value has changed on the network. """
+        if self._value.value_id == value.value_id:
+            self.update_ha_state()
 
 
 # pylint: disable=too-few-public-methods
