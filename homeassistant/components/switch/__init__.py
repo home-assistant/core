@@ -71,7 +71,7 @@ def setup(hass, config):
             logger.info("Updating switch states")
 
             for switch in switches.values():
-                switch.update_ha_state(hass, True)
+                switch.update_ha_state(True)
 
     update_states(None)
 
@@ -88,12 +88,14 @@ def setup(hass, config):
 
         for switch in discovered:
             if switch is not None and switch not in switches.values():
+                switch.hass = hass
+
                 switch.entity_id = generate_entity_id(
                     ENTITY_ID_FORMAT, switch.name, switches.keys())
 
                 switches[switch.entity_id] = switch
 
-                switch.update_ha_state(hass)
+                switch.update_ha_state()
 
         switch_group.update_tracked_entity_ids(switches.keys())
 
@@ -114,7 +116,7 @@ def setup(hass, config):
             else:
                 switch.turn_off()
 
-            switch.update_ha_state(hass)
+            switch.update_ha_state(True)
 
     # Update state every 30 seconds
     hass.track_time_change(update_states, second=[0, 30])

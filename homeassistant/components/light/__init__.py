@@ -178,12 +178,14 @@ def setup(hass, config):
         """ Add lights to the component to track. """
         for light in new_lights:
             if light is not None and light not in lights.values():
+                light.hass = hass
+
                 light.entity_id = generate_entity_id(
                     ENTITY_ID_FORMAT, light.name, lights.keys())
 
                 lights[light.entity_id] = light
 
-                light.update_ha_state(hass)
+                light.update_ha_state()
 
         light_group.update_tracked_entity_ids(lights.keys())
 
@@ -201,7 +203,8 @@ def setup(hass, config):
             _LOGGER.info("Updating light states")
 
             for light in lights.values():
-                light.update_ha_state(hass, True)
+                if light.should_poll:
+                    light.update_ha_state(True)
 
     update_lights_state(None)
 
@@ -298,7 +301,7 @@ def setup(hass, config):
                 light.turn_on(**params)
 
         for light in target_lights:
-            light.update_ha_state(hass, True)
+            light.update_ha_state(True)
 
     # Update light state every 30 seconds
     hass.track_time_change(update_lights_state, second=[0, 30])

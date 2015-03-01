@@ -82,7 +82,8 @@ def setup(hass, config):
         logger.info("Updating thermostat state")
 
         for thermostat in thermostats.values():
-            thermostat.update_ha_state(hass, True)
+            if thermostat.should_poll:
+                thermostat.update_ha_state(True)
 
     # Update state every minute
     hass.track_time_change(update_state, second=[0])
@@ -125,7 +126,7 @@ def setup(hass, config):
                 thermostat.set_temperature(temperature)
 
         for thermostat in target_thermostats:
-            thermostat.update_ha_state(hass, True)
+            thermostat.update_ha_state(True)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service)

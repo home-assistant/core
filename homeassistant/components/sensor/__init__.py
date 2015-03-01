@@ -40,7 +40,8 @@ def setup(hass, config):
         """ Update states of all sensors. """
         if sensors:
             for sensor in sensors.values():
-                sensor.update_ha_state(hass, True)
+                if sensor.should_poll:
+                    sensor.update_ha_state(True)
 
     update_sensor_states(None)
 
@@ -53,12 +54,14 @@ def setup(hass, config):
 
         for sensor in discovered:
             if sensor is not None and sensor not in sensors.values():
+                sensor.hass = hass
+
                 sensor.entity_id = generate_entity_id(
                     ENTITY_ID_FORMAT, sensor.name, sensors.keys())
 
                 sensors[sensor.entity_id] = sensor
 
-                sensor.update_ha_state(hass)
+                sensor.update_ha_state()
 
     discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), sensor_discovered)
 
