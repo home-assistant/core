@@ -56,8 +56,13 @@ device_sun_light_trigger:
 # A comma seperated list of states that have to be tracked as a single group
 # Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
 group: 
-  living_room: light.Bowl,light.Ceiling,light.TV_back_light
-  children: device_tracker.child_1,device_tracker.child_2
+  living_room:
+    - light.Bowl
+    - light.Ceiling
+    - light.TV_back_light
+  children:
+   - device_tracker.child_1
+   - device_tracker.child_2
 
 process:
   # items are which processes to look for: <entity_id>: <search string within ps>
