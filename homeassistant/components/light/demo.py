@@ -2,8 +2,7 @@
 import random
 
 from homeassistant.helpers import ToggleDevice
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, ATTR_FRIENDLY_NAME)
+from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_XY_COLOR
 
 
@@ -44,15 +43,11 @@ class DemoLight(ToggleDevice):
     @property
     def state_attributes(self):
         """ Returns optional state attributes. """
-        attr = {
-            ATTR_FRIENDLY_NAME: self._name,
-        }
-
         if self.is_on:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-            attr[ATTR_XY_COLOR] = self._xy
-
-        return attr
+            return {
+                ATTR_BRIGHTNESS: self._brightness,
+                ATTR_XY_COLOR: self._xy,
+            }
 
     @property
     def is_on(self):

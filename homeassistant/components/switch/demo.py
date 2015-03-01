@@ -1,7 +1,6 @@
 """ Demo platform that has two fake switchces. """
 from homeassistant.helpers import ToggleDevice
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, ATTR_FRIENDLY_NAME)
+from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
 
 def get_devices(hass, config):
@@ -37,11 +36,6 @@ class DemoSwitch(ToggleDevice):
     def state(self):
         """ Returns the name of the device if any. """
         return self._state
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        return {ATTR_FRIENDLY_NAME: self._name}
 
     @property
     def is_on(self):

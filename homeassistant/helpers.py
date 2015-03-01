@@ -7,8 +7,8 @@ from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.loader import get_component
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM, CONF_TYPE,
-    DEVICE_DEFAULT_NAME)
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF, CONF_PLATFORM,
+    CONF_TYPE, DEVICE_DEFAULT_NAME)
 from homeassistant.util import ensure_unique_string, slugify
 
 
@@ -216,7 +216,7 @@ class Device(object):
 
     def get_state_attributes(self):
         """ Returns optional state attributes. """
-        return {}
+        return None
 
     def update(self):
         """ Retrieve latest state from the real device. """
@@ -234,8 +234,12 @@ class Device(object):
         if force_refresh:
             self.update()
 
-        return hass.states.set(self.entity_id, self.state,
-                               self.state_attributes)
+        attr = self.state_attributes or {}
+
+        if ATTR_FRIENDLY_NAME not in attr and self.name:
+            attr[ATTR_FRIENDLY_NAME] = self.name
+
+        return hass.states.set(self.entity_id, self.state, attr)
 
     def __eq__(self, other):
         return (isinstance(other, Device) and

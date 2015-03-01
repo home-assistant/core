@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.helpers import ToggleDevice
-from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.components.switch import (
     ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
 
@@ -75,12 +74,9 @@ class WemoSwitch(ToggleDevice):
             cur_info = self.wemo.insight_params
 
             return {
-                ATTR_FRIENDLY_NAME: self.wemo.name,
                 ATTR_CURRENT_POWER_MWH: cur_info['currentpower'],
                 ATTR_TODAY_MWH: cur_info['todaymw']
             }
-        else:
-            return {ATTR_FRIENDLY_NAME: self.wemo.name}
 
     @property
     def is_on(self):
