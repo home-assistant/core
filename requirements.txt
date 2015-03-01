@@ -30,5 +30,8 @@ pushbullet.py>=0.7.1
 # thermostat.nest
 python-nest>=2.1
 
+# z-wave
+pydispatcher>=2.0.5
+
 # pyyaml
 pyyaml

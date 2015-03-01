@@ -63,7 +63,7 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global NETWORK
 
-    from louie import connect
+    from pydispatch import dispatcher
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
 
@@ -89,7 +89,7 @@ def setup(hass, config):
                 pprint(_obj_to_dict(value))
             print("")
 
-        connect(log_all, weak=False)
+        dispatcher.connect(log_all, weak=False)
 
     def value_added(node, value):
         """ Called when a value is added to a node on the network. """
@@ -108,7 +108,7 @@ def setup(hass, config):
                     }
                 })
 
-    connect(
+    dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
 
     def stop_zwave(event):
