@@ -1,21 +1,21 @@
 homeassistant:
-# Location required to calculate the time the sun rises and sets
-  latitude: '32.87336'
-  longitude: '-117.22743'
+  # Location required to calculate the time the sun rises and sets
+  latitude: 32.87336
+  longitude: 117.22743
 
 http:
   api_password: mypass
-  # Set to 1 to load each Polymer component separately
+  # Set to 1 to enable development mode
   # development: 1
 
-#light:
+light:
 #  platform: hue
 
-#wink:
+wink:
   # Get your token at https://winkbearertoken.appspot.com
-#  access_token: 'YOUR_TOKEN'
+  access_token: 'YOUR_TOKEN'
 
-#device_tracker:
+device_tracker:
   # The following types are available: netgear, tomato, luci, nmap_tracker
   platform: netgear
   host: 192.168.1.1
@@ -27,11 +27,12 @@ http:
   # hosts: 192.168.1.1/24 # netmask prefix notation or
   # hosts: 192.168.1.1-255 # address range
 
-#chromecast:
+chromecast:
+
 switch:
   platform: wemo
 
-#thermostat:
+thermostat:
   platform: nest
   # Required: username and password that are used to login to the Nest thermostat.
   username: myemail@mydomain.com
