@@ -4,6 +4,7 @@ homeassistant.components.sensor.zwave
 
 Interfaces with Z-Wave sensors.
 """
+# pylint: disable=import-error
 from openzwave.network import ZWaveNetwork
 from pydispatch import dispatcher
 
