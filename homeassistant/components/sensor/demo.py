@@ -4,23 +4,13 @@ from homeassistant.const import (
     TEMP_CELCIUS, ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
 
 
-def get_devices(hass, config):
-    """ Find and return Wink sensors. """
-
-    return get_sensors()
-
-
-def devices_discovered(hass, config, info):
-    """ Called when a device is discovered. """
-    return get_sensors()
-
-
-def get_sensors():
-    """ Returns the Wink sensors. """
-    return [
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up the Demo sensors. """
+    add_devices([
         DemoSensor('Outside Temperature', 15.6, TEMP_CELCIUS),
         DemoSensor('Outside Humidity', 54, '%'),
-    ]
+    ])
 
 
 class DemoSensor(Device):

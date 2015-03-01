@@ -15,6 +15,23 @@ from homeassistant.const import (
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
 
 
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up Z-Wave sensors. """
+    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+
+    value.set_change_verified(False)
+
+    if zwave.NETWORK.controller.node_id not in node.groups[1].associations:
+        node.groups[1].add_association(zwave.NETWORK.controller.node_id)
+
+    if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
+        return [ZWaveBinarySensor(value)]
+
+    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
+        return [ZWaveMultilevelSensor(value)]
+
+
 class ZWaveSensor(Device):
     """ Represents a Z-Wave sensor. """
     def __init__(self, sensor_value):
@@ -116,20 +133,3 @@ class ZWaveMultilevelSensor(ZWaveSensor):
             return TEMP_FAHRENHEIT
         else:
             return unit
-
-
-def devices_discovered(hass, config, info):
-    """ Called when a device is discovered. """
-    node = zwave.NETWORK.nodes[info[zwave.ATTR_NODE_ID]]
-    value = node.values[info[zwave.ATTR_VALUE_ID]]
-
-    value.set_change_verified(False)
-
-    if zwave.NETWORK.controller.node_id not in node.groups[1].associations:
-        node.groups[1].add_association(zwave.NETWORK.controller.node_id)
-
-    if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
-        return [ZWaveBinarySensor(value)]
-
-    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
-        return [ZWaveMultilevelSensor(value)]

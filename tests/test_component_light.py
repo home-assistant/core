@@ -103,7 +103,7 @@ class TestLight(unittest.TestCase):
         self.assertTrue(
             light.setup(self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}))
 
-        dev1, dev2, dev3 = platform.get_lights()
+        dev1, dev2, dev3 = platform.DEVICES
 
         # Test init
         self.assertTrue(light.is_on(self.hass, dev1.entity_id))
@@ -244,7 +244,7 @@ class TestLight(unittest.TestCase):
             self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
         ))
 
-        dev1, dev2, dev3 = platform.get_lights()
+        dev1, dev2, dev3 = platform.DEVICES
 
         light.turn_on(self.hass, dev1.entity_id, profile='test')
 

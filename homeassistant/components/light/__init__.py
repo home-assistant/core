@@ -52,17 +52,18 @@ import logging
 import os
 import csv
 
-from homeassistant.loader import get_component
+from homeassistant.helpers.device_component import DeviceComponent
+
 import homeassistant.util as util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.helpers import (
-    generate_entity_id, extract_entity_ids, config_per_platform)
+from homeassistant.helpers import extract_entity_ids
 from homeassistant.components import group, discovery, wink
 
 
 DOMAIN = "light"
 DEPENDENCIES = []
+SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
@@ -140,6 +141,13 @@ def turn_off(hass, entity_id=None, transition=None):
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
 
+    component = DeviceComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
+        GROUP_NAME_ALL_LIGHTS)
+    component.setup(config)
+
+    lights = component.devices
+
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),
                                   LIGHT_PROFILES_FILE),
@@ -167,55 +175,6 @@ def setup(hass, config):
                         "Error parsing light profiles from %s", profile_path)
 
                     return False
-
-    # Dict to track entity_id -> lights
-    lights = {}
-
-    # Track all lights in a group
-    light_group = group.Group(hass, GROUP_NAME_ALL_LIGHTS, user_defined=False)
-
-    def add_lights(new_lights):
-        """ Add lights to the component to track. """
-        for light in new_lights:
-            if light is not None and light not in lights.values():
-                light.hass = hass
-
-                light.entity_id = generate_entity_id(
-                    ENTITY_ID_FORMAT, light.name, lights.keys())
-
-                lights[light.entity_id] = light
-
-                light.update_ha_state()
-
-        light_group.update_tracked_entity_ids(lights.keys())
-
-    for p_type, p_config in config_per_platform(config, DOMAIN, _LOGGER):
-        platform = get_component(ENTITY_ID_FORMAT.format(p_type))
-
-        if platform is None:
-            _LOGGER.error("Unknown type specified: %s", p_type)
-
-        platform.setup_platform(hass, p_config, add_lights)
-
-    def update_lights_state(now):
-        """ Update the states of all the lights. """
-        if lights:
-            _LOGGER.info("Updating light states")
-
-            for light in lights.values():
-                if light.should_poll:
-                    light.update_ha_state(True)
-
-    update_lights_state(None)
-
-    def light_discovered(service, info):
-        """ Called when a light is discovered. """
-        platform = get_component(
-            ENTITY_ID_FORMAT.format(DISCOVERY_PLATFORMS[service]))
-
-        platform.setup_platform(hass, {}, add_lights, info)
-
-    discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), light_discovered)
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
@@ -302,9 +261,6 @@ def setup(hass, config):
 
         for light in target_lights:
             light.update_ha_state(True)
-
-    # Update light state every 30 seconds
-    hass.track_time_change(update_lights_state, second=[0, 30])
 
     # Listen for light on and light off service calls
     hass.services.register(DOMAIN, SERVICE_TURN_ON,

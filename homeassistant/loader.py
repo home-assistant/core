@@ -132,10 +132,13 @@ def get_component(comp_name):
 
             return module
 
-        except ImportError:
-            _LOGGER.exception(
-                ("Error loading %s. Make sure all "
-                 "dependencies are installed"), path)
+        except ImportError as err:
+            # This error happens if for example custom_components/switch
+            # exists and we try to load switch.demo.
+            if str(err) != "No module named '{}'".format(path):
+                _LOGGER.exception(
+                    ("Error loading %s. Make sure all "
+                     "dependencies are installed"), path)
 
     _LOGGER.error("Unable to find component %s", comp_name)
 

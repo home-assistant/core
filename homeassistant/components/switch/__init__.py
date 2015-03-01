@@ -6,16 +6,16 @@ Component to interface with various switches that can be controlled remotely.
 import logging
 from datetime import timedelta
 
-from homeassistant.loader import get_component
-import homeassistant.util as util
+from homeassistant.helpers.device_component import DeviceComponent
+
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.helpers import (
-    generate_entity_id, extract_entity_ids, platform_devices_from_config)
+from homeassistant.helpers import extract_entity_ids
 from homeassistant.components import group, discovery, wink
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
+SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_SWITCHES = 'all switches'
 ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
@@ -59,47 +59,12 @@ def turn_off(hass, entity_id=None):
 
 def setup(hass, config):
     """ Track states and offer events for switches. """
-    logger = logging.getLogger(__name__)
+    component = DeviceComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
+        GROUP_NAME_ALL_SWITCHES)
+    component.setup(config)
 
-    switches = platform_devices_from_config(
-        config, DOMAIN, hass, ENTITY_ID_FORMAT, logger)
-
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
-    def update_states(now):
-        """ Update states of all switches. """
-        if switches:
-            logger.info("Updating switch states")
-
-            for switch in switches.values():
-                switch.update_ha_state(True)
-
-    update_states(None)
-
-    # Track all switches in a group
-    switch_group = group.Group(
-        hass, GROUP_NAME_ALL_SWITCHES, switches.keys(), False)
-
-    def switch_discovered(service, info):
-        """ Called when a switch is discovered. """
-        platform = get_component("{}.{}".format(
-            DOMAIN, DISCOVERY_PLATFORMS[service]))
-
-        discovered = platform.devices_discovered(hass, config, info)
-
-        for switch in discovered:
-            if switch is not None and switch not in switches.values():
-                switch.hass = hass
-
-                switch.entity_id = generate_entity_id(
-                    ENTITY_ID_FORMAT, switch.name, switches.keys())
-
-                switches[switch.entity_id] = switch
-
-                switch.update_ha_state()
-
-        switch_group.update_tracked_entity_ids(switches.keys())
-
-    discovery.listen(hass, DISCOVERY_PLATFORMS.keys(), switch_discovered)
+    switches = component.devices
 
     def handle_switch_service(service):
         """ Handles calls to the switch services. """
@@ -117,9 +82,6 @@ def setup(hass, config):
                 switch.turn_off()
 
             switch.update_ha_state(True)
-
-    # Update state every 30 seconds
-    hass.track_time_change(update_states, second=[0, 30])
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_switch_service)
 
