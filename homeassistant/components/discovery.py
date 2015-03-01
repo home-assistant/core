@@ -54,7 +54,7 @@ def setup(hass, config):
     logger = logging.getLogger(__name__)
 
     try:
-        from homeassistant.external.netdisco.netdisco import DiscoveryService
+        from homeassistant.external.netdisco.netdisco.service import DiscoveryService
     except ImportError:
         logger.exception(
             "Unable to import netdisco. "
