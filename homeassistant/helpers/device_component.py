@@ -100,8 +100,16 @@ class DeviceComponent(object):
         try:
             platform.setup_platform(
                 self.hass, config, self._add_devices, discovery_info)
-        except (AttributeError, TypeError):
-            # AttributeError if setup_platform does not exist
-            # TypeError if wrong number of argumnets for setup_platform
-            self.logger.exception(
-                "Error setting up %s", platform_type)
+        except AttributeError:
+            # Support old deprecated method for now - 3/1/2015
+            if hasattr(platform, 'get_devices'):
+                self.logger.warning(
+                    "Please upgrade %s to return new devices using "
+                    "setup_platform. See %s/demo.py for an example.",
+                    platform_name, self.domain)
+                self._add_devices(platform.get_devices(self.hass, config))
+
+            else:
+                # AttributeError if setup_platform does not exist
+                self.logger.exception(
+                    "Error setting up %s", platform_type)
