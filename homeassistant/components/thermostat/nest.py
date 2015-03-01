@@ -7,8 +7,9 @@ from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
 
-def get_devices(hass, config):
-    """ Gets Nest thermostats. """
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up the nest thermostat. """
     logger = logging.getLogger(__name__)
 
     username = config.get(CONF_USERNAME)
@@ -17,7 +18,7 @@ def get_devices(hass, config):
     if username is None or password is None:
         logger.error("Missing required configuration items %s or %s",
                      CONF_USERNAME, CONF_PASSWORD)
-        return []
+        return
 
     try:
         import nest
@@ -26,14 +27,15 @@ def get_devices(hass, config):
             "Error while importing dependency nest. "
             "Did you maybe not install the python-nest dependency?")
 
-        return []
+        return
 
     napi = nest.Nest(username, password)
 
-    return [
+    add_devices([
         NestThermostat(structure, device)
         for structure in napi.structures
-        for device in structure.devices]
+        for device in structure.devices
+    ])
 
 
 class NestThermostat(ThermostatDevice):

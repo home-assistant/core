@@ -3,22 +3,13 @@ from homeassistant.helpers import ToggleDevice
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
 
-def get_devices(hass, config):
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return demo switches. """
-    return get_switches()
-
-
-def devices_discovered(hass, config, info):
-    """ Called when a device is discovered. """
-    return get_switches()
-
-
-def get_switches():
-    """ Returns the Wink switches. """
-    return [
+    add_devices_callback([
         DemoSwitch('Ceiling', STATE_ON),
         DemoSwitch('AC', STATE_OFF)
-    ]
+    ])
 
 
 class DemoSwitch(ToggleDevice):

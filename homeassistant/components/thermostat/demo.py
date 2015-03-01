@@ -6,14 +6,12 @@ from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS, TEMP_FAHRENHEIT
 
 
-# pylint: disable=unused-argument
-def get_devices(hass, config):
-    """ Gets thermostats. """
-
-    return [
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up the Demo thermostats. """
+    add_devices([
         DemoThermostat("Nest", 21, TEMP_CELCIUS, False, 19),
         DemoThermostat("Thermostat", 68, TEMP_FAHRENHEIT, True, 77),
-    ]
+    ])
 
 
 # pylint: disable=too-many-arguments

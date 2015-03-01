@@ -8,26 +8,17 @@ from homeassistant.components.wink import WinkSensorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 
-def get_devices(hass, config):
-    """ Find and return Wink sensors. """
-    token = config.get(CONF_ACCESS_TOKEN)
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up the Wink platform. """
+    if discovery_info is None:
+        token = config.get(CONF_ACCESS_TOKEN)
 
-    if token is None:
-        logging.getLogger(__name__).error(
-            "Missing wink access_token - "
-            "get one at https://winkbearertoken.appspot.com/")
-        return []
+        if token is None:
+            logging.getLogger(__name__).error(
+                "Missing wink access_token - "
+                "get one at https://winkbearertoken.appspot.com/")
+            return
 
-    pywink.set_bearer_token(token)
+        pywink.set_bearer_token(token)
 
-    return get_sensors()
-
-
-def devices_discovered(hass, config, info):
-    """ Called when a device is discovered. """
-    return get_sensors()
-
-
-def get_sensors():
-    """ Returns the Wink sensors. """
-    return [WinkSensorDevice(sensor) for sensor in pywink.get_sensors()]
+    add_devices(WinkSensorDevice(sensor) for sensor in pywink.get_sensors())

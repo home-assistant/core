@@ -5,22 +5,20 @@ homeassistant.components.thermostat
 Provides functionality to interact with thermostats.
 """
 import logging
-from datetime import timedelta
 
-from homeassistant.helpers import (
-    extract_entity_ids, platform_devices_from_config)
+from homeassistant.helpers.device_component import DeviceComponent
+
 import homeassistant.util as util
-from homeassistant.helpers import Device
+from homeassistant.helpers import Device, extract_entity_ids
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON, STATE_OFF)
 
 DOMAIN = "thermostat"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 DEPENDENCIES = []
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+SCAN_INTERVAL = 60
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
@@ -31,22 +29,10 @@ ATTR_AWAY_MODE = "away_mode"
 _LOGGER = logging.getLogger(__name__)
 
 
-def turn_away_mode_on(hass, entity_id=None):
+def set_away_mode(hass, away_mode, entity_id=None):
     """ Turn all or specified thermostat away mode on. """
     data = {
-        ATTR_AWAY_MODE: True
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
-
-
-def turn_away_mode_off(hass, entity_id=None):
-    """ Turn all or specified thermostat away mode off. """
-    data = {
-        ATTR_AWAY_MODE: False
+        ATTR_AWAY_MODE: away_mode
     }
 
     if entity_id:
@@ -67,27 +53,10 @@ def set_temperature(hass, temperature, entity_id=None):
 
 def setup(hass, config):
     """ Setup thermostats. """
+    component = DeviceComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component.setup(config)
 
-    logger = logging.getLogger(__name__)
-
-    thermostats = platform_devices_from_config(
-        config, DOMAIN, hass, ENTITY_ID_FORMAT, _LOGGER)
-
-    if not thermostats:
-        return False
-
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
-    def update_state(now):
-        """ Update thermostat state. """
-        logger.info("Updating thermostat state")
-
-        for thermostat in thermostats.values():
-            if thermostat.should_poll:
-                thermostat.update_ha_state(True)
-
-    # Update state every minute
-    hass.track_time_change(update_state, second=[0])
-    update_state(None)
+    thermostats = component.devices
 
     def thermostat_service(service):
         """ Handles calls to the services. """

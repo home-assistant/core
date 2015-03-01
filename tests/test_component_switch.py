@@ -30,7 +30,7 @@ class TestSwitch(unittest.TestCase):
 
         # Switch 1 is ON, switch 2 is OFF
         self.switch_1, self.switch_2, self.switch_3 = \
-            platform.get_switches(None, None)
+            platform.DEVICES
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
