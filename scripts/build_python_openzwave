@@ -1,5 +1,5 @@
 # Sets up and builds python open zwave to be used with Home Assistant
-# Dependencies that need to be installed:
+# Dependencies that need to be installed: 
 # apt-get install cython3 libudev-dev python-sphinx python3-setuptools mercurial
 # pip3 install cython
 
