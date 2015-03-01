@@ -11,7 +11,6 @@ import logging
 import threading
 
 # pylint: disable=no-name-in-module, import-error
-from homeassistant.external.netdisco.netdisco import DiscoveryService
 import homeassistant.external.netdisco.netdisco.const as services
 
 from homeassistant import bootstrap
@@ -52,11 +51,18 @@ def listen(hass, service, callback):
 
 def setup(hass, config):
     """ Starts a discovery service. """
+    logger = logging.getLogger(__name__)
+
+    try:
+        from homeassistant.external.netdisco.netdisco import DiscoveryService
+    except ImportError:
+        logger.exception(
+            "Unable to import netdisco. "
+            "Did you install all the zeroconf dependency?")
+        return False
 
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
-
-    logger = logging.getLogger(__name__)
 
     lock = threading.Lock()
 
