@@ -25,6 +25,7 @@ class DeviceComponent(object):
 
         self.devices = {}
         self.group = None
+        self.is_polling = False
 
     def setup(self, config):
         """
@@ -46,9 +47,6 @@ class DeviceComponent(object):
                 config_per_platform(config, self.domain, self.logger):
 
             self._setup_platform(p_type, p_config)
-
-        self.hass.track_time_change(self._update_device_states,
-                                    second=range(0, 60, self.scan_interval))
 
         if self.discovery_platforms:
             discovery.listen(self.hass, self.discovery_platforms.keys(),
@@ -87,6 +85,20 @@ class DeviceComponent(object):
 
         if self.group is not None:
             self.group.update_tracked_entity_ids(self.devices.keys())
+
+        self._start_polling()
+
+    def _start_polling(self):
+        """ Start polling device states if necessary. """
+        if self.is_polling or \
+           not any(device.should_poll for device in self.devices.values()):
+            return
+
+        self.is_polling = True
+
+        self.hass.track_time_change(
+            self._update_device_states,
+            second=range(0, 60, self.scan_interval))
 
     def _setup_platform(self, platform_type, config, discovery_info=None):
         """ Tries to setup a platform for this component. """
