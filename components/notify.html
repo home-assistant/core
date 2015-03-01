@@ -99,19 +99,19 @@
 
 <p>Home Assistant currently supports the awesome <a href="https://www.pushbullet.com/">PushBullet</a>, a free service to send information between your phones, browsers and friends.</p>
 
-<p>To add PushBullet to your installation, add the following to your <code>home-assistant.conf</code> file:</p>
+<p>To add PushBullet to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[notify]
-</span><span class='line'>platform=pushbullet
-</span><span class='line'>api_key=YOUR_API_KEY</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>notify:
+</span><span class='line'>  platform: pushbullet
+</span><span class='line'>  api_key: YOUR_API_KEY</span></code></pre></td></tr></table></div></figure>
 
 
 <h3>Automation example</h3>
 
-<p>Notifications are great to be used within Home Automation. Below is a an example configuration that you can add to your <code>home-assistant.conf</code> to be notified when the sun sets.</p>
+<p>Notifications are great to be used within Home Automation. Below is a an example configuration that you can add to your <code>configuration.yaml</code> to be notified when the sun sets.</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -123,16 +123,16 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[automation]
-</span><span class='line'>alias=Sun set notification
+</pre></td><td class='code'><pre><code class=''><span class='line'>automation:
+</span><span class='line'>  alias: Sun set notification
 </span><span class='line'>
-</span><span class='line'>platform=state
-</span><span class='line'>state_entity_id=sun.sun
-</span><span class='line'>state_from=above_horizon
-</span><span class='line'>state_to=below_horizon
+</span><span class='line'>  platform: state
+</span><span class='line'>  state_entity_id: sun.sun
+</span><span class='line'>  state_from: above_horizon
+</span><span class='line'>  state_to: below_horizon
 </span><span class='line'>
-</span><span class='line'>execute_service=notify.notify
-</span><span class='line'>service_data={"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  execute_service: notify.notify
+</span><span class='line'>  service_data: {"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
 
 
 <p>For more automation examples, see the <a href="/components/automation.html">getting started with automation page</a>.</p>

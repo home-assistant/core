@@ -99,18 +99,18 @@
 
 <p>This component depends on the compoments <a href="/components/device_tracker.html">device_tracker</a> and <a href="/components/light.html">light</a> being setup.</p>
 
-<p>To set it up, add the following lines to your <code>home-assistant.conf</code>:</p>
+<p>To set it up, add the following lines to your <code>configuration.yaml</code>:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[simple_alarm]
-</span><span class='line'># Which light/light group has to flash when a known device comes home
-</span><span class='line'>known_light=light.Bowl
-</span><span class='line'># Which light/light group has to flash red when light turns on while no one home
-</span><span class='line'>unknown_light=group.living_room</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>simple_alarm:
+</span><span class='line'>  # Which light/light group has to flash when a known device comes home
+</span><span class='line'>  known_light: light.Bowl
+</span><span class='line'>  # Which light/light group has to flash red when light turns on while no one home
+</span><span class='line'>  unknown_light: group.living_room</span></code></pre></td></tr></table></div></figure>
 
 
 

@@ -100,16 +100,16 @@ is easy to built your own. If you are the kind of person that likes to learn fro
 
 <p>The first is <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/hello_world.py">hello_world.py</a>, which is the classic Hello World example for Home Assistant. The second one is <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py">example.py</a> which showcases various ways you can tap into Home Assistant to be notified when certain events occur.</p>
 
-<p>If you want to load these components in Home Assistant, add the following lines to your <code>home-assistant.conf</code> file:</p>
+<p>If you want to load these components in Home Assistant, add the following lines to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[hello_world]
+</pre></td><td class='code'><pre><code class=''><span class='line'>hello_world:
 </span><span class='line'>
-</span><span class='line'>[example]
-</span><span class='line'>target=TARGET_ENTITY</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>example:
+</span><span class='line'>  target: TARGET_ENTITY</span></code></pre></td></tr></table></div></figure>
 
 
 <p><code>TARGET_ENTITY</code> should be one of your devices that can be turned on and off, ie a light or a switch. Example value could be <code>light.Ceiling</code> or <code>switch.AC</code> (if you have these devices with those names).</p>
@@ -196,8 +196,8 @@ Home Assistant will use the directory that contains your config file as the dire
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[example]
-</span><span class='line'>host=paulusschoutsen.nl</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>example:
+</span><span class='line'>  host: paulusschoutsen.nl</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Then in the setup-method of your component you will be able to refer to <code>config['example']['host']</code> to get the value <code>paulusschoutsen.nl</code>.</p>

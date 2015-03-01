@@ -109,18 +109,18 @@
 
 <p>Preferred way to setup the Philips Hue platform is through the <a href="/components/discovery.html">the discovery component</a>. For the Wink light platform enable <a href="/components/wink.html">the wink component</a>.</p>
 
-<p>If you really feel like enabling the light component directly, add the following lines to your <code>home-assistant.conf</code>:</p>
+<p>If you want to enable the light component directly, add the following lines to your <code>configuration.yaml</code>:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[light]
-</span><span class='line'>platform=hue</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>light:
+</span><span class='line'>  platform: hue</span></code></pre></td></tr></table></div></figure>
 
 
 
 
 <p class='note'>
-The light component supports multiple entries in <code>home-assistant.conf</code> by appending a sequential number to the section: <code>[light 2]</code>, <code>[light 3]</code> etc.
+The light component supports multiple entries in <code>configuration.yaml</code> by appending a sequential number to the section: <code>light 2:</code>, <code>light 3:</code> etc.
 </p>
 
 

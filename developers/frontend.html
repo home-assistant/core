@@ -99,14 +99,12 @@
 
 <h1><a class='title-link' name='turning-on-development-mode' href='#turning-on-development-mode'></a> Turning on development mode</h1>
 
-<p>Home Assistant will by default serve the compiled version of the frontend. To change it so that the components are served separately, update your <code>home-assistant.conf</code> to have these lines:</p>
+<p>Home Assistant will by default serve the compiled version of the frontend. To change it so that the components are served separately, update your <code>configuration.yaml</code> to have these lines:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[http]
-</span><span class='line'>api_password=YOUR_PASSWORD
-</span><span class='line'>development=1</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>http:
+</span><span class='line'>  development: 1</span></code></pre></td></tr></table></div></figure>
 
 
 <p>After turning on development mode, you will have to install the webcomponents that the frontend depends on. You can do this by running the <code>build_frontend</code> script.</p>

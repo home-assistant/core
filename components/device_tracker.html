@@ -95,18 +95,18 @@
   <hr class="divider">
   
 
-  <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers: tomato, netgear and luci (OpenWRT). To get started add the following lines to your <code>home-assistant.conf</code> (example for Netgear):</p>
+  <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers: tomato, netgear and luci (OpenWRT). To get started add the following lines to your <code>configuration.yaml</code> (example for Netgear):</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[device_tracker]
-</span><span class='line'>platform=netgear
-</span><span class='line'>host=192.168.1.1
-</span><span class='line'>username=admin
-</span><span class='line'>password=MY_PASSWORD</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>device_tracker:
+</span><span class='line'>  platform: netgear
+</span><span class='line'>  host: 192.168.1.1
+</span><span class='line'>  username: admin
+</span><span class='line'>  password: MY_PASSWORD</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -130,9 +130,9 @@ Before the Luci scanner can be used you have to install the luci RPC package on 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[device_tracker]
-</span><span class='line'>platform=nmap_tracker
-</span><span class='line'>hosts=192.168.1.1/24</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>device_tracker:
+</span><span class='line'>  platform: nmap_tracker
+</span><span class='line'>  hosts: 192.168.1.1/24</span></code></pre></td></tr></table></div></figure>
 
 
 

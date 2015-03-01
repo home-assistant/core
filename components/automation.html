@@ -112,19 +112,19 @@
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[automation]
-</span><span class='line'># Optional alias that the logs will use to refer to the entry
-</span><span class='line'>alias=Sunset notification
+</pre></td><td class='code'><pre><code class=''><span class='line'>automation:
+</span><span class='line'>  # Optional alias that the logs will use to refer to the entry
+</span><span class='line'>  alias: Sunset notification
 </span><span class='line'>
-</span><span class='line'># Type of trigger and informatino for the trigger
-</span><span class='line'>platform=state
-</span><span class='line'>state_entity_id=sun.sun
-</span><span class='line'>state_from=above_horizon
-</span><span class='line'>state_to=below_horizon
+</span><span class='line'>  # Type of trigger and informatino for the trigger
+</span><span class='line'>  platform: state
+</span><span class='line'>  state_entity_id: sun.sun
+</span><span class='line'>  state_from: above_horizon
+</span><span class='line'>  state_to: below_horizon
 </span><span class='line'>
-</span><span class='line'># Action to be done when trigger activated
-</span><span class='line'>execute_service=notify.notify
-</span><span class='line'>service_data={"message":"The sun has set"}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  # Action to be done when trigger activated
+</span><span class='line'>  execute_service: notify.notify
+</span><span class='line'>  service_data: {"message":"The sun has set"}</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Setting up triggers</h2>
@@ -145,17 +145,16 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Match at the start of every hour
-</span><span class='line'>platform=time
-</span><span class='line'>time_minutes=0
-</span><span class='line'>time_seconds=0
+</pre></td><td class='code'><pre><code class=''><span class='line'>  # Match at the start of every hour
+</span><span class='line'>  platform: time
+</span><span class='line'>  time_minutes: 0
+</span><span class='line'>  time_seconds: 0
 </span><span class='line'>
-</span><span class='line'># Match at 4pm
-</span><span class='line'>platform=time
-</span><span class='line'>time_hours=16
-</span><span class='line'>time_minutes=0
-</span><span class='line'>time_seconds=0
-</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  # Match at 4pm
+</span><span class='line'>  platform: time
+</span><span class='line'>  time_hours: 16
+</span><span class='line'>  time_minutes: 0
+</span><span class='line'>  time_seconds: 0</span></code></pre></td></tr></table></div></figure>
 
 
 <h4>State-based automation</h4>
@@ -180,22 +179,22 @@
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'># Match when the sun sets
-</span><span class='line'>platform=state
-</span><span class='line'>state_entity_id=sun.sun
-</span><span class='line'>state_from=above_horizon
-</span><span class='line'>state_to=below_horizon
+</span><span class='line'>  platform: state
+</span><span class='line'>  state_entity_id: sun.sun
+</span><span class='line'>  state_from: above_horizon
+</span><span class='line'>  state_to: below_horizon
 </span><span class='line'>
-</span><span class='line'># Match when a person comes home
-</span><span class='line'>platform=state
-</span><span class='line'>state_entity_id=device_tracker.Paulus_OnePlus_One
-</span><span class='line'>state_from=not_home
-</span><span class='line'>state_to=home
+</span><span class='line'>  # Match when a person comes home
+</span><span class='line'>  platform: state
+</span><span class='line'>  state_entity_id: device_tracker.Paulus_OnePlus_One
+</span><span class='line'>  state_from: not_home
+</span><span class='line'>  state_to: home
 </span><span class='line'>
-</span><span class='line'># Match when a light turns on
-</span><span class='line'>platform=state
-</span><span class='line'>state_entity_id=light.Ceiling
-</span><span class='line'>state_from=off
-</span><span class='line'>state_to=on</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  # Match when a light turns on
+</span><span class='line'>  platform: state
+</span><span class='line'>  state_entity_id: light.Ceiling
+</span><span class='line'>  state_from: off
+</span><span class='line'>  state_to: on</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Setting up the action</h2>
@@ -214,23 +213,23 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Turn the lights Ceiling and Wall on.
-</span><span class='line'>execute_service=light.turn_on
-</span><span class='line'>service_entity_id=light.Ceiling,light.Wall
+</pre></td><td class='code'><pre><code class=''><span class='line'>  # Turn the lights Ceiling and Wall on.
+</span><span class='line'>  execute_service: light.turn_on
+</span><span class='line'>  service_entity_id: light.Ceiling,light.Wall
 </span><span class='line'>
-</span><span class='line'># Turn the lights Ceiling and Wall on and turn them red.
-</span><span class='line'>execute_service=light.turn_on
-</span><span class='line'>service_entity_id=light.Ceiling,light.Wall
-</span><span class='line'>service_data={"rgb_color": [255, 0, 0]}
+</span><span class='line'>  # Turn the lights Ceiling and Wall on and turn them red.
+</span><span class='line'>  execute_service: light.turn_on
+</span><span class='line'>  service_entity_id: light.Ceiling,light.Wall
+</span><span class='line'>  service_data: {"rgb_color": [255, 0, 0]}
 </span><span class='line'>
-</span><span class='line'># Notify the user
-</span><span class='line'>execute_service=notify.notify
-</span><span class='line'>service_data={"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  # Notify the user
+</span><span class='line'>  execute_service: notify.notify
+</span><span class='line'>  service_data: {"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Putting it all together</h2>
 
-<p>For every combination of a trigger and an action we will have to combine the configuration lines and add it to an <code>automation</code> component entry in <code>home-assistant.conf</code>. You can add an optional <code>alias</code> key to the configuration to make the logs more understandable. To setup multiple entries, append 2, 3 etc to the section name. An example of a <code>home-assistant.conf</code> file:</p>
+<p>For every combination of a trigger and an action we will have to combine the configuration lines and add it to an <code>automation</code> component entry in <code>configuration.yaml</code>. You can add an optional <code>alias</code> key to the configuration to make the logs more understandable. To setup multiple entries, append 2, 3 etc to the section name. An example of a <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -263,43 +262,43 @@
 <span class='line-number'>29</span>
 <span class='line-number'>30</span>
 <span class='line-number'>31</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[automation]
-</span><span class='line'>alias=Sunset notification
+</pre></td><td class='code'><pre><code class=''><span class='line'>automation:
+</span><span class='line'>  alias: Sunset notification
 </span><span class='line'>
-</span><span class='line'>platform=state
-</span><span class='line'>state_entity_id=sun.sun
-</span><span class='line'>state_from=above_horizon
-</span><span class='line'>state_to=below_horizon
+</span><span class='line'>  platform: state
+</span><span class='line'>  state_entity_id: sun.sun
+</span><span class='line'>  state_from: above_horizon
+</span><span class='line'>  state_to: below_horizon
 </span><span class='line'>
-</span><span class='line'>execute_service=notify.notify
-</span><span class='line'>service_data={"message":"The sun has set"}
+</span><span class='line'>  execute_service: notify.notify
+</span><span class='line'>  service_data: {"message":"The sun has set"}
 </span><span class='line'>
-</span><span class='line'>[automation 2]
-</span><span class='line'>alias=Turn lights off at 8am in the morning
+</span><span class='line'>automation 2:
+</span><span class='line'>  alias: Turn lights off at 8am in the morning
 </span><span class='line'>
-</span><span class='line'>platform=time
-</span><span class='line'>time_hours=8
-</span><span class='line'>time_minutes=0
-</span><span class='line'>time_seconds=0
+</span><span class='line'>  platform: time
+</span><span class='line'>  time_hours: 8
+</span><span class='line'>  time_minutes: 0
+</span><span class='line'>  time_seconds: 0
 </span><span class='line'>
-</span><span class='line'>execute_service=light.turn_off
+</span><span class='line'>  execute_service: light.turn_off
 </span><span class='line'>
-</span><span class='line'>[automation 3]
-</span><span class='line'>alias=Turn lights in study room on when Paulus comes home
+</span><span class='line'>automation 3:
+</span><span class='line'>  alias: Turn lights in study room on when Paulus comes home
 </span><span class='line'>
-</span><span class='line'>platform=state
-</span><span class='line'>state_entity_id=device_tracker.Paulus_OnePlus
-</span><span class='line'>state_from=not_home
-</span><span class='line'>state_to=home
+</span><span class='line'>  platform: state
+</span><span class='line'>  state_entity_id: device_tracker.Paulus_OnePlus
+</span><span class='line'>  state_from: not_home
+</span><span class='line'>  state_to: home
 </span><span class='line'>
-</span><span class='line'>execute_service=homeassistant.turn_on
-</span><span class='line'>service_entity_id=group.Study_Room</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  execute_service: homeassistant.turn_on
+</span><span class='line'>  service_entity_id: group.Study_Room</span></code></pre></td></tr></table></div></figure>
 
 
 
 
 <p class='note'>
-All configuration entries have to be sequential. If you have <code>[automation]</code>, <code>[automation 2]</code> and <code>[automation 4]</code> then the last one will not be processed. 
+All configuration entries have to be sequential. If you have <code>automation:</code>, <code>automation 2:</code> and <code>automation 4:</code> then the last one will not be processed. 
 </p>
 
 

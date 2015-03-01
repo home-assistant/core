@@ -106,7 +106,7 @@
 
 <p>This component requires the components <a href="">sun</a>, <a href="/components/device_tracker.html">device_tracker</a> and <a href="/components/light.html">light</a> to be enabled.</p>
 
-<p>To enable this component, add the following lines to your <code>home-assistant.conf</code>:</p>
+<p>To enable this component, add the following lines to your <code>configuration.yaml</code>:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -115,13 +115,13 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[device_sun_light_trigger]
-</span><span class='line'># Specify a specific light/group of lights that has to be turned on
-</span><span class='line'>light_group=group.living_room
-</span><span class='line'># Specify which light profile to use when turning lights on
-</span><span class='line'>light_profile=relax
-</span><span class='line'># Disable lights being turned off when everybody leaves the house
-</span><span class='line'>disable_turn_off=1</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>device_sun_light_trigger:
+</span><span class='line'>  # Specify a specific light/group of lights that has to be turned on
+</span><span class='line'>  light_group: group.living_room
+</span><span class='line'>  # Specify which light profile to use when turning lights on
+</span><span class='line'>  light_profile: relax
+</span><span class='line'>  # Disable lights being turned off when everybody leaves the house
+</span><span class='line'>  disable_turn_off: 1</span></code></pre></td></tr></table></div></figure>
 
 
 <p>The options <code>light_group</code>, <code>light_profile</code> and <code>disable_turn_off</code> are optional.</p>

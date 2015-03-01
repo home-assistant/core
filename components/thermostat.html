@@ -97,16 +97,16 @@
 
   <p>Thermostats offer Home Assistant a peek into the current and target temperature in a house. Some thermostats will also offer an away mode that will lower use of heating/cooling. The only supported thermostat right now is the Nest thermostat.</p>
 
-<p>To set it up, add the following information to your <code>home-assistant.conf</code> file:</p>
+<p>To set it up, add the following information to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[thermostat]
-</span><span class='line'>platform=nest
-</span><span class='line'>username=myemail@mydomain.com
-</span><span class='line'>password=mypassword</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>thermostat:
+</span><span class='line'>  platform: nest
+</span><span class='line'>  username: myemail@mydomain.com
+</span><span class='line'>  password: mypassword</span></code></pre></td></tr></table></div></figure>
 
 
 

@@ -239,27 +239,23 @@ NOTE: the rest of the commands are not being run as sudo and will install python
 
 <h2><a class='title-link' name='configuring-home-assistant' href='#configuring-home-assistant'></a> Configuring Home Assistant</h2>
 
-<p>The configuration for Home Assistant lives by default in the <code>config</code> folder. The file <code>home-assistant.conf</code> is the main file that contains which components will be loaded and what their configuration is. An example configuration file is located at <a href="https://github.com/balloob/home-assistant/blob/master/config/home-assistant.conf.example"><code>config/home-assistant.conf.example</code></a>.</p>
+<p>The configuration for Home Assistant lives by default in the <code>config</code> folder. The file <code>configuration.yaml</code> is the main file that contains which components will be loaded and what their configuration is. An example configuration file is located at <a href="https://github.com/balloob/home-assistant/blob/master/config/configuration.yaml.example"><code>config/configuration.yaml.example</code></a>.</p>
 
 <p>When launched for the first time, Home Assistant will write a default configuration enabling the web interface and device discovery. It can take up to a minute for your devices to be discovered and show up in the interface.</p>
 
 <p class='note'>
-  You will have to restart Home Assistant for changes in <code>home-assistant.conf</code> to take effect.
+  You will have to restart Home Assistant for changes in <code>configuration.yaml</code> to take effect.
 </p>
 
 
 <h3>Password protecting the web interface</h3>
 
-<p>The first thing you want to add is a password for the web interface. Use your favourite text editor to open the file <code>/config/home-assistant.conf</code>. Look for the line that says <code>[http]</code> and add the line <code>api_password=YOUR_PASSWORD</code> below. Your configuration should now look like this:</p>
+<p>The first thing you want to add is a password for the web interface. Use your favourite text editor to open the file <code>/config/configuration.yaml</code> and add the following to the bottom:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>http<span class="o">]</span>
-</span><span class='line'><span class="nv">api_password</span><span class="o">=</span>YOUR_PASSWORD
-</span><span class='line'>
-</span><span class='line'><span class="o">[</span>discovery<span class="o">]</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>http:
+</span><span class='line'>  api_password: YOUR_PASSWORD
 </span></code></pre></td></tr></table></div></figure>
 
 
