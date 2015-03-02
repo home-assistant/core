@@ -5,7 +5,7 @@ import time
 import json
 
 from homeassistant.helpers import Device
-import config.custom_components.external.vera as veraApi
+import homeassistant.external.vera.vera as veraApi
 from homeassistant.const import (STATE_OPEN, STATE_CLOSED, ATTR_FRIENDLY_NAME)
 
 _LOGGER = logging.getLogger('Vera_Sensor')
@@ -78,7 +78,7 @@ class VeraSensor(Device):
     def unique_id(self):
         """ Returns the id of this switch """
         return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', 'vera-sensor-' + self.vera_device.deviceId))
+            self.__class__, self.info.get('uniqueid', self.name))
 
     @property
     def name(self):

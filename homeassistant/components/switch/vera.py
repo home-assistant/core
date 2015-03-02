@@ -5,7 +5,7 @@ import time
 import json
 
 from homeassistant.helpers import ToggleDevice
-import config.custom_components.external.vera as veraApi
+import homeassistant.external.vera.vera as veraApi
 
 _LOGGER = logging.getLogger('Vera_Switch')
 
@@ -70,7 +70,7 @@ class VeraSwitch(ToggleDevice):
     def unique_id(self):
         """ Returns the id of this switch """
         return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', 'vera-switch-' + self.vera_device.deviceId))
+            self.__class__, self.info.get('uniqueid', self.name))
 
     @property
     def name(self):

@@ -27,6 +27,7 @@ password=PASSWORD
 # hosts=192.168.1.1/24 # netmask prefix notation or
 # hosts=192.168.1.1-255 # address range
 
+
 [chromecast]
 
 [switch]
@@ -97,3 +98,27 @@ time_seconds=0
 
 execute_service=notify.notify
 service_data={"message":"It's 4, time for beer!"}
+
+
+[light]
+platform=vera
+# The "device_data" field is not required but if you want a switch to show up as a light
+# then add it in to here.  If you leave out the "name" field the name configured in your 
+# Vera controller will be used instead.  The "id" field should be the Vera id for the device.
+device_data=[{"id" : 12, "name": "Lounge Light"}]
+vera_controller_url=http://192.168.1.254:3480/
+
+[switch]
+platform=vera
+# The "device_data" field is not required and if not specified all switches will still be added.
+# You can use it to override the name specified in your Vera controller using the "name" variable.
+# The "id" field should be the Vera id for the device.
+device_data=[{"id" : 12, "name": "Lounge Light"}, {"id" : 3, "name": "Lounge Motion"}]
+vera_controller_url=http://192.168.1.254:3480/
+
+[sensor]
+platform=vera
+# The "device_data" field is not required and if not specified all sensors will still be added.
+# You can use it to override the name specified in your Vera controller using the "name" variable.
+device_data=[{"id" : 4, "name": "Lounge Temp"}, {"id" : 3, "name": "Lounge Motion"}, {"id" : 5, "name": "Light Level"}]
+vera_controller_url=http://192.168.1.254:3480/
