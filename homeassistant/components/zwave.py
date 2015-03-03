@@ -122,3 +122,5 @@ def setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
+
+    return True
