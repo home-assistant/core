@@ -1,0 +1,15 @@
+{
+  "name": "Home Assistant",
+  "short_name": "Home Assist",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "icons": [
+    {
+     "src": "\/static\/favicon-192x192.png",
+     "sizes": "192x192",
+     "type": "image\/png",
+     "density": "4.0"
+    }
+  ]
+}
