@@ -25,7 +25,7 @@ SCAN_INTERVAL = 300  # seconds
 
 SERVICE_HANDLERS = {
     services.BELKIN_WEMO: "switch",
-    services.GOOGLE_CAST: "chromecast",
+    services.GOOGLE_CAST: "media_player",
     services.PHILIPS_HUE: "light",
 }
 

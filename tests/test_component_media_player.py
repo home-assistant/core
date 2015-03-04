@@ -1,8 +1,8 @@
 """
-tests.test_component_chromecast
+tests.test_component_media_player
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests Chromecast component.
+Tests media_player component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import logging
@@ -12,28 +12,27 @@ import homeassistant as ha
 from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK, ATTR_ENTITY_ID,
-    CONF_HOSTS)
-import homeassistant.components.chromecast as chromecast
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK, ATTR_ENTITY_ID)
+import homeassistant.components.media_player as media_player
 from helpers import mock_service
 
 
 def setUpModule():   # pylint: disable=invalid-name
-    """ Setup to ignore chromecast errors. """
+    """ Setup to ignore media_player errors. """
     logging.disable(logging.CRITICAL)
 
 
-class TestChromecast(unittest.TestCase):
-    """ Test the chromecast module. """
+class TestMediaPlayer(unittest.TestCase):
+    """ Test the media_player module. """
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
 
-        self.test_entity = chromecast.ENTITY_ID_FORMAT.format('living_room')
-        self.hass.states.set(self.test_entity, chromecast.STATE_NO_APP)
+        self.test_entity = media_player.ENTITY_ID_FORMAT.format('living_room')
+        self.hass.states.set(self.test_entity, media_player.STATE_NO_APP)
 
-        self.test_entity2 = chromecast.ENTITY_ID_FORMAT.format('bedroom')
-        self.hass.states.set(self.test_entity2, "Youtube")
+        self.test_entity2 = media_player.ENTITY_ID_FORMAT.format('bedroom')
+        self.hass.states.set(self.test_entity2, "YouTube")
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -41,33 +40,33 @@ class TestChromecast(unittest.TestCase):
 
     def test_is_on(self):
         """ Test is_on method. """
-        self.assertFalse(chromecast.is_on(self.hass, self.test_entity))
-        self.assertTrue(chromecast.is_on(self.hass, self.test_entity2))
+        self.assertFalse(media_player.is_on(self.hass, self.test_entity))
+        self.assertTrue(media_player.is_on(self.hass, self.test_entity2))
 
     def test_services(self):
         """
         Test if the call service methods conver to correct service calls.
         """
         services = {
-            SERVICE_TURN_OFF: chromecast.turn_off,
-            SERVICE_VOLUME_UP: chromecast.volume_up,
-            SERVICE_VOLUME_DOWN: chromecast.volume_down,
-            SERVICE_MEDIA_PLAY_PAUSE: chromecast.media_play_pause,
-            SERVICE_MEDIA_PLAY: chromecast.media_play,
-            SERVICE_MEDIA_PAUSE: chromecast.media_pause,
-            SERVICE_MEDIA_NEXT_TRACK: chromecast.media_next_track,
-            SERVICE_MEDIA_PREV_TRACK: chromecast.media_prev_track
+            SERVICE_TURN_OFF: media_player.turn_off,
+            SERVICE_VOLUME_UP: media_player.volume_up,
+            SERVICE_VOLUME_DOWN: media_player.volume_down,
+            SERVICE_MEDIA_PLAY_PAUSE: media_player.media_play_pause,
+            SERVICE_MEDIA_PLAY: media_player.media_play,
+            SERVICE_MEDIA_PAUSE: media_player.media_pause,
+            SERVICE_MEDIA_NEXT_TRACK: media_player.media_next_track,
+            SERVICE_MEDIA_PREV_TRACK: media_player.media_prev_track
         }
 
         for service_name, service_method in services.items():
-            calls = mock_service(self.hass, chromecast.DOMAIN, service_name)
+            calls = mock_service(self.hass, media_player.DOMAIN, service_name)
 
             service_method(self.hass)
             self.hass.pool.block_till_done()
 
             self.assertEqual(1, len(calls))
             call = calls[-1]
-            self.assertEqual(chromecast.DOMAIN, call.domain)
+            self.assertEqual(media_player.DOMAIN, call.domain)
             self.assertEqual(service_name, call.service)
 
             service_method(self.hass, self.test_entity)
@@ -75,7 +74,7 @@ class TestChromecast(unittest.TestCase):
 
             self.assertEqual(2, len(calls))
             call = calls[-1]
-            self.assertEqual(chromecast.DOMAIN, call.domain)
+            self.assertEqual(media_player.DOMAIN, call.domain)
             self.assertEqual(service_name, call.service)
             self.assertEqual(self.test_entity,
                              call.data.get(ATTR_ENTITY_ID))

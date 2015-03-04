@@ -17,7 +17,8 @@ DOMAIN = "demo"
 
 DEPENDENCIES = []
 
-COMPONENTS_WITH_DEMO_PLATFORM = ['switch', 'light', 'thermostat', 'sensor']
+COMPONENTS_WITH_DEMO_PLATFORM = [
+    'switch', 'light', 'thermostat', 'sensor', 'media_player']
 
 
 def setup(hass, config):
@@ -70,12 +71,6 @@ def setup(hass, config):
                             "device_tracker.Anne_Therese"
                         ]
                     })
-
-    # Setup chromecast
-    hass.states.set("chromecast.Living_Rm", "Plex",
-                    {'friendly_name': 'Living Room',
-                     ATTR_ENTITY_PICTURE:
-                     'http://graph.facebook.com/KillBillMovie/picture'})
 
     # Setup configurator
     configurator_ids = []
