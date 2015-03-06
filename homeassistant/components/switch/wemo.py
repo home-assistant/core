@@ -1,7 +1,7 @@
 """ Support for WeMo switchces. """
 import logging
 
-from homeassistant.helpers import ToggleDevice
+from homeassistant.helpers.device import ToggleDevice
 from homeassistant.components.switch import (
     ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
 

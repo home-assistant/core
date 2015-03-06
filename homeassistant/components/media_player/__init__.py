@@ -7,7 +7,7 @@ Component to interface with various media players
 import logging
 
 from homeassistant.components import discovery
-from homeassistant.helpers import Device
+from homeassistant.helpers.device import Device
 from homeassistant.helpers.device_component import DeviceComponent
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,

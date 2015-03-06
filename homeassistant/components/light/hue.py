@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.helpers import ToggleDevice
+from homeassistant.helpers.device import ToggleDevice
 from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,

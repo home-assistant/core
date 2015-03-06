@@ -9,7 +9,7 @@ import logging
 from homeassistant.helpers.device_component import DeviceComponent
 
 import homeassistant.util as util
-from homeassistant.helpers import Device, extract_entity_ids
+from homeassistant.helpers.device import Device
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON, STATE_OFF)

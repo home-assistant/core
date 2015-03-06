@@ -1,7 +1,7 @@
 """ Provides demo lights. """
 import random
 
-from homeassistant.helpers import ToggleDevice
+from homeassistant.helpers.device import ToggleDevice
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_XY_COLOR
 

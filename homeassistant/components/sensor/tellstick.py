@@ -31,7 +31,7 @@ import tellcore.constants as tellcore_constants
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELCIUS)
-from homeassistant.helpers import Device
+from homeassistant.helpers.device import Device
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
