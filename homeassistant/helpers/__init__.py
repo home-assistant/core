@@ -4,8 +4,7 @@ Helper methods for components within Home Assistant.
 from datetime import datetime
 
 from homeassistant.loader import get_component
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_PLATFORM, CONF_TYPE, DEVICE_DEFAULT_NAME)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.util import ensure_unique_string, slugify
 
 # Deprecated 3/5/2015 - Moved to homeassistant.helpers.device
@@ -102,15 +101,6 @@ def config_per_platform(config, domain, logger):
 
         platform_type = platform_config.get(CONF_PLATFORM)
 
-        # DEPRECATED, still supported for now.
-        if platform_type is None:
-            platform_type = platform_config.get(CONF_TYPE)
-
-            if platform_type is not None:
-                logger.warning((
-                    'Please update your config for {}.{} to use "platform" '
-                    'instead of "type"').format(domain, platform_type))
-
         if platform_type is None:
             logger.warning('No platform specified for %s', config_key)
             break
@@ -119,60 +109,3 @@ def config_per_platform(config, domain, logger):
 
         found += 1
         config_key = "{} {}".format(domain, found)
-
-
-def platform_devices_from_config(config, domain, hass,
-                                 entity_id_format, logger):
-
-    """ Parses the config for specified domain.
-        Loads different platforms and retrieve domains. """
-    devices = []
-
-    for p_type, p_config in config_per_platform(config, domain, logger):
-        platform = get_component('{}.{}'.format(domain, p_type))
-
-        if platform is None:
-            logger.error("Unknown %s type specified: %s", domain, p_type)
-
-        else:
-            try:
-                p_devices = platform.get_devices(hass, p_config)
-            except AttributeError:
-                # DEPRECATED, still supported for now
-                logger.warning(
-                    'Platform %s should migrate to use the method get_devices',
-                    p_type)
-
-                if domain == 'light':
-                    p_devices = platform.get_lights(hass, p_config)
-                elif domain == 'switch':
-                    p_devices = platform.get_switches(hass, p_config)
-                else:
-                    raise
-
-            logger.info("Found %d %s %ss", len(p_devices), p_type, domain)
-
-            devices.extend(p_devices)
-
-    # Setup entity IDs for each device
-    device_dict = {}
-
-    no_name_count = 0
-
-    for device in devices:
-        device.hass = hass
-
-        # Get the name or set to default if none given
-        name = device.name or DEVICE_DEFAULT_NAME
-
-        if name == DEVICE_DEFAULT_NAME:
-            no_name_count += 1
-            name = "{} {}".format(domain, no_name_count)
-
-        entity_id = generate_entity_id(
-            entity_id_format, name, device_dict.keys())
-
-        device.entity_id = entity_id
-        device_dict[entity_id] = device
-
-    return device_dict

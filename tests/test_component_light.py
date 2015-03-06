@@ -11,7 +11,7 @@ import os
 import homeassistant.loader as loader
 import homeassistant.util as util
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_TYPE,
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF)
 import homeassistant.components.light as light
 
@@ -101,7 +101,7 @@ class TestLight(unittest.TestCase):
 
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}))
+            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1, dev2, dev3 = platform.DEVICES
 
@@ -226,7 +226,7 @@ class TestLight(unittest.TestCase):
             user_file.write('I,WILL,NOT,WORK\n')
 
         self.assertFalse(light.setup(
-            self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
+            self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
         ))
 
     def test_light_profiles(self):
@@ -241,7 +241,7 @@ class TestLight(unittest.TestCase):
             user_file.write('test,.4,.6,100\n')
 
         self.assertTrue(light.setup(
-            self.hass, {light.DOMAIN: {CONF_TYPE: 'test'}}
+            self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
         ))
 
         dev1, dev2, dev3 = platform.DEVICES
