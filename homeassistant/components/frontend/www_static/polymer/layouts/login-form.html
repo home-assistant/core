@@ -1,5 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../bower_components/core-label/core-label.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
 <link rel="import" href="../bower_components/core-input/core-input.html">
@@ -8,15 +10,29 @@
 <polymer-element name="login-form">
   <template>
     <style>
-      paper-input {
+      #passwordDecorator {
         display: block;
+        height: 57px;
       }
 
-      .login paper-button {
-        margin-left: 242px;
+      paper-checkbox {
+        margin-right: 8px;
       }
 
-      .login .interact {
+      paper-checkbox::shadow #checkbox.checked {
+        background-color: #03a9f4;
+        border-color: #03a9f4;
+      }
+
+      paper-checkbox::shadow #ink[checked] {
+        color: #03a9f4;
+      }
+
+      paper-button {
+        margin-left: 72px;
+      }
+
+      .interact {
         height: 125px;
       }
 
@@ -44,7 +60,14 @@
               <input is="core-input" type="password" id="passwordInput"
                      value="{{authToken}}" on-keyup="{{passwordKeyup}}">
             </paper-input-decorator>
-            <paper-button on-click={{validatePassword}}>Log In</paper-button>
+
+            <div horizontal center layout>
+              <core-label horizontal layout>
+                <paper-checkbox for checked={{rememberLogin}}></paper-checkbox><b>Remember</b>
+              </core-label>
+
+              <paper-button on-click={{validatePassword}}>Log In</paper-button>
+            </div>
           </div>
 
           <div id="validatebox" hidden?="{{!(isValidating || isLoggedIn)}}">
@@ -66,6 +89,7 @@
     MSG_LOADING_DATA: "Loading data…",
 
     authToken: "",
+    rememberLogin: false,
 
     isValidating: false,
     isLoggedIn: false,
@@ -114,7 +138,7 @@
     validatePassword: function() {
       this.$.hideKeyboardOnFocus.focus();
 
-      uiActions.validateAuth(this.authToken);
+      uiActions.validateAuth(this.authToken, this.rememberLogin);
     },
   }, storeListenerMixIn));
   </script>
