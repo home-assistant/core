@@ -87,7 +87,7 @@
       this.spinnerMessage = this.isValidating ? this.MSG_VALIDATING : this.MSG_LOADING_DATA;
 
       if (authStore.wasLastAttemptInvalid()) {
-        this.$.passwordDecorator.error = this.authStore.getLastAttemptMessage();
+        this.$.passwordDecorator.error = authStore.getLastAttemptMessage();
         this.$.passwordDecorator.isInvalid = true;
       }
 
