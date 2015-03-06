@@ -123,7 +123,7 @@ def setup(hass, config=None):
 
     server_port = config[DOMAIN].get(CONF_SERVER_PORT, SERVER_PORT)
 
-    development = config[DOMAIN].get(CONF_DEVELOPMENT, "") == "1"
+    development = str(config[DOMAIN].get(CONF_DEVELOPMENT, "")) == "1"
 
     server = HomeAssistantHTTPServer(
         (server_host, server_port), RequestHandler, hass, api_password,
