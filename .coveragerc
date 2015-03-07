@@ -3,15 +3,18 @@ source = homeassistant
 
 omit =
     homeassistant/external/*
-    homeassistant/__main__
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
+
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
+
     homeassistant/components/*/tellstick.py
-    homeassistant/components/*/wemo.py
+
+    homeassistant/components/keyboard.py
+    homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/nest.py
     homeassistant/components/light/hue.py
     homeassistant/components/sensor/systemmonitor.py
