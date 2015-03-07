@@ -44,12 +44,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SystemMonitorSensor(Device):
     """ A system monitor sensor """
 
-    def __init__(self, type, argument=''):
-        self._name = SENSOR_TYPES[type][0] + ' ' + argument
+    def __init__(self, sensor_type, argument=''):
+        self._name = SENSOR_TYPES[sensor_type][0] + ' ' + argument
         self.argument = argument
-        self.type = type
+        self.type = sensor_type
         self._state = None
-        self.unit_of_measurement = SENSOR_TYPES[type][1]
+        self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.update()
 
     @property
