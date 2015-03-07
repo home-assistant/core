@@ -106,11 +106,16 @@ automation 2:
 sensor:
   platform: systemmonitor
   resources:
-    - {type: 'disk_use_percent', arg: '/'}
-    - {type: 'disk_use_percent', arg: '/home'}
-    - {type: 'disk_use', arg: '/home'}
-    - {type: 'disk_free', arg: '/'}
-    - {type: 'memory_use_percent'}
-    - {type: 'memory_use'}
-    - {type: 'memory_free'}
-    - {type: 'processor_use'}
+    - type: 'disk_use_percent'
+      arg: '/'
+    - type: 'disk_use_percent'
+      arg: '/home'
+    - type: 'disk_use'
+      arg: '/home'
+    - type: 'disk_free'
+      arg: '/'
+    - type: 'memory_use_percent'
+    - type: 'memory_use'
+    - type: 'memory_free'
+    - type: 'processor_use'
+    - type: 'unknown sensor type'
