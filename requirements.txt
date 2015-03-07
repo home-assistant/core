@@ -33,3 +33,6 @@ python-nest>=2.1
 
 # z-wave
 pydispatcher>=2.0.5
+
+# sensor.systemmonitor 
+psutil>=2.2.1
