@@ -51,9 +51,8 @@ def get_extra_device_data(device_data, device_id):
     return None
 
 
-def get_switches():
-    return vera_switches
-
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    add_devices(get_devices(hass, config))
 
 class VeraSwitch(ToggleDevice):
     """ Represents a Vera Switch """
@@ -65,12 +64,6 @@ class VeraSwitch(ToggleDevice):
     def __init__(self, vera_device, extra_data=None):
         self.vera_device = vera_device
         self.extra_data = extra_data
-
-    @property
-    def unique_id(self):
-        """ Returns the id of this switch """
-        return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.name))
 
     @property
     def name(self):

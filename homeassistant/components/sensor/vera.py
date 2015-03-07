@@ -41,6 +41,9 @@ def get_devices(hass, config):
 
     return vera_sensors
 
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    add_devices(get_devices(hass, config))
+
 def get_extra_device_data(device_data, device_id):
     if not device_data:
         return None
@@ -49,10 +52,6 @@ def get_extra_device_data(device_data, device_id):
         if item.get('id') == device_id:
             return item
     return None
-
-
-def get_sensors():
-    return vera_sensors
 
 
 class VeraSensor(Device):
@@ -73,12 +72,6 @@ class VeraSensor(Device):
 
     def updateState(self):
         return self.state()
-
-    @property
-    def unique_id(self):
-        """ Returns the id of this switch """
-        return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.name))
 
     @property
     def name(self):
