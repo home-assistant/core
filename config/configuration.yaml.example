@@ -118,4 +118,5 @@ sensor:
     - type: 'memory_use'
     - type: 'memory_free'
     - type: 'processor_use'
-    - type: 'unknown sensor type'
+    - type: 'process'
+      arg: 'octave-cli'
