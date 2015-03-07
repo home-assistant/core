@@ -1,4 +1,56 @@
-""" Support for Vera lights. """
+""" 
+Support for Vera switches. 
+
+Configuration:
+To use the Vera switches you will need to add something like the following to your config/configuration.yaml
+
+switch:
+    platform: vera
+    vera_controller_url: http://YOUR_VERA_IP:3480/
+    device_data: 
+        - 
+            vera_id: 12
+            name: My awesome switch
+            exclude: true
+        -
+            vera_id: 13
+            name: Another Switch            
+
+VARIABLES: 
+
+vera_controller_url
+*Required
+This is the base URL of your vera controller including the port number if not running on 80
+Example: http://192.168.1.21:3480/
+
+
+device_data
+*Optional
+This contains an array additional device info for your Vera devices.  It is not required and if 
+not specified all switches configured in your Vera controller will be added with default values.
+
+
+These are the variables for the device_data array:
+
+vera_id
+*Required
+The Vera device id you wish these configuration options to be applied to
+
+
+name
+*Optional
+This parameter allows you to override the name of your Vera device in the HA interface, if not specified the 
+value configured for the device in your Vera will be used
+
+
+exclude
+*Optional
+This parameter allows you to exclude the specified device from homeassistant, it should be set to "true" if
+you want this device excluded
+
+
+
+"""
 import logging
 import requests
 import time
