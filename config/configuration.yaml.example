@@ -105,7 +105,7 @@ automation 2:
 
 sensor:
   platform: systemmonitor
-  devices:
+  resources:
     - {type: 'disk_use_percent', arg: '/'}
     - {type: 'disk_use_percent', arg: '/home'}
     - {type: 'disk_use', arg: '/home'}
