@@ -5,25 +5,22 @@ homeassistant.components.thermostat
 Provides functionality to interact with thermostats.
 """
 import logging
-from datetime import timedelta
 
-from homeassistant.helpers import (
-    extract_entity_ids, platform_devices_from_config)
+from homeassistant.helpers.device_component import DeviceComponent
+
 import homeassistant.util as util
-from homeassistant.helpers import Device
+from homeassistant.helpers import Device, extract_entity_ids
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON, STATE_OFF)
 
 DOMAIN = "thermostat"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 DEPENDENCIES = []
 
-SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
-SERVICE_TURN_AWAY_MODE_OFF = "turn_away_mode_off"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+SCAN_INTERVAL = 60
+
+SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
@@ -32,18 +29,16 @@ ATTR_AWAY_MODE = "away_mode"
 _LOGGER = logging.getLogger(__name__)
 
 
-def turn_away_mode_on(hass, entity_id=None):
+def set_away_mode(hass, away_mode, entity_id=None):
     """ Turn all or specified thermostat away mode on. """
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {
+        ATTR_AWAY_MODE: away_mode
+    }
 
-    hass.services.call(DOMAIN, SERVICE_TURN_AWAY_MODE_ON, data)
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
 
-
-def turn_away_mode_off(hass, entity_id=None):
-    """ Turn all or specified thermostat away mode off. """
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-
-    hass.services.call(DOMAIN, SERVICE_TURN_AWAY_MODE_OFF, data)
+    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
 
 
 def set_temperature(hass, temperature, entity_id=None):
@@ -58,26 +53,10 @@ def set_temperature(hass, temperature, entity_id=None):
 
 def setup(hass, config):
     """ Setup thermostats. """
+    component = DeviceComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component.setup(config)
 
-    logger = logging.getLogger(__name__)
-
-    thermostats = platform_devices_from_config(
-        config, DOMAIN, hass, ENTITY_ID_FORMAT, _LOGGER)
-
-    if not thermostats:
-        return False
-
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
-    def update_state(now):
-        """ Update thermostat state. """
-        logger.info("Updating thermostat state")
-
-        for thermostat in thermostats.values():
-            thermostat.update_ha_state(hass, True)
-
-    # Update state every minute
-    hass.track_time_change(update_state, second=[0])
-    update_state(None)
+    thermostats = component.devices
 
     def thermostat_service(service):
         """ Handles calls to the services. """
@@ -90,13 +69,20 @@ def setup(hass, config):
         if not target_thermostats:
             target_thermostats = thermostats.values()
 
-        if service.service == SERVICE_TURN_AWAY_MODE_ON:
-            for thermostat in target_thermostats:
-                thermostat.turn_away_mode_on()
+        if service.service == SERVICE_SET_AWAY_MODE:
+            away_mode = service.data.get(ATTR_AWAY_MODE)
 
-        elif service.service == SERVICE_TURN_AWAY_MODE_OFF:
-            for thermostat in target_thermostats:
-                thermostat.turn_away_mode_off()
+            if away_mode is None:
+                _LOGGER.error(
+                    "Received call to %s without attribute %s",
+                    SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
+
+            elif away_mode:
+                for thermostat in target_thermostats:
+                    thermostat.turn_away_mode_on()
+            else:
+                for thermostat in target_thermostats:
+                    thermostat.turn_away_mode_off()
 
         elif service.service == SERVICE_SET_TEMPERATURE:
             temperature = util.convert(
@@ -109,13 +95,10 @@ def setup(hass, config):
                 thermostat.set_temperature(temperature)
 
         for thermostat in target_thermostats:
-            thermostat.update_ha_state(hass, True)
+            thermostat.update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, SERVICE_TURN_AWAY_MODE_OFF, thermostat_service)
-
-    hass.services.register(
-        DOMAIN, SERVICE_TURN_AWAY_MODE_ON, thermostat_service)
+        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service)

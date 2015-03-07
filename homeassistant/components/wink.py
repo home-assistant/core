@@ -92,7 +92,7 @@ class WinkSensorDevice(Device):
 
 
 class WinkToggleDevice(ToggleDevice):
-    """ represents a WeMo switch within home assistant. """
+    """ represents a Wink switch within home assistant. """
 
     def __init__(self, wink):
         self.wink = wink

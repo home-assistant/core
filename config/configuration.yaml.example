@@ -1,0 +1,104 @@
+homeassistant:
+  # Location required to calculate the time the sun rises and sets
+  latitude: 32.87336
+  longitude: 117.22743
+
+http:
+  api_password: mypass
+  # Set to 1 to enable development mode
+  # development: 1
+
+light:
+#  platform: hue
+
+wink:
+  # Get your token at https://winkbearertoken.appspot.com
+  access_token: 'YOUR_TOKEN'
+
+device_tracker:
+  # The following types are available: netgear, tomato, luci, nmap_tracker
+  platform: netgear
+  host: 192.168.1.1
+  username: admin
+  password: PASSWORD
+  # http_id is needed for Tomato routers only
+  # http_id: ABCDEFGHH
+  # For nmap_tracker, only the IP addresses to scan are needed:
+  # hosts: 192.168.1.1/24 # netmask prefix notation or
+  # hosts: 192.168.1.1-255 # address range
+
+chromecast:
+
+switch:
+  platform: wemo
+
+thermostat:
+  platform: nest
+  # Required: username and password that are used to login to the Nest thermostat.
+  username: myemail@mydomain.com
+  password: mypassword
+
+downloader:
+  download_dir: downloads
+
+notify:
+  platform: pushbullet
+  api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
+
+device_sun_light_trigger:
+  # Optional: specify a specific light/group of lights that has to be turned on
+  light_group: group.living_room
+  # Optional: specify which light profile to use when turning lights on
+  light_profile: relax
+  # Optional: disable lights being turned off when everybody leaves the house
+  # disable_turn_off: 1
+
+# A comma seperated list of states that have to be tracked as a single group
+# Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
+group: 
+  living_room:
+    - light.Bowl
+    - light.Ceiling
+    - light.TV_back_light
+  children:
+   - device_tracker.child_1
+   - device_tracker.child_2
+
+process:
+  # items are which processes to look for: <entity_id>: <search string within ps>
+  xbmc: XBMC.App
+
+example:
+
+simple_alarm:
+  # Which light/light group has to flash when a known device comes home
+  known_light: light.Bowl
+  # Which light/light group has to flash red when light turns on while no one home
+  unknown_light: group.living_room
+
+browser:
+
+keyboard:
+
+automation:
+  platform: state
+  alias: Sun starts shining
+
+  state_entity_id: sun.sun
+  # Next two are optional, omit to match all
+  state_from: below_horizon
+  state_to: above_horizon
+
+  execute_service: light.turn_off
+  service_entity_id: group.living_room
+
+automation 2:
+  platform: time
+  alias: Beer o Clock
+
+  time_hours: 16
+  time_minutes: 0
+  time_seconds: 0
+
+  execute_service: notify.notify
+  service_data: {"message":"It's 4, time for beer!"}

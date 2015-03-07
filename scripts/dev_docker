@@ -1,3 +1,5 @@
+# Build and run Home Assinstant in Docker
+
 # Optional: pass in a timezone as first argument
 # If not given will attempt to mount /etc/localtime
 
@@ -12,6 +14,7 @@ if [ $# -gt 0 ]
 then
   docker run \
     --net=host \
+    --device=/dev/ttyUSB0:/zwaveusbstick:rwm \
     -e "TZ=$1" \
     -v `pwd`:/usr/src/app \
     -v `pwd`/config:/config \

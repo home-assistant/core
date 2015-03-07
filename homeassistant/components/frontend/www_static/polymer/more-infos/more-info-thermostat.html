@@ -1,0 +1,114 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<polymer-element name="more-info-thermostat" attributes="stateObj">
+<template>
+  <style>
+    paper-slider {
+      width: 100%;
+    }
+
+    paper-slider::shadow #sliderKnobInner,
+    paper-slider::shadow #sliderBar::shadow #activeProgress {
+      background-color: #039be5;
+    }
+
+    .away-mode-toggle {
+      display: none;
+      margin-top: 16px;
+    }
+
+    :host-context(.has-away_mode) .away-mode-toggle {
+      display: block;
+    }
+  </style>
+
+  <div>
+    <div>
+      <div>Target Temperature</div>
+      <paper-slider
+        min="{{tempMin}}" max="{{tempMax}}"
+        value='{{targetTemperatureSliderValue}}' pin
+        on-change="{{targetTemperatureSliderChanged}}">
+      </paper-slider>
+    </div>
+
+    <div class='away-mode-toggle'>
+      <div center horizontal layout>
+        <div flex>Away Mode</div>
+        <paper-toggle-button
+          checked="{{awayToggleChecked}}"
+          on-change="{{toggleChanged}}">
+        </paper-toggle-button>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+var constants = window.hass.constants;
+
+Polymer({
+  tempMin: 10,
+  tempMax: 40,
+  targetTemperatureSliderValue: 0,
+
+  awayToggleChecked: false,
+
+  observe: {
+    'stateObj.attributes.away_mode': 'awayChanged'
+  },
+
+  stateObjChanged: function(oldVal, newVal) {
+    this.targetTemperatureSliderValue = this.stateObj.state;
+
+    if (this.stateObj.attributes.unit_of_measurement === constants.UNIT_TEMP_F) {
+      this.tempMin = 45;
+      this.tempMax = 95;
+    } else {
+      this.tempMin = 7;
+      this.tempMax = 35;
+    }
+  },
+
+  targetTemperatureSliderChanged: function(ev, details, target) {
+    var temp = parseInt(target.value);
+
+    if(isNaN(temp)) return;
+
+    serviceActions.callService("thermostat", "set_temperature", {
+      entity_id: this.stateObj.entityId,
+      temperature: temp
+    });
+  },
+
+  toggleChanged: function(ev) {
+    var newVal = ev.target.checked;
+
+    if(newVal && this.stateObj.attributes.away_mode === 'off') {
+      this.service_set_away(true);
+    } else if(!newVal && this.stateObj.attributes.away_mode === 'on') {
+      this.service_set_away(false);
+    }
+  },
+
+  awayChanged: function(oldVal, newVal) {
+    this.awayToggleChecked = newVal == 'on';
+  },
+
+  service_set_away: function(away_mode) {
+    // We call stateChanged after a successful call to re-sync the toggle
+    // with the state. It will be out of sync if our service call did not
+    // result in the entity to be turned on. Since the state is not changing,
+    // the resync is not called automatic.
+    serviceActions.callService(
+      'thermostat', 'set_away_mode',
+      {entity_id: this.stateObj.entityId, away_mode: away_mode})
+
+    .then(function() {
+      this.awayChanged(null, this.stateObj.attributes.away_mode);
+    }.bind(this));
+  },
+});
+</script>
+</polymer-element>
