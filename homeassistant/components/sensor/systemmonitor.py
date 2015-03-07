@@ -29,13 +29,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the sensors """
 
     devices = []
-    for resurce in config['resources']:
-        if 'arg' not in resurce:
-            resurce['arg'] = ''
-        if resurce['type'] not in sensor_types:
-            _LOGGER.error('Sensor type: "%s" does not exist', resurce['type'])
+    for resource in config['resources']:
+        if 'arg' not in resource:
+            resource['arg'] = ''
+        if resource['type'] not in sensor_types:
+            _LOGGER.error('Sensor type: "%s" does not exist', resource['type'])
         else:
-            devices.append(SystemMonitorSensor(resurce['type'], resurce['arg']))
+            devices.append(SystemMonitorSensor(resource['type'], resource['arg']))
 
     add_devices(devices)
 
