@@ -96,8 +96,8 @@ def setup(hass, config):
 
     sun = ephem.Sun()  # pylint: disable=no-member
 
-    latitude = config[ha.DOMAIN][CONF_LATITUDE]
-    longitude = config[ha.DOMAIN][CONF_LONGITUDE]
+    latitude = str(config[ha.DOMAIN][CONF_LATITUDE])
+    longitude = str(config[ha.DOMAIN][CONF_LONGITUDE])
 
     # Validate latitude and longitude
     observer = ephem.Observer()

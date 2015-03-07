@@ -1,0 +1,22 @@
+# Sets up and builds python open zwave to be used with Home Assistant
+# Dependencies that need to be installed: 
+# apt-get install cython3 libudev-dev python-sphinx python3-setuptools mercurial
+# pip3 install cython
+
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
+mkdir build
+cd build
+
+hg clone https://code.google.com/r/balloob-python-openzwave/
+cd balloob-python-openzwave
+./update.sh
+
+# Fix an issue with openzwave
+sed -i '253s/.*//' openzwave/cpp/src/value_classes/ValueID.h
+
+./compile.sh
+./install.sh

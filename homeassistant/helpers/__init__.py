@@ -7,8 +7,8 @@ from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.loader import get_component
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM, CONF_TYPE,
-    DEVICE_DEFAULT_NAME)
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF, CONF_PLATFORM,
+    CONF_TYPE, DEVICE_DEFAULT_NAME)
 from homeassistant.util import ensure_unique_string, slugify
 
 
@@ -159,6 +159,8 @@ def platform_devices_from_config(config, domain, hass,
     no_name_count = 0
 
     for device in devices:
+        device.hass = hass
+
         # Get the name or set to default if none given
         name = device.name or DEVICE_DEFAULT_NAME
 
@@ -179,7 +181,16 @@ class Device(object):
     """ ABC for Home Assistant devices. """
     # pylint: disable=no-self-use
 
+    hass = None
     entity_id = None
+
+    @property
+    def should_poll(self):
+        """
+        Return True if device has to be polled for state.
+        False if device pushes its state to HA.
+        """
+        return True
 
     @property
     def unique_id(self):
@@ -216,17 +227,20 @@ class Device(object):
 
     def get_state_attributes(self):
         """ Returns optional state attributes. """
-        return {}
+        return None
 
     def update(self):
         """ Retrieve latest state from the real device. """
         pass
 
-    def update_ha_state(self, hass, force_refresh=False):
+    def update_ha_state(self, force_refresh=False):
         """
         Updates Home Assistant with current state of device.
         If force_refresh == True will update device before setting state.
         """
+        if self.hass is None:
+            raise RuntimeError("Attribute hass is None for {}".format(self))
+
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
                 "No entity specified for device {}".format(self.name))
@@ -234,12 +248,19 @@ class Device(object):
         if force_refresh:
             self.update()
 
-        return hass.states.set(self.entity_id, self.state,
-                               self.state_attributes)
+        attr = self.state_attributes or {}
+
+        if ATTR_FRIENDLY_NAME not in attr and self.name:
+            attr[ATTR_FRIENDLY_NAME] = self.name
+
+        return self.hass.states.set(self.entity_id, self.state, attr)
 
     def __eq__(self, other):
         return (isinstance(other, Device) and
                 other.unique_id == self.unique_id)
+
+    def __repr__(self):
+        return "<Device {}: {}>".format(self.name, self.state)
 
 
 class ToggleDevice(Device):

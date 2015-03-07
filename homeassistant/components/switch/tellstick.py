@@ -7,14 +7,15 @@ from homeassistant.helpers import ToggleDevice
 import tellcore.constants as tellcore_constants
 
 
-def get_devices(hass, config):
-    """ Find and return Tellstick switches. """
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+    """ Find and return tellstick switches. """
     try:
         import tellcore.telldus as telldus
     except ImportError:
         logging.getLogger(__name__).exception(
             "Failed to import tellcore")
-        return []
+        return
 
     core = telldus.TelldusCore()
     switches_and_lights = core.devices()
@@ -25,7 +26,7 @@ def get_devices(hass, config):
         if not switch.methods(tellcore_constants.TELLSTICK_DIM):
             switches.append(TellstickSwitchDevice(switch))
 
-    return switches
+    add_devices_callback(switches)
 
 
 class TellstickSwitchDevice(ToggleDevice):

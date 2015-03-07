@@ -69,11 +69,11 @@ TOL_TEMP = 0.3
 
 
 # pylint: disable=unused-argument
-def get_devices(hass, config):
-    """ Gets thermostats. """
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up the heat control thermostat. """
     logger = logging.getLogger(__name__)
 
-    return [HeatControl(hass, config, logger)]
+    add_devices([HeatControl(hass, config, logger)])
 
 
 # pylint: disable=too-many-instance-attributes
