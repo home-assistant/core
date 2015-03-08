@@ -82,8 +82,8 @@ def get_devices(hass, config):
     devices = []
     try:
         devices = vera_controller.get_devices(['Switch', 'Armable Sensor'])
-    # pylint: disable=broad-except
-    except Exception as inst:
+    except IOError as inst:
+        # There was a network related error connecting to the vera controller
         _LOGGER.error("Could not find Vera switches: %s", inst)
         return False
 
@@ -175,7 +175,6 @@ class VeraSwitch(ToggleDevice):
     @property
     def is_on(self):
         """ True if device is on. """
-        self.update()
         return self.is_on_status
 
     def update(self):

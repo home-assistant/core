@@ -83,8 +83,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     devices = []
     try:
         devices = controller.get_devices('Switch')
-    # pylint: disable=broad-except
-    except Exception as inst:
+    except IOError as inst:
+        # There was a network related error connecting to the vera controller
         _LOGGER.error("Could not find Vera lights: %s", inst)
         return False
 
