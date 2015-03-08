@@ -66,33 +66,36 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Vera Sensors. """
+
+    base_url = config.get('vera_controller_url')
+    if not base_url:
+        _LOGGER.error(
+            "The required parameter 'vera_controller_url'"
+            " was not found in config"
+        )
+        return False
+
+    device_data = config.get('device_data', None)
+
+    vera_controller = veraApi.VeraController(base_url)
+    categories = ['Temperature Sensor', 'Light Sensor', 'Sensor']
+    devices = []
     try:
-        base_url = config.get('vera_controller_url')
-        if not base_url:
-            _LOGGER.error(
-                "The required parameter 'vera_controller_url'"
-                " was not found in config"
-            )
-            return False
-
-        device_data = config.get('device_data', None)
-
-        vera_controller = veraApi.VeraController(base_url)
-        categories = ['Temperature Sensor', 'Light Sensor', 'Sensor']
         devices = vera_controller.get_devices(categories)
-
-        vera_sensors = []
-        for device in devices:
-            extra_data = get_extra_device_data(device_data, device.deviceId)
-            exclude = False
-            if extra_data:
-                exclude = extra_data.get('exclude', False)
-
-            if exclude is not True:
-                vera_sensors.append(VeraSensor(device, extra_data))
     # pylint: disable=broad-except
     except Exception as inst:
         _LOGGER.error("Could not find Vera sensors: %s", inst)
+        return False
+
+    vera_sensors = []
+    for device in devices:
+        extra_data = get_extra_device_data(device_data, device.deviceId)
+        exclude = False
+        if extra_data:
+            exclude = extra_data.get('exclude', False)
+
+        if exclude is not True:
+            vera_sensors.append(VeraSensor(device, extra_data))
 
     return vera_sensors
 

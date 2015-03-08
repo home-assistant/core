@@ -70,35 +70,37 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
+
+    base_url = config.get('vera_controller_url')
+    if not base_url:
+        _LOGGER.error(
+            "The required parameter 'vera_controller_url'"
+            " was not found in config"
+        )
+        return False
+
+    device_data = config.get('device_data', None)
+
+    controller = veraApi.VeraController(base_url)
+    devices = []
     try:
-        base_url = config.get('vera_controller_url')
-        if not base_url:
-            _LOGGER.error(
-                "The required parameter 'vera_controller_url'"
-                " was not found in config"
-            )
-            return False
-
-        device_data = config.get('device_data', None)
-
-        controller = veraApi.VeraController(base_url)
         devices = controller.get_devices('Switch')
-
-        lights = []
-        for device in devices:
-            extra_data = get_extra_device_data(device_data, device.deviceId)
-            exclude = False
-            if extra_data:
-                exclude = extra_data.get('exclude', False)
-
-            if exclude is not True:
-                lights.append(VeraLight(device, extra_data))
-
-        add_devices_callback(lights)
     # pylint: disable=broad-except
     except Exception as inst:
         _LOGGER.error("Could not find Vera lights: %s", inst)
         return False
+
+    lights = []
+    for device in devices:
+        extra_data = get_extra_device_data(device_data, device.deviceId)
+        exclude = False
+        if extra_data:
+            exclude = extra_data.get('exclude', False)
+
+        if exclude is not True:
+            lights.append(VeraLight(device, extra_data))
+
+    add_devices_callback(lights)
 
 
 def get_extra_device_data(device_data, device_id):
