@@ -1,0 +1,40 @@
+[run]
+source = homeassistant
+
+omit =
+    homeassistant/external/*
+
+    # omit pieces of code that rely on external devices being present
+    homeassistant/components/wink.py
+    homeassistant/components/*/wink.py
+
+    homeassistant/components/zwave.py
+    homeassistant/components/*/zwave.py
+
+    homeassistant/components/*/tellstick.py
+
+    homeassistant/components/keyboard.py
+    homeassistant/components/switch/wemo.py
+    homeassistant/components/thermostat/nest.py
+    homeassistant/components/light/hue.py
+    homeassistant/components/sensor/systemmonitor.py
+    homeassistant/components/notify/pushbullet.py
+    homeassistant/components/media_player/cast.py
+    homeassistant/components/device_tracker/luci.py
+    homeassistant/components/device_tracker/tomato.py
+    homeassistant/components/device_tracker/netgear.py
+    homeassistant/components/device_tracker/nmap_tracker.py
+
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError

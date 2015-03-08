@@ -10,7 +10,6 @@ from homeassistant.helpers.device_component import DeviceComponent
 
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.helpers import extract_entity_ids
 from homeassistant.components import group, discovery, wink
 
 DOMAIN = 'switch'
@@ -64,16 +63,9 @@ def setup(hass, config):
         GROUP_NAME_ALL_SWITCHES)
     component.setup(config)
 
-    switches = component.devices
-
     def handle_switch_service(service):
         """ Handles calls to the switch services. """
-        target_switches = [switches[entity_id] for entity_id
-                           in extract_entity_ids(hass, service)
-                           if entity_id in switches]
-
-        if not target_switches:
-            target_switches = switches.values()
+        target_switches = component.extract_from_service(service)
 
         for switch in target_switches:
             if service.service == SERVICE_TURN_ON:

@@ -1,5 +1,5 @@
 """ Support for Wink sensors. """
-from homeassistant.helpers import Device
+from homeassistant.helpers.device import Device
 from homeassistant.const import (
     TEMP_CELCIUS, ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
 

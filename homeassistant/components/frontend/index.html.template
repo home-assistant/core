@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Home Assistant</title>
+
+    <link rel='manifest' href='/static/manifest.json' />
+
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+    <meta name='mobile-web-app-capable' content='yes'>
+
+    <meta name='viewport' content='width=device-width, 
+          user-scalable=no' />
+
+    <link rel='shortcut icon' href='/static/favicon.ico' />
+    <link rel='icon' type='image/png' 
+         href='/static/favicon-192x192.png' sizes='192x192'>
+    <link rel='apple-touch-icon' sizes='180x180'
+         href='/apple-icon-180x180.png'>
+    <meta name='theme-color' content='#03a9f4'>
+   </head>
+   <body fullbleed>
+        <h3 id='init' align='center'>Initializing Home Assistant</h3>
+        <script src='/static/webcomponents.min.js'></script>
+        <link rel='import' href='/static/{{ app_url }}' />
+        <home-assistant auth='{{ auth }}'></home-assistant>
+  </body>
+</html>

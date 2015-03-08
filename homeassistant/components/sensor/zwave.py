@@ -9,7 +9,7 @@ from openzwave.network import ZWaveNetwork
 from pydispatch import dispatcher
 
 import homeassistant.components.zwave as zwave
-from homeassistant.helpers import Device
+from homeassistant.helpers.device import Device
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)

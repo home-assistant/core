@@ -57,7 +57,6 @@ from homeassistant.helpers.device_component import DeviceComponent
 import homeassistant.util as util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.helpers import extract_entity_ids
 from homeassistant.components import group, discovery, wink
 
 
@@ -146,8 +145,6 @@ def setup(hass, config):
         GROUP_NAME_ALL_LIGHTS)
     component.setup(config)
 
-    lights = component.devices
-
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),
                                   LIGHT_PROFILES_FILE),
@@ -182,12 +179,7 @@ def setup(hass, config):
         dat = service.data
 
         # Convert the entity ids to valid light ids
-        target_lights = [lights[entity_id] for entity_id
-                         in extract_entity_ids(hass, service)
-                         if entity_id in lights]
-
-        if not target_lights:
-            target_lights = lights.values()
+        target_lights = component.extract_from_service(service)
 
         params = {}
 

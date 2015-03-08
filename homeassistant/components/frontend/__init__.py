@@ -15,6 +15,8 @@ from homeassistant.const import URL_ROOT, HTTP_OK
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
 
+INDEX_PATH = os.path.join(os.path.dirname(__file__), 'index.html.template')
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,10 +42,6 @@ def setup(hass, config):
 def _handle_get_root(handler, path_match, data):
     """ Renders the debug interface. """
 
-    def write(txt):
-        """ Helper to write text to the output. """
-        handler.wfile.write((txt + "\n").encode("UTF-8"))
-
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/html; charset=utf-8')
     handler.end_headers()
@@ -54,28 +52,16 @@ def _handle_get_root(handler, path_match, data):
         app_url = "frontend-{}.html".format(version.VERSION)
 
     # auto login if no password was set, else check api_password param
-    auth = (handler.server.api_password if handler.server.no_password_set
+    auth = ('no_password_set' if handler.server.no_password_set
             else data.get('api_password', ''))
 
-    write(("<!doctype html>"
-           "<html>"
-           "<head><title>Home Assistant</title>"
-           "<meta name='mobile-web-app-capable' content='yes'>"
-           "<link rel='shortcut icon' href='/static/favicon.ico' />"
-           "<link rel='icon' type='image/png' "
-           "     href='/static/favicon-192x192.png' sizes='192x192'>"
-           "<meta name='viewport' content='width=device-width, "
-           "      user-scalable=no, initial-scale=1.0, "
-           "      minimum-scale=1.0, maximum-scale=1.0' />"
-           "<meta name='theme-color' content='#03a9f4'>"
-           "</head>"
-           "<body fullbleed>"
-           "<h3 id='init' align='center'>Initializing Home Assistant</h3>"
-           "<script"
-           "     src='/static/webcomponents.min.js'></script>"
-           "<link rel='import' href='/static/{}' />"
-           "<home-assistant auth='{}'></home-assistant>"
-           "</body></html>").format(app_url, auth))
+    with open(INDEX_PATH) as template_file:
+        template_html = template_file.read()
+
+    template_html = template_html.replace('{{ app_url }}', app_url)
+    template_html = template_html.replace('{{ auth }}', auth)
+
+    handler.wfile.write(template_html.encode("UTF-8"))
 
 
 def _handle_get_static(handler, path_match, data):

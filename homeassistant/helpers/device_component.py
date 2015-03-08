@@ -2,13 +2,15 @@
 Provides helpers for components that handle devices.
 """
 from homeassistant.loader import get_component
-from homeassistant.helpers import generate_entity_id, config_per_platform
+from homeassistant.helpers import (
+    generate_entity_id, config_per_platform, extract_entity_ids)
 from homeassistant.components import group, discovery
+from homeassistant.const import ATTR_ENTITY_ID
 
 
 class DeviceComponent(object):
     # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-arguments,too-few-public-methods
+    # pylint: disable=too-many-arguments
     """
     Helper class that will help a device component manage its devices.
     """
@@ -51,6 +53,18 @@ class DeviceComponent(object):
         if self.discovery_platforms:
             discovery.listen(self.hass, self.discovery_platforms.keys(),
                              self._device_discovered)
+
+    def extract_from_service(self, service):
+        """
+        Takes a service and extracts all known devices.
+        Will return all if no entity IDs given in service.
+        """
+        if ATTR_ENTITY_ID not in service.data:
+            return self.devices.values()
+        else:
+            return [self.devices[entity_id] for entity_id
+                    in extract_entity_ids(self.hass, service)
+                    if entity_id in self.devices]
 
     def _update_device_states(self, now):
         """ Update the states of all the lights. """

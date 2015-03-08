@@ -30,8 +30,9 @@
 
   </template>
   <script>
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
-  var uiActions = window.hass.uiActions;
+  var storeListenerMixIn = window.hass.storeListenerMixIn,
+      uiActions = window.hass.uiActions,
+      preferenceStore = window.hass.preferenceStore;
 
   Polymer(Polymer.mixin({
     loaded: false,
@@ -42,7 +43,9 @@
 
       // if auth was given, tell the backend
       if(this.auth) {
-        uiActions.validateAuth(this.auth);    
+        uiActions.validateAuth(this.auth, false);    
+      } else if (preferenceStore.hasAuthToken()) {
+        uiActions.validateAuth(preferenceStore.getAuthToken(), false);    
       }
     },
 

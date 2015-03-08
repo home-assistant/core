@@ -1,5 +1,6 @@
-# required
+# required for Home Assistant core
 requests>=2.0
+pyyaml>=3.11
 
 # optional, needed for specific components
 
@@ -12,17 +13,17 @@ pyephem>=3.7
 # lights.hue
 phue>=0.8
 
-# chromecast
+# media_player.cast
 pychromecast>=0.5
 
 # keyboard
 pyuserinput>=0.1.9
 
-# switch.tellstick, tellstick_sensor
+# switch.tellstick, sensor.tellstick
 tellcore-py>=1.0.4
 
 # device_tracker.nmap
-python-libnmap
+python-libnmap>=0.6.2
 
 # notify.pushbullet
 pushbullet.py>=0.7.1
@@ -33,5 +34,5 @@ python-nest>=2.1
 # z-wave
 pydispatcher>=2.0.5
 
-# pyyaml
-pyyaml
+# sensor.systemmonitor 
+psutil>=2.2.1

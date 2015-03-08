@@ -1,5 +1,5 @@
 """ Demo platform that has two fake switchces. """
-from homeassistant.helpers import ToggleDevice
+from homeassistant.helpers.device import ToggleDevice
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
 

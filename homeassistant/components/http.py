@@ -111,7 +111,7 @@ def setup(hass, config=None):
     if config is None or DOMAIN not in config:
         config = {DOMAIN: {}}
 
-    api_password = config[DOMAIN].get(CONF_API_PASSWORD)
+    api_password = str(config[DOMAIN].get(CONF_API_PASSWORD))
 
     no_password_set = api_password is None
 
@@ -123,7 +123,7 @@ def setup(hass, config=None):
 
     server_port = config[DOMAIN].get(CONF_SERVER_PORT, SERVER_PORT)
 
-    development = config[DOMAIN].get(CONF_DEVELOPMENT, "") == "1"
+    development = str(config[DOMAIN].get(CONF_DEVELOPMENT, "")) == "1"
 
     server = HomeAssistantHTTPServer(
         (server_host, server_port), RequestHandler, hass, api_password,
@@ -341,17 +341,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.send_response(HTTP_OK)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, content_type)
 
-        # Add cache if not development
-        if not self.server.development:
-            # 1 year in seconds
-            cache_time = 365 * 86400
-
-            self.send_header(
-                HTTP_HEADER_CACHE_CONTROL,
-                "public, max-age={}".format(cache_time))
-            self.send_header(
-                HTTP_HEADER_EXPIRES,
-                self.date_time_string(time.time()+cache_time))
+        self.set_cache_header()
 
         if do_gzip:
             gzip_data = gzip.compress(inp.read())
@@ -374,3 +364,16 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         else:
             self.copyfile(inp, self.wfile)
+
+    def set_cache_header(self):
+        """ Add cache headers if not in development """
+        if not self.server.development:
+            # 1 year in seconds
+            cache_time = 365 * 86400
+
+            self.send_header(
+                HTTP_HEADER_CACHE_CONTROL,
+                "public, max-age={}".format(cache_time))
+            self.send_header(
+                HTTP_HEADER_EXPIRES,
+                self.date_time_string(time.time()+cache_time))

@@ -9,9 +9,6 @@ DEVICE_DEFAULT_NAME = "Unnamed Device"
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
 
-# This one is deprecated. Use platform instead.
-CONF_TYPE = "type"
-
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
 CONF_HOSTS = "hosts"
