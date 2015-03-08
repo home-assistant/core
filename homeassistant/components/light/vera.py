@@ -78,17 +78,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     devices = []
     try:
         devices = controller.get_devices('Switch')
-    except RequestException as inst:
+    except RequestException:
         # There was a network related error connecting to the vera controller
-        _LOGGER.error("Could not find Vera lights: %s", inst)
+        _LOGGER.exception("Error communicating with Vera API")
         return False
 
     lights = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, None)
-        exclude = False
-        if extra_data:
-            exclude = extra_data.get('exclude', False)
+        extra_data = device_data.get(device.deviceId, {})
+        exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
             lights.append(VeraSwitch(device, extra_data))

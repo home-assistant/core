@@ -79,17 +79,15 @@ def get_devices(hass, config):
     devices = []
     try:
         devices = vera_controller.get_devices(['Switch', 'Armable Sensor'])
-    except RequestException as inst:
+    except RequestException:
         # There was a network related error connecting to the vera controller
-        _LOGGER.error("Could not find Vera switches: %s", inst)
+        _LOGGER.exception("Error communicating with Vera API")
         return False
 
     vera_switches = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, None)
-        exclude = False
-        if extra_data:
-            exclude = extra_data.get('exclude', False)
+        extra_data = device_data.get(device.deviceId, {})
+        exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
             vera_switches.append(VeraSwitch(device, extra_data))
