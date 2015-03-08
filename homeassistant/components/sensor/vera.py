@@ -9,12 +9,10 @@ sensor:
     platform: vera
     vera_controller_url: http://YOUR_VERA_IP:3480/
     device_data:
-        -
-            vera_id: 12
+        12:
             name: My awesome sensor
             exclude: true
-        -
-            vera_id: 13
+        13:
             name: Another sensor
 
 VARIABLES:
@@ -30,15 +28,10 @@ device_data
 *Optional
 This contains an array additional device info for your Vera devices.  It is not
 required and if not specified all sensors configured in your Vera controller
-will be added with default values.
-
+will be added with default values.  You should use the id of your vera device
+as the key for the device within device_data
 
 These are the variables for the device_data array:
-
-vera_id
-*Required
-The Vera device id you wish these configuration options to be applied to
-
 
 name
 *Optional
@@ -77,7 +70,7 @@ def get_devices(hass, config):
         )
         return False
 
-    device_data = config.get('device_data', None)
+    device_data = config.get('device_data', {})
 
     vera_controller = veraApi.VeraController(base_url)
     categories = ['Temperature Sensor', 'Light Sensor', 'Sensor']
@@ -91,7 +84,7 @@ def get_devices(hass, config):
 
     vera_sensors = []
     for device in devices:
-        extra_data = get_extra_device_data(device_data, device.deviceId)
+        extra_data = device_data.get(device.deviceId, None)
         exclude = False
         if extra_data:
             exclude = extra_data.get('exclude', False)
@@ -107,17 +100,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(get_devices(hass, config))
 
 
-def get_extra_device_data(device_data, device_id):
-    """ Gets the additional configuration data by Vera device Id """
-    if not device_data:
-        return None
-
-    for item in device_data:
-        if item.get('vera_id') == device_id:
-            return item
-    return None
-
-
 class VeraSensor(Device):
     """ Represents a Vera Sensor """
     extra_data = None
@@ -128,7 +110,8 @@ class VeraSensor(Device):
         self.extra_data = extra_data
         if self.extra_data and self.extra_data.get('name'):
             self._name = self.extra_data.get('name')
-        self._name = self.vera_device.name
+        else:
+            self._name = self.vera_device.name
 
     def __str__(self):
         return "%s %s %s" % (self.name, self.vera_device.deviceId, self.state)
