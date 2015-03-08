@@ -58,9 +58,7 @@ it should be set to "true" if you want this device excluded
 
 """
 import logging
-import time
-from homeassistant.const import ATTR_BATTERY_LEVEL
-from homeassistant.helpers import ToggleDevice
+from homeassistant.components.switch.vera import VeraSwitch
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
 
@@ -98,7 +96,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
-            lights.append(VeraLight(device, extra_data))
+            lights.append(VeraSwitch(device, extra_data))
 
     add_devices_callback(lights)
 
@@ -113,72 +111,3 @@ def get_extra_device_data(device_data, device_id):
             return item
 
     return None
-
-
-class VeraLight(ToggleDevice):
-    """ Represents a Vera light """
-    is_on_status = False
-    # for debouncing status check after command is sent
-    last_command_send = 0
-    extra_data = None
-
-    def __init__(self, vera_device, extra_data=None):
-        self.vera_device = vera_device
-        self.extra_data = extra_data
-        if self.extra_data and self.extra_data.get('name'):
-            self._name = self.extra_data.get('name')
-        self._name = self.vera_device.name
-
-    @property
-    def name(self):
-        """ Get the mame of the light. """
-        return self._name
-
-    @property
-    def state_attributes(self):
-        attr = super().state_attributes
-
-        if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
-
-        if self.vera_device.is_armable:
-            armed = self.vera_device.refresh_value('Armed')
-            attr['Armed'] = 'True' if armed == '1' else 'False'
-
-        if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.refresh_value('LastTrip')
-            trip_time_str = time.strftime(
-                "%Y-%m-%d %H:%M",
-                time.localtime(int(last_tripped))
-            )
-
-            attr['Last Tripped'] = trip_time_str
-
-            tripped = self.vera_device.refresh_value('Tripped')
-            attr['Tripped'] = 'True' if tripped == '1' else 'False'
-
-        attr['Vera Device Id'] = self.vera_device.vera_device_id
-
-        return attr
-
-    def turn_on(self, **kwargs):
-        self.last_command_send = time.time()
-        self.vera_device.switch_on()
-        self.is_on_status = True
-
-    def turn_off(self, **kwargs):
-        self.last_command_send = time.time()
-        self.vera_device.switch_off()
-        self.is_on_status = False
-
-    @property
-    def is_on(self):
-        """ True if device is on. """
-        self.update()
-        return self.is_on_status
-
-    def update(self):
-        # We need to debounce the status call after turning light on or off
-        # because the vera has some lag in updating the device status
-        if (self.last_command_send + 5) < time.time():
-            self.is_on_status = self.vera_device.is_switched_on()
