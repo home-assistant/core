@@ -57,7 +57,8 @@ import logging
 import time
 
 from homeassistant.helpers import ToggleDevice
-from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
 
@@ -144,7 +145,7 @@ class VeraSwitch(ToggleDevice):
 
         if self.vera_device.is_armable:
             armed = self.vera_device.refresh_value('Armed')
-            attr['Armed'] = 'True' if armed == '1' else 'False'
+            attr[ATTR_ARMED] = 'True' if armed == '1' else 'False'
 
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.refresh_value('LastTrip')
@@ -152,11 +153,9 @@ class VeraSwitch(ToggleDevice):
                 "%Y-%m-%d %H:%M",
                 time.localtime(int(last_tripped))
             )
-
-            attr['Last Tripped'] = trip_time_str
-
+            attr[ATTR_LAST_TRIP_TIME] = trip_time_str
             tripped = self.vera_device.refresh_value('Tripped')
-            attr['Tripped'] = 'True' if tripped == '1' else 'False'
+            attr[ATTR_TRIPPED] = 'True' if tripped == '1' else 'False'
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
