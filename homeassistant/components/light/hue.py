@@ -6,14 +6,14 @@ from urllib.parse import urlparse
 
 from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.helpers import ToggleDevice
+from homeassistant.helpers.device import ToggleDevice
 from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
     ATTR_FLASH, FLASH_LONG, FLASH_SHORT)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = "phue.conf"
 

@@ -67,7 +67,7 @@ def setup(hass, config):
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
 
-    use_debug = config[DOMAIN].get(CONF_DEBUG) == '1'
+    use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
 
     # Setup options
     options = ZWaveOption(

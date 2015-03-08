@@ -16,7 +16,7 @@ import homeassistant.util as util
 
 from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME,
-    CONF_PLATFORM, CONF_TYPE)
+    CONF_PLATFORM)
 from homeassistant.components import group
 
 DOMAIN = "device_tracker"
@@ -53,20 +53,10 @@ def is_on(hass, entity_id=None):
 def setup(hass, config):
     """ Sets up the device tracker. """
 
-    # CONF_TYPE is deprecated for CONF_PLATOFRM. We keep supporting it for now.
-    if not (validate_config(config, {DOMAIN: [CONF_PLATFORM]}, _LOGGER) or
-            validate_config(config, {DOMAIN: [CONF_TYPE]}, _LOGGER)):
-
+    if not validate_config(config, {DOMAIN: [CONF_PLATFORM]}, _LOGGER):
         return False
 
     tracker_type = config[DOMAIN].get(CONF_PLATFORM)
-
-    if tracker_type is None:
-        tracker_type = config[DOMAIN][CONF_TYPE]
-
-        _LOGGER.warning((
-            "Please update your config for %s to use 'platform' "
-            "instead of 'type'"), tracker_type)
 
     tracker_implementation = get_component(
         'device_tracker.{}'.format(tracker_type))

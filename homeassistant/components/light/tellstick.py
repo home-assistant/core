@@ -3,7 +3,7 @@ import logging
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.helpers import ToggleDevice
+from homeassistant.helpers.device import ToggleDevice
 import tellcore.constants as tellcore_constants
 
 

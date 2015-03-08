@@ -9,7 +9,7 @@ import logging
 from homeassistant.helpers.device_component import DeviceComponent
 
 import homeassistant.util as util
-from homeassistant.helpers import Device, extract_entity_ids
+from homeassistant.helpers.device import Device
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON, STATE_OFF)
@@ -56,18 +56,11 @@ def setup(hass, config):
     component = DeviceComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     component.setup(config)
 
-    thermostats = component.devices
-
     def thermostat_service(service):
         """ Handles calls to the services. """
 
         # Convert the entity ids to valid light ids
-        target_thermostats = [thermostats[entity_id] for entity_id
-                              in extract_entity_ids(hass, service)
-                              if entity_id in thermostats]
-
-        if not target_thermostats:
-            target_thermostats = thermostats.values()
+        target_thermostats = component.extract_from_service(service)
 
         if service.service == SERVICE_SET_AWAY_MODE:
             away_mode = service.data.get(ATTR_AWAY_MODE)
