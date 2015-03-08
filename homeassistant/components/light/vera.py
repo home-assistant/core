@@ -125,13 +125,14 @@ class VeraLight(ToggleDevice):
     def __init__(self, vera_device, extra_data=None):
         self.vera_device = vera_device
         self.extra_data = extra_data
+        if self.extra_data and self.extra_data.get('name'):
+            self._name = self.extra_data.get('name')
+        self._name = self.vera_device.name
 
     @property
     def name(self):
         """ Get the mame of the light. """
-        if self.extra_data and self.extra_data.get('name'):
-            return self.extra_data.get('name')
-        return self.vera_device.name
+        return self._name
 
     @property
     def state_attributes(self):
