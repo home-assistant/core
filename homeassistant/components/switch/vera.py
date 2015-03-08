@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VeraSwitch(ToggleDevice):
     """ Represents a Vera Switch """
     is_on_status = False
-    #for debouncing status check after command is sent
+    # for debouncing status check after command is sent
     last_command_send = 0
     extra_data = None
 

@@ -116,7 +116,7 @@ def get_extra_device_data(device_data, device_id):
 class VeraLight(ToggleDevice):
     """ Represents a Vera light """
     is_on_status = False
-    #for debouncing status check after command is sent
+    # for debouncing status check after command is sent
     last_command_send = 0
     extra_data = None
 
