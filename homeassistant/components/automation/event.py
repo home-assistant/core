@@ -5,8 +5,6 @@ homeassistant.components.automation.event
 Offers event listening automation rules.
 """
 import logging
-import json
-from homeassistant.util import convert
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_DATA = "event_data"
@@ -22,7 +20,7 @@ def register(hass, config, action):
         _LOGGER.error("Missing configuration key %s", CONF_EVENT_TYPE)
         return False
 
-    event_data = convert(config.get(CONF_EVENT_DATA), json.loads, {})
+    event_data = config.get(CONF_EVENT_DATA, {})
 
     def handle_event(event):
         """ Listens for events and calls the action when data matches. """
