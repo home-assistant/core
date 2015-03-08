@@ -1,4 +1,59 @@
-""" Support for Vera lights. """
+""" 
+Support for Vera lights. 
+
+Configuration:
+This component is useful if you wish for switches connected to your Vera controller to appear as lights 
+in homeassistant.  All switches will be added as a light unless you exclude them in the config.
+
+To use the Vera lights you will need to add something like the following to your config/configuration.yaml
+
+light:
+    platform: vera
+    vera_controller_url: http://YOUR_VERA_IP:3480/
+    device_data: 
+        - 
+            vera_id: 12
+            name: My awesome switch
+            exclude: true
+        -
+            vera_id: 13
+            name: Another switch            
+
+VARIABLES: 
+
+vera_controller_url
+*Required
+This is the base URL of your vera controller including the port number if not running on 80
+Example: http://192.168.1.21:3480/
+
+
+device_data
+*Optional
+This contains an array additional device info for your Vera devices.  It is not required and if 
+not specified all sensors configured in your Vera controller will be added with default values.
+
+
+These are the variables for the device_data array:
+
+vera_id
+*Required
+The Vera device id you wish these configuration options to be applied to
+
+
+name
+*Optional
+This parameter allows you to override the name of your Vera device in the HA interface, if not specified the 
+value configured for the device in your Vera will be used
+
+
+exclude
+*Optional
+This parameter allows you to exclude the specified device from homeassistant, it should be set to "true" if
+you want this device excluded
+
+
+
+"""
 import logging
 import requests
 import time
@@ -7,7 +62,7 @@ import json
 from homeassistant.helpers import ToggleDevice
 import homeassistant.external.vera.vera as veraApi
 
-_LOGGER = logging.getLogger('Vera_Light')
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -18,46 +73,33 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             _LOGGER.error("The required parameter 'vera_controller_url' was not found in config")
             return False
 
-        device_data_str = config.get('device_data')        
-        device_data = None
-        if device_data_str:
-            try:
-                device_data = json.loads(device_data_str)
-            except Exception as json_ex:
-                _LOGGER.error('Vera lights error parsing device info, should be in the format [{"id" : 12, "name": "Lounge Light"}]: %s', json_ex)
+        device_data = config.get('device_data', None)
 
         controller = veraApi.VeraController(base_url)
         devices = controller.get_devices('Switch')
 
         lights = []
         for device in devices:
-            if is_switch_a_light(device_data, device.deviceId):
-                lights.append(VeraLight(device, get_extra_device_data(device_data, device.deviceId)))
+            extra_data = get_extra_device_data(device_data, device.deviceId)
+            exclude = False
+            if extra_data:
+                exclude = extra_data.get('exclude', False)
+
+            if exclude is not True: 
+                lights.append(VeraLight(device, extra_data))
 
         add_devices_callback(lights)
     except Exception as inst:
         _LOGGER.error("Could not find Vera lights: %s", inst)
         return False
 
-# If you have z-wave switches that control lights you can configure them
-# to be treated as lights using the "device_data" parameter in the config.
-# If "device_data" is not set then all switches are treated as lights
-def is_switch_a_light(device_data, device_id):
-    if not device_data:
-        return True
-
-    for item in device_data:
-        if item.get('id') == device_id:
-            return True
-
-    return False
 
 def get_extra_device_data(device_data, device_id):
     if not device_data:
         return None
 
     for item in device_data:
-        if item.get('id') == device_id:
+        if item.get('vera_id') == device_id:
             return item
 
     return None
@@ -74,11 +116,6 @@ class VeraLight(ToggleDevice):
         self.vera_device = vera_device
         self.extra_data = extra_data
 
-    @property
-    def unique_id(self):
-        """ Returns the id of this light """
-        return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.name))
 
     @property
     def name(self):

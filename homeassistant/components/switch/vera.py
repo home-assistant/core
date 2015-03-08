@@ -59,7 +59,7 @@ import json
 from homeassistant.helpers import ToggleDevice
 import homeassistant.external.vera.vera as veraApi
 
-_LOGGER = logging.getLogger('Vera_Switch')
+_LOGGER = logging.getLogger(__name__)
 
 vera_controller = None
 vera_switches = []
@@ -72,20 +72,20 @@ def get_devices(hass, config):
             _LOGGER.error("The required parameter 'vera_controller_url' was not found in config")
             return False
 
-        device_data_str = config.get('device_data')        
-        device_data = None
-        if device_data_str:
-            try:
-                device_data = json.loads(device_data_str)
-            except Exception as json_ex:
-                _LOGGER.error('Vera switch error parsing device info, should be in the format [{"id" : 12, "name": "Lounge Light"}]: %s', json_ex)
+        device_data = config.get('device_data', None)
 
         vera_controller = veraApi.VeraController(base_url)
         devices = vera_controller.get_devices(['Switch', 'Armable Sensor'])
 
         vera_switches = []
         for device in devices:
-            vera_switches.append(VeraSwitch(device, get_extra_device_data(device_data, device.deviceId)))
+            extra_data = get_extra_device_data(device_data, device.deviceId)
+            exclude = False
+            if extra_data:
+                exclude = extra_data.get('exclude', False)
+
+            if exclude is not True: 
+                vera_switches.append(VeraSwitch(device, extra_data))
 
     except Exception as inst:
         _LOGGER.error("Could not find Vera switches: %s", inst)
@@ -98,7 +98,7 @@ def get_extra_device_data(device_data, device_id):
         return None
 
     for item in device_data:
-        if item.get('id') == device_id:
+        if item.get('vera_id') == device_id:
             return item
     return None
 
