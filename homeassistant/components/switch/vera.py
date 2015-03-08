@@ -50,6 +50,7 @@ it should be set to "true" if you want this device excluded
 """
 import logging
 import time
+from requests.exceptions import RequestException
 
 from homeassistant.helpers import ToggleDevice
 from homeassistant.const import (
@@ -78,7 +79,7 @@ def get_devices(hass, config):
     devices = []
     try:
         devices = vera_controller.get_devices(['Switch', 'Armable Sensor'])
-    except IOError as inst:
+    except RequestException as inst:
         # There was a network related error connecting to the vera controller
         _LOGGER.error("Could not find Vera switches: %s", inst)
         return False

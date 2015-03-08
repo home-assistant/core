@@ -52,6 +52,7 @@ it should be set to "true" if you want this device excluded
 
 """
 import logging
+from requests.exceptions import RequestException
 from homeassistant.components.switch.vera import VeraSwitch
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
@@ -77,7 +78,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     devices = []
     try:
         devices = controller.get_devices('Switch')
-    except IOError as inst:
+    except RequestException as inst:
         # There was a network related error connecting to the vera controller
         _LOGGER.error("Could not find Vera lights: %s", inst)
         return False
@@ -93,4 +94,3 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             lights.append(VeraSwitch(device, extra_data))
 
     add_devices_callback(lights)
-
