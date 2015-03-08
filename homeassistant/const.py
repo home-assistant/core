@@ -73,6 +73,16 @@ ATTR_LOCATION = "location"
 
 ATTR_BATTERY_LEVEL = "battery_level"
 
+# For devices which support an armed state
+ATTR_ARMED = "device_armed"
+
+# For sensors that support 'tripping', eg. motion and door sensors
+ATTR_TRIPPED = "device_tripped"
+
+# For sensors that support 'tripping' this holds the most recent
+# time the device was tripped
+ATTR_LAST_TRIP_TIME = "last_tripped_time"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
