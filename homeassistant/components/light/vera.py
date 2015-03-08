@@ -66,14 +66,17 @@ import homeassistant.external.vera.vera as veraApi
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
     try:
         base_url = config.get('vera_controller_url')
         if not base_url:
-            _LOGGER.error("The required parameter 'vera_controller_url'"
-            " was not found in config")
+            _LOGGER.error(
+                "The required parameter 'vera_controller_url'"
+                " was not found in config"
+            )
             return False
 
         device_data = config.get('device_data', None)
@@ -121,7 +124,6 @@ class VeraLight(ToggleDevice):
         self.vera_device = vera_device
         self.extra_data = extra_data
 
-
     @property
     def name(self):
         """ Get the mame of the light. """
@@ -142,8 +144,10 @@ class VeraLight(ToggleDevice):
 
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.refresh_value('LastTrip')
-            trip_time_str = time.strftime("%Y-%m-%d %H:%M",
-            time.localtime(int(last_tripped)))
+            trip_time_str = time.strftime(
+                "%Y-%m-%d %H:%M",
+                time.localtime(int(last_tripped))
+            )
 
             attr['Last Tripped'] = trip_time_str
 
@@ -175,4 +179,3 @@ class VeraLight(ToggleDevice):
         # because the vera has some lag in updating the device status
         if (self.last_command_send + 5) < time.time():
             self.is_on_status = self.vera_device.is_switched_on()
-        

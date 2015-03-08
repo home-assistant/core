@@ -62,14 +62,17 @@ import homeassistant.external.vera.vera as veraApi
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Vera Sensors. """
     try:
         base_url = config.get('vera_controller_url')
         if not base_url:
-            _LOGGER.error("The required parameter 'vera_controller_url'"
-            " was not found in config")
+            _LOGGER.error(
+                "The required parameter 'vera_controller_url'"
+                " was not found in config"
+            )
             return False
 
         device_data = config.get('device_data', None)
@@ -93,9 +96,11 @@ def get_devices(hass, config):
 
     return vera_sensors
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Performs setup for Vera controller devices """
     add_devices(get_devices(hass, config))
+
 
 def get_extra_device_data(device_data, device_id):
     """ Gets the additional configuration data by Vera device Id """
@@ -134,7 +139,6 @@ class VeraSensor(Device):
     @property
     def state_attributes(self):
         attr = super().state_attributes
-
         if self.vera_device.has_battery:
             attr['Battery'] = self.vera_device.battery_level + '%'
 
@@ -144,18 +148,16 @@ class VeraSensor(Device):
 
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.refresh_value('LastTrip')
-            trip_time_str = time.strftime("%Y-%m-%d %H:%M",
-            time.localtime(int(last_tripped)))
-
+            trip_time_str = time.strftime(
+                "%Y-%m-%d %H:%M",
+                time.localtime(int(last_tripped))
+            )
             attr['Last Tripped'] = trip_time_str
-
             tripped = self.vera_device.refresh_value('Tripped')
             attr['Tripped'] = 'True' if tripped == '1' else 'False'
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
-
         return attr
-
 
     def update(self):
         if self.vera_device.category == "Temperature Sensor":
@@ -163,7 +165,6 @@ class VeraSensor(Device):
             current_temp = self.vera_device.get_value('CurrentTemperature')
             vera_temp_units = self.vera_device.veraController.temperature_units
             self.current_value = current_temp + '°' + vera_temp_units
-
         elif self.vera_device.category == "Light Sensor":
             self.vera_device.refresh_value('CurrentLevel')
             self.current_value = self.vera_device.get_value('CurrentLevel')
@@ -172,4 +173,3 @@ class VeraSensor(Device):
             self.current_value = 'Tripped' if tripped == '1' else 'Not Tripped'
         else:
             self.current_value = 'Unknown'
-        
