@@ -115,6 +115,7 @@ class HomeAssistant(object):
                 action(now)
 
         self.bus.listen(EVENT_TIME_CHANGED, point_in_time_listener)
+        return point_in_time_listener
 
     # pylint: disable=too-many-arguments
     def track_time_change(self, action,
@@ -154,6 +155,7 @@ class HomeAssistant(object):
                 action(event.data[ATTR_NOW])
 
         self.bus.listen(EVENT_TIME_CHANGED, time_listener)
+        return time_listener
 
     def stop(self):
         """ Stops Home Assistant and shuts down all threads. """
