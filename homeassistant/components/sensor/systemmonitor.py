@@ -8,9 +8,10 @@ Shows system monitor values such as: disk, memory and processor use
 
 from homeassistant.helpers.device import Device
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
+    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF)
 import psutil
 import logging
+
 
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
@@ -20,6 +21,7 @@ SENSOR_TYPES = {
     'memory_use': ['RAM Use', 'MiB'],
     'memory_free': ['RAM Free', 'MiB'],
     'processor_use': ['CPU Use', '%'],
+    'process': ['Process', ''],
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,3 +90,8 @@ class SystemMonitorSensor(Device):
             self._state = round(psutil.virtual_memory().available / 1024**2, 1)
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
+        elif self.type == 'process':
+            if any(self.argument in l.name() for l in psutil.process_iter()):
+                self._state = STATE_ON
+            else:
+                self._state = STATE_OFF

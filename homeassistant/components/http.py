@@ -111,7 +111,7 @@ def setup(hass, config=None):
     if config is None or DOMAIN not in config:
         config = {DOMAIN: {}}
 
-    api_password = config[DOMAIN].get(CONF_API_PASSWORD)
+    api_password = str(config[DOMAIN].get(CONF_API_PASSWORD))
 
     no_password_set = api_password is None
 
