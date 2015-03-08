@@ -59,7 +59,7 @@ it should be set to "true" if you want this device excluded
 """
 import logging
 import time
-
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers import ToggleDevice
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
@@ -138,7 +138,7 @@ class VeraLight(ToggleDevice):
         attr = super().state_attributes
 
         if self.vera_device.has_battery:
-            attr['Battery'] = self.vera_device.battery_level + '%'
+            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
 
         if self.vera_device.is_armable:
             armed = self.vera_device.refresh_value('Armed')

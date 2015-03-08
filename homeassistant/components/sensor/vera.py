@@ -57,6 +57,7 @@ import logging
 import time
 
 from homeassistant.helpers import Device
+from homeassistant.const import ATTR_BATTERY_LEVEL
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
 
@@ -143,7 +144,7 @@ class VeraSensor(Device):
     def state_attributes(self):
         attr = super().state_attributes
         if self.vera_device.has_battery:
-            attr['Battery'] = self.vera_device.battery_level + '%'
+            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
 
         if self.vera_device.is_armable:
             armed = self.vera_device.refresh_value('Armed')
