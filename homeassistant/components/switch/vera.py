@@ -102,10 +102,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class VeraSwitch(ToggleDevice):
     """ Represents a Vera Switch """
-    is_on_status = False
-    # for debouncing status check after command is sent
-    last_command_send = 0
-    extra_data = None
 
     def __init__(self, vera_device, extra_data=None):
         self.vera_device = vera_device
@@ -114,6 +110,9 @@ class VeraSwitch(ToggleDevice):
             self._name = self.extra_data.get('name')
         else:
             self._name = self.vera_device.name
+        self.is_on_status = False
+        # for debouncing status check after command is sent
+        self.last_command_send = 0
 
     @property
     def name(self):
