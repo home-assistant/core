@@ -101,8 +101,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class VeraSensor(Device):
     """ Represents a Vera Sensor """
-    extra_data = None
-    current_value = ''
 
     def __init__(self, vera_device, extra_data=None):
         self.vera_device = vera_device
@@ -111,6 +109,7 @@ class VeraSensor(Device):
             self._name = self.extra_data.get('name')
         else:
             self._name = self.vera_device.name
+        self.current_value = ''
 
     def __str__(self):
         return "%s %s %s" % (self.name, self.vera_device.deviceId, self.state)
