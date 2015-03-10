@@ -27,6 +27,7 @@ def setup(hass, config):
     logger = logging.getLogger(__name__)
 
     def process(service):
+        """ Parses text into commands for Home Assistant. """
         if ATTR_TEXT not in service.data:
             logger.error("Received process service call without a text")
             return

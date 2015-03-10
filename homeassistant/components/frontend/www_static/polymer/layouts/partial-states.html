@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-icon/core-icon.html">
 <link rel="import" href="../bower_components/core-style/core-style.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
@@ -10,13 +11,46 @@
 <template>
   <core-style ref="ha-animations"></core-style>
 
+  <style>
+    .listening {
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+      padding: 16px;
+      background-color: #FFF;
+      line-height: 2em;
+      cursor: pointer;
+    }
+
+    @media all and (min-width: 1020px) {
+      .listening {
+        margin: 8px 8px 0 8px;
+      }
+    }
+
+    .interimTranscript {
+      color: darkgrey;
+    }
+
+    .listening paper-spinner {
+      float: right;
+    }
+  </style>
+
   <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
     <span header-title>{{headerTitle}}</span>
 
     <span header-buttons>
       <paper-icon-button icon="refresh" class="{{isFetching && 'ha-spin'}}"
         on-click="{{handleRefreshClick}}" hidden?="{{isStreaming}}"></paper-icon-button>
+      <paper-icon-button icon="{{isListening ? 'av:mic-off' : 'av:mic' }}" hidden?={{!canListen}}
+        on-click="{{handleListenClick}}"></paper-icon-button>
     </span>
+
+    <div class='listening' hidden?="{{!isListening && !isTransmitting}}" on-click={{handleListenClick}}>
+      <core-icon icon="av:hearing"></core-icon> {{finalTranscript}}
+      <span class='interimTranscript'>{{interimTranscript}}</span>
+      <paper-spinner active?="{{isTransmitting}}"></paper-spinner>
+    </div>
 
     <state-cards states="{{states}}">
       <h3>Hi there!</h3>
@@ -32,6 +66,7 @@
 <script>
   var storeListenerMixIn = window.hass.storeListenerMixIn;
   var syncActions = window.hass.syncActions;
+  var voiceActions = window.hass.voiceActions;
   var stateStore = window.hass.stateStore;
 
   Polymer(Polymer.mixin({
@@ -40,12 +75,29 @@
     isFetching: false,
     isStreaming: false,
 
+    canListen: false,
+    voiceSupported: false,
+    hasConversationComponent: false,
+    isListening: false,
+    isTransmittingVoice: false,
+    interimTranscript: '',
+    finalTranscript: '',
+
+    ready: function() {
+      this.voiceSupported = voiceActions.isSupported();
+    },
+
     attached: function() {
       this.listenToStores(true);
     },
 
     detached: function() {
       this.stopListeningToStores();
+    },
+
+    componentStoreChanged: function(componentStore) {
+      this.canListen = this.voiceSupported &&
+                       componentStore.isLoaded('conversation');
     },
 
     stateStoreChanged: function() {
@@ -58,6 +110,23 @@
 
     streamStoreChanged: function(streamStore) {
       this.isStreaming = streamStore.isStreaming();
+    },
+
+    voiceStoreChanged: function(voiceStore) {
+      this.isListening = voiceStore.isListening();
+      this.isTransmitting = voiceStore.isTransmitting();
+      this.finalTranscript = voiceStore.getFinalTranscript();
+
+      var interimTranscript = voiceStore.getInterimTranscript();
+
+      var lengthFinal = this.finalTranscript.length;
+
+      // cut off finalTranscript part from beginning interimTranscript
+      if (interimTranscript.slice(0, lengthFinal) === this.finalTranscript) {
+        this.interimTranscript = interimTranscript.slice(lengthFinal);
+      } else {
+        this.interimTranscript = interimTranscript;
+      }
     },
 
     filterChanged: function() {
@@ -88,6 +157,14 @@
 
     handleRefreshClick: function() {
       syncActions.fetchAll();
+    },
+
+    handleListenClick: function() {
+      if (this.isListening) {
+        voiceActions.stop();
+      } else {
+        voiceActions.listen();
+      }
     },
   }, storeListenerMixIn));
 </script>
