@@ -98,14 +98,17 @@ def config_per_platform(config, domain, logger):
 
     while config_key in config:
         platform_config = config[config_key]
+        if not isinstance(platform_config, list):
+            platform_config = [platform_config]
 
-        platform_type = platform_config.get(CONF_PLATFORM)
+        for item in platform_config:
+            platform_type = item.get(CONF_PLATFORM)
 
-        if platform_type is None:
-            logger.warning('No platform specified for %s', config_key)
-            break
+            if platform_type is None:
+                logger.warning('No platform specified for %s', config_key)
+                continue
 
-        yield platform_type, platform_config
+            yield platform_type, item
 
         found += 1
         config_key = "{} {}".format(domain, found)
