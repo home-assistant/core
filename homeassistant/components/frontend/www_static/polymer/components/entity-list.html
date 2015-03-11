@@ -22,9 +22,9 @@
     </template>
 
     <div>
-      <template repeat="{{state in states}}">
+      <template repeat="{{entityID in entityIDs}}">
         <div class='eventContainer'>
-          <a on-click={{handleClick}}>{{state.entityId}}</a>
+          <a on-click={{handleClick}}>{{entityID}}</a>
         </div>
       </template>
 
@@ -35,7 +35,7 @@
 
   Polymer(Polymer.mixin({
     cbEventClicked: null,
-    states: [],
+    entityIDs: [],
 
     attached: function() {
       this.listenToStores(true);
@@ -46,7 +46,7 @@
     },
 
     stateStoreChanged: function(stateStore) {
-      this.states = stateStore.all();
+      this.entityIDs = stateStore.entityIDs.toArray();
     },
 
     handleClick: function(ev) {

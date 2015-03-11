@@ -41,11 +41,8 @@ Polymer(Polymer.mixin({
   },
 
   updateStates: function() {
-    if (this.stateObj && this.stateObj.attributes.entity_id) {
-      this.states = stateStore.gets(this.stateObj.attributes.entity_id);
-    } else {
-      this.states = [];
-    }
+    this.states = this.stateObj && this.stateObj.attributes.entity_id ?
+      stateStore.gets(this.stateObj.attributes.entity_id).toArray() : [];
   },
 }, storeListenerMixIn));
 </script>

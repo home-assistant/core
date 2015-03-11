@@ -69,6 +69,8 @@
   var voiceActions = window.hass.voiceActions;
   var stateStore = window.hass.stateStore;
 
+  var stateGroupFilter = function(state) { return state.domain === 'group'; };
+
   Polymer(Polymer.mixin({
     headerTitle: "States",
     states: [],
@@ -105,28 +107,19 @@
     },
 
     syncStoreChanged: function(syncStore) {
-      this.isFetching = syncStore.isFetching();
+      this.isFetching = syncStore.isFetching;
     },
 
     streamStoreChanged: function(streamStore) {
-      this.isStreaming = streamStore.isStreaming();
+      this.isStreaming = streamStore.isStreaming;
     },
 
     voiceStoreChanged: function(voiceStore) {
-      this.isListening = voiceStore.isListening();
-      this.isTransmitting = voiceStore.isTransmitting();
-      this.finalTranscript = voiceStore.getFinalTranscript();
-
-      var interimTranscript = voiceStore.getInterimTranscript();
-
-      var lengthFinal = this.finalTranscript.length;
-
-      // cut off finalTranscript part from beginning interimTranscript
-      if (interimTranscript.slice(0, lengthFinal) === this.finalTranscript) {
-        this.interimTranscript = interimTranscript.slice(lengthFinal);
-      } else {
-        this.interimTranscript = interimTranscript;
-      }
+      this.isListening = voiceStore.isListening;
+      this.isTransmitting = voiceStore.isTransmitting;
+      this.finalTranscript = voiceStore.finalTranscript;
+      this.interimTranscript = voiceStore.interimTranscript.slice(
+                                 this.finalTranscript.length)
     },
 
     filterChanged: function() {
@@ -144,15 +137,15 @@
     },
 
     refreshStates: function() {
-      if (this.filter == 'group') {
-        this.states = _.filter(stateStore.all(), function(state) {
-          return state.domain === 'group';
-        });
+      var states = stateStore.all;
+
+      if (this.filter === 'group') {
+        states = states.filter(stateGroupFilter);
       } else {
-        this.states = _.filter(stateStore.all(), function(state) {
-          return state.domain !== 'group';
-        });
+        states = states.filterNot(stateGroupFilter);
       }
+
+      this.states = states.toArray();
     },
 
     handleRefreshClick: function() {
