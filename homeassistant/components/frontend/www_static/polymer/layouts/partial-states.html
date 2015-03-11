@@ -13,18 +13,18 @@
 
   <style>
     .listening {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1;
+
       border-radius: 2px;
       box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
       padding: 16px;
-      background-color: #FFF;
+      background-color: rgba(255, 255, 255, 0.95);
       line-height: 2em;
       cursor: pointer;
-    }
-
-    @media all and (min-width: 1020px) {
-      .listening {
-        margin: 8px 8px 0 8px;
-      }
     }
 
     .interimTranscript {
