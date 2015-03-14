@@ -212,14 +212,22 @@ components within Home Assistant.</p>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.remote</span> <span class="kn">as</span> <span class="nn">remote</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.components.http</span> <span class="kn">as</span> <span class="nn">http</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.bootstrap</span> <span class="kn">as</span> <span class="nn">bootstrap</span>
 </span><span class='line'>
-</span><span class='line'><span class="n">remote_api</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">API</span><span class="p">(</span><span class="s">&quot;remote_host_or_ip&quot;</span><span class="p">,</span> <span class="s">&quot;remote_api_password&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Location of the Master API: host, password, port.</span>
+</span><span class='line'><span class="c"># Password and port are optional.</span>
+</span><span class='line'><span class="n">remote_api</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">API</span><span class="p">(</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="s">&quot;password&quot;</span><span class="p">,</span> <span class="mi">8124</span><span class="p">)</span>
 </span><span class='line'>
+</span><span class='line'><span class="c"># Initialize slave</span>
 </span><span class='line'><span class="n">hass</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">HomeAssistant</span><span class="p">(</span><span class="n">remote_api</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'><span class="n">http</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&quot;my_local_api_password&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="c"># To add an interface to the slave on localhost:8123</span>
+</span><span class='line'><span class="n">bootstrap</span><span class="o">.</span><span class="n">setup_component</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&#39;frontend&#39;</span><span class="p">)</span>
 </span><span class='line'>
 </span><span class='line'><span class="n">hass</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </span><span class='line'><span class="n">hass</span><span class="o">.</span><span class="n">block_till_stopped</span><span class="p">()</span>
