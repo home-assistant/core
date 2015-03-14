@@ -208,7 +208,7 @@ class TestRemoteClasses(unittest.TestCase):
         slave.states.set("remote.test", "remote.statemachine test")
 
         # Wait till slave tells master
-        slave._pool.block_till_done()
+        slave.pool.block_till_done()
         # Wait till master gives updated state
         hass.pool.block_till_done()
 
@@ -228,7 +228,7 @@ class TestRemoteClasses(unittest.TestCase):
         slave.bus.fire("test.event_no_data")
 
         # Wait till slave tells master
-        slave._pool.block_till_done()
+        slave.pool.block_till_done()
         # Wait till master gives updated event
         hass.pool.block_till_done()
 
