@@ -7,35 +7,37 @@
     {{ relativeTime }}
   </template>
   <script>
-  var UPDATE_INTERVAL = 60000; // 60 seconds
+  (function() {
+    var UPDATE_INTERVAL = 60000; // 60 seconds
 
-  var parseDateTime = window.hass.util.parseDateTime;
+    var parseDateTime = window.hass.util.parseDateTime;
 
-  Polymer({
-    relativeTime: "",
-    parsedDateTime: null,
+    Polymer({
+      relativeTime: "",
+      parsedDateTime: null,
 
-    created: function() {
-      this.updateRelative = this.updateRelative.bind(this);
-    },
+      created: function() {
+        this.updateRelative = this.updateRelative.bind(this);
+      },
 
-    attached: function() {
-      this._interval = setInterval(this.updateRelative, UPDATE_INTERVAL);
-    },
+      attached: function() {
+        this._interval = setInterval(this.updateRelative, UPDATE_INTERVAL);
+      },
 
-    detached: function() {
-      clearInterval(this._interval);
-    },
+      detached: function() {
+        clearInterval(this._interval);
+      },
 
-    datetimeChanged: function(oldVal, newVal) {
-      this.parsedDateTime = newVal ? parseDateTime(newVal) : null;
+      datetimeChanged: function(oldVal, newVal) {
+        this.parsedDateTime = newVal ? parseDateTime(newVal) : null;
 
-      this.updateRelative();
-    },
+        this.updateRelative();
+      },
 
-    updateRelative: function() {
-      this.relativeTime = this.parsedDateTime ? moment(this.parsedDateTime).fromNow() : "";
-    },
-  });
+      updateRelative: function() {
+        this.relativeTime = this.parsedDateTime ? moment(this.parsedDateTime).fromNow() : "";
+      },
+    });
+  })();
   </script>
 </polymer-element>

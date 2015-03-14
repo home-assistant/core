@@ -34,10 +34,12 @@
     <div>
       <core-menu selected="0">
       
-        <template repeat="{{serv in services}}">
-          <core-submenu icon="{{serv.domain | getIcon}}" label="{{serv.domain}}">
-            <template repeat="{{service in serv.services}}">
-              <a on-click={{serviceClicked}} data-domain={{serv.domain}}>{{service}}</a>
+        <template repeat="{{domain in domains}}">
+          <core-submenu icon="{{domain | getIcon}}" label="{{domain}}">
+            <template repeat="{{service in domain | getServices}}">
+              <a on-click={{serviceClicked}} data-domain={{domain}}>
+                {{service}}
+              </a>
             </template>
           </core-submenu>
         </template>
@@ -50,7 +52,8 @@
   var storeListenerMixIn = window.hass.storeListenerMixIn;
 
   Polymer(Polymer.mixin({
-    services: [],
+    domains: [],
+    services: null,
     cbServiceClicked: null,
 
     attached: function() {
@@ -62,11 +65,16 @@
     },
 
     getIcon: function(domain) {
-      return (new DomainIcon()).icon(domain);
+      return hass.uiUtil.domainIcon(domain);
+    },
+
+    getServices: function(domain) {
+      return this.services.get(domain).toArray();
     },
 
     serviceStoreChanged: function(serviceStore) {
       this.services = serviceStore.all;
+      this.domains = this.services.keySeq().sort().toArray();
     },
 
     serviceClicked: function(ev) {
