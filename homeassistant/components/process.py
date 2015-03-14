@@ -7,7 +7,7 @@ on the host machine.
 
 Author: Markus Stenberg <fingon@iki.fi>
 """
-
+import logging
 import os
 
 from homeassistant.const import STATE_ON, STATE_OFF
@@ -26,6 +26,11 @@ def setup(hass, config):
         processes: dict mapping entity id to substring to search for
                    in process list.
     """
+
+    # Deprecated as of 3/7/2015
+    logging.getLogger(__name__).warning(
+        "This component has been deprecated and will be removed in the future."
+        " Please use sensor.systemmonitor with the process type")
 
     entities = {ENTITY_ID_FORMAT.format(util.slugify(pname)): pstring
                 for pname, pstring in config[DOMAIN].items()}

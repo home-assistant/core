@@ -24,6 +24,9 @@ omit =
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
+    homeassistant/components/light/vera.py
+    homeassistant/components/sensor/vera.py
+    homeassistant/components/switch/vera.py
 
 
 [report]

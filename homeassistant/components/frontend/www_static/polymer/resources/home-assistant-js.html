@@ -63,10 +63,13 @@
 
       validateAuth: function(authToken, rememberLogin) {
         authActions.validate(authToken, {
-          useStreaming: preferenceStore.useStreaming(),
+          useStreaming: preferenceStore.useStreaming,
           rememberLogin: rememberLogin,
         });
       },
     };
+
+    // UI specific util methods
+    window.hass.uiUtil = {}
   })();
 </script>

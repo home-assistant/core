@@ -63,7 +63,8 @@
 
             <div horizontal center layout>
               <core-label horizontal layout>
-                <paper-checkbox for checked={{rememberLogin}}></paper-checkbox><b>Remember</b>
+                <paper-checkbox for checked={{rememberLogin}}></paper-checkbox>
+                Remember
               </core-label>
 
               <paper-button on-click={{validatePassword}}>Log In</paper-button>
@@ -106,12 +107,12 @@
     },
 
     authStoreChanged: function(authStore) {
-      this.isValidating = authStore.isValidating();
-      this.isLoggedIn = authStore.isLoggedIn();
+      this.isValidating = authStore.isValidating;
+      this.isLoggedIn = authStore.isLoggedIn;
       this.spinnerMessage = this.isValidating ? this.MSG_VALIDATING : this.MSG_LOADING_DATA;
 
-      if (authStore.wasLastAttemptInvalid()) {
-        this.$.passwordDecorator.error = authStore.getLastAttemptMessage();
+      if (authStore.lastAttemptInvalid) {
+        this.$.passwordDecorator.error = authStore.lastAttemptMessage;
         this.$.passwordDecorator.isInvalid = true;
       }
 

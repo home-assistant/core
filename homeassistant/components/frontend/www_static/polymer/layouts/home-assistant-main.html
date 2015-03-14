@@ -172,10 +172,8 @@ Polymer(Polymer.mixin({
   },
 
   streamStoreChanged: function(streamStore) {
-    var state = streamStore.getState();
-
-    this.isStreaming = state === streamStore.STATE_CONNECTED;
-    this.hasStreamError = state === streamStore.STATE_ERROR;
+    this.isStreaming = streamStore.isStreaming;
+    this.hasStreamError = streamStore.hasError;
   },
 
   menuSelect: function(ev, detail, sender) {

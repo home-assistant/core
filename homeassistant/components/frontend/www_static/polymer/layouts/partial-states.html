@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-icon/core-icon.html">
 <link rel="import" href="../bower_components/core-style/core-style.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
@@ -10,13 +11,46 @@
 <template>
   <core-style ref="ha-animations"></core-style>
 
+  <style>
+    .listening {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1;
+
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+      padding: 16px;
+      background-color: rgba(255, 255, 255, 0.95);
+      line-height: 2em;
+      cursor: pointer;
+    }
+
+    .interimTranscript {
+      color: darkgrey;
+    }
+
+    .listening paper-spinner {
+      float: right;
+    }
+  </style>
+
   <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
     <span header-title>{{headerTitle}}</span>
 
     <span header-buttons>
       <paper-icon-button icon="refresh" class="{{isFetching && 'ha-spin'}}"
         on-click="{{handleRefreshClick}}" hidden?="{{isStreaming}}"></paper-icon-button>
+      <paper-icon-button icon="{{isListening ? 'av:mic-off' : 'av:mic' }}" hidden?={{!canListen}}
+        on-click="{{handleListenClick}}"></paper-icon-button>
     </span>
+
+    <div class='listening' hidden?="{{!isListening && !isTransmitting}}" on-click={{handleListenClick}}>
+      <core-icon icon="av:hearing"></core-icon> {{finalTranscript}}
+      <span class='interimTranscript'>{{interimTranscript}}</span>
+      <paper-spinner active?="{{isTransmitting}}"></paper-spinner>
+    </div>
 
     <state-cards states="{{states}}">
       <h3>Hi there!</h3>
@@ -32,13 +66,28 @@
 <script>
   var storeListenerMixIn = window.hass.storeListenerMixIn;
   var syncActions = window.hass.syncActions;
+  var voiceActions = window.hass.voiceActions;
   var stateStore = window.hass.stateStore;
+
+  var stateGroupFilter = function(state) { return state.domain === 'group'; };
 
   Polymer(Polymer.mixin({
     headerTitle: "States",
     states: [],
     isFetching: false,
     isStreaming: false,
+
+    canListen: false,
+    voiceSupported: false,
+    hasConversationComponent: false,
+    isListening: false,
+    isTransmittingVoice: false,
+    interimTranscript: '',
+    finalTranscript: '',
+
+    ready: function() {
+      this.voiceSupported = voiceActions.isSupported();
+    },
 
     attached: function() {
       this.listenToStores(true);
@@ -48,16 +97,29 @@
       this.stopListeningToStores();
     },
 
+    componentStoreChanged: function(componentStore) {
+      this.canListen = this.voiceSupported &&
+                       componentStore.isLoaded('conversation');
+    },
+
     stateStoreChanged: function() {
       this.refreshStates();
     },
 
     syncStoreChanged: function(syncStore) {
-      this.isFetching = syncStore.isFetching();
+      this.isFetching = syncStore.isFetching;
     },
 
     streamStoreChanged: function(streamStore) {
-      this.isStreaming = streamStore.isStreaming();
+      this.isStreaming = streamStore.isStreaming;
+    },
+
+    voiceStoreChanged: function(voiceStore) {
+      this.isListening = voiceStore.isListening;
+      this.isTransmitting = voiceStore.isTransmitting;
+      this.finalTranscript = voiceStore.finalTranscript;
+      this.interimTranscript = voiceStore.interimTranscript.slice(
+                                 this.finalTranscript.length)
     },
 
     filterChanged: function() {
@@ -75,19 +137,27 @@
     },
 
     refreshStates: function() {
-      if (this.filter == 'group') {
-        this.states = _.filter(stateStore.all(), function(state) {
-          return state.domain === 'group';
-        });
+      var states = stateStore.all;
+
+      if (this.filter === 'group') {
+        states = states.filter(stateGroupFilter);
       } else {
-        this.states = _.filter(stateStore.all(), function(state) {
-          return state.domain !== 'group';
-        });
+        states = states.filterNot(stateGroupFilter);
       }
+
+      this.states = states.toArray();
     },
 
     handleRefreshClick: function() {
       syncActions.fetchAll();
+    },
+
+    handleListenClick: function() {
+      if (this.isListening) {
+        voiceActions.stop();
+      } else {
+        voiceActions.listen();
+      }
     },
   }, storeListenerMixIn));
 </script>

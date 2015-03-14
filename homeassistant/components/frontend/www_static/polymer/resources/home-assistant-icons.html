@@ -1,6 +1,12 @@
 <link rel="import" href="../bower_components/core-icon/core-icon.html">
 <link rel="import" href="../bower_components/core-iconset-svg/core-iconset-svg.html">
 
+<link rel="import" href="../bower_components/core-icon/core-icon.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-icons/image-icons.html">
+<link rel="import" href="../bower_components/core-icons/hardware-icons.html">
+<link rel="import" href="../bower_components/core-icons/av-icons.html">
+
 <core-iconset-svg id="homeassistant-100" iconSize="100">
 <svg><defs>
 <g id="thermostat">
@@ -26,3 +32,57 @@
 
 </defs></svg>
 </core-iconset-svg>
+
+<script>
+window.hass.uiUtil.domainIcon = function(domain, state) {
+  switch(domain) {
+    case "homeassistant":
+      return "home";
+
+    case "group":
+      return "homeassistant-24:group";
+
+    case "device_tracker":
+      return "social:person";
+
+    case "switch":
+      return "image:flash-on";
+
+    case "media_player":
+      var icon = "hardware:cast";
+
+      if (state !== "idle") {
+        icon += "-connected";
+      }
+
+      return icon;
+
+    case "sun":
+      return "image:wb-sunny";
+
+    case "light":
+      return "image:wb-incandescent";
+
+    case "simple_alarm":
+      return "social:notifications";
+
+    case "notify":
+      return "announcement";
+
+    case "thermostat":
+      return "homeassistant-100:thermostat";
+
+    case "sensor":
+      return "visibility";
+
+    case "configurator":
+      return "settings";
+
+    case "conversation":
+      return "av:hearing";
+
+    default:
+      return "bookmark-outline";
+  }
+}
+</script>

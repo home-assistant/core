@@ -10,7 +10,7 @@ import homeassistant as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.loader as loader
 from homeassistant.const import (
-    CONF_PLATFORM, ATTR_ENTITY_PICTURE, STATE_ON,
+    CONF_PLATFORM, ATTR_ENTITY_PICTURE,
     CONF_LATITUDE, CONF_LONGITUDE)
 
 DOMAIN = "demo"
@@ -51,9 +51,6 @@ def setup(hass, config):
     switches = hass.states.entity_ids('switch')
     group.setup_group(hass, 'living room', [lights[0], lights[1], switches[0]])
     group.setup_group(hass, 'bedroom', [lights[2], switches[1]])
-
-    # Setup process
-    hass.states.set("process.XBMC", STATE_ON)
 
     # Setup device tracker
     hass.states.set("device_tracker.Paulus", "home",
