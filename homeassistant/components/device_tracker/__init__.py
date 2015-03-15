@@ -236,7 +236,7 @@ class DeviceTracker(object):
 
             try:
                 for row in csv.DictReader(inp):
-                    device = row['device']
+                    device = row['device'].upper()
 
                     if row['track'] == '1':
                         if device in self.tracked:
