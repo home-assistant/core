@@ -23,19 +23,21 @@ CONF_LIGHT_PROFILE = 'light_profile'
 CONF_LIGHT_GROUP = 'light_group'
 CONF_DEVICE_GROUP = 'device_group'
 
+def setup(hass, config):
+    return _setup(hass, config[DOMAIN])
 
 # pylint: disable=too-many-branches
-def setup(hass, config):
+def _setup(hass, config):
     """ Triggers to turn lights on or off based on device precense. """
 
-    disable_turn_off = 'disable_turn_off' in config[DOMAIN]
+    disable_turn_off = 'disable_turn_off' in config
 
-    light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
+    light_group = config.get(CONF_LIGHT_GROUP,
                                      light.ENTITY_ID_ALL_LIGHTS)
 
-    light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
+    light_profile = config.get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
 
-    device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
+    device_group = config.get(CONF_DEVICE_GROUP,
                                       device_tracker.ENTITY_ID_ALL_DEVICES)
 
     logger = logging.getLogger(__name__)
