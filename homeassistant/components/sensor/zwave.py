@@ -22,8 +22,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     value.set_change_verified(False)
 
-    if zwave.NETWORK.controller.node_id not in node.groups[1].associations:
-        node.groups[1].add_association(zwave.NETWORK.controller.node_id)
+    # if 1 in groups and (zwave.NETWORK.controller.node_id not in
+    #                     groups[1].associations):
+    #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
 
     if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
         return [ZWaveBinarySensor(value)]
