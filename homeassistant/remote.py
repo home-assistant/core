@@ -14,6 +14,7 @@ import logging
 import json
 import enum
 import urllib.parse
+import os
 
 import requests
 
@@ -49,13 +50,16 @@ class API(object):
     """ Object to pass around Home Assistant API location and credentials. """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, host, api_password, port=None):
+    def __init__(self, host, api_password=None, port=None):
         self.host = host
         self.port = port or SERVER_PORT
         self.api_password = api_password
         self.base_url = "http://{}:{}".format(host, self.port)
         self.status = None
-        self._headers = {HTTP_HEADER_HA_AUTH: api_password}
+        self._headers = {}
+
+        if api_password is not None:
+            self._headers[HTTP_HEADER_HA_AUTH] = api_password
 
     def validate_api(self, force_validate=False):
         """ Tests if we can communicate with the API. """
@@ -95,7 +99,7 @@ class API(object):
 
 class HomeAssistant(ha.HomeAssistant):
     """ Home Assistant that forwards work. """
-    # pylint: disable=super-init-not-called
+    # pylint: disable=super-init-not-called,too-many-instance-attributes
 
     def __init__(self, remote_api, local_api=None):
         if not remote_api.validate_api():
@@ -106,12 +110,14 @@ class HomeAssistant(ha.HomeAssistant):
         self.remote_api = remote_api
         self.local_api = local_api
 
-        self._pool = pool = ha.create_worker_pool()
+        self.pool = pool = ha.create_worker_pool()
 
         self.bus = EventBus(remote_api, pool)
         self.services = ha.ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus, self.remote_api)
         self.components = []
+
+        self.config_dir = os.path.join(os.getcwd(), 'config')
 
     def start(self):
         # Ensure a local API exists to connect with remote
@@ -142,9 +148,9 @@ class HomeAssistant(ha.HomeAssistant):
         disconnect_remote_events(self.remote_api, self.local_api)
 
         # Wait till all responses to homeassistant_stop are done
-        self._pool.block_till_done()
+        self.pool.block_till_done()
 
-        self._pool.stop()
+        self.pool.stop()
 
 
 class EventBus(ha.EventBus):

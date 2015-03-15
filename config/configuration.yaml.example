@@ -101,7 +101,8 @@ automation 2:
   time_seconds: 0
 
   execute_service: notify.notify
-  service_data: {"message":"It's 4, time for beer!"}
+  service_data:
+    message: It's 4, time for beer!
 
 sensor:
   platform: systemmonitor

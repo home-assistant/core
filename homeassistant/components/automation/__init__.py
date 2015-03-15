@@ -54,8 +54,7 @@ def _get_action(hass, config):
         if CONF_SERVICE in config:
             domain, service = split_entity_id(config[CONF_SERVICE])
 
-            service_data = convert(
-                config.get(CONF_SERVICE_DATA), json.loads, {})
+            service_data = config.get(CONF_SERVICE_DATA, {})
 
             if not isinstance(service_data, dict):
                 _LOGGER.error(
