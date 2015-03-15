@@ -27,10 +27,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
 
     if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
-        return [ZWaveBinarySensor(value)]
+        add_devices([ZWaveBinarySensor(value)])
 
     elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
-        return [ZWaveMultilevelSensor(value)]
+        add_devices([ZWaveMultilevelSensor(value)])
 
 
 class ZWaveSensor(Device):
