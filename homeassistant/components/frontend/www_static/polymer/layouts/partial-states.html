@@ -70,6 +70,10 @@
   var stateStore = window.hass.stateStore;
 
   var stateGroupFilter = function(state) { return state.domain === 'group'; };
+  var stateScriptFilter = function(state) { return state.domain === 'script'; };
+  var stateFilter = function(state) {
+    return !stateGroupFilter(state) && !stateScriptFilter(state);
+  };
 
   Polymer(Polymer.mixin({
     headerTitle: "States",
@@ -130,6 +134,10 @@
           this.headerTitle = "Groups";
           break;
 
+        case "script":
+          this.headerTitle = "Scripts";
+          break;
+
         default:
           this.headerTitle = "States";
           break;
@@ -139,10 +147,12 @@
     refreshStates: function() {
       var states = stateStore.all;
 
-      if (this.filter === 'group') {
+      if (this.filter == 'group') {
         states = states.filter(stateGroupFilter);
+      } else if (this.filter == 'script') {
+        states = states.filter(stateScriptFilter);
       } else {
-        states = states.filterNot(stateGroupFilter);
+        states = states.filter(stateFilter);
       }
 
       this.states = states.toArray();

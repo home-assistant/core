@@ -40,7 +40,7 @@
     }
 
     core-menu {
-      overflow: scroll;
+      overflow: auto;
       position: absolute;
       top: 0px;
       left: 0px;
@@ -93,6 +93,13 @@
           </paper-item>
         </template>
 
+        <template if="{{hasScriptComponent}}">
+          <paper-item data-panel="script">
+            <core-icon icon="description"></core-icon>
+            Scripts
+          </paper-item>
+        </template>
+
         <div flex></div>
 
         <paper-item on-click="{{handleLogOutClick}}">
@@ -124,10 +131,10 @@
         This is the main partial, never remove it from the DOM but hide it
         to speed up when people click on states.
     -->
-    <partial-states hidden?="{{selected != 'states' && selected != 'group'}}"
+    <partial-states hidden?="{{hideStates}}"
       main narrow="{{narrow}}"
       togglePanel="{{togglePanel}}"
-      filter="{{selected == 'group' ? 'group' : null}}">
+      filter="{{selected}}">
     </partial-states>
 
     <template if="{{selected == 'history'}}">
@@ -153,9 +160,12 @@ Polymer(Polymer.mixin({
   selected: "states",
   narrow: false,
   hasHistoryComponent: false,
+  hasScriptComponent: false,
 
   isStreaming: false,
   hasStreamError: false,
+
+  hideStates: false,
 
   attached: function() {
     this.togglePanel = this.togglePanel.bind(this);
@@ -169,6 +179,7 @@ Polymer(Polymer.mixin({
 
   componentStoreChanged: function(componentStore) {
     this.hasHistoryComponent = componentStore.isLoaded('history');
+    this.hasScriptComponent = componentStore.isLoaded('script');
   },
 
   streamStoreChanged: function(streamStore) {
@@ -193,6 +204,15 @@ Polymer(Polymer.mixin({
     if(newChoice !== this.selected) {
       this.togglePanel();
       this.selected = newChoice;
+    }
+    switch(this.selected) {
+      case 'states':
+      case 'group':
+      case 'script':
+        hideStates = false;
+        break;
+      default:
+        hideStates = true;
     }
   },
 
