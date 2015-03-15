@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Chromecast - Home Assistant</title>
+    <title>Media Player - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to setup your chromecasts with Home Assistant.">
+    <meta name="description" content="Instructions how to setup your media players with Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Chromecast">
+    <meta property="og:title" content="Media Player">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/chromecast.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/media_player.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to setup your chromecasts with Home Assistant.">
+    <meta property="og:description" content="Instructions how to setup your media players with Home Assistant.">
     
     
     
@@ -89,24 +89,28 @@
   
   <header>
     <h1 class="title indent">
-      Chromecast
+      Media Player
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p class='note warning'>
+  <p>Interacts with media players on your network. Currently only supports Chromecasts. These will be automatically discovered if you setup <a href="/components/discovery.html">the discovery component</a>. Can also be forced to load by adding the following lines to your <code>configuration.yaml</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>media_player:
+</span><span class='line'>  platform: chromecast</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note warning'>
 Chromecasts have recently received a new API which is not yet supported by Home Assistant. Therefore we currently can only detect them and do not know what they are up to.
 </p>
 
 
 <p></p>
-
-<p>Interacts with Chromecasts on your network. Will be automatically discovered if you setup <a href="/components/discovery.html">the discovery component</a>. Can also be forced to load by adding the following lines to your <code>configuration.yaml</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>chromecast:</span></code></pre></td></tr></table></div></figure>
-
 
 <h2>Services</h2>
 
@@ -126,7 +130,7 @@ Chromecasts have recently received a new API which is not yet supported by Home 
 <tr>
 <td> <code>entity_id</code>            </td>
 <td>      yes </td>
-<td> Target a specific chromecast. Defaults to all.</td>
+<td> Target a specific media player. Defaults to all.</td>
 </tr>
 </tbody>
 </table>
@@ -134,11 +138,11 @@ Chromecasts have recently received a new API which is not yet supported by Home 
 
 <h3>Media play services</h3>
 
-<p>There are three services to start playing YouTube video&rsquo;s on the ChromeCast.</p>
+<p>There are three services to start playing YouTube video&rsquo;s on the media player.</p>
 
-<h4>Service <code>chromecast/play_youtube_video</code></h4>
+<h4>Service <code>media_player/play_youtube_video</code></h4>
 
-<p>Service to start playing a YouTube vide on the Chromecast.</p>
+<p>Service to start playing a YouTube vide on the media player.</p>
 
 <table>
 <thead>
@@ -152,7 +156,7 @@ Chromecasts have recently received a new API which is not yet supported by Home 
 <tr>
 <td> <code>entity_id</code>            </td>
 <td>      yes </td>
-<td> Target a specific chromecast. Defaults to all.</td>
+<td> Target a specific media player. Defaults to all.</td>
 </tr>
 <tr>
 <td> <code>video</code>                </td>
@@ -163,9 +167,9 @@ Chromecasts have recently received a new API which is not yet supported by Home 
 </table>
 
 
-<h4>Service <code>chromecast/start_fireplace</code> and <code>chromecast/start_epic_sax</code></h4>
+<h4>Service <code>media_player/start_fireplace</code> and <code>media_player/start_epic_sax</code></h4>
 
-<p>Will either start a fireplace or Epic Sax Guy 10h on the Chromecast.</p>
+<p>Will either start a fireplace or Epic Sax Guy 10h on the media player.</p>
 
 <table>
 <thead>
@@ -179,7 +183,7 @@ Chromecasts have recently received a new API which is not yet supported by Home 
 <tr>
 <td> <code>entity_id</code>            </td>
 <td>      yes </td>
-<td> Target a specific chromecast. Defaults to all.</td>
+<td> Target a specific media player. Defaults to all.</td>
 </tr>
 </tbody>
 </table>

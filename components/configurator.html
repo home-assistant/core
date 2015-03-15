@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Tellstick Sensors - Home Assistant</title>
+    <title>Configurator - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to setup tellstick sensors with Home Assistant.">
+    <meta name="description" content="Instructions how to integrate the configurator in your components.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Tellstick Sensors">
+    <meta property="og:title" content="Configurator">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/tellstick_sensor.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/configurator.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to setup tellstick sensors with Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate the configurator in your components.">
     
     
     
@@ -89,26 +89,22 @@
   
   <header>
     <h1 class="title indent">
-      Tellstick Sensors
+      Configurator
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Shows the values of that sensors that is connected to your Tellstick.</p>
-
-<p>To enable it, add the following lines to your <code>configuration.yaml</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>tellstick_sensor:</span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<p class='note warning'>
-This component is going to be merged into the sensor component.
+  <p class='note'>
+This component is intended for developers.
 </p>
 
+
+<p>The configurator component allows components to request information from the user. It is currently implemented as the minimum viable product: it supports showing a text, image and button to the user. It will trigger a callback when the button is pressed.</p>
+
+<p>The Hue component in <a href="/demo">the demo</a> is implemented using the configurator. See <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/demo.py#L72">the source of the demo component</a> for a simple example.</p>
+
+<p>See <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/configurator.py#L39">the source</a> for more details on how to use the configurator component.</p>
 
 
 </article>
