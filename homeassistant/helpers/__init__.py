@@ -97,7 +97,7 @@ def get_configs_for_domain(config, domain, logger):
     found = 1
 
     while config_key in config:
-        yield found, config[config_key]
+        yield config_key, config[config_key]
         found += 1
         config_key = "{} {}".format(domain, found)
 
@@ -107,7 +107,8 @@ def config_per_platform(config, domain, logger):
     Generator to break a component config into different platforms.
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
     """
-    for _, platform_config in get_configs_for_domain(config, domain, logger):
+    for config_key, platform_config in get_configs_for_domain(config, domain,
+                                                              logger):
         if not isinstance(platform_config, list):
             platform_config = [platform_config]
 

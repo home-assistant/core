@@ -31,12 +31,12 @@ def setup(hass, config):
 
     success = True
 
-    for index, domain_config in get_configs_for_domain(config, DOMAIN, logger):
+    for key, domain_config in get_configs_for_domain(config, DOMAIN, logger):
         s = _setup(hass, domain_config, logger)
         if s:
-            logger.info("Successfully initialized %s #%d", DOMAIN, index)
+            logger.info("Successfully initialized %s", key)
         else:
-            logger.error("Failed to initialize %s #%d", DOMAIN, index)
+            logger.error("Failed to initialize %s", key)
         success |= s
 
     return success
