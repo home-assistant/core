@@ -29,17 +29,13 @@ def setup(hass, config):
     """ Triggers to turn lights on or off based on device precense. """
     logger = logging.getLogger(__name__)
 
-    success = True
-
     for key, domain_config in get_configs_for_domain(config, DOMAIN, logger):
-        s = _setup(hass, domain_config, logger)
-        if s:
+        if _setup(hass, domain_config, logger):
             logger.info("Successfully initialized %s", key)
         else:
             logger.error("Failed to initialize %s", key)
-        success |= s
 
-    return success
+    return True
 
 
 # pylint: disable=too-many-branches
