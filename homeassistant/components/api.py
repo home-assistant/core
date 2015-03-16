@@ -10,7 +10,7 @@ import threading
 import json
 
 import homeassistant as ha
-from homeassistant.helpers import TrackStates
+from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,

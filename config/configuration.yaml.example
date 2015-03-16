@@ -139,3 +139,12 @@ script:
         execute_service: light.turn_on
         service_data:
           entity_id: group.living_room
+
+scene:
+  - name: Romantic
+    entities:
+      light.tv_back_light: on
+      light.ceiling:
+        state: on
+        color: [0.33, 0.66]
+        brightness: 200
