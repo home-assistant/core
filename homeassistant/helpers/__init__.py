@@ -88,16 +88,27 @@ def validate_config(config, items, logger):
     return not errors_found
 
 
-def config_per_platform(config, domain, logger):
+def get_configs_for_domain(config, domain, logger):
     """
-    Generator to break a component config into different platforms.
+    Generator to get the different configurations for specified domain.
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
     """
     config_key = domain
     found = 1
 
     while config_key in config:
-        platform_config = config[config_key]
+        yield config_key, config[config_key]
+        found += 1
+        config_key = "{} {}".format(domain, found)
+
+
+def config_per_platform(config, domain, logger):
+    """
+    Generator to break a component config into different platforms.
+    For example, will find 'switch', 'switch 2', 'switch 3', .. etc
+    """
+    for config_key, platform_config in get_configs_for_domain(config, domain,
+                                                              logger):
         if not isinstance(platform_config, list):
             platform_config = [platform_config]
 
@@ -109,6 +120,3 @@ def config_per_platform(config, domain, logger):
                 continue
 
             yield platform_type, item
-
-        found += 1
-        config_key = "{} {}".format(domain, found)

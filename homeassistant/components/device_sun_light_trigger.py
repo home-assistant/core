@@ -9,6 +9,7 @@ import logging
 from datetime import datetime, timedelta
 
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.helpers import get_configs_for_domain
 from . import light, sun, device_tracker, group
 
 DOMAIN = "device_sun_light_trigger"
@@ -24,21 +25,32 @@ CONF_LIGHT_GROUP = 'light_group'
 CONF_DEVICE_GROUP = 'device_group'
 
 
-# pylint: disable=too-many-branches
 def setup(hass, config):
     """ Triggers to turn lights on or off based on device precense. """
-
-    disable_turn_off = 'disable_turn_off' in config[DOMAIN]
-
-    light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
-                                     light.ENTITY_ID_ALL_LIGHTS)
-
-    light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
-
-    device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
-                                      device_tracker.ENTITY_ID_ALL_DEVICES)
-
     logger = logging.getLogger(__name__)
+
+    for key, domain_config in get_configs_for_domain(config, DOMAIN, logger):
+        if _setup(hass, domain_config, logger):
+            logger.info("Successfully initialized %s", key)
+        else:
+            logger.error("Failed to initialize %s", key)
+
+    return True
+
+
+# pylint: disable=too-many-branches
+def _setup(hass, config, logger):
+    """ Instance setup for device presense trigger. """
+
+    disable_turn_off = 'disable_turn_off' in config
+
+    light_group = config.get(CONF_LIGHT_GROUP,
+                             light.ENTITY_ID_ALL_LIGHTS)
+
+    light_profile = config.get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
+
+    device_group = config.get(CONF_DEVICE_GROUP,
+                              device_tracker.ENTITY_ID_ALL_DEVICES)
 
     device_entity_ids = group.get_entity_ids(hass, device_group,
                                              device_tracker.DOMAIN)
