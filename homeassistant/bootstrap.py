@@ -119,6 +119,11 @@ def from_config_file(config_path, hass=None):
     if os.path.splitext(config_path)[1] == '.yaml':
         # Read yaml
         config_dict = yaml.load(io.open(config_path, 'r'))
+
+        # If YAML file was empty
+        if config_dict is None:
+            config_dict = {}
+
     else:
         # Read config
         config = configparser.ConfigParser()
