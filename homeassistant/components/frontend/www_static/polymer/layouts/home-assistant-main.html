@@ -23,15 +23,11 @@
   <core-style ref="ha-headers"></core-style>
 
   <style>
-    core-header-panel {
+    .sidenav {
       background: #fafafa;
       box-shadow: 1px 0 1px rgba(0, 0, 0, 0.1);
       color: #757575;
       overflow: hidden;
-    }
-
-    core-menu core-icon {
-      margin-right: 24px;
     }
 
     core-toolbar {
@@ -39,7 +35,7 @@
       padding-left: 24px;
     }
 
-    core-menu {
+    .sidenav-menu {
       overflow: auto;
       position: absolute;
       top: 0px;
@@ -48,7 +44,11 @@
       bottom: 0px;
     }
 
-    paper-item {
+    .sidenav-menu core-icon {
+      margin-right: 24px;
+    }
+
+    .sidenav-menu > paper-item {
       min-height: 53px;
     }
 
@@ -70,11 +70,11 @@
   <ha-modals></ha-modals>
 
   <core-drawer-panel id="drawer" on-core-responsive-change="{{responsiveChanged}}">
-    <core-header-panel mode="scroll" drawer>
+    <core-header-panel mode="scroll" drawer class='sidenav'>
       <core-toolbar>
         Home Assistant
       </core-toolbar>
-      <core-menu id="menu"
+      <core-menu id="menu" class="sidenav-menu"
         selected="0" excludedLocalNames="div" on-core-select="{{menuSelect}}"
         layout vertical>
         <paper-item data-panel="states">
