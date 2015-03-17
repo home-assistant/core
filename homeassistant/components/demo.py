@@ -70,6 +70,24 @@ def setup(hass, config):
                     }]
             }}})
 
+    # Setup scenes
+    bootstrap.setup_component(
+        hass, 'scene',
+        {'scene': [
+            {'name': 'Romantic lights',
+             'entities': {
+                lights[0]: True,
+                lights[1]: {'state': 'on', 'xy_color': [0.33, 0.66],
+                            'brightness': 200},
+             }},
+            {'name': 'Switch on and off',
+             'entities': {
+                switches[0]: True,
+                switches[1]: False,
+             }},
+            ]
+         })
+
     # Setup fake device tracker
     hass.states.set("device_tracker.paulus", "home",
                     {ATTR_ENTITY_PICTURE:

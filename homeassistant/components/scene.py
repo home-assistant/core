@@ -103,7 +103,6 @@ class Scene(ToggleDevice):
         self.scene_config = scene_config
 
         self.is_active = False
-        self.active_requested = False
         self.prev_states = None
 
         self.hass.states.track_change(
