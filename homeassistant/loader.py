@@ -169,7 +169,7 @@ def load_order_components(components):
 
     # Push recorder to first place in load order
     if 'recorder' in load_order:
-        load_order.promote('recorder'.DOMAIN)
+        load_order.promote('recorder')
 
     return load_order
 

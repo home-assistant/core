@@ -51,23 +51,23 @@ def setup(hass, config):
     # Setup scripts
     bootstrap.setup_component(
         hass, 'script',
-        {'script':
-            {'demo': {
+        {'script': {
+            'demo': {
                 'alias': 'Demo {}'.format(lights[0]),
                 'sequence': [{
-                        'execute_service': 'light.turn_off',
-                        'service_data': {ATTR_ENTITY_ID: lights[0]}
-                    }, {
-                        'delay': {'seconds': 5}
-                    }, {
-                        'execute_service': 'light.turn_on',
-                        'service_data': {ATTR_ENTITY_ID: lights[0]}
-                    }, {
-                        'delay': {'seconds': 5}
-                    }, {
-                        'execute_service': 'light.turn_off',
-                        'service_data': {ATTR_ENTITY_ID: lights[0]}
-                    }]
+                    'execute_service': 'light.turn_off',
+                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                }, {
+                    'delay': {'seconds': 5}
+                }, {
+                    'execute_service': 'light.turn_on',
+                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                }, {
+                    'delay': {'seconds': 5}
+                }, {
+                    'execute_service': 'light.turn_off',
+                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                }]
             }}})
 
     # Setup scenes
@@ -76,17 +76,16 @@ def setup(hass, config):
         {'scene': [
             {'name': 'Romantic lights',
              'entities': {
-                lights[0]: True,
-                lights[1]: {'state': 'on', 'xy_color': [0.33, 0.66],
-                            'brightness': 200},
+                 lights[0]: True,
+                 lights[1]: {'state': 'on', 'xy_color': [0.33, 0.66],
+                             'brightness': 200},
              }},
             {'name': 'Switch on and off',
              'entities': {
-                switches[0]: True,
-                switches[1]: False,
+                 switches[0]: True,
+                 switches[1]: False,
              }},
-            ]
-         })
+            ]})
 
     # Setup fake device tracker
     hass.states.set("device_tracker.paulus", "home",
