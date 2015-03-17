@@ -81,22 +81,18 @@
           <core-icon icon="apps"></core-icon>
           States
         </paper-item>
-        <paper-item data-panel="group">
-          <core-icon icon="homeassistant-24:group"></core-icon>
-          Groups
-        </paper-item>
+
+        <template repeat="{{activeFilters as filter}}">
+          <paper-item data-panel="states_{{filter}}">
+            <core-icon icon="{{filter | filterIcon}}"></core-icon>
+            {{filter | filterName}}
+          </paper-item>
+        </template>
 
         <template if="{{hasHistoryComponent}}">
           <paper-item data-panel="history">
             <core-icon icon="assessment"></core-icon>
             History
-          </paper-item>
-        </template>
-
-        <template if="{{hasScriptComponent}}">
-          <paper-item data-panel="script">
-            <core-icon icon="description"></core-icon>
-            Scripts
           </paper-item>
         </template>
 
@@ -134,7 +130,7 @@
     <partial-states hidden?="{{hideStates}}"
       main narrow="{{narrow}}"
       togglePanel="{{togglePanel}}"
-      filter="{{selected}}">
+      filter="{{stateFilter}}">
     </partial-states>
 
     <template if="{{selected == 'history'}}">
@@ -153,14 +149,18 @@
 
 </template>
 <script>
+(function() {
 var storeListenerMixIn = window.hass.storeListenerMixIn;
 var authActions = window.hass.authActions;
+var uiUtil = window.hass.uiUtil;
+var uiConstants = window.hass.uiConstants;
 
 Polymer(Polymer.mixin({
   selected: "states",
+  stateFilter: null,
   narrow: false,
+  activeFilters: [],
   hasHistoryComponent: false,
-  hasScriptComponent: false,
 
   isStreaming: false,
   hasStreamError: false,
@@ -175,6 +175,12 @@ Polymer(Polymer.mixin({
 
   detached: function() {
     this.stopListeningToStores();
+  },
+
+  stateStoreChanged: function(stateStore) {
+    this.activeFilters = stateStore.domains.filter(function(domain) {
+      return domain in uiConstants.STATE_FILTERS;
+    }).toArray();
   },
 
   componentStoreChanged: function(componentStore) {
@@ -205,14 +211,13 @@ Polymer(Polymer.mixin({
       this.togglePanel();
       this.selected = newChoice;
     }
-    switch(this.selected) {
-      case 'states':
-      case 'group':
-      case 'script':
-        hideStates = false;
-        break;
-      default:
-        hideStates = true;
+
+    if (this.selected.substr(0, 7) === 'states_') {
+      this.hideStates = false;
+      this.stateFilter = this.selected.substr(7);
+    } else {
+      this.hideStates = this.selected !== 'states';
+      this.stateFilter = null;
     }
   },
 
@@ -227,6 +232,15 @@ Polymer(Polymer.mixin({
   handleLogOutClick: function() {
     authActions.logOut();
   },
+
+  filterIcon: function(filter) {
+    return uiUtil.domainIcon(filter);
+  },
+
+  filterName: function(filter) {
+    return uiConstants.STATE_FILTERS[filter];
+  },
 }, storeListenerMixIn));
+})();
 </script>  
 </polymer-element>
