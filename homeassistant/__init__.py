@@ -459,6 +459,11 @@ class State(object):
         self.last_changed = util.strip_microseconds(
             last_changed or self.last_updated)
 
+    @property
+    def domain(self):
+        """ Returns domain of this state. """
+        return util.split_entity_id(self.entity_id)[0]
+
     def copy(self):
         """ Creates a copy of itself. """
         return State(self.entity_id, self.state,

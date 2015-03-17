@@ -134,7 +134,6 @@
       if (this.filter) {
         var filter = this.filter;
         states = stateStore.all.filter(function(state) {
-          console.log(state, state.domain, filter);
           return state.domain === filter;
         });
 

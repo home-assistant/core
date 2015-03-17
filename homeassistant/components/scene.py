@@ -61,8 +61,6 @@ def setup(hass, config):
             else:
                 scene.turn_off()
 
-            scene.update_ha_state(True)
-
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_scene_service)
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service)
 
@@ -104,6 +102,7 @@ class Scene(ToggleDevice):
 
         self.is_active = False
         self.prev_states = None
+        self.ignore_updates = False
 
         self.hass.states.track_change(
             self.entity_ids, self.entity_state_changed)
@@ -140,23 +139,27 @@ class Scene(ToggleDevice):
         self.prev_states = tuple(self.hass.states.get(entity_id)
                                  for entity_id in self.entity_ids)
 
-        reproduce_state(self.hass, self.scene_config.states.values())
+        self._reproduce_state(self.scene_config.states.values())
 
     def turn_off(self):
         """ Deactivates scene and restores old states. """
         if self.prev_states:
-            reproduce_state(self.hass, self.prev_states)
+            self._reproduce_state(self.prev_states)
             self.prev_states = None
 
     def entity_state_changed(self, entity_id, old_state, new_state):
         """ Called when an entity part of this scene changes state. """
+        if self.ignore_updates:
+            return
+
         # If new state is not what we expect, it can never be active
         if self._state_as_requested(new_state):
             self.update()
         else:
             self.is_active = False
+            self.prev_states = None
 
-        self.update_ha_state(True)
+        self.update_ha_state()
 
     def update(self):
         """
@@ -170,9 +173,6 @@ class Scene(ToggleDevice):
             self._state_as_requested(self.hass.states.get(entity_id))
             for entity_id in self.entity_ids)
 
-        if not self.is_active and self.prev_states:
-            self.prev_states = None
-
     def _state_as_requested(self, cur_state):
         """ Returns if given state is as requested. """
         state = self.scene_config.states.get(cur_state and cur_state.entity_id)
@@ -180,3 +180,11 @@ class Scene(ToggleDevice):
         return (cur_state is not None and state.state == cur_state.state and
                 all(value == cur_state.attributes.get(key)
                     for key, value in state.attributes.items()))
+
+    def _reproduce_state(self, states):
+        """ Wraps reproduce state with Scence specific logic. """
+        self.ignore_updates = True
+        reproduce_state(self.hass, states, True)
+        self.ignore_updates = False
+
+        self.update_ha_state(True)
