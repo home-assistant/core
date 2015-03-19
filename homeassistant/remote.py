@@ -14,7 +14,6 @@ import logging
 import json
 import enum
 import urllib.parse
-import os
 
 import requests
 
@@ -115,9 +114,8 @@ class HomeAssistant(ha.HomeAssistant):
         self.bus = EventBus(remote_api, pool)
         self.services = ha.ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus, self.remote_api)
+        self.config = ha.Config()
         self.components = []
-
-        self.config_dir = os.path.join(os.getcwd(), 'config')
 
     def start(self):
         # Ensure a local API exists to connect with remote

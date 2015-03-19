@@ -8,7 +8,8 @@ Provides ABC for devices in HA.
 from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME)
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF,
+    DEVICE_DEFAULT_NAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 
 class Device(object):
@@ -46,6 +47,11 @@ class Device(object):
         """ Returns the state attributes. """
         return {}
 
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity if any. """
+        return None
+
     # DEPRECATION NOTICE:
     # Device is moving from getters to properties.
     # For now the new properties will call the old functions
@@ -82,12 +88,25 @@ class Device(object):
         if force_refresh:
             self.update()
 
+        state = str(self.state)
         attr = self.state_attributes or {}
 
         if ATTR_FRIENDLY_NAME not in attr and self.name:
             attr[ATTR_FRIENDLY_NAME] = self.name
 
-        return self.hass.states.set(self.entity_id, self.state, attr)
+        if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
+            attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+
+        # Convert temperature if we detect one
+        if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,
+                                                  TEMP_FAHRENHEIT):
+
+            state, attr[ATTR_UNIT_OF_MEASUREMENT] = \
+                self.hass.config.temperature(
+                    state, attr[ATTR_UNIT_OF_MEASUREMENT])
+            state = str(state)
+
+        return self.hass.states.set(self.entity_id, state, attr)
 
     def __eq__(self, other):
         return (isinstance(other, Device) and

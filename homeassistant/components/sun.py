@@ -24,9 +24,6 @@ which event (sunset or sunrise) and the offset.
 import logging
 from datetime import datetime, timedelta
 
-import homeassistant as ha
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.helpers import validate_config
 from homeassistant.util import str_to_datetime, datetime_to_str
 
 from homeassistant.components.scheduler import ServiceEventListener
@@ -83,11 +80,6 @@ def setup(hass, config):
     """ Tracks the state of the sun. """
     logger = logging.getLogger(__name__)
 
-    if not validate_config(config,
-                           {ha.DOMAIN: [CONF_LATITUDE, CONF_LONGITUDE]},
-                           logger):
-        return False
-
     try:
         import ephem
     except ImportError:
@@ -96,8 +88,8 @@ def setup(hass, config):
 
     sun = ephem.Sun()  # pylint: disable=no-member
 
-    latitude = str(config[ha.DOMAIN][CONF_LATITUDE])
-    longitude = str(config[ha.DOMAIN][CONF_LONGITUDE])
+    latitude = str(hass.config.latitude)
+    longitude = str(hass.config.longitude)
 
     # Validate latitude and longitude
     observer = ephem.Observer()

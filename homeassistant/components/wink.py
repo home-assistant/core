@@ -8,10 +8,9 @@ import homeassistant.external.wink.pywink as pywink
 
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
-from homeassistant.helpers import validate_config, ToggleDevice, Device
+from homeassistant.helpers import validate_config, ToggleDevice
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, CONF_ACCESS_TOKEN,
-    STATE_OPEN, STATE_CLOSED,
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "wink"
@@ -51,44 +50,6 @@ def setup(hass, config):
             })
 
     return True
-
-
-class WinkSensorDevice(Device):
-    """ represents a wink sensor within home assistant. """
-
-    def __init__(self, wink):
-        self.wink = wink
-
-    @property
-    def state(self):
-        """ Returns the state. """
-        return STATE_OPEN if self.is_open else STATE_CLOSED
-
-    @property
-    def unique_id(self):
-        """ Returns the id of this wink switch """
-        return "{}.{}".format(self.__class__, self.wink.deviceId())
-
-    @property
-    def name(self):
-        """ Returns the name of the sensor if any. """
-        return self.wink.name()
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.wink.name()
-        }
-
-    def update(self):
-        """ Update state of the sensor. """
-        self.wink.updateState()
-
-    @property
-    def is_open(self):
-        """ True if door is open. """
-        return self.wink.state()
 
 
 class WinkToggleDevice(ToggleDevice):
