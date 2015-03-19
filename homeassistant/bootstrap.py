@@ -148,7 +148,7 @@ def enable_logging(hass):
     logging.basicConfig(level=logging.INFO)
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.get_config_path("home-assistant.log")
+    err_log_path = hass.config.path("home-assistant.log")
     err_path_exists = os.path.isfile(err_log_path)
 
     # Check if we can write to the error log if it exists or that

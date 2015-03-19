@@ -74,7 +74,7 @@ def setup(hass, config):
         schedule.schedule(hass)
         return True
 
-    with open(hass.config.get_config_path(_SCHEDULE_FILE)) as schedule_file:
+    with open(hass.config.path(_SCHEDULE_FILE)) as schedule_file:
         schedule_descriptions = json.load(schedule_file)
 
     for schedule_description in schedule_descriptions:

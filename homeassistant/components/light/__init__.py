@@ -148,7 +148,7 @@ def setup(hass, config):
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),
                                   LIGHT_PROFILES_FILE),
-                     hass.config.get_config_path(LIGHT_PROFILES_FILE)]
+                     hass.config.path(LIGHT_PROFILES_FILE)]
     profiles = {}
 
     for profile_path in profile_paths:

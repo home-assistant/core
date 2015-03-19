@@ -63,11 +63,15 @@ class HomeAssistant(object):
     @property
     def config_dir(self):
         """ DEPRECATED 3/18/2015. Use hass.config.config_dir """
+        _LOGGER.warning(
+            'hass.config_dir is deprecated. Use hass.config.config_dir')
         return self.config.config_dir
 
     def get_config_path(self, path):
-        """ DEPRECATED 3/18/2015. Use hass.config.get_config_path """
-        return self.config.get_config_path(path)
+        """ DEPRECATED 3/18/2015. Use hass.config.path """
+        _LOGGER.warning(
+            'hass.get_config_path is deprecated. Use hass.config.path')
+        return self.config.path(path)
 
     def start(self):
         """ Start home assistant. """
@@ -854,10 +858,6 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = os.path.join(os.getcwd(), 'config')
 
-    def get_config_path(self, path):
-        """ Returns path to the file within the config dir. """
-        return os.path.join(self.config_dir, path)
-
     def auto_detect(self):
         """ Will attempt to detect config of Home Assistant. """
         # Only detect if location or temp unit missing
@@ -891,6 +891,10 @@ class Config(object):
 
         if self.time_zone is None:
             self.time_zone = info['time_zone']
+
+    def path(self, path):
+        """ Returns path to the file within the config dir. """
+        return os.path.join(self.config_dir, path)
 
     def temperature(self, value, unit):
         """ Converts temperature to user preferred unit if set. """

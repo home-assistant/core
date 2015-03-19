@@ -32,7 +32,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.hass = get_test_home_assistant()
         loader.prepare(self.hass)
 
-        self.known_dev_path = self.hass.get_config_path(
+        self.known_dev_path = self.hass.config.path(
             device_tracker.KNOWN_DEVICES_FILE)
 
     def tearDown(self):  # pylint: disable=invalid-name
