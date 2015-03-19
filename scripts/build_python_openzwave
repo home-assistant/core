@@ -19,7 +19,7 @@ if [ -d python-openzwave ]; then
   git pull --recurse-submodules=yes
   git submodule update --init --recursive
 else
-  git clone -b python-3-support --recursive https://github.com/balloob/python-openzwave.git
+  git clone --recursive https://github.com/balloob/python-openzwave.git
   cd python-openzwave
 fi
 

@@ -81,9 +81,9 @@ def setup(hass, config):
 
     if use_debug:
         def log_all(signal, value=None):
-            """ Log all the louie signals. """
+            """ Log all the signals. """
             print("")
-            print("LOUIE SIGNAL *****", signal)
+            print("SIGNAL *****", signal)
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
                                     ZWaveNetwork.SIGNAL_VALUE_ADDED):
                 pprint(_obj_to_dict(value))

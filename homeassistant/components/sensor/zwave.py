@@ -120,6 +120,8 @@ class ZWaveMultilevelSensor(ZWaveSensor):
 
         if self._value.units in ('C', 'F'):
             return round(value, 1)
+        elif isinstance(value, float):
+            return round(value, 2)
 
         return value
 
