@@ -32,6 +32,7 @@ import tellcore.constants as tellcore_constants
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELCIUS)
 from homeassistant.helpers.device import Device
+import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
@@ -71,6 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     sensors = []
+    datatype_mask = util.convert(config.get('datatype_mask'), int, 127)
 
     for ts_sensor in core.sensors():
         try:
@@ -81,8 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensor_name = str(ts_sensor.id)
 
         for datatype in sensor_value_descriptions.keys():
-            if datatype & int(config['datatype_mask']) and \
-                    ts_sensor.has_value(datatype):
+            if datatype & datatype_mask and ts_sensor.has_value(datatype):
 
                 sensor_info = sensor_value_descriptions[datatype]
 
