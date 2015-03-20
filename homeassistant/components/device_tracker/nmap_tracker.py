@@ -1,6 +1,6 @@
 """ Supports scanning using nmap. """
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 import threading
 from collections import namedtuple
 import subprocess
@@ -11,13 +11,16 @@ from libnmap.parser import NmapParser, NmapParserException
 
 from homeassistant.const import CONF_HOSTS
 from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, convert
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
+
+# interval in minutes to exclude devices from a scan while they are home
+CONF_HOME_INTERVAL = "home_interval"
 
 
 def get_scanner(hass, config):
@@ -30,7 +33,7 @@ def get_scanner(hass, config):
 
     return scanner if scanner.success_init else None
 
-Device = namedtuple("Device", ["mac", "name"])
+Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 def _arp(ip_address):
@@ -53,6 +56,8 @@ class NmapDeviceScanner(object):
 
         self.lock = threading.Lock()
         self.hosts = config[CONF_HOSTS]
+        minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
+        self.home_interval = timedelta(minutes=minutes)
 
         self.success_init = True
         self._update_info()
@@ -77,6 +82,33 @@ class NmapDeviceScanner(object):
         else:
             return None
 
+    def _parse_results(self, stdout):
+        """ Parses results from an nmap scan.
+            Returns True if successful, False otherwise. """
+        try:
+            results = NmapParser.parse(stdout)
+            now = datetime.now()
+            self.last_results = []
+            for host in results.hosts:
+                if host.is_up():
+                    if host.hostnames:
+                        name = host.hostnames[0]
+                    else:
+                        name = host.ipv4
+                    if host.mac:
+                        mac = host.mac
+                    else:
+                        mac = _arp(host.ipv4)
+                    if mac:
+                        device = Device(mac, name, host.ipv4, now)
+                        self.last_results.append(device)
+            _LOGGER.info("nmap scan successful")
+            return True
+        except NmapParserException as parse_exc:
+            _LOGGER.error("failed to parse nmap results: %s", parse_exc.msg)
+            self.last_results = []
+            return False
+
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Scans the network for devices.
@@ -87,35 +119,24 @@ class NmapDeviceScanner(object):
         with self.lock:
             _LOGGER.info("Scanning")
 
-            nmap = NmapProcess(targets=self.hosts, options="-F")
+            options = "-F"
+            exclude_targets = set()
+            if self.home_interval:
+                now = datetime.now()
+                for host in self.last_results:
+                    if host.last_update + self.home_interval > now:
+                        exclude_targets.add(host)
+                if len(exclude_targets) > 0:
+                    target_list = [t.ip for t in exclude_targets]
+                    options += " --exclude {}".format(",".join(target_list))
+
+            nmap = NmapProcess(targets=self.hosts, options=options)
 
             nmap.run()
 
             if nmap.rc == 0:
-                try:
-                    results = NmapParser.parse(nmap.stdout)
-                    self.last_results = []
-                    for host in results.hosts:
-                        if host.is_up():
-                            if host.hostnames:
-                                name = host.hostnames[0]
-                            else:
-                                name = host.ipv4
-                            if host.mac:
-                                mac = host.mac
-                            else:
-                                mac = _arp(host.ipv4)
-                            if mac:
-                                device = Device(mac, name)
-                                self.last_results.append(device)
-                    _LOGGER.info("nmap scan successful")
-                    return True
-                except NmapParserException as parse_exc:
-                    _LOGGER.error("failed to parse nmap results: %s",
-                                  parse_exc.msg)
-                    self.last_results = []
-                    return False
-
+                if self._parse_results(nmap.stdout):
+                    self.last_results.extend(exclude_targets)
             else:
                 self.last_results = []
                 _LOGGER.error(nmap.stderr)

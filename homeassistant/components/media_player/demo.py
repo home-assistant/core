@@ -35,6 +35,11 @@ class DemoMediaPlayer(MediaPlayerDevice):
         self.volume = 1.0
 
     @property
+    def should_poll(self):
+        """ No polling needed for a demo componentn. """
+        return False
+
+    @property
     def name(self):
         """ Returns the name of the device. """
         return self._name

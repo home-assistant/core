@@ -1,8 +1,6 @@
 """
 Helper methods for components within Home Assistant.
 """
-from datetime import datetime
-
 from homeassistant.loader import get_component
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.util import ensure_unique_string, slugify
@@ -43,25 +41,6 @@ def extract_entity_ids(hass, service):
     return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
 
 
-# pylint: disable=too-few-public-methods, attribute-defined-outside-init
-class TrackStates(object):
-    """
-    Records the time when the with-block is entered. Will add all states
-    that have changed since the start time to the return list when with-block
-    is exited.
-    """
-    def __init__(self, hass):
-        self.hass = hass
-        self.states = []
-
-    def __enter__(self):
-        self.now = datetime.now()
-        return self.states
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.states.extend(self.hass.states.get_since(self.now))
-
-
 def validate_config(config, items, logger):
     """
     Validates if all items are available in the configuration.
@@ -98,14 +77,17 @@ def config_per_platform(config, domain, logger):
 
     while config_key in config:
         platform_config = config[config_key]
+        if not isinstance(platform_config, list):
+            platform_config = [platform_config]
 
-        platform_type = platform_config.get(CONF_PLATFORM)
+        for item in platform_config:
+            platform_type = item.get(CONF_PLATFORM)
 
-        if platform_type is None:
-            logger.warning('No platform specified for %s', config_key)
-            break
+            if platform_type is None:
+                logger.warning('No platform specified for %s', config_key)
+                continue
 
-        yield platform_type, platform_config
+            yield platform_type, item
 
         found += 1
         config_key = "{} {}".format(domain, found)

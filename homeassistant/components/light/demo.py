@@ -31,6 +31,11 @@ class DemoLight(ToggleDevice):
         self._brightness = brightness
 
     @property
+    def should_poll(self):
+        """ No polling needed for a demo light. """
+        return False
+
+    @property
     def name(self):
         """ Returns the name of the device if any. """
         return self._name

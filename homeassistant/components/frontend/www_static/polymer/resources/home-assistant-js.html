@@ -2,9 +2,9 @@
 
 <script>
   (function() {
-    var DOMAINS_WITH_CARD = ['thermostat', 'configurator'];
+    var DOMAINS_WITH_CARD = ['thermostat', 'configurator', 'scene'];
     var DOMAINS_WITH_MORE_INFO = [
-      'light', 'group', 'sun', 'configurator', 'thermostat'
+      'light', 'group', 'sun', 'configurator', 'thermostat', 'script'
     ];
 
     // Register some polymer filters
@@ -51,9 +51,17 @@
         preferenceStore = window.hass.preferenceStore,
         authActions = window.hass.authActions;
 
-    window.hass.uiActions = {
+    window.hass.uiConstants = {
       ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
 
+      STATE_FILTERS: {
+        'group': 'Groups',
+        'script': 'Scripts',
+        'scene': 'Scenes',
+      },
+    };
+
+    window.hass.uiActions = {
       showMoreInfoDialog: function(entityId) {
         dispatcher.dispatch({
           actionType: this.ACTION_SHOW_DIALOG_MORE_INFO,
@@ -63,10 +71,13 @@
 
       validateAuth: function(authToken, rememberLogin) {
         authActions.validate(authToken, {
-          useStreaming: preferenceStore.useStreaming(),
+          useStreaming: preferenceStore.useStreaming,
           rememberLogin: rememberLogin,
         });
       },
     };
+
+    // UI specific util methods
+    window.hass.uiUtil = {};
   })();
 </script>

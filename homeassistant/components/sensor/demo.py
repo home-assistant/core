@@ -22,6 +22,11 @@ class DemoSensor(Device):
         self._unit_of_measurement = unit_of_measurement
 
     @property
+    def should_poll(self):
+        """ No polling needed for a demo sensor. """
+        return False
+
+    @property
     def name(self):
         """ Returns the name of the device. """
         return self._name

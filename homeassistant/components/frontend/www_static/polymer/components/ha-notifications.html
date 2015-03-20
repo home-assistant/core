@@ -11,7 +11,7 @@
   Polymer(Polymer.mixin({
     lastId: null,
 
-    ready: function() {
+    attached: function() {
       this.listenToStores(true);
     },
 
@@ -22,11 +22,13 @@
     notificationStoreChanged: function(notificationStore) {
       if (notificationStore.hasNewNotifications(this.lastId)) {
         var toast = this.$.toast;
-        var notification = notificationStore.getLastNotification();
+        var notification = notificationStore.lastNotification;
 
-        this.lastId = notification.id;
-        toast.text = notification.message;
-        toast.show();
+        if (notification) {
+          this.lastId = notification.id;
+          toast.text = notification.message;
+          toast.show();
+        }
       }
     },
 

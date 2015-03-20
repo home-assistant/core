@@ -190,7 +190,6 @@ def setup(hass, config):
 
         if service.service == SERVICE_TURN_OFF:
             for light in target_lights:
-                # pylint: disable=star-args
                 light.turn_off(**params)
 
         else:
@@ -248,7 +247,6 @@ def setup(hass, config):
                     params[ATTR_FLASH] = FLASH_LONG
 
             for light in target_lights:
-                # pylint: disable=star-args
                 light.turn_on(**params)
 
         for light in target_lights:

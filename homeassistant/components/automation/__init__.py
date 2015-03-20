@@ -5,11 +5,10 @@ homeassistant.components.automation
 Allows to setup simple automation rules via the config file.
 """
 import logging
-import json
 
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform
-from homeassistant.util import convert, split_entity_id
+from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID
 
 DOMAIN = "automation"
@@ -54,8 +53,7 @@ def _get_action(hass, config):
         if CONF_SERVICE in config:
             domain, service = split_entity_id(config[CONF_SERVICE])
 
-            service_data = convert(
-                config.get(CONF_SERVICE_DATA), json.loads, {})
+            service_data = config.get(CONF_SERVICE_DATA, {})
 
             if not isinstance(service_data, dict):
                 _LOGGER.error(

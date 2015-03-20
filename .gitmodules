@@ -13,6 +13,9 @@
 [submodule "homeassistant/components/frontend/www_static/polymer/home-assistant-js"]
 	path = homeassistant/components/frontend/www_static/polymer/home-assistant-js
 	url = https://github.com/balloob/home-assistant-js.git
+[submodule "homeassistant/external/vera"]
+	path = homeassistant/external/vera
+	url = https://github.com/jamespcole/home-assistant-vera-api.git
 [submodule "homeassistant/external/nzbclients"]
-	path = homeassistant/external/nzbclients
-	url = https://github.com/jamespcole/home-assistant-nzb-clients.git
+        path = homeassistant/external/nzbclients
+        url = https://github.com/jamespcole/home-assistant-nzb-clients.git

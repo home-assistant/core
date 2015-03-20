@@ -101,7 +101,8 @@ automation 2:
   time_seconds: 0
 
   execute_service: notify.notify
-  service_data: {"message":"It's 4, time for beer!"}
+  service_data:
+    message: It's 4, time for beer!
 
 sensor:
   platform: systemmonitor
@@ -120,3 +121,30 @@ sensor:
     - type: 'processor_use'
     - type: 'process'
       arg: 'octave-cli'
+
+script:
+  # Turns on the bedroom lights and then the living room lights 1 minute later
+  wakeup:
+    alias: Wake Up
+    sequence:
+      # alias is optional
+      - alias: Bedroom lights on
+        execute_service: light.turn_on
+        service_data:
+          entity_id: group.bedroom
+      - delay:
+          # supports seconds, milliseconds, minutes, hours, etc.
+          minutes: 1
+      - alias: Living room lights on
+        execute_service: light.turn_on
+        service_data:
+          entity_id: group.living_room
+
+scene:
+  - name: Romantic
+    entities:
+      light.tv_back_light: on
+      light.ceiling:
+        state: on
+        color: [0.33, 0.66]
+        brightness: 200

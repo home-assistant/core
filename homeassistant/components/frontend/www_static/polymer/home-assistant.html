@@ -44,8 +44,8 @@
       // if auth was given, tell the backend
       if(this.auth) {
         uiActions.validateAuth(this.auth, false);    
-      } else if (preferenceStore.hasAuthToken()) {
-        uiActions.validateAuth(preferenceStore.getAuthToken(), false);    
+      } else if (preferenceStore.hasAuthToken) {
+        uiActions.validateAuth(preferenceStore.authToken, false);    
       }
     },
 
@@ -58,7 +58,7 @@
     },
 
     syncStoreChanged: function(syncStore) {
-      this.loaded = syncStore.initialLoadDone();
+      this.loaded = syncStore.initialLoadDone;
     },
   }, storeListenerMixIn));
   </script>  
