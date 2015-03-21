@@ -49,13 +49,16 @@ list of all available variables
 
 """
 
+from homeassistant.util import Throttle
+from datetime import timedelta
+
 from homeassistant.helpers.device import Device
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApi
+from homeassistant.external.nzbclients.sabnzbd import SabnzbdApiException
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
 import logging
-
 
 SENSOR_TYPES = {
     'current_status': ['Status', ''],
@@ -67,6 +70,8 @@ SENSOR_TYPES = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+_THROTTLED_REFRESH = None
 
 
 # pylint: disable=unused-argument
@@ -83,6 +88,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     sab_api = SabnzbdApi(base_url, api_key)
+
+    try:
+        sab_api.check_available()
+    except SabnzbdApiException:
+        _LOGGER.exception("Connection to SABnzbd API failed.")
+        return False
+
+    # pylint: disable=global-statement
+    global _THROTTLED_REFRESH
+    _THROTTLED_REFRESH = Throttle(timedelta(seconds=1))(sab_api.refresh_queue)
+
     dev = []
     for variable in config['monitored_variables']:
         if variable['type'] not in SENSOR_TYPES:
@@ -103,7 +119,6 @@ class SabnzbdSensor(Device):
         self.client_name = client_name
         self._state = None
         self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -122,8 +137,18 @@ class SabnzbdSensor(Device):
             ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
         }
 
+    def refresh_sabnzbd_data(self):
+        """ Calls the throttled SABnzbd refresh method. """
+        if _THROTTLED_REFRESH is not None:
+            try:
+                _THROTTLED_REFRESH()
+            except SabnzbdApiException:
+                _LOGGER.exception(
+                    self.name + "  Connection to SABnzbd API failed."
+                )
+
     def update(self):
-        self.sabnzb_client.refresh_queue()
+        self.refresh_sabnzbd_data()
         if self.sabnzb_client.queue:
             if self.type == 'current_status':
                 self._state = self.sabnzb_client.queue.get('status')
