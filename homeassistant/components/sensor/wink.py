@@ -4,8 +4,8 @@ import logging
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.wink.pywink as pywink
 
-from homeassistant.components.wink import WinkSensorDevice
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.helpers.device import Device
+from homeassistant.const import CONF_ACCESS_TOKEN, STATE_OPEN, STATE_CLOSED
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -22,3 +22,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pywink.set_bearer_token(token)
 
     add_devices(WinkSensorDevice(sensor) for sensor in pywink.get_sensors())
+
+
+class WinkSensorDevice(Device):
+    """ represents a wink sensor within home assistant. """
+
+    def __init__(self, wink):
+        self.wink = wink
+
+    @property
+    def state(self):
+        """ Returns the state. """
+        return STATE_OPEN if self.is_open else STATE_CLOSED
+
+    @property
+    def unique_id(self):
+        """ Returns the id of this wink sensor """
+        return "{}.{}".format(self.__class__, self.wink.deviceId())
+
+    @property
+    def name(self):
+        """ Returns the name of the sensor if any. """
+        return self.wink.name()
+
+    def update(self):
+        """ Update state of the sensor. """
+        self.wink.updateState()
+
+    @property
+    def is_open(self):
+        """ True if door is open. """
+        return self.wink.state()

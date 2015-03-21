@@ -15,11 +15,14 @@ import re
 import datetime as dt
 import functools as ft
 
+import requests
+
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
-    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED)
+    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
+    TEMP_CELCIUS, TEMP_FAHRENHEIT)
 import homeassistant.util as util
 
 DOMAIN = "homeassistant"
@@ -49,6 +52,7 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
+        self.config = Config()
 
         # List of loaded components
         self.components = []
@@ -56,12 +60,18 @@ class HomeAssistant(object):
         # Remote.API object pointing at local API
         self.local_api = None
 
-        # Directory that holds the configuration
-        self.config_dir = os.path.join(os.getcwd(), 'config')
+    @property
+    def config_dir(self):
+        """ DEPRECATED 3/18/2015. Use hass.config.config_dir """
+        _LOGGER.warning(
+            'hass.config_dir is deprecated. Use hass.config.config_dir')
+        return self.config.config_dir
 
     def get_config_path(self, path):
-        """ Returns path to the file within the config dir. """
-        return os.path.join(self.config_dir, path)
+        """ DEPRECATED 3/18/2015. Use hass.config.path """
+        _LOGGER.warning(
+            'hass.get_config_path is deprecated. Use hass.config.path')
+        return self.config.path(path)
 
     def start(self):
         """ Start home assistant. """
@@ -834,6 +844,75 @@ class Timer(threading.Thread):
             last_fired_on_second = now.second
 
             self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+
+
+class Config(object):
+    """ Configuration settings for Home Assistant. """
+    def __init__(self):
+        self.latitude = None
+        self.longitude = None
+        self.temperature_unit = None
+        self.location_name = None
+        self.time_zone = None
+
+        # Directory that holds the configuration
+        self.config_dir = os.path.join(os.getcwd(), 'config')
+
+    def auto_detect(self):
+        """ Will attempt to detect config of Home Assistant. """
+        # Only detect if location or temp unit missing
+        if None not in (self.latitude, self.longitude, self.temperature_unit):
+            return
+
+        _LOGGER.info('Auto detecting location and temperature unit')
+
+        try:
+            info = requests.get('https://freegeoip.net/json/').json()
+        except requests.RequestException:
+            return
+
+        if self.latitude is None and self.longitude is None:
+            self.latitude = info['latitude']
+            self.longitude = info['longitude']
+
+        if self.temperature_unit is None:
+            # From Wikipedia:
+            # Fahrenheit is used in the Bahamas, Belize, the Cayman Islands,
+            # Palau, and the United States and associated territories of
+            # American Samoa and the U.S. Virgin Islands
+            if info['country_code'] in ('BS', 'BZ', 'KY', 'PW',
+                                        'US', 'AS', 'VI'):
+                self.temperature_unit = TEMP_FAHRENHEIT
+            else:
+                self.temperature_unit = TEMP_CELCIUS
+
+        if self.location_name is None:
+            self.location_name = info['city']
+
+        if self.time_zone is None:
+            self.time_zone = info['time_zone']
+
+    def path(self, path):
+        """ Returns path to the file within the config dir. """
+        return os.path.join(self.config_dir, path)
+
+    def temperature(self, value, unit):
+        """ Converts temperature to user preferred unit if set. """
+        if not (unit and self.temperature_unit and
+                unit != self.temperature_unit):
+            return value, unit
+
+        try:
+            if unit == TEMP_CELCIUS:
+                # Convert C to F
+                return round(float(value) * 1.8 + 32.0, 1), TEMP_FAHRENHEIT
+
+            # Convert F to C
+            return round((float(value)-32.0)/1.8, 1), TEMP_CELCIUS
+
+        except ValueError:
+            # Could not convert value to float
+            return value, unit
 
 
 class HomeAssistantError(Exception):

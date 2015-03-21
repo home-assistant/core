@@ -20,7 +20,10 @@ import homeassistant
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
-from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, TEMP_CELCIUS,
+    TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +76,8 @@ def from_config_dict(config, hass=None):
     if hass is None:
         hass = homeassistant.HomeAssistant()
 
+    process_ha_core_config(hass, config.get(homeassistant.DOMAIN, {}))
+
     enable_logging(hass)
 
     _ensure_loader_prepared(hass)
@@ -111,8 +116,8 @@ def from_config_file(config_path, hass=None):
     if hass is None:
         hass = homeassistant.HomeAssistant()
 
-        # Set config dir to directory holding config file
-        hass.config_dir = os.path.abspath(os.path.dirname(config_path))
+    # Set config dir to directory holding config file
+    hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
 
     config_dict = {}
     # check config file type
@@ -143,13 +148,13 @@ def enable_logging(hass):
     logging.basicConfig(level=logging.INFO)
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.get_config_path("home-assistant.log")
+    err_log_path = hass.config.path("home-assistant.log")
     err_path_exists = os.path.isfile(err_log_path)
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
-       (not err_path_exists and os.access(hass.config_dir, os.W_OK)):
+       (not err_path_exists and os.access(hass.config.config_dir, os.W_OK)):
 
         err_handler = logging.FileHandler(
             err_log_path, mode='w', delay=True)
@@ -163,6 +168,26 @@ def enable_logging(hass):
     else:
         _LOGGER.error(
             "Unable to setup error log %s (access denied)", err_log_path)
+
+
+def process_ha_core_config(hass, config):
+    """ Processes the [homeassistant] section from the config. """
+    for key, attr in ((CONF_LATITUDE, 'latitude'),
+                      (CONF_LONGITUDE, 'longitude'),
+                      (CONF_NAME, 'location_name'),
+                      (CONF_TIME_ZONE, 'time_zone')):
+        if key in config:
+            setattr(hass.config, attr, config[key])
+
+    if CONF_TEMPERATURE_UNIT in config:
+        unit = config[CONF_TEMPERATURE_UNIT]
+
+        if unit == 'C':
+            hass.config.temperature_unit = TEMP_CELCIUS
+        elif unit == 'F':
+            hass.config.temperature_unit = TEMP_FAHRENHEIT
+
+    hass.config.auto_detect()
 
 
 def _ensure_loader_prepared(hass):

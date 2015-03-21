@@ -51,7 +51,8 @@ def setup_bridge(host, hass, add_devices_callback):
 
     try:
         bridge = phue.Bridge(
-            host, config_file_path=hass.get_config_path(PHUE_CONFIG_FILE))
+            host,
+            config_file_path=hass.config.path(PHUE_CONFIG_FILE))
     except ConnectionRefusedError:  # Wrong host was given
         _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
 

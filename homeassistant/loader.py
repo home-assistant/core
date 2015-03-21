@@ -46,11 +46,11 @@ def prepare(hass):
         pkgutil.iter_modules(components.__path__, 'homeassistant.components.'))
 
     # Look for available custom components
-    custom_path = hass.get_config_path("custom_components")
+    custom_path = hass.config.path("custom_components")
 
     if os.path.isdir(custom_path):
         # Ensure we can load custom components using Pythons import
-        sys.path.insert(0, hass.config_dir)
+        sys.path.insert(0, hass.config.config_dir)
 
         # We cannot use the same approach as for built-in components because
         # custom components might only contain a platform for a component.

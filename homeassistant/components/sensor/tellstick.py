@@ -29,8 +29,7 @@ from collections import namedtuple
 import tellcore.telldus as telldus
 import tellcore.constants as tellcore_constants
 
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELCIUS)
+from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.device import Device
 import homeassistant.util as util
 
@@ -100,7 +99,7 @@ class TellstickSensor(Device):
     def __init__(self, name, sensor, datatype, sensor_info):
         self.datatype = datatype
         self.sensor = sensor
-        self.unit = sensor_info.unit or None
+        self.unit_of_measurement = sensor_info.unit or None
 
         self._name = "{} {}".format(name, sensor_info.name)
 
@@ -113,15 +112,3 @@ class TellstickSensor(Device):
     def state(self):
         """ Returns the state of the device. """
         return self.sensor.value(self.datatype).value
-
-    @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        attrs = {
-            ATTR_FRIENDLY_NAME: self._name,
-        }
-
-        if self.unit:
-            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit
-
-        return attrs

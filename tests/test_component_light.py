@@ -29,7 +29,7 @@ class TestLight(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-        user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
 
         if os.path.isfile(user_light_file):
             os.remove(user_light_file)
@@ -218,7 +218,7 @@ class TestLight(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
 
-        user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
 
         # Setup a wrong light file
         with open(user_light_file, 'w') as user_file:
@@ -234,7 +234,7 @@ class TestLight(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
 
-        user_light_file = self.hass.get_config_path(light.LIGHT_PROFILES_FILE)
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
 
         with open(user_light_file, 'w') as user_file:
             user_file.write('id,x,y,brightness\n')

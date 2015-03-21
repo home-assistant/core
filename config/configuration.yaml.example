@@ -1,7 +1,19 @@
 homeassistant:
+  # Omitted values in this section will be auto detected using freegeoip.net
+
   # Location required to calculate the time the sun rises and sets
   latitude: 32.87336
   longitude: 117.22743
+
+  # C for Celcius, F for Fahrenheit
+  temperature_unit: C
+
+  # Pick yours from here:
+  # http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: America/Los_Angeles
+
+  # Name of the location where Home Assistant is running
+  name: Home
 
 http:
   api_password: mypass

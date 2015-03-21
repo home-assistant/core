@@ -35,10 +35,10 @@ class TestHomeAssistant(unittest.TestCase):
     def test_get_config_path(self):
         """ Test get_config_path method. """
         self.assertEqual(os.path.join(os.getcwd(), "config"),
-                         self.hass.config_dir)
+                         self.hass.config.config_dir)
 
         self.assertEqual(os.path.join(os.getcwd(), "config", "test.conf"),
-                         self.hass.get_config_path("test.conf"))
+                         self.hass.config.path("test.conf"))
 
     def test_block_till_stoped(self):
         """ Test if we can block till stop service is called. """

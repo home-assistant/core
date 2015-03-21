@@ -72,7 +72,7 @@ def setup(hass, config):
     # Setup options
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
-        user_path=hass.config_dir)
+        user_path=hass.config.config_dir)
 
     options.set_console_output(use_debug)
     options.lock()

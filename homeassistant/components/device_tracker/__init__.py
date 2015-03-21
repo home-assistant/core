@@ -179,7 +179,7 @@ class DeviceTracker(object):
             # Write new devices to known devices file
             if not self.invalid_known_devices_file:
 
-                known_dev_path = self.hass.get_config_path(KNOWN_DEVICES_FILE)
+                known_dev_path = self.hass.config.path(KNOWN_DEVICES_FILE)
 
                 try:
                     # If file does not exist we will write the header too
@@ -214,7 +214,7 @@ class DeviceTracker(object):
     # pylint: disable=too-many-branches
     def _read_known_devices_file(self):
         """ Parse and process the known devices file. """
-        known_dev_path = self.hass.get_config_path(KNOWN_DEVICES_FILE)
+        known_dev_path = self.hass.config.path(KNOWN_DEVICES_FILE)
 
         # Return if no known devices file exists
         if not os.path.isfile(known_dev_path):

@@ -10,8 +10,7 @@ import homeassistant as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.loader as loader
 from homeassistant.const import (
-    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID,
-    CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID)
 
 DOMAIN = "demo"
 
@@ -33,8 +32,6 @@ def setup(hass, config):
         hass.states.set('a.Demo_Mode', 'Enabled')
 
     # Setup sun
-    config[ha.DOMAIN].setdefault(CONF_LATITUDE, '32.87336')
-    config[ha.DOMAIN].setdefault(CONF_LONGITUDE, '-117.22743')
     loader.get_component('sun').setup(hass, config)
 
     # Setup demo platforms
