@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.helpers.device import ToggleDevice
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
@@ -131,7 +131,7 @@ def request_configuration(host, hass, add_devices_callback):
     )
 
 
-class HueLight(ToggleDevice):
+class HueLight(ToggleEntity):
     """ Represents a Hue light """
 
     def __init__(self, light_id, info, bridge, update_lights):

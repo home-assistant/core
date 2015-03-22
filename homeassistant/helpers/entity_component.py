@@ -134,7 +134,7 @@ class EntityComponent(object):
                     "Please upgrade %s to return new entities using "
                     "setup_platform. See %s/demo.py for an example.",
                     platform_name, self.domain)
-                self.add_devices(platform.get_entities(self.hass, config))
+                self.add_entities(platform.get_devices(self.hass, config))
 
             else:
                 # AttributeError if setup_platform does not exist

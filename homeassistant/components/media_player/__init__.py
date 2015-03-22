@@ -7,7 +7,7 @@ Component to interface with various media players
 import logging
 
 from homeassistant.components import discovery
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.device_component import DeviceComponent
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
@@ -171,7 +171,7 @@ def setup(hass, config):
     return True
 
 
-class MediaPlayerDevice(Device):
+class MediaPlayerDevice(Entity):
     """ ABC for media player devices. """
 
     def turn_off(self):

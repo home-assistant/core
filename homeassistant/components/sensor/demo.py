@@ -1,5 +1,5 @@
 """ Support for Wink sensors. """
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELCIUS, ATTR_BATTERY_LEVEL
 
 
@@ -12,7 +12,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-class DemoSensor(Device):
+class DemoSensor(Entity):
     """ A Demo sensor. """
 
     def __init__(self, name, state, unit_of_measurement, battery):

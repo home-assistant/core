@@ -52,7 +52,7 @@ list of all available variables
 from homeassistant.util import Throttle
 from datetime import timedelta
 
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApi
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApiException
@@ -109,7 +109,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-class SabnzbdSensor(Device):
+class SabnzbdSensor(Entity):
     """ A Sabnzbd sensor """
 
     def __init__(self, sensor_type, sabnzb_client, client_name):

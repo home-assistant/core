@@ -3,7 +3,7 @@ import logging
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.helpers.device import ToggleDevice
+from homeassistant.helpers.entity import ToggleEntity
 import tellcore.constants as tellcore_constants
 
 
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(lights)
 
 
-class TellstickLight(ToggleDevice):
+class TellstickLight(ToggleEntity):
     """ Represents a tellstick light """
     last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                               tellcore_constants.TELLSTICK_TURNOFF |

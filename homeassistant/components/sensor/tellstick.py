@@ -30,7 +30,7 @@ import tellcore.telldus as telldus
 import tellcore.constants as tellcore_constants
 
 from homeassistant.const import TEMP_CELCIUS
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-class TellstickSensor(Device):
+class TellstickSensor(Entity):
     """ Represents a Tellstick sensor. """
 
     def __init__(self, name, sensor, datatype, sensor_info):

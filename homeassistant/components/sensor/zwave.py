@@ -9,7 +9,7 @@ from openzwave.network import ZWaveNetwork
 from pydispatch import dispatcher
 
 import homeassistant.components.zwave as zwave
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_ON, STATE_OFF,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([ZWaveMultilevelSensor(value)])
 
 
-class ZWaveSensor(Device):
+class ZWaveSensor(Entity):
     """ Represents a Z-Wave sensor. """
     def __init__(self, sensor_value):
         self._value = sensor_value

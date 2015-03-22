@@ -9,7 +9,7 @@ import logging
 from homeassistant.helpers.device_component import DeviceComponent
 
 import homeassistant.util as util
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF)
 
@@ -98,7 +98,7 @@ def setup(hass, config):
     return True
 
 
-class ThermostatDevice(Device):
+class ThermostatDevice(Entity):
     """ Represents a thermostat within Home Assistant. """
 
     # pylint: disable=no-self-use

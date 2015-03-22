@@ -19,7 +19,7 @@ import logging
 from collections import namedtuple
 
 from homeassistant import State
-from homeassistant.helpers.device import ToggleDevice
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.device_component import DeviceComponent
 from homeassistant.helpers.state import reproduce_state
 from homeassistant.const import (
@@ -93,7 +93,7 @@ def _process_config(scene_config):
     return SceneConfig(name, states)
 
 
-class Scene(ToggleDevice):
+class Scene(ToggleEntity):
     """ A scene is a group of entities and the states we want them to be. """
 
     def __init__(self, hass, scene_config):

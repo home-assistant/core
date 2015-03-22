@@ -8,7 +8,8 @@ import homeassistant.external.wink.pywink as pywink
 
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
-from homeassistant.helpers import validate_config, ToggleDevice
+from homeassistant.helpers import validate_config
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, CONF_ACCESS_TOKEN,
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
@@ -52,7 +53,7 @@ def setup(hass, config):
     return True
 
 
-class WinkToggleDevice(ToggleDevice):
+class WinkToggleDevice(ToggleEntity):
     """ represents a Wink switch within home assistant. """
 
     def __init__(self, wink):

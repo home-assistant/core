@@ -6,7 +6,7 @@ Shows system monitor values such as: disk, memory and processor use
 
 """
 
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
 import psutil
 import logging
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-class SystemMonitorSensor(Device):
+class SystemMonitorSensor(Entity):
     """ A system monitor sensor """
 
     def __init__(self, sensor_type, argument=''):
