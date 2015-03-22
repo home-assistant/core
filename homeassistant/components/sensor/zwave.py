@@ -9,9 +9,9 @@ from openzwave.network import ZWaveNetwork
 from pydispatch import dispatcher
 
 import homeassistant.components.zwave as zwave
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF,
+    ATTR_BATTERY_LEVEL, STATE_ON, STATE_OFF,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
 
 
@@ -22,17 +22,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     value.set_change_verified(False)
 
-    if zwave.NETWORK.controller.node_id not in node.groups[1].associations:
-        node.groups[1].add_association(zwave.NETWORK.controller.node_id)
+    # if 1 in groups and (zwave.NETWORK.controller.node_id not in
+    #                     groups[1].associations):
+    #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
 
     if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
-        return [ZWaveBinarySensor(value)]
+        add_devices([ZWaveBinarySensor(value)])
 
     elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
-        return [ZWaveMultilevelSensor(value)]
+        add_devices([ZWaveMultilevelSensor(value)])
 
 
-class ZWaveSensor(Device):
+class ZWaveSensor(Entity):
     """ Represents a Z-Wave sensor. """
     def __init__(self, sensor_value):
         self._value = sensor_value
@@ -76,11 +77,6 @@ class ZWaveSensor(Device):
         if battery_level is not None:
             attrs[ATTR_BATTERY_LEVEL] = battery_level
 
-        unit = self.unit
-
-        if unit:
-            attrs[ATTR_UNIT_OF_MEASUREMENT] = unit
-
         location = self._node.location
 
         if location:
@@ -89,8 +85,7 @@ class ZWaveSensor(Device):
         return attrs
 
     @property
-    def unit(self):
-        """ Unit if sensor has one. """
+    def unit_of_measurement(self):
         return self._value.units
 
     def _value_changed(self, value):
@@ -119,12 +114,13 @@ class ZWaveMultilevelSensor(ZWaveSensor):
 
         if self._value.units in ('C', 'F'):
             return round(value, 1)
+        elif isinstance(value, float):
+            return round(value, 2)
 
         return value
 
     @property
-    def unit(self):
-        """ Unit of this sensor. """
+    def unit_of_measurement(self):
         unit = self._value.units
 
         if unit == 'C':

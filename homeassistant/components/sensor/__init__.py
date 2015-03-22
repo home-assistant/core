@@ -5,7 +5,7 @@ Component to interface with various sensors that can be monitored.
 """
 import logging
 
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import wink, zwave
 
 DOMAIN = 'sensor'
@@ -23,7 +23,7 @@ DISCOVERY_PLATFORMS = {
 
 def setup(hass, config):
     """ Track states and offer events for sensors. """
-    component = DeviceComponent(
+    component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)
 

@@ -1,5 +1,5 @@
 """ Demo platform that has two fake switchces. """
-from homeassistant.helpers.device import ToggleDevice
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
 
@@ -12,11 +12,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     ])
 
 
-class DemoSwitch(ToggleDevice):
+class DemoSwitch(ToggleEntity):
     """ Provides a demo switch. """
     def __init__(self, name, state):
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
+
+    @property
+    def should_poll(self):
+        """ No polling needed for a demo switch. """
+        return False
 
     @property
     def name(self):

@@ -37,9 +37,7 @@
         <template repeat="{{domain in domains}}">
           <core-submenu icon="{{domain | getIcon}}" label="{{domain}}">
             <template repeat="{{service in domain | getServices}}">
-              <a on-click={{serviceClicked}} data-domain={{domain}}>
-                {{service}}
-              </a>
+              <a on-click={{serviceClicked}} data-domain={{domain}}>{{service}}</a>
             </template>
           </core-submenu>
         </template>

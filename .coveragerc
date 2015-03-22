@@ -12,21 +12,21 @@ omit =
     homeassistant/components/*/zwave.py
 
     homeassistant/components/*/tellstick.py
+    homeassistant/components/*/vera.py
 
     homeassistant/components/keyboard.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/nest.py
     homeassistant/components/light/hue.py
     homeassistant/components/sensor/systemmonitor.py
+    homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/notify/pushbullet.py
+    homeassistant/components/notify/pushover.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
-    homeassistant/components/light/vera.py
-    homeassistant/components/sensor/vera.py
-    homeassistant/components/switch/vera.py
 
 
 [report]

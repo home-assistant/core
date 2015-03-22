@@ -135,7 +135,7 @@ def setup(hass, config=None):
         threading.Thread(target=server.start, daemon=True).start())
 
     hass.http = server
-    hass.local_api = rem.API(util.get_local_ip(), api_password, server_port)
+    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
 
     return True
 

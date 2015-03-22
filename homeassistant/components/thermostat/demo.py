@@ -27,6 +27,11 @@ class DemoThermostat(ThermostatDevice):
         self._current_temperature = current_temperature
 
     @property
+    def should_poll(self):
+        """ No polling needed for a demo thermostat. """
+        return False
+
+    @property
     def name(self):
         """ Returns the name. """
         return self._name

@@ -50,7 +50,7 @@ import logging
 import time
 from requests.exceptions import RequestException
 
-from homeassistant.helpers import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
 # pylint: disable=no-name-in-module, import-error
@@ -99,7 +99,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(get_devices(hass, config))
 
 
-class VeraSensor(Device):
+class VeraSensor(Entity):
     """ Represents a Vera Sensor """
 
     def __init__(self, vera_device, extra_data=None):

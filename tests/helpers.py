@@ -7,14 +7,14 @@ Helper method for writing tests.
 import os
 
 import homeassistant as ha
-from homeassistant.helpers.device import ToggleDevice
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
 
 def get_test_home_assistant():
     """ Returns a Home Assistant object pointing at test config dir. """
     hass = ha.HomeAssistant()
-    hass.config_dir = os.path.join(os.path.dirname(__file__), "config")
+    hass.config.config_dir = os.path.join(os.path.dirname(__file__), "config")
 
     return hass
 
@@ -42,7 +42,7 @@ class MockModule(object):
         self.setup = lambda hass, config: False if setup is None else setup
 
 
-class MockToggleDevice(ToggleDevice):
+class MockToggleDevice(ToggleEntity):
     """ Provides a mock toggle device. """
     def __init__(self, name, state):
         self._name = name or DEVICE_DEFAULT_NAME

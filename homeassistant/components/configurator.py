@@ -83,8 +83,8 @@ def _get_instance(hass):
     except KeyError:
         _INSTANCES[hass] = Configurator(hass)
 
-        if DOMAIN not in hass.components:
-            hass.components.append(DOMAIN)
+        if DOMAIN not in hass.config.components:
+            hass.config.components.append(DOMAIN)
 
         return _INSTANCES[hass]
 

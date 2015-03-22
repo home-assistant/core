@@ -8,6 +8,9 @@ DEVICE_DEFAULT_NAME = "Unnamed Device"
 # #### CONFIG ####
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
+CONF_TEMPERATURE_UNIT = "temperature_unit"
+CONF_NAME = "name"
+CONF_TIME_ZONE = "time_zone"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"

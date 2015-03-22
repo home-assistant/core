@@ -10,15 +10,14 @@ import homeassistant as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.loader as loader
 from homeassistant.const import (
-    CONF_PLATFORM, ATTR_ENTITY_PICTURE,
-    CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID)
 
 DOMAIN = "demo"
 
 DEPENDENCIES = []
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    'switch', 'light', 'thermostat', 'sensor', 'media_player']
+    'switch', 'light', 'thermostat', 'sensor', 'media_player', 'notify']
 
 
 def setup(hass, config):
@@ -29,16 +28,10 @@ def setup(hass, config):
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
 
-    if config[DOMAIN].get('hide_demo_state') != '1':
+    if config[DOMAIN].get('hide_demo_state') != 1:
         hass.states.set('a.Demo_Mode', 'Enabled')
 
     # Setup sun
-    if CONF_LATITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][CONF_LATITUDE] = '32.87336'
-
-    if CONF_LONGITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][CONF_LONGITUDE] = '-117.22743'
-
     loader.get_component('sun').setup(hass, config)
 
     # Setup demo platforms
@@ -52,18 +45,57 @@ def setup(hass, config):
     group.setup_group(hass, 'living room', [lights[0], lights[1], switches[0]])
     group.setup_group(hass, 'bedroom', [lights[2], switches[1]])
 
-    # Setup device tracker
-    hass.states.set("device_tracker.Paulus", "home",
+    # Setup scripts
+    bootstrap.setup_component(
+        hass, 'script',
+        {'script': {
+            'demo': {
+                'alias': 'Demo {}'.format(lights[0]),
+                'sequence': [{
+                    'execute_service': 'light.turn_off',
+                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                }, {
+                    'delay': {'seconds': 5}
+                }, {
+                    'execute_service': 'light.turn_on',
+                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                }, {
+                    'delay': {'seconds': 5}
+                }, {
+                    'execute_service': 'light.turn_off',
+                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                }]
+            }}})
+
+    # Setup scenes
+    bootstrap.setup_component(
+        hass, 'scene',
+        {'scene': [
+            {'name': 'Romantic lights',
+             'entities': {
+                 lights[0]: True,
+                 lights[1]: {'state': 'on', 'xy_color': [0.33, 0.66],
+                             'brightness': 200},
+             }},
+            {'name': 'Switch on and off',
+             'entities': {
+                 switches[0]: True,
+                 switches[1]: False,
+             }},
+            ]})
+
+    # Setup fake device tracker
+    hass.states.set("device_tracker.paulus", "home",
                     {ATTR_ENTITY_PICTURE:
                      "http://graph.facebook.com/schoutsen/picture"})
-    hass.states.set("device_tracker.Anne_Therese", "not_home",
+    hass.states.set("device_tracker.anne_therese", "not_home",
                     {ATTR_ENTITY_PICTURE:
                      "http://graph.facebook.com/anne.t.frederiksen/picture"})
 
     hass.states.set("group.all_devices", "home",
                     {
                         "auto": True,
-                        "entity_id": [
+                        ATTR_ENTITY_ID: [
                             "device_tracker.Paulus",
                             "device_tracker.Anne_Therese"
                         ]

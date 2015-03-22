@@ -46,11 +46,11 @@ def prepare(hass):
         pkgutil.iter_modules(components.__path__, 'homeassistant.components.'))
 
     # Look for available custom components
-    custom_path = hass.get_config_path("custom_components")
+    custom_path = hass.config.path("custom_components")
 
     if os.path.isdir(custom_path):
         # Ensure we can load custom components using Pythons import
-        sys.path.insert(0, hass.config_dir)
+        sys.path.insert(0, hass.config.config_dir)
 
         # We cannot use the same approach as for built-in components because
         # custom components might only contain a platform for a component.
@@ -157,28 +157,19 @@ def load_order_components(components):
     """
     _check_prepared()
 
-    group = get_component('group')
-    recorder = get_component('recorder')
-
     load_order = OrderedSet()
 
     # Sort the list of modules on if they depend on group component or not.
-    # We do this because the components that do not depend on the group
-    # component usually set up states that the group component requires to be
-    # created before it can group them.
-    # This does not matter in the future if we can setup groups without the
-    # states existing yet.
+    # Components that do not depend on the group usually set up states.
+    # Components that depend on group usually use states in their setup.
     for comp_load_order in sorted((load_order_component(component)
                                    for component in components),
-                                  # Test if group component exists in case
-                                  # above get_component call had an error.
-                                  key=lambda order:
-                                  group and group.DOMAIN in order):
+                                  key=lambda order: 'group' in order):
         load_order.update(comp_load_order)
 
     # Push recorder to first place in load order
-    if recorder.DOMAIN in load_order:
-        load_order.promote(recorder.DOMAIN)
+    if 'recorder' in load_order:
+        load_order.promote('recorder')
 
     return load_order
 

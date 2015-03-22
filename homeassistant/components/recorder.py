@@ -262,7 +262,7 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """ Ensure database is ready to fly. """
-        db_path = self.hass.get_config_path(DB_FILE)
+        db_path = self.hass.config.path(DB_FILE)
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
 

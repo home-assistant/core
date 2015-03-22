@@ -64,12 +64,12 @@
   </partial-base>
 </template>
 <script>
+(function(){
   var storeListenerMixIn = window.hass.storeListenerMixIn;
   var syncActions = window.hass.syncActions;
   var voiceActions = window.hass.voiceActions;
   var stateStore = window.hass.stateStore;
-
-  var stateGroupFilter = function(state) { return state.domain === 'group'; };
+  var uiConstants = window.hass.uiConstants;
 
   Polymer(Polymer.mixin({
     headerTitle: "States",
@@ -119,30 +119,29 @@
       this.isTransmitting = voiceStore.isTransmitting;
       this.finalTranscript = voiceStore.finalTranscript;
       this.interimTranscript = voiceStore.interimTranscript.slice(
-                                 this.finalTranscript.length)
+                                 this.finalTranscript.length);
     },
 
     filterChanged: function() {
       this.refreshStates();
 
-      switch (this.filter) {
-        case "group":
-          this.headerTitle = "Groups";
-          break;
-
-        default:
-          this.headerTitle = "States";
-          break;
-      }
+      this.headerTitle = uiConstants.STATE_FILTERS[this.filter] || 'States';
     },
 
     refreshStates: function() {
-      var states = stateStore.all;
+      var states;
 
-      if (this.filter === 'group') {
-        states = states.filter(stateGroupFilter);
+      if (this.filter) {
+        var filter = this.filter;
+        states = stateStore.all.filter(function(state) {
+          return state.domain === filter;
+        });
+
       } else {
-        states = states.filterNot(stateGroupFilter);
+        // all but the STATE_FILTER keys
+        states = stateStore.all.filter(function(state) {
+          return !(state.domain in uiConstants.STATE_FILTERS);
+        });
       }
 
       this.states = states.toArray();
@@ -160,5 +159,6 @@
       }
     },
   }, storeListenerMixIn));
+})();
 </script>
 </polymer>

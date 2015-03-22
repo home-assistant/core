@@ -6,9 +6,8 @@ Shows system monitor values such as: disk, memory and processor use
 
 """
 
-from homeassistant.helpers.device import Device
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF)
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import STATE_ON, STATE_OFF
 import psutil
 import logging
 
@@ -43,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-class SystemMonitorSensor(Device):
+class SystemMonitorSensor(Entity):
     """ A system monitor sensor """
 
     def __init__(self, sensor_type, argument=''):
@@ -51,7 +50,7 @@ class SystemMonitorSensor(Device):
         self.argument = argument
         self.type = sensor_type
         self._state = None
-        self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.update()
 
     @property
@@ -64,12 +63,8 @@ class SystemMonitorSensor(Device):
         return self._state
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.name,
-            ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
-        }
+    def unit_of_measurement(self):
+        return self._unit_of_measurement
 
     def update(self):
         if self.type == 'disk_use_percent':

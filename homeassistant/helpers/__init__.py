@@ -1,15 +1,13 @@
 """
 Helper methods for components within Home Assistant.
 """
-from datetime import datetime
-
 from homeassistant.loader import get_component
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.util import ensure_unique_string, slugify
 
-# Deprecated 3/5/2015 - Moved to homeassistant.helpers.device
+# Deprecated 3/5/2015 - Moved to homeassistant.helpers.entity
 # pylint: disable=unused-import
-from .device import Device, ToggleDevice  # noqa
+from .entity import Entity as Device, ToggleEntity as ToggleDevice  # noqa
 
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
@@ -41,25 +39,6 @@ def extract_entity_ids(hass, service):
         return group.expand_entity_ids(hass, [service_ent_id.lower()])
 
     return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
-
-
-# pylint: disable=too-few-public-methods, attribute-defined-outside-init
-class TrackStates(object):
-    """
-    Records the time when the with-block is entered. Will add all states
-    that have changed since the start time to the return list when with-block
-    is exited.
-    """
-    def __init__(self, hass):
-        self.hass = hass
-        self.states = []
-
-    def __enter__(self):
-        self.now = datetime.now()
-        return self.states
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.states.extend(self.hass.states.get_since(self.now))
 
 
 def validate_config(config, items, logger):

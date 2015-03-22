@@ -23,15 +23,11 @@
   <core-style ref="ha-headers"></core-style>
 
   <style>
-    core-header-panel {
+    .sidenav {
       background: #fafafa;
       box-shadow: 1px 0 1px rgba(0, 0, 0, 0.1);
       color: #757575;
       overflow: hidden;
-    }
-
-    core-menu core-icon {
-      margin-right: 24px;
     }
 
     core-toolbar {
@@ -39,8 +35,8 @@
       padding-left: 24px;
     }
 
-    core-menu {
-      overflow: scroll;
+    .sidenav-menu {
+      overflow: auto;
       position: absolute;
       top: 0px;
       left: 0px;
@@ -48,7 +44,11 @@
       bottom: 0px;
     }
 
-    paper-item {
+    .sidenav-menu core-icon {
+      margin-right: 24px;
+    }
+
+    .sidenav-menu > paper-item {
       min-height: 53px;
     }
 
@@ -70,21 +70,24 @@
   <ha-modals></ha-modals>
 
   <core-drawer-panel id="drawer" on-core-responsive-change="{{responsiveChanged}}">
-    <core-header-panel mode="scroll" drawer>
+    <core-header-panel mode="scroll" drawer class='sidenav'>
       <core-toolbar>
         Home Assistant
       </core-toolbar>
-      <core-menu id="menu"
+      <core-menu id="menu" class="sidenav-menu"
         selected="0" excludedLocalNames="div" on-core-select="{{menuSelect}}"
         layout vertical>
         <paper-item data-panel="states">
           <core-icon icon="apps"></core-icon>
           States
         </paper-item>
-        <paper-item data-panel="group">
-          <core-icon icon="homeassistant-24:group"></core-icon>
-          Groups
-        </paper-item>
+
+        <template repeat="{{activeFilters as filter}}">
+          <paper-item data-panel="states_{{filter}}">
+            <core-icon icon="{{filter | filterIcon}}"></core-icon>
+            {{filter | filterName}}
+          </paper-item>
+        </template>
 
         <template if="{{hasHistoryComponent}}">
           <paper-item data-panel="history">
@@ -124,10 +127,10 @@
         This is the main partial, never remove it from the DOM but hide it
         to speed up when people click on states.
     -->
-    <partial-states hidden?="{{selected != 'states' && selected != 'group'}}"
+    <partial-states hidden?="{{hideStates}}"
       main narrow="{{narrow}}"
       togglePanel="{{togglePanel}}"
-      filter="{{selected == 'group' ? 'group' : null}}">
+      filter="{{stateFilter}}">
     </partial-states>
 
     <template if="{{selected == 'history'}}">
@@ -146,16 +149,23 @@
 
 </template>
 <script>
+(function() {
 var storeListenerMixIn = window.hass.storeListenerMixIn;
 var authActions = window.hass.authActions;
+var uiUtil = window.hass.uiUtil;
+var uiConstants = window.hass.uiConstants;
 
 Polymer(Polymer.mixin({
   selected: "states",
+  stateFilter: null,
   narrow: false,
+  activeFilters: [],
   hasHistoryComponent: false,
 
   isStreaming: false,
   hasStreamError: false,
+
+  hideStates: false,
 
   attached: function() {
     this.togglePanel = this.togglePanel.bind(this);
@@ -167,8 +177,15 @@ Polymer(Polymer.mixin({
     this.stopListeningToStores();
   },
 
+  stateStoreChanged: function(stateStore) {
+    this.activeFilters = stateStore.domains.filter(function(domain) {
+      return domain in uiConstants.STATE_FILTERS;
+    }).toArray();
+  },
+
   componentStoreChanged: function(componentStore) {
     this.hasHistoryComponent = componentStore.isLoaded('history');
+    this.hasScriptComponent = componentStore.isLoaded('script');
   },
 
   streamStoreChanged: function(streamStore) {
@@ -194,6 +211,14 @@ Polymer(Polymer.mixin({
       this.togglePanel();
       this.selected = newChoice;
     }
+
+    if (this.selected.substr(0, 7) === 'states_') {
+      this.hideStates = false;
+      this.stateFilter = this.selected.substr(7);
+    } else {
+      this.hideStates = this.selected !== 'states';
+      this.stateFilter = null;
+    }
   },
 
   responsiveChanged: function(ev, detail, sender) {
@@ -207,6 +232,15 @@ Polymer(Polymer.mixin({
   handleLogOutClick: function() {
     authActions.logOut();
   },
+
+  filterIcon: function(filter) {
+    return uiUtil.domainIcon(filter);
+  },
+
+  filterName: function(filter) {
+    return uiConstants.STATE_FILTERS[filter];
+  },
 }, storeListenerMixIn));
+})();
 </script>  
 </polymer-element>

@@ -153,7 +153,7 @@ def setup(hass, config):
             logger.info(
                 "Everyone has left but there are lights on. Turning them off")
 
-            light.turn_off(hass)
+            light.turn_off(hass, light_ids)
 
     # Track home coming of each device
     hass.states.track_change(

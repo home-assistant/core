@@ -29,9 +29,9 @@ from collections import namedtuple
 import tellcore.telldus as telldus
 import tellcore.constants as tellcore_constants
 
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELCIUS)
-from homeassistant.helpers.device import Device
+from homeassistant.const import TEMP_CELCIUS
+from homeassistant.helpers.entity import Entity
+import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
@@ -71,18 +71,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     sensors = []
+    datatype_mask = util.convert(config.get('datatype_mask'), int, 127)
 
     for ts_sensor in core.sensors():
         try:
-            sensor_name = config[str(ts_sensor.id)]
+            sensor_name = config[ts_sensor.id]
         except KeyError:
             if 'only_named' in config:
                 continue
             sensor_name = str(ts_sensor.id)
 
         for datatype in sensor_value_descriptions.keys():
-            if datatype & int(config['datatype_mask']) and \
-                    ts_sensor.has_value(datatype):
+            if datatype & datatype_mask and ts_sensor.has_value(datatype):
 
                 sensor_info = sensor_value_descriptions[datatype]
 
@@ -93,13 +93,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-class TellstickSensor(Device):
+class TellstickSensor(Entity):
     """ Represents a Tellstick sensor. """
 
     def __init__(self, name, sensor, datatype, sensor_info):
         self.datatype = datatype
         self.sensor = sensor
-        self.unit = sensor_info.unit or None
+        self._unit_of_measurement = sensor_info.unit or None
 
         self._name = "{} {}".format(name, sensor_info.name)
 
@@ -114,13 +114,5 @@ class TellstickSensor(Device):
         return self.sensor.value(self.datatype).value
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        attrs = {
-            ATTR_FRIENDLY_NAME: self._name,
-        }
-
-        if self.unit:
-            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit
-
-        return attrs
+    def unit_of_measurement(self):
+        return self._unit_of_measurement

@@ -24,9 +24,11 @@
         var toast = this.$.toast;
         var notification = notificationStore.lastNotification;
 
-        this.lastId = notification.id;
-        toast.text = notification.message;
-        toast.show();
+        if (notification) {
+          this.lastId = notification.id;
+          toast.text = notification.message;
+          toast.show();
+        }
       }
     },
 
