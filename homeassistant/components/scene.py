@@ -20,7 +20,7 @@ from collections import namedtuple
 
 from homeassistant import State
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import reproduce_state
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -46,7 +46,7 @@ def setup(hass, config):
         logger.error('Scene config should be a list of scenes')
         return False
 
-    component = DeviceComponent(logger, DOMAIN, hass)
+    component = EntityComponent(logger, DOMAIN, hass)
 
     component.add_entities(Scene(hass, _process_config(scene_config))
                            for scene_config in scene_configs)

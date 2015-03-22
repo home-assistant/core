@@ -6,7 +6,7 @@ Component to interface with various switches that can be controlled remotely.
 import logging
 from datetime import timedelta
 
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
@@ -58,7 +58,7 @@ def turn_off(hass, entity_id=None):
 
 def setup(hass, config):
     """ Track states and offer events for switches. """
-    component = DeviceComponent(
+    component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_SWITCHES)
     component.setup(config)

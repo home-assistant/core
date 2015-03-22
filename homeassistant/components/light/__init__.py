@@ -52,7 +52,7 @@ import logging
 import os
 import csv
 
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 
 import homeassistant.util as util
 from homeassistant.const import (
@@ -140,7 +140,7 @@ def turn_off(hass, entity_id=None, transition=None):
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
 
-    component = DeviceComponent(
+    component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_LIGHTS)
     component.setup(config)

@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
     SERVICE_VOLUME_DOWN, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY,
@@ -126,7 +126,7 @@ SERVICE_TO_METHOD = {
 
 def setup(hass, config):
     """ Track states and offer events for media_players. """
-    component = DeviceComponent(
+    component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)
 

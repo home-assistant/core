@@ -6,7 +6,7 @@ Provides functionality to interact with thermostats.
 """
 import logging
 
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
@@ -52,7 +52,7 @@ def set_temperature(hass, temperature, entity_id=None):
 
 def setup(hass, config):
     """ Setup thermostats. """
-    component = DeviceComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     component.setup(config)
 
     def thermostat_service(service):
