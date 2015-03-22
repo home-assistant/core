@@ -50,7 +50,7 @@ class SystemMonitorSensor(Entity):
         self.argument = argument
         self.type = sensor_type
         self._state = None
-        self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.update()
 
     @property
@@ -61,6 +61,10 @@ class SystemMonitorSensor(Entity):
     def state(self):
         """ Returns the state of the device. """
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        return self._unit_of_measurement
 
     def update(self):
         if self.type == 'disk_use_percent':
