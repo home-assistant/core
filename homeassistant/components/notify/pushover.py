@@ -16,7 +16,7 @@ VARIABLES:
 api_key
 *Required
 This parameter is optional but should be configured, in order to get an API
-key you should go to pushover.com and register a new application.
+key you should go to https://pushover.net and register a new application.
 
 This is a quote from the pushover website regarding free/open source apps:
 "If you are creating a client-side library, application, or open source project
@@ -29,7 +29,7 @@ https://home-assistant.io/images/favicon-192x192.png
 
 user_key
 *Required
-To retrieve this value log into your account at http://pushover.com
+To retrieve this value log into your account at https://pushover.net
 
 """
 import logging
@@ -71,7 +71,7 @@ def get_service(hass, config):
     except InitError:
         _LOGGER.error(
             "Wrong API key supplied. "
-            "Get it at https://www.pushover.com")
+            "Get it at https://pushover.net")
 
 
 # pylint: disable=too-few-public-methods
