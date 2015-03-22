@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-03-21T23:24:20-07:00</updated>
+  <updated>2015-03-22T00:22:50-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,84 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Release notes for March 22, 2015]]></title>
+    <link href="https://home-assistant.io/blog/2015/03/22/release-notes/"/>
+    <updated>2015-03-22T01:21:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/03/22/release-notes</id>
+    <content type="html"><![CDATA[<p>A new version of Home Assistant has just been pushed out. It contains bugfixes contributed by <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/trainman419">trainman419</a> and <a href="https://github.com/balloob">me</a>. It also adds a bunch of great new features:</p>
+
+<p><strong>Script</strong><br>
+Andythigpen has contributed a script component. This allows users to create a sequence of service calls and delays. Scripts can be started using the service <code>script/turn_on</code> and interrupted using the service <code>script/turn_off</code>. A separate page has been added to the frontend to see the status of your scripts.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+script:
+  # Turns on the bedroom lights and then the living room lights 1 minute later
+  wakeup:
+    alias: Wake Up
+    sequence:
+      - alias: Bedroom lights on
+        execute_service: light.turn_on
+        service_data:
+          entity_id: group.bedroom
+      - delay:
+          # supports seconds, milliseconds, minutes, hours, etc.
+          minutes: 1
+      - alias: Living room lights on
+        execute_service: light.turn_on
+        service_data:
+          entity_id: group.living_room
+</code></pre>
+
+<p><strong>Scene</strong><br>
+I (Paulus) have contributed a scene component. A user can create scenes that capture the states you want certain entities to be. For example a scene can contain that light A should be turned on and light B should be bright red. Deactivating a scene will restore the previous state from before the scene was activated. Just like scripts, scenes have their own separate page to see which scenes are on.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+scene:
+  - name: Romantic
+    entities:
+      light.tv_back_light: on
+      light.ceiling:
+        state: on
+        color: [0.33, 0.66]
+        brightness: 200
+</code></pre>
+
+<p><strong>SABnzbd</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/sabnzbd.png' style='border:none; box-shadow: none; float: right;' height='50' />
+James Cole has contributed support to integrate SABnzbd. This will allow you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+sensor:
+  - platform: sabnzbd
+    name: SAB
+    api_key: YOUR_API_KEY
+    # Example: http://192.168.1.32:8124/
+    base_url: YOUR_SABNZBD_BASE_URL
+    monitored_variables:
+        - type: 'current_status'
+        - type: 'speed'
+        - type: 'queue_size'
+        - type: 'queue_remaining'
+        - type: 'disk_size'
+        - type: 'disk_free'
+</code></pre>
+
+<p><strong>PushOver</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/pushover.png' style='border:none; box-shadow: none; float: right;' height='50' />
+James Cole has also contributed support for <a href='https://pushover.net/'>the PushOver service</a> as a platform for the notify component. This allows components to send messages to the user using PushOver.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+notify:
+    platform: pushover
+    # Get this by registering a new application on https://pushover.net
+    api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
+    # Get this by logging into your account on https://pushover.net
+    user_key: ABCDEFGHJKLMNOPQRSTUVXYZ
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Release notes for March 11, 2015]]></title>
