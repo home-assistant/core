@@ -56,8 +56,7 @@ from homeassistant.helpers.entity import Entity
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApi
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApiException
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
+
 import logging
 
 SENSOR_TYPES = {
