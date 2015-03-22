@@ -56,8 +56,7 @@ from homeassistant.helpers.entity import Entity
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApi
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApiException
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
+
 import logging
 
 SENSOR_TYPES = {
@@ -118,7 +117,7 @@ class SabnzbdSensor(Entity):
         self.type = sensor_type
         self.client_name = client_name
         self._state = None
-        self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
@@ -130,12 +129,9 @@ class SabnzbdSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.name,
-            ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
-        }
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
+        return self._unit_of_measurement
 
     def refresh_sabnzbd_data(self):
         """ Calls the throttled SABnzbd refresh method. """
