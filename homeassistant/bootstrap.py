@@ -31,17 +31,45 @@ ATTR_COMPONENT = "component"
 
 
 def setup_component(hass, domain, config=None):
-    """ Setup a component for Home Assistant. """
-    # Check if already loaded
+    """ Setup a component and all its dependencies. """
+
     if domain in hass.config.components:
-        return
+        return True
 
     _ensure_loader_prepared(hass)
 
     if config is None:
         config = defaultdict(dict)
 
+    components = loader.load_order_component(domain)
+
+    # OrderedSet is empty if component or dependencies could not be resolved
+    if not components:
+        return False
+
+    for component in components:
+        if component in hass.config.components:
+            continue
+
+        if not _setup_component(hass, component, config):
+            return False
+
+    return True
+
+
+def _setup_component(hass, domain, config):
+    """ Setup a component for Home Assistant. """
     component = loader.get_component(domain)
+
+    missing_deps = [dep for dep in component.DEPENDENCIES
+                    if dep not in hass.config.components]
+
+    if missing_deps:
+        _LOGGER.error(
+            "Not initializing %s because not all dependencies loaded: %s",
+            domain, ", ".join(missing_deps))
+
+        return False
 
     try:
         if component.setup(hass, config):
@@ -102,7 +130,7 @@ def from_config_dict(config, hass=None):
 
     # Setup the components
     for domain in loader.load_order_components(components):
-        setup_component(hass, domain, config)
+        _setup_component(hass, domain, config)
 
     return hass
 

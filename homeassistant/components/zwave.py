@@ -96,8 +96,7 @@ def setup(hass, config):
         for component, discovery_service, command_ids in DISCOVERY_COMPONENTS:
             if value.command_class in command_ids:
                 # Ensure component is loaded
-                if component not in hass.config.components:
-                    bootstrap.setup_component(hass, component, config)
+                bootstrap.setup_component(hass, component, config)
 
                 # Fire discovery event
                 hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {

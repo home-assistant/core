@@ -35,9 +35,6 @@ _SCHEDULE_FILE = 'schedule.json'
 def setup(hass, config):
     """ Create the schedules """
 
-    if DOMAIN in hass.config.components:
-        return True
-
     def setup_listener(schedule, event_data):
         """ Creates the event listener based on event_data """
         event_type = event_data['type']
@@ -47,9 +44,7 @@ def setup(hass, config):
         if event_type in ['time']:
             component = 'scheduler.{}'.format(event_type)
 
-        elif component not in hass.config.components and \
-                not bootstrap.setup_component(hass, component, config):
-
+        elif not bootstrap.setup_component(hass, component, config):
             _LOGGER.warn("Could setup event listener for %s", component)
             return None
 
