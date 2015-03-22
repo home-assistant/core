@@ -129,7 +129,7 @@ class EntityComponent(object):
                 self.hass, config, self.add_entities, discovery_info)
         except AttributeError:
             # Support old deprecated method for now - 3/1/2015
-            if hasattr(platform, 'get_entities'):
+            if hasattr(platform, 'get_devices'):
                 self.logger.warning(
                     "Please upgrade %s to return new entities using "
                     "setup_platform. See %s/demo.py for an example.",
