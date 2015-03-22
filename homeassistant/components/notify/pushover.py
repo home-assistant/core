@@ -42,6 +42,7 @@ from homeassistant.const import CONF_API_KEY
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=unused-variable
 def get_service(hass, config):
     """ Get the pushover notification service. """
 
@@ -51,8 +52,8 @@ def get_service(hass, config):
         return None
 
     try:
-        # pylint: disable=unused-variable
-        from pushover import Client, InitError, RequestError
+        # pylint: disable=no-name-in-module, unused-variable
+        from pushover import InitError
 
     except ImportError:
         _LOGGER.exception(
@@ -64,9 +65,8 @@ def get_service(hass, config):
     try:
         api_token = config[DOMAIN].get(CONF_API_KEY)
         return PushoverNotificationService(
-                config[DOMAIN]['user_key'],
-                api_token
-            )
+            config[DOMAIN]['user_key'],
+            api_token)
 
     except InitError:
         _LOGGER.error(
@@ -79,14 +79,18 @@ class PushoverNotificationService(BaseNotificationService):
     """ Implements notification service for Pushover. """
 
     def __init__(self, user_key, api_token):
-        from pushover import Client, RequestError
+        # pylint: disable=no-name-in-module, unused-variable
+        from pushover import Client
         self._user_key = user_key
         self._api_token = api_token
-        self.pushover = client = Client(self._user_key, api_token=self._api_token)
+        self.pushover = Client(
+            self._user_key, api_token=self._api_token)
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
 
+        # pylint: disable=no-name-in-module
+        from pushover import RequestError
         title = kwargs.get(ATTR_TITLE)
         try:
             self.pushover.send_message(message, title=title)
