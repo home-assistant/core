@@ -41,7 +41,7 @@ def setup(hass, config):
             component = get_component(component_name)
 
             # Ensure component is loaded
-            if component.DOMAIN not in hass.components:
+            if component.DOMAIN not in hass.config.components:
                 bootstrap.setup_component(hass, component.DOMAIN, config)
 
             # Fire discovery event

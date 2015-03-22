@@ -33,7 +33,7 @@ ATTR_COMPONENT = "component"
 def setup_component(hass, domain, config=None):
     """ Setup a component for Home Assistant. """
     # Check if already loaded
-    if domain in hass.components:
+    if domain in hass.config.components:
         return
 
     _ensure_loader_prepared(hass)
@@ -45,7 +45,7 @@ def setup_component(hass, domain, config=None):
 
     try:
         if component.setup(hass, config):
-            hass.components.append(component.DOMAIN)
+            hass.config.components.append(component.DOMAIN)
 
             # Assumption: if a component does not depend on groups
             # it communicates with devices

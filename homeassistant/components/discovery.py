@@ -74,7 +74,7 @@ def setup(hass, config):
 
             logger.info("Found new service: %s %s", service, info)
 
-            if component and component not in hass.components:
+            if component and component not in hass.config.components:
                 bootstrap.setup_component(hass, component, config)
 
             hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {

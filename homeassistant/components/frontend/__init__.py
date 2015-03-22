@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Setup serving the frontend. """
-    if 'http' not in hass.components:
+    if 'http' not in hass.config.components:
         _LOGGER.error('Dependency http is not loaded')
         return False
 

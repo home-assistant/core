@@ -54,11 +54,19 @@ class HomeAssistant(object):
         self.states = StateMachine(self.bus)
         self.config = Config()
 
-        # List of loaded components
-        self.components = []
+    @property
+    def components(self):
+        """ DEPRECATED 3/21/2015. Use hass.config.components """
+        _LOGGER.warning(
+            'hass.components is deprecated. Use hass.config.components')
+        return self.config.components
 
-        # Remote.API object pointing at local API
-        self.local_api = None
+    @property
+    def local_api(self):
+        """ DEPRECATED 3/21/2015. Use hass.config.api """
+        _LOGGER.warning(
+            'hass.local_api is deprecated. Use hass.config.api')
+        return self.config.api
 
     @property
     def config_dir(self):
@@ -848,12 +856,20 @@ class Timer(threading.Thread):
 
 class Config(object):
     """ Configuration settings for Home Assistant. """
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.latitude = None
         self.longitude = None
         self.temperature_unit = None
         self.location_name = None
         self.time_zone = None
+
+        # List of loaded components
+        self.components = []
+
+        # Remote.API object pointing at local API
+        self.api = None
 
         # Directory that holds the configuration
         self.config_dir = os.path.join(os.getcwd(), 'config')
