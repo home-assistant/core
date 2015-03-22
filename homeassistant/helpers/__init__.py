@@ -5,9 +5,9 @@ from homeassistant.loader import get_component
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.util import ensure_unique_string, slugify
 
-# Deprecated 3/5/2015 - Moved to homeassistant.helpers.device
+# Deprecated 3/5/2015 - Moved to homeassistant.helpers.entity
 # pylint: disable=unused-import
-from .device import Device, ToggleDevice  # noqa
+from .entity import Entity as Device, ToggleEntity as ToggleDevice  # noqa
 
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):

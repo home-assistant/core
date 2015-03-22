@@ -48,8 +48,8 @@ def setup(hass, config):
 
     component = DeviceComponent(logger, DOMAIN, hass)
 
-    component.add_devices(Scene(hass, _process_config(scene_config))
-                          for scene_config in scene_configs)
+    component.add_entities(Scene(hass, _process_config(scene_config))
+                           for scene_config in scene_configs)
 
     def handle_scene_service(service):
         """ Handles calls to the switch services. """
