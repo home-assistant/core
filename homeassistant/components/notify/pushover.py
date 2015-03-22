@@ -8,9 +8,24 @@ to your config/configuration.yaml
 
 notify:
     platform: pushover
+    api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
     user_key: ABCDEFGHJKLMNOPQRSTUVXYZ
 
 VARIABLES:
+
+api_key
+*Required
+This parameter is optional but should be configured, in order to get an API
+key you should go to pushover.com and register a new application.
+
+This is a quote from the pushover website regarding free/open source apps:
+"If you are creating a client-side library, application, or open source project
+that will be redistributed and installed by end-users, you may want to require
+each of your users to register their own application rather than including your
+own API token with the software."
+
+When setting up the application I recommend using the icon located here:
+https://home-assistant.io/images/favicon-192x192.png
 
 user_key
 *Required
@@ -22,22 +37,22 @@ import logging
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
+from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
-_API_TOKEN = 'a99PmRoFWhchykrsS6MQwgM3mPdhEv'
 
 def get_service(hass, config):
     """ Get the pushover notification service. """
 
     if not validate_config(config,
-                           {DOMAIN: ['user_key']},
+                           {DOMAIN: ['user_key', CONF_API_KEY]},
                            _LOGGER):
         return None
 
     try:
         # pylint: disable=unused-variable
-        from pushover import Client
+        from pushover import Client, InitError, RequestError
 
     except ImportError:
         _LOGGER.exception(
@@ -47,9 +62,13 @@ def get_service(hass, config):
         return None
 
     try:
-        return PushoverNotificationService(config[DOMAIN]['user_key'])
+        api_token = config[DOMAIN].get(CONF_API_KEY)
+        return PushoverNotificationService(
+                config[DOMAIN]['user_key'],
+                api_token
+            )
 
-    except InvalidKeyError:
+    except InitError:
         _LOGGER.error(
             "Wrong API key supplied. "
             "Get it at https://www.pushover.com")
@@ -59,14 +78,17 @@ def get_service(hass, config):
 class PushoverNotificationService(BaseNotificationService):
     """ Implements notification service for Pushover. """
 
-    def __init__(self, user_key):
-        from pushover import Client
-        self.user_key = user_key
-        self.pushover = client = Client(self.user_key, api_token=_API_TOKEN)
+    def __init__(self, user_key, api_token):
+        from pushover import Client, RequestError
+        self._user_key = user_key
+        self._api_token = api_token
+        self.pushover = client = Client(self._user_key, api_token=self._api_token)
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
 
         title = kwargs.get(ATTR_TITLE)
-
-        self.pushover.send_message(message, title=title)
+        try:
+            self.pushover.send_message(message, title=title)
+        except RequestError:
+            _LOGGER.exception("Could not send pushover notification")
