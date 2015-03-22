@@ -118,7 +118,7 @@ class SabnzbdSensor(Entity):
         self.type = sensor_type
         self.client_name = client_name
         self._state = None
-        self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
@@ -134,7 +134,7 @@ class SabnzbdSensor(Entity):
         """ Returns the state attributes. """
         return {
             ATTR_FRIENDLY_NAME: self.name,
-            ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
+            ATTR_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
         }
 
     def refresh_sabnzbd_data(self):
