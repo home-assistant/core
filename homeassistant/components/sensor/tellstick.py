@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for ts_sensor in core.sensors():
         try:
-            sensor_name = config[str(ts_sensor.id)]
+            sensor_name = config[ts_sensor.id]
         except KeyError:
             if 'only_named' in config:
                 continue
