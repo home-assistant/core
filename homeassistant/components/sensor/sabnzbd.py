@@ -130,12 +130,9 @@ class SabnzbdSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.name,
-            ATTR_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
-        }
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
+        return self._unit_of_measurement
 
     def refresh_sabnzbd_data(self):
         """ Calls the throttled SABnzbd refresh method. """
