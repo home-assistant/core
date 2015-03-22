@@ -127,7 +127,11 @@ class EntityComponent(object):
         try:
             platform.setup_platform(
                 self.hass, config, self.add_entities, discovery_info)
+
+            self.hass.config.components.append(platform_name)
+
         except AttributeError:
+            # AttributeError if setup_platform does not exist
             # Support old deprecated method for now - 3/1/2015
             if hasattr(platform, 'get_devices'):
                 self.logger.warning(
@@ -137,6 +141,9 @@ class EntityComponent(object):
                 self.add_entities(platform.get_devices(self.hass, config))
 
             else:
-                # AttributeError if setup_platform does not exist
                 self.logger.exception(
-                    "Error setting up %s", platform_type)
+                    "Error while setting up platform %s", platform_type)
+
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception(
+                "Error while setting up platform %s", platform_type)
