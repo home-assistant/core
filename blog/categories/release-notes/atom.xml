@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-03-22T00:22:50-07:00</updated>
+  <updated>2015-03-23T13:30:28-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -56,7 +56,8 @@ scene:
         brightness: 200
 </code></pre>
 
-<p><strong>SABnzbd</strong><br>
+<p><a name='sabnzbd'></a>
+<strong>SABnzbd</strong><br>
 <img src='https://home-assistant.io/images/supported_brands/sabnzbd.png' style='border:none; box-shadow: none; float: right;' height='50' />
 James Cole has contributed support to integrate SABnzbd. This will allow you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
 
@@ -76,7 +77,8 @@ sensor:
         - type: 'disk_free'
 </code></pre>
 
-<p><strong>PushOver</strong><br>
+<p><a name='pushover'></a>
+<strong>PushOver</strong><br>
 <img src='https://home-assistant.io/images/supported_brands/pushover.png' style='border:none; box-shadow: none; float: right;' height='50' />
 James Cole has also contributed support for <a href='https://pushover.net/'>the PushOver service</a> as a platform for the notify component. This allows components to send messages to the user using PushOver.</p>
 
