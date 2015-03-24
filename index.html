@@ -22,7 +22,7 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Observe Home Assistant will track the state of all the devices in your home, so you don't have to. Control Control all your devices from a single, mobile-friendly, interface. Home Assistant allows &hellip;">
+    <meta property="og:description" content="Observe Home Assistant will track the state of all the devices in your home, so you don't have to. Browse all &raquo; Control Control all your devices from a single, mobile-friendly, interface. Home &hellip;">
     
     
     
@@ -50,7 +50,15 @@
     <input type="checkbox" id="toggle">
 <label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
 <ul class="menu pull-right">
-  <li><a href="/getting-started/">Getting started</a></li>
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration.html'>Initial configuration</a></li>
+      <li><a href='/components/'>Component overview</a></li>
+      <li><a href='/getting-started/android.html'>Setting up Android</a></li>
+    </ul>
+  </li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -126,9 +134,7 @@ Home Assistant is an open-source home automation platform running on Python 3. T
         <div class="grid__item one-whole lap-two-thirds">
           <h2 class="title">Observe</h2>
 <hr>
-<p>
-Home Assistant will track the state of all the devices in your home, so you don&#8217;t have to.
-</p>
+<p>Home Assistant will track the state of all the devices in your home, so you don&#8217;t have to.</p>
 <div class='supported-brands clearfix'>
   <img src='/images/supported_brands/z-wave.png' />
   <img src='/images/supported_brands/vera.png' />
@@ -144,7 +150,11 @@ Home Assistant will track the state of all the devices in your home, so you don&
   <img src='/images/supported_brands/sabnzbd.png' />
   <img src='/images/supported_brands/netgear.png' />
   <img src='/images/supported_brands/openwrt.png' />
+
 </div>
+
+<p class='pull-right'><a href='/components/'>Browse all &raquo;</a></p>
+
 
         </div>
       </div>

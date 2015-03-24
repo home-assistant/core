@@ -50,7 +50,15 @@
     <input type="checkbox" id="toggle">
 <label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
 <ul class="menu pull-right">
-  <li><a href="/getting-started/">Getting started</a></li>
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration.html'>Initial configuration</a></li>
+      <li><a href='/components/'>Component overview</a></li>
+      <li><a href='/getting-started/android.html'>Setting up Android</a></li>
+    </ul>
+  </li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -81,7 +89,7 @@
     <div class="grid-wrapper">
       <div class="grid grid-center">
         
-        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        <div class="grid__item one-whole">
         
 
           <article class="page">
@@ -95,28 +103,221 @@
   <hr class="divider">
   
 
-  <p>Home Assistant consists of the following built-in components:</p>
+  <p>Components add support for devices, automation and much much more to Home Assistant. The following things are supported out-of-the-box.</p>
 
-<ul>
-<li><p><a href="/components/automation.html">Automation</a></p></li>
-<li><p><a href="/components/browser.html">Browser</a></p></li>
-<li><p><a href="/components/configurator.html">Configurator</a></p></li>
-<li><p><a href="/components/conversation.html">Conversation</a></p></li>
-<li><p><a href="/components/device_sun_light_trigger.html">Device sun light trigger</a></p></li>
-<li><p><a href="/components/device_tracker.html">Device tracker</a></p></li>
-<li><p><a href="/components/discovery.html">Discovery</a></p></li>
-<li><p><a href="/components/downloader.html">Downloader</a></p></li>
-<li><p><a href="/components/keyboard.html">Keyboard</a></p></li>
-<li><p><a href="/components/light.html">Light</a></p></li>
-<li><p><a href="/components/media_player.html">Media player</a></p></li>
-<li><p><a href="/components/notify.html">Notify</a></p></li>
-<li><p><a href="/components/simple_alarm.html">Simple alarm</a></p></li>
-<li><p><a href="/components/sun.html">Sun</a></p></li>
-<li><p><a href="/components/switch.html">Switch</a></p></li>
-<li><p><a href="/components/tellstick.html">Tellstick</a></p></li>
-<li><p><a href="/components/thermostat.html">Thermostat</a></p></li>
-<li><p><a href="/components/wink.html">Wink</a></p></li>
-</ul>
+<h2><a class='title-link' name='entities' href='#entities'></a> Entities</h2>
+
+<p>Entities are things that you want to observe within Home Assistant. Support for these things are provided by the entity components <a href="/components/light.html">Light</a>, <a href="/components/switch.html">Switch</a>, <a href="/components/thermostat.html">Thermostat</a>, <a href="/components/media_player.html">Media player</a>, <a href="/components/device_tracker.html">Device tracker</a>, <a href="/components/sun.html">Sun</a>.</p>
+
+<table>
+<tr>
+<th colspan='2'>Type</th>
+<th>Description</th>
+</tr>
+
+<tr>
+  <td><a href='/components/light.hue.html'><img src='/images/supported_brands/philips_hue.png' class='brand overview' /></a></td>
+  <td><a href='/components/light.hue.html'>Philips Hue</a></td>
+  <td>Turn lights on, control brightness and color.</td>
+</tr>
+
+<tr>
+  <td><a href='/components/sensor.sabnzbd.html'><img src='/images/supported_brands/sabnzbd.png' class='brand overview' /></a></td>
+  <td><a href='/components/sensor.sabnzbd.html'>SABnzbd clients</a></td>
+  <td>Monitor queue and download speeds</td>
+</tr>
+
+<tr>
+  <td></td>
+  <td><a href='/components/sensor.systemmonitor.html'>System Monitor</a></td>
+  <td>Track CPU, memory and disk usage on the host machine.</td>
+</tr>
+
+<tr>
+  <td><a href='/components/thermostat.nest.html'><img src='/images/supported_brands/nest_thermostat.png' class='brand overview' /></a></td>
+  <td><a href='/components/thermostat.nest.html'>Nest thermostats</a></td>
+  <td>See current temperature and control target temperature and away mode.</td>
+</tr>
+
+<tr>
+  <td></td>
+  <td><a href='/components/thermostat.heat_control.html'>Heat Control</a></td>
+  <td>Turn home Assistant into your own thermostat by reading a temperature sensor and controlling a switch connected to a heater.</td>
+</tr>
+
+<tr>
+  <td><a href='/components/switch.wemo.html'><img src='/images/supported_brands/belkin_wemo.png' class='brand overview' /></a></td>
+  <td><a href='/components/switch.wemo.html'>WeMo switches</a></td>
+  <td>Control WeMo switches and read the usage statistics from Insight switches.</td>
+</tr>
+
+<tr>
+  <td><a href='/components/device_tracker.luci.html'><img src='/images/supported_brands/openwrt.png' class='brand overview' /></a></td>
+  <td><a href='/components/device_tracker.luci.html'>OpenWRT routers</a></td>
+  <td>Offers presence detection by looking at connected devices.</td>
+</tr>
+
+<tr>
+  <td><a href='/components/device_tracker.netgear.html'><img src='/images/supported_brands/netgear.png' class='brand overview' /></a></td>
+  <td><a href='/components/device_tracker.netgear.html'>Netgear routers</a></td>
+  <td>Offers presence detection by looking at connected devices.</td>
+</tr>
+
+<tr>
+  <td></td>
+  <td><a href='/components/device_tracker.tomato.html'>Tomato routers</a></td>
+  <td>Offers presence detection by looking at connected devices.</td>
+</tr>
+
+<tr>
+  <td></td>
+  <td><a href='/components/device_tracker.nmap_scanner.html'>NMap network scanning</a></td>
+  <td>Offers presence detection by scanning the network for connected devices.</td>
+</tr>
+
+<tr>
+  <td><a href='/components/media_player.cast.html'><img src='/images/supported_brands/google_cast.png' class='brand overview' /></a></td>
+  <td><a href='/components/media_player.cast.html'>Google Cast devices</a></td>
+  <td>Track what is being played and control playback. (temporarely disabled awaiting protobuf 3 release)</td>
+</tr>
+
+</table>
+
+
+<h2><a class='title-link' name='organization' href='#organization'></a> Organization</h2>
+
+<table>
+<thead>
+<tr>
+<th> Type </th>
+<th> Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <a href="/components/group.html">Group</a> </td>
+<td> Allows grouping of entities</td>
+</tr>
+<tr>
+<td> <a href="/components/scene.html">Scene</a> </td>
+<td> Allow defining preferred state of a set of entities</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2><a class='title-link' name='hubs' href='#hubs'></a> Hubs</h2>
+
+<p>Home Assistant integrates with a variety of third party Home Automation hubs and networks. It allows you to control the connected switches, lights and sensors via Home Assistant. Click on the following logo&rsquo;s for setup instructions:</p>
+
+<p><a href="/components/zwave.html"><img src='/images/supported_brands/z-wave.png' class='brand' /></a>
+<a href="/components/tellstick.html"><img src='/images/supported_brands/telldus_tellstick.png' class='brand' /></a>
+<a href="/components/vera.html"><img src='/images/supported_brands/vera.png' class='brand' /></a>
+<a href="/components/wink.html"><img src='/images/supported_brands/wink.png' class='brand' /></a></p>
+
+<h2><a class='title-link' name='services' href='#services'></a> Services</h2>
+
+<table>
+<tr>
+<td></td>
+<td><a href='/components/history.html'>History</a></td>
+<td>Track the state of entities and allow users to browse through history.</td>
+</tr>
+
+<tr>
+<td></td>
+<td><a href='/components/conversation.html'>Conversation</a></td>
+<td>Process textual commands like ones received by speech-to-text engines.</td>
+</tr>
+
+<tr>
+<td></td>
+<td><a href='/components/discovery.html'>Discovery</a></td>
+<td>Scans the network for supported devices.</td>
+</tr>
+
+<tr>
+<td><img src='/images/supported_brands/pushbullet.png' class='brand' /></td>
+<td><a href='/components/notify.pushbullet.html'>PushBullet</a></td>
+<td>Allow sending messages using PushBullet</td>
+</tr>
+
+<tr>
+<td><img src='/images/supported_brands/pushover.png' class='brand' /></td>
+<td><a href='/components/notify.pushover.html'>PushOver</a></td>
+<td>Allow sending messages using PushOver</td>
+</tr>
+
+<tr>
+<td></td>
+<td><a href='/components/browser.html'>Browser</a></td>
+<td>Open URLs on the host machine</td>
+</tr>
+
+<tr>
+<td></td>
+<td><a href='/components/downloader.html'>Downloader</a></td>
+<td>Allows downloading URLs to the host machine.</td>
+</tr>
+
+<tr>
+<td></td>
+<td><a href='/components/keyboard.html'>Keyboard</a></td>
+<td>Simulate key presses on the host machine</td>
+</tr>
+</table>
+
+
+<h2><a class='title-link' name='automation' href='#automation'></a> Automation</h2>
+
+<table>
+<thead>
+<tr>
+<th> Type </th>
+<th> Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <a href="/components/automation.html">Automation</a> </td>
+<td> Allow for automating service calls when a specific state is met</td>
+</tr>
+<tr>
+<td> <a href="/components/scheduler.html">Scheduler</a> </td>
+<td> Allows for scheduling service calls when sun sets or it is specific time</td>
+</tr>
+<tr>
+<td> <a href="/components/script.html">Script</a> </td>
+<td> Allow user to define scripts to run from within Home Assistant</td>
+</tr>
+<tr>
+<td> <a href="/components/device_sun_light_trigger.html">Device sun light trigger</a> </td>
+<td> Slowly fade in the lights to compensate the setting sun. Also turns on lights when you get home after dark.</td>
+</tr>
+<tr>
+<td> <a href="/components/simple_alarm.html">Simple alarm</a> </td>
+<td> Let the lights blink red when the lights turn on while no one is home.</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2><a class='title-link' name='misc' href='#misc'></a> Misc</h2>
+
+<table>
+<thead>
+<tr>
+<th> Type </th>
+<th> Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <a href="/components/configurator.html">Configurator</a> </td>
+<td> Component used by other components to get configuration from the user.</td>
+</tr>
+</tbody>
+</table>
 
 
 

@@ -1,0 +1,213 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Heat control - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Turn Home Assistant into a thermostat">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Heat control">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/thermostat.heat_control.html/">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Turn Home Assistant into a thermostat">
+    
+    
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration.html'>Initial configuration</a></li>
+      <li><a href='/components/'>Component overview</a></li>
+      <li><a href='/getting-started/android.html'>Setting up Android</a></li>
+    </ul>
+  </li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">Rest API</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Heat Control
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>Specify a start time, end time and a target temperature.
+If the the current temperature is lower than the target temperature,
+and the time is between start time and end time, the heater will
+be turned on. Opposite if the the temperature is higher than the
+target temperature the heater will be turned off.</p>
+
+<p>If away mode is activated the target temperature is sat to a min
+temperature (min_temp in config). The min temperature is also used
+as target temperature when no other temperature is specified.</p>
+
+<p>If the heater is manually turned on, the target temperature will
+be sat to 100*C. Meaning
+the thermostat probably will never turn off the heater.
+If the heater is manually turned off, the target temperature will
+be sat according to normal rules. (Based on target temperature
+for given time intervals and the min temperature.)</p>
+
+<p>A target temperature sat with the set_temperature function will
+override all other rules for the target temperature.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">thermostat</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">heat_control</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Stue</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># entity_id for heater switch, must be a toggle device</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">heater</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">switch.Ovn_stue</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># entity_id for temperature sensor, target_sensor.state must be temperature</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">target_sensor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tellstick_sensor.Stue_temperature</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># start_time-end_time:target_temp,</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">time_temp</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0700-0745:17,1500-1850:20</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># minimum temperature, used when away mode is active or</span>
+</span><span class='line'>  <span class="c1"># no other temperature specified.</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">min_temp</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For the example the heater will turn on at 0700 if the temperature
+is lower than 17C away mode is false. Between 0700 and 0745 the
+target temperature will be 17C. Between 0745 and 1500 no temperature
+is specified. so the min_temp of 10C will be used. From 1500 to 1850
+the target temperature is 20, but if away mode is true the target
+temperature will be sat to 10C</p>
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    
+
+
+<script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+
+
+
+
+
+  </body>
+</html>

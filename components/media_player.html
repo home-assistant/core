@@ -50,7 +50,15 @@
     <input type="checkbox" id="toggle">
 <label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
 <ul class="menu pull-right">
-  <li><a href="/getting-started/">Getting started</a></li>
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration.html'>Initial configuration</a></li>
+      <li><a href='/components/'>Component overview</a></li>
+      <li><a href='/getting-started/android.html'>Setting up Android</a></li>
+    </ul>
+  </li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -95,22 +103,7 @@
   <hr class="divider">
   
 
-  <p>Interacts with media players on your network. Currently only supports Chromecasts. These will be automatically discovered if you setup <a href="/components/discovery.html">the discovery component</a>. Can also be forced to load by adding the following lines to your <code>configuration.yaml</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>media_player:
-</span><span class='line'>  platform: chromecast</span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<p class='note warning'>
-Chromecasts have recently received a new API which is not yet supported by Home Assistant. Therefore we currently can only detect them and do not know what they are up to.
-</p>
-
-
-<p></p>
+  <p>Interacts with media players on your network. Currently only supports <a href="/components/media_player.cast.html">Chromecasts</a>.</p>
 
 <h2>Services</h2>
 
