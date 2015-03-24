@@ -3,178 +3,268 @@
   <url>
     <loc>https://home-assistant.io/blog/2015/03/22/release-notes/</loc>
     <lastmod>2015-03-22T01:21:00-07:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/03/11/release-notes/</loc>
     <lastmod>2015-03-11T19:36:00-07:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/03/08/new-logo/</loc>
     <lastmod>2015-03-08T23:16:10-07:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/</loc>
     <lastmod>2015-03-01T11:38:00-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/02/24/streaming-updates/</loc>
     <lastmod>2015-02-24T22:41:27-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/02/08/looking-at-the-past/</loc>
     <lastmod>2015-02-08T09:01:23-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/01/24/release-notes/</loc>
     <lastmod>2015-01-24T18:36:00-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/01/13/nest-in-da-house/</loc>
     <lastmod>2015-01-13T08:29:04-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/</loc>
     <lastmod>2015-01-11T21:49:08-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/</loc>
     <lastmod>2015-01-04T13:29:07-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2014/12/26/home-control-home-automation-and-the-smart-home/</loc>
     <lastmod>2014-12-26T10:23:13-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2014/12/18/website-launched/</loc>
     <lastmod>2014-12-18T23:24:45-08:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/add_new_platform.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/android.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/api.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/architecture.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/automation.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/browser.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/configuration.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/configurator.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/conversation.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/creating_components.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_sun_light_trigger.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/discovery.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/downloader.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/frontend.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/archives/</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/keyboard.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/simple_alarm.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sun.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/tellstick.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/troubleshooting.html</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/components/wink.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/categories/website/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/categories/architecture/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/categories/component/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/categories/release-notes/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/categories/frontend/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/categories/core/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/categories/branding/</loc>
+    <lastmod>2015-03-23T19:00:04-07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/demo/frontend.html</loc>
-    <lastmod>2015-03-23T12:45:19-07:00</lastmod>
+    <lastmod>2015-03-10T23:40:22-07:00</lastmod>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/demo/index.html</loc>
-    <lastmod>2015-03-23T12:45:19-07:00</lastmod>
+    <lastmod>2015-02-08T23:22:22-08:00</lastmod>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://home-assistant.io/googlef4f3693c209fe788.html</loc>
-    <lastmod>2015-03-23T12:45:19-07:00</lastmod>
+    <lastmod>2014-12-22T00:10:47-08:00</lastmod>
+    <priority>0.6</priority>
   </url>
 </urlset>
