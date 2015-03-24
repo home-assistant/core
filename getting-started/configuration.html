@@ -112,14 +112,54 @@
 </p>
 
 
+<h3>Setting up the basic info</h3>
+
+<p>By default Home Assistant will try to detect your location and will automatically select a temperature unit and time zone based on your location. You can overwrite this by adding the following information to your <code>configuration.yaml</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="c1"># Omitted values in this section will be auto detected using freegeoip.net</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Location required to calculate the time the sun rises and sets</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">latitude</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">32.87336</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">longitude</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">117.22743</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># C for Celcius, F for Fahrenheit</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">temperature_unit</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">C</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Pick yours from here:</span>
+</span><span class='line'>  <span class="c1"># http://en.wikipedia.org/wiki/List_of_tz_database_time_zones</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">time_zone</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">America/Los_Angeles</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Name of the location where Home Assistant is running</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Home</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
 <h3>Password protecting the web interface</h3>
 
 <p>The first thing you want to add is a password for the web interface. Use your favourite text editor to open the file <code>/config/configuration.yaml</code> and add the following to the bottom:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>http:
-</span><span class='line'>  api_password: YOUR_PASSWORD</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">http</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">api_password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h3><a class='title-link' name='adding-devices-and-services' href='#adding-devices-and-services'></a> Adding devices and services</h3>
