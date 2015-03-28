@@ -1,6 +1,5 @@
 """ Supports scanning a DD-WRT router. """
 import logging
-import json
 from datetime import timedelta
 import re
 import threading
@@ -38,7 +37,7 @@ class DdWrtDeviceScanner(object):
     def __init__(self, config):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]        
+        self.password = config[CONF_PASSWORD]
 
         self.lock = threading.Lock()
 
@@ -73,20 +72,20 @@ class DdWrtDeviceScanner(object):
 
                 dhcp_leases = data.get('dhcp_leases', None)
                 if dhcp_leases:
-                    
                     # remove leading and trailing single quotes
                     cleaned_str = dhcp_leases.strip().strip('"')
-                    elements = cleaned_str.split('","')                    
-                    num_clients = int(len(elements)/5)  
-                    self.mac2name = {}                  
-                    for x in range(0, num_clients):
+                    elements = cleaned_str.split('","')
+                    num_clients = int(len(elements)/5)
+                    self.mac2name = {}
+                    for idx in range(0, num_clients):
                         # this is stupid but the data is a single array
                         # every 5 elements represents one hosts, the MAC
                         # is the third element and the name is the first
-                        mac_index = (x * 5) + 2
-                        if mac_index < len(elements):                           
-                            self.mac2name[elements[mac_index]] = elements[x * 5]
-                                
+                        mac_index = (idx * 5) + 2
+                        if mac_index < len(elements):
+                            mac = elements[mac_index]
+                            self.mac2name[mac] = elements[idx * 5]
+
             return self.mac2name.get(device, None)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -109,21 +108,22 @@ class DdWrtDeviceScanner(object):
                 self.last_results = []
                 active_clients = data.get('active_wireless', None)
                 if active_clients:
-                    # This is really lame, instead of using JSON the ddwrt UI uses
-                    # it's own data format for some reason and then regex's out
-                    # values so I guess I have to do the same, LAME!!!
-                    
+                    # This is really lame, instead of using JSON the ddwrt UI
+                    # uses it's own data format for some reason and then
+                    # regex's out values so I guess I have to do the same,
+                    # LAME!!!
+
                     # remove leading and trailing single quotes
                     clean_str = active_clients.strip().strip("'")
                     elements = clean_str.split("','")
-                    
-                    num_clients = int(len(elements)/9)                    
-                    for x in range(0, num_clients):
+
+                    num_clients = int(len(elements)/9)
+                    for idx in range(0, num_clients):
                         # get every 9th element which is the MAC address
-                        index = x * 9
-                        if index < len(elements):                            
+                        index = idx * 9
+                        if index < len(elements):
                             self.last_results.append(elements[index])
-                            
+
                     return True
 
             return False
@@ -131,25 +131,25 @@ class DdWrtDeviceScanner(object):
     def get_ddwrt_data(self, url):
         """ Retrieve data from DD-WRT and return parsed result  """
         try:
-            response = requests.get(url, auth=(self.username, 
+            response = requests.get(url, auth=(self.username,
                 self.password), timeout=4)
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
             return
         if response.status_code == 200:
             return _parse_ddwrt_response(response.text)
-        elif res.status_code == 401:
+        elif response.status_code == 401:
         # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, "
                 "please check your username and password")
             return
         else:
-            _LOGGER.error("Invalid response from ddwrt: %s", res)
+            _LOGGER.error("Invalid response from ddwrt: %s", response)
 
 
 def _parse_ddwrt_response(data_str):
-    """ Parse the awful DD-WRT data format, why didn't they use JSON????. 
+    """ Parse the awful DD-WRT data format, why didn't they use JSON????.
         This code is a python version of how they are parsing in the JS  """
     data = {}
     pattern = re.compile(r'\{(\w+)::([^\}]*)\}')
