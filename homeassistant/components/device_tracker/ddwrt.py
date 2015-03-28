@@ -16,6 +16,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a DdWrt scanner. """
     if not validate_config(config,
@@ -131,8 +132,10 @@ class DdWrtDeviceScanner(object):
     def get_ddwrt_data(self, url):
         """ Retrieve data from DD-WRT and return parsed result  """
         try:
-            response = requests.get(url, auth=(self.username,
-                self.password), timeout=4)
+            response = requests.get(url, auth=(
+                self.username,
+                self.password),
+                timeout=4)
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
             return
