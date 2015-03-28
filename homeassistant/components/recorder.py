@@ -86,7 +86,7 @@ def run_information(point_in_time=None):
         return RecorderRun()
 
     run = _INSTANCE.query(
-        "SELECT * FROM recorder_runs WHERE start>? AND END IS NULL OR END<?",
+        "SELECT * FROM recorder_runs WHERE start<? AND END>?",
         (point_in_time, point_in_time), return_value=RETURN_ONE_ROW)
 
     return RecorderRun(run) if run else None
