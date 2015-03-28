@@ -46,7 +46,7 @@ class DdWrtDeviceScanner(object):
 
         self.mac2name = None
 
-        #test the router is accessible
+        # Test the router is accessible
         url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
         data = self.get_ddwrt_data(url)
         self.success_init = data is not None
@@ -142,7 +142,7 @@ class DdWrtDeviceScanner(object):
         if response.status_code == 200:
             return _parse_ddwrt_response(response.text)
         elif response.status_code == 401:
-        # Authentication error
+            # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, "
                 "please check your username and password")
