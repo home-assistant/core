@@ -132,9 +132,9 @@ class DdWrtDeviceScanner(object):
     def get_ddwrt_data(self, url):
         """ Retrieve data from DD-WRT and return parsed result  """
         try:
-            response = requests.get(url, auth=(
-                self.username,
-                self.password),
+            response = requests.get(
+                url,
+                auth=(self.username, self.password),
                 timeout=4)
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
