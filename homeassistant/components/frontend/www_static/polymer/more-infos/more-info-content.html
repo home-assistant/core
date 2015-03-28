@@ -8,7 +8,7 @@
 <link rel="import" href="more-info-thermostat.html">
 <link rel="import" href="more-info-script.html">
 
-<polymer-element name="more-info-content" attributes="stateObj">
+<polymer-element name="more-info-content" attributes="stateObj dialogOpen">
 <template>
   <style>
     :host {
@@ -20,9 +20,18 @@
 <script>
 Polymer({
   classNames: '',
+  dialogOpen: false,
 
   observe: {
     'stateObj.attributes': 'stateAttributesChanged',
+  },
+
+  dialogOpenChanged: function(oldVal, newVal) {
+    var moreInfoContainer = this.$.moreInfoContainer;
+
+    if (moreInfoContainer.lastChild) {
+      moreInfoContainer.lastChild.dialogOpen = newVal;
+    }
   },
 
   stateObjChanged: function(oldVal, newVal) {
@@ -42,10 +51,12 @@ Polymer({
 
       var moreInfo = document.createElement("more-info-" + newVal.moreInfoType);
       moreInfo.stateObj = newVal;
+      moreInfo.dialogOpen = this.dialogOpen;
       moreInfoContainer.appendChild(moreInfo);
 
     } else {
 
+      moreInfoContainer.lastChild.dialogOpen = this.dialogOpen;
       moreInfoContainer.lastChild.stateObj = newVal;
 
     }

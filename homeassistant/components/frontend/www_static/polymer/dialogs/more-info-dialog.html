@@ -7,12 +7,14 @@
 
 <polymer-element name="more-info-dialog">
 <template>
-  <ha-dialog id="dialog">
+  <ha-dialog id="dialog" on-core-overlay-open="{{dialogOpenChanged}}">
     <div>
       <state-card-content stateObj="{{stateObj}}" style='margin-bottom: 24px;'>
       </state-card-content>
       <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
-      <more-info-content stateObj="{{stateObj}}"></more-info-content>
+      <more-info-content
+        stateObj="{{stateObj}}"
+        dialogOpen="{{dialogOpen}}"></more-info-content>
     </div>
   </ha-dialog>
 </template>
@@ -27,9 +29,14 @@ Polymer(Polymer.mixin({
   stateObj: null,
   stateHistory: null,
   hasHistoryComponent: false,
+  dialogOpen: false,
 
   observe: {
     'stateObj.attributes': 'reposition'
+  },
+
+  created: function() {
+    this.dialogOpenChanged = this.dialogOpenChanged.bind(this);
   },
 
   attached: function() {
@@ -63,6 +70,13 @@ Polymer(Polymer.mixin({
 
     if (newHistory !== this.stateHistory) {
       this.stateHistory = newHistory;
+    }
+  },
+
+  dialogOpenChanged: function(ev) {
+    // we get CustomEvent, undefined and true/false from polymer…
+    if (typeof ev === 'object') {
+      this.dialogOpen = ev.detail;
     }
   },
 
