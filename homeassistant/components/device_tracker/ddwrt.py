@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 
+
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a DdWrt scanner. """
