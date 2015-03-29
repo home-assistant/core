@@ -1,0 +1,157 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+
+<polymer-element name="more-info-camera" attributes="stateObj">
+<template>
+  <style>
+   @media (max-width: 720px) {
+      :host .camera-image {
+        max-width: calc(100%);         
+      }
+    }
+    
+    @media (max-width: 620px) {
+      :host .camera-image {
+        max-width: calc(100%);         
+      }
+    }
+
+    @media (max-height: 780px) {
+      :host .camera-image {
+        height:450px;       
+      }
+
+      :host .camera-container {
+        height: 550px;   
+      }
+
+      .opened .camera-container {
+        background-color:red;    
+      }
+    }
+    
+  </style>
+  <div class="camera-container" id="camera_container">
+    <img src="{{stillImage}}" onload="" id="camera_image" class="camera-image" />
+  </div>
+ 
+</template>
+<script>
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var syncActions = window.hass.syncActions;
+  var serviceActions = window.hass.serviceActions;
+  var stateStore = window.hass.stateStore;
+
+  Polymer(Polymer.mixin({
+    stateObj: null,
+    isStreaming: false,
+    interval: null,
+    stillImage: null,
+    isShowing: false,
+    reloadTime: null,  
+    isOpen: false,  
+
+    observe: {
+      'isShowing': 'toggleImageStream'
+    },
+
+
+    ready: function() {
+      var self = this;
+      this.$.camera_image.addEventListener('load', function() {  
+        //this is kind of lame but the dialog won't resize after the image laods unless
+        //it is forced to             
+        if(self.reloadTime) {
+          self.reloadTime = null;
+          //this is a hack to force the dialog to resize after the camera image loadss
+          document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
+        }             
+        if(self.isOpen && self.stateObj) {
+          self.stillImage = self.stateObj.attributes['entity_picture'] + '?t=' + Date.now();
+        }
+      });      
+    },
+
+    attached: function() {
+      this.listenToStores(true);
+      this.isOpen = this.checkIfOpen();
+
+    },
+
+    domReady: function() {
+      this.startImageStream();
+    },
+
+    detached: function() {
+      this.stopListeningToStores();
+      this.isOpen = this.checkIfOpen();
+    },    
+
+    isOpenChanged: function(oldVal, newVal) {
+      if(newVal === true) {
+        //move the history item around to underneath the dialog content
+        document.querySelector("* /deep/ ha-dialog").appendChild(document.querySelector("* /deep/ ha-dialog state-timeline"));
+        document.querySelector("* /deep/ ha-dialog").classList.add('wide-dialog');
+        this.startImageStream();
+      }
+      else {
+        //move the history item back to its original position
+        document.querySelector("* /deep/ ha-dialog").appendChild(document.querySelector("* /deep/ ha-dialog more-info-content"));
+        document.querySelector("* /deep/ ha-dialog").classList.remove('wide-dialog');
+      }
+    },
+
+    streamStoreChanged: function(streamStore) {
+      this.isStreaming = streamStore.isStreaming();      
+    },
+
+    stateObjChanged: function(oldVal, newVal) {
+      this.startImageStream();
+    },
+
+    startImageStream: function() {
+      if(this.isOpen && this.stateObj) {
+        this.reloadTime = Date.now();
+        this.stillImage = this.stateObj.attributes['entity_picture'] + '?t=' + Date.now();
+      }
+      /*var self = this;
+      if(this.interval) {
+        clearInterval(this.interval);
+        this.interval = null;
+      }
+      self.reloadTime = Date.now();
+      this.interval = setInterval( function() {                  
+        if(self.stateObj) {
+          if(self.isOpen) {
+            self.stillImage = self.stateObj.attributes['entity_picture'] + '?t=' + Date.now();              
+          }
+          else {
+            clearInterval(self.interval);
+            self.interval = null;
+            self.reloadTime = Date.now();
+            return;
+          }
+        }
+      }, 250);*/
+    },
+
+    checkIfOpen: function() {
+      var dialogOpen = document.querySelector("* /deep/ more-info-dialog").$.dialog.opened;
+      if(!dialogOpen) {
+        return false;
+      }
+
+      var infoContainer =  document.querySelector("* /deep/ more-info-content").$.moreInfoContainer;
+      if(!infoContainer || !infoContainer.firstElementChild) {
+        return false;
+      }
+
+      if(infoContainer.firstElementChild.tagName == 'MORE-INFO-CAMERA') {
+        return true;
+      }
+      return false;    
+    }
+  }, storeListenerMixIn));
+</script>
+</polymer-element>
