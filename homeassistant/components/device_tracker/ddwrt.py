@@ -154,9 +154,6 @@ class DdWrtDeviceScanner(object):
 def _parse_ddwrt_response(data_str):
     """ Parse the awful DD-WRT data format, why didn't they use JSON????.
         This code is a python version of how they are parsing in the JS  """
-    data = {}
-    pattern = re.compile(r'\{(\w+)::([^\}]*)\}')
-    for (key, val) in re.findall(pattern, data_str):
-        data[key] = val
-
-    return data
+    return {
+        key: val for key, val in re.compile(r'\{(\w+)::([^\}]*)\}')
+        .findall(data_str)}
