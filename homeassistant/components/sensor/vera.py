@@ -52,7 +52,8 @@ from requests.exceptions import RequestException
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
+    ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
+    TEMP_CELCIUS, TEMP_FAHRENHEIT)
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
 
@@ -110,6 +111,7 @@ class VeraSensor(Entity):
         else:
             self._name = self.vera_device.name
         self.current_value = ''
+        self._temperature_units = None
 
     def __str__(self):
         return "%s %s %s" % (self.name, self.vera_device.deviceId, self.state)
@@ -122,6 +124,11 @@ class VeraSensor(Entity):
     def name(self):
         """ Get the mame of the sensor. """
         return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
+        return self._temperature_units
 
     @property
     def state_attributes(self):
@@ -151,7 +158,20 @@ class VeraSensor(Entity):
             self.vera_device.refresh_value('CurrentTemperature')
             current_temp = self.vera_device.get_value('CurrentTemperature')
             vera_temp_units = self.vera_device.veraController.temperature_units
-            self.current_value = current_temp + '°' + vera_temp_units
+
+            if vera_temp_units == 'F':
+                self._temperature_units = TEMP_FAHRENHEIT
+            else:
+                self._temperature_units = TEMP_CELCIUS
+
+            if self.hass:
+                temp = self.hass.config.temperature(
+                    current_temp,
+                    self._temperature_units)
+
+                current_temp, self._temperature_units = temp
+
+            self.current_value = current_temp
         elif self.vera_device.category == "Light Sensor":
             self.vera_device.refresh_value('CurrentLevel')
             self.current_value = self.vera_device.get_value('CurrentLevel')
