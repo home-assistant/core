@@ -36,7 +36,7 @@
       <div>
     </template>
 
-    <img  hidden?="{{connectionFailed}}" src="{{stillImage}}" onload="" id="camera_image" class="camera-image" />
+    <img  hidden?="{{connectionFailed}}" src="" onload="" id="camera_image" class="camera-image" />
     <div center horizontal layout>
       <div>
         {{frameRateSec}} frames/sec
@@ -125,10 +125,10 @@
     loadNextFrame: function() {
       if(this.dialogOpen && this.stateObj && !this.connectionFailed) {
         isStreaming = true;
-        this.stillImage = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
+        //this.stillImage = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
         //we need to set the src of the image rather than use a databound property, very rapidly updating
         //databound properties is causin performance issues.
-        //this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
+        this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
         this.startedLoading = Date.now();
       }
       else {
