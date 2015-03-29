@@ -5,6 +5,10 @@
 <polymer-element name="more-info-camera" attributes="stateObj">
 <template>
   <style>
+
+  #retry_btn {
+    color: #4285f4;
+  }
    @media (max-width: 720px) {
       :host .camera-image {
         max-width: calc(100%);         
@@ -28,130 +32,123 @@
 
       .opened .camera-container {
         background-color:red;    
-      }
+      }      
     }
     
   </style>
   <div class="camera-container" id="camera_container">
-    <img src="{{stillImage}}" onload="" id="camera_image" class="camera-image" />
+    <template if="{{ connectionFailed }}">
+      <div center vertical layout>
+        <div>Could not connect to camera...</div>
+        <paper-button ink id="retry_btn" on-click="{{retry}}">Retry</paper-button>        
+      <div>      
+    </template>
+
+    <img  hidden?="{{connectionFailed}}" src="{{stillImage}}" onload="" id="camera_image" class="camera-image" />
+
+  </div>
+  <div>
+    {{frameRateSec}} frames/sec
   </div>
  
 </template>
 <script>
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
-  var syncActions = window.hass.syncActions;
-  var serviceActions = window.hass.serviceActions;
-  var stateStore = window.hass.stateStore;
 
-  Polymer(Polymer.mixin({
+  var authStore = window.hass.authStore;
+
+  Polymer({
     stateObj: null,
     isStreaming: false,
-    interval: null,
     stillImage: null,
-    isShowing: false,
     reloadTime: null,  
-    isOpen: false,  
-
-    observe: {
-      'isShowing': 'toggleImageStream'
-    },
-
+    dialogOpen: false, 
+    errorCount: 0,
+    connectionFailed: false,
+    //times are to smooth out the images
+    debounceLoadMs: 100, //the reload rate
+    startedLoading: 0,
+    frameRateSec: 0,
+    steamingStarted: 0,
+    frameCount: 0,
 
     ready: function() {
       var self = this;
+      this.$.camera_image.addEventListener('error', function() { 
+        self.errorCount++;
+        if(self.errorCount > 5) {
+          self.connectionFailed = true;
+          self.isStreaming = false;
+          self.errorCount = 0;
+        }
+        else {
+          self.loadNextFrame();
+        }
+      });
+
       this.$.camera_image.addEventListener('load', function() {  
+        var finishedLoading = Date.now();
+        self.frameCount++;
         //this is kind of lame but the dialog won't resize after the image laods unless
         //it is forced to             
         if(self.reloadTime) {
           self.reloadTime = null;
           //this is a hack to force the dialog to resize after the camera image loadss
           document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
-        }             
-        if(self.isOpen && self.stateObj) {
-          self.stillImage = self.stateObj.attributes['entity_picture'] + '?t=' + Date.now();
         }
+
+        var loadTimeMs = finishedLoading - self.startedLoading;
+        var debounceMS = self.debounceLoadMs - loadTimeMs;
+        
+        var secondsRunning = ((Date.now() - self.steamingStarted) / 1000);
+        self.frameRateSec =  (self.frameCount / secondsRunning).toFixed(2);       
+        
+        if(debounceMS < 0) {
+          self.loadNextFrame();
+        }
+        else {
+          setTimeout(function () { 
+            self.loadNextFrame();
+          }, debounceMS);
+        }  
       });      
+
+      //this.$.retry_btn.addEventListener('click', this.startImageStream);
     },
 
-    attached: function() {
-      this.listenToStores(true);
-      this.isOpen = this.checkIfOpen();
-
-    },
-
-    domReady: function() {
-      this.startImageStream();
-    },
-
-    detached: function() {
-      this.stopListeningToStores();
-      this.isOpen = this.checkIfOpen();
-    },    
-
-    isOpenChanged: function(oldVal, newVal) {
-      if(newVal === true) {
-        //move the history item around to underneath the dialog content
-        document.querySelector("* /deep/ ha-dialog").appendChild(document.querySelector("* /deep/ ha-dialog state-timeline"));
-        document.querySelector("* /deep/ ha-dialog").classList.add('wide-dialog');
+    dialogOpenChanged: function(oldVal, newVal) {
+      if(newVal == true) {
         this.startImageStream();
       }
-      else {
-        //move the history item back to its original position
-        document.querySelector("* /deep/ ha-dialog").appendChild(document.querySelector("* /deep/ ha-dialog more-info-content"));
-        document.querySelector("* /deep/ ha-dialog").classList.remove('wide-dialog');
+    },  
+
+    loadNextFrame: function() {
+      if(this.dialogOpen && this.stateObj && !this.connectionFailed) {
+        isStreaming = true;        
+        this.stillImage = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();        
+        this.startedLoading = Date.now();
       }
-    },
-
-    streamStoreChanged: function(streamStore) {
-      this.isStreaming = streamStore.isStreaming();      
-    },
-
-    stateObjChanged: function(oldVal, newVal) {
-      this.startImageStream();
+      else {
+        isStreaming = false;
+      }
     },
 
     startImageStream: function() {
-      if(this.isOpen && this.stateObj) {
+
+      if(!this.isStreaming && this.dialogOpen && this.stateObj) {        
         this.reloadTime = Date.now();
-        this.stillImage = this.stateObj.attributes['entity_picture'] + '?t=' + Date.now();
-      }
-      /*var self = this;
-      if(this.interval) {
-        clearInterval(this.interval);
-        this.interval = null;
-      }
-      self.reloadTime = Date.now();
-      this.interval = setInterval( function() {                  
-        if(self.stateObj) {
-          if(self.isOpen) {
-            self.stillImage = self.stateObj.attributes['entity_picture'] + '?t=' + Date.now();              
-          }
-          else {
-            clearInterval(self.interval);
-            self.interval = null;
-            self.reloadTime = Date.now();
-            return;
-          }
-        }
-      }, 250);*/
+        this.frameRateSec = 0;
+        this.steamingStarted = Date.now();
+        this.frameCount = 0;
+        this.connectionFailed = false;
+        this.errorCount = 0;
+        this.loadNextFrame();      
+      }      
     },
 
-    checkIfOpen: function() {
-      var dialogOpen = document.querySelector("* /deep/ more-info-dialog").$.dialog.opened;
-      if(!dialogOpen) {
-        return false;
-      }
-
-      var infoContainer =  document.querySelector("* /deep/ more-info-content").$.moreInfoContainer;
-      if(!infoContainer || !infoContainer.firstElementChild) {
-        return false;
-      }
-
-      if(infoContainer.firstElementChild.tagName == 'MORE-INFO-CAMERA') {
-        return true;
-      }
-      return false;    
+    retry: function(event, detail, sender) {      
+      this.startImageStream();      
     }
-  }, storeListenerMixIn));
+
+  });
 </script>
 </polymer-element>
