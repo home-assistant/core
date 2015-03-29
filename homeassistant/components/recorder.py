@@ -9,7 +9,7 @@ import logging
 import threading
 import queue
 import sqlite3
-from datetime import datetime
+from datetime import datetime, date
 import time
 import json
 import atexit
@@ -272,6 +272,7 @@ class Recorder(threading.Thread):
         atexit.register(self._close_connection)
 
         # Have datetime objects be saved as integers
+        sqlite3.register_adapter(date, _adapt_datetime)
         sqlite3.register_adapter(datetime, _adapt_datetime)
 
         # Validate we are on the correct schema or that we have to migrate
