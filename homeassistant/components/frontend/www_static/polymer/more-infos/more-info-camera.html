@@ -11,46 +11,46 @@
   }
    @media (max-width: 720px) {
       :host .camera-image {
-        max-width: calc(100%);         
+        max-width: calc(100%);
       }
     }
-    
+
     @media (max-width: 620px) {
       :host .camera-image {
-        max-width: calc(100%);         
+        max-width: calc(100%);
       }
     }
 
     @media (max-height: 780px) {
-      :host .camera-image {
-        height:450px;       
-      }
-
       :host .camera-container {
-        height: 550px;   
+        height: 550px;
       }
-
-      .opened .camera-container {
-        background-color:red;    
-      }      
     }
-    
+
   </style>
   <div class="camera-container" id="camera_container">
     <template if="{{ connectionFailed }}">
       <div center vertical layout>
         <div>Could not connect to camera...</div>
-        <paper-button ink id="retry_btn" on-click="{{retry}}">Retry</paper-button>        
-      <div>      
+        <paper-button ink id="retry_btn" on-click="{{retry}}">Retry</paper-button>
+      <div>
     </template>
 
     <img  hidden?="{{connectionFailed}}" src="{{stillImage}}" onload="" id="camera_image" class="camera-image" />
+    <div center horizontal layout>
+      <div>
+        {{frameRateSec}} frames/sec
+      </div>
+      <div flex>
+        &nbsp;
+      </div>
+      <div>
+        {{stateObj.attributes['brand']}} - {{stateObj.attributes['model_name']}}
+      </div>
+    </div>
+  </div>
 
-  </div>
-  <div>
-    {{frameRateSec}} frames/sec
-  </div>
- 
+
 </template>
 <script>
 
@@ -60,8 +60,8 @@
     stateObj: null,
     isStreaming: false,
     stillImage: null,
-    reloadTime: null,  
-    dialogOpen: false, 
+    reloadTime: null,
+    dialogOpen: false,
     errorCount: 0,
     connectionFailed: false,
     //times are to smooth out the images
@@ -73,7 +73,7 @@
 
     ready: function() {
       var self = this;
-      this.$.camera_image.addEventListener('error', function() { 
+      this.$.camera_image.addEventListener('error', function() {
         self.errorCount++;
         if(self.errorCount > 5) {
           self.connectionFailed = true;
@@ -85,11 +85,12 @@
         }
       });
 
-      this.$.camera_image.addEventListener('load', function() {  
+      this.$.camera_image.addEventListener('load', function() {
         var finishedLoading = Date.now();
         self.frameCount++;
-        //this is kind of lame but the dialog won't resize after the image laods unless
-        //it is forced to             
+
+        //this is kind of lame but the dialog won't resize after the image losds unless
+        //it is forced to
         if(self.reloadTime) {
           self.reloadTime = null;
           //this is a hack to force the dialog to resize after the camera image loadss
@@ -98,19 +99,19 @@
 
         var loadTimeMs = finishedLoading - self.startedLoading;
         var debounceMS = self.debounceLoadMs - loadTimeMs;
-        
+
         var secondsRunning = ((Date.now() - self.steamingStarted) / 1000);
-        self.frameRateSec =  (self.frameCount / secondsRunning).toFixed(2);       
-        
+        self.frameRateSec =  (self.frameCount / secondsRunning).toFixed(2);
+
         if(debounceMS < 0) {
           self.loadNextFrame();
         }
         else {
-          setTimeout(function () { 
+          setTimeout(function () {
             self.loadNextFrame();
           }, debounceMS);
-        }  
-      });      
+        }
+      });
 
       //this.$.retry_btn.addEventListener('click', this.startImageStream);
     },
@@ -119,12 +120,15 @@
       if(newVal == true) {
         this.startImageStream();
       }
-    },  
+    },
 
     loadNextFrame: function() {
       if(this.dialogOpen && this.stateObj && !this.connectionFailed) {
-        isStreaming = true;        
-        this.stillImage = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();        
+        isStreaming = true;
+        this.stillImage = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
+        //we need to set the src of the image rather than use a databound property, very rapidly updating
+        //databound properties is causin performance issues.
+        //this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
         this.startedLoading = Date.now();
       }
       else {
@@ -134,19 +138,19 @@
 
     startImageStream: function() {
 
-      if(!this.isStreaming && this.dialogOpen && this.stateObj) {        
+      if(!this.isStreaming && this.dialogOpen && this.stateObj) {
         this.reloadTime = Date.now();
         this.frameRateSec = 0;
         this.steamingStarted = Date.now();
         this.frameCount = 0;
         this.connectionFailed = false;
         this.errorCount = 0;
-        this.loadNextFrame();      
-      }      
+        this.loadNextFrame();
+      }
     },
 
-    retry: function(event, detail, sender) {      
-      this.startImageStream();      
+    retry: function(event, detail, sender) {
+      this.startImageStream();
     }
 
   });

@@ -11,6 +11,7 @@ import time
 from datetime import timedelta
 import re
 from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND)
 
 
@@ -30,7 +31,7 @@ DISCOVERY_PLATFORMS = {}
 def setup(hass, config):
     """ Track states and offer events for sensors. """
 
-    
+
 
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
@@ -71,13 +72,13 @@ class Camera(Entity):
         self.username = device_info.get('username')
         self.password = device_info.get('password')
 
-    def get_camera_image(self):        
-        response = requests.get(self.still_image_url, auth=(self.username, self.password))        
+    def get_camera_image(self):
+        response = requests.get(self.still_image_url, auth=(self.username, self.password))
         return response
 
     @property
     def name(self):
-        if self.device_info.get('name'): 
+        if self.device_info.get('name'):
             return self.device_info.get('name')
         else:
             return super().name
@@ -87,9 +88,11 @@ class Camera(Entity):
     def state_attributes(self):
         """ Returns optional state attributes. """
         attr = super().state_attributes
+        attr['model_name'] = self.device_info.get('model', 'generic')
+        attr['brand'] = self.device_info.get('brand', 'generic')
         attr['still_image_url'] = '/api/camera_proxy/' + self.entity_id
-        attr['entity_picture'] = '/api/camera_proxy/' + self.entity_id + '?api_password=' + self.hass.http.api_password + '&time=' + str(time.time())
-        
+        attr[ATTR_ENTITY_PICTURE] = '/api/camera_proxy/' + self.entity_id + '?api_password=' + self.hass.http.api_password + '&time=' + str(time.time())
+
         return attr
 
     @property
