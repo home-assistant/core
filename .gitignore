@@ -63,3 +63,6 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Hide emacs backups
+*~
