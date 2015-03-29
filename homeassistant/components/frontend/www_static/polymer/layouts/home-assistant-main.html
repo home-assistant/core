@@ -10,6 +10,7 @@
 
 <link rel="import" href="../layouts/partial-states.html">
 <link rel="import" href="../layouts/partial-history.html">
+<link rel="import" href="../layouts/partial-logbook.html">
 <link rel="import" href="../layouts/partial-dev-fire-event.html">
 <link rel="import" href="../layouts/partial-dev-call-service.html">
 <link rel="import" href="../layouts/partial-dev-set-state.html">
@@ -96,6 +97,13 @@
           </paper-item>
         </template>
 
+        <template if="{{hasLogbookComponent}}">
+          <paper-item data-panel="logbook">
+            <core-icon icon="list"></core-icon>
+            Logbook
+          </paper-item>
+        </template>
+
         <div flex></div>
 
         <paper-item on-click="{{handleLogOutClick}}">
@@ -136,6 +144,9 @@
     <template if="{{selected == 'history'}}">
       <partial-history main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-history>
     </template>
+    <template if="{{selected == 'logbook'}}">
+      <partial-logbook main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-logbook>
+    </template>
     <template if="{{selected == 'fire-event'}}">
       <partial-dev-fire-event main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-fire-event>
     </template>
@@ -161,6 +172,7 @@ Polymer(Polymer.mixin({
   narrow: false,
   activeFilters: [],
   hasHistoryComponent: false,
+  hasLogbookComponent: false,
 
   isStreaming: false,
   hasStreamError: false,
@@ -185,7 +197,7 @@ Polymer(Polymer.mixin({
 
   componentStoreChanged: function(componentStore) {
     this.hasHistoryComponent = componentStore.isLoaded('history');
-    this.hasScriptComponent = componentStore.isLoaded('script');
+    this.hasLogbookComponent = componentStore.isLoaded('logbook');
   },
 
   streamStoreChanged: function(streamStore) {
