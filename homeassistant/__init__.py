@@ -22,7 +22,7 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 import homeassistant.util as util
 
 DOMAIN = "homeassistant"
@@ -325,19 +325,23 @@ class EventOrigin(enum.Enum):
 class Event(object):
     """ Represents an event within the Bus. """
 
-    __slots__ = ['event_type', 'data', 'origin']
+    __slots__ = ['event_type', 'data', 'origin', 'time_fired']
 
-    def __init__(self, event_type, data=None, origin=EventOrigin.local):
+    def __init__(self, event_type, data=None, origin=EventOrigin.local,
+                 time_fired=None):
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
+        self.time_fired = util.strip_microseconds(
+            time_fired or dt.datetime.now())
 
     def as_dict(self):
         """ Returns a dict representation of this Event. """
         return {
             'event_type': self.event_type,
             'data': dict(self.data),
-            'origin': str(self.origin)
+            'origin': str(self.origin),
+            'time_fired': util.datetime_to_str(self.time_fired),
         }
 
     def __repr__(self):
@@ -481,6 +485,18 @@ class State(object):
     def domain(self):
         """ Returns domain of this state. """
         return util.split_entity_id(self.entity_id)[0]
+
+    @property
+    def object_id(self):
+        """ Returns object_id of this state. """
+        return util.split_entity_id(self.entity_id)[1]
+
+    @property
+    def name(self):
+        """ Name to represent this state. """
+        return (
+            self.attributes.get(ATTR_FRIENDLY_NAME) or
+            self.object_id.replace('_', ' '))
 
     def copy(self):
         """ Creates a copy of itself. """

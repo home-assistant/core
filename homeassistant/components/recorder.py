@@ -70,9 +70,10 @@ def row_to_state(row):
 def row_to_event(row):
     """ Convert a databse row to an event. """
     try:
-        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()])
+        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()],
+                     datetime.fromtimestamp(row[5]))
     except ValueError:
-        # When json.oads fails
+        # When json.loads fails
         _LOGGER.exception("Error converting row to event: %s", row)
         return None
 
@@ -225,13 +226,13 @@ class Recorder(threading.Thread):
         """ Save an event to the database. """
         info = (
             event.event_type, json.dumps(event.data, cls=JSONEncoder),
-            str(event.origin), datetime.now()
+            str(event.origin), datetime.now(), event.time_fired,
         )
 
         self.query(
             "INSERT INTO events ("
-            "event_type, event_data, origin, created"
-            ") VALUES (?, ?, ?, ?)", info)
+            "event_type, event_data, origin, created, time_fired"
+            ") VALUES (?, ?, ?, ?, ?)", info)
 
     def query(self, sql_query, data=None, return_value=None):
         """ Query the database. """
@@ -327,6 +328,16 @@ class Recorder(threading.Thread):
             cur.execute('CREATE INDEX states__entity_id ON states(entity_id)')
 
             save_migration(1)
+
+        if migration_id < 2:
+            cur.execute("""
+                ALTER TABLE events
+                ADD COLUMN time_fired integer
+            """)
+
+            cur.execute('UPDATE events SET time_fired=created')
+
+            save_migration(2)
 
     def _close_connection(self):
         """ Close connection to the database. """
