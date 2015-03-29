@@ -15,6 +15,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
+_DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
@@ -155,5 +156,5 @@ def _parse_ddwrt_response(data_str):
     """ Parse the awful DD-WRT data format, why didn't they use JSON????.
         This code is a python version of how they are parsing in the JS  """
     return {
-        key: val for key, val in re.compile(r'\{(\w+)::([^\}]*)\}')
+        key: val for key, val in _DDWRT_DATA_REGEX
         .findall(data_str)}
