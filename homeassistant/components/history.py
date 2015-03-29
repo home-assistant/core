@@ -67,6 +67,10 @@ def get_states(point_in_time, entity_ids=None, run=None):
     if run is None:
         run = recorder.run_information(point_in_time)
 
+        # History did not run before point_in_time
+        if run is None:
+            return []
+
     where = run.where_after_start_run + "AND created < ? "
     where_data = [point_in_time]
 
