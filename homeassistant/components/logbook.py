@@ -48,7 +48,7 @@ def _handle_get_logbook(handler, path_match, data):
 class Entry(object):
     """ A human readable version of the log. """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, too-few-public-methods
 
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
@@ -57,11 +57,6 @@ class Entry(object):
         self.message = message
         self.domain = domain
         self.entity_id = entity_id
-
-    @property
-    def is_valid(self):
-        """ Returns if this entry contains all the needed fields. """
-        return self.when and self.name and self.message
 
     def as_dict(self):
         """ Convert Entry to a dict to be used within JSON. """
@@ -82,7 +77,7 @@ def humanify(events):
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
      - if home assistant stop and start happen in same minute call it restarted
     """
-    # pylint: disable=too-many-branches, too-many-statements
+    # pylint: disable=too-many-branches
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -138,32 +133,12 @@ def humanify(events):
                    event != last_sensor_event[to_state.entity_id]:
                     continue
 
-                entry = Entry(
-                    event.time_fired, domain=domain,
-                    name=to_state.name, entity_id=to_state.entity_id)
-
-                if domain == 'device_tracker':
-                    entry.message = '{} home'.format(
-                        'arrived' if to_state.state == STATE_HOME else 'left')
-
-                elif domain == 'sun':
-                    if to_state.state == sun.STATE_ABOVE_HORIZON:
-                        entry.message = 'has risen'
-                    else:
-                        entry.message = 'has set'
-
-                elif to_state.state == STATE_ON:
-                    # Future: combine groups and its entity entries ?
-                    entry.message = "turned on"
-
-                elif to_state.state == STATE_OFF:
-                    entry.message = "turned off"
-
-                else:
-                    entry.message = "changed to {}".format(to_state.state)
-
-                if entry.is_valid:
-                    yield entry
+                yield Entry(
+                    event.time_fired,
+                    name=to_state.name,
+                    message=_entry_message_from_state(domain, to_state),
+                    domain=domain,
+                    entity_id=to_state.entity_id)
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
                 if start_stop_events.get(event.time_fired.minute) == 2:
@@ -182,3 +157,27 @@ def humanify(events):
                 yield Entry(
                     event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
+
+
+def _entry_message_from_state(domain, state):
+    """ Convert a state to a message for the logbook. """
+    # We pass domain in so we don't have to split entity_id again
+
+    if domain == 'device_tracker':
+        return '{} home'.format(
+            'arrived' if state.state == STATE_HOME else 'left')
+
+    elif domain == 'sun':
+        if state.state == sun.STATE_ABOVE_HORIZON:
+            return 'has risen'
+        else:
+            return 'has set'
+
+    elif state.state == STATE_ON:
+        # Future: combine groups and its entity entries ?
+        return "turned on"
+
+    elif state.state == STATE_OFF:
+        return "turned off"
+
+    return "changed to {}".format(state.state)
