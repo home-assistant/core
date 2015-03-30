@@ -80,8 +80,9 @@ def humanify(events):
 
     Will try to group events if possible:
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
+     - if home assistant stop and start happen in same minute call it restarted
     """
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, too-many-statements
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -93,6 +94,10 @@ def humanify(events):
         # Keep track of last sensor states
         last_sensor_event = {}
 
+        # group HA start/stop events
+        # Maps minute of event to 1: stop, 2: stop + start
+        start_stop_events = {}
+
         # Process events
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
@@ -100,6 +105,18 @@ def humanify(events):
 
                 if entity_id.startswith('sensor.'):
                     last_sensor_event[entity_id] = event
+
+            elif event.event_type == EVENT_HOMEASSISTANT_STOP:
+                if event.time_fired.minute in start_stop_events:
+                    continue
+
+                start_stop_events[event.time_fired.minute] = 1
+
+            elif event.event_type == EVENT_HOMEASSISTANT_START:
+                if event.time_fired.minute not in start_stop_events:
+                    continue
+
+                start_stop_events[event.time_fired.minute] = 2
 
         # Yield entries
         for event in events_batch:
@@ -149,12 +166,19 @@ def humanify(events):
                     yield entry
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
-                # Future: look for sequence stop/start and rewrite as restarted
+                if start_stop_events.get(event.time_fired.minute) == 2:
+                    continue
+
                 yield Entry(
                     event.time_fired, "Home Assistant", "started",
                     domain=HA_DOMAIN)
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
+                if start_stop_events.get(event.time_fired.minute) == 2:
+                    action = "restarted"
+                else:
+                    action = "stopped"
+
                 yield Entry(
-                    event.time_fired, "Home Assistant", "stopped",
+                    event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
