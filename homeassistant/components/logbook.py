@@ -5,6 +5,7 @@ homeassistant.components.logbook
 Parses events and generates a human log
 """
 from datetime import datetime
+from itertools import groupby
 
 from homeassistant import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
@@ -24,6 +25,8 @@ QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
     ORDER BY time_fired
 """
+
+GROUP_BY_MINUTES = 15
 
 
 def setup(hass, config):
@@ -72,56 +75,86 @@ class Entry(object):
 
 
 def humanify(events):
-    """ Generator that converts a list of events into Entry objects. """
+    """
+    Generator that converts a list of events into Entry objects.
+
+    Will try to group events if possible:
+     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
+    """
     # pylint: disable=too-many-branches
-    for event in events:
-        if event.event_type == EVENT_STATE_CHANGED:
 
-            # Do not report on new entities
-            if 'old_state' not in event.data:
-                continue
+    # Group events in batches of GROUP_BY_MINUTES
+    for _, g_events in groupby(
+            events,
+            lambda event: event.time_fired.minute // GROUP_BY_MINUTES):
 
-            to_state = State.from_dict(event.data.get('new_state'))
+        events_batch = list(g_events)
 
-            if not to_state:
-                continue
+        # Keep track of last sensor states
+        last_sensor_event = {}
 
-            domain = to_state.domain
+        # Process events
+        for event in events_batch:
+            if event.event_type == EVENT_STATE_CHANGED:
+                entity_id = event.data['entity_id']
 
-            entry = Entry(
-                event.time_fired, domain=domain,
-                name=to_state.name, entity_id=to_state.entity_id)
+                if entity_id.startswith('sensor.'):
+                    last_sensor_event[entity_id] = event
 
-            if domain == 'device_tracker':
-                entry.message = '{} home'.format(
-                    'arrived' if to_state.state == STATE_HOME else 'left')
+        # Yield entries
+        for event in events_batch:
+            if event.event_type == EVENT_STATE_CHANGED:
 
-            elif domain == 'sun':
-                if to_state.state == sun.STATE_ABOVE_HORIZON:
-                    entry.message = 'has risen'
+                # Do not report on new entities
+                if 'old_state' not in event.data:
+                    continue
+
+                to_state = State.from_dict(event.data.get('new_state'))
+
+                if not to_state:
+                    continue
+
+                domain = to_state.domain
+
+                # Skip all but the last sensor state
+                if domain == 'sensor' and \
+                   event != last_sensor_event[to_state.entity_id]:
+                    continue
+
+                entry = Entry(
+                    event.time_fired, domain=domain,
+                    name=to_state.name, entity_id=to_state.entity_id)
+
+                if domain == 'device_tracker':
+                    entry.message = '{} home'.format(
+                        'arrived' if to_state.state == STATE_HOME else 'left')
+
+                elif domain == 'sun':
+                    if to_state.state == sun.STATE_ABOVE_HORIZON:
+                        entry.message = 'has risen'
+                    else:
+                        entry.message = 'has set'
+
+                elif to_state.state == STATE_ON:
+                    # Future: combine groups and its entity entries ?
+                    entry.message = "turned on"
+
+                elif to_state.state == STATE_OFF:
+                    entry.message = "turned off"
+
                 else:
-                    entry.message = 'has set'
+                    entry.message = "changed to {}".format(to_state.state)
 
-            elif to_state.state == STATE_ON:
-                # Future: combine groups and its entity entries ?
-                entry.message = "turned on"
+                if entry.is_valid:
+                    yield entry
 
-            elif to_state.state == STATE_OFF:
-                entry.message = "turned off"
+            elif event.event_type == EVENT_HOMEASSISTANT_START:
+                # Future: look for sequence stop/start and rewrite as restarted
+                yield Entry(
+                    event.time_fired, "Home Assistant", "started",
+                    domain=HA_DOMAIN)
 
-            else:
-                entry.message = "changed to {}".format(to_state.state)
-
-            if entry.is_valid:
-                yield entry
-
-        elif event.event_type == EVENT_HOMEASSISTANT_START:
-            # Future: look for sequence stop/start and rewrite as restarted
-            yield Entry(
-                event.time_fired, "Home Assistant", "started",
-                domain=HA_DOMAIN)
-
-        elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-            yield Entry(
-                event.time_fired, "Home Assistant", "stopped",
-                domain=HA_DOMAIN)
+            elif event.event_type == EVENT_HOMEASSISTANT_STOP:
+                yield Entry(
+                    event.time_fired, "Home Assistant", "stopped",
+                    domain=HA_DOMAIN)
