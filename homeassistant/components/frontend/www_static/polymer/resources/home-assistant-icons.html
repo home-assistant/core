@@ -51,7 +51,7 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
     case "media_player":
       var icon = "hardware:cast";
 
-      if (state !== "idle") {
+      if (state && state !== "idle") {
         icon += "-connected";
       }
 
