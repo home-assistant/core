@@ -50,7 +50,8 @@
     var uiActions = window.hass.uiActions;
 
     Polymer({
-      entityClicked: function() {
+      entityClicked: function(ev) {
+        ev.preventDefault();
         uiActions.showMoreInfoDialog(this.entryObj.entityId);
       }
     });

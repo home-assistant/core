@@ -39,8 +39,7 @@ def setup(hass, config):
 def _handle_get_logbook(handler, path_match, data):
     """ Return logbook entries. """
     start_today = datetime.now().date()
-    import time
-    print(time.mktime(start_today.timetuple()))
+
     handler.write_json(humanify(
         recorder.query_events(QUERY_EVENTS_AFTER, (start_today,))))
 
@@ -123,7 +122,7 @@ def humanify(events):
 
                 to_state = State.from_dict(event.data.get('new_state'))
 
-                if not to_state:
+                if not to_state or to_state.last_changed != to_state.last_updated:
                     continue
 
                 domain = to_state.domain
