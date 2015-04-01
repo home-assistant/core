@@ -122,7 +122,10 @@ def humanify(events):
 
                 to_state = State.from_dict(event.data.get('new_state'))
 
-                if not to_state or to_state.last_changed != to_state.last_updated:
+                # if last_changed == last_updated only attributes have changed
+                # we do not report on that yet.
+                if not to_state or \
+                   to_state.last_changed != to_state.last_updated:
                     continue
 
                 domain = to_state.domain

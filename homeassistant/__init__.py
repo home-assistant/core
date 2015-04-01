@@ -463,6 +463,7 @@ class State(object):
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated']
 
+    # pylint: disable=too-many-arguments
     def __init__(self, entity_id, state, attributes=None, last_changed=None,
                  last_updated=None):
         if not ENTITY_ID_PATTERN.match(entity_id):
