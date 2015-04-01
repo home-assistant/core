@@ -60,7 +60,8 @@ def row_to_state(row):
     """ Convert a databsae row to a state. """
     try:
         return State(
-            row[1], row[2], json.loads(row[3]), datetime.fromtimestamp(row[4]))
+            row[1], row[2], json.loads(row[3]), datetime.fromtimestamp(row[4]),
+            datetime.fromtimestamp(row[5]))
     except ValueError:
         # When json.loads fails
         _LOGGER.exception("Error converting row to state: %s", row)

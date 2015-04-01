@@ -463,7 +463,8 @@ class State(object):
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated']
 
-    def __init__(self, entity_id, state, attributes=None, last_changed=None):
+    def __init__(self, entity_id, state, attributes=None, last_changed=None,
+                 last_updated=None):
         if not ENTITY_ID_PATTERN.match(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
@@ -472,7 +473,7 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
-        self.last_updated = dt.datetime.now()
+        self.last_updated = last_updated or dt.datetime.now()
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
@@ -510,7 +511,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': self.attributes,
-                'last_changed': util.datetime_to_str(self.last_changed)}
+                'last_changed': util.datetime_to_str(self.last_changed),
+                'last_updated': util.datetime_to_str(self.last_updated)}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -527,8 +529,13 @@ class State(object):
         if last_changed:
             last_changed = util.str_to_datetime(last_changed)
 
+        last_updated = json_dict.get('last_updated')
+
+        if last_updated:
+            last_updated = util.str_to_datetime(last_updated)
+
         return cls(json_dict['entity_id'], json_dict['state'],
-                   json_dict.get('attributes'), last_changed)
+                   json_dict.get('attributes'), last_changed, last_updated)
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and
