@@ -115,10 +115,10 @@
 </span><span class='line'>  development: 1</span></code></pre></td></tr></table></div></figure>
 
 
-<p>After turning on development mode, you will have to install the webcomponents that the frontend depends on. You can do this by running the <code>build_frontend</code> script.</p>
+<p>After turning on development mode, you will have to install the web components that the frontend depends on. You can do this by running the <code>build_frontend</code> script.</p>
 
 <p class='note warning'>
-Do not use development mode in production. Home Assistant uses aggresive caching to improve the mobile experience. This is disabled during development so that you do not have to restart the server in between changes.
+Do not use development mode in production. Home Assistant uses aggressive caching to improve the mobile experience. This is disabled during development so that you do not have to restart the server in between changes.
 </p>
 
 
@@ -131,7 +131,7 @@ Do not use development mode in production. Home Assistant uses aggresive caching
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>After that you can run <a href="https://github.com/balloob/home-assistant/blob/master/build_frontend"><code>./build_frontend</code></a> from the project directory. This will take all the used webcomponents and &lsquo;vulcanize&rsquo; it into a single file to be served by Home Assistant. The script also updates <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/frontend.py"><code>homeassistant/components/http/frontend.py</code></a> with an MD5 hash of the frontend.</p>
+<p>After that you can run <a href="https://github.com/balloob/home-assistant/blob/master/build_frontend"><code>./build_frontend</code></a> from the project directory. This will take all the used web components and &lsquo;vulcanize&rsquo; it into a single file to be served by Home Assistant. The script also updates <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/frontend.py"><code>homeassistant/components/http/frontend.py</code></a> with an MD5 hash of the frontend.</p>
 
 <h1><a class='title-link' name='adding-state-cards' href='#adding-state-cards'></a> Adding state cards</h1>
 
