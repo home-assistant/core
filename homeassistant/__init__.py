@@ -22,7 +22,7 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 import homeassistant.util as util
 
 DOMAIN = "homeassistant"
@@ -325,19 +325,23 @@ class EventOrigin(enum.Enum):
 class Event(object):
     """ Represents an event within the Bus. """
 
-    __slots__ = ['event_type', 'data', 'origin']
+    __slots__ = ['event_type', 'data', 'origin', 'time_fired']
 
-    def __init__(self, event_type, data=None, origin=EventOrigin.local):
+    def __init__(self, event_type, data=None, origin=EventOrigin.local,
+                 time_fired=None):
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
+        self.time_fired = util.strip_microseconds(
+            time_fired or dt.datetime.now())
 
     def as_dict(self):
         """ Returns a dict representation of this Event. """
         return {
             'event_type': self.event_type,
             'data': dict(self.data),
-            'origin': str(self.origin)
+            'origin': str(self.origin),
+            'time_fired': util.datetime_to_str(self.time_fired),
         }
 
     def __repr__(self):
@@ -459,7 +463,9 @@ class State(object):
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated']
 
-    def __init__(self, entity_id, state, attributes=None, last_changed=None):
+    # pylint: disable=too-many-arguments
+    def __init__(self, entity_id, state, attributes=None, last_changed=None,
+                 last_updated=None):
         if not ENTITY_ID_PATTERN.match(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
@@ -468,7 +474,7 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
-        self.last_updated = dt.datetime.now()
+        self.last_updated = last_updated or dt.datetime.now()
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
@@ -482,6 +488,18 @@ class State(object):
         """ Returns domain of this state. """
         return util.split_entity_id(self.entity_id)[0]
 
+    @property
+    def object_id(self):
+        """ Returns object_id of this state. """
+        return util.split_entity_id(self.entity_id)[1]
+
+    @property
+    def name(self):
+        """ Name to represent this state. """
+        return (
+            self.attributes.get(ATTR_FRIENDLY_NAME) or
+            self.object_id.replace('_', ' '))
+
     def copy(self):
         """ Creates a copy of itself. """
         return State(self.entity_id, self.state,
@@ -494,7 +512,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': self.attributes,
-                'last_changed': util.datetime_to_str(self.last_changed)}
+                'last_changed': util.datetime_to_str(self.last_changed),
+                'last_updated': util.datetime_to_str(self.last_updated)}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -511,8 +530,13 @@ class State(object):
         if last_changed:
             last_changed = util.str_to_datetime(last_changed)
 
+        last_updated = json_dict.get('last_updated')
+
+        if last_updated:
+            last_updated = util.str_to_datetime(last_updated)
+
         return cls(json_dict['entity_id'], json_dict['state'],
-                   json_dict.get('attributes'), last_changed)
+                   json_dict.get('attributes'), last_changed, last_updated)
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and

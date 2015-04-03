@@ -9,7 +9,7 @@ import logging
 import threading
 import queue
 import sqlite3
-from datetime import datetime
+from datetime import datetime, date
 import time
 import json
 import atexit
@@ -60,7 +60,8 @@ def row_to_state(row):
     """ Convert a databsae row to a state. """
     try:
         return State(
-            row[1], row[2], json.loads(row[3]), datetime.fromtimestamp(row[4]))
+            row[1], row[2], json.loads(row[3]), datetime.fromtimestamp(row[4]),
+            datetime.fromtimestamp(row[5]))
     except ValueError:
         # When json.loads fails
         _LOGGER.exception("Error converting row to state: %s", row)
@@ -70,9 +71,10 @@ def row_to_state(row):
 def row_to_event(row):
     """ Convert a databse row to an event. """
     try:
-        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()])
+        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()],
+                     datetime.fromtimestamp(row[5]))
     except ValueError:
-        # When json.oads fails
+        # When json.loads fails
         _LOGGER.exception("Error converting row to event: %s", row)
         return None
 
@@ -86,7 +88,7 @@ def run_information(point_in_time=None):
         return RecorderRun()
 
     run = _INSTANCE.query(
-        "SELECT * FROM recorder_runs WHERE start>? AND END IS NULL OR END<?",
+        "SELECT * FROM recorder_runs WHERE start<? AND END>?",
         (point_in_time, point_in_time), return_value=RETURN_ONE_ROW)
 
     return RecorderRun(run) if run else None
@@ -225,13 +227,13 @@ class Recorder(threading.Thread):
         """ Save an event to the database. """
         info = (
             event.event_type, json.dumps(event.data, cls=JSONEncoder),
-            str(event.origin), datetime.now()
+            str(event.origin), datetime.now(), event.time_fired,
         )
 
         self.query(
             "INSERT INTO events ("
-            "event_type, event_data, origin, created"
-            ") VALUES (?, ?, ?, ?)", info)
+            "event_type, event_data, origin, created, time_fired"
+            ") VALUES (?, ?, ?, ?, ?)", info)
 
     def query(self, sql_query, data=None, return_value=None):
         """ Query the database. """
@@ -271,6 +273,7 @@ class Recorder(threading.Thread):
         atexit.register(self._close_connection)
 
         # Have datetime objects be saved as integers
+        sqlite3.register_adapter(date, _adapt_datetime)
         sqlite3.register_adapter(datetime, _adapt_datetime)
 
         # Validate we are on the correct schema or that we have to migrate
@@ -327,6 +330,16 @@ class Recorder(threading.Thread):
             cur.execute('CREATE INDEX states__entity_id ON states(entity_id)')
 
             save_migration(1)
+
+        if migration_id < 2:
+            cur.execute("""
+                ALTER TABLE events
+                ADD COLUMN time_fired integer
+            """)
+
+            cur.execute('UPDATE events SET time_fired=created')
+
+            save_migration(2)
 
     def _close_connection(self):
         """ Close connection to the database. """

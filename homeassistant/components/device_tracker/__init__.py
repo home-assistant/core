@@ -157,7 +157,8 @@ class DeviceTracker(object):
 
     def update_devices(self, now):
         """ Update device states based on the found devices. """
-        self.lock.acquire()
+        if not self.lock.acquire(False):
+            return
 
         found_devices = set(dev.upper() for dev in
                             self.device_scanner.scan_devices())
