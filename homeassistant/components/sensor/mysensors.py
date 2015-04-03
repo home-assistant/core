@@ -1,77 +1,93 @@
-import homeassistant.external.pymysensors.mysensors as mysensors
-from homeassistant.helpers.entity import Entity
+"""
+homeassistant.components.sensor.mysensors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MySensors sensors.
+
+Config:
+  sensor:
+    - platform: mysensors
+      port: '/dev/ttyACM0'
+"""
 import logging
 
-#
-# Config:
-#  sensor:
-#  platform: mysensors
-#  gateway: serial
-#  port: '/dev/ttyACM0'
-#
+# pylint: disable=no-name-in-module, import-error
+import homeassistant.external.pymysensors.mysensors.mysensors as mysensors
+import homeassistant.external.pymysensors.mysensors.const as const
+from homeassistant.helpers.entity import Entity
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL )
+from homeassistant.const import ATTR_BATTERY_LEVEL
+
+CONF_PORT = "port"
 
 _LOGGER = logging.getLogger(__name__)
 
-devices = {}    # keep track of devices added to HA
-gw = mysensors.Gateway();
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Setup the mysensors platform. """
 
-    # Passed to pymysensors and called when a sensor is updated
-    def sensor_update(type, nid, cid = None, value = None):
-        s = gw.sensors[nid]
-        if s.sketch_name is not None:
-            if nid in devices:
-                devices[nid]._battery_level = s.battery_level
-                for c in s.children:
-                    child = s.children[c]
-                    devices[nid]._children[child.id] = MySensorsChildSensor(child.type, child.value)
-            else:
-                devices[nid] = MySensorsSensor(s.sketch_name)
-                add_devices([devices[nid]])
+    devices = {}    # keep track of devices added to HA
 
-    if config['gateway'] == 'serial':
-        gw = mysensors.SerialGateway('/dev/ttyACM0', sensor_update)
-    else:
-        _LOGGER.error('mysensors gateway type: ' + config.gateway + ' not supported')
+    def sensor_update(update_type, nid):
+        """ Callback for sensor updates from the MySensors gateway. """
+        sensor = gateway.sensors[nid]
+        if sensor.sketch_name is None:
+            return
+        if nid not in devices:
+            devices[nid] = MySensorsNode(sensor.sketch_name)
+            add_devices([devices[nid]])
 
-    gw.listen()
+        devices[nid].battery_level = sensor.battery_level
+        for child_id, child in sensor.children.items():
+            devices[nid].update_child(child_id, child)
+
+    port = config.get(CONF_PORT)
+    if port is None:
+        _LOGGER.error("Missing required key 'port'")
+        return False
+
+    gateway = mysensors.SerialGateway(port, sensor_update)
+    gateway.start()
 
 
-class MySensorsSensor(Entity):
+class MySensorsNode(Entity):
+    """ Represents a MySensors node. """
     def __init__(self, name):
         self._name = name
-        self._state = ''
-        self._battery_level = 0
-        self._children = {}
+        self.battery_level = 0
+        self.children = {}
 
     @property
     def name(self):
+        """ The name of this sensor. """
         return self._name
 
     @property
     def state(self):
         """ Returns the state of the device. """
-        return self._state
+        return ''
 
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
         attrs = {}
-        attrs[ATTR_BATTERY_LEVEL] = self._battery_level
-        
-        for c in self._children.values():
-            attrs[c._type] = c._value
+        attrs[ATTR_BATTERY_LEVEL] = self.battery_level
 
+        for child in self.children.values():
+            for value_type, value in child.values.items():
+                attrs[value_type] = value
         return attrs
 
-    #def update(self):
-        # get latest values from gateway
+    def update_child(self, child_id, child):
+        """ Sets the values of a child sensor. """
+        self.children[child_id] = MySensorsChildSensor(
+            const.Presentation(child.type).name,
+            {const.SetReq(t).name: v for t, v in child.values.items()})
+
 
 class MySensorsChildSensor():
-    def __init__(self, type, value):
-        self._type = type
-        self._value = value
+    """ Represents a MySensors child sensor. """
+    # pylint: disable=too-few-public-methods
+    def __init__(self, child_type, values):
+        self.type = child_type
+        self.values = values
