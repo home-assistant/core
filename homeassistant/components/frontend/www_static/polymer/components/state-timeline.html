@@ -200,22 +200,22 @@
         var timeIndex = 1;
         var endDate = new Date();
         var prevDate = times[0];
-        data.push([times[0]].concat(empty));
-        while(prevDate < endDate) {
+        //data.push([times[0]].concat(empty));
+        for(var i = 0; i < times.length; i++) {
           var currentDate = new Date(prevDate);
-          currentDate.setMinutes(prevDate.getMinutes() + 1);
-          if(currentDate >= times[timeIndex] && timeIndex < times.length) {
+          //currentDate.setMinutes(prevDate.getMinutes() + 1);
+          //if(currentDate >= times[timeIndex] && timeIndex < times.length) {
 
-            var beforePoint = new Date(times[timeIndex]);
+            var beforePoint = new Date(times[i]);
             data.push([beforePoint].concat(empty));
 
-            data.push([times[timeIndex]].concat(empty));
-            prevDate = times[timeIndex];
+            data.push([times[i]].concat(empty));
+            prevDate = times[i];
             timeIndex++;
-          }
-          else {
-            prevDate = currentDate;
-          }
+          //}
+          //else {
+            //prevDate = currentDate;
+          //}
 
 
         }
