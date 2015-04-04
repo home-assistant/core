@@ -11,7 +11,6 @@ import datetime as dt
 import ephem
 
 import homeassistant as ha
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 import homeassistant.components.sun as sun
 
 
@@ -35,12 +34,9 @@ class TestSun(unittest.TestCase):
     def test_setting_rising(self):
         """ Test retrieving sun setting and rising. """
         # Compare it with the real data
-        self.assertTrue(sun.setup(
-            self.hass,
-            {ha.DOMAIN: {
-                CONF_LATITUDE: '32.87336',
-                CONF_LONGITUDE: '117.22743'
-            }}))
+        self.hass.config.latitude = '32.87336'
+        self.hass.config.longitude = '117.22743'
+        sun.setup(self.hass, None)
 
         observer = ephem.Observer()
         observer.lat = '32.87336'  # pylint: disable=assigning-non-slot
@@ -74,12 +70,9 @@ class TestSun(unittest.TestCase):
 
     def test_state_change(self):
         """ Test if the state changes at next setting/rising. """
-        self.assertTrue(sun.setup(
-            self.hass,
-            {ha.DOMAIN: {
-                CONF_LATITUDE: '32.87336',
-                CONF_LONGITUDE: '117.22743'
-            }}))
+        self.hass.config.latitude = '32.87336'
+        self.hass.config.longitude = '117.22743'
+        sun.setup(self.hass, None)
 
         if sun.is_on(self.hass):
             test_state = sun.STATE_BELOW_HORIZON
@@ -96,30 +89,3 @@ class TestSun(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertEqual(test_state, self.hass.states.get(sun.ENTITY_ID).state)
-
-    def test_setup(self):
-        """ Test Sun setup with empty and wrong configs. """
-        self.assertFalse(sun.setup(self.hass, {}))
-        self.assertFalse(sun.setup(self.hass, {sun.DOMAIN: {}}))
-        self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {CONF_LATITUDE: '32.87336'}}))
-        self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {CONF_LONGITUDE: '117.22743'}}))
-        self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {CONF_LATITUDE: 'hello'}}))
-        self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {CONF_LONGITUDE: 'how are you'}}))
-        self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {
-                CONF_LATITUDE: 'wrong', CONF_LONGITUDE: '117.22743'
-            }}))
-        self.assertFalse(sun.setup(
-            self.hass, {ha.DOMAIN: {
-                CONF_LATITUDE: '32.87336', CONF_LONGITUDE: 'wrong'
-            }}))
-
-        # Test with correct config
-        self.assertTrue(sun.setup(
-            self.hass, {ha.DOMAIN: {
-                CONF_LATITUDE: '32.87336', CONF_LONGITUDE: '117.22743'
-            }}))

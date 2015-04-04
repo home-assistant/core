@@ -6,13 +6,12 @@ Provides functionality to interact with thermostats.
 """
 import logging
 
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 
 import homeassistant.util as util
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
-    STATE_ON, STATE_OFF)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF)
 
 DOMAIN = "thermostat"
 DEPENDENCIES = []
@@ -53,7 +52,7 @@ def set_temperature(hass, temperature, entity_id=None):
 
 def setup(hass, config):
     """ Setup thermostats. """
-    component = DeviceComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     component.setup(config)
 
     def thermostat_service(service):
@@ -99,7 +98,7 @@ def setup(hass, config):
     return True
 
 
-class ThermostatDevice(Device):
+class ThermostatDevice(Entity):
     """ Represents a thermostat within Home Assistant. """
 
     # pylint: disable=no-self-use
@@ -110,11 +109,6 @@ class ThermostatDevice(Device):
         return self.target_temperature
 
     @property
-    def unit_of_measurement(self):
-        """ Returns the unit of measurement. """
-        return ""
-
-    @property
     def device_state_attributes(self):
         """ Returns device specific state attributes. """
         return None
@@ -123,8 +117,8 @@ class ThermostatDevice(Device):
     def state_attributes(self):
         """ Returns optional state attributes. """
         data = {
-            ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
-            ATTR_CURRENT_TEMPERATURE: self.current_temperature
+            ATTR_CURRENT_TEMPERATURE: self.hass.config.temperature(
+                self.current_temperature, self.unit_of_measurement)[0]
         }
 
         is_away = self.is_away_mode_on

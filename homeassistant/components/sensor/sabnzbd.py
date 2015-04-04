@@ -52,12 +52,11 @@ list of all available variables
 from homeassistant.util import Throttle
 from datetime import timedelta
 
-from homeassistant.helpers.device import Device
+from homeassistant.helpers.entity import Entity
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApi
 from homeassistant.external.nzbclients.sabnzbd import SabnzbdApiException
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
+
 import logging
 
 SENSOR_TYPES = {
@@ -109,7 +108,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-class SabnzbdSensor(Device):
+class SabnzbdSensor(Entity):
     """ A Sabnzbd sensor """
 
     def __init__(self, sensor_type, sabnzb_client, client_name):
@@ -118,7 +117,7 @@ class SabnzbdSensor(Device):
         self.type = sensor_type
         self.client_name = client_name
         self._state = None
-        self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
@@ -130,12 +129,9 @@ class SabnzbdSensor(Device):
         return self._state
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.name,
-            ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
-        }
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
+        return self._unit_of_measurement
 
     def refresh_sabnzbd_data(self):
         """ Calls the throttled SABnzbd refresh method. """

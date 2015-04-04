@@ -1,7 +1,7 @@
 """ Provides demo lights. """
 import random
 
-from homeassistant.helpers.device import ToggleDevice
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_XY_COLOR
 
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     ])
 
 
-class DemoLight(ToggleDevice):
+class DemoLight(ToggleEntity):
     """ Provides a demo switch. """
     def __init__(self, name, state, xy=None, brightness=180):
         self._name = name or DEVICE_DEFAULT_NAME

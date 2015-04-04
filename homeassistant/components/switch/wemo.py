@@ -1,7 +1,7 @@
 """ Support for WeMo switchces. """
 import logging
 
-from homeassistant.helpers.device import ToggleDevice
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.switch import (
     ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
          if isinstance(switch, pywemo.Switch)])
 
 
-class WemoSwitch(ToggleDevice):
+class WemoSwitch(ToggleEntity):
     """ represents a WeMo switch within home assistant. """
     def __init__(self, wemo):
         self.wemo = wemo

@@ -52,7 +52,7 @@ import logging
 import os
 import csv
 
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity_component import EntityComponent
 
 import homeassistant.util as util
 from homeassistant.const import (
@@ -140,7 +140,7 @@ def turn_off(hass, entity_id=None, transition=None):
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
 
-    component = DeviceComponent(
+    component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_LIGHTS)
     component.setup(config)
@@ -148,7 +148,7 @@ def setup(hass, config):
     # Load built-in profiles and custom profiles
     profile_paths = [os.path.join(os.path.dirname(__file__),
                                   LIGHT_PROFILES_FILE),
-                     hass.get_config_path(LIGHT_PROFILES_FILE)]
+                     hass.config.path(LIGHT_PROFILES_FILE)]
     profiles = {}
 
     for profile_path in profile_paths:

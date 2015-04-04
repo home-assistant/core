@@ -6,7 +6,7 @@ Home Assistant is a home automation platform running on Python 3. The goal of Ho
 
 It offers the following functionality through built-in components:
 
- * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com))
+ * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), [DD-WRT](http://www.dd-wrt.com/site/index))
  * Track and control [Philips Hue](http://meethue.com) lights
  * Track and control [WeMo switches](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/)
  * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast)

@@ -1,0 +1,17 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../components/logbook-entry.html">
+
+<polymer-element name="ha-logbook" attributes="entries" noscript>
+<template>
+  <style>
+    .logbook {
+    }
+  </style>
+  <div class='logbook'>
+    <template repeat="{{entries as entry}}">
+      <logbook-entry entryObj="{{entry}}"></logbook-entry>
+    </template>
+  </div>
+</template>
+</polymer>

@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Register the API with the HTTP interface. """
 
-    if 'http' not in hass.components:
+    if 'http' not in hass.config.components:
         _LOGGER.error('Dependency http is not loaded')
         return False
 
@@ -311,4 +311,4 @@ def _handle_delete_api_event_forward(handler, path_match, data):
 def _handle_get_api_components(handler, path_match, data):
     """ Returns all the loaded components. """
 
-    handler.write_json(handler.server.hass.components)
+    handler.write_json(handler.server.hass.config.components)

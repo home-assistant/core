@@ -1,7 +1,6 @@
 """ Supports scanning using nmap. """
 import logging
 from datetime import timedelta, datetime
-import threading
 from collections import namedtuple
 import subprocess
 import re
@@ -54,7 +53,6 @@ class NmapDeviceScanner(object):
     def __init__(self, config):
         self.last_results = []
 
-        self.lock = threading.Lock()
         self.hosts = config[CONF_HOSTS]
         minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
         self.home_interval = timedelta(minutes=minutes)
@@ -116,28 +114,27 @@ class NmapDeviceScanner(object):
         if not self.success_init:
             return False
 
-        with self.lock:
-            _LOGGER.info("Scanning")
+        _LOGGER.info("Scanning")
 
-            options = "-F"
-            exclude_targets = set()
-            if self.home_interval:
-                now = datetime.now()
-                for host in self.last_results:
-                    if host.last_update + self.home_interval > now:
-                        exclude_targets.add(host)
-                if len(exclude_targets) > 0:
-                    target_list = [t.ip for t in exclude_targets]
-                    options += " --exclude {}".format(",".join(target_list))
+        options = "-F --host-timeout 5"
+        exclude_targets = set()
+        if self.home_interval:
+            now = datetime.now()
+            for host in self.last_results:
+                if host.last_update + self.home_interval > now:
+                    exclude_targets.add(host)
+            if len(exclude_targets) > 0:
+                target_list = [t.ip for t in exclude_targets]
+                options += " --exclude {}".format(",".join(target_list))
 
-            nmap = NmapProcess(targets=self.hosts, options=options)
+        nmap = NmapProcess(targets=self.hosts, options=options)
 
-            nmap.run()
+        nmap.run()
 
-            if nmap.rc == 0:
-                if self._parse_results(nmap.stdout):
-                    self.last_results.extend(exclude_targets)
-            else:
-                self.last_results = []
-                _LOGGER.error(nmap.stderr)
-                return False
+        if nmap.rc == 0:
+            if self._parse_results(nmap.stdout):
+                self.last_results.extend(exclude_targets)
+        else:
+            self.last_results = []
+            _LOGGER.error(nmap.stderr)
+            return False

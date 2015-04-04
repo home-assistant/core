@@ -15,11 +15,14 @@ import re
 import datetime as dt
 import functools as ft
 
+import requests
+
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
-    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED)
+    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 import homeassistant.util as util
 
 DOMAIN = "homeassistant"
@@ -49,19 +52,34 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
+        self.config = Config()
 
-        # List of loaded components
-        self.components = []
+    @property
+    def components(self):
+        """ DEPRECATED 3/21/2015. Use hass.config.components """
+        _LOGGER.warning(
+            'hass.components is deprecated. Use hass.config.components')
+        return self.config.components
 
-        # Remote.API object pointing at local API
-        self.local_api = None
+    @property
+    def local_api(self):
+        """ DEPRECATED 3/21/2015. Use hass.config.api """
+        _LOGGER.warning(
+            'hass.local_api is deprecated. Use hass.config.api')
+        return self.config.api
 
-        # Directory that holds the configuration
-        self.config_dir = os.path.join(os.getcwd(), 'config')
+    @property
+    def config_dir(self):
+        """ DEPRECATED 3/18/2015. Use hass.config.config_dir """
+        _LOGGER.warning(
+            'hass.config_dir is deprecated. Use hass.config.config_dir')
+        return self.config.config_dir
 
     def get_config_path(self, path):
-        """ Returns path to the file within the config dir. """
-        return os.path.join(self.config_dir, path)
+        """ DEPRECATED 3/18/2015. Use hass.config.path """
+        _LOGGER.warning(
+            'hass.get_config_path is deprecated. Use hass.config.path')
+        return self.config.path(path)
 
     def start(self):
         """ Start home assistant. """
@@ -307,19 +325,23 @@ class EventOrigin(enum.Enum):
 class Event(object):
     """ Represents an event within the Bus. """
 
-    __slots__ = ['event_type', 'data', 'origin']
+    __slots__ = ['event_type', 'data', 'origin', 'time_fired']
 
-    def __init__(self, event_type, data=None, origin=EventOrigin.local):
+    def __init__(self, event_type, data=None, origin=EventOrigin.local,
+                 time_fired=None):
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
+        self.time_fired = util.strip_microseconds(
+            time_fired or dt.datetime.now())
 
     def as_dict(self):
         """ Returns a dict representation of this Event. """
         return {
             'event_type': self.event_type,
             'data': dict(self.data),
-            'origin': str(self.origin)
+            'origin': str(self.origin),
+            'time_fired': util.datetime_to_str(self.time_fired),
         }
 
     def __repr__(self):
@@ -441,7 +463,9 @@ class State(object):
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated']
 
-    def __init__(self, entity_id, state, attributes=None, last_changed=None):
+    # pylint: disable=too-many-arguments
+    def __init__(self, entity_id, state, attributes=None, last_changed=None,
+                 last_updated=None):
         if not ENTITY_ID_PATTERN.match(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
@@ -450,7 +474,7 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
-        self.last_updated = dt.datetime.now()
+        self.last_updated = last_updated or dt.datetime.now()
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
@@ -464,6 +488,18 @@ class State(object):
         """ Returns domain of this state. """
         return util.split_entity_id(self.entity_id)[0]
 
+    @property
+    def object_id(self):
+        """ Returns object_id of this state. """
+        return util.split_entity_id(self.entity_id)[1]
+
+    @property
+    def name(self):
+        """ Name to represent this state. """
+        return (
+            self.attributes.get(ATTR_FRIENDLY_NAME) or
+            self.object_id.replace('_', ' '))
+
     def copy(self):
         """ Creates a copy of itself. """
         return State(self.entity_id, self.state,
@@ -476,7 +512,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': self.attributes,
-                'last_changed': util.datetime_to_str(self.last_changed)}
+                'last_changed': util.datetime_to_str(self.last_changed),
+                'last_updated': util.datetime_to_str(self.last_updated)}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -493,8 +530,13 @@ class State(object):
         if last_changed:
             last_changed = util.str_to_datetime(last_changed)
 
+        last_updated = json_dict.get('last_updated')
+
+        if last_updated:
+            last_updated = util.str_to_datetime(last_updated)
+
         return cls(json_dict['entity_id'], json_dict['state'],
-                   json_dict.get('attributes'), last_changed)
+                   json_dict.get('attributes'), last_changed, last_updated)
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and
@@ -834,6 +876,83 @@ class Timer(threading.Thread):
             last_fired_on_second = now.second
 
             self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+
+
+class Config(object):
+    """ Configuration settings for Home Assistant. """
+
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self):
+        self.latitude = None
+        self.longitude = None
+        self.temperature_unit = None
+        self.location_name = None
+        self.time_zone = None
+
+        # List of loaded components
+        self.components = []
+
+        # Remote.API object pointing at local API
+        self.api = None
+
+        # Directory that holds the configuration
+        self.config_dir = os.path.join(os.getcwd(), 'config')
+
+    def auto_detect(self):
+        """ Will attempt to detect config of Home Assistant. """
+        # Only detect if location or temp unit missing
+        if None not in (self.latitude, self.longitude, self.temperature_unit):
+            return
+
+        _LOGGER.info('Auto detecting location and temperature unit')
+
+        try:
+            info = requests.get('https://freegeoip.net/json/').json()
+        except requests.RequestException:
+            return
+
+        if self.latitude is None and self.longitude is None:
+            self.latitude = info['latitude']
+            self.longitude = info['longitude']
+
+        if self.temperature_unit is None:
+            # From Wikipedia:
+            # Fahrenheit is used in the Bahamas, Belize, the Cayman Islands,
+            # Palau, and the United States and associated territories of
+            # American Samoa and the U.S. Virgin Islands
+            if info['country_code'] in ('BS', 'BZ', 'KY', 'PW',
+                                        'US', 'AS', 'VI'):
+                self.temperature_unit = TEMP_FAHRENHEIT
+            else:
+                self.temperature_unit = TEMP_CELCIUS
+
+        if self.location_name is None:
+            self.location_name = info['city']
+
+        if self.time_zone is None:
+            self.time_zone = info['time_zone']
+
+    def path(self, path):
+        """ Returns path to the file within the config dir. """
+        return os.path.join(self.config_dir, path)
+
+    def temperature(self, value, unit):
+        """ Converts temperature to user preferred unit if set. """
+        if not (unit and self.temperature_unit and
+                unit != self.temperature_unit):
+            return value, unit
+
+        try:
+            if unit == TEMP_CELCIUS:
+                # Convert C to F
+                return round(float(value) * 1.8 + 32.0, 1), TEMP_FAHRENHEIT
+
+            # Convert F to C
+            return round((float(value)-32.0)/1.8, 1), TEMP_CELCIUS
+
+        except ValueError:
+            # Could not convert value to float
+            return value, unit
 
 
 class HomeAssistantError(Exception):

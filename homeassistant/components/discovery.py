@@ -70,12 +70,17 @@ def setup(hass, config):
     def new_service_listener(service, info):
         """ Called when a new service is found. """
         with lock:
-            component = SERVICE_HANDLERS.get(service)
-
             logger.info("Found new service: %s %s", service, info)
 
-            if component and component not in hass.components:
-                bootstrap.setup_component(hass, component, config)
+            component = SERVICE_HANDLERS.get(service)
+
+            # We do not know how to handle this service
+            if not component:
+                return
+
+            # This component cannot be setup.
+            if not bootstrap.setup_component(hass, component, config):
+                return
 
             hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
                 ATTR_SERVICE: service,

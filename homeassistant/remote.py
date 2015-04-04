@@ -14,7 +14,6 @@ import logging
 import json
 import enum
 import urllib.parse
-import os
 
 import requests
 
@@ -108,20 +107,19 @@ class HomeAssistant(ha.HomeAssistant):
                     remote_api.host, remote_api.port, remote_api.status))
 
         self.remote_api = remote_api
-        self.local_api = local_api
 
         self.pool = pool = ha.create_worker_pool()
 
         self.bus = EventBus(remote_api, pool)
         self.services = ha.ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus, self.remote_api)
-        self.components = []
+        self.config = ha.Config()
 
-        self.config_dir = os.path.join(os.getcwd(), 'config')
+        self.config.api = local_api
 
     def start(self):
         # Ensure a local API exists to connect with remote
-        if self.local_api is None:
+        if self.config.api is None:
             bootstrap.setup_component(self, 'http')
             bootstrap.setup_component(self, 'api')
 
@@ -132,10 +130,10 @@ class HomeAssistant(ha.HomeAssistant):
 
         # Setup that events from remote_api get forwarded to local_api
         # Do this after we fire START, otherwise HTTP is not started
-        if not connect_remote_events(self.remote_api, self.local_api):
+        if not connect_remote_events(self.remote_api, self.config.api):
             raise ha.HomeAssistantError((
                 'Could not setup event forwarding from api {} to '
-                'local api {}').format(self.remote_api, self.local_api))
+                'local api {}').format(self.remote_api, self.config.api))
 
     def stop(self):
         """ Stops Home Assistant and shuts down all threads. """
@@ -145,7 +143,7 @@ class HomeAssistant(ha.HomeAssistant):
                       origin=ha.EventOrigin.remote)
 
         # Disconnect master event forwarding
-        disconnect_remote_events(self.remote_api, self.local_api)
+        disconnect_remote_events(self.remote_api, self.config.api)
 
         # Wait till all responses to homeassistant_stop are done
         self.pool.block_till_done()
@@ -264,7 +262,7 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         """ Converts Home Assistant objects and hands
             other objects to the original method. """
-        if isinstance(obj, (ha.State, ha.Event)):
+        if hasattr(obj, 'as_dict'):
             return obj.as_dict()
 
         try:

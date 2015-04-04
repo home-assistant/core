@@ -19,8 +19,8 @@ import logging
 from collections import namedtuple
 
 from homeassistant import State
-from homeassistant.helpers.device import ToggleDevice
-from homeassistant.helpers.device_component import DeviceComponent
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import reproduce_state
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -46,10 +46,10 @@ def setup(hass, config):
         logger.error('Scene config should be a list of scenes')
         return False
 
-    component = DeviceComponent(logger, DOMAIN, hass)
+    component = EntityComponent(logger, DOMAIN, hass)
 
-    component.add_devices(Scene(hass, _process_config(scene_config))
-                          for scene_config in scene_configs)
+    component.add_entities(Scene(hass, _process_config(scene_config))
+                           for scene_config in scene_configs)
 
     def handle_scene_service(service):
         """ Handles calls to the switch services. """
@@ -93,7 +93,7 @@ def _process_config(scene_config):
     return SceneConfig(name, states)
 
 
-class Scene(ToggleDevice):
+class Scene(ToggleEntity):
     """ A scene is a group of entities and the states we want them to be. """
 
     def __init__(self, hass, scene_config):
