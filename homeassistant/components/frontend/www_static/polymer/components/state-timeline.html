@@ -8,7 +8,24 @@
     :host {
       display: block;
     }
+
+    #loadingbox {
+      text-align: center;
+    }
+
+    .loadingmessage {
+      margin-top: 10px;
+    }
     </style>
+
+    <div layout horizontal center fit class='login' id="splash" hidden?="{{!isLoading}}">
+      <div layout vertical center flex>
+        <div id="loadingbox">
+          <paper-spinner active="true"></paper-spinner><br />
+          <div class="loadingmessage">{{spinnerMessage}}</div>
+        </div>
+      </div>
+    </div>
 
     <google-jsapi on-api-load="{{googleApiLoaded}}"></google-jsapi>
     <div id="timeline" style='width: 100%; height: auto;'></div>
@@ -19,6 +36,8 @@
   Polymer({
     apiLoaded: false,
     stateHistory: null,
+    isLoading: true,
+    spinnerMessage: "Loading data...",
 
     googleApiLoaded: function() {
       google.load("visualization", "1", {
@@ -38,6 +57,7 @@
       if (!this.apiLoaded || !this.stateHistory) {
         return;
       }
+      this.isLoading = true;
 
       var container = this.$.timeline;
       var chart = new google.visualization.Timeline(container);
@@ -244,6 +264,7 @@
         dataTable.addRows(data);
         chart.draw(dataTable, options);
       }
+      this.isLoading = false;
 
     },
 
