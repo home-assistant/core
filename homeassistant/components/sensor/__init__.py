@@ -6,7 +6,7 @@ Component to interface with various sensors that can be monitored.
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import wink, zwave
+from homeassistant.components import wink, zwave, isy994
 
 DOMAIN = 'sensor'
 DEPENDENCIES = []
@@ -18,6 +18,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_SENSORS: 'wink',
     zwave.DISCOVER_SENSORS: 'zwave',
+    isy994.DISCOVER_SENSORS: 'isy994'
 }
 
 
