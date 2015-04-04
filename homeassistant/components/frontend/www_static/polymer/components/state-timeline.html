@@ -12,13 +12,13 @@
 
     <google-jsapi on-api-load="{{googleApiLoaded}}"></google-jsapi>
     <div id="timeline" style='width: 100%; height: auto;'></div>
-    <div id="single_timeline" style='width: 100%; height: auto;'></div>
+    <div id="line_graphs" style='width: 100%; height: auto;'></div>
+
   </template>
   <script>
   Polymer({
     apiLoaded: false,
     stateHistory: null,
-    entityIds: [],
 
     googleApiLoaded: function() {
       google.load("visualization", "1", {
@@ -37,175 +37,200 @@
     drawChart: function() {
       if (!this.apiLoaded || !this.stateHistory) {
         return;
-      }      
-
-      var graphType = '';
+      }
 
       var container = this.$.timeline;
+      var chart = new google.visualization.Timeline(container);
+      var dataTable = new google.visualization.DataTable();
 
-      var chart = null;
-      var dataTable = null;
-      var addRow = null;
+      dataTable.addColumn({ type: 'string', id: 'Entity' });
+      dataTable.addColumn({ type: 'string', id: 'State' });
+      dataTable.addColumn({ type: 'date', id: 'Start' });
+      dataTable.addColumn({ type: 'date', id: 'End' });
+
+      var addRow = function(entityDisplay, stateStr, start, end) {
+        dataTable.addRow([entityDisplay, stateStr, start, end]);
+      };
 
       if (this.stateHistory.length === 0) {
         return;
       }
 
       // people can pass in history of 1 entityId or a collection.
-      var attributes = {};
+
       var stateHistory;
       if (_.isArray(this.stateHistory[0])) {
         stateHistory = this.stateHistory;
       } else {
-        stateHistory = [this.stateHistory];        
+        stateHistory = [this.stateHistory];
       }
 
-      //remove any existing chart divs before re-rendering
-      while (this.$.timeline.firstChild) {
-        this.$.timeline.removeChild(this.$.timeline.firstChild);
-      }
-
-      var count = 0;
-      var consecutiveTimelineCount = 0;
+      var lineChartDevices = Array();
+      var numTimelines = 0;
       // stateHistory is a list of lists of sorted state objects
       stateHistory.forEach(function(stateInfo) {
         if(stateInfo.length === 0) return;
 
-        if(stateHistory.length === 1) {
-          container = this.$.single_timeline;
-        }
-        else {
-          container = document.createElement("DIV");
-          this.$.timeline.appendChild(container); 
-        }
-        
+        var entityDisplay = stateInfo[0].entityDisplay;
+        var newLastChanged, prevState = null, prevLastChanged = null;
         //get the latest update to get the graph type from the component attributes
-        attributes = stateInfo[stateInfo.length - 1].attributes;
+        var attributes = stateInfo[stateInfo.length - 1].attributes;
 
-        graphType = attributes['graph_type'];
+        //if the device has a unit of meaurment it will be added as a line graph further down
+        if(attributes['unit_of_measurement']) {
+          if(!lineChartDevices[attributes['unit_of_measurement']]){
+            lineChartDevices[attributes['unit_of_measurement']] = [];
+          }
+          lineChartDevices[attributes['unit_of_measurement']].push(stateInfo);
+          return;
+        }
 
-        if(graphType == 'linechart') {
-        
-          chart = new google.visualization.LineChart(container);
-
-
-          dataTable = new google.visualization.DataTable();
-          dataTable.addColumn({ type: 'datetime', id: 'Time' });
-          dataTable.addColumn({ type: 'number', id: 'Value' });
-
-          addRow = function(entityDisplay, stateStr, start, end) {
-            if(stateStr == 'None') {
-              stateStr = 0;
-            }
-            else {
-              dataTable.addRow([start, parseFloat(stateStr)]);
-            }
-          };
-
-          var entityDisplay = stateInfo[0].entityDisplay;
-          var newLastChanged, prevState = null, prevLastChanged = null;
-
-          stateInfo.forEach(function(state) {
+        stateInfo.forEach(function(state) {
+          if (prevState !== null && state.state !== prevState) {
             newLastChanged = state.lastChangedAsDate;
-            addRow(entityDisplay, state.state, state.lastChangedAsDate, newLastChanged);
+
+            addRow(entityDisplay, prevState, prevLastChanged, newLastChanged);
+
             prevState = state.state;
             prevLastChanged = newLastChanged;
-          });
+          } else if (prevState === null) {
+            prevState = state.state;
+            prevLastChanged = state.lastChangedAsDate;
+          }
+        });
 
-          addRow(entityDisplay, prevState, new Date(), new Date());
+        addRow(entityDisplay, prevState, prevLastChanged, new Date());
+        numTimelines++;
+      }.bind(this));
 
-          var options = {            
-            legend: { position: 'none' },
+      chart.draw(dataTable, {
+         height: 55 + numTimelines * 42,
+
+        // interactive properties require CSS, the JS api puts it on the document
+        // instead of inside our Shadow DOM.
+        enableInteractivity: false,
+
+        timeline: {
+          showRowLabels: stateHistory.length > 1
+        },
+
+        hAxis: {
+          format: 'H:mm'
+        },
+      });
+
+      var isSingleDevice = false;
+      if(stateHistory.length === 1) {
+        isSingleDevice = true;
+      }
+
+      for (var key in lineChartDevices) {
+        var deviceStates = lineChartDevices[key];
+
+        if(isSingleDevice) {
+          container = this.$.timeline
+        }
+        else {
+          container = this.$.single_timeline;
+          container = document.createElement("DIV");
+          this.$.line_graphs.appendChild(container);
+        }
+
+
+        var chart = new google.visualization.LineChart(container);
+
+
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn({ type: 'datetime', id: 'Time' });
+        //dataTable.addColumn({ type: 'number', id: 'Value' });
+
+
+
+        var options = {
+            legend: { position: 'top' },
             vAxes: {
               // Adds units to the left hand side of the graph
-              0: {title: attributes['unit_of_measurement']}
+              0: {title: key}
             },
             hAxis: {
               format: 'H:mm'
             }
           };
-          //only put in the title when we are rendering multiple graphs
-          if(stateHistory.length === 1) {
-            options['titlePosition'] = 'none';    
-            options['height'] = 150;        
+
+        if(isSingleDevice) {
+          options.legend.position = 'none';
+        }
+
+        var times = _(deviceStates).chain().flatten().pluck('lastChangedAsDate').unique().value();
+
+        times = _.sortBy(times, function(o) { return o; })
+        //console.log(times);
+        var data = [];
+        var empty = new Array(deviceStates.length);
+        for(var i = 0; i < empty.length; i++) {
+          empty[i] = 0;
+        }
+
+        var timeIndex = 1;
+        var endDate = new Date();
+        var prevDate = times[0];
+        data.push([times[0]].concat(empty));
+        while(prevDate < endDate) {
+          var currentDate = new Date(prevDate);
+          currentDate.setMinutes(prevDate.getMinutes() + 1);
+          if(currentDate >= times[timeIndex] && timeIndex < times.length) {
+            data.push([times[timeIndex]].concat(empty));
+            timeIndex++;
           }
           else {
-            options['title'] = attributes['friendly_name'];            
+            data.push([currentDate].concat(empty));
           }
-          chart.draw(dataTable, options);
-          chart = null;
 
+          prevDate = currentDate;
         }
-        else {
-          if(chart == null) {
-            chart = new google.visualization.Timeline(container);
 
-            dataTable = new google.visualization.DataTable();
+        var deviceCount = 0;
+        deviceStates.forEach(function(device) {
+          var attributes = device[device.length - 1].attributes;
+          dataTable.addColumn('number', attributes['friendly_name']);
 
-            dataTable.addColumn({ type: 'string', id: 'Entity' });
-            dataTable.addColumn({ type: 'string', id: 'State' });
-            dataTable.addColumn({ type: 'date', id: 'Start' });
-            dataTable.addColumn({ type: 'date', id: 'End' });
+          var currentState = 0;
+          var previousState = 0;
+          var lastIndex = 0;
+          var count = 0;
+          device.forEach(function(state) {
 
-            addRow = function(entityDisplay, stateStr, start, end) {
-              dataTable.addRow([entityDisplay, stateStr, start, end]);
-            };
-          }
-          
-
-          var entityDisplay = stateInfo[0].entityDisplay;
-          var newLastChanged, prevState = null, prevLastChanged = null;
-
-          stateInfo.forEach(function(state) {
-            if (prevState !== null && state.state !== prevState) {
-              newLastChanged = state.lastChangedAsDate;
-
-              addRow(entityDisplay, prevState, prevLastChanged, newLastChanged);
-
-              prevState = state.state;
-              prevLastChanged = newLastChanged;
-            } else if (prevState === null) {
-              prevState = state.state;
-              prevLastChanged = state.lastChangedAsDate;
+            currentState = state.state;
+            var start = state.lastChangedAsDate;
+            //console.log(start);
+            if(state.state == 'None') {
+              currentState = previousState;
             }
-          });
+            for(var i = lastIndex; i < data.length; i++) {
+              data[i][1 + deviceCount] = parseFloat(previousState);
+              if(data[i][0] == start) {
+                data[i][1 + deviceCount] = parseFloat(currentState);
+                lastIndex = i;
+                break;
+              }
+            }
 
-          addRow(entityDisplay, prevState, prevLastChanged, new Date());
+            previousState = currentState;
 
-          var nextHist = (count + 1 < stateHistory.length) ? stateHistory[count + 1] : null;
+            count++;
+          }.bind(this));
 
-          var nextGraphType = (nextHist === null) ? '' : nextHist[nextHist.length - 1].attributes['graph_type'];
-
-          consecutiveTimelineCount++
-
-          //this is so that timelines get grouped together into a single chart
-          if(nextHist == null || (nextGraphType && nextGraphType != 'timeline')) {
-
-            chart.draw(dataTable, {
-              height: 55 + consecutiveTimelineCount * 42,
-
-              // interactive properties require CSS, the JS api puts it on the document
-              // instead of inside our Shadow DOM.
-              enableInteractivity: false,
-
-              timeline: {
-                showRowLabels: stateHistory.length > 1
-              },
-
-              hAxis: {
-                format: 'H:mm'
-              },
-            });
-            chart = null;
-            consecutiveTimelineCount = 0;
+          //fill in the rest of the Array
+          for(var i = lastIndex; i < data.length; i++) {
+            data[i][1 + deviceCount] = parseFloat(previousState);
           }
-          
-        }
 
-        count++;
-      }.bind(this));
+          deviceCount++;
+        }.bind(this));
 
-      chart == null;
+        dataTable.addRows(data);
+        chart.draw(dataTable, options);
+      }
 
     },
 
