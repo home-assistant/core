@@ -21,7 +21,7 @@ from homeassistant.const import (
 # homeassistant constants
 DOMAIN = "isy994"
 DEPENDENCIES = []
-#DISCOVER_LIGHTS = "isy994.lights"
+DISCOVER_LIGHTS = "isy994.lights"
 #DISCOVER_SWITCHES = "isy994.switches"
 DISCOVER_SENSORS = "isy994.sensors"
 ISY = None
@@ -60,7 +60,8 @@ def setup(hass, config):
         return False
 
     # Load components for the devices in the ISY controller that we support
-    for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),)):
+    for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
+                                 ('light', DISCOVER_LIGHTS))):
         component = get_component(comp_name)
         bootstrap.setup_component(hass, component.DOMAIN, config)
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED, 
