@@ -124,6 +124,10 @@
         isSingleDevice = true;
       }
 
+      while (this.$.line_graphs.firstChild) {
+        this.$.line_graphs.removeChild(this.$.line_graphs.firstChild);
+      }
+
       for (var key in lineChartDevices) {
         var deviceStates = lineChartDevices[key];
 
@@ -142,9 +146,6 @@
 
         var dataTable = new google.visualization.DataTable();
         dataTable.addColumn({ type: 'datetime', id: 'Time' });
-        //dataTable.addColumn({ type: 'number', id: 'Value' });
-
-
 
         var options = {
             legend: { position: 'top' },
@@ -155,6 +156,7 @@
             hAxis: {
               format: 'H:mm'
             }
+            ,width: '100%'
           };
 
         if(isSingleDevice) {
