@@ -176,6 +176,7 @@
             hAxis: {
               format: 'H:mm'
             },
+            lineWidth: 1,
             chartArea:{left:'60',width:"95%"}
           };
 
@@ -204,11 +205,9 @@
           var currentDate = new Date(prevDate);
           currentDate.setMinutes(prevDate.getMinutes() + 1);
           if(currentDate >= times[timeIndex] && timeIndex < times.length) {
-            //this is so we don't get jumps in the graph
-            if(times[timeIndex].getTime() - prevDate.getTime() > 30 * 1000) {
-              var beforePoint = new Date(times[timeIndex].getTime() - 2000);
-              data.push([beforePoint].concat(empty));
-            }
+
+            var beforePoint = new Date(times[timeIndex]);
+            data.push([beforePoint].concat(empty));
 
             data.push([times[timeIndex]].concat(empty));
             prevDate = times[timeIndex];
@@ -232,6 +231,7 @@
           var previousState = 0;
           var lastIndex = 0;
           var count = 0;
+          var prevTime = data[0][0];
           device.forEach(function(state) {
 
             currentState = state.state;
@@ -241,11 +241,13 @@
             }
             for(var i = lastIndex; i < data.length; i++) {
               data[i][1 + deviceCount] = parseFloat(previousState);
-              if(data[i][0].getTime() == start.getTime()) {
+              if(prevTime.getTime() == data[i][0].getTime() && data[i][0].getTime() == start.getTime()) {
                 data[i][1 + deviceCount] = parseFloat(currentState);
                 lastIndex = i;
+                prevTime = data[i][0];
                 break;
               }
+              prevTime = data[i][0];
             }
 
             previousState = currentState;
