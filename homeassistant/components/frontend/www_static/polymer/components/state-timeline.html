@@ -180,12 +180,16 @@
           var currentDate = new Date(prevDate);
           currentDate.setMinutes(prevDate.getMinutes() + 1);
           if(currentDate >= times[timeIndex] && timeIndex < times.length) {
+            //this is so we don't get jumps in the graph
+            var beforePoint = new Date(times[timeIndex]);
+            beforePoint.setSeconds(times[timeIndex].getSeconds() - 1)
+            data.push([beforePoint].concat(empty));
             data.push([times[timeIndex]].concat(empty));
             timeIndex++;
           }
-          else {
-            data.push([currentDate].concat(empty));
-          }
+          //else {
+            //data.push([currentDate].concat(empty));
+          //}
 
           prevDate = currentDate;
         }
