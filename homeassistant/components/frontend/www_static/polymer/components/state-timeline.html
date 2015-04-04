@@ -155,17 +155,21 @@
             },
             hAxis: {
               format: 'H:mm'
-            }
+            },
+            chartArea:{left:'60',width:"95%"}
           };
 
         if(isSingleDevice) {
           options.legend.position = 'none';
         }
+        //var times = _(deviceStates).chain().flatten().pluck('lastChangedAsDate').unique().value();
+        var times = _.pluck(_.flatten(deviceStates), "lastChangedAsDate");
+        times = _.uniq(times, function(e) {
+            return e.getTime();
+          });
 
-        var times = _(deviceStates).chain().flatten().pluck('lastChangedAsDate').unique().value();
+        times = _.sortBy(times, function(o) { return o; });
 
-        times = _.sortBy(times, function(o) { return o; })
-        //console.log(times);
         var data = [];
         var empty = new Array(deviceStates.length);
         for(var i = 0; i < empty.length; i++) {
@@ -181,18 +185,23 @@
           currentDate.setMinutes(prevDate.getMinutes() + 1);
           if(currentDate >= times[timeIndex] && timeIndex < times.length) {
             //this is so we don't get jumps in the graph
-            var beforePoint = new Date(times[timeIndex]);
-            beforePoint.setSeconds(times[timeIndex].getSeconds() - 1)
-            data.push([beforePoint].concat(empty));
+            if(times[timeIndex].getTime() - prevDate.getTime() > 30 * 1000) {
+              var beforePoint = new Date(times[timeIndex].getTime() - 2000);
+              data.push([beforePoint].concat(empty));
+            }
+
             data.push([times[timeIndex]].concat(empty));
+            prevDate = times[timeIndex];
             timeIndex++;
           }
-          //else {
-            //data.push([currentDate].concat(empty));
-          //}
+          else {
+            prevDate = currentDate;
+          }
 
-          prevDate = currentDate;
+
         }
+        data.push([endDate].concat(empty));
+
 
         var deviceCount = 0;
         deviceStates.forEach(function(device) {
@@ -207,13 +216,12 @@
 
             currentState = state.state;
             var start = state.lastChangedAsDate;
-            //console.log(start);
             if(state.state == 'None') {
               currentState = previousState;
             }
             for(var i = lastIndex; i < data.length; i++) {
               data[i][1 + deviceCount] = parseFloat(previousState);
-              if(data[i][0] == start) {
+              if(data[i][0].getTime() == start.getTime()) {
                 data[i][1 + deviceCount] = parseFloat(currentState);
                 lastIndex = i;
                 break;
