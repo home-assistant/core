@@ -16,7 +16,8 @@ import homeassistant.external.pymysensors.mysensors.mysensors as mysensors
 import homeassistant.external.pymysensors.mysensors.const as const
 from homeassistant.helpers.entity import Entity
 
-from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP, TEMP_CELCIUS)
 
 CONF_PORT = "port"
 
@@ -50,6 +51,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     gateway = mysensors.SerialGateway(port, sensor_update)
     gateway.start()
+
+    # Just assume celcius means that the user wants metric for now.
+    # It may make more sense to make this a global config option in the future.
+    gateway.metric = (hass.config.temperature_unit == TEMP_CELCIUS)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                          lambda event: gateway.stop())
