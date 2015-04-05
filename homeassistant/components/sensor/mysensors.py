@@ -37,9 +37,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices[nid] = MySensorsNode(sensor.sketch_name)
             add_devices([devices[nid]])
 
-        devices[nid].battery_level = sensor.battery_level
+        node = devices[nid]
+        node.battery_level = sensor.battery_level
         for child_id, child in sensor.children.items():
-            devices[nid].update_child(child_id, child)
+            node.update_child(child_id, child)
+        node.update_ha_state()
 
     port = config.get(CONF_PORT)
     if port is None:
@@ -59,6 +61,11 @@ class MySensorsNode(Entity):
         self._name = name
         self.battery_level = 0
         self.children = {}
+
+    @property
+    def should_poll(self):
+        """ MySensor gateway pushes its state to HA.  """
+        return False
 
     @property
     def name(self):
