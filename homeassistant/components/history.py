@@ -50,8 +50,10 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
 
     result = defaultdict(list)
 
+    entity_ids = [entity_id] if entity_id is not None else None
+
     # Get the states at the start time
-    for state in get_states(start_time):
+    for state in get_states(start_time, entity_ids):
         state.last_changed = start_time
         result[state.entity_id].append(state)
 
