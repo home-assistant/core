@@ -58,6 +58,7 @@
         return;
       }
       this.isLoading = true;
+      this.spinnerMessage = 'Building timelines...';
 
       var container = this.$.timeline;
       var chart = new google.visualization.Timeline(container);
@@ -139,6 +140,26 @@
         },
       });
 
+      /**************************************************
+      The following code gererates line line graphs for devices with continuous
+      values(which are devices that have a unit_of_measurment values defined).
+      On each graph the devices are grouped by their unit of measurement, eg. all
+      sensors measuring MB will be a separate line on single graph.  The google
+      chart API takes data as a 2 dimensional array in the format:
+
+      DateTime,   device1,  device2,  device3
+      2015-04-01, 1,        2,        0
+      2015-04-01, 0,        1,        0
+      2015-04-01, 2,        1,        1
+
+      NOTE: the first column is a javascript date objects.
+
+      The first thing we do is build up the data with rows for each time of a state
+      change and initialise the values to 0.  THen we loop through each device and
+      fill in its data.
+
+      **************************************************/
+      this.spinnerMessage = 'Building line graphs...';
       var isSingleDevice = false;
       if(stateHistory.length === 1) {
         isSingleDevice = true;
@@ -183,7 +204,9 @@
         if(isSingleDevice) {
           options.legend.position = 'none';
         }
-        //var times = _(deviceStates).chain().flatten().pluck('lastChangedAsDate').unique().value();
+
+        // Get a unique list of times of state changes for all the device
+        // for a particular unit of measureent.
         var times = _.pluck(_.flatten(deviceStates), "lastChangedAsDate");
         times = _.uniq(times, function(e) {
             return e.getTime();
@@ -200,24 +223,18 @@
         var timeIndex = 1;
         var endDate = new Date();
         var prevDate = times[0];
-        //data.push([times[0]].concat(empty));
+
         for(var i = 0; i < times.length; i++) {
           var currentDate = new Date(prevDate);
-          //currentDate.setMinutes(prevDate.getMinutes() + 1);
-          //if(currentDate >= times[timeIndex] && timeIndex < times.length) {
 
-            var beforePoint = new Date(times[i]);
-            data.push([beforePoint].concat(empty));
+          // because we only have state changes we add an extra point at the same time
+          // that holds the previous state which makes the line display correctly
+          var beforePoint = new Date(times[i]);
+          data.push([beforePoint].concat(empty));
 
-            data.push([times[i]].concat(empty));
-            prevDate = times[i];
-            timeIndex++;
-          //}
-          //else {
-            //prevDate = currentDate;
-          //}
-
-
+          data.push([times[i]].concat(empty));
+          prevDate = times[i];
+          timeIndex++;
         }
         data.push([endDate].concat(empty));
 
@@ -241,6 +258,9 @@
             }
             for(var i = lastIndex; i < data.length; i++) {
               data[i][1 + deviceCount] = parseFloat(previousState);
+              // this is where data gets filled in for each time for the particular device
+              // because for each time two entires were create we fill the first one with the
+              // previous value and the second one with the new value
               if(prevTime.getTime() == data[i][0].getTime() && data[i][0].getTime() == start.getTime()) {
                 data[i][1 + deviceCount] = parseFloat(currentState);
                 lastIndex = i;
@@ -267,6 +287,7 @@
         chart.draw(dataTable, options);
       }
       this.isLoading = false;
+      this.spinnerMessage = 'Loading data...';//just resetting it back to the generic message
 
     },
 
