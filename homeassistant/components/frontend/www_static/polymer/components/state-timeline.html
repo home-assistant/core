@@ -196,7 +196,14 @@
               format: 'H:mm'
             },
             lineWidth: 1,
-            chartArea:{left:'60',width:"95%"}
+            chartArea:{left:'60',width:"95%"},
+            explorer: {
+              actions: ['dragToZoom', 'rightClickToReset', 'dragToPan'],
+               keepInBounds: true,
+              axis: 'horizontal',
+              maxZoomIn: 0.1
+            }
+
           };
 
         if(isSingleDevice) {
