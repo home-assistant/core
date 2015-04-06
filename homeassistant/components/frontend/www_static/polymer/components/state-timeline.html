@@ -58,7 +58,6 @@
         return;
       }
       this.isLoading = true;
-      this.spinnerMessage = 'Building timelines...';
 
       var container = this.$.timeline;
       var chart = new google.visualization.Timeline(container);
@@ -159,7 +158,6 @@
       fill in its data.
 
       **************************************************/
-      this.spinnerMessage = 'Building line graphs...';
       var isSingleDevice = false;
       if(stateHistory.length === 1) {
         isSingleDevice = true;
@@ -287,7 +285,6 @@
         chart.draw(dataTable, options);
       }
       this.isLoading = false;
-      this.spinnerMessage = 'Loading data...';//just resetting it back to the generic message
 
     },
 
