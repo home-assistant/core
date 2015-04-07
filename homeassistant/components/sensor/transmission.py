@@ -1,39 +1,49 @@
 """
-homeassistant.components.sensor.sabnzbd
+homeassistant.components.sensor.transmission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Monitors SABnzbd NZB client API
+Monitors Transmission BitTorrent client API
 
 Configuration:
 
-To use the SABnzbd sensor you will need to add something like the following to
-your config/configuration.yaml
+To use the Transmission sensor you will need to add something like the
+following to your config/configuration.yaml
 
 sensor:
-    platform: sabnzbd
-    name: SAB
-    api_key: YOUR_API_KEY
-    base_url: YOUR_SABNZBD_BASE_URL
+    platform: transmission
+    name: Transmission
+    host: 192.168.1.26
+    port: 9091
+    username: YOUR_USERNAME
+    password: YOUR_PASSWORD
     monitored_variables:
         - type: 'current_status'
-        - type: 'speed'
-        - type: 'queue_size'
-        - type: 'queue_remaining'
-        - type: 'disk_size'
-        - type: 'disk_free'
+        - type: 'download_speed'
+        - type: 'upload_speed'
 
 VARIABLES:
 
-base_url
+host
 *Required
-This is the base URL of your SABnzbd instance including the port number if not
-running on 80
-Example: http://192.168.1.32:8124/
+This is the IP address of your Transmission Daemon
+Example: 192.168.1.32
 
+port
+*Optional
+The port your Transmission daemon uses, defaults to 9091
+Example: 8080
+
+username
+*Required
+Your Transmission username
+
+password
+*Required
+Your Transmission password
 
 name
 *Optional
-The name to use when displaying this SABnzbd instance
+The name to use when displaying this Transmission instance
 
 monitored_variables
 *Required
@@ -64,11 +74,7 @@ import logging
 SENSOR_TYPES = {
     'current_status': ['Status', ''],
     'download_speed': ['Down Speed', 'MB/s'],
-    'upload_speed': ['Up Speed', 'MB/s'],
-    'queue_size': ['Queue', 'MB'],
-    'queue_remaining': ['Left', 'MB'],
-    'disk_size': ['Disk', 'GB'],
-    'disk_free': ['Disk Free', 'GB'],
+    'upload_speed': ['Up Speed', 'MB/s']
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +88,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
-    port = config.get('port')
+    port = config.get('port', 9091)
 
     name = config.get("name", "Transmission")
     if not host:
@@ -92,24 +98,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # import logging
     # logging.getLogger('transmissionrpc').setLevel(logging.DEBUG)
 
-    transmission_api = transmissionrpc.Client(host, port=port, user=username, password=password)
+    transmission_api = transmissionrpc.Client(
+        host, port=port, user=username, password=password)
     try:
-        session = transmission_api.session_stats()
-        print(transmission_api.session)
+        transmission_api.session_stats()
     except TransmissionError:
         _LOGGER.exception("Connection to Transmission API failed.")
         return False
 
     # pylint: disable=global-statement
     global _THROTTLED_REFRESH
-    _THROTTLED_REFRESH = Throttle(timedelta(seconds=1))(transmission_api.session_stats)
+    _THROTTLED_REFRESH = Throttle(timedelta(seconds=1))(
+        transmission_api.session_stats)
 
     dev = []
     for variable in config['monitored_variables']:
         if variable['type'] not in SENSOR_TYPES:
             _LOGGER.error('Sensor type: "%s" does not exist', variable['type'])
         else:
-            dev.append(TransmissionSensor(variable['type'], transmission_api, name))
+            dev.append(TransmissionSensor(
+                variable['type'], transmission_api, name))
 
     add_devices(dev)
 
@@ -157,20 +165,22 @@ class TransmissionSensor(Entity):
                 upload = self.transmission_client.session.uploadSpeed
                 download = self.transmission_client.session.downloadSpeed
                 if upload > 0 and download > 0:
-                    self._state =  'Up/Down'
+                    self._state = 'Up/Down'
                 elif upload > 0 and download == 0:
-                    self._state =  'Seeding'
+                    self._state = 'Seeding'
                 elif upload == 0 and download > 0:
-                    self._state =  'Downloading'
+                    self._state = 'Downloading'
                 else:
-                    self._state =  'Idle'
+                    self._state = 'Idle'
             else:
-                self._state =  'Unknown'
+                self._state = 'Unknown'
 
         if self.transmission_client.session:
             if self.type == 'download_speed':
-                mb_spd = float(self.transmission_client.session.downloadSpeed) / 1024 / 1024
+                mb_spd = float(self.transmission_client.session.downloadSpeed)
+                mb_spd = mb_spd / 1024 / 1024
                 self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
             elif self.type == 'upload_speed':
-                mb_spd = float(self.transmission_client.session.uploadSpeed) / 1024 / 1024
+                mb_spd = float(self.transmission_client.session.uploadSpeed)
+                mb_spd = mb_spd / 1024 / 1024
                 self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
