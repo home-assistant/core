@@ -2,7 +2,7 @@
 
 <link rel="import" href="../bower_components/google-apis/google-jsapi.html">
 
-<polymer-element name="state-timeline" attributes="stateHistory">
+<polymer-element name="state-timeline" attributes="stateHistory isLoadingData">
   <template>
     <style>
     :host {
@@ -16,20 +16,29 @@
     .loadingmessage {
       margin-top: 10px;
     }
+
+    .hiddencharts {
+      visibility:hidden;
+    }
+
+    .singlelinechart {
+      min-height:140px;
+    }
     </style>
 
-    <div layout horizontal center fit class='login' id="splash" hidden?="{{!isLoading}}">
-      <div layout vertical center flex>
-        <div id="loadingbox">
-          <paper-spinner active="true"></paper-spinner><br />
-          <div class="loadingmessage">{{spinnerMessage}}</div>
+    <div style='width: 100%; height: auto;' class="{{ {hiddencharts: !isLoading}  | tokenList}}" >
+      <div layout horizontal center fit id="splash">
+        <div layout vertical center flex>
+          <div id="loadingbox">
+            <paper-spinner active="true"></paper-spinner><br />
+            <div class="loadingmessage">{{spinnerMessage}}</div>
+          </div>
         </div>
       </div>
     </div>
-
     <google-jsapi on-api-load="{{googleApiLoaded}}"></google-jsapi>
-    <div id="timeline" style='width: 100%; height: auto;'></div>
-    <div id="line_graphs" style='width: 100%; height: auto;'></div>
+    <div id="timeline" style='width: 100%; height: auto;' class="{{ {hiddencharts: isLoadingData, singlelinechart: isSingleDevice && hasLineChart } | tokenList}}"></div>
+    <div id="line_graphs" style='width: 100%; height: auto;' class="{{ {hiddencharts: isLoadingData}  | tokenList}}"></div>
 
   </template>
   <script>
@@ -37,7 +46,10 @@
     apiLoaded: false,
     stateHistory: null,
     isLoading: true,
+    isLoadingData: false,
     spinnerMessage: "Loading data...",
+    isSingleDevice: false,
+    hasLineChart: false,
 
     googleApiLoaded: function() {
       google.load("visualization", "1", {
@@ -51,6 +63,12 @@
 
     stateHistoryChanged: function() {
       this.drawChart();
+    },
+
+    isLoadingDataChanged: function() {
+      if(this.isLoadingData) {
+        isLoading = true;
+      }
     },
 
     drawChart: function() {
@@ -76,16 +94,20 @@
         return;
       }
 
-      // people can pass in history of 1 entityId or a collection.
 
+      this.hasLineChart = false;
+      this.isSingleDevice = false;
+
+      // people can pass in history of 1 entityId or a collection.
       var stateHistory;
       if (_.isArray(this.stateHistory[0])) {
         stateHistory = this.stateHistory;
       } else {
         stateHistory = [this.stateHistory];
+        this.isSingleDevice = true;
       }
 
-      var lineChartDevices = Array();
+      var lineChartDevices = {};
       var numTimelines = 0;
       // stateHistory is a list of lists of sorted state objects
       stateHistory.forEach(function(stateInfo) {
@@ -102,6 +124,7 @@
             lineChartDevices[attributes['unit_of_measurement']] = [];
           }
           lineChartDevices[attributes['unit_of_measurement']].push(stateInfo);
+          this.hasLineChart = true
           return;
         }
 
@@ -158,10 +181,7 @@
       fill in its data.
 
       **************************************************/
-      var isSingleDevice = false;
-      if(stateHistory.length === 1) {
-        isSingleDevice = true;
-      }
+
 
       while (this.$.line_graphs.firstChild) {
         this.$.line_graphs.removeChild(this.$.line_graphs.firstChild);
@@ -170,11 +190,10 @@
       for (var key in lineChartDevices) {
         var deviceStates = lineChartDevices[key];
 
-        if(isSingleDevice) {
+        if(this.isSingleDevice) {
           container = this.$.timeline
         }
         else {
-          container = this.$.single_timeline;
           container = document.createElement("DIV");
           this.$.line_graphs.appendChild(container);
         }
@@ -188,6 +207,7 @@
 
         var options = {
             legend: { position: 'top' },
+            titlePosition: 'none',
             vAxes: {
               // Adds units to the left hand side of the graph
               0: {title: key}
@@ -206,8 +226,12 @@
 
           };
 
-        if(isSingleDevice) {
+        if(this.isSingleDevice) {
           options.legend.position = 'none';
+          options.vAxes[0].title = null;
+          options.chartArea.left = 40;
+          options.chartArea.height = '80%';
+          options.chartArea.top = 5;
         }
 
         // Get a unique list of times of state changes for all the device
@@ -291,7 +315,7 @@
         dataTable.addRows(data);
         chart.draw(dataTable, options);
       }
-      this.isLoading = false;
+      this.isLoading = (!this.isLoadingData) ? false : true;
 
     },
 
