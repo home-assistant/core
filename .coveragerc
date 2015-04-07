@@ -28,6 +28,7 @@ omit =
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/sensor/transmission.py
 
 
 [report]
