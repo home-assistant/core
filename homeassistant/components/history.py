@@ -100,6 +100,7 @@ def get_state(point_in_time, entity_id, run=None):
     return states[0] if states else None
 
 
+# pylint: disable=unused-argument
 def setup(hass, config):
     """ Setup history hooks. """
     hass.http.register_path(
@@ -115,6 +116,7 @@ def setup(hass, config):
     return True
 
 
+# pylint: disable=unused-argument
 # pylint: disable=invalid-name
 def _api_last_5_states(handler, path_match, data):
     """ Return the last 5 states for an entity id as JSON. """
