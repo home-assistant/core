@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         ## only one name given
         if type(config['names']) == str:
-            names = [names]
+            names = config[names]
         
         ## map names and sensors in given order
         elif type(config['names']) == list:
