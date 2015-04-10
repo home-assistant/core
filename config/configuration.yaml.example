@@ -28,11 +28,15 @@ wink:
   access_token: 'YOUR_TOKEN'
 
 device_tracker:
-  # The following types are available: netgear, tomato, luci, nmap_tracker
+  # The following types are available: netgear, tomato, luci, nmap_tracker, unifi
   platform: netgear
   host: 192.168.1.1
   username: admin
   password: PASSWORD
+  # Unifi requires a couple extra parameters
+  port: 8443
+  version: v3
+  siteid: default
   # http_id is needed for Tomato routers only
   # http_id: ABCDEFGHH
   # For nmap_tracker, only the IP addresses to scan are needed:
