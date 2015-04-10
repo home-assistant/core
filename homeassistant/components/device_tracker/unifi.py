@@ -34,7 +34,7 @@ def get_scanner(hass, config):
 
 
 class unifiDeviceScanner(object):
-    """ This class queries a Netgear wireless router using the SOAP-api. """
+    """ This class queries a Unifi controller server. """
 
     def __init__(self, host, username, password, port, version, siteid):
         self.last_results = []
@@ -52,6 +52,7 @@ class unifiDeviceScanner(object):
 
             return
 
+        # The example format to initialize the controller - taken from unifi-ls-clients
         # c = Controller(args.controller, args.username, args.password, args.port, args.version, args.siteid)
         self._api = Controller(host, username, password, port, version, siteid)
 
@@ -60,12 +61,9 @@ class unifiDeviceScanner(object):
 
         _LOGGER.info("Unifi object created, running first device scan.")
 
-        #self.success_init = self._api.login()
         self.success_init = True
-        #if self.success_init:
         self._update_info()
-        #else:
-        #    _LOGGER.error("Failed to Login")
+
 
     def scan_devices(self):
         """ Scans for new devices and return a
@@ -76,9 +74,8 @@ class unifiDeviceScanner(object):
 
     def get_device_name(self, mac):
         """ Returns the name of the given device or None if we don't know. """
-        print (self.last_results.__len__())
+
         for x in self.last_results:
-            print (x["mac"])
             if (x["mac"].upper() == mac.upper()):
                 try:
                     return (x["name"])
@@ -92,7 +89,7 @@ class unifiDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Retrieves latest information from the Netgear router.
+        """ Retrieves latest information from the Unifi AP.
             Returns boolean if scanning successful. """
         if not self.success_init:
             return
