@@ -20,6 +20,7 @@ omit =
     homeassistant/components/light/hue.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/mysensors.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushover.py
     homeassistant/components/media_player/cast.py
