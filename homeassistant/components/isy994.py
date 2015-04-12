@@ -22,7 +22,7 @@ from homeassistant.const import (
 DOMAIN = "isy994"
 DEPENDENCIES = []
 DISCOVER_LIGHTS = "isy994.lights"
-# DISCOVER_SWITCHES = "isy994.switches"
+DISCOVER_SWITCHES = "isy994.switches"
 DISCOVER_SENSORS = "isy994.sensors"
 ISY = None
 
@@ -63,7 +63,8 @@ def setup(hass, config):
 
     # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
-                                 ('light', DISCOVER_LIGHTS))):
+                                  ('light', DISCOVER_LIGHTS),
+                                  ('switch', DISCOVER_SWITCHES))):
         component = get_component(comp_name)
         bootstrap.setup_component(hass, component.DOMAIN, config)
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
@@ -137,7 +138,7 @@ class ISYDeviceABC(ToggleEntity):
         pass
 
     def onUpdate(self, e):
-        """ Handles the update recieved event. """
+        """ Handles the update received event. """
         self.update_ha_state()
 
     @property
@@ -157,12 +158,18 @@ class ISYDeviceABC(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ turns the device on """
-        attrs = [kwargs.get(name) for name in self._onattrs]
-        self.node.on(*attrs)
+        if self.domain is not 'sensor':
+            attrs = [kwargs.get(name) for name in self._onattrs]
+            self.node.on(*attrs)
+        else:
+            logger.error('ISY cannot turn on sensors.')
 
     def turn_off(self, **kwargs):
         """ turns the device off """
-        self.node.off()
+        if self.domain is not 'sensor':
+            self.node.off()
+        else:
+            logger.error('ISY cannot turn off sensors.')
 
     @property
     def unit_of_measurement(self):
