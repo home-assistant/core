@@ -25,6 +25,8 @@ DISCOVER_LIGHTS = "isy994.lights"
 DISCOVER_SWITCHES = "isy994.switches"
 DISCOVER_SENSORS = "isy994.sensors"
 ISY = None
+SENSOR_STRING = 'Sensor'
+HIDDEN_STRING = '{HIDE ME}'
 
 # setup logger
 logger = logging.getLogger(__name__)
@@ -32,28 +34,34 @@ logger.setLevel(logging.DEBUG)
 
 
 def setup(hass, config):
-    # pull values from configuration file
+    # check for required values in configuration file
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            logger):
         return False
+
+    # pull and parse standard configuration
+    user = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
+    host = urlparse(config[DOMAIN][CONF_HOST])
+    addr = host.geturl()
+    if host.scheme == 'http':
+        addr = addr.replace('http://', '')
+        https = False
+    elif host.scheme == 'https':
+        addr = addr.replace('https://', '')
+        https = True
     else:
-        user = config[DOMAIN][CONF_USERNAME]
-        password = config[DOMAIN][CONF_PASSWORD]
-        host = urlparse(config[DOMAIN][CONF_HOST])
-        addr = host.geturl()
-        if host.scheme == 'http':
-            addr = addr.replace('http://', '')
-            https = False
-        elif host.scheme == 'https':
-            addr = addr.replace('https://', '')
-            https = True
-        else:
-            logger.error('isy994 host value in configuration ' +
-                         'file is invalid.')
-            return False
-        port = host.port
-        addr = addr.replace(':{}'.format(port), '')
+        logger.error('isy994 host value in configuration file is invalid.')
+        return False
+    port = host.port
+    addr = addr.replace(':{}'.format(port), '')
+
+    # pull and parse optional configuration
+    global SENSOR_STRING
+    global HIDDEN_STRING
+    SENSOR_STRING = config[DOMAIN].get('sensor_string', SENSOR_STRING)
+    HIDDEN_STRING = config[DOMAIN].get('hidden_string', HIDDEN_STRING)
 
     # connect to ISY controller
     global ISY

@@ -3,7 +3,7 @@
 import logging
 
 # homeassistant imports
-from homeassistant.components.isy994 import ISY, ISYDeviceABC
+from homeassistant.components.isy994 import ISY, ISYDeviceABC, SENSOR_STRING
 from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_HOME,
                                  STATE_NOT_HOME, STATE_ON, STATE_OFF)
 
@@ -25,6 +25,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                          getattr(ISY.climate, prop),
                                          getattr(ISY.climate, prop + '_units'))
                 devs.append(ISYSensorDevice(node))
+
+    # import sensor nodes
+    for node in ISY.nodes:
+        if SENSOR_STRING in node.name:
+            devs.append(ISYSensorDevice(node, [STATE_ON, STATE_OFF]))
 
     # import sensor programs
     for (folder_name, states) in (

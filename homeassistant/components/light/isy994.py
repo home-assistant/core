@@ -3,7 +3,7 @@
 import logging
 
 # homeassistant imports
-from homeassistant.components.isy994 import ISYDeviceABC, ISY
+from homeassistant.components.isy994 import ISYDeviceABC, ISY, SENSOR_STRING
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_ON, STATE_OFF
 
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # import dimmable nodes
     for node in ISY.nodes:
-        if node.dimmable:
+        if node.dimmable and SENSOR_STRING not in node.name:
             devs.append(ISYLightDevice(node))
 
     add_devices(devs)
