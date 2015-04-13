@@ -4,8 +4,8 @@ import logging
 
 # homeassistant imports
 from homeassistant.components.isy994 import ISY, ISYDeviceABC
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import STATE_OPEN, STATE_CLOSED
+from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_HOME,
+                                 STATE_NOT_HOME, STATE_ON, STATE_OFF)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,6 +26,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                          getattr(ISY.climate, prop + '_units'))
                 devs.append(ISYSensorDevice(node))
 
+    # import sensor programs
+    for (folder_name, states) in (
+            ('HA.locations', [STATE_HOME, STATE_NOT_HOME]),
+            ('HA.sensors', [STATE_OPEN, STATE_CLOSED]),
+            ('HA.states', [STATE_ON, STATE_OFF])):
+        try:
+            folder = ISY.programs['My Programs'][folder_name]
+        except KeyError:
+            # folder does not exist
+            pass
+        else:
+            for dtype, name, node_id in folder.children:
+                node = folder[node_id].leaf
+                devs.append(ISYSensorDevice(node, states))
+
     add_devices(devs)
 
 
@@ -43,3 +58,7 @@ class ISYSensorDevice(ISYDeviceABC):
     """ represents a isy sensor within home assistant. """
 
     _domain = 'sensor'
+
+    def __init__(self, node, states=[]):
+        super().__init__(node)
+        self._states = states
