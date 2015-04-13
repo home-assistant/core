@@ -130,7 +130,10 @@ class ISYDeviceABC(ToggleEntity):
     @property
     def name(self):
         """ Returns the name of the node if any. """
-        return self.node.name
+        try:
+            return self._name
+        except AttributeError:
+            return self.node.name
 
     def update(self):
         """ Update state of the sensor. """
@@ -143,7 +146,7 @@ class ISYDeviceABC(ToggleEntity):
 
     @property
     def is_on(self):
-        return self.value > 0
+        return bool(self.value)
 
     @property
     def is_open(self):
