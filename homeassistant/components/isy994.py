@@ -60,8 +60,8 @@ def setup(hass, config):
     # pull and parse optional configuration
     global SENSOR_STRING
     global HIDDEN_STRING
-    SENSOR_STRING = config[DOMAIN].get('sensor_string', SENSOR_STRING)
-    HIDDEN_STRING = config[DOMAIN].get('hidden_string', HIDDEN_STRING)
+    SENSOR_STRING = str(config[DOMAIN].get('sensor_string', SENSOR_STRING))
+    HIDDEN_STRING = str(config[DOMAIN].get('hidden_string', HIDDEN_STRING))
 
     # connect to ISY controller
     global ISY
@@ -95,6 +95,7 @@ class ISYDeviceABC(ToggleEntity):
     def __init__(self, node):
         # setup properties
         self.node = node
+        self.hidden = HIDDEN_STRING in self.raw_name
 
         # track changes
         self._changeHandler = self.node.status. \
@@ -136,12 +137,16 @@ class ISYDeviceABC(ToggleEntity):
         return self.node._id
 
     @property
+    def raw_name(self):
+        try:
+            return str(self._name)
+        except AttributeError:
+            return str(self.node.name)
+
+    @property
     def name(self):
         """ Returns the name of the node if any. """
-        try:
-            return self._name
-        except AttributeError:
-            return self.node.name
+        return self.raw_name.replace(HIDDEN_STRING, '').strip()
 
     def update(self):
         """ Update state of the sensor. """
