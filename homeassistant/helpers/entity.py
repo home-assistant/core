@@ -139,7 +139,7 @@ class Entity(object):
         """
         if self.entity_id is not None and \
                 self.entity_id.lower() in self._visibility:
-            return self._visibility[self.entity_id.lower()] is 'hide'
+            return self._visibility[self.entity_id.lower()] == 'hide'
         else:
             return self._hidden
 
