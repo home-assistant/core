@@ -83,7 +83,7 @@ class Entity(object):
 
     hass = None
     entity_id = None
-    _visibility = {}
+    visibility = {}
 
     def update_ha_state(self, force_refresh=False):
         """
@@ -138,8 +138,8 @@ class Entity(object):
         whatever the component sets for visibility.
         """
         if self.entity_id is not None and \
-                self.entity_id.lower() in self._visibility:
-            return self._visibility[self.entity_id.lower()] == 'hide'
+                self.entity_id.lower() in self.visibility:
+            return self.visibility[self.entity_id.lower()] == 'hide'
         else:
             return self._hidden
 

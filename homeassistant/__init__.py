@@ -625,8 +625,8 @@ class StateMachine(object):
         # components that don't use the Entity base class for their entities.
         # The sun component is an example of this. The Entity class cannot be
         # imported cleanly, so assume the state is shown. This means that for
-        # visibility to be supported, the state must originate from a class that
-        # uses the base class Entity or it must manually put the hidden
+        # visibility to be supported, the state must originate from a class
+        # that uses the base class Entity or it must manually put the hidden
         # attribute in its attributes dictionary.
         if ATTR_HIDDEN not in attributes:
             attributes[ATTR_HIDDEN] = False

@@ -3,13 +3,29 @@
 import logging
 
 # homeassistant imports
-from homeassistant.components.isy994 import ISY, ISYDeviceABC, SENSOR_STRING
+from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
+                                             HIDDEN_STRING)
 from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_HOME,
                                  STATE_NOT_HOME, STATE_ON, STATE_OFF)
+
+DEFAULT_HIDDEN_WEATHER = ['Temperature_High', 'Temperature_Low', 'Feels_Like',
+                          'Temperature_Average', 'Pressure', 'Dew_Point',
+                          'Gust_Speed', 'Evapotranspiration',
+                          'Irrigation_Requirement', 'Water_Deficit_Yesterday',
+                          'Elevation', 'Average_Temperature_Tomorrow',
+                          'High_Temperature_Tomorrow',
+                          'Low_Temperature_Tomorrow', 'Humidity_Tomorrow',
+                          'Wind_Speed_Tomorrow', 'Gust_Speed_Tomorrow',
+                          'Rain_Tomorrow', 'Snow_Tomorrow',
+                          'Forecast_Average_Temperature',
+                          'Forecast_High_Temperature',
+                          'Forecast_Low_Temperature', 'Forecast_Humidity',
+                          'Forecast_Rain', 'Forecast_Snow']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the isy994 platform. """
+    # pylint: disable=protected-access
     logger = logging.getLogger(__name__)
     devs = []
     # verify connection
@@ -21,7 +37,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if ISY.climate is not None:
         for prop in ISY.climate._id2name:
             if prop is not None:
-                node = WeatherPseudoNode('ISY.weather.' + prop, prop,
+                prefix = HIDDEN_STRING if prop in DEFAULT_HIDDEN_WEATHER else ''
+                node = WeatherPseudoNode('ISY.weather.' + prop, prefix + prop,
                                          getattr(ISY.climate, prop),
                                          getattr(ISY.climate, prop + '_units'))
                 devs.append(ISYSensorDevice(node))
@@ -42,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # folder does not exist
             pass
         else:
-            for dtype, name, node_id in folder.children:
+            for _, _, node_id in folder.children:
                 node = folder[node_id].leaf
                 devs.append(ISYSensorDevice(node, states))
 
@@ -51,6 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class WeatherPseudoNode(object):
     """ This class allows weather variable to act as regular nodes. """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, device_id, name, status, units=None):
         self._id = device_id
@@ -64,6 +82,6 @@ class ISYSensorDevice(ISYDeviceABC):
 
     _domain = 'sensor'
 
-    def __init__(self, node, states=[]):
+    def __init__(self, node, states=None):
         super().__init__(node)
-        self._states = states
+        self._states = states or []

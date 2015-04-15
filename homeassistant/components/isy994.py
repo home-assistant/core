@@ -29,15 +29,19 @@ SENSOR_STRING = 'Sensor'
 HIDDEN_STRING = '{HIDE ME}'
 
 # setup logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
+    """
+    Setup isy994 component.
+    This will automatically import associated lights, switches, and sensors.
+    """
+    # pylint: disable=global-statement
     # check for required values in configuration file
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           logger):
+                           _LOGGER):
         return False
 
     # pull and parse standard configuration
@@ -52,7 +56,7 @@ def setup(hass, config):
         addr = addr.replace('https://', '')
         https = True
     else:
-        logger.error('isy994 host value in configuration file is invalid.')
+        _LOGGER.error('isy994 host value in configuration file is invalid.')
         return False
     port = host.port
     addr = addr.replace(':{}'.format(port), '')
@@ -65,7 +69,7 @@ def setup(hass, config):
 
     # connect to ISY controller
     global ISY
-    ISY = PyISY.ISY(addr, port, user, password, use_https=https, log=logger)
+    ISY = PyISY.ISY(addr, port, user, password, use_https=https, log=_LOGGER)
     if not ISY.connected:
         return False
 
@@ -91,6 +95,7 @@ class ISYDeviceABC(ToggleEntity):
     _states = []
     _dtype = None
     _domain = None
+    _name = None
 
     def __init__(self, node):
         # setup properties
@@ -98,34 +103,39 @@ class ISYDeviceABC(ToggleEntity):
         self.hidden = HIDDEN_STRING in self.raw_name
 
         # track changes
-        self._changeHandler = self.node.status. \
-            subscribe('changed', self.onUpdate)
+        self._change_handler = self.node.status. \
+            subscribe('changed', self.on_update)
 
     def __del__(self):
         """ cleanup subscriptions because it is the right thing to do. """
-        self._changeHandler.unsubscribe()
+        self._change_handler.unsubscribe()
 
     @property
     def domain(self):
+        """ Returns the domain of the entity. """
         return self._domain
 
     @property
     def dtype(self):
+        """ Returns the data type of the entity (binary or analog). """
         if self._dtype in ['analog', 'binary']:
             return self._dtype
-        return 'binary' if self._units is None else 'analog'
+        return 'binary' if self.unit_of_measurement is None else 'analog'
 
     @property
     def should_poll(self):
+        """ Tells Home Assistant not to poll this entity. """
         return False
 
     @property
     def value(self):
         """ returns the unclean value from the controller """
+        # pylint: disable=protected-access
         return self.node.status._val
 
     @property
     def state_attributes(self):
+        """ Returns the state attributes for the node. """
         attr = {ATTR_FRIENDLY_NAME: self.name}
         for name, prop in self._attrs.items():
             attr[name] = getattr(self, prop)
@@ -134,18 +144,18 @@ class ISYDeviceABC(ToggleEntity):
     @property
     def unique_id(self):
         """ Returns the id of this isy sensor """
+        # pylint: disable=protected-access
         return self.node._id
 
     @property
     def raw_name(self):
-        try:
-            return str(self._name)
-        except AttributeError:
-            return str(self.node.name)
+        """ Returns the unclean node name. """
+        return str(self._name) \
+            if self._name is not None else str(self.node.name)
 
     @property
     def name(self):
-        """ Returns the name of the node if any. """
+        """ Returns the cleaned name of the node. """
         return self.raw_name.replace(HIDDEN_STRING, '').strip()
 
     def update(self):
@@ -153,16 +163,18 @@ class ISYDeviceABC(ToggleEntity):
         # ISY objects are automatically updated by the ISY's event stream
         pass
 
-    def onUpdate(self, e):
+    def on_update(self, event):
         """ Handles the update received event. """
         self.update_ha_state()
 
     @property
     def is_on(self):
+        """ Returns boolean response if the node is on. """
         return bool(self.value)
 
     @property
     def is_open(self):
+        """ Returns boolean respons if the node is open. On = Open. """
         return self.is_on
 
     @property
@@ -178,17 +190,18 @@ class ISYDeviceABC(ToggleEntity):
             attrs = [kwargs.get(name) for name in self._onattrs]
             self.node.on(*attrs)
         else:
-            logger.error('ISY cannot turn on sensors.')
+            _LOGGER.error('ISY cannot turn on sensors.')
 
     def turn_off(self, **kwargs):
         """ turns the device off """
         if self.domain is not 'sensor':
             self.node.off()
         else:
-            logger.error('ISY cannot turn off sensors.')
+            _LOGGER.error('ISY cannot turn off sensors.')
 
     @property
     def unit_of_measurement(self):
+        """ Returns the defined units of measurement or None. """
         try:
             return self.node.units
         except AttributeError:
