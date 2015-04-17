@@ -37,15 +37,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if ISY.climate is not None:
         for prop in ISY.climate._id2name:
             if prop is not None:
-                prefix = HIDDEN_STRING if prop in DEFAULT_HIDDEN_WEATHER else ''
+                prefix = HIDDEN_STRING \
+                    if prop in DEFAULT_HIDDEN_WEATHER else ''
                 node = WeatherPseudoNode('ISY.weather.' + prop, prefix + prop,
                                          getattr(ISY.climate, prop),
                                          getattr(ISY.climate, prop + '_units'))
                 devs.append(ISYSensorDevice(node))
 
     # import sensor nodes
-    for node in ISY.nodes:
+    for (path, node) in ISY.nodes:
         if SENSOR_STRING in node.name:
+            if HIDDEN_STRING in path:
+                node.name += HIDDEN_STRING
             devs.append(ISYSensorDevice(node, [STATE_ON, STATE_OFF]))
 
     # import sensor programs

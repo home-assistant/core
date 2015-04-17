@@ -113,6 +113,7 @@ def setup(hass, config):
 
 class Group(object):
     """ Tracks a group of entity ids. """
+    # pylint: disable=too-many-instance-attributes
 
     visibility = Entity.visibility
     _hidden = False

@@ -3,7 +3,8 @@
 import logging
 
 # homeassistant imports
-from homeassistant.components.isy994 import ISY, ISYDeviceABC, SENSOR_STRING
+from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
+                                             HIDDEN_STRING)
 from homeassistant.const import STATE_ON, STATE_OFF  # STATE_OPEN, STATE_CLOSED
 # The frontend doesn't seem to fully support the open and closed states yet.
 # Once it does, the HA.doors programs should report open and closed instead of
@@ -20,8 +21,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     # import not dimmable nodes and groups
-    for node in ISY.nodes:
+    for (path, node) in ISY.nodes:
         if not node.dimmable and SENSOR_STRING not in node.name:
+            if HIDDEN_STRING in path:
+                node.name += HIDDEN_STRING
             devs.append(ISYSwitchDevice(node))
 
     # import ISY doors programs
