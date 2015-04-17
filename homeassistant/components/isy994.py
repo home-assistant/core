@@ -156,7 +156,8 @@ class ISYDeviceABC(ToggleEntity):
     @property
     def name(self):
         """ Returns the cleaned name of the node. """
-        return self.raw_name.replace(HIDDEN_STRING, '').strip()
+        return self.raw_name.replace(HIDDEN_STRING, '').strip() \
+            .replace('_', ' ')
 
     def update(self):
         """ Update state of the sensor. """
