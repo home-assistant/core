@@ -47,21 +47,15 @@ def main(password, askpass, attrs, address, port):
             output[attr].append(item['attributes'].get(attr, ''))
 
     # output data
-    print_table(output, 'entity_id')
+    print_table(output, ['entity_id'] + attrs)
 
 
-def print_table(data, first_key):
+def print_table(data, columns):
     """ format and print a table of data from a dictionary """
     # get column lengths
     lengths = {}
     for key, value in data.items():
         lengths[key] = max([len(str(val)) for val in value] + [len(key)])
-
-    # construct the column order
-    columns = sorted(list(data.keys()))
-    ind = columns.index(first_key)
-    columns.pop(ind)
-    columns = [first_key] + columns
 
     # print header
     for item in columns:
