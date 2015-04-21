@@ -1,5 +1,3 @@
-__author__ = "Aurélien Correia"
-
 """
 Support for Modbus sensors.
 
@@ -42,6 +40,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Read config and create Modbus devices """
     sensors = []
@@ -52,15 +51,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     registers = config.get("registers")
     for regnum, register in registers.items():
         if register.get("name"):
-            sensors.append(ModbusSensor(register.get("name"), slave, regnum, None, register.get("unit")))
+            sensors.append(ModbusSensor(register.get("name"),
+                                        slave,
+                                        regnum,
+                                        None,
+                                        register.get("unit")))
         if register.get("bits"):
             bits = register.get("bits")
             for bitnum, bit in bits.items():
                 if bit.get("name"):
-                    sensors.append(ModbusSensor(bit.get("name"), slave, regnum, bitnum))
+                    sensors.append(ModbusSensor(bit.get("name"),
+                                                slave,
+                                                regnum,
+                                                bitnum))
     add_devices(sensors)
 
+
 class ModbusSensor(Entity):
+    # pylint: disable=too-many-arguments
     """ Represents a Modbus Sensor """
 
     def __init__(self, name, slave, register, bit=None, unit=None):
@@ -76,13 +84,16 @@ class ModbusSensor(Entity):
 
     @property
     def should_poll(self):
-        """ We should poll, because slaves are not allowed to initiate communication on Modbus networks"""
+        """ We should poll, because slaves are not allowed to
+            initiate communication on Modbus networks"""
         return True
 
     @property
     def unique_id(self):
         """ Returns a unique id. """
-        return "MODBUS-SENSOR-{}-{}-{}".format(self.slave, self.register, self.bit)
+        return "MODBUS-SENSOR-{}-{}-{}".format(self.slave,
+                                               self.register,
+                                               self.bit)
 
     @property
     def state(self):
@@ -113,10 +124,12 @@ class ModbusSensor(Entity):
         return attr
 
     def update(self):
-        result = modbus.NETWORK.read_holding_registers(unit=self.slave,address=self.register,count=1)
+        result = modbus.NETWORK.read_holding_registers(unit=self.slave,
+                                                       address=self.register,
+                                                       count=1)
         val = 0
-        for i, e in enumerate(result.registers):
-            val += e * (2**(i*16))
+        for i, res in enumerate(result.registers):
+            val += res * (2**(i*16))
         if self.bit:
             self._value = val & (0x0001 << self.bit)
         else:

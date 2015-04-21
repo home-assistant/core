@@ -1,5 +1,3 @@
-__author__ = "Aurélien Correia"
-
 """
 Support for Modbus switches.
 
@@ -34,6 +32,7 @@ from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Read config and create Modbus devices """
     switches = []
@@ -46,8 +45,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         bits = register.get("bits")
         for bitnum, bit in bits.items():
             if bit.get("name"):
-                switches.append(ModbusSwitch(bit.get("name"), slave, regnum, bitnum))
+                switches.append(ModbusSwitch(bit.get("name"),
+                                             slave,
+                                             regnum,
+                                             bitnum))
     add_devices(switches)
+
 
 class ModbusSwitch(ToggleEntity):
     """ Represents a Modbus Switch """
@@ -65,13 +68,16 @@ class ModbusSwitch(ToggleEntity):
 
     @property
     def should_poll(self):
-        """ We should poll, because slaves are not allowed to initiate communication on Modbus networks"""
+        """ We should poll, because slaves are not allowed to
+            initiate communication on Modbus networks"""
         return True
 
     @property
     def unique_id(self):
         """ Returns a unique id. """
-        return "MODBUS-SWITCH-{}-{}-{}".format(self.slave, self.register, self.bit)
+        return "MODBUS-SWITCH-{}-{}-{}".format(self.slave,
+                                               self.register,
+                                               self.bit)
 
     @property
     def is_on(self):
@@ -92,18 +98,24 @@ class ModbusSwitch(ToggleEntity):
         if self.register_value is None:
             self.update()
         val = self.register_value | (0x0001 << self.bit)
-        modbus.NETWORK.write_register(unit=self.slave,address=self.register,value=val)
+        modbus.NETWORK.write_register(unit=self.slave,
+                                      address=self.register,
+                                      value=val)
 
     def turn_off(self, **kwargs):
         if self.register_value is None:
             self.update()
         val = self.register_value & ~(0x0001 << self.bit)
-        modbus.NETWORK.write_register(unit=self.slave,address=self.register,value=val)
+        modbus.NETWORK.write_register(unit=self.slave,
+                                      address=self.register,
+                                      value=val)
 
     def update(self):
-        result = modbus.NETWORK.read_holding_registers(unit=self.slave,address=self.register,count=1)
+        result = modbus.NETWORK.read_holding_registers(unit=self.slave,
+                                                       address=self.register,
+                                                       count=1)
         val = 0
-        for i, e in enumerate(result.registers):
-            val += e * (2**(i*16))
+        for i, res in enumerate(result.registers):
+            val += res * (2**(i*16))
         self.register_value = val
         self._is_on = (val & (0x0001 << self.bit) > 0)
