@@ -10,7 +10,7 @@ After you finish adding support for your device:
 
 If you've added a component:
 
- - update the file [`domain-icon.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/domain-icon.html) with an icon for your domain ([pick from this list](https://www.polymer-project.org/components/core-icons/demo.html))
+ - update the file [`domain-icon.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/domain-icon.html) with an icon for your domain ([pick from this list](https://www.polymer-project.org/0.5/components/core-elements/demo.html#core-icon))
  - update the demo component with two states that it provides
  - Add your component to home-assistant.conf.example
 
