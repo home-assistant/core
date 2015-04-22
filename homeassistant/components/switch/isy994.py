@@ -13,6 +13,7 @@ from homeassistant.const import STATE_ON, STATE_OFF  # STATE_OPEN, STATE_CLOSED
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the isy994 platform. """
+    # pylint: disable=too-many-locals
     logger = logging.getLogger(__name__)
     devs = []
     # verify connection
