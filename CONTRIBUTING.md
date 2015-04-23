@@ -27,8 +27,24 @@ A state can have several attributes that will help the frontend in displaying yo
  - `friendly_name`: this name will be used as the name of the device
  - `entity_picture`: this picture will be shown instead of the domain icon
  - `unit_of_measurement`: this will be appended to the state in the interface
+ - `hidden`: This is a suggestion to the frontend on if the state should be hidden
 
 These attributes are defined in [homeassistant.components](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/__init__.py#L25).
+
+## Proper Visibility Handling ##
+
+Generally, when creating a new entity for Home Assistant you will want it to be a class that inherits the [homeassistant.helpers.entity.Entity](https://github.com/balloob/home-assistant/blob/master/homeassistant/helpers/entity.py] Class. If this is done, visibility will be handled for you. 
+You can set a suggestion for your entitie's visibility by setting the hidden property by doing something similar to the following.
+
+```python
+self.hidden = True
+```
+
+This will SUGGEST that the active frontend hide the entity. This requires that the active frontend support hidden cards (the default frontend does) and that the value of hidden be included in your attributes dictionary (see above). The Entity abstract class will take care of this for you.
+
+Remember: The suggestion set by your component's code will always be overwritten by manual settings in the configuration.yaml file. This is why you may set hidden to be False, but the property may remain True (or vice-versa).
+
+If you would not like to use the Entity Abstract Class, you may also inherity the Visibility Abstract Class which will include the logic for the hidden property but not automatically add the hidden property to the attributes dictionary. If you use this class, ensure that your class correctly adds the hidden property to the attributes.
 
 ## Working on the frontend
 

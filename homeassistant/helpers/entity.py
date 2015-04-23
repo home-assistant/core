@@ -8,16 +8,51 @@ Provides ABC for entities in HA.
 from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF,
-    DEVICE_DEFAULT_NAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN, STATE_ON,
+    STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 
-class Entity(object):
+class VisibilityABC(object):
+    """
+    Abstract Class for including visibility logic. This class includes the
+    necessary methods and properties to consider a visibility suggestion form
+    the component and then determine visibility based on the options in the
+    configuration file. When using this abstract class, the value for the
+    hidden property must still be included in the attributes disctionary. The
+    Entity class takes care of this automatically.
+    """
+    # pylint: disable=too-few-public-methods
+
+    entity_id = None
+    visibility = {}
+    _hidden = False
+
+    @property
+    def hidden(self):
+        """
+        Returns the official decision of whether the entity should be hidden.
+        Any value set by the user in the configuration file will overwrite
+        whatever the component sets for visibility.
+        """
+        if self.entity_id is not None and \
+                self.entity_id.lower() in self.visibility:
+            return self.visibility[self.entity_id.lower()] == 'hide'
+        else:
+            return self._hidden
+
+    @hidden.setter
+    def hidden(self, val):
+        """ Sets the suggestion for visibility. """
+        self._hidden = bool(val)
+
+
+class Entity(VisibilityABC):
     """ ABC for Home Assistant entities. """
     # pylint: disable=no-self-use
 
-    hass = None
-    entity_id = None
+    # SAFE TO OVERWRITE
+    # The properties and methods here are safe to overwrite when inherting this
+    # class. These may be used to customize the behavior of the entity.
 
     @property
     def should_poll(self):
@@ -52,6 +87,10 @@ class Entity(object):
         """ Unit of measurement of this entity, if any. """
         return None
 
+    def update(self):
+        """ Retrieve latest state. """
+        pass
+
     # DEPRECATION NOTICE:
     # Device is moving from getters to properties.
     # For now the new properties will call the old functions
@@ -69,9 +108,13 @@ class Entity(object):
         """ Returns optional state attributes. """
         return None
 
-    def update(self):
-        """ Retrieve latest state. """
-        pass
+    # DO NOT OVERWRITE
+    # These properties and methods are either managed by Home Assistant or they
+    # are used to perform a very specific function. Overwriting these may
+    # produce undesirable effects in the entity's operation.
+
+    hass = None
+    entity_id = None
 
     def update_ha_state(self, force_refresh=False):
         """
@@ -96,6 +139,9 @@ class Entity(object):
 
         if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
             attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+
+        if ATTR_HIDDEN not in attr:
+            attr[ATTR_HIDDEN] = bool(self.hidden)
 
         # Convert temperature if we detect one
         if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,

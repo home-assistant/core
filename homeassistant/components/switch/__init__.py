@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.components import group, discovery, wink
+from homeassistant.components import group, discovery, wink, isy994
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -30,6 +30,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 DISCOVERY_PLATFORMS = {
     discovery.services.BELKIN_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
+    isy994.DISCOVER_SWITCHES: 'isy994',
 }
 
 _LOGGER = logging.getLogger(__name__)

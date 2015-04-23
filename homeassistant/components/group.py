@@ -7,10 +7,11 @@ Provides functionality to group devices that can be turned on or off.
 
 import homeassistant as ha
 from homeassistant.helpers import generate_entity_id
+from homeassistant.helpers.entity import VisibilityABC
 import homeassistant.util as util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF,
-    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN)
+    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, ATTR_HIDDEN)
 
 DOMAIN = "group"
 DEPENDENCIES = []
@@ -110,8 +111,9 @@ def setup(hass, config):
     return True
 
 
-class Group(object):
+class Group(VisibilityABC):
     """ Tracks a group of entity ids. """
+
     def __init__(self, hass, name, entity_ids=None, user_defined=True):
         self.hass = hass
         self.name = name
@@ -138,7 +140,8 @@ class Group(object):
         return {
             ATTR_ENTITY_ID: self.tracking,
             ATTR_AUTO: not self.user_defined,
-            ATTR_FRIENDLY_NAME: self.name
+            ATTR_FRIENDLY_NAME: self.name,
+            ATTR_HIDDEN: self.hidden
         }
 
     def update_tracked_entity_ids(self, entity_ids):

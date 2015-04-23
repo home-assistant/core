@@ -86,6 +86,9 @@ ATTR_TRIPPED = "device_tripped"
 # time the device was tripped
 ATTR_LAST_TRIP_TIME = "last_tripped_time"
 
+# For all entity's, this hold whether or not it should be hidden
+ATTR_HIDDEN = "hidden"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
