@@ -1,21 +1,12 @@
 #! /usr/bin/python
 """
-get_entities.py
-
-Usage: get_entities.py [OPTION] ... [ATTRIBUTE] ...
-
 Query the Home Assistant API for available entities then print them and any
 desired attributes to the screen.
-
-Options:
-    -h, --help                      display this text
-        --password=PASS             use the supplied password
-        --ask-password              prompt for password
-    -a, --address=ADDR              use the supplied server address
-    -p, --port=PORT                 use the supplied server port
 """
+
 import sys
 import getpass
+import argparse
 try:
     from urllib2 import urlopen
     PYTHON = 2
@@ -84,52 +75,23 @@ def mk_url(address, port, password):
     return url
 
 
-def parse(option, all_options):
-    """ either update the options or set it to be updated next time """
-    if len(option) > 1:
-        all_options[option[0]] = option[1]
-        return (all_options, None)
-    else:
-        return (all_options, option)
-
-
 if __name__ == "__main__":
     all_options = {'password': None, 'askpass': False, 'attrs': [],
                    'address': 'localhost', 'port': '8123'}
 
-    # parse arguments
-    next_key = None
-    for arg in sys.argv[1:]:
-        if next_key is None:
-            option = arg.split('=')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('attrs', metavar='ATTRIBUTE', type=str, nargs='*',
+                        help='an attribute to read from the state')
+    parser.add_argument('--password', dest='password', default=None,
+                        type=str, help='API password for the HA server')
+    parser.add_argument('--ask-password', dest='askpass', default=False,
+                        action='store_const', const=True,
+                        help='prompt for HA API password')
+    parser.add_argument('--addr', dest='address',
+                        default='localhost', type=str,
+                        help='address of the HA server')
+    parser.add_argument('--port', dest='port', default='8123',
+                        type=str, help='port that HA is hosting on')
 
-            if option[0] in ['-h', '--help']:
-                print(__doc__)
-                sys.exit(0)
-
-            elif option[0] == '--password':
-                all_options['password'] = '='.join(option[1:])
-
-            elif option[0] == '--ask-password':
-                all_options['askpass'] = True
-
-            elif option[0] == '-a':
-                next_key = 'address'
-
-            elif option[0] == '--address':
-                all_options['address'] = '='.join(option[1:])
-
-            elif option[0] == '-p':
-                next_key = 'port'
-
-            elif option[0] == '--port':
-                all_options['port'] = '='.join(option[1])
-
-            else:
-                all_options['attrs'].append('='.join(option))
-
-        else:
-            all_options[next_key] = arg
-            next_key = None
-
-    main(**all_options)
+    args = parser.parse_args()
+    main(args.password, args.askpass, args.attrs, args.address, args.port)
