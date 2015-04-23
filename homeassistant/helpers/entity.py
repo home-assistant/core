@@ -11,44 +11,15 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN, STATE_ON,
     STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
-
-class VisibilityABC(object):
-    """
-    Abstract Class for including visibility logic. This class includes the
-    necessary methods and properties to consider a visibility suggestion form
-    the component and then determine visibility based on the options in the
-    configuration file. When using this abstract class, the value for the
-    hidden property must still be included in the attributes disctionary. The
-    Entity class takes care of this automatically.
-    """
-    # pylint: disable=too-few-public-methods
-
-    entity_id = None
-    visibility = {}
-    _hidden = False
-
-    @property
-    def hidden(self):
-        """
-        Returns the official decision of whether the entity should be hidden.
-        Any value set by the user in the configuration file will overwrite
-        whatever the component sets for visibility.
-        """
-        if self.entity_id is not None and \
-                self.entity_id.lower() in self.visibility:
-            return self.visibility[self.entity_id.lower()] == 'hide'
-        else:
-            return self._hidden
-
-    @hidden.setter
-    def hidden(self, val):
-        """ Sets the suggestion for visibility. """
-        self._hidden = bool(val)
+# Dict mapping entity_id to a boolean that overwrites the hidden property
+_OVERWRITE_HIDDEN = {}
 
 
-class Entity(VisibilityABC):
+class Entity(object):
     """ ABC for Home Assistant entities. """
     # pylint: disable=no-self-use
+
+    _hidden = False
 
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inherting this
@@ -86,6 +57,16 @@ class Entity(VisibilityABC):
     def unit_of_measurement(self):
         """ Unit of measurement of this entity, if any. """
         return None
+
+    @property
+    def hidden(self):
+        """ Suggestion if the entity should be hidden from UIs. """
+        return self._hidden
+
+    @hidden.setter
+    def hidden(self, val):
+        """ Sets the suggestion for visibility. """
+        self._hidden = bool(val)
 
     def update(self):
         """ Retrieve latest state. """
@@ -140,8 +121,8 @@ class Entity(VisibilityABC):
         if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
             attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
-        if ATTR_HIDDEN not in attr:
-            attr[ATTR_HIDDEN] = bool(self.hidden)
+        if _OVERWRITE_HIDDEN.get(self.entity_id, self.hidden):
+            attr[ATTR_HIDDEN] = True
 
         # Convert temperature if we detect one
         if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,
@@ -160,6 +141,17 @@ class Entity(VisibilityABC):
 
     def __repr__(self):
         return "<Entity {}: {}>".format(self.name, self.state)
+
+    @staticmethod
+    def overwrite_hidden(entity_id, hidden):
+        """
+        Overwrite the hidden property of an entity.
+        Set hidden to None to remove any overwritten value in place.
+        """
+        if hidden is None:
+            _OVERWRITE_HIDDEN.pop(entity_id, None)
+        else:
+            _OVERWRITE_HIDDEN[entity_id.lower()] = hidden
 
 
 class ToggleEntity(Entity):
