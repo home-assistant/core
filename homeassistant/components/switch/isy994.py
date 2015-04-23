@@ -1,4 +1,4 @@
-""" Support for ISY994 lights. """
+""" Support for ISY994 switch. """
 # system imports
 import logging
 
