@@ -30,6 +30,11 @@ omit =
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/sensor/transmission.py
 
+    homeassistant/components/isy994.py
+    homeassistant/components/light/isy994.py
+    homeassistant/components/switch/isy994.py
+    homeassistant/components/sensor/isy994.py
+
 
 [report]
 # Regexes for lines to exclude from consideration

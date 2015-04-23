@@ -35,7 +35,7 @@ python-nest>=2.1
 pydispatcher>=2.0.5
 
 # isy994
-PyISY>=1.0.0
+PyISY>=1.0.2
 
 # sensor.systemmonitor 
 psutil>=2.2.1
