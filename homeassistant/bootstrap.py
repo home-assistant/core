@@ -208,7 +208,7 @@ def process_ha_core_config(hass, config):
         if key in config:
             setattr(hass.config, attr, config[key])
 
-    Entity.visibility.update(config.get('visibility', [{}])[0])
+    Entity.visibility.update(config.get('visibility', {}))
 
     if CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]
