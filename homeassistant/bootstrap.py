@@ -20,7 +20,7 @@ import homeassistant
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import VisibilityABC
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, TEMP_CELCIUS,
@@ -208,7 +208,7 @@ def process_ha_core_config(hass, config):
         if key in config:
             setattr(hass.config, attr, config[key])
 
-    Entity.visibility.update(config.get('visibility', {}))
+    VisibilityABC.visibility.update(config.get('visibility', {}))
 
     if CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]

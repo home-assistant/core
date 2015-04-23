@@ -7,7 +7,7 @@ Provides functionality to group devices that can be turned on or off.
 
 import homeassistant as ha
 from homeassistant.helpers import generate_entity_id
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import VisibilityABC
 import homeassistant.util as util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF,
@@ -111,12 +111,8 @@ def setup(hass, config):
     return True
 
 
-class Group(object):
+class Group(VisibilityABC):
     """ Tracks a group of entity ids. """
-    # pylint: disable=too-many-instance-attributes
-
-    visibility = Entity.visibility
-    _hidden = False
 
     def __init__(self, hass, name, entity_ids=None, user_defined=True):
         self.hass = hass
@@ -219,24 +215,6 @@ class Group(object):
                        for ent_id in self.tracking if entity_id != ent_id):
                 self.hass.states.set(
                     self.entity_id, group_off, self.state_attr)
-
-    @property
-    def hidden(self):
-        """
-        Returns the official decision of whether the entity should be hidden.
-        Any value set by the user in the configuration file will overwrite
-        whatever the component sets for visibility.
-        """
-        if self.entity_id is not None and \
-                self.entity_id.lower() in self.visibility:
-            return self.visibility[self.entity_id.lower()] == 'hide'
-        else:
-            return self._hidden
-
-    @hidden.setter
-    def hidden(self, val):
-        """ Sets the suggestion for visibility. """
-        self._hidden = bool(val)
 
 
 def setup_group(hass, name, entity_ids, user_defined=True):

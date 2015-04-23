@@ -12,15 +12,46 @@ from homeassistant.const import (
     STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 
-class Entity(object):
+class VisibilityABC(object):
+    """
+    Abstract Class for including visibility logic. This class includes the
+    necessary methods and properties to consider a visibility suggestion form
+    the component and then determine visibility based on the options in the
+    configuration file. When using this abstract class, the value for the
+    hidden property must still be included in the attributes disctionary. The
+    Entity class takes care of this automatically.
+    """
+
+    entity_id = None
+    visibility = {}
+    _hidden = False
+
+    @property
+    def hidden(self):
+        """
+        Returns the official decision of whether the entity should be hidden.
+        Any value set by the user in the configuration file will overwrite
+        whatever the component sets for visibility.
+        """
+        if self.entity_id is not None and \
+                self.entity_id.lower() in self.visibility:
+            return self.visibility[self.entity_id.lower()] == 'hide'
+        else:
+            return self._hidden
+
+    @hidden.setter
+    def hidden(self, val):
+        """ Sets the suggestion for visibility. """
+        self._hidden = bool(val)
+
+
+class Entity(VisibilityABC):
     """ ABC for Home Assistant entities. """
     # pylint: disable=no-self-use
 
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inherting this
     # class. These may be used to customize the behavior of the entity.
-
-    _hidden = False  # suggestion as to whether the entity should be hidden
 
     @property
     def should_poll(self):
@@ -83,7 +114,6 @@ class Entity(object):
 
     hass = None
     entity_id = None
-    visibility = {}
 
     def update_ha_state(self, force_refresh=False):
         """
@@ -129,24 +159,6 @@ class Entity(object):
 
     def __repr__(self):
         return "<Entity {}: {}>".format(self.name, self.state)
-
-    @property
-    def hidden(self):
-        """
-        Returns the official decision of whether the entity should be hidden.
-        Any value set by the user in the configuration file will overwrite
-        whatever the component sets for visibility.
-        """
-        if self.entity_id is not None and \
-                self.entity_id.lower() in self.visibility:
-            return self.visibility[self.entity_id.lower()] == 'hide'
-        else:
-            return self._hidden
-
-    @hidden.setter
-    def hidden(self, val):
-        """ Sets the suggestion for visibility. """
-        self._hidden = bool(val)
 
 
 class ToggleEntity(Entity):
