@@ -7,11 +7,11 @@ Provides functionality to group devices that can be turned on or off.
 
 import homeassistant as ha
 from homeassistant.helpers import generate_entity_id
-from homeassistant.helpers.entity import VisibilityABC
+from homeassistant.helpers.entity import Entity
 import homeassistant.util as util
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF,
-    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, ATTR_HIDDEN)
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
+    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN)
 
 DOMAIN = "group"
 DEPENDENCIES = []
@@ -111,37 +111,43 @@ def setup(hass, config):
     return True
 
 
-class Group(VisibilityABC):
+class Group(Entity):
     """ Tracks a group of entity ids. """
+
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, hass, name, entity_ids=None, user_defined=True):
         self.hass = hass
-        self.name = name
+        self._name = name
+        self._state = STATE_UNKNOWN
         self.user_defined = user_defined
-
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
-
         self.tracking = []
-        self.group_on, self.group_off = None, None
+        self.group_on = None
+        self.group_off = None
 
         if entity_ids is not None:
             self.update_tracked_entity_ids(entity_ids)
         else:
-            self.force_update()
+            self.update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        return False
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def state(self):
-        """ Return the current state from the group. """
-        return self.hass.states.get(self.entity_id)
+        return self._state
 
     @property
-    def state_attr(self):
-        """ State attributes of this group. """
+    def state_attributes(self):
         return {
             ATTR_ENTITY_ID: self.tracking,
             ATTR_AUTO: not self.user_defined,
-            ATTR_FRIENDLY_NAME: self.name,
-            ATTR_HIDDEN: self.hidden
         }
 
     def update_tracked_entity_ids(self, entity_ids):
@@ -150,71 +156,69 @@ class Group(VisibilityABC):
         self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         self.group_on, self.group_off = None, None
 
-        self.force_update()
+        self.update_ha_state(True)
 
         self.start()
 
-    def force_update(self):
-        """ Query all the tracked states and update group state. """
-        for entity_id in self.tracking:
-            state = self.hass.states.get(entity_id)
-
-            if state is not None:
-                self._update_group_state(state.entity_id, None, state)
-
-        # If parsing the entitys did not result in a state, set UNKNOWN
-        if self.state is None:
-            self.hass.states.set(
-                self.entity_id, STATE_UNKNOWN, self.state_attr)
-
     def start(self):
         """ Starts the tracking. """
-        self.hass.states.track_change(self.tracking, self._update_group_state)
+        self.hass.states.track_change(
+            self.tracking, self._state_changed_listener)
 
     def stop(self):
         """ Unregisters the group from Home Assistant. """
         self.hass.states.remove(self.entity_id)
 
         self.hass.bus.remove_listener(
-            ha.EVENT_STATE_CHANGED, self._update_group_state)
+            ha.EVENT_STATE_CHANGED, self._state_changed_listener)
 
-    def _update_group_state(self, entity_id, old_state, new_state):
-        """ Updates the group state based on a state change by
-            a tracked entity. """
+    def update(self):
+        """ Query all the tracked states and determine current group state. """
+        self._state = STATE_UNKNOWN
+
+        for entity_id in self.tracking:
+            state = self.hass.states.get(entity_id)
+
+            if state is not None:
+                self._process_tracked_state(state)
+
+    def _state_changed_listener(self, entity_id, old_state, new_state):
+        """ Listener to receive state changes of tracked entities. """
+        self._process_tracked_state(new_state)
+        self.update_ha_state()
+
+    def _process_tracked_state(self, tr_state):
+        """ Updates group state based on a new state of a tracked entity. """
 
         # We have not determined type of group yet
         if self.group_on is None:
-            self.group_on, self.group_off = _get_group_on_off(new_state.state)
+            self.group_on, self.group_off = _get_group_on_off(tr_state.state)
 
             if self.group_on is not None:
                 # New state of the group is going to be based on the first
                 # state that we can recognize
-                self.hass.states.set(
-                    self.entity_id, new_state.state, self.state_attr)
+                self._state = tr_state.state
 
             return
 
         # There is already a group state
-        cur_gr_state = self.hass.states.get(self.entity_id).state
+        cur_gr_state = self._state
         group_on, group_off = self.group_on, self.group_off
 
-        # if cur_gr_state = OFF and new_state = ON: set ON
-        # if cur_gr_state = ON and new_state = OFF: research
+        # if cur_gr_state = OFF and tr_state = ON: set ON
+        # if cur_gr_state = ON and tr_state = OFF: research
         # else: ignore
 
-        if cur_gr_state == group_off and new_state.state == group_on:
+        if cur_gr_state == group_off and tr_state.state == group_on:
+            self._state = group_on
 
-            self.hass.states.set(
-                self.entity_id, group_on, self.state_attr)
+        elif cur_gr_state == group_on and tr_state.state == group_off:
 
-        elif (cur_gr_state == group_on and
-              new_state.state == group_off):
-
-            # Check if any of the other states is still on
+            # Set to off if no other states are on
             if not any(self.hass.states.is_state(ent_id, group_on)
-                       for ent_id in self.tracking if entity_id != ent_id):
-                self.hass.states.set(
-                    self.entity_id, group_off, self.state_attr)
+                       for ent_id in self.tracking
+                       if tr_state.entity_id != ent_id):
+                self._state = group_off
 
 
 def setup_group(hass, name, entity_ids, user_defined=True):
