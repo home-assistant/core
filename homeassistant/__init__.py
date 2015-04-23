@@ -22,7 +22,7 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME, ATTR_HIDDEN)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 import homeassistant.util as util
 
 DOMAIN = "homeassistant"
@@ -620,16 +620,6 @@ class StateMachine(object):
         entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-
-        # Last chance to enforce the visibility property. This is required for
-        # components that don't use the Entity base class for their entities.
-        # The sun component is an example of this. The Entity class cannot be
-        # imported cleanly, so assume the state is shown. This means that for
-        # visibility to be supported, the state must originate from a class
-        # that uses the base class Entity or it must manually put the hidden
-        # attribute in its attributes dictionary.
-        if ATTR_HIDDEN not in attributes:
-            attributes[ATTR_HIDDEN] = False
 
         with self._lock:
             old_state = self._states.get(entity_id)

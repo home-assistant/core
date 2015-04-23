@@ -2,26 +2,58 @@
 
 <link rel="import" href="../bower_components/google-apis/google-jsapi.html">
 
-<polymer-element name="state-timeline" attributes="stateHistory">
+<polymer-element name="state-timeline" attributes="stateHistory isLoadingData">
   <template>
     <style>
     :host {
       display: block;
     }
+
+    #loadingbox {
+      text-align: center;
+    }
+
+    .loadingmessage {
+      margin-top: 10px;
+    }
+
+    .hiddencharts {
+      visibility:hidden;
+    }
+
+    .singlelinechart {
+      min-height:140px;
+    }
     </style>
 
+    <div style='width: 100%; height: auto;' class="{{ {hiddencharts: !isLoading}  | tokenList}}" >
+      <div layout horizontal center fit id="splash">
+        <div layout vertical center flex>
+          <div id="loadingbox">
+            <paper-spinner active="true"></paper-spinner><br />
+            <div class="loadingmessage">{{spinnerMessage}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <google-jsapi on-api-load="{{googleApiLoaded}}"></google-jsapi>
-    <div id="timeline" style='width: 100%; height: auto;'></div>
+    <div id="timeline" style='width: 100%; height: auto;' class="{{ {hiddencharts: isLoadingData, singlelinechart: isSingleDevice && hasLineChart } | tokenList}}"></div>
+    <div id="line_graphs" style='width: 100%; height: auto;' class="{{ {hiddencharts: isLoadingData}  | tokenList}}"></div>
 
   </template>
   <script>
   Polymer({
     apiLoaded: false,
     stateHistory: null,
+    isLoading: true,
+    isLoadingData: false,
+    spinnerMessage: "Loading data...",
+    isSingleDevice: false,
+    hasLineChart: false,
 
     googleApiLoaded: function() {
       google.load("visualization", "1", {
-        packages: ["timeline"],
+        packages: ["timeline", "corechart"],
         callback: function() {
           this.apiLoaded = true;
           this.drawChart();
@@ -33,10 +65,17 @@
       this.drawChart();
     },
 
+    isLoadingDataChanged: function() {
+      if(this.isLoadingData) {
+        isLoading = true;
+      }
+    },
+
     drawChart: function() {
       if (!this.apiLoaded || !this.stateHistory) {
         return;
       }
+      this.isLoading = true;
 
       var container = this.$.timeline;
       var chart = new google.visualization.Timeline(container);
@@ -55,21 +94,39 @@
         return;
       }
 
-      // people can pass in history of 1 entityId or a collection.
 
+      this.hasLineChart = false;
+      this.isSingleDevice = false;
+
+      // people can pass in history of 1 entityId or a collection.
       var stateHistory;
       if (_.isArray(this.stateHistory[0])) {
         stateHistory = this.stateHistory;
       } else {
         stateHistory = [this.stateHistory];
+        this.isSingleDevice = true;
       }
 
+      var lineChartDevices = {};
+      var numTimelines = 0;
       // stateHistory is a list of lists of sorted state objects
       stateHistory.forEach(function(stateInfo) {
         if(stateInfo.length === 0) return;
 
         var entityDisplay = stateInfo[0].entityDisplay;
         var newLastChanged, prevState = null, prevLastChanged = null;
+        //get the latest update to get the graph type from the component attributes
+        var attributes = stateInfo[stateInfo.length - 1].attributes;
+
+        //if the device has a unit of meaurment it will be added as a line graph further down
+        if(attributes['unit_of_measurement']) {
+          if(!lineChartDevices[attributes['unit_of_measurement']]){
+            lineChartDevices[attributes['unit_of_measurement']] = [];
+          }
+          lineChartDevices[attributes['unit_of_measurement']].push(stateInfo);
+          this.hasLineChart = true
+          return;
+        }
 
         stateInfo.forEach(function(state) {
           if (prevState !== null && state.state !== prevState) {
@@ -86,10 +143,11 @@
         });
 
         addRow(entityDisplay, prevState, prevLastChanged, new Date());
+        numTimelines++;
       }.bind(this));
 
       chart.draw(dataTable, {
-        height: 55 + stateHistory.length * 42,
+         height: 55 + numTimelines * 42,
 
         // interactive properties require CSS, the JS api puts it on the document
         // instead of inside our Shadow DOM.
@@ -103,6 +161,163 @@
           format: 'H:mm'
         },
       });
+
+      /**************************************************
+      The following code gererates line line graphs for devices with continuous
+      values(which are devices that have a unit_of_measurment values defined).
+      On each graph the devices are grouped by their unit of measurement, eg. all
+      sensors measuring MB will be a separate line on single graph.  The google
+      chart API takes data as a 2 dimensional array in the format:
+
+      DateTime,   device1,  device2,  device3
+      2015-04-01, 1,        2,        0
+      2015-04-01, 0,        1,        0
+      2015-04-01, 2,        1,        1
+
+      NOTE: the first column is a javascript date objects.
+
+      The first thing we do is build up the data with rows for each time of a state
+      change and initialise the values to 0.  THen we loop through each device and
+      fill in its data.
+
+      **************************************************/
+
+
+      while (this.$.line_graphs.firstChild) {
+        this.$.line_graphs.removeChild(this.$.line_graphs.firstChild);
+      }
+
+      for (var key in lineChartDevices) {
+        var deviceStates = lineChartDevices[key];
+
+        if(this.isSingleDevice) {
+          container = this.$.timeline
+        }
+        else {
+          container = document.createElement("DIV");
+          this.$.line_graphs.appendChild(container);
+        }
+
+
+        var chart = new google.visualization.LineChart(container);
+
+
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn({ type: 'datetime', id: 'Time' });
+
+        var options = {
+            legend: { position: 'top' },
+            titlePosition: 'none',
+            vAxes: {
+              // Adds units to the left hand side of the graph
+              0: {title: key}
+            },
+            hAxis: {
+              format: 'H:mm'
+            },
+            lineWidth: 1,
+            chartArea:{left:'60',width:"95%"},
+            explorer: {
+              actions: ['dragToZoom', 'rightClickToReset', 'dragToPan'],
+               keepInBounds: true,
+              axis: 'horizontal',
+              maxZoomIn: 0.1
+            }
+
+          };
+
+        if(this.isSingleDevice) {
+          options.legend.position = 'none';
+          options.vAxes[0].title = null;
+          options.chartArea.left = 40;
+          options.chartArea.height = '80%';
+          options.chartArea.top = 5;
+          options.enableInteractivity = false;
+        }
+
+        // Get a unique list of times of state changes for all the device
+        // for a particular unit of measureent.
+        var times = _.pluck(_.flatten(deviceStates), "lastChangedAsDate");
+        times = _.uniq(times, function(e) {
+            return e.getTime();
+          });
+
+        times = _.sortBy(times, function(o) { return o; });
+
+        var data = [];
+        var empty = new Array(deviceStates.length);
+        for(var i = 0; i < empty.length; i++) {
+          empty[i] = 0;
+        }
+
+        var timeIndex = 1;
+        var endDate = new Date();
+        var prevDate = times[0];
+
+        for(var i = 0; i < times.length; i++) {
+          var currentDate = new Date(prevDate);
+
+          // because we only have state changes we add an extra point at the same time
+          // that holds the previous state which makes the line display correctly
+          var beforePoint = new Date(times[i]);
+          data.push([beforePoint].concat(empty));
+
+          data.push([times[i]].concat(empty));
+          prevDate = times[i];
+          timeIndex++;
+        }
+        data.push([endDate].concat(empty));
+
+
+        var deviceCount = 0;
+        deviceStates.forEach(function(device) {
+          var attributes = device[device.length - 1].attributes;
+          dataTable.addColumn('number', attributes['friendly_name']);
+
+          var currentState = 0;
+          var previousState = 0;
+          var lastIndex = 0;
+          var count = 0;
+          var prevTime = data[0][0];
+          device.forEach(function(state) {
+
+            currentState = state.state;
+            var start = state.lastChangedAsDate;
+            if(state.state == 'None') {
+              currentState = previousState;
+            }
+            for(var i = lastIndex; i < data.length; i++) {
+              data[i][1 + deviceCount] = parseFloat(previousState);
+              // this is where data gets filled in for each time for the particular device
+              // because for each time two entires were create we fill the first one with the
+              // previous value and the second one with the new value
+              if(prevTime.getTime() == data[i][0].getTime() && data[i][0].getTime() == start.getTime()) {
+                data[i][1 + deviceCount] = parseFloat(currentState);
+                lastIndex = i;
+                prevTime = data[i][0];
+                break;
+              }
+              prevTime = data[i][0];
+            }
+
+            previousState = currentState;
+
+            count++;
+          }.bind(this));
+
+          //fill in the rest of the Array
+          for(var i = lastIndex; i < data.length; i++) {
+            data[i][1 + deviceCount] = parseFloat(previousState);
+          }
+
+          deviceCount++;
+        }.bind(this));
+
+        dataTable.addRows(data);
+        chart.draw(dataTable, options);
+      }
+      this.isLoading = (!this.isLoadingData) ? false : true;
+
     },
 
   });

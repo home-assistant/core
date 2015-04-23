@@ -42,3 +42,6 @@ psutil>=2.2.1
 
 #pushover notifications
 python-pushover>=0.2
+
+# Transmission Torrent Client
+transmissionrpc>=0.11
