@@ -21,6 +21,7 @@ class VisibilityABC(object):
     hidden property must still be included in the attributes disctionary. The
     Entity class takes care of this automatically.
     """
+    # pylint: disable=too-few-public-methods
 
     entity_id = None
     visibility = {}
