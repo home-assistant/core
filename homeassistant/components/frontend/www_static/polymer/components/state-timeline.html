@@ -17,17 +17,13 @@
       margin-top: 10px;
     }
 
-    .hiddencharts {
-      visibility:hidden;
-    }
-
     .singlelinechart {
       min-height:140px;
     }
     </style>
 
-    <div style='width: 100%; height: auto;' class="{{ {hiddencharts: !isLoading}  | tokenList}}" >
-      <div layout horizontal center fit id="splash">
+    <div style='width: 100%; height: auto;' hidden?="{{!isLoading}}" >
+      <div layout horizontal center id="splash">
         <div layout vertical center flex>
           <div id="loadingbox">
             <paper-spinner active="true"></paper-spinner><br />
@@ -37,8 +33,8 @@
       </div>
     </div>
     <google-jsapi on-api-load="{{googleApiLoaded}}"></google-jsapi>
-    <div id="timeline" style='width: 100%; height: auto;' class="{{ {hiddencharts: isLoadingData, singlelinechart: isSingleDevice && hasLineChart } | tokenList}}"></div>
-    <div id="line_graphs" style='width: 100%; height: auto;' class="{{ {hiddencharts: isLoadingData}  | tokenList}}"></div>
+    <div id="timeline" style='width: 100%; height: auto;' class="{{ {singlelinechart: isSingleDevice && hasLineChart } | tokenList}}" hidden?="{{isLoadingData}}"></div>
+    <div id="line_graphs" style='width: 100%; height: auto;' hidden?="{{isLoadingData}}"></div>
 
   </template>
   <script>
@@ -47,7 +43,7 @@
     stateHistory: null,
     isLoading: true,
     isLoadingData: false,
-    spinnerMessage: "Loading data...",
+    spinnerMessage: "Loading history data...",
     isSingleDevice: false,
     hasLineChart: false,
 
@@ -87,6 +83,7 @@
       dataTable.addColumn({ type: 'date', id: 'End' });
 
       var addRow = function(entityDisplay, stateStr, start, end) {
+        stateStr = stateStr.replace(/_/g, ' ');
         dataTable.addRow([entityDisplay, stateStr, start, end]);
       };
 
@@ -119,12 +116,12 @@
         var attributes = stateInfo[stateInfo.length - 1].attributes;
 
         //if the device has a unit of meaurment it will be added as a line graph further down
-        if(attributes['unit_of_measurement']) {
-          if(!lineChartDevices[attributes['unit_of_measurement']]){
-            lineChartDevices[attributes['unit_of_measurement']] = [];
+        if(attributes.unit_of_measurement) {
+          if(!lineChartDevices[attributes.unit_of_measurement]){
+            lineChartDevices[attributes.unit_of_measurement] = [];
           }
-          lineChartDevices[attributes['unit_of_measurement']].push(stateInfo);
-          this.hasLineChart = true
+          lineChartDevices[attributes.unit_of_measurement].push(stateInfo);
+          this.hasLineChart = true;
           return;
         }
 
@@ -191,7 +188,7 @@
         var deviceStates = lineChartDevices[key];
 
         if(this.isSingleDevice) {
-          container = this.$.timeline
+          container = this.$.timeline;
         }
         else {
           container = document.createElement("DIV");
@@ -223,7 +220,6 @@
               axis: 'horizontal',
               maxZoomIn: 0.1
             }
-
           };
 
         if(this.isSingleDevice) {
@@ -272,7 +268,7 @@
         var deviceCount = 0;
         deviceStates.forEach(function(device) {
           var attributes = device[device.length - 1].attributes;
-          dataTable.addColumn('number', attributes['friendly_name']);
+          dataTable.addColumn('number', attributes.friendly_name);
 
           var currentState = 0;
           var previousState = 0;
