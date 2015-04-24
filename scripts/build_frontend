@@ -34,5 +34,5 @@ if [ $(command -v md5) ]; then
 elif [ $(command -v md5sum) ]; then
     echo 'VERSION = "'`md5sum www_static/frontend.html | cut -c-32`'"' >> version.py
 else
-    echo 'Could not find a MD5 utility'
+    echo 'Could not find an MD5 utility'
 fi

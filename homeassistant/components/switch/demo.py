@@ -1,4 +1,4 @@
-""" Demo platform that has two fake switchces. """
+""" Demo platform that has two fake switches. """
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
@@ -30,7 +30,7 @@ class DemoSwitch(ToggleEntity):
 
     @property
     def state(self):
-        """ Returns the name of the device if any. """
+        """ Returns the state of the device if any. """
         return self._state
 
     @property

@@ -34,8 +34,14 @@ python-nest>=2.1
 # z-wave
 pydispatcher>=2.0.5
 
+# isy994
+PyISY>=1.0.2
+
 # sensor.systemmonitor 
 psutil>=2.2.1
 
 #pushover notifications
 python-pushover>=0.2
+
+# Transmission Torrent Client
+transmissionrpc>=0.11

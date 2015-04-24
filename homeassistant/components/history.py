@@ -50,8 +50,10 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
 
     result = defaultdict(list)
 
+    entity_ids = [entity_id] if entity_id is not None else None
+
     # Get the states at the start time
-    for state in get_states(start_time):
+    for state in get_states(start_time, entity_ids):
         state.last_changed = start_time
         result[state.entity_id].append(state)
 
@@ -66,6 +68,10 @@ def get_states(point_in_time, entity_ids=None, run=None):
     """ Returns the states at a specific point in time. """
     if run is None:
         run = recorder.run_information(point_in_time)
+
+        # History did not run before point_in_time
+        if run is None:
+            return []
 
     where = run.where_after_start_run + "AND created < ? "
     where_data = [point_in_time]
@@ -94,6 +100,7 @@ def get_state(point_in_time, entity_id, run=None):
     return states[0] if states else None
 
 
+# pylint: disable=unused-argument
 def setup(hass, config):
     """ Setup history hooks. """
     hass.http.register_path(
@@ -109,6 +116,7 @@ def setup(hass, config):
     return True
 
 
+# pylint: disable=unused-argument
 # pylint: disable=invalid-name
 def _api_last_5_states(handler, path_match, data):
     """ Return the last 5 states for an entity id as JSON. """

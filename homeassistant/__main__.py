@@ -85,6 +85,7 @@ def ensure_config_path(config_dir):
                 conf.write("frontend:\n\n")
                 conf.write("discovery:\n\n")
                 conf.write("history:\n\n")
+                conf.write("logbook:\n\n")
         except IOError:
             print(('Fatal Error: No configuration file found and unable '
                    'to write a default one to {}').format(config_path))

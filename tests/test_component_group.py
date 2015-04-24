@@ -54,7 +54,7 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass, 'light_and_nothing',
             ['light.Bowl', 'non.existing'])
 
-        self.assertEqual(STATE_ON, grp.state.state)
+        self.assertEqual(STATE_ON, grp.state)
 
     def test_setup_group_with_non_groupable_states(self):
         self.hass.states.set('cast.living_room', "Plex")
@@ -64,13 +64,13 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass, 'chromecasts',
             ['cast.living_room', 'cast.bedroom'])
 
-        self.assertEqual(STATE_UNKNOWN, grp.state.state)
+        self.assertEqual(STATE_UNKNOWN, grp.state)
 
     def test_setup_empty_group(self):
         """ Try to setup an empty group. """
         grp = group.setup_group(self.hass, 'nothing', [])
 
-        self.assertEqual(STATE_UNKNOWN, grp.state.state)
+        self.assertEqual(STATE_UNKNOWN, grp.state)
 
     def test_monitor_group(self):
         """ Test if the group keeps track of states. """

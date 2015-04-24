@@ -11,7 +11,7 @@
     <div>
       <state-card-content stateObj="{{stateObj}}" style='margin-bottom: 24px;'>
       </state-card-content>
-      <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
+      <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingHistoryData}}"></state-timeline>
       <more-info-content
         stateObj="{{stateObj}}"
         dialogOpen="{{dialogOpen}}"></more-info-content>
@@ -30,6 +30,7 @@ Polymer(Polymer.mixin({
   stateHistory: null,
   hasHistoryComponent: false,
   dialogOpen: false,
+  isLoadingHistoryData: false,
 
   observe: {
     'stateObj.attributes': 'reposition'
@@ -67,7 +68,7 @@ Polymer(Polymer.mixin({
     } else {
       newHistory = null;
     }
-
+    this.isLoadingHistoryData = false;
     if (newHistory !== this.stateHistory) {
       this.stateHistory = newHistory;
     }
@@ -87,6 +88,7 @@ Polymer(Polymer.mixin({
     this.stateHistoryStoreChanged();
 
     if (this.hasHistoryComponent && stateHistoryStore.isStale(entityId)) {
+      this.isLoadingHistoryData = true;
       stateHistoryActions.fetch(entityId);
     }
   },

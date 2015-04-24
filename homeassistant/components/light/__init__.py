@@ -57,7 +57,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.util as util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.components import group, discovery, wink
+from homeassistant.components import group, discovery, wink, isy994
 
 
 DOMAIN = "light"
@@ -92,6 +92,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
+    isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.services.PHILIPS_HUE: 'hue',
 }
 
