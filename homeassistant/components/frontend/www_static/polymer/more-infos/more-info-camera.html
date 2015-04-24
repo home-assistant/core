@@ -39,7 +39,7 @@
     <img  hidden?="{{connectionFailed}}" src="" onload="" id="camera_image" class="camera-image" />
     <div center horizontal layout>
       <div>
-        {{frameRateSec}} frames/sec
+
       </div>
       <div flex>
         &nbsp;
@@ -64,89 +64,20 @@
     dialogOpen: false,
     errorCount: 0,
     connectionFailed: false,
-    //times are to smooth out the images
-    debounceLoadMs: 100, //the reload rate
-    startedLoading: 0,
-    frameRateSec: 0,
-    steamingStarted: 0,
-    frameCount: 0,
 
-    ready: function() {
-      var self = this;
-      this.$.camera_image.addEventListener('error', function() {
-        self.errorCount++;
-        if(self.errorCount > 5) {
-          self.connectionFailed = true;
-          self.isStreaming = false;
-          self.errorCount = 0;
-        }
-        else {
-          self.loadNextFrame();
-        }
-      });
-
-      this.$.camera_image.addEventListener('load', function() {
-        var finishedLoading = Date.now();
-        self.frameCount++;
-
-        //this is kind of lame but the dialog won't resize after the image losds unless
-        //it is forced to
-        if(self.reloadTime) {
-          self.reloadTime = null;
-          //this is a hack to force the dialog to resize after the camera image loadss
-          document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
-        }
-
-        var loadTimeMs = finishedLoading - self.startedLoading;
-        var debounceMS = self.debounceLoadMs - loadTimeMs;
-
-        var secondsRunning = ((Date.now() - self.steamingStarted) / 1000);
-        self.frameRateSec =  (self.frameCount / secondsRunning).toFixed(2);
-
-        if(debounceMS < 0) {
-          self.loadNextFrame();
-        }
-        else {
-          setTimeout(function () {
-            self.loadNextFrame();
-          }, debounceMS);
-        }
-      });
-
-      //this.$.retry_btn.addEventListener('click', this.startImageStream);
-    },
+    //document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
 
     dialogOpenChanged: function(oldVal, newVal) {
       if(newVal == true) {
         this.startImageStream();
       }
-    },
-
-    loadNextFrame: function() {
-      if(this.dialogOpen && this.stateObj && !this.connectionFailed) {
-        isStreaming = true;
-        //this.stillImage = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
-        //we need to set the src of the image rather than use a databound property, very rapidly updating
-        //databound properties is causin performance issues.
-        this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
-        this.startedLoading = Date.now();
-      }
       else {
-        isStreaming = false;
+        this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
       }
     },
 
     startImageStream: function() {
-
-      if(!this.isStreaming && this.dialogOpen && this.stateObj) {
-        this.reloadTime = Date.now();
-        this.frameRateSec = 0;
-        this.steamingStarted = Date.now();
-        this.frameCount = 0;
-        this.connectionFailed = false;
-        this.errorCount = 0;
-        this.loadNextFrame();
-      }
+      this.$.camera_image.src = this.stateObj.attributes['stream_url'] + '?api_password=' + authStore.authToken;
     },
 
     retry: function(event, detail, sender) {
