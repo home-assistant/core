@@ -37,7 +37,7 @@ pydispatcher>=2.0.5
 # isy994
 PyISY>=1.0.2
 
-# sensor.systemmonitor 
+# sensor.systemmonitor
 psutil>=2.2.1
 
 #pushover notifications
@@ -45,3 +45,15 @@ python-pushover>=0.2
 
 # Transmission Torrent Client
 transmissionrpc>=0.11
+
+# used by ipcamera for mjpeg streams
+urllib3>=1.7.1
+
+# used for various scraping tasks
+beautifulsoup4>=4.3.2
+
+# used to obtain the LAN ip for HA
+netifaces>=0.10.4
+
+# used by the ftp component
+pyftpdlib>=1.4.0

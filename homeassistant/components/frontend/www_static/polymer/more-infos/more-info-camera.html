@@ -9,6 +9,9 @@
   #retry_btn {
     color: #4285f4;
   }
+  paper-button.colored {
+    color: #4285f4;
+  }
    @media (max-width: 720px) {
       :host .camera-image {
         max-width: calc(100%);
@@ -28,7 +31,7 @@
     }
 
   </style>
-  <div class="camera-container" id="camera_container">
+  <div hidden?="{{configureFTP}}" class="camera-container" id="camera_container">
     <template if="{{ connectionFailed }}">
       <div center vertical layout>
         <div>Could not connect to camera...</div>
@@ -39,7 +42,7 @@
     <img  hidden?="{{connectionFailed}}" src="" onload="" id="camera_image" class="camera-image" />
     <div center horizontal layout>
       <div>
-
+        <paper-icon-button on-click="{{toggleMotionDetection}}" icon="{{motionDetectionIcon}}"></paper-icon-button>
       </div>
       <div flex>
         &nbsp;
@@ -50,11 +53,38 @@
     </div>
   </div>
 
+  <div hidden?="{{!configureFTP}}">
+    <h3>Configure FTP Settings</h3>
+    <p>
+      In order for this camera to notify Home Assistant when motion occurs the FTP details
+      need to be configured in the camera settings first.  Home Assistant can configure these
+      settings for you automatically, this process will overwrite any existing settings.
+    </p>
+    <p>Would you like Home Assistant to automatically configure your camera's FTP settings now?</p>
+    <div center horizontal layout>
+      <div>
+        <paper-button on-click="{{closeFtpConfigDialog}}">
+          <core-icon icon="close"></core-icon>
+          Cancel
+        </paper-button>
+      </div>
+      <div flex>
+        &nbsp;
+      </div>
+      <div>
+        <paper-button class="colored" on-click="{{setFtpDetails}}">
+          <core-icon icon="check"></core-icon>
+          OK
+        </paper-button>
+      </div>
+    </div>
+  </div>
 
 </template>
 <script>
 
   var authStore = window.hass.authStore;
+  var serviceActions = window.hass.serviceActions;
 
   Polymer({
     stateObj: null,
@@ -64,11 +94,51 @@
     dialogOpen: false,
     errorCount: 0,
     connectionFailed: false,
+    motionDetectionIcon: 'visibility',
+    configureFTP: false,
 
     //document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
 
+    stateObjChanged: function(oldVal, newVal) {
+      this.motionDetectionIcon = (newVal.attributes['is_motion_detection_enabled']) ? 'visibility-off' : 'visibility';
+
+    },
+
+    toggleMotionDetection: function(ev) {
+      if(!this.stateObj.attributes['is_ftp_configured']) {
+        this.configureFTP = true;
+        return;
+      }
+
+      if(this.stateObj.attributes['is_motion_detection_enabled'] === true) {
+        serviceActions.callService("camera", "turn_off", {
+          entity_id: this.stateObj.entityId,
+          feature: 'motion_detection'
+        });
+      } else {
+        serviceActions.callService("camera", "turn_on", {
+          entity_id: this.stateObj.entityId,
+          feature: 'motion_detection'
+        });
+      }
+    },
+
+    closeFtpConfigDialog: function(ev) {
+      this.configureFTP = false;
+    },
+
+    setFtpDetails: function(ev) {
+      serviceActions.callService("camera", "turn_on", {
+          entity_id: this.stateObj.entityId,
+          feature: 'configure_ftp'
+        }).then(function() {
+          this.configureFTP = false;
+        }.bind(this));
+    },
+
     dialogOpenChanged: function(oldVal, newVal) {
       if(newVal == true) {
+        this.configureFTP = false;
         this.startImageStream();
       }
       else {

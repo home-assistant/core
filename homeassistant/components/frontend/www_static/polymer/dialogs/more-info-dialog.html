@@ -8,10 +8,10 @@
 <polymer-element name="more-info-dialog">
 <template>
   <ha-dialog id="dialog" on-core-overlay-open="{{dialogOpenChanged}}">
-    <div>
+    <div class="{{moreInfoTypeClass}}">
       <state-card-content stateObj="{{stateObj}}" style='margin-bottom: 24px;'>
       </state-card-content>
-      <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingHistoryData}}"></state-timeline>
+      <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingHistoryData}}" hidden?="{{!showHistory}}"></state-timeline>
       <more-info-content
         stateObj="{{stateObj}}"
         dialogOpen="{{dialogOpen}}"></more-info-content>
@@ -31,6 +31,8 @@ Polymer(Polymer.mixin({
   hasHistoryComponent: false,
   dialogOpen: false,
   isLoadingHistoryData: false,
+  moreInfoTypeClass: '',
+  showHistory: true,
 
   observe: {
     'stateObj.attributes': 'reposition'
@@ -57,6 +59,8 @@ Polymer(Polymer.mixin({
 
     if (newState !== this.stateObj) {
       this.stateObj = newState;
+      this.moreInfoTypeClass = (this.stateObj) ? this.stateObj.moreInfoType : '';
+      this.showHistory = (this.stateObj) ? !_.contains(['camera'], this.stateObj.moreInfoType) : true;
     }
   },
 
