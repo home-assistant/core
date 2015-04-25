@@ -52,8 +52,5 @@ urllib3>=1.7.1
 # used for various scraping tasks
 beautifulsoup4>=4.3.2
 
-# used to obtain the LAN ip for HA
-netifaces>=0.10.4
-
 # used by the ftp component
 pyftpdlib>=1.4.0

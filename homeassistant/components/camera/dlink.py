@@ -1,9 +1,11 @@
 import logging
 import requests
+import os
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera import Camera
+from homeassistant.loader import get_component
 from bs4 import BeautifulSoup
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,13 +58,22 @@ class DlinkCamera(Camera):
         res = requests.get(self.BASE_URL + 'motion.htm', auth=(self.username, self.password))
         motion_settings = BeautifulSoup(res.content)
 
-        print('----------------------------------------------------------------------------------')
+
         settings = self.extract_form_fields(motion_settings)
         self._is_motion_detection_enabled = True if settings.get('MotionDetectionEnable') == '1' else False
-        print(settings)
+        # print(settings)
         self._web_ui_form_data['motion'] = settings
 
-        print('motion detection ' + str(self._is_motion_detection_enabled))
+        # This is pretty lame, for some reason the motion detection area is returned like this
+        # instead on in the same way as the other or even JSON
+        res = requests.get(self.BASE_URL + 'motion.cgi', auth=(self.username, self.password))
+        lines = res.text.splitlines(True)
+
+        for line in lines:
+            line = line.strip()
+            keypair = line.split("=")
+            if len(keypair) > 1:
+                self._web_ui_form_data['motion'][keypair[0]] = keypair[1]
 
         res = requests.get(self.BASE_URL + 'upload.htm', auth=(self.username, self.password))
         upload_settings = BeautifulSoup(res.content)
@@ -70,9 +81,11 @@ class DlinkCamera(Camera):
         u_settings = self.extract_form_fields(upload_settings)
         self._is_ftp_upload_enabled = True if u_settings.get('FTPScheduleEnable') == '1' else False
 
-        print(self._is_ftp_upload_enabled)
+        # print(self._is_ftp_upload_enabled)
 
-        print(u_settings)
+        # print(u_settings)
+
+
 
         self._web_ui_form_data['upload'] = u_settings
 
@@ -82,16 +95,24 @@ class DlinkCamera(Camera):
         self._ftp_username = u_settings.get('FTPUserName')
         self._ftp_password = u_settings.get('FTPPassword')
 
-        print(self._is_ftp_configured)
-        print(self.get_ha_lan_address())
+
+
+
+        # print(self._is_ftp_configured)
+        # print(self.get_ha_lan_address())
 
     def enable_motion_detection(self):
+
         can_enable = super().enable_motion_detection()
         if can_enable == False:
             return can_enable
 
         self._web_ui_form_data['motion']['MotionDetectionEnable'] = 1
         self._web_ui_form_data['motion']['MotionDetectionScheduleMode'] = 0
+        # The camera won't detect any motion if there are no blocks set
+        # so we default them to all set if none are selected
+        if self._web_ui_form_data['motion']['MotionDetectionBlockSet'] == '0000000000000000000000000':
+            self._web_ui_form_data['motion']['MotionDetectionBlockSet'] = '1111111111111111111111111'
         r = requests.post(self.BASE_URL + 'setSystemMotion', data=self._web_ui_form_data['motion'], auth=(self.username, self.password))
 
         self.get_all_settings()
@@ -117,18 +138,24 @@ class DlinkCamera(Camera):
         if can_enable == False:
             return can_enable
 
-        self._web_ui_form_data['upload']['FTPHostAddress'] = self.get_ha_lan_address()
-        self._web_ui_form_data['upload']['FTPPortNumber'] = 21
-        self._web_ui_form_data['upload']['FTPUserName'] = 'test'
-        self._web_ui_form_data['upload']['FTPPassword'] = 'test'
-        self._web_ui_form_data['upload']['FTPDirectoryPath'] = '/'
+        ftp_server = get_component('ftp').ftp_server
+
+        ftp_path = os.path.join(ftp_server.ftp_root_path, self.entity_id)
+
+        if not os.path.isdir(ftp_path):
+            os.makedirs(ftp_path)
+            _LOGGER.info('Camera {0} image path did not exist and was atomatically created at {1}'.format(self.entity_id, ftp_path))
+
+        self._web_ui_form_data['upload']['FTPHostAddress'] = ftp_server.server_ip
+        self._web_ui_form_data['upload']['FTPPortNumber'] = ftp_server.server_port
+        self._web_ui_form_data['upload']['FTPUserName'] = ftp_server.username
+        self._web_ui_form_data['upload']['FTPPassword'] = ftp_server.password
+        self._web_ui_form_data['upload']['FTPDirectoryPath'] = self.entity_id
 
         self._web_ui_form_data['upload']['FTPScheduleEnable'] = '1'
         self._web_ui_form_data['upload']['FTPScheduleMode'] = '2'
 
         r = requests.post(self.BASE_URL + 'setSystemFTP', data=self._web_ui_form_data['upload'], auth=(self.username, self.password))
-
-        print(r.content)
 
         self.get_all_settings()
         self.update_ha_state(True)

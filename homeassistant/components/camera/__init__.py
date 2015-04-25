@@ -7,7 +7,6 @@ import urllib3
 import mimetypes
 import requests
 import logging
-import netifaces
 from homeassistant.helpers.entity import Entity
 import time
 from datetime import timedelta
@@ -166,9 +165,6 @@ class Camera(Entity):
         self._ftp_username = ''
         self._ftp_password = ''
 
-        # The address of HA on the local lan
-        self._ha_lan_address = self.get_ha_lan_address()
-
     def get_camera_image(self, stream=False):
         response = requests.get(self.still_image_url, auth=(self.username, self.password), stream=stream)
         return response
@@ -198,12 +194,8 @@ class Camera(Entity):
         attr['still_image_url'] = '/api/camera_proxy/' + self.entity_id
         attr[ATTR_ENTITY_PICTURE] = '/api/camera_proxy/' + self.entity_id + '?api_password=' + self.hass.http.api_password + '&time=' + str(time.time())
         attr['stream_url'] = '/api/camera_proxy_stream/' + self.entity_id
-        attr['ha_lan_address'] = self._ha_lan_address
 
         attr.update(self.function_attributes)
-        # function_attrs = self.function_attributes
-        # for key in function_attrs.keys():
-        #     attr[key] = function_attrs[key]
 
         return attr
 
@@ -259,16 +251,3 @@ class Camera(Entity):
         attr['is_ftp_upload_enabled'] = self.is_ftp_upload_enabled
         attr['is_ftp_configured'] = self.is_ftp_configured
         return attr
-
-    def get_ha_lan_address(self):
-        interfaces = netifaces.interfaces()
-        for i in interfaces:
-            if i == 'lo':
-                continue
-            iface = netifaces.ifaddresses(i).get(netifaces.AF_INET)
-            if iface != None:
-                for j in iface:
-                    ip = j['addr']
-                    if not ip == None:
-                        return ip
-        return None
