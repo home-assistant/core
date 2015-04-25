@@ -12,6 +12,7 @@ CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_NAME = "name"
 CONF_TIME_ZONE = "time_zone"
 CONF_VISIBILITY = "visibility"
+CONF_DECORATE = "decorate"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
