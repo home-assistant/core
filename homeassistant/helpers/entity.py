@@ -11,8 +11,8 @@ from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN,
-    ATTR_ENTITY_PICTURE, STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS,
+    TEMP_FAHRENHEIT)
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
 _OVERWRITE = defaultdict(dict)
@@ -124,12 +124,12 @@ class Entity(object):
         if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
             attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
-        if _OVERWRITE[ATTR_HIDDEN].get(self.entity_id, self.hidden):
-            attr[ATTR_HIDDEN] = True
+        for attr_name, val in _OVERWRITE[self.entity_id].items():
+            attr[attr_name] = val
 
-        if _OVERWRITE[ATTR_ENTITY_PICTURE].get(self.entity_id, False):
-            attr[ATTR_ENTITY_PICTURE] = \
-                _OVERWRITE[ATTR_ENTITY_PICTURE][self.entity_id]
+        # remove hidden property if false so it won't show up
+        if not attr.get(ATTR_HIDDEN, True):
+            attr.pop(ATTR_HIDDEN)
 
         # Convert temperature if we detect one
         if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,
@@ -150,15 +150,18 @@ class Entity(object):
         return "<Entity {}: {}>".format(self.name, self.state)
 
     @staticmethod
-    def overwrite_attribute(entity_id, attr, val):
+    def overwrite_attribute(entity_id, attrs, vals):
         """
         Overwrite any attribute of an entity.
-        Set attribute to None to remove any overwritten value in place.
+        This function should receive a list of attributes and a
+        list of values. Set attribute to None to remove any overwritten
+        value in place.
         """
-        if val is None:
-            _OVERWRITE[attr].pop(entity_id, None)
-        else:
-            _OVERWRITE[attr][entity_id.lower()] = val
+        for attr, val in zip(attrs, vals):
+            if val is None:
+                _OVERWRITE[entity_id.lower()].pop(attr, None)
+            else:
+                _OVERWRITE[entity_id.lower()][attr] = val
 
 
 class ToggleEntity(Entity):
