@@ -128,8 +128,7 @@ class Entity(object):
             attr[ATTR_HIDDEN] = self.hidden
 
         # overwrite properties that have been set in the config file
-        for attr_name, val in _OVERWRITE[self.entity_id].items():
-            attr[attr_name] = val
+        attr.update(_OVERWRITE.get(self.entity_id, {}))
 
         # remove hidden property if false so it won't show up
         if not attr.get(ATTR_HIDDEN, True):
