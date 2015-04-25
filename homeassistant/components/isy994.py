@@ -6,9 +6,6 @@ devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
 import logging
 from urllib.parse import urlparse
 
-# addon library imports
-import PyISY
-
 # homeassistant imports
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
@@ -37,6 +34,13 @@ def setup(hass, config):
     Setup isy994 component.
     This will automatically import associated lights, switches, and sensors.
     """
+    try:
+        import PyISY
+    except ImportError:
+        _LOGGER.error("Error while importing dependency PyISY.")
+
+        return False
+
     # pylint: disable=global-statement
     # check for required values in configuration file
     if not validate_config(config,
