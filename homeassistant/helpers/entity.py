@@ -152,8 +152,8 @@ class Entity(object):
     @staticmethod
     def overwrite_attribute(entity_id, attr, val):
         """
-        Overwrite the hidden property of an entity.
-        Set hidden to None to remove any overwritten value in place.
+        Overwrite any attribute of an entity.
+        Set attribute to None to remove any overwritten value in place.
         """
         if val is None:
             _OVERWRITE[attr].pop(entity_id, None)
