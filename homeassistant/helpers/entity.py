@@ -124,6 +124,10 @@ class Entity(object):
         if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
             attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
+        if self.hidden:
+            attr[ATTR_HIDDEN] = self.hidden
+
+        # overwrite properties that have been set in the config file
         for attr_name, val in _OVERWRITE[self.entity_id].items():
             attr[attr_name] = val
 
