@@ -907,7 +907,8 @@ class Config(object):
         _LOGGER.info('Auto detecting location and temperature unit')
 
         try:
-            info = requests.get('https://freegeoip.net/json/').json()
+            info = requests.get(
+                'https://freegeoip.net/json/', timeout=5).json()
         except requests.RequestException:
             return
 
