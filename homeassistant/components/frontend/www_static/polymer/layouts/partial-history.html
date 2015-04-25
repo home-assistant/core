@@ -26,7 +26,7 @@
     </span>
 
     <div flex class="{{ {content: true, narrow: narrow, wide: !narrow} | tokenList }}">
-      <state-timeline stateHistory="{{stateHistory}}"></state-timeline>
+      <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingData}}"></state-timeline>
     </div>
   </partial-base>
 </template>
@@ -36,6 +36,7 @@
 
   Polymer(Polymer.mixin({
     stateHistory: null,
+    isLoadingData: false,
 
     attached: function() {
       this.listenToStores(true);
@@ -47,13 +48,18 @@
 
     stateHistoryStoreChanged: function(stateHistoryStore) {
       if (stateHistoryStore.isStale()) {
+        this.isLoadingData = true;
         stateHistoryActions.fetchAll();
+      }
+      else {
+        this.isLoadingData = false;
       }
 
       this.stateHistory = stateHistoryStore.all;
     },
 
     handleRefreshClick: function() {
+      this.isLoadingData = true;
       stateHistoryActions.fetchAll();
     },
   }, storeListenerMixIn));

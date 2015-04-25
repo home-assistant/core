@@ -11,6 +11,7 @@ CONF_LONGITUDE = "longitude"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_NAME = "name"
 CONF_TIME_ZONE = "time_zone"
+CONF_VISIBILITY = "visibility"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
@@ -85,6 +86,9 @@ ATTR_TRIPPED = "device_tripped"
 # For sensors that support 'tripping' this holds the most recent
 # time the device was tripped
 ATTR_LAST_TRIP_TIME = "last_tripped_time"
+
+# For all entity's, this hold whether or not it should be hidden
+ATTR_HIDDEN = "hidden"
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
