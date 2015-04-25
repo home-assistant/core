@@ -23,7 +23,7 @@ import homeassistant.components.group as group
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_VISIBILITY,
+    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
@@ -208,8 +208,8 @@ def process_ha_core_config(hass, config):
         if key in config:
             setattr(hass.config, attr, config[key])
 
-    for entity_id, hidden in config.get(CONF_VISIBILITY, {}).items():
-        Entity.overwrite_hidden(entity_id, hidden == 'hide')
+    for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
+        Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
 
     if CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]
