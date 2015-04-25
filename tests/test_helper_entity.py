@@ -25,7 +25,8 @@ class TestHelpersEntity(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass.stop()
-        entity.Entity.overwrite_hidden(self.entity.entity_id, None)
+        entity.Entity.overwrite_attribute(self.entity.entity_id,
+                                          ATTR_HIDDEN, None)
 
     def test_default_hidden_not_in_attributes(self):
         """ Test that the default hidden property is set to False. """
@@ -43,7 +44,8 @@ class TestHelpersEntity(unittest.TestCase):
 
     def test_overwriting_hidden_property_to_true(self):
         """ Test we can overwrite hidden property to True. """
-        entity.Entity.overwrite_hidden(self.entity.entity_id, True)
+        entity.Entity.overwrite_attribute(self.entity.entity_id,
+                                          ATTR_HIDDEN, True)
         self.entity.update_ha_state()
 
         state = self.hass.states.get(self.entity.entity_id)
@@ -51,7 +53,8 @@ class TestHelpersEntity(unittest.TestCase):
 
     def test_overwriting_hidden_property_to_false(self):
         """ Test we can overwrite hidden property to True. """
-        entity.Entity.overwrite_hidden(self.entity.entity_id, False)
+        entity.Entity.overwrite_attribute(self.entity.entity_id,
+                                          ATTR_HIDDEN, False)
         self.entity.hidden = True
         self.entity.update_ha_state()
 
