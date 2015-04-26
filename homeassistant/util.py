@@ -16,6 +16,8 @@ import random
 import string
 from functools import wraps
 
+import requests
+
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
@@ -172,6 +174,32 @@ def get_random_string(length=10):
     source_chars = string.ascii_letters + string.digits
 
     return ''.join(generator.choice(source_chars) for _ in range(length))
+
+
+LocationInfo = collections.namedtuple(
+    "LocationInfo",
+    ['ip', 'country_code', 'country_name', 'region_code', 'region_name',
+     'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
+     'use_fahrenheit'])
+
+
+def detect_location_info():
+    """ Detect location information. """
+    try:
+        raw_info = requests.get(
+            'https://freegeoip.net/json/', timeout=5).json()
+    except requests.RequestException:
+        return
+
+    data = {key: raw_info.get(key) for key in LocationInfo._fields}
+
+    # From Wikipedia: Fahrenheit is used in the Bahamas, Belize,
+    # the Cayman Islands, Palau, and the United States and associated
+    # territories of American Samoa and the U.S. Virgin Islands
+    data['use_fahrenheit'] = data['country_code'] in (
+        'BS', 'BZ', 'KY', 'PW', 'US', 'AS', 'VI')
+
+    return LocationInfo(**data)
 
 
 class OrderedEnum(enum.Enum):
