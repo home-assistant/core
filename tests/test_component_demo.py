@@ -4,13 +4,10 @@ tests.test_component_demo
 
 Tests demo component.
 """
-# pylint: disable=too-many-public-methods,protected-access
 import unittest
 
 import homeassistant as ha
 import homeassistant.components.demo as demo
-from homeassistant.const import (
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
 
 
 class TestDemo(unittest.TestCase):
@@ -22,46 +19,6 @@ class TestDemo(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass.stop()
-
-    def test_services(self):
-        """ Test the demo services. """
-        # Test turning on and off different types
-        demo.setup(self.hass, {})
-
-        for domain in ('light', 'switch'):
-            # Focus on 1 entity
-            entity_id = self.hass.states.entity_ids(domain)[0]
-
-            self.hass.services.call(
-                domain, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
-
-            self.hass.pool.block_till_done()
-
-            self.assertEqual(STATE_ON, self.hass.states.get(entity_id).state)
-
-            self.hass.services.call(
-                domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
-
-            self.hass.pool.block_till_done()
-
-            self.assertEqual(STATE_OFF, self.hass.states.get(entity_id).state)
-
-            # Act on all
-            self.hass.services.call(domain, SERVICE_TURN_ON)
-
-            self.hass.pool.block_till_done()
-
-            for entity_id in self.hass.states.entity_ids(domain):
-                self.assertEqual(
-                    STATE_ON, self.hass.states.get(entity_id).state)
-
-            self.hass.services.call(domain, SERVICE_TURN_OFF)
-
-            self.hass.pool.block_till_done()
-
-            for entity_id in self.hass.states.entity_ids(domain):
-                self.assertEqual(
-                    STATE_OFF, self.hass.states.get(entity_id).state)
 
     def test_if_demo_state_shows_by_default(self):
         """ Test if demo state shows if we give no configuration. """

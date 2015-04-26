@@ -32,7 +32,13 @@ def setup(hass, config):
         hass.states.set('a.Demo_Mode', 'Enabled')
 
     # Setup sun
-    loader.get_component('sun').setup(hass, config)
+    if not hass.config.latitude:
+        hass.config.latitude = '32.87336'
+
+    if not hass.config.longitude:
+        hass.config.longitude = '117.22743'
+
+    bootstrap.setup_component(hass, 'sun')
 
     # Setup demo platforms
     for component in COMPONENTS_WITH_DEMO_PLATFORM:

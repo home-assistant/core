@@ -6,9 +6,6 @@ devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
 import logging
 from urllib.parse import urlparse
 
-# addon library imports
-import PyISY
-
 # homeassistant imports
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
@@ -16,7 +13,8 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, EVENT_PLATFORM_DISCOVERED,
-    ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
+    EVENT_HOMEASSISTANT_STOP, ATTR_SERVICE, ATTR_DISCOVERED,
+    ATTR_FRIENDLY_NAME)
 
 # homeassistant constants
 DOMAIN = "isy994"
@@ -37,6 +35,13 @@ def setup(hass, config):
     Setup isy994 component.
     This will automatically import associated lights, switches, and sensors.
     """
+    try:
+        import PyISY
+    except ImportError:
+        _LOGGER.error("Error while importing dependency PyISY.")
+
+        return False
+
     # pylint: disable=global-statement
     # check for required values in configuration file
     if not validate_config(config,
@@ -73,6 +78,9 @@ def setup(hass, config):
     if not ISY.connected:
         return False
 
+    # listen for HA stop to disconnect
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
+
     # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
                                   ('light', DISCOVER_LIGHTS),
@@ -85,6 +93,11 @@ def setup(hass, config):
 
     ISY.auto_update = True
     return True
+
+
+def stop(event):
+    """ Cleanup the ISY subscription. """
+    ISY.auto_update = False
 
 
 class ISYDeviceABC(ToggleEntity):
