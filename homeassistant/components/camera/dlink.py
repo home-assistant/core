@@ -140,7 +140,8 @@ class DlinkCamera(Camera):
 
         ftp_server = get_component('ftp').ftp_server
 
-        ftp_path = os.path.join(ftp_server.ftp_root_path, self.entity_id)
+        ftp_path = self.images_path
+        #os.path.join(ftp_server.ftp_root_path, self.entity_id)
 
         if not os.path.isdir(ftp_path):
             os.makedirs(ftp_path)

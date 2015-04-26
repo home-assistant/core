@@ -1,5 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-tabs=/paper-tab.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 
 <polymer-element name="more-info-camera" attributes="stateObj">
@@ -32,6 +33,11 @@
 
   </style>
   <div hidden?="{{configureFTP}}" class="camera-container" id="camera_container">
+    <paper-tabs selected="0">
+      <paper-tab>TAB 1</paper-tab>
+      <paper-tab>TAB 2</paper-tab>
+      <paper-tab>TAB 3</paper-tab>
+    </paper-tabs>
     <template if="{{ connectionFailed }}">
       <div center vertical layout>
         <div>Could not connect to camera...</div>

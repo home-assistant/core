@@ -7,16 +7,22 @@ import urllib3
 import mimetypes
 import requests
 import logging
+import time
 from homeassistant.helpers.entity import Entity
 import time
+import datetime
 from datetime import timedelta
 import re
+import os
+from homeassistant.loader import get_component
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
     SERVICE_TURN_ON,
-    SERVICE_TURN_OFF
+    SERVICE_TURN_OFF,
+    EVENT_FTP_FILE_RECEIVED,
+    EVENT_COMPONENT_LOADED
     )
 
 
@@ -28,6 +34,10 @@ DEPENDENCIES = ['http']
 GROUP_NAME_ALL_CAMERAS = 'all_cameras'
 SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+# The number of seconds between images before being
+# considerd a new event
+EVENT_GAP_THRESHOLD = 15
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {}
@@ -165,6 +175,19 @@ class Camera(Entity):
         self._ftp_username = ''
         self._ftp_password = ''
 
+        self._images_path = None
+        self._event_images_path = None
+
+        self.hass.bus.listen(
+            EVENT_FTP_FILE_RECEIVED,
+            self.process_file_event)
+
+        # self.hass.bus.listen_once(
+        #     EVENT_COMPONENT_LOADED,
+        #     self.ftp_server_loaded_event)
+
+
+
     def get_camera_image(self, stream=False):
         response = requests.get(self.still_image_url, auth=(self.username, self.password), stream=stream)
         return response
@@ -221,6 +244,81 @@ class Camera(Entity):
     def set_ftp_details(self):
         if not self.is_motion_detection_supported:
             return False
+
+    def process_file_event(self, event):
+        if self.images_path != None:
+            if event.data.get('file_name').startswith(self.images_path):
+                self.process_new_file(event.data.get('file_name'))
+
+    def process_new_file(self, path):
+        if not os.path.isfile(path):
+            return False
+
+        if self.event_images_path == None:
+            return False
+
+        if not os.path.isdir(self.event_images_path):
+            os.makedirs(self.event_images_path)
+
+        all_subdirs = [d for d in os.listdir(self.event_images_path)
+            if os.path.isdir(os.path.join(self.event_images_path, d)) and d.startswith('event-')]
+
+        event_dir = None
+        if len(all_subdirs) > 0:
+            event_dir = sorted(all_subdirs, key=lambda x: os.path.getctime(os.path.join(self.event_images_path, x)), reverse=True)[:1][0]
+            event_dir = os.path.join(self.event_images_path, event_dir)
+            file_dt = datetime.datetime.fromtimestamp(os.path.getctime(path))
+
+            # Get the newest file in the dir
+            all_subfiles = [f for f in os.listdir(event_dir)
+                if os.path.isfile(os.path.join(event_dir, f)) and f.startswith('event_image-')]
+
+            if len(all_subfiles) > 0:
+                newest_image = sorted(all_subfiles, key=lambda x: os.path.getctime(os.path.join(event_dir, x)), reverse=True)[:1][0]
+                newest_image_path = os.path.join(event_dir, newest_image)
+                newest_file_dt = datetime.datetime.fromtimestamp(os.path.getctime(newest_image_path))
+                if (file_dt - newest_file_dt).total_seconds() > EVENT_GAP_THRESHOLD:
+                    event_dir = None
+            else:
+                event_dir_dt = datetime.datetime.fromtimestamp(os.path.getctime(event_dir))
+                if (file_dt - event_dir_dt).total_seconds() > EVENT_GAP_THRESHOLD:
+                    event_dir = None
+
+
+        if event_dir == None:
+            new_event_dir_name = 'event-' + datetime.datetime.fromtimestamp(os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S')
+            event_dir = os.path.join(self.event_images_path, new_event_dir_name)
+            if not os.path.isdir(event_dir):
+                os.makedirs(event_dir)
+
+        new_file_name = 'event_image-' + datetime.datetime.fromtimestamp(os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S-%f') + '.jpg'
+        new_file_path = os.path.join(event_dir, new_file_name)
+
+        if not os.path.isfile(path):
+            return False
+
+        os.rename(path, new_file_path)
+
+        return True
+
+
+    @property
+    def images_path(self):
+        if self._images_path == None:
+            ftp_comp = get_component('ftp')
+            if ftp_comp != None and ftp_comp.ftp_server != None:
+                self._images_path = os.path.join(ftp_comp.ftp_server.ftp_root_path, self.entity_id)
+        return self._images_path
+
+    @property
+    def event_images_path(self):
+        if self._images_path == None:
+            return None
+
+        if self._event_images_path == None:
+           self._event_images_path = os.path.join(self._images_path, 'events')
+
+        return self._event_images_path
 
     @property
     def is_motion_detection_supported(self):
