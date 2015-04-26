@@ -15,8 +15,6 @@ import re
 import datetime as dt
 import functools as ft
 
-import requests
-
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
@@ -897,41 +895,6 @@ class Config(object):
 
         # Directory that holds the configuration
         self.config_dir = os.path.join(os.getcwd(), 'config')
-
-    def auto_detect(self):
-        """ Will attempt to detect config of Home Assistant. """
-        # Only detect if location or temp unit missing
-        if None not in (self.latitude, self.longitude, self.temperature_unit):
-            return
-
-        _LOGGER.info('Auto detecting location and temperature unit')
-
-        try:
-            info = requests.get(
-                'https://freegeoip.net/json/', timeout=5).json()
-        except requests.RequestException:
-            return
-
-        if self.latitude is None and self.longitude is None:
-            self.latitude = info['latitude']
-            self.longitude = info['longitude']
-
-        if self.temperature_unit is None:
-            # From Wikipedia:
-            # Fahrenheit is used in the Bahamas, Belize, the Cayman Islands,
-            # Palau, and the United States and associated territories of
-            # American Samoa and the U.S. Virgin Islands
-            if info['country_code'] in ('BS', 'BZ', 'KY', 'PW',
-                                        'US', 'AS', 'VI'):
-                self.temperature_unit = TEMP_FAHRENHEIT
-            else:
-                self.temperature_unit = TEMP_CELCIUS
-
-        if self.location_name is None:
-            self.location_name = info['city']
-
-        if self.time_zone is None:
-            self.time_zone = info['time_zone']
 
     def path(self, path):
         """ Returns path to the file within the config dir. """
