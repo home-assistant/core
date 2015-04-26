@@ -24,8 +24,14 @@ which event (sunset or sunrise) and the offset.
 import logging
 from datetime import datetime, timedelta
 
-from homeassistant.util import str_to_datetime, datetime_to_str
+try:
+    import ephem
+except ImportError:
+    # Error will be raised during setup
+    ephem = None
 
+from homeassistant.util import str_to_datetime, datetime_to_str
+from homeassistant.helpers.entity import Entity
 from homeassistant.components.scheduler import ServiceEventListener
 
 DEPENDENCIES = []
@@ -80,76 +86,91 @@ def setup(hass, config):
     """ Tracks the state of the sun. """
     logger = logging.getLogger(__name__)
 
-    try:
-        import ephem
-    except ImportError:
+    if ephem is None:
         logger.exception("Error while importing dependency ephem.")
         return False
 
-    sun = ephem.Sun()  # pylint: disable=no-member
-
-    latitude = str(hass.config.latitude)
-    longitude = str(hass.config.longitude)
-
-    # Validate latitude and longitude
-    observer = ephem.Observer()
-
-    errors = []
-
-    try:
-        observer.lat = latitude  # pylint: disable=assigning-non-slot
-    except ValueError:
-        errors.append("invalid value for latitude given: {}".format(latitude))
-
-    try:
-        observer.long = longitude  # pylint: disable=assigning-non-slot
-    except ValueError:
-        errors.append("invalid value for latitude given: {}".format(latitude))
-
-    if errors:
-        logger.error("Error setting up: %s", ", ".join(errors))
+    if None in (hass.config.latitude, hass.config.longitude):
+        logger.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    def update_sun_state(now):
-        """ Method to update the current state of the sun and
-            set time of next setting and rising. """
-        utc_offset = datetime.utcnow() - datetime.now()
-        utc_now = now + utc_offset
+    sun = Sun(hass, str(hass.config.latitude), str(hass.config.longitude))
 
-        observer = ephem.Observer()
-        observer.lat = latitude  # pylint: disable=assigning-non-slot
-        observer.long = longitude  # pylint: disable=assigning-non-slot
-
-        next_rising_dt = ephem.localtime(
-            observer.next_rising(sun, start=utc_now))
-        next_setting_dt = ephem.localtime(
-            observer.next_setting(sun, start=utc_now))
-
-        if next_rising_dt > next_setting_dt:
-            new_state = STATE_ABOVE_HORIZON
-            next_change = next_setting_dt
-
-        else:
-            new_state = STATE_BELOW_HORIZON
-            next_change = next_rising_dt
-
-        logger.info("%s. Next change: %s",
-                    new_state, next_change.strftime("%H:%M"))
-
-        state_attributes = {
-            STATE_ATTR_NEXT_RISING: datetime_to_str(next_rising_dt),
-            STATE_ATTR_NEXT_SETTING: datetime_to_str(next_setting_dt)
-        }
-
-        hass.states.set(ENTITY_ID, new_state, state_attributes)
-
-        # +1 second so Ephem will report it has set
-        hass.track_point_in_time(update_sun_state,
-                                 next_change + timedelta(seconds=1))
-
-    update_sun_state(datetime.now())
+    try:
+        sun.point_in_time_listener(datetime.now())
+    except ValueError:
+        # Raised when invalid latitude or longitude is given to Observer
+        logger.exception("Invalid value for latitude or longitude")
+        return False
 
     return True
+
+
+class Sun(Entity):
+    """ Represents the Sun. """
+
+    entity_id = ENTITY_ID
+
+    def __init__(self, hass, latitude, longitude):
+        self.hass = hass
+        self.latitude = latitude
+        self.longitude = longitude
+
+        self._state = self.next_rising = self.next_setting = None
+
+    @property
+    def should_poll(self):
+        """ We trigger updates ourselves after sunset/sunrise """
+        return False
+
+    @property
+    def name(self):
+        return "Sun"
+
+    @property
+    def state(self):
+        if self.next_rising > self.next_setting:
+            return STATE_ABOVE_HORIZON
+
+        return STATE_BELOW_HORIZON
+
+    @property
+    def state_attributes(self):
+        return {
+            STATE_ATTR_NEXT_RISING: datetime_to_str(self.next_rising),
+            STATE_ATTR_NEXT_SETTING: datetime_to_str(self.next_setting)
+        }
+
+    @property
+    def next_change(self):
+        """ Returns the datetime when the next change to the state is. """
+        return min(self.next_rising, self.next_setting)
+
+    def update_as_of(self, point_in_time):
+        """ Calculate sun state at a point in time. """
+        utc_offset = datetime.utcnow() - datetime.now()
+        utc_now = point_in_time + utc_offset
+
+        sun = ephem.Sun()  # pylint: disable=no-member
+
+        # Setting invalid latitude and longitude to observer raises ValueError
+        observer = ephem.Observer()
+        observer.lat = self.latitude  # pylint: disable=assigning-non-slot
+        observer.long = self.longitude  # pylint: disable=assigning-non-slot
+
+        self.next_rising = ephem.localtime(
+            observer.next_rising(sun, start=utc_now))
+        self.next_setting = ephem.localtime(
+            observer.next_setting(sun, start=utc_now))
+
+    def point_in_time_listener(self, now):
+        """ Called when the state of the sun has changed. """
+        self.update_as_of(now)
+        self.update_ha_state()
+
+        # Schedule next update at next_change+1 second so sun state has changed
+        self.hass.track_point_in_time(self.point_in_time_listener,
+                                      self.next_change + timedelta(seconds=1))
 
 
 def create_event_listener(schedule, event_listener_data):
