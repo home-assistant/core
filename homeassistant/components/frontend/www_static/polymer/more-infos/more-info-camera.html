@@ -1,7 +1,9 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-tabs=/paper-tab.html">
+<link rel="import" href="../bower_components/core-pages/core-pages.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<!--<link rel="import" href="../bower_components/core-icons/image-icons.html">-->
 
 <polymer-element name="more-info-camera" attributes="stateObj">
 <template>
@@ -12,6 +14,10 @@
   }
   paper-button.colored {
     color: #4285f4;
+  }
+
+  :host .camera-image {
+    max-width: 100%;
   }
    @media (max-width: 720px) {
       :host .camera-image {
@@ -28,35 +34,63 @@
     @media (max-height: 780px) {
       :host .camera-container {
         height: 550px;
+        max-width: calc(100%);
       }
     }
 
-  </style>
-  <div hidden?="{{configureFTP}}" class="camera-container" id="camera_container">
-    <paper-tabs selected="0">
-      <paper-tab>TAB 1</paper-tab>
-      <paper-tab>TAB 2</paper-tab>
-      <paper-tab>TAB 3</paper-tab>
-    </paper-tabs>
-    <template if="{{ connectionFailed }}">
-      <div center vertical layout>
-        <div>Could not connect to camera...</div>
-        <paper-button ink id="retry_btn" on-click="{{retry}}">Retry</paper-button>
-      <div>
-    </template>
+    :host .camera-page {
+      max-width: calc(100%);
+      max-height: calc(100%);
+    }
 
-    <img  hidden?="{{connectionFailed}}" src="" onload="" id="camera_image" class="camera-image" />
-    <div center horizontal layout>
-      <div>
-        <paper-icon-button on-click="{{toggleMotionDetection}}" icon="{{motionDetectionIcon}}"></paper-icon-button>
+  </style>
+
+  <div hidden?="{{configureFTP}}">
+    <paper-tabs selected="{{selected}}">
+      <paper-tab>Camera</paper-tab>
+      <paper-tab>Events</paper-tab>
+      <paper-tab>Settings</paper-tab>
+    </paper-tabs>
+
+    <!--<core-pages selected="{{selected}}">-->
+      <div id="camera_container" class="camera-container camera-page" hidden?="{{ selected != 0 }}">
+        <template if="{{ connectionFailed }}">
+          <div center vertical layout>
+            <div>Could not connect to camera...</div>
+            <paper-button ink id="retry_btn" on-click="{{retry}}">Retry</paper-button>
+          <div>
+        </template>
+
+        <img  hidden?="{{connectionFailed}}" src="" onload="" id="camera_image" class="camera-image" />
+        <div center horizontal layout>
+          <div>
+            <core-tooltip label="Toggle Motion Detection" position="top">
+              <paper-icon-button on-click="{{toggleMotionDetection}}" icon="{{motionDetectionIcon}}"></paper-icon-button>
+            </core-tooltip>
+            <core-tooltip label="Take Picture" position="top">
+              <paper-icon-button on-click="" icon="image:camera-alt"></paper-icon-button>
+            </core-tooltip>
+            <core-tooltip label="Record Camera" position="top">
+              <paper-icon-button on-click="{{startRecording}}" icon="{{recordingIcon}}"></paper-icon-button>
+            </core-tooltip>
+          </div>
+          <div flex>
+            &nbsp;
+          </div>
+          <div>
+            {{stateObj.attributes['brand']}} - {{stateObj.attributes['model_name']}}
+          </div>
+        </div>
       </div>
-      <div flex>
-        &nbsp;
+      <div class="camera-container camera-page" hidden?="{{ selected != 1 }}">Page 2</div>
+      <div class="camera-container camera-page" hidden?="{{ selected != 2 }}">
+        <p>
+          Depending on the level of support for your current model of camera some settings may not be
+          available here and will need to be set by accessing the camera's web interface directly.
+        </p>
       </div>
-      <div>
-        {{stateObj.attributes['brand']}} - {{stateObj.attributes['model_name']}}
-      </div>
-    </div>
+    <!--</core-pages>-->
+
   </div>
 
   <div hidden?="{{!configureFTP}}">
@@ -102,6 +136,8 @@
     connectionFailed: false,
     motionDetectionIcon: 'visibility',
     configureFTP: false,
+    selected: 0,
+    recordingIcon: 'av:videocam',
 
     //document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
 
@@ -146,6 +182,8 @@
       if(newVal == true) {
         this.configureFTP = false;
         this.startImageStream();
+        this.selected = 0;
+        this.recordingIcon = 'av:videocam';
       }
       else {
         this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
@@ -158,6 +196,10 @@
 
     retry: function(event, detail, sender) {
       this.startImageStream();
+    },
+
+    startRecording: function() {
+      this.recordingIcon = 'av:videocam-off';
     }
 
   });

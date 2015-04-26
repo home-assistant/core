@@ -34,6 +34,7 @@ DEPENDENCIES = ['http']
 GROUP_NAME_ALL_CAMERAS = 'all_cameras'
 SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+EVENT_CAMERA_MOTION_DETECTED = 'camera_motion_detected'
 
 # The number of seconds between images before being
 # considerd a new event
@@ -175,8 +176,13 @@ class Camera(Entity):
         self._ftp_username = ''
         self._ftp_password = ''
 
-        self._images_path = None
+        self._images_path = device_info.get('images_path', None)
+
+        if self._images_path != None and not os.path.isdir(self._images_path):
+            os.makedirs(self._images_path)
+
         self._event_images_path = None
+        self._ftp_path = None
 
         self.hass.bus.listen(
             EVENT_FTP_FILE_RECEIVED,
@@ -246,8 +252,8 @@ class Camera(Entity):
             return False
 
     def process_file_event(self, event):
-        if self.images_path != None:
-            if event.data.get('file_name').startswith(self.images_path):
+        if self.ftp_path != None:
+            if event.data.get('file_name').startswith(self.ftp_path):
                 self.process_new_file(event.data.get('file_name'))
 
     def process_new_file(self, path):
@@ -291,6 +297,12 @@ class Camera(Entity):
             if not os.path.isdir(event_dir):
                 os.makedirs(event_dir)
 
+            self.hass.bus.fire(
+                EVENT_CAMERA_MOTION_DETECTED, {"component": DOMAIN,
+                ATTR_ENTITY_ID: self.entity_id,
+                'event_images_path': event_dir,
+                'event_images_dir': new_event_dir_name})
+
         new_file_name = 'event_image-' + datetime.datetime.fromtimestamp(os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S-%f') + '.jpg'
         new_file_path = os.path.join(event_dir, new_file_name)
 
@@ -305,20 +317,32 @@ class Camera(Entity):
     @property
     def images_path(self):
         if self._images_path == None:
-            ftp_comp = get_component('ftp')
-            if ftp_comp != None and ftp_comp.ftp_server != None:
-                self._images_path = os.path.join(ftp_comp.ftp_server.ftp_root_path, self.entity_id)
+            default_images_path = os.path.join(self.hass.config.config_dir, 'camera_data')
+            default_images_path = os.path.join(default_images_path, self.entity_id)
+            self._images_path = default_images_path
+
+            if not os.path.isdir(self.images_path):
+                os.makedirs(self.images_path)
+
         return self._images_path
 
     @property
     def event_images_path(self):
-        if self._images_path == None:
+        if self.images_path == None:
             return None
 
         if self._event_images_path == None:
-           self._event_images_path = os.path.join(self._images_path, 'events')
+           self._event_images_path = os.path.join(self.images_path, 'events')
 
         return self._event_images_path
+
+    @property
+    def ftp_path(self):
+        if self._ftp_path == None:
+            ftp_comp = get_component('ftp')
+            if ftp_comp != None and ftp_comp.ftp_server != None:
+                self._ftp_path = os.path.join(ftp_comp.ftp_server.ftp_root_path, self.entity_id)
+        return self._ftp_path
 
     @property
     def is_motion_detection_supported(self):
