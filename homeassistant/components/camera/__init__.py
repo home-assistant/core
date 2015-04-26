@@ -22,7 +22,11 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_TURN_OFF,
     EVENT_FTP_FILE_RECEIVED,
-    EVENT_COMPONENT_LOADED
+    EVENT_COMPONENT_LOADED,
+    STATE_MOTION_DETECTED,
+    STATE_STREAMING,
+    STATE_ARMED,
+    STATE_IDLE
     )
 
 
@@ -81,6 +85,7 @@ def setup(hass, config):
             camera = component.entities[entity_id]
 
         if camera:
+            camera._last_connected_address = handler.address_string()
             message = "{0} started streaming to {1}".format(camera.name, handler.address_string())
             hass.bus.fire(
                 "camera_stream_started", {"component": DOMAIN,
@@ -162,6 +167,9 @@ class Camera(Entity):
         self.username = device_info.get('username')
         self.password = device_info.get('password')
         self.is_streaming = False
+        self._is_detecting_motion = False
+        self._last_motion_detected = datetime.datetime.now()
+        self._last_connected_address = None
         # these are the camera functions and capabilities initialised
         # to defaults, these should be overridden in derived classes
         self._is_motion_detection_supported = False
@@ -187,7 +195,7 @@ class Camera(Entity):
         self.hass.bus.listen(
             EVENT_FTP_FILE_RECEIVED,
             self.process_file_event)
-
+        #print('5555555555555555555555555555555555555555555555555555555')
         # self.hass.bus.listen_once(
         #     EVENT_COMPONENT_LOADED,
         #     self.ftp_server_loaded_event)
@@ -208,10 +216,18 @@ class Camera(Entity):
     @property
     def state(self):
         """ Returns the state of the entity. """
-        if self.is_streaming:
-            return "Streaming"
+        seconds_since_last_motion = (datetime.datetime.now() - self._last_motion_detected).total_seconds()
+        if self._is_detecting_motion and seconds_since_last_motion > EVENT_GAP_THRESHOLD:
+            self._is_detecting_motion = False
+
+        if self._is_detecting_motion:
+            return STATE_MOTION_DETECTED
+        elif self.is_streaming:
+            return STATE_STREAMING
+        elif self._is_motion_detection_enabled:
+            return STATE_ARMED
         else:
-            return "Idle"
+            return STATE_IDLE
 
 
     @property
@@ -223,6 +239,8 @@ class Camera(Entity):
         attr['still_image_url'] = '/api/camera_proxy/' + self.entity_id
         attr[ATTR_ENTITY_PICTURE] = '/api/camera_proxy/' + self.entity_id + '?api_password=' + self.hass.http.api_password + '&time=' + str(time.time())
         attr['stream_url'] = '/api/camera_proxy_stream/' + self.entity_id
+        attr['last_motion_time'] = self._last_motion_detected.strftime('%Y-%m-%d %H-%M-%S')
+        attr['last_connected_address'] = self._last_connected_address
 
         attr.update(self.function_attributes)
 
@@ -254,6 +272,8 @@ class Camera(Entity):
     def process_file_event(self, event):
         if self.ftp_path != None:
             if event.data.get('file_name').startswith(self.ftp_path):
+                self._is_detecting_motion = True
+                self._last_motion_detected = datetime.datetime.now()
                 self.process_new_file(event.data.get('file_name'))
 
     def process_new_file(self, path):

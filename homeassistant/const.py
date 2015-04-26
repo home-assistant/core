@@ -41,6 +41,10 @@ STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = "unknown"
 STATE_OPEN = 'open'
 STATE_CLOSED = 'closed'
+STATE_MOTION_DETECTED = 'motion_detected'
+STATE_ARMED = 'armed'
+STATE_STREAMING = 'streaming'
+STATE_IDLE = 'idle'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event

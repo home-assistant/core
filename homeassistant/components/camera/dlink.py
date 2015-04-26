@@ -95,6 +95,9 @@ class DlinkCamera(Camera):
         self._ftp_username = u_settings.get('FTPUserName')
         self._ftp_password = u_settings.get('FTPPassword')
 
+        ftp_comp = get_component('ftp')
+        if ftp_comp != None and ftp_comp.ftp_server != None:
+            self._ftp_path = os.path.join(ftp_comp.ftp_server.ftp_root_path, u_settings.get('FTPDirectoryPath', self.entity_id))
 
 
 
