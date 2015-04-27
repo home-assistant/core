@@ -45,7 +45,7 @@ def get_service(hass, config):
 
     try:
         # pylint: disable=unused-variable
-        from requests import Request, Session
+        from requests import Session
 
     except ImportError:
         _LOGGER.exception(
@@ -56,12 +56,13 @@ def get_service(hass, config):
 
     nma = Session()
     response = nma.get(_RESOURCE + 'verify',
-                       params={"apikey" : config[DOMAIN][CONF_API_KEY]})
+                       params={"apikey": config[DOMAIN][CONF_API_KEY]})
     tree = ET.fromstring(response.content)
+    # pylint: disable=logging-not-lazy
     if tree[0].tag == 'error':
         _LOGGER.error(
             "Wrong API key supplied. "
-            "Error: {}".format(tree[0].text))
+            "{}".format(tree[0].text))
     else:
         return NmaNotificationService(config[DOMAIN][CONF_API_KEY])
 
@@ -72,10 +73,10 @@ class NmaNotificationService(BaseNotificationService):
 
     def __init__(self, api_key):
         # pylint: disable=no-name-in-module, unused-variable
-        from requests import Request, Session
+        from requests import Session
 
         self._api_key = api_key
-        self._data = {"apikey" : self._api_key}
+        self._data = {"apikey": self._api_key}
 
         self.nma = Session()
 
@@ -92,6 +93,7 @@ class NmaNotificationService(BaseNotificationService):
         response = self.nma.get(_RESOURCE + 'notify',
                                 params=self._data)
         tree = ET.fromstring(response.content)
+        # pylint: disable=logging-not-lazy
         if tree[0].tag == 'error':
             _LOGGER.exception(
                 "Unable to perform request. "
