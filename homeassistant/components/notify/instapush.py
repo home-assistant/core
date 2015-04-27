@@ -21,23 +21,23 @@ VARIABLES:
 api_key
 *Required
 To retrieve this value log into your account at https://instapush.im and go
-to 'APPS'.
+to 'APPS', choose an app, and check 'Basic Info'.
 
 app_secret
 *Required
 To get this value log into your account at https://instapush.im and go to
-'APPS'. The 'Application ID' can be found under 'Basic Info'. Make sure that
-you have at least one event for your app.
+'APPS'. The 'Application ID' can be found under 'Basic Info'.
 
 event
 *Required
-To retrieve this value log into your account at https://instapush.im and go
-to 'APPS'.
+To retrieve a valid event log into your account at https://instapush.im and go
+to 'APPS'. If you have no events to use with Home Assistant, create one event for
+your app.
 
 tracker
 *Required
-To retrieve this value log into your account at https://instapush.im and go
-to 'APPS'.
+To retrieve the tracker value log into your account at https://instapush.im and go
+to 'APPS', choose the app, and check the event entries.
 
 Example usage of Instapush if you have an event 'notification' and a tracker
 'home-assistant'.
@@ -61,15 +61,17 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'https://api.instapush.im/v1/post'
+_RESOURCE = 'https://api.instapush.im/v1/'
 
 
 def get_service(hass, config):
     """ Get the instapush notification service. """
 
     if not validate_config(config,
-                           {DOMAIN: [CONF_API_KEY, 'app_secret', \
-                                'event', 'tracker']},
+                           {DOMAIN: [CONF_API_KEY,
+                                     'app_secret',
+                                     'event',
+                                     'tracker']},
                            _LOGGER):
         return None
 
@@ -94,12 +96,31 @@ def get_service(hass, config):
 
         return None
 
-    return InstapushNotificationService(
-        config[DOMAIN].get(CONF_API_KEY),
-        config[DOMAIN]['app_secret'],
-        config[DOMAIN]['event'],
-        config[DOMAIN]['tracker']
-        )
+    instapush = requests.Session()
+    headers = {'x-instapush-appid': config[DOMAIN][CONF_API_KEY],
+               'x-instapush-appsecret': config[DOMAIN]['app_secret']}
+    response = instapush.get(_RESOURCE + 'events/list',
+                             headers=headers)
+
+    try:
+        if response.json()['error']:
+            _LOGGER.error("{}".format(response.json()['msg']))
+    # pylint: disable=bare-except
+    except:
+        try:
+            next(events for events in response.json()
+                 if events['title'] == config[DOMAIN]['event'])
+        except StopIteration:
+            _LOGGER.error(
+                "No event match your given value. "
+                "Please create an event at https://instapush.im")
+        else:
+            return InstapushNotificationService(
+                config[DOMAIN].get(CONF_API_KEY),
+                config[DOMAIN]['app_secret'],
+                config[DOMAIN]['event'],
+                config[DOMAIN]['tracker']
+                )
 
 
 # pylint: disable=too-few-public-methods
@@ -108,34 +129,33 @@ class InstapushNotificationService(BaseNotificationService):
 
     def __init__(self, api_key, app_secret, event, tracker):
         # pylint: disable=no-name-in-module, unused-variable
-        from requests import Request, Session
+        from requests import Session
 
         self._api_key = api_key
         self._app_secret = app_secret
         self._event = event
         self._tracker = tracker
         self._headers = {
-            'X-INSTAPUSH-APPID' : self._api_key,
-            'X-INSTAPUSH-APPSECRET' : self._app_secret,
-            'Content-Type' : 'application/json'}
+            'x-instapush-appid': self._api_key,
+            'x-instapush-appsecret': self._app_secret,
+            'Content-Type': 'application/json'}
 
         self.instapush = Session()
-
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
 
         title = kwargs.get(ATTR_TITLE)
 
-        data = {"event":self._event,
-                "trackers":{self._tracker:title + " : " + message}}
+        data = {"event": self._event,
+                "trackers": {self._tracker: title + " : " + message}}
 
         response = self.instapush.post(
-            _RESOURCE,
+            _RESOURCE + 'post',
             data=json.dumps(data),
             headers=self._headers)
 
-        if response.json()['error'] == 'True':
+        if response.json()['status'] == 401:
             _LOGGER.error(
-                "Wrong details supplied. "
-                "Get them at https://instapush.im/")
+                response.json()['msg'],
+                "Please check your details at https://instapush.im/")
