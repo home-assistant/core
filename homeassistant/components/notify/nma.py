@@ -17,11 +17,14 @@ VARIABLES:
 
 api_key
 *Required
-Enter the API for NMA. Go to https://www.notifymyandroid.com and create a
-new API to use with Home Assistant.
+Enter the API key for NMA. Go to https://www.notifymyandroid.com and create a
+new API key to use with Home Assistant.
+
+Details for the API : https://www.notifymyandroid.com/api.jsp
 
 """
 import logging
+import xml.etree.ElementTree as ET
 
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
@@ -29,6 +32,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
+_RESOURCE = 'https://www.notifymyandroid.com/publicapi/'
 
 
 def get_service(hass, config):
@@ -41,14 +45,24 @@ def get_service(hass, config):
 
     try:
         # pylint: disable=unused-variable
-        from homeassistant.external.pynma.pynma import PyNMA
+        from requests import Request, Session
 
     except ImportError:
         _LOGGER.exception(
-            "Unable to import pyNMA. "
-            "Did you maybe not install the 'PyNMA' package?")
+            "Unable to import requests. "
+            "Did you maybe not install the 'Requests' package?")
 
         return None
+
+    nma = Session()
+    response = nma.get(_RESOURCE + 'verify', params={"apikey" : config[DOMAIN][CONF_API_KEY]})
+    tree = ET.fromstring(response.content)
+    if tree[0].tag == 'error':
+        _LOGGER.error(
+            "Wrong API key supplied. "
+            "Error: {}".format(tree[0].text))
+    else:
+        return NmaNotificationService(config[DOMAIN][CONF_API_KEY])
 
 
 # pylint: disable=too-few-public-methods
@@ -56,13 +70,27 @@ class NmaNotificationService(BaseNotificationService):
     """ Implements notification service for NMA. """
 
     def __init__(self, api_key):
-        from homeassistant.external.pynma.pynma import PyNMA
+        # pylint: disable=no-name-in-module, unused-variable
+        from requests import Request, Session
 
-        self.nma = PyNMA(api_key)
+        self._api_key = api_key
+        self._data = {"apikey" : self._api_key}
+
+        self.nma = Session()
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
 
         title = kwargs.get(ATTR_TITLE)
 
-        self.nma.push('home-assistant', title, message)
+        self._data['application'] = 'home-assistant'
+        self._data['event'] = title
+        self._data['description'] = message
+        self._data['priority'] = 0
+
+        response = self.nma.get(_RESOURCE + 'notify', params=self._data)
+        tree = ET.fromstring(response.content)
+        if tree[0].tag == 'error':
+            _LOGGER.exception(
+                "Unable to perform request. "
+                "Error: {}".format(tree[0].text))
