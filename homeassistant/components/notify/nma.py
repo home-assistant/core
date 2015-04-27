@@ -58,7 +58,7 @@ def get_service(hass, config):
     response = nma.get(_RESOURCE + 'verify',
                        params={"apikey": config[DOMAIN][CONF_API_KEY]})
     tree = ET.fromstring(response.content)
-    # pylint: disable=logging-not-lazy
+    # pylint: disable=bad-option-value
     if tree[0].tag == 'error':
         _LOGGER.error(
             "Wrong API key supplied. "
@@ -93,7 +93,7 @@ class NmaNotificationService(BaseNotificationService):
         response = self.nma.get(_RESOURCE + 'notify',
                                 params=self._data)
         tree = ET.fromstring(response.content)
-        # pylint: disable=logging-not-lazy
+        # pylint: disable=bad-option-value
         if tree[0].tag == 'error':
             _LOGGER.exception(
                 "Unable to perform request. "
