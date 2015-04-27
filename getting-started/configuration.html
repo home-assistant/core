@@ -169,18 +169,54 @@
 <p>Not all devices can be discovered, so if you have any of the following devices or services, please see their respective pages for installation instructions:</p>
 
 <ul>
+<li><a href="/components/device_tracker.html">Device tracking</a></li>
+<li><a href="/components/isy994.html">ISY994 controller</a></li>
 <li><a href="/components/thermostat.html">Nest thermostat</a></li>
-<li><a href="/components/wink.html">Wink hub</a></li>
-<li><a href="/components/tellstick.html">TellStick</a></li>
 <li><a href="/components/notify.html">PushBullet</a></li>
 <li><a href="/blog/2015/03/22/release-notes/#pushover">PushOver</a></li>
 <li><a href="/blog/2015/03/22/release-notes/#sabnzbd">SABnzbd</a></li>
-<li><a href="/components/device_tracker.html">Device tracking</a></li>
+<li><a href="/components/tellstick.html">TellStick</a></li>
+<li><a href="/components/wink.html">Wink hub</a></li>
 <li><a href="/developers/add_new_platform.html">Add support for your own device or service</a></li>
 </ul>
 
 
 <p>See the <a href="/components/">components overview page</a> for a complete list of supported devices.</p>
+
+<h3><a class='title-link' name='customizing-devices-and-services' href='#customizing-devices-and-services'></a> Customizing devices and services</h3>
+
+<p>By default, most of your devices will be visible on the Home Assistant States
+page and have a default icon determined by their domain. You may find it
+desireable to customize the look and feel of your front page by altering some
+of these parameters.</p>
+
+<p>By adding the following parameters to the <em>homeassistant</em> section of your
+<em>configuration.yaml</em> file, you can customize the attributes of any state on
+your front page.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Add this to your existing configuration</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
+</span><span class='line'>        <span class="l-Scalar-Plain">SOME_ENTITY_ID</span><span class="p-Indicator">:</span>
+</span><span class='line'>            <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</span><span class='line'>            <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://URL.TO/PICTURE</span>
+</span><span class='line'>            <span class="l-Scalar-Plain">friendly_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SOME CUSTOM NAME</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Entity IDs can be retrieved from the web interface by using the Set State page
+in the Developer Tools.</p>
 
 <h3><a class='title-link' name='setting-up-home-automation' href='#setting-up-home-automation'></a> Setting up Home Automation</h3>
 
