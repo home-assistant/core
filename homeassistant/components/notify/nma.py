@@ -55,7 +55,8 @@ def get_service(hass, config):
         return None
 
     nma = Session()
-    response = nma.get(_RESOURCE + 'verify', params={"apikey" : config[DOMAIN][CONF_API_KEY]})
+    response = nma.get(_RESOURCE + 'verify',
+                       params={"apikey" : config[DOMAIN][CONF_API_KEY]})
     tree = ET.fromstring(response.content)
     if tree[0].tag == 'error':
         _LOGGER.error(
@@ -88,7 +89,8 @@ class NmaNotificationService(BaseNotificationService):
         self._data['description'] = message
         self._data['priority'] = 0
 
-        response = self.nma.get(_RESOURCE + 'notify', params=self._data)
+        response = self.nma.get(_RESOURCE + 'notify',
+                                params=self._data)
         tree = ET.fromstring(response.content)
         if tree[0].tag == 'error':
             _LOGGER.exception(
