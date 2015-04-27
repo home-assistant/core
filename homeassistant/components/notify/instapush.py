@@ -31,13 +31,13 @@ To get this value log into your account at https://instapush.im and go to
 event
 *Required
 To retrieve a valid event log into your account at https://instapush.im and go
-to 'APPS'. If you have no events to use with Home Assistant, create one event for
-your app.
+to 'APPS'. If you have no events to use with Home Assistant, create one event
+for your app.
 
 tracker
 *Required
-To retrieve the tracker value log into your account at https://instapush.im and go
-to 'APPS', choose the app, and check the event entries.
+To retrieve the tracker value log into your account at https://instapush.im and
+go to 'APPS', choose the app, and check the event entries.
 
 Example usage of Instapush if you have an event 'notification' and a tracker
 'home-assistant'.
