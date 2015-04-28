@@ -104,7 +104,7 @@ def get_service(hass, config):
 
     try:
         if response.json()['error']:
-            _LOGGER.error("{}".format(response.json()['msg']))
+            _LOGGER.error(response.json()['msg'])
     # pylint: disable=bare-except
     except:
         try:
