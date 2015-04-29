@@ -37,7 +37,7 @@ def setup(hass, config):
 
 def _handle_get_logbook(handler, path_match, data):
     """ Return logbook entries. """
-    start_today = dt_util.now().date()
+    start_today = dt_util.now().replace(hour=0, minute=0, second=0)
 
     handler.write_json(humanify(
         recorder.query_events(

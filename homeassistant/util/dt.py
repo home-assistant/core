@@ -32,15 +32,12 @@ def get_time_zone(time_zone_str):
 
 def utcnow():
     """ Get now in UTC time. """
-    return dt.datetime.utcnow().replace(tzinfo=pytz.utc)
+    return dt.datetime.now(pytz.utc)
 
 
 def now(time_zone=None):
     """ Get now in specified time zone. """
-    if time_zone is None:
-        time_zone = DEFAULT_TIME_ZONE
-
-    return utcnow().astimezone(time_zone)
+    return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
 def as_utc(dattim):
@@ -66,7 +63,7 @@ def as_local(dattim):
 
 def utc_from_timestamp(timestamp):
     """ Returns a UTC time from a timestamp. """
-    return dt.datetime.fromtimestamp(timestamp, pytz.utc)
+    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.utc)
 
 
 def datetime_to_local_str(dattim, time_zone=None):

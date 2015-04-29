@@ -10,7 +10,6 @@ import threading
 import queue
 import sqlite3
 from datetime import datetime, date
-import time
 import json
 import atexit
 
@@ -302,7 +301,7 @@ class Recorder(threading.Thread):
             migration_id = 0
 
         if migration_id < 1:
-            cur.execute("""
+            self.query("""
                 CREATE TABLE recorder_runs (
                     run_id integer primary key,
                     start integer,
@@ -311,7 +310,7 @@ class Recorder(threading.Thread):
                     created integer)
             """)
 
-            cur.execute("""
+            self.query("""
                 CREATE TABLE events (
                     event_id integer primary key,
                     event_type text,
@@ -319,10 +318,10 @@ class Recorder(threading.Thread):
                     origin text,
                     created integer)
             """)
-            cur.execute(
+            self.query(
                 'CREATE INDEX events__event_type ON events(event_type)')
 
-            cur.execute("""
+            self.query("""
                 CREATE TABLE states (
                     state_id integer primary key,
                     entity_id text,
@@ -332,55 +331,41 @@ class Recorder(threading.Thread):
                     last_updated integer,
                     created integer)
             """)
-            cur.execute('CREATE INDEX states__entity_id ON states(entity_id)')
+            self.query('CREATE INDEX states__entity_id ON states(entity_id)')
 
             save_migration(1)
 
         if migration_id < 2:
-            cur.execute("""
+            self.query("""
                 ALTER TABLE events
                 ADD COLUMN time_fired integer
             """)
 
-            cur.execute('UPDATE events SET time_fired=created')
+            self.query('UPDATE events SET time_fired=created')
 
             save_migration(2)
 
         if migration_id < 3:
             utc_offset = self.utc_offset
 
-            cur.execute("""
+            self.query("""
                 ALTER TABLE recorder_runs
                 ADD COLUMN utc_offset integer
             """)
 
-            cur.execute("""
+            self.query("""
                 ALTER TABLE events
                 ADD COLUMN utc_offset integer
             """)
 
-            cur.execute("""
+            self.query("""
                 ALTER TABLE states
                 ADD COLUMN utc_offset integer
             """)
 
-            cur.execute("UPDATE schema_version SET performed=performed+?",
-                        (utc_offset,))
-
-            cur.execute("""
-                UPDATE recorder_runs SET utc_offset=?,
-                start=start + ?, end=end + ?, created=created + ?
-            """, [utc_offset]*4)
-
-            cur.execute("""
-                UPDATE events SET utc_offset=?,
-                time_fired=time_fired + ?, created=created + ?
-            """, [utc_offset]*3)
-
-            cur.execute("""
-                UPDATE states SET utc_offset=?, last_changed=last_changed + ?,
-                last_updated=last_updated + ?, created=created + ?
-            """, [utc_offset]*4)
+            self.query("UPDATE recorder_runs SET utc_offset=?", [utc_offset])
+            self.query("UPDATE events SET utc_offset=?", [utc_offset])
+            self.query("UPDATE states SET utc_offset=?", [utc_offset])
 
             save_migration(3)
 
@@ -411,7 +396,7 @@ class Recorder(threading.Thread):
 
 def _adapt_datetime(datetimestamp):
     """ Turn a datetime into an integer for in the DB. """
-    return time.mktime(date_util.as_utc(datetimestamp).timetuple())
+    return date_util.as_utc(datetimestamp.replace(microsecond=0)).timestamp()
 
 
 def _verify_instance():
