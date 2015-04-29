@@ -11,38 +11,43 @@
 
     <div layout justified horizontal class='data-entry' id='rising'>
       <div class='key'>
-        Rising <relative-ha-datetime datetime="{{stateObj.attributes.next_rising}}"></relative-ha-datetime>
+        Rising <relative-ha-datetime datetimeObj="{{rising}}"></relative-ha-datetime>
       </div>
       <div class='value'>
-        {{stateObj.attributes.next_rising | HATimeStripDate}}
+        {{rising | formatTime}}
       </div>
     </div>
 
     <div layout justified horizontal class='data-entry' id='setting'>
       <div class='key'>
-        Setting <relative-ha-datetime datetime="{{stateObj.attributes.next_setting}}"></relative-ha-datetime>
+        Setting <relative-ha-datetime datetimeObj="{{setting}}"></relative-ha-datetime>
       </div>
       <div class='value'>
-        {{stateObj.attributes.next_setting | HATimeStripDate}}
+        {{setting | formatTime}}
       </div>
     </div>
 
   </div>
 </template>
 <script>
+(function() {
 var parseDateTime = window.hass.util.parseDateTime;
 
 Polymer({
-  stateObjChanged: function() {
-    var rising = parseDateTime(this.stateObj.attributes.next_rising);
-    var setting = parseDateTime(this.stateObj.attributes.next_setting);
+  rising: null,
+  setting: null,
 
-    if(rising > setting) {
+  stateObjChanged: function() {
+    this.rising = parseDateTime(this.stateObj.attributes.next_rising);
+    this.setting = parseDateTime(this.stateObj.attributes.next_setting);
+
+    if(self.rising > self.setting) {
       this.$.sunData.appendChild(this.$.rising);
     } else {
       this.$.sunData.appendChild(this.$.setting);
     }
   }
 });
+})();
 </script>
 </polymer-element>
