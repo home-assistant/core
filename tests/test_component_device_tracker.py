@@ -1,17 +1,18 @@
 """
-tests.test_component_group
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.test_component_device_tracker
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests the group compoments.
+Tests the device tracker compoments.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import os
 
 import homeassistant as ha
 import homeassistant.loader as loader
+import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, CONF_PLATFORM)
 import homeassistant.components.device_tracker as device_tracker
@@ -116,7 +117,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         dev2 = device_tracker.ENTITY_ID_FORMAT.format('device_2')
         dev3 = device_tracker.ENTITY_ID_FORMAT.format('DEV3')
 
-        now = datetime.now()
+        now = dt_util.utcnow()
 
         # Device scanner scans every 12 seconds. We need to sync our times to
         # be every 12 seconds or else the time_changed event will be ignored.

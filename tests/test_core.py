@@ -72,7 +72,7 @@ class TestHomeAssistant(unittest.TestCase):
 
         runs = []
 
-        self.hass.track_point_in_time(
+        self.hass.track_point_in_utc_time(
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(before_birthday)
@@ -88,7 +88,7 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
-        self.hass.track_point_in_time(
+        self.hass.track_point_in_utc_time(
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(after_birthday)

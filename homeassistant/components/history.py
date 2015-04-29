@@ -5,10 +5,11 @@ homeassistant.components.history
 Provide pre-made queries on top of the recorder component.
 """
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from itertools import groupby
 from collections import defaultdict
 
+import homeassistant.util.dt as date_util
 import homeassistant.components.recorder as recorder
 
 DOMAIN = 'history'
@@ -30,7 +31,7 @@ def last_5_states(entity_id):
 
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
     """
-    Return states changes during period start_time - end_time.
+    Return states changes during UTC period start_time - end_time.
     """
     where = "last_changed=last_updated AND last_changed > ? "
     data = [start_time]
@@ -64,17 +65,17 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
     return result
 
 
-def get_states(point_in_time, entity_ids=None, run=None):
+def get_states(utc_point_in_time, entity_ids=None, run=None):
     """ Returns the states at a specific point in time. """
     if run is None:
-        run = recorder.run_information(point_in_time)
+        run = recorder.run_information(utc_point_in_time)
 
-        # History did not run before point_in_time
+        # History did not run before utc_point_in_time
         if run is None:
             return []
 
     where = run.where_after_start_run + "AND created < ? "
-    where_data = [point_in_time]
+    where_data = [utc_point_in_time]
 
     if entity_ids is not None:
         where += "AND entity_id IN ({}) ".format(
@@ -93,9 +94,9 @@ def get_states(point_in_time, entity_ids=None, run=None):
     return recorder.query_states(query, where_data)
 
 
-def get_state(point_in_time, entity_id, run=None):
+def get_state(utc_point_in_time, entity_id, run=None):
     """ Return a state at a specific point in time. """
-    states = get_states(point_in_time, (entity_id,), run)
+    states = get_states(utc_point_in_time, (entity_id,), run)
 
     return states[0] if states else None
 
@@ -128,7 +129,7 @@ def _api_last_5_states(handler, path_match, data):
 def _api_history_period(handler, path_match, data):
     """ Return history over a period of time. """
     # 1 day for now..
-    start_time = datetime.now() - timedelta(seconds=86400)
+    start_time = date_util.utcnow() - timedelta(seconds=86400)
 
     entity_id = data.get('filter_entity_id')
 

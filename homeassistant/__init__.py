@@ -12,7 +12,6 @@ import logging
 import threading
 import enum
 import re
-import datetime as dt
 import functools as ft
 
 from homeassistant.const import (
@@ -22,6 +21,7 @@ from homeassistant.const import (
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 import homeassistant.util as util
+import homeassistant.util.dt as date_util
 
 DOMAIN = "homeassistant"
 
@@ -107,7 +107,20 @@ class HomeAssistant(object):
 
     def track_point_in_time(self, action, point_in_time):
         """
-        Adds a listener that fires once at or after a spefic point in time.
+        Adds a listener that fires once after a spefic point in time.
+        """
+        utc_point_in_time = date_util.as_utc(point_in_time)
+
+        @ft.wraps(action)
+        def utc_converter(utc_now):
+            """ Converts passed in UTC now to local now. """
+            action(date_util.as_local(utc_now))
+
+        self.track_point_in_utc_time(utc_converter, utc_point_in_time)
+
+    def track_point_in_utc_time(self, action, point_in_time):
+        """
+        Adds a listener that fires once after a specific point in UTC time.
         """
 
         @ft.wraps(action)
@@ -134,10 +147,18 @@ class HomeAssistant(object):
         return point_in_time_listener
 
     # pylint: disable=too-many-arguments
+    def track_utc_time_change(self, action,
+                              year=None, month=None, day=None,
+                              hour=None, minute=None, second=None):
+        """ Adds a listener that will fire if time matches a pattern. """
+        self.track_time_change(
+            action, year, month, day, hour, minute, second, utc=True)
+
+    # pylint: disable=too-many-arguments
     def track_time_change(self, action,
                           year=None, month=None, day=None,
-                          hour=None, minute=None, second=None):
-        """ Adds a listener that will fire if time matches a pattern. """
+                          hour=None, minute=None, second=None, utc=False):
+        """ Adds a listener that will fire if UTC time matches a pattern. """
 
         # We do not have to wrap the function with time pattern matching logic
         # if no pattern given
@@ -152,6 +173,9 @@ class HomeAssistant(object):
             def time_listener(event):
                 """ Listens for matching time_changed events. """
                 now = event.data[ATTR_NOW]
+
+                if not utc:
+                    now = date_util.as_local(now)
 
                 mat = _matcher
 
@@ -303,7 +327,7 @@ def create_worker_pool():
 
         for start, job in current_jobs:
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
-                            util.datetime_to_str(start), job)
+                            date_util.datetime_to_local_str(start), job)
 
     return util.ThreadPool(job_handler, MIN_WORKER_THREAD, busy_callback)
 
@@ -331,7 +355,7 @@ class Event(object):
         self.data = data or {}
         self.origin = origin
         self.time_fired = util.strip_microseconds(
-            time_fired or dt.datetime.now())
+            time_fired or date_util.utcnow())
 
     def as_dict(self):
         """ Returns a dict representation of this Event. """
@@ -339,7 +363,7 @@ class Event(object):
             'event_type': self.event_type,
             'data': dict(self.data),
             'origin': str(self.origin),
-            'time_fired': util.datetime_to_str(self.time_fired),
+            'time_fired': date_util.datetime_to_str(self.time_fired),
         }
 
     def __repr__(self):
@@ -472,13 +496,13 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
-        self.last_updated = last_updated or dt.datetime.now()
+        self.last_updated = last_updated or date_util.utcnow()
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
         # This behavior occurs because to_dict uses datetime_to_str
         # which does not preserve microseconds
-        self.last_changed = util.strip_microseconds(
+        self.last_changed = date_util.strip_microseconds(
             last_changed or self.last_updated)
 
     @property
@@ -510,8 +534,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': self.attributes,
-                'last_changed': util.datetime_to_str(self.last_changed),
-                'last_updated': util.datetime_to_str(self.last_updated)}
+                'last_changed': date_util.datetime_to_str(self.last_changed),
+                'last_updated': date_util.datetime_to_str(self.last_updated)}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -526,12 +550,12 @@ class State(object):
         last_changed = json_dict.get('last_changed')
 
         if last_changed:
-            last_changed = util.str_to_datetime(last_changed)
+            last_changed = date_util.str_to_datetime(last_changed)
 
         last_updated = json_dict.get('last_updated')
 
         if last_updated:
-            last_updated = util.str_to_datetime(last_updated)
+            last_updated = date_util.str_to_datetime(last_updated)
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated)
@@ -548,7 +572,7 @@ class State(object):
 
         return "<state {}={}{} @ {}>".format(
             self.entity_id, self.state, attr,
-            util.datetime_to_str(self.last_changed))
+            date_util.datetime_to_local_str(self.last_changed))
 
 
 class StateMachine(object):
@@ -585,7 +609,7 @@ class StateMachine(object):
         """
         Returns all states that have been changed since point_in_time.
         """
-        point_in_time = util.strip_microseconds(point_in_time)
+        point_in_time = date_util.strip_microseconds(point_in_time)
 
         with self._lock:
             return [state for state in self._states.values()
@@ -847,7 +871,7 @@ class Timer(threading.Thread):
 
         last_fired_on_second = -1
 
-        calc_now = dt.datetime.now
+        calc_now = date_util.utcnow
         interval = self.interval
 
         while not self._stop_event.isSet():

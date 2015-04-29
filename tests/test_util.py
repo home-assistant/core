@@ -35,17 +35,6 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("Test_More", util.slugify("Test More"))
         self.assertEqual("Test_More", util.slugify("Test_(More)"))
 
-    def test_datetime_to_str(self):
-        """ Test datetime_to_str. """
-        self.assertEqual("12:00:00 09-07-1986",
-                         util.datetime_to_str(datetime(1986, 7, 9, 12, 0, 0)))
-
-    def test_str_to_datetime(self):
-        """ Test str_to_datetime. """
-        self.assertEqual(datetime(1986, 7, 9, 12, 0, 0),
-                         util.str_to_datetime("12:00:00 09-07-1986"))
-        self.assertIsNone(util.str_to_datetime("not a datetime string"))
-
     def test_split_entity_id(self):
         """ Test split_entity_id. """
         self.assertEqual(['domain', 'object_id'],

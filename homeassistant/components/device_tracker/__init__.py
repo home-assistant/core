@@ -8,11 +8,12 @@ import logging
 import threading
 import os
 import csv
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
 import homeassistant.util as util
+import homeassistant.util.dt as dt_util
 
 from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME,
@@ -113,7 +114,7 @@ class DeviceTracker(object):
             """ Reload known devices file. """
             self._read_known_devices_file()
 
-            self.update_devices(datetime.now())
+            self.update_devices(dt_util.utcnow())
 
             dev_group.update_tracked_entity_ids(self.device_entity_ids)
 
@@ -125,7 +126,7 @@ class DeviceTracker(object):
         seconds = range(0, 60, seconds)
 
         _LOGGER.info("Device tracker interval second=%s", seconds)
-        hass.track_time_change(update_device_state, second=seconds)
+        hass.track_utc_time_change(update_device_state, second=seconds)
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,
@@ -226,7 +227,7 @@ class DeviceTracker(object):
         self.untracked_devices.clear()
 
         with open(known_dev_path) as inp:
-            default_last_seen = datetime(1990, 1, 1)
+            default_last_seen = dt_util.utcnow().replace(year=1990)
 
             # To track which devices need an entity_id assigned
             need_entity_id = []
