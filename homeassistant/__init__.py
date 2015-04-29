@@ -496,7 +496,8 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
-        self.last_updated = last_updated or date_util.utcnow()
+        self.last_updated = date_util.strip_microseconds(
+            last_updated or date_util.utcnow())
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
