@@ -11,6 +11,9 @@ omit =
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
+    homeassistant/components/modbus.py
+    homeassistant/components/*/modbus.py
+
     homeassistant/components/*/tellstick.py
     homeassistant/components/*/vera.py
 
@@ -23,6 +26,8 @@ omit =
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushover.py
+    homeassistant/components/notify/instapush.py
+    homeassistant/components/notify/nma.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/tomato.py
