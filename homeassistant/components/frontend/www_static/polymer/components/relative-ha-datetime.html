@@ -2,7 +2,7 @@
 
 <link rel="import" href="../resources/moment-js.html">
 
-<polymer-element name="relative-ha-datetime" attributes="datetime">
+<polymer-element name="relative-ha-datetime" attributes="datetime datetimeObj">
   <template>
     {{ relativeTime }}
   </template>
@@ -34,8 +34,15 @@
         this.updateRelative();
       },
 
+      datetimeObjChanged: function(oldVal, newVal) {
+        this.parsedDateTime = newVal;
+
+        this.updateRelative();
+      },
+
       updateRelative: function() {
-        this.relativeTime = this.parsedDateTime ? moment(this.parsedDateTime).fromNow() : "";
+        this.relativeTime = this.parsedDateTime ?
+          moment(this.parsedDateTime).fromNow() : "";
       },
     });
   })();
