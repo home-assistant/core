@@ -5,10 +5,14 @@ tests.helper
 Helper method for writing tests.
 """
 import os
+from datetime import timedelta
 
 import homeassistant as ha
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED)
+from homeassistant.components import sun
 
 
 def get_test_config_dir():
@@ -20,6 +24,8 @@ def get_test_home_assistant():
     """ Returns a Home Assistant object pointing at test config dir. """
     hass = ha.HomeAssistant()
     hass.config.config_dir = get_test_config_dir()
+    hass.config.latitude = 32.87336
+    hass.config.longitude = -117.22743
 
     return hass
 
@@ -35,6 +41,32 @@ def mock_service(hass, domain, service):
         domain, service, lambda call: calls.append(call))
 
     return calls
+
+
+def trigger_device_tracker_scan(hass):
+    """ Triggers the device tracker to scan. """
+    hass.bus.fire(
+        EVENT_TIME_CHANGED,
+        {'now':
+         dt_util.utcnow().replace(second=0) + timedelta(hours=1)})
+
+
+def ensure_sun_risen(hass):
+    """ Trigger sun to rise if below horizon. """
+    if not sun.is_on(hass):
+        hass.bus.fire(
+            EVENT_TIME_CHANGED,
+            {'now':
+             sun.next_rising_utc(hass) + timedelta(seconds=10)})
+
+
+def ensure_sun_set(hass):
+    """ Trigger sun to set if above horizon. """
+    if sun.is_on(hass):
+        hass.bus.fire(
+            EVENT_TIME_CHANGED,
+            {'now':
+             sun.next_setting_utc(hass) + timedelta(seconds=10)})
 
 
 class MockModule(object):

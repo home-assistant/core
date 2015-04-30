@@ -81,6 +81,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner = loader.get_component(
             'device_tracker.test').get_scanner(None, None)
 
+        scanner.reset()
+
         scanner.come_home('DEV1')
         scanner.come_home('DEV2')
 
