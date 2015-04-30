@@ -189,9 +189,11 @@ class Recorder(threading.Thread):
             if event == self.quit_object:
                 self._close_run()
                 self._close_connection()
+                self.queue.task_done()
                 return
 
             elif event.event_type == EVENT_TIME_CHANGED:
+                self.queue.task_done()
                 continue
 
             elif event.event_type == EVENT_STATE_CHANGED:
@@ -199,6 +201,7 @@ class Recorder(threading.Thread):
                     event.data['entity_id'], event.data.get('new_state'))
 
             self.record_event(event)
+            self.queue.task_done()
 
     def event_listener(self, event):
         """ Listens for new events on the EventBus and puts them
@@ -265,6 +268,10 @@ class Recorder(threading.Thread):
             _LOGGER.exception(
                 "Error querying the database using: %s", sql_query)
             return []
+
+    def block_till_done(self):
+        """ Blocks till all events processed. """
+        self.queue.join()
 
     def _setup_connection(self):
         """ Ensure database is ready to fly. """

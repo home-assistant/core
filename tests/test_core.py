@@ -30,7 +30,11 @@ class TestHomeAssistant(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass.stop()
+        try:
+            self.hass.stop()
+        except ha.HomeAssistantError:
+            # Already stopped after the block till stopped test
+            pass
 
     def test_get_config_path(self):
         """ Test get_config_path method. """

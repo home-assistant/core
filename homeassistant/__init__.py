@@ -376,6 +376,13 @@ class Event(object):
             return "<Event {}[{}]>".format(self.event_type,
                                            str(self.origin)[0])
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.event_type == other.event_type and
+                self.data == other.data and
+                self.origin == other.origin and
+                self.time_fired == other.time_fired)
+
 
 class EventBus(object):
     """ Class that allows different components to communicate via services
@@ -398,6 +405,9 @@ class EventBus(object):
 
     def fire(self, event_type, event_data=None, origin=EventOrigin.local):
         """ Fire an event. """
+        if not self._pool.running:
+            raise HomeAssistantError('Home Assistant has shut down.')
+
         with self._lock:
             # Copy the list of the current listeners because some listeners
             # remove themselves as a listener while being executed which
@@ -898,7 +908,9 @@ class Timer(threading.Thread):
 
             last_fired_on_second = now.second
 
-            self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+            # Event might have been set while sleeping
+            if not self._stop_event.isSet():
+                self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
 
 
 class Config(object):
