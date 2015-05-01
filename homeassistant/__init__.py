@@ -910,7 +910,11 @@ class Timer(threading.Thread):
 
             # Event might have been set while sleeping
             if not self._stop_event.isSet():
-                self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+                try:
+                    self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+                except HomeAssistantError:
+                    # HA raises error if firing event after it has shut down
+                    break
 
 
 class Config(object):

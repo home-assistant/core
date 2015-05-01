@@ -23,7 +23,7 @@ def last_5_states(entity_id):
     query = """
         SELECT * FROM states WHERE entity_id=? AND
         last_changed=last_updated
-        ORDER BY last_changed DESC LIMIT 0, 5
+        ORDER BY state_id DESC LIMIT 0, 5
     """
 
     return recorder.query_states(query, (entity_id, ))
