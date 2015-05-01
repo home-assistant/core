@@ -2,6 +2,8 @@
 source = homeassistant
 
 omit =
+    homeassistant/__main__.py
+
     homeassistant/external/*
 
     # omit pieces of code that rely on external devices being present
@@ -14,10 +16,14 @@ omit =
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
+    homeassistant/components/isy994.py
+    homeassistant/components/*/isy994.py
+
     homeassistant/components/*/tellstick.py
     homeassistant/components/*/vera.py
 
     homeassistant/components/keyboard.py
+    homeassistant/components/browser.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/nest.py
     homeassistant/components/light/hue.py
@@ -35,11 +41,6 @@ omit =
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/sensor/transmission.py
-
-    homeassistant/components/isy994.py
-    homeassistant/components/light/isy994.py
-    homeassistant/components/switch/isy994.py
-    homeassistant/components/sensor/isy994.py
 
 
 [report]
