@@ -10,6 +10,7 @@ import logging
 import time
 from homeassistant.helpers.entity import Entity
 import time
+import math
 import datetime
 from datetime import timedelta
 import re
@@ -130,6 +131,45 @@ def setup(hass, config):
         camera.is_streaming = False
 
     hass.http.register_path('GET', re.compile(r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'), _proxy_camera_mjpeg_stream, require_auth=True)
+
+
+    def _get_camera_events(handler, path_match, data):
+        """ Proxies the camera image via the HA server. """
+        entity_id = path_match.group('entity_id')
+
+        camera = None
+        if entity_id in component.entities.keys():
+            camera = component.entities[entity_id]
+
+        if camera:
+            handler.write_json(camera.get_all_events())
+        else:
+            handler.send_response(HTTP_NOT_FOUND)
+
+    hass.http.register_path('GET', re.compile(r'/api/camera_events/(?P<entity_id>[a-zA-Z\._0-9]+)'), _get_camera_events, require_auth=True)
+
+
+    def _saved_camera_image(handler, path_match, data):
+        """ Get a saved camera image via the HA server. """
+        entity_id = path_match.group('entity_id')
+
+        camera = None
+        if entity_id in component.entities.keys():
+            camera = component.entities[entity_id]
+
+        if camera:
+            image_path = os.path.normpath(os.path.join(camera.event_images_path, data['image_path']))
+            # check to see that someone is not trying to do something dodgey with relative paths
+            if not image_path.startswith(camera.event_images_path) :
+                handler.send_response(HTTP_NOT_FOUND)
+
+            handler.write_file(image_path)
+
+        else:
+            handler.send_response(HTTP_NOT_FOUND)
+
+    hass.http.register_path('GET', re.compile(r'/api/saved_camera_image/(?P<entity_id>[a-zA-Z\._0-9]+)'), _saved_camera_image, require_auth=True)
+
 
     def handle_motion_detection_service(service):
         """ Handles calls to the camera services. """
@@ -333,6 +373,48 @@ class Camera(Entity):
         os.rename(path, new_file_path)
 
         return True
+
+    def get_all_events(self, start=0, length=10):
+
+        events_data = []
+        all_subdirs = [d for d in os.listdir(self.event_images_path)
+            if os.path.isdir(os.path.join(self.event_images_path, d)) and d.startswith('event-')]
+        event_dirs = sorted(all_subdirs, key=lambda x: os.path.getctime(os.path.join(self.event_images_path, x)), reverse=True)
+
+        count = 0
+        for event_dir in event_dirs:
+            if count < start:
+                continue
+            if count > length:
+                break
+            event_data = {}
+            event_data['directory'] = event_dir
+            event_data['name'] = event_dir
+            event_data['fullPath'] = os.path.join(self.event_images_path, event_dir)
+            event_data['thumbUrl'] = ''
+            event_data['images'] = []
+            event_data['time'] = datetime.datetime.fromtimestamp(os.path.getctime(event_data['fullPath'])).strftime('%Y-%m-%d %H:%M:%S')
+
+            all_subfiles = [f for f in os.listdir(event_data['fullPath'])
+                if os.path.isfile(os.path.join(event_data['fullPath'], f)) and f.startswith('event_image-')]
+
+            for image_file in all_subfiles:
+                full_image_path = os.path.join(event_data['fullPath'], image_file)
+                image_data = {}
+                image_data['fileName'] = image_file
+                image_data['path'] = event_dir + os.path.sep + image_file
+                image_data['url'] = 'api/saved_camera_image/' + self.entity_id + '?image_path=' + image_data['path']
+                image_data['time'] = datetime.datetime.fromtimestamp(os.path.getctime(full_image_path)).strftime('%Y-%m-%d %H:%M:%S')
+                event_data['images'].append(image_data)
+
+            if len(event_data['images']) > 0:
+                thumb_index = math.floor(len(event_data['images'])/2)
+                event_data['thumbUrl'] = event_data['images'][thumb_index]['url']
+
+            events_data.append(event_data)
+            count += 1
+
+        return events_data
 
 
     @property

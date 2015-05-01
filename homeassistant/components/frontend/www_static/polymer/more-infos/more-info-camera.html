@@ -4,6 +4,7 @@
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../components/entity-logbook.html">
+<link rel="import" href="../components/camera-image-events.html">
 <!--<link rel="import" href="../bower_components/core-icons/image-icons.html">-->
 
 <polymer-element name="more-info-camera" attributes="stateObj">
@@ -136,7 +137,8 @@
 
       </div>
       <div class="camera-container camera-page" hidden?="{{ selected != 1 }}">
-        <entity-logbook entityId="{{stateObj.entityId}}"></entity-logbook>
+        <camera-image-events cameraImageEvents="{{cameraImageEvents}}"></camera-image-events>
+        <!--<entity-logbook entityId="{{stateObj.entityId}}"></entity-logbook>-->
       </div>
       <div class="camera-container camera-page" hidden?="{{ selected != 2 }}">
         <p>
@@ -223,13 +225,16 @@
     recordingIcon: 'av:videocam',
     ftpComponentLoaded: false,
     configureFtpComponent: false,
+    cameraImageEvents: [],
 
 
     //document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
 
     stateObjChanged: function(oldVal, newVal) {
       this.motionDetectionIcon = (newVal.attributes['is_motion_detection_enabled']) ? 'visibility-off' : 'visibility';
-
+      window.hass.callApi('GET', 'camera_events/' + this.stateObj.entityId).then(function(data) {
+        this.cameraImageEvents = data;
+      }.bind(this));
     },
 
     toggleMotionDetection: function(ev) {

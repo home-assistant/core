@@ -193,9 +193,24 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     def check_expired_sessions(self):
         """ Reemove any expired sessions. """
-        for key in self._sessions:
+        keys = []
+        for key in self._sessions.keys():
+            keys.append(key)
+
+        for key in keys:
             if self._sessions[key].is_expired:
                 del self._sessions[key]
+
+    def add_session(self, key, session):
+        # self.check_expired_sessions()
+        self._sessions[key] = session
+
+    def get_session(self, key):
+        # self.check_expired_sessions()
+        session = self._sessions.get(key, None)
+        if session is not None and session.is_expired:
+            return None
+        return session
 
 
 # pylint: disable=too-many-public-methods,too-many-locals
@@ -407,7 +422,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def get_session(self):
         """ Get the requested session object from cookie value """
 
-        self.server.check_expired_sessions()
+        # self.server.check_expired_sessions()
 
         self.cookie=cookies.SimpleCookie()
 
@@ -415,7 +430,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.cookie.load(self.headers.get("Cookie"))
 
         if self.cookie is not None and self.cookie.get("sessionId", False):
-            session = self.server._sessions.get(self.cookie["sessionId"].value, None)
+            session = self.server.get_session(self.cookie["sessionId"].value)
             if session is not None:
                 session.reset_expiry()
             return session
@@ -427,11 +442,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """Session management"""
         chars = string.ascii_letters + string.digits
         session_id = ''.join([random.choice(chars) for i in range(20)])
-        self.server._sessions[session_id] = ServerSession()
-        self.server._sessions[session_id].cookie_values['api_password'] = api_password
+        session = ServerSession()
+        session.cookie_values['api_password'] = api_password
+        self.server.add_session(session_id, session)
+
         self.cookie = cookies.SimpleCookie()
         self.cookie["sessionId"] = session_id
-        self._session = self.server._sessions.get(session_id)
+
+        self._session = self.server.get_session(session_id)
 
 class ServerSession:
 
