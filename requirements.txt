@@ -1,6 +1,7 @@
 # required for Home Assistant core
 requests>=2.0
 pyyaml>=3.11
+pytz>=2015.2
 
 # optional, needed for specific components
 

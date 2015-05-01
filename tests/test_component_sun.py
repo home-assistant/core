@@ -6,11 +6,12 @@ Tests Sun component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-import datetime as dt
+from datetime import timedelta
 
 import ephem
 
 import homeassistant as ha
+import homeassistant.util.dt as dt_util
 import homeassistant.components.sun as sun
 
 
@@ -42,22 +43,20 @@ class TestSun(unittest.TestCase):
         observer.lat = '32.87336'  # pylint: disable=assigning-non-slot
         observer.long = '117.22743'  # pylint: disable=assigning-non-slot
 
-        utc_now = dt.datetime.utcnow()
+        utc_now = dt_util.utcnow()
         body_sun = ephem.Sun()  # pylint: disable=no-member
-        next_rising_dt = ephem.localtime(
-            observer.next_rising(body_sun, start=utc_now))
-        next_setting_dt = ephem.localtime(
-            observer.next_setting(body_sun, start=utc_now))
+        next_rising_dt = observer.next_rising(
+            body_sun, start=utc_now).datetime().replace(tzinfo=dt_util.UTC)
+        next_setting_dt = observer.next_setting(
+            body_sun, start=utc_now).datetime().replace(tzinfo=dt_util.UTC)
 
         # Home Assistant strips out microseconds
         # strip it out of the datetime objects
-        next_rising_dt = next_rising_dt - dt.timedelta(
-            microseconds=next_rising_dt.microsecond)
-        next_setting_dt = next_setting_dt - dt.timedelta(
-            microseconds=next_setting_dt.microsecond)
+        next_rising_dt = dt_util.strip_microseconds(next_rising_dt)
+        next_setting_dt = dt_util.strip_microseconds(next_setting_dt)
 
-        self.assertEqual(next_rising_dt, sun.next_rising(self.hass))
-        self.assertEqual(next_setting_dt, sun.next_setting(self.hass))
+        self.assertEqual(next_rising_dt, sun.next_rising_utc(self.hass))
+        self.assertEqual(next_setting_dt, sun.next_setting_utc(self.hass))
 
         # Point it at a state without the proper attributes
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON)
@@ -84,7 +83,7 @@ class TestSun(unittest.TestCase):
         self.assertIsNotNone(test_time)
 
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: test_time + dt.timedelta(seconds=5)})
+                           {ha.ATTR_NOW: test_time + timedelta(seconds=5)})
 
         self.hass.pool.block_till_done()
 

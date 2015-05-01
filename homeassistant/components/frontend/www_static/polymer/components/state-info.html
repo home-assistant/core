@@ -37,8 +37,8 @@
         </div>
 
         <div class="time-ago">
-          <core-tooltip label="{{stateObj.lastChanged}}" position="bottom">
-            <relative-ha-datetime datetime="{{stateObj.lastChanged}}"></relative-ha-datetime>
+          <core-tooltip label="{{stateObj.lastChangedAsDate | formatDateTime}}" position="bottom">
+            <relative-ha-datetime datetimeObj="{{stateObj.lastChangedAsDate}}"></relative-ha-datetime>
           </core-tooltip>
         </div>
         

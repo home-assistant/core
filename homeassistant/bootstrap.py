@@ -10,13 +10,13 @@ start by calling homeassistant.start_home_assistant(bus)
 """
 
 import os
-import configparser
-import yaml
-import io
 import logging
 from collections import defaultdict
 
 import homeassistant
+import homeassistant.util as util
+import homeassistant.util.dt as date_util
+import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
@@ -148,26 +148,7 @@ def from_config_file(config_path, hass=None):
     # Set config dir to directory holding config file
     hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
 
-    config_dict = {}
-    # check config file type
-    if os.path.splitext(config_path)[1] == '.yaml':
-        # Read yaml
-        config_dict = yaml.load(io.open(config_path, 'r'))
-
-        # If YAML file was empty
-        if config_dict is None:
-            config_dict = {}
-
-    else:
-        # Read config
-        config = configparser.ConfigParser()
-        config.read(config_path)
-
-        for section in config.sections():
-            config_dict[section] = {}
-
-            for key, val in config.items(section):
-                config_dict[section][key] = val
+    config_dict = config_util.load_config_file(config_path)
 
     return from_config_dict(config_dict, hass)
 
@@ -201,12 +182,28 @@ def enable_logging(hass):
 
 def process_ha_core_config(hass, config):
     """ Processes the [homeassistant] section from the config. """
+    hac = hass.config
+
+    def set_time_zone(time_zone_str):
+        """ Helper method to set time zone in HA. """
+        if time_zone_str is None:
+            return
+
+        time_zone = date_util.get_time_zone(time_zone_str)
+
+        if time_zone:
+            hac.time_zone = time_zone
+            date_util.set_default_time_zone(time_zone)
+        else:
+            _LOGGER.error("Received invalid time zone %s", time_zone_str)
+
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name'),
-                      (CONF_TIME_ZONE, 'time_zone')):
+                      (CONF_NAME, 'location_name')):
         if key in config:
-            setattr(hass.config, attr, config[key])
+            setattr(hac, attr, config[key])
+
+    set_time_zone(config.get(CONF_TIME_ZONE))
 
     for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
         Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
@@ -215,11 +212,38 @@ def process_ha_core_config(hass, config):
         unit = config[CONF_TEMPERATURE_UNIT]
 
         if unit == 'C':
-            hass.config.temperature_unit = TEMP_CELCIUS
+            hac.temperature_unit = TEMP_CELCIUS
         elif unit == 'F':
-            hass.config.temperature_unit = TEMP_FAHRENHEIT
+            hac.temperature_unit = TEMP_FAHRENHEIT
 
-    hass.config.auto_detect()
+    # If we miss some of the needed values, auto detect them
+    if None not in (
+            hac.latitude, hac.longitude, hac.temperature_unit, hac.time_zone):
+        return
+
+    _LOGGER.info('Auto detecting location and temperature unit')
+
+    info = util.detect_location_info()
+
+    if info is None:
+        _LOGGER.error('Could not detect location information')
+        return
+
+    if hac.latitude is None and hac.longitude is None:
+        hac.latitude = info.latitude
+        hac.longitude = info.longitude
+
+    if hac.temperature_unit is None:
+        if info.use_fahrenheit:
+            hac.temperature_unit = TEMP_FAHRENHEIT
+        else:
+            hac.temperature_unit = TEMP_CELCIUS
+
+    if hac.location_name is None:
+        hac.location_name = info.city
+
+    if hac.time_zone is None:
+        set_time_zone(info.time_zone)
 
 
 def _ensure_loader_prepared(hass):
