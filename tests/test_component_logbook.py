@@ -16,6 +16,8 @@ from homeassistant.components import logbook, http
 
 from helpers import get_test_home_assistant
 
+SERVER_PORT = 8127
+
 
 class TestComponentHistory(unittest.TestCase):
     """ Tests homeassistant.components.history module. """
@@ -24,7 +26,8 @@ class TestComponentHistory(unittest.TestCase):
         """ Test setup method. """
         try:
             hass = get_test_home_assistant()
-            http.setup(hass, {})
+            http.setup(hass, {
+                http.DOMAIN: {http.CONF_SERVER_PORT: SERVER_PORT}})
             self.assertTrue(logbook.setup(hass, {}))
         finally:
             hass.stop()
