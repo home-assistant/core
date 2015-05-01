@@ -7,6 +7,14 @@ import argparse
 import importlib
 
 
+# Home Assistant dependencies, mapped module -> package name
+DEPENDENCIES = {
+    'requests': 'requests',
+    'yaml': 'pyyaml',
+    'pytz': 'pytz',
+}
+
+
 def validate_python():
     """ Validate we're running the right Python version. """
     major, minor = sys.version_info[:2]
@@ -20,13 +28,13 @@ def validate_dependencies():
     """ Validate all dependencies that HA uses. """
     import_fail = False
 
-    for module in ['requests']:
+    for module, name in DEPENDENCIES.items():
         try:
             importlib.import_module(module)
         except ImportError:
             import_fail = True
             print(
-                'Fatal Error: Unable to find dependency {}'.format(module))
+                'Fatal Error: Unable to find dependency {}'.format(name))
 
     if import_fail:
         print(("Install dependencies by running: "
