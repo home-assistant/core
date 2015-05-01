@@ -22,25 +22,26 @@ omit =
     homeassistant/components/*/tellstick.py
     homeassistant/components/*/vera.py
 
-    homeassistant/components/keyboard.py
     homeassistant/components/browser.py
-    homeassistant/components/switch/wemo.py
-    homeassistant/components/thermostat/nest.py
-    homeassistant/components/light/hue.py
-    homeassistant/components/sensor/systemmonitor.py
-    homeassistant/components/sensor/sabnzbd.py
-    homeassistant/components/sensor/mysensors.py
-    homeassistant/components/notify/pushbullet.py
-    homeassistant/components/notify/pushover.py
-    homeassistant/components/notify/instapush.py
-    homeassistant/components/notify/nma.py
-    homeassistant/components/media_player/cast.py
+    homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/luci.py
-    homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
-    homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/device_tracker/tomato.py
+    homeassistant/components/keyboard.py
+    homeassistant/components/light/hue.py
+    homeassistant/components/media_player/cast.py
+    homeassistant/components/notify/instapush.py
+    homeassistant/components/notify/nma.py
+    homeassistant/components/notify/pushbullet.py
+    homeassistant/components/notify/pushover.py
+    homeassistant/components/sensor/mysensors.py
+    homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/switch/wemo.py
+    homeassistant/components/thermostat/nest.py
 
 
 [report]
