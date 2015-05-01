@@ -3,6 +3,7 @@
 <link rel="import" href="../bower_components/core-pages/core-pages.html">
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../components/entity-logbook.html">
 <!--<link rel="import" href="../bower_components/core-icons/image-icons.html">-->
 
 <polymer-element name="more-info-camera" attributes="stateObj">
@@ -134,7 +135,9 @@
 
 
       </div>
-      <div class="camera-container camera-page" hidden?="{{ selected != 1 }}">Page 2</div>
+      <div class="camera-container camera-page" hidden?="{{ selected != 1 }}">
+        <entity-logbook entityId="{{stateObj.entityId}}"></entity-logbook>
+      </div>
       <div class="camera-container camera-page" hidden?="{{ selected != 2 }}">
         <p>
           Depending on the level of support for your current model of camera some settings may not be
@@ -220,6 +223,7 @@
     recordingIcon: 'av:videocam',
     ftpComponentLoaded: false,
     configureFtpComponent: false,
+
 
     //document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
 

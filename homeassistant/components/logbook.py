@@ -6,6 +6,7 @@ Parses events and generates a human log
 """
 from datetime import datetime
 from itertools import groupby
+import re
 
 from homeassistant import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
@@ -31,7 +32,8 @@ GROUP_BY_MINUTES = 15
 
 def setup(hass, config):
     """ Listens for download events to download files. """
-    hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
+    hass.http.register_path('GET', re.compile('/api/logbook/(?P<entity_id>[a-zA-Z\._0-9]+)'), _handle_get_entity_logbook)
+    hass.http.register_path('GET', re.compile(URL_LOGBOOK), _handle_get_logbook)
 
     return True
 
@@ -42,6 +44,16 @@ def _handle_get_logbook(handler, path_match, data):
 
     handler.write_json(humanify(
         recorder.query_events(QUERY_EVENTS_AFTER, (start_today,))))
+
+def _handle_get_entity_logbook(handler, path_match, data):
+    """ Return logbook entries. """
+    start_today = datetime.now().date()
+
+    entity_id = path_match.group('entity_id')
+
+    handler.write_json(humanify(
+        recorder.query_events(QUERY_EVENTS_AFTER, (start_today,)),
+        entity_id))
 
 
 class Entry(object):
@@ -68,7 +80,7 @@ class Entry(object):
         }
 
 
-def humanify(events):
+def humanify(events, filter_entity_id=None):
     """
     Generator that converts a list of events into Entry objects.
 
@@ -97,6 +109,12 @@ def humanify(events):
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.data['entity_id']
 
+                # This should be rafactored so that the SQL query does
+                # the filtering, possibly by adding an option entity_id
+                # field to events
+                if filter_entity_id != None and filter_entity_id != entity_id:
+                    continue
+
                 if entity_id.startswith('sensor.'):
                     last_sensor_event[entity_id] = event
 
@@ -115,6 +133,14 @@ def humanify(events):
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
+
+                entity_id = event.data['entity_id']
+
+                # This should be rafactored so that the SQL query does
+                # the filtering, possibly by adding an option entity_id
+                # field to events
+                if filter_entity_id != None and filter_entity_id != entity_id:
+                    continue
 
                 # Do not report on new entities
                 if 'old_state' not in event.data:
