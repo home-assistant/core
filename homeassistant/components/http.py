@@ -77,9 +77,14 @@ import logging
 import time
 import gzip
 import os
+import random
+import string
+import datetime
+from datetime import timedelta
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
+from http import cookies
 
 import homeassistant as ha
 from homeassistant.const import (
@@ -158,6 +163,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.development = development
         self.no_password_set = no_password_set
         self.paths = []
+        self._sessions = {}
 
         # We will lazy init this one if needed
         self.event_forwarder = None
@@ -185,6 +191,12 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         """ Regitsters a path wit the server. """
         self.paths.append((method, url, callback, require_auth))
 
+    def check_expired_sessions(self):
+        """ Reemove any expired sessions. """
+        for key in self._sessions:
+            if self._sessions[key].is_expired:
+                del self._sessions[key]
+
 
 # pylint: disable=too-many-public-methods,too-many-locals
 class RequestHandler(SimpleHTTPRequestHandler):
@@ -194,12 +206,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
     We extend from SimpleHTTPRequestHandler instead of Base so we
     can use the guess content type methods.
     """
-
     server_version = "HomeAssistant/1.0"
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
+        self._session = None
 
         # Read query input
         data = parse_qs(url.query)
@@ -232,6 +244,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             if not api_password and DATA_API_PASSWORD in data:
                 api_password = data[DATA_API_PASSWORD]
+
+        self._session = self.get_session()
+
+        if not api_password and self._session is not None:
+            api_password = self._session.cookie_values.get('api_password')
+
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -271,6 +289,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "API password missing or incorrect.", HTTP_UNAUTHORIZED)
 
             else:
+                if self._session is None:
+                    self.set_session(api_password)
+
+
+                # self.wfile.write(bytes(self.cookie.output() + '\r\n', 'utf-8'))
                 handle_request_method(self, path_match, data)
 
         elif path_matched_but_not_method:
@@ -312,6 +335,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         if location:
             self.send_header('Location', location)
+
+        if self._session is not None:
+            self.send_header('Set-Cookie', 'sessionId='+self.cookie['sessionId'].value)
 
         self.end_headers()
 
@@ -377,3 +403,46 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header(
                 HTTP_HEADER_EXPIRES,
                 self.date_time_string(time.time()+cache_time))
+
+    def get_session(self):
+        """ Get the requested session object from cookie value """
+
+        self.server.check_expired_sessions()
+
+        self.cookie=cookies.SimpleCookie()
+
+        if self.headers.get('Cookie', None) is not None:
+            self.cookie.load(self.headers.get("Cookie"))
+
+        if self.cookie is not None and self.cookie.get("sessionId", False):
+            session = self.server._sessions.get(self.cookie["sessionId"].value, None)
+            if session is not None:
+                session.reset_expiry()
+            return session
+        else:
+            return None
+
+
+    def set_session(self, api_password):
+        """Session management"""
+        chars = string.ascii_letters + string.digits
+        session_id = ''.join([random.choice(chars) for i in range(20)])
+        self.server._sessions[session_id] = ServerSession()
+        self.server._sessions[session_id].cookie_values['api_password'] = api_password
+        self.cookie = cookies.SimpleCookie()
+        self.cookie["sessionId"] = session_id
+        self._session = self.server._sessions.get(session_id)
+
+class ServerSession:
+
+    def __init__(self):
+        self._expiry = 0
+        self.reset_expiry()
+        self.cookie_values = {}
+
+    def reset_expiry(self):
+        self._expiry = datetime.datetime.now() + datetime.timedelta(seconds=3600)
+
+    @property
+    def is_expired(self):
+        return (self._expiry < datetime.datetime.now())

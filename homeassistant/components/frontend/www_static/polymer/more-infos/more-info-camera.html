@@ -282,12 +282,14 @@
         this.recordingIcon = 'av:videocam';
       }
       else {
-        this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
+        //this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
+        this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?t=' + Date.now();
       }
     },
 
     startImageStream: function() {
-      this.$.camera_image.src = this.stateObj.attributes['stream_url'] + '?api_password=' + authStore.authToken;
+      //this.$.camera_image.src = this.stateObj.attributes['stream_url'] + '?api_password=' + authStore.authToken;
+      this.$.camera_image.src = this.stateObj.attributes['stream_url'];
     },
 
     retry: function(event, detail, sender) {

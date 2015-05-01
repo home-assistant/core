@@ -237,7 +237,8 @@ class Camera(Entity):
         attr['model_name'] = self.device_info.get('model', 'generic')
         attr['brand'] = self.device_info.get('brand', 'generic')
         attr['still_image_url'] = '/api/camera_proxy/' + self.entity_id
-        attr[ATTR_ENTITY_PICTURE] = '/api/camera_proxy/' + self.entity_id + '?api_password=' + self.hass.http.api_password + '&time=' + str(time.time())
+        # attr[ATTR_ENTITY_PICTURE] = '/api/camera_proxy/' + self.entity_id + '?api_password=' + self.hass.http.api_password + '&time=' + str(time.time())
+        attr[ATTR_ENTITY_PICTURE] = '/api/camera_proxy/' + self.entity_id + '?time=' + str(time.time())
         attr['stream_url'] = '/api/camera_proxy_stream/' + self.entity_id
         attr['last_motion_time'] = self._last_motion_detected.strftime('%Y-%m-%d %H-%M-%S')
         attr['last_connected_address'] = self._last_connected_address
