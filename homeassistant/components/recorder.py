@@ -10,11 +10,11 @@ import threading
 import queue
 import sqlite3
 from datetime import datetime, date
-import time
 import json
 import atexit
 
 from homeassistant import Event, EventOrigin, State
+import homeassistant.util.dt as date_util
 from homeassistant.remote import JSONEncoder
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
@@ -60,8 +60,9 @@ def row_to_state(row):
     """ Convert a databsae row to a state. """
     try:
         return State(
-            row[1], row[2], json.loads(row[3]), datetime.fromtimestamp(row[4]),
-            datetime.fromtimestamp(row[5]))
+            row[1], row[2], json.loads(row[3]),
+            date_util.utc_from_timestamp(row[4]),
+            date_util.utc_from_timestamp(row[5]))
     except ValueError:
         # When json.loads fails
         _LOGGER.exception("Error converting row to state: %s", row)
@@ -72,7 +73,7 @@ def row_to_event(row):
     """ Convert a databse row to an event. """
     try:
         return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()],
-                     datetime.fromtimestamp(row[5]))
+                     date_util.utc_from_timestamp(row[5]))
     except ValueError:
         # When json.loads fails
         _LOGGER.exception("Error converting row to event: %s", row)
@@ -113,10 +114,10 @@ class RecorderRun(object):
             self.start = _INSTANCE.recording_start
             self.closed_incorrect = False
         else:
-            self.start = datetime.fromtimestamp(row[1])
+            self.start = date_util.utc_from_timestamp(row[1])
 
             if row[2] is not None:
-                self.end = datetime.fromtimestamp(row[2])
+                self.end = date_util.utc_from_timestamp(row[2])
 
             self.closed_incorrect = bool(row[3])
 
@@ -166,7 +167,8 @@ class Recorder(threading.Thread):
         self.queue = queue.Queue()
         self.quit_object = object()
         self.lock = threading.Lock()
-        self.recording_start = datetime.now()
+        self.recording_start = date_util.utcnow()
+        self.utc_offset = date_util.now().utcoffset().total_seconds()
 
         def start_recording(event):
             """ Start recording. """
@@ -187,9 +189,11 @@ class Recorder(threading.Thread):
             if event == self.quit_object:
                 self._close_run()
                 self._close_connection()
+                self.queue.task_done()
                 return
 
             elif event.event_type == EVENT_TIME_CHANGED:
+                self.queue.task_done()
                 continue
 
             elif event.event_type == EVENT_STATE_CHANGED:
@@ -197,6 +201,7 @@ class Recorder(threading.Thread):
                     event.data['entity_id'], event.data.get('new_state'))
 
             self.record_event(event)
+            self.queue.task_done()
 
     def event_listener(self, event):
         """ Listens for new events on the EventBus and puts them
@@ -209,31 +214,33 @@ class Recorder(threading.Thread):
 
     def record_state(self, entity_id, state):
         """ Save a state to the database. """
-        now = datetime.now()
+        now = date_util.utcnow()
 
+        # State got deleted
         if state is None:
             info = (entity_id, '', "{}", now, now, now)
         else:
             info = (
                 entity_id.lower(), state.state, json.dumps(state.attributes),
-                state.last_changed, state.last_updated, now)
+                state.last_changed, state.last_updated, now, self.utc_offset)
 
         self.query(
             "INSERT INTO states ("
             "entity_id, state, attributes, last_changed, last_updated,"
-            "created) VALUES (?, ?, ?, ?, ?, ?)", info)
+            "created, utc_offset) VALUES (?, ?, ?, ?, ?, ?, ?)", info)
 
     def record_event(self, event):
         """ Save an event to the database. """
         info = (
             event.event_type, json.dumps(event.data, cls=JSONEncoder),
-            str(event.origin), datetime.now(), event.time_fired,
+            str(event.origin), date_util.utcnow(), event.time_fired,
+            self.utc_offset
         )
 
         self.query(
             "INSERT INTO events ("
-            "event_type, event_data, origin, created, time_fired"
-            ") VALUES (?, ?, ?, ?, ?)", info)
+            "event_type, event_data, origin, created, time_fired, utc_offset"
+            ") VALUES (?, ?, ?, ?, ?, ?)", info)
 
     def query(self, sql_query, data=None, return_value=None):
         """ Query the database. """
@@ -262,6 +269,10 @@ class Recorder(threading.Thread):
                 "Error querying the database using: %s", sql_query)
             return []
 
+    def block_till_done(self):
+        """ Blocks till all events processed. """
+        self.queue.join()
+
     def _setup_connection(self):
         """ Ensure database is ready to fly. """
         db_path = self.hass.config.path(DB_FILE)
@@ -282,7 +293,7 @@ class Recorder(threading.Thread):
         def save_migration(migration_id):
             """ Save and commit a migration to the database. """
             cur.execute('INSERT INTO schema_version VALUES (?, ?)',
-                        (migration_id, datetime.now()))
+                        (migration_id, date_util.utcnow()))
             self.conn.commit()
             _LOGGER.info("Database migrated to version %d", migration_id)
 
@@ -297,7 +308,7 @@ class Recorder(threading.Thread):
             migration_id = 0
 
         if migration_id < 1:
-            cur.execute("""
+            self.query("""
                 CREATE TABLE recorder_runs (
                     run_id integer primary key,
                     start integer,
@@ -306,7 +317,7 @@ class Recorder(threading.Thread):
                     created integer)
             """)
 
-            cur.execute("""
+            self.query("""
                 CREATE TABLE events (
                     event_id integer primary key,
                     event_type text,
@@ -314,10 +325,10 @@ class Recorder(threading.Thread):
                     origin text,
                     created integer)
             """)
-            cur.execute(
+            self.query(
                 'CREATE INDEX events__event_type ON events(event_type)')
 
-            cur.execute("""
+            self.query("""
                 CREATE TABLE states (
                     state_id integer primary key,
                     entity_id text,
@@ -327,19 +338,43 @@ class Recorder(threading.Thread):
                     last_updated integer,
                     created integer)
             """)
-            cur.execute('CREATE INDEX states__entity_id ON states(entity_id)')
+            self.query('CREATE INDEX states__entity_id ON states(entity_id)')
 
             save_migration(1)
 
         if migration_id < 2:
-            cur.execute("""
+            self.query("""
                 ALTER TABLE events
                 ADD COLUMN time_fired integer
             """)
 
-            cur.execute('UPDATE events SET time_fired=created')
+            self.query('UPDATE events SET time_fired=created')
 
             save_migration(2)
+
+        if migration_id < 3:
+            utc_offset = self.utc_offset
+
+            self.query("""
+                ALTER TABLE recorder_runs
+                ADD COLUMN utc_offset integer
+            """)
+
+            self.query("""
+                ALTER TABLE events
+                ADD COLUMN utc_offset integer
+            """)
+
+            self.query("""
+                ALTER TABLE states
+                ADD COLUMN utc_offset integer
+            """)
+
+            self.query("UPDATE recorder_runs SET utc_offset=?", [utc_offset])
+            self.query("UPDATE events SET utc_offset=?", [utc_offset])
+            self.query("UPDATE states SET utc_offset=?", [utc_offset])
+
+            save_migration(3)
 
     def _close_connection(self):
         """ Close connection to the database. """
@@ -357,18 +392,18 @@ class Recorder(threading.Thread):
 
         self.query(
             "INSERT INTO recorder_runs (start, created) VALUES (?, ?)",
-            (self.recording_start, datetime.now()))
+            (self.recording_start, date_util.utcnow()))
 
     def _close_run(self):
         """ Save end time for current run. """
         self.query(
             "UPDATE recorder_runs SET end=? WHERE start=?",
-            (datetime.now(), self.recording_start))
+            (date_util.utcnow(), self.recording_start))
 
 
 def _adapt_datetime(datetimestamp):
     """ Turn a datetime into an integer for in the DB. """
-    return time.mktime(datetimestamp.timetuple())
+    return date_util.as_utc(datetimestamp.replace(microsecond=0)).timestamp()
 
 
 def _verify_instance():

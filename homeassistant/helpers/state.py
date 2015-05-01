@@ -5,9 +5,9 @@ homeassistant.helpers.state
 Helpers that help with state related things.
 """
 import logging
-from datetime import datetime
 
 from homeassistant import State
+import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 
@@ -26,7 +26,7 @@ class TrackStates(object):
         self.states = []
 
     def __enter__(self):
-        self.now = datetime.now()
+        self.now = dt_util.utcnow()
         return self.states
 
     def __exit__(self, exc_type, exc_value, traceback):

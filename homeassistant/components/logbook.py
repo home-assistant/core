@@ -4,14 +4,13 @@ homeassistant.components.logbook
 
 Parses events and generates a human log
 """
-from datetime import datetime
 from itertools import groupby
 
 from homeassistant import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-import homeassistant.util as util
+import homeassistant.util.dt as dt_util
 import homeassistant.components.recorder as recorder
 import homeassistant.components.sun as sun
 
@@ -38,10 +37,11 @@ def setup(hass, config):
 
 def _handle_get_logbook(handler, path_match, data):
     """ Return logbook entries. """
-    start_today = datetime.now().date()
+    start_today = dt_util.now().replace(hour=0, minute=0, second=0)
 
     handler.write_json(humanify(
-        recorder.query_events(QUERY_EVENTS_AFTER, (start_today,))))
+        recorder.query_events(
+            QUERY_EVENTS_AFTER, (dt_util.as_utc(start_today),))))
 
 
 class Entry(object):
@@ -60,7 +60,7 @@ class Entry(object):
     def as_dict(self):
         """ Convert Entry to a dict to be used within JSON. """
         return {
-            'when': util.datetime_to_str(self.when),
+            'when': dt_util.datetime_to_str(self.when),
             'name': self.name,
             'message': self.message,
             'domain': self.domain,

@@ -30,7 +30,7 @@ except ImportError:
     # Error will be raised during setup
     ephem = None
 
-from homeassistant.util import str_to_datetime, datetime_to_str
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.scheduler import ServiceEventListener
 
@@ -55,13 +55,21 @@ def is_on(hass, entity_id=None):
 
 
 def next_setting(hass, entity_id=None):
-    """ Returns the datetime object representing the next sun setting. """
+    """ Returns the local datetime object of the next sun setting. """
+    utc_next = next_setting_utc(hass, entity_id)
+
+    return dt_util.as_local(utc_next) if utc_next else None
+
+
+def next_setting_utc(hass, entity_id=None):
+    """ Returns the UTC datetime object of the next sun setting. """
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return str_to_datetime(state.attributes[STATE_ATTR_NEXT_SETTING])
+        return dt_util.str_to_datetime(
+            state.attributes[STATE_ATTR_NEXT_SETTING])
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_SETTING does not exist
@@ -69,13 +77,21 @@ def next_setting(hass, entity_id=None):
 
 
 def next_rising(hass, entity_id=None):
-    """ Returns the datetime object representing the next sun rising. """
+    """ Returns the local datetime object of the next sun rising. """
+    utc_next = next_rising_utc(hass, entity_id)
+
+    return dt_util.as_local(utc_next) if utc_next else None
+
+
+def next_rising_utc(hass, entity_id=None):
+    """ Returns the UTC datetime object of the next sun rising. """
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return str_to_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
+        return dt_util.str_to_datetime(
+            state.attributes[STATE_ATTR_NEXT_RISING])
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_RISING does not exist
@@ -94,14 +110,14 @@ def setup(hass, config):
         logger.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    sun = Sun(hass, str(hass.config.latitude), str(hass.config.longitude))
-
     try:
-        sun.point_in_time_listener(datetime.now())
+        sun = Sun(hass, str(hass.config.latitude), str(hass.config.longitude))
     except ValueError:
         # Raised when invalid latitude or longitude is given to Observer
         logger.exception("Invalid value for latitude or longitude")
         return False
+
+    sun.point_in_time_listener(dt_util.utcnow())
 
     return True
 
@@ -113,8 +129,11 @@ class Sun(Entity):
 
     def __init__(self, hass, latitude, longitude):
         self.hass = hass
-        self.latitude = latitude
-        self.longitude = longitude
+        self.observer = ephem.Observer()
+        # pylint: disable=assigning-non-slot
+        self.observer.lat = latitude
+        # pylint: disable=assigning-non-slot
+        self.observer.long = longitude
 
         self._state = self.next_rising = self.next_setting = None
 
@@ -137,8 +156,8 @@ class Sun(Entity):
     @property
     def state_attributes(self):
         return {
-            STATE_ATTR_NEXT_RISING: datetime_to_str(self.next_rising),
-            STATE_ATTR_NEXT_SETTING: datetime_to_str(self.next_setting)
+            STATE_ATTR_NEXT_RISING: dt_util.datetime_to_str(self.next_rising),
+            STATE_ATTR_NEXT_SETTING: dt_util.datetime_to_str(self.next_setting)
         }
 
     @property
@@ -146,22 +165,19 @@ class Sun(Entity):
         """ Returns the datetime when the next change to the state is. """
         return min(self.next_rising, self.next_setting)
 
-    def update_as_of(self, point_in_time):
-        """ Calculate sun state at a point in time. """
-        utc_offset = datetime.utcnow() - datetime.now()
-        utc_now = point_in_time + utc_offset
-
+    def update_as_of(self, utc_point_in_time):
+        """ Calculate sun state at a point in UTC time. """
         sun = ephem.Sun()  # pylint: disable=no-member
 
-        # Setting invalid latitude and longitude to observer raises ValueError
-        observer = ephem.Observer()
-        observer.lat = self.latitude  # pylint: disable=assigning-non-slot
-        observer.long = self.longitude  # pylint: disable=assigning-non-slot
+        # pylint: disable=assigning-non-slot
+        self.observer.date = ephem.date(utc_point_in_time)
 
-        self.next_rising = ephem.localtime(
-            observer.next_rising(sun, start=utc_now))
-        self.next_setting = ephem.localtime(
-            observer.next_setting(sun, start=utc_now))
+        self.next_rising = self.observer.next_rising(
+            sun,
+            start=utc_point_in_time).datetime().replace(tzinfo=dt_util.UTC)
+        self.next_setting = self.observer.next_setting(
+            sun,
+            start=utc_point_in_time).datetime().replace(tzinfo=dt_util.UTC)
 
     def point_in_time_listener(self, now):
         """ Called when the state of the sun has changed. """
@@ -169,8 +185,9 @@ class Sun(Entity):
         self.update_ha_state()
 
         # Schedule next update at next_change+1 second so sun state has changed
-        self.hass.track_point_in_time(self.point_in_time_listener,
-                                      self.next_change + timedelta(seconds=1))
+        self.hass.track_point_in_utc_time(
+            self.point_in_time_listener,
+            self.next_change + timedelta(seconds=1))
 
 
 def create_event_listener(schedule, event_listener_data):

@@ -15,6 +15,7 @@ from collections import defaultdict
 
 import homeassistant
 import homeassistant.util as util
+import homeassistant.util.dt as date_util
 import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.components as core_components
@@ -183,12 +184,26 @@ def process_ha_core_config(hass, config):
     """ Processes the [homeassistant] section from the config. """
     hac = hass.config
 
+    def set_time_zone(time_zone_str):
+        """ Helper method to set time zone in HA. """
+        if time_zone_str is None:
+            return
+
+        time_zone = date_util.get_time_zone(time_zone_str)
+
+        if time_zone:
+            hac.time_zone = time_zone
+            date_util.set_default_time_zone(time_zone)
+        else:
+            _LOGGER.error("Received invalid time zone %s", time_zone_str)
+
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name'),
-                      (CONF_TIME_ZONE, 'time_zone')):
+                      (CONF_NAME, 'location_name')):
         if key in config:
             setattr(hac, attr, config[key])
+
+    set_time_zone(config.get(CONF_TIME_ZONE))
 
     for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
         Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
@@ -202,7 +217,8 @@ def process_ha_core_config(hass, config):
             hac.temperature_unit = TEMP_FAHRENHEIT
 
     # If we miss some of the needed values, auto detect them
-    if None not in (hac.latitude, hac.longitude, hac.temperature_unit):
+    if None not in (
+            hac.latitude, hac.longitude, hac.temperature_unit, hac.time_zone):
         return
 
     _LOGGER.info('Auto detecting location and temperature unit')
@@ -227,7 +243,7 @@ def process_ha_core_config(hass, config):
         hac.location_name = info.city
 
     if hac.time_zone is None:
-        hac.time_zone = info.time_zone
+        set_time_zone(info.time_zone)
 
 
 def _ensure_loader_prepared(hass):

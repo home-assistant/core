@@ -30,7 +30,11 @@ class TestHomeAssistant(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
-        self.hass.stop()
+        try:
+            self.hass.stop()
+        except ha.HomeAssistantError:
+            # Already stopped after the block till stopped test
+            pass
 
     def test_get_config_path(self):
         """ Test get_config_path method. """
@@ -72,7 +76,7 @@ class TestHomeAssistant(unittest.TestCase):
 
         runs = []
 
-        self.hass.track_point_in_time(
+        self.hass.track_point_in_utc_time(
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(before_birthday)
@@ -88,7 +92,7 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
-        self.hass.track_point_in_time(
+        self.hass.track_point_in_utc_time(
             lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(after_birthday)

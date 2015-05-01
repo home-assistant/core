@@ -3,3 +3,22 @@
 -->
 
 <script src="../bower_components/moment/moment.js"></script>
+
+<script>
+window.hass.uiUtil.formatTime = function(dateObj) {
+  return moment(dateObj).format('LT');
+};
+
+window.hass.uiUtil.formatDateTime = function(dateObj) {
+  return moment(dateObj).format('lll');
+};
+
+window.hass.uiUtil.formatDate = function(dateObj) {
+  return moment(dateObj).format('ll');
+};
+
+PolymerExpressions.prototype.formatTime = window.hass.uiUtil.formatTime;
+PolymerExpressions.prototype.formatDateTime = window.hass.uiUtil.formatDateTime;
+PolymerExpressions.prototype.formatDate = window.hass.uiUtil.formatDate;
+
+</script>

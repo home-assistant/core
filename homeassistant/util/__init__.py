@@ -8,7 +8,7 @@ import collections
 from itertools import chain
 import threading
 import queue
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 import enum
 import socket
@@ -18,11 +18,16 @@ from functools import wraps
 
 import requests
 
+# DEPRECATED AS OF 4/27/2015 - moved to homeassistant.util.dt package
+# pylint: disable=unused-import
+from .dt import (  # noqa
+    datetime_to_str, str_to_datetime, strip_microseconds,
+    datetime_to_local_str, utcnow)
+
+
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
-
-DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
 
 
 def sanitize_filename(filename):
@@ -42,33 +47,6 @@ def slugify(text):
     return RE_SLUGIFY.sub("", text)
 
 
-def datetime_to_str(dattim):
-    """ Converts datetime to a string format.
-
-    @rtype : str
-    """
-    return dattim.strftime(DATE_STR_FORMAT)
-
-
-def str_to_datetime(dt_str):
-    """ Converts a string to a datetime object.
-
-    @rtype: datetime
-    """
-    try:
-        return datetime.strptime(dt_str, DATE_STR_FORMAT)
-    except ValueError:  # If dt_str did not match our format
-        return None
-
-
-def strip_microseconds(dattim):
-    """ Returns a copy of dattime object but with microsecond set to 0. """
-    if dattim.microsecond:
-        return dattim - timedelta(microseconds=dattim.microsecond)
-    else:
-        return dattim
-
-
 def split_entity_id(entity_id):
     """ Splits a state entity_id into domain, object_id. """
     return entity_id.split(".", 1)
@@ -81,7 +59,7 @@ def repr_helper(inp):
             repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
     elif isinstance(inp, datetime):
-        return datetime_to_str(inp)
+        return datetime_to_local_str(inp)
     else:
         return str(inp)
 
@@ -464,7 +442,7 @@ class ThreadPool(object):
                 return
 
             # Add to current running jobs
-            job_log = (datetime.now(), job)
+            job_log = (utcnow(), job)
             self.current_jobs.append(job_log)
 
             # Do the job
