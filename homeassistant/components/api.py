@@ -333,10 +333,12 @@ def _handle_get_api_components(handler, path_match, data):
 
     handler.write_json(handler.server.hass.config.components)
 
+
 def _services_json(hass):
     """ Generate services data to JSONify. """
     return [{"domain": key, "services": value}
             for key, value in hass.services.services.items()]
+
 
 def _events_json(hass):
     """ Generate event data to JSONify. """
