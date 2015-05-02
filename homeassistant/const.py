@@ -111,6 +111,7 @@ SERVER_PORT = 8123
 URL_ROOT = "/"
 URL_API = "/api/"
 URL_API_STREAM = "/api/stream"
+URL_API_CONFIG = "/api/config"
 URL_API_STATES = "/api/states"
 URL_API_STATES_ENTITY = "/api/states/{}"
 URL_API_EVENTS = "/api/events"
