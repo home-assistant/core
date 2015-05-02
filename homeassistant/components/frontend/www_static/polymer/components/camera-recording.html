@@ -1,7 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 
-<polymer-element name="camera-image-event" attributes="cameraImageEvent">
+<polymer-element name="camera-recording" attributes="cameraImageEvent">
 <template>
 	<style>
 		:host .camera-event-thumb {
@@ -30,13 +30,29 @@
 		:host .strip-container {
 			width: calc(99%);
 		}
+
+		@media (max-width: 720px) {
+	      :host .camera-event-image {
+	        max-width: calc(100%);
+	      }
+	    }
+
+	    @media (max-width: 620px) {
+	      :host .camera-event-image {
+	        max-width: calc(100%);
+	      }
+	    }
 	</style>
 	<div class='camera-image-event'>
 		<div center horizontal layout>
 			<div>
-				<core-tooltip label="Back to Events" position="right">
+				<!--<core-tooltip label="Back to Events" position="right">
 					<paper-icon-button on-click="{{closeCameraEvent}}" icon="highlight-remove"></paper-icon-button>
-				</core-tooltip>
+				</core-tooltip>-->
+				<paper-button on-click="{{closeCameraEvent}}">
+					<paper-icon-button icon="image:navigate-before"></paper-icon-button>
+					Go Back
+				</paper-button>
 			</div>
 			<div flex>
 				&nbsp;
@@ -64,7 +80,7 @@
 			</div>
 			<div horizontal layout class="strip-container">
 				<div>
-					<core-tooltip label="Play/Pause" position="bottom">
+					<core-tooltip label="Previous Frames" position="bottom">
 						<paper-icon-button on-click="{{changeStripImagesBackward}}" icon="chevron-left"></paper-icon-button>
 					</core-tooltip>
 				</div>
@@ -79,7 +95,7 @@
 					</div>
 				</div>
 				<div>
-					<core-tooltip label="Play/Pause" position="bottom">
+					<core-tooltip label="Next Frames" position="bottom">
 						<paper-icon-button on-click="{{changeStripImagesForward}}" icon="chevron-right"></paper-icon-button>
 					</core-tooltip>
 				</div>
@@ -106,7 +122,7 @@
 
 
     cameraImageEventChanged: function(oldval, newval) {
-    	if(newval) {
+    	if(newval && newval.images) {
     		this.playing = false;
     		this.groupedImages = [];
     		this.currentIndex = 0;

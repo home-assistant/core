@@ -1,0 +1,79 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../components/camera-recordings.html">
+
+<polymer-element name="camera-events" attributes="stateObj dialogOpen hasTabs">
+<template>
+	<style>
+		:host paper-tabs.camera-tabs::shadow #selectionBar {
+	      background-color: #00bcd4;
+	    }
+
+	    :host paper-tabs.camera-tabs paper-tab::shadow #ink {
+	      color: #00bcd4;
+	    }
+
+	    :host paper-tabs.camera-tabs paper-tab::shadow .tab-content {
+	      cursor: pointer;
+	    }
+
+	    :host .camera-events {
+	    	width: calc(100%);
+	    }
+
+	    @media (max-width: 620px) {
+	      :host .camera-image {
+	        width: calc(100%);
+	      }
+	    }
+	</style>
+
+	<div class='camera-events'>
+		<paper-tabs class='camera-tabs' selected="{{selected}}" hidden?='{{!hasTabs}}'>
+			<paper-tab>Recordings</paper-tab>
+			<paper-tab>Snapshots</paper-tab>
+			<paper-tab>Motion</paper-tab>
+		</paper-tabs>
+
+		<div hidden?="{{ selected != 0 }}">
+			<camera-recordings stateObj="{{stateObj}}" dialogOpen="{{dialogOpen}}" recordingType='recording' hasTabs='{{hasTabs}}'></camera-recordings>
+		</div>
+
+		<div hidden?="{{ selected != 1 }}">
+			<camera-recordings stateObj="{{stateObj}}" dialogOpen="{{dialogOpen}}" recordingType='snapshot' hasTabs='{{hasTabs}}'></camera-recordings>
+		</div>
+
+		<div hidden?="{{ selected != 2 }}">
+			<camera-recordings stateObj="{{stateObj}}" dialogOpen="{{dialogOpen}}" recordingType='motion' hasTabs='{{hasTabs}}'></camera-recordings>
+		</div>
+
+
+	</div>
+
+</template>
+<script>
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer({
+    dialogOpen: false,
+    stateObj: null,
+    selected: 0,
+    hasTabs: true,
+
+    stateObjChanged: function(oldVal, newVal) {
+    	if(!newVal) {
+    		this.selected = 0;
+    	}
+    	else if((oldVal && newVal) && (oldVal.entity_id != newVal.entity_id)) {
+    		this.selected = 0;
+    	}
+	},
+
+    dialogOpenChanged: function(oldVal, newVal) {
+
+    }
+
+  });
+</script>
+</polymer>
+
+

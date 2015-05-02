@@ -1,0 +1,128 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../components/camera-recording.html">
+
+<polymer-element name="camera-recordings" attributes="stateObj dialogOpen recordingType hasTabs">
+<template>
+	<style>
+		:host .camera-event-thumb {
+			width: calc(95%);
+			display:inline;
+			cursor:pointer;
+		}
+		:host .camera-event-list-item {
+			width: calc(33%);
+			display:inline;
+		}
+
+		:host .camera-event-list {
+			width: calc(100%%);
+		}
+
+		:host .message-page {
+	      /*max-width: calc(100%);
+	      max-height: calc(100%);*/
+	      width:632px;
+	      height:400px;
+	    }
+
+	    @media (max-width: 620px) {
+	      :host .message-page {
+	        width: calc(100%);
+	        height:calc(100%);
+	      }
+	    }
+	</style>
+	<camera-recording cameraImageEvent="{{selectedCameraImageEvent}}" hidden?="{{!selectedCameraImageEvent}}"></camera-recording>
+	<div class='camera-image-events' hidden?="{{selectedCameraImageEvent}}">
+
+		<div class='camera-event-list' layout horizontal wrap hidden?="{{!hasRecordings}}">
+			<template repeat="{{cameraImageEvent, cameraImageEventIndex in cameraImageEvents}}" id='camera_event_list'>
+		      	<div class='camera-event-list-item'>
+		      		<img class='camera-event-thumb' src="{{cameraImageEvent.thumbUrl}}" data-item='{{cameraImageEventIndex}}' on-click='{{selectCameraImageEvent}}' />
+			      	<div class='camera-event-time'>
+			      		{{cameraImageEvent.time}}
+			      	</div>
+		     	</div>
+			</template>
+		</div>
+
+		<div hidden?="{{hasRecordings}}" class="message-page">
+			<p class="message-page">
+				There are no recordings of this type available.
+			</p>
+		</div>
+	</div>
+
+</template>
+<script>
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
+
+  Polymer({
+    cameraImageEvents: null,
+    selectedCameraImageEvent: null,
+    dialogOpen: false,
+    recordingType: null, //snapshot, recording, motion
+    hasRecordings: true,
+    hasTabs: true,
+    offset: 0,
+    resultLength: 6,
+
+    selectCameraImageEvent: function(evt, detail, target) {
+    	this.selectedCameraImageEvent = this.cameraImageEvents[evt.target.attributes['data-item'].value];
+    },
+
+    dialogOpenChanged: function(oldVal, newVal) {
+    	if(!newVal) {
+    		this.cameraImageEvents = null;
+    		this.selectedCameraImageEvent = null;
+    	}
+    },
+
+    stateObjChanged: function(oldVal, newVal) {
+    	var oldEntityId = null;
+    	if(oldVal) {
+    		oldEntityId = oldVal.entityId;
+    	}
+    	if(newVal) {
+    		console.log(newVal.entityId, oldEntityId);
+    		if(this.recordingType == 'motion') {
+		    	window.hass.callApi('GET', 'camera_events/' + this.stateObj.entityId + '?offset=' + this.offset + '&length=' + this.resultLength).then(function(data) {
+			        this.cameraImageEvents = data;
+			    }.bind(this));
+	    	}
+	    	else { //just for testing
+	    		this.cameraImageEvents = [];
+	    	}
+	    }
+	    else {
+	    	this.selectedCameraImageEvent = null;
+	    }
+    },
+
+    selectedCameraImageEventChanged: function(oldVal, newVal) {
+    	//hise parent container tabs
+    	if(!newVal) {
+    		this.hasTabs = true;
+    	}
+    	else {
+    		this.hasTabs = false;
+    	}
+    },
+
+    cameraImageEventsChanged: function(oldVal, newVal) {
+    	if(newVal && newVal.length == 0) {
+    		this.hasRecordings = false;
+    	}
+    	else if(newVal && newVal.length > 0) {
+    		this.hasRecordings = true;
+    	}
+    	else {
+    		this.hasRecordings = false;
+    	}
+    }
+
+  });
+</script>
+</polymer>
+
+

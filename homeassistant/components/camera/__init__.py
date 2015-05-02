@@ -142,7 +142,9 @@ def setup(hass, config):
             camera = component.entities[entity_id]
 
         if camera:
-            handler.write_json(camera.get_all_events())
+            offset = int(data.get('offset', 0))
+            length = int(data.get('length', 10))
+            handler.write_json(camera.get_all_events(offset, length))
         else:
             handler.send_response(HTTP_NOT_FOUND)
 
@@ -385,7 +387,7 @@ class Camera(Entity):
         for event_dir in event_dirs:
             if count < start:
                 continue
-            if count > length:
+            if count >= length:
                 break
             event_data = {}
             event_data['directory'] = event_dir

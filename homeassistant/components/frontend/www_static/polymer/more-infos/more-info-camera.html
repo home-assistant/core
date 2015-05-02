@@ -4,10 +4,10 @@
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../components/entity-logbook.html">
-<link rel="import" href="../components/camera-image-events.html">
+<link rel="import" href="../components/camera-events.html">
 <!--<link rel="import" href="../bower_components/core-icons/image-icons.html">-->
 
-<polymer-element name="more-info-camera" attributes="stateObj">
+<polymer-element name="more-info-camera" attributes="stateObj dialogOpen">
 <template>
   <style>
 
@@ -45,10 +45,22 @@
       max-height: calc(100%);
     }
 
+    :host paper-tabs.camera-tabs::shadow #selectionBar {
+      background-color: #00bcd4;
+    }
+
+    :host paper-tabs.camera-tabs paper-tab::shadow #ink {
+      color: #00bcd4;
+    }
+
+    :host paper-tabs.camera-tabs paper-tab::shadow .tab-content {
+      cursor: pointer;
+    }
+
   </style>
 
   <div hidden?="{{configureFTP || configureFtpComponent}}">
-    <paper-tabs selected="{{selected}}">
+    <paper-tabs selected="{{selected}}" class="camera-tabs" hidden?='{{!hasTabs}}'>
       <paper-tab>Camera</paper-tab>
       <paper-tab>Events</paper-tab>
       <paper-tab>Settings</paper-tab>
@@ -137,7 +149,7 @@
 
       </div>
       <div class="camera-container camera-page" hidden?="{{ selected != 1 }}">
-        <camera-image-events cameraImageEvents="{{cameraImageEvents}}"></camera-image-events>
+        <camera-events stateObj="{{stateObj}}" dialogOpen="{{dialogOpen}}" hasTabs='{{hasTabs}}'></camera-events>
         <!--<entity-logbook entityId="{{stateObj.entityId}}"></entity-logbook>-->
       </div>
       <div class="camera-container camera-page" hidden?="{{ selected != 2 }}">
@@ -225,16 +237,13 @@
     recordingIcon: 'av:videocam',
     ftpComponentLoaded: false,
     configureFtpComponent: false,
-    cameraImageEvents: [],
+    hasTabs: true,
 
 
     //document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
 
     stateObjChanged: function(oldVal, newVal) {
       this.motionDetectionIcon = (newVal.attributes['is_motion_detection_enabled']) ? 'visibility-off' : 'visibility';
-      window.hass.callApi('GET', 'camera_events/' + this.stateObj.entityId).then(function(data) {
-        this.cameraImageEvents = data;
-      }.bind(this));
     },
 
     toggleMotionDetection: function(ev) {
