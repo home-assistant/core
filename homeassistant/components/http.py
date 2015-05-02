@@ -109,6 +109,8 @@ DATA_API_PASSWORD = 'api_password'
 
 _LOGGER = logging.getLogger(__name__)
 
+session_lock = threading.RLock()
+
 
 def setup(hass, config=None):
     """ Sets up the HTTP API and debug interface. """
@@ -152,6 +154,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
+
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
                  hass, api_password, development, no_password_set):
@@ -193,20 +196,25 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     def check_expired_sessions(self):
         """ Reemove any expired sessions. """
-        keys = []
-        for key in self._sessions.keys():
-            keys.append(key)
+        session_lock.acquire()
+        try:
+            keys = []
+            for key in self._sessions.keys():
+                keys.append(key)
 
-        for key in keys:
-            if self._sessions[key].is_expired:
-                del self._sessions[key]
+            for key in keys:
+                if self._sessions[key].is_expired:
+                    del self._sessions[key]
+                    _LOGGER.info("Cleared expired session {0}".format(key))
+        finally:
+            session_lock.release()
 
     def add_session(self, key, session):
-        # self.check_expired_sessions()
+        self.check_expired_sessions()
         self._sessions[key] = session
 
     def get_session(self, key):
-        # self.check_expired_sessions()
+        self.check_expired_sessions()
         session = self._sessions.get(key, None)
         if session is not None and session.is_expired:
             return None

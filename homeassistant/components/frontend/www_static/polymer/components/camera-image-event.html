@@ -26,6 +26,10 @@
 		:host .selected-frame {
 			border: solid #4285f4 2px;
 		}
+
+		:host .strip-container {
+			width: calc(99%);
+		}
 	</style>
 	<div class='camera-image-event'>
 		<div center horizontal layout>
@@ -58,7 +62,7 @@
 					&nbsp;
 				</div>
 			</div>
-			<div horizontal layout>
+			<div horizontal layout class="strip-container">
 				<div>
 					<core-tooltip label="Play/Pause" position="bottom">
 						<paper-icon-button on-click="{{changeStripImagesBackward}}" icon="chevron-left"></paper-icon-button>
@@ -68,7 +72,8 @@
 					<div layout horizontal wrap id='camera_strip'>
 						<template repeat="{{cameraImage, cameraImageIndex in displayedImages}}">
 					      <div flex class='camera-thumb-list-item'>
-					      	<img class='camera-event-thumb {{cameraImage.classname}}' data-strip-index='{{cameraImageIndex}}' src="{{cameraImage.url}}" on-click='{{selectFrame}}' />
+					      	<img class='camera-event-thumb {{cameraImage.classname}}' data-strip-index='{{cameraImage.position}}' src="{{cameraImage.url}}" on-click='{{selectFrame}}' />
+					      	{{cameraImage.position}}
 					      </div>
 						</template>
 					</div>
@@ -93,25 +98,44 @@
     timer: null,
     playing: false,
     playIcon: 'av:play-circle-outline',
-    stripDisplayEnd: 0,
     displayedImages: [],
     imagesInStrip: 10,
+    groupedImages: [],
+    currentGroupIndex: null,
 
 
 
     cameraImageEventChanged: function(oldval, newval) {
     	if(newval) {
     		this.playing = false;
+    		this.groupedImages = [];
     		this.currentIndex = 0;
-    		this.currentImage = this.cameraImageEvent.images[0];
+
+
+    		// This groups the images together for display in the strip of frames below the main image
+    		var count = 0;
+    		var currentGroup = 0;
+    		this.groupedImages[currentGroup] = [];
+    		for(var i = 0; i < this.cameraImageEvent.images.length; i++) {
+    			if(count == this.imagesInStrip) {
+    				count = 0;
+    				currentGroup++;
+    				this.groupedImages[currentGroup] = [];
+    			}
+    			this.cameraImageEvent.images[i].position = i;
+    			this.groupedImages[currentGroup][count] = this.cameraImageEvent.images[i];
+
+    			count++;
+    		}
+    		this.currentGroupIndex = 0;
     	}
     	else {
     		this.playing = false;
     		this.currentIndex = null;
     		this.currentImage = null;
+    		this.currentGroupIndex = null;
+    		this.groupedImages = [];
     	}
-    	this.stripDisplayEnd = 0;
-    	this.changeStripImages(true);
     },
 
     closeCameraEvent: function(e) {
@@ -131,7 +155,6 @@
     },
 
     showNextFrame: function() {
-    	console.log(this.currentIndex);
     	if(!this.cameraImageEvent) {
     		clearInterval(this.timer);
     		this.playing = false;
@@ -142,10 +165,8 @@
     	if(this.currentIndex >= this.cameraImageEvent.images.length) {
     		this.currentIndex = 0;
     	}
-    	this.currentImage = this.cameraImageEvent.images[this.currentIndex];
-    	if(this.currentIndex >= this.stripDisplayEnd) {
-    		this.changeStripImages(true);
-    	}
+
+    	this.highlightCurrentFrame();
     },
 
     playingChanged: function(oldval, newval) {
@@ -157,6 +178,12 @@
     	}
     },
 
+    currentGroupIndexChanged: function(oldval, newval) {
+    	if(newval != null && newval < this.groupedImages.length) {
+    		this.displayedImages = this.groupedImages[this.currentGroupIndex];
+    	}
+    },
+
     changeStripImages: function(forward) {
     	var imagesBuffer = [];
     	if(!this.cameraImageEvent) {
@@ -164,38 +191,21 @@
     	}
 
     	if(forward) {
-    		if(this.stripDisplayEnd >= this.cameraImageEvent.images.length) {
-    			this.stripDisplayEnd = 0;
+    		if(this.currentGroupIndex + 1 >= this.groupedImages.length) {
+    			this.currentGroupIndex = 0;
     		}
-    		var count = 0;
-    		for(var i = 0; i < this.imagesInStrip; i++) {
-	    		if(this.stripDisplayEnd >= this.cameraImageEvent.images.length) {
-	    			//this.stripDisplayEnd = 0;
-	    			break;
-	    		}
-	    		imagesBuffer[i] = this.cameraImageEvent.images[this.stripDisplayEnd];
-	    		this.stripDisplayEnd++;
-	    		count++;
-	    	}
+    		else {
+    			this.currentGroupIndex++;
+    		}
     	}
     	else {
-    		var count = 0;
-    		if(this.stripDisplayEnd < 0) {
-    			this.stripDisplayEnd = this.cameraImageEvent.images.length - 1;
+    		if(this.currentGroupIndex - 1 < 0) {
+    			this.currentGroupIndex = this.groupedImages.length - 1;
     		}
-    		for(var i = this.imagesInStrip; i > 0; i--) {
-	    		if(this.stripDisplayEnd < 0) {
-	    			//this.stripDisplayEnd = this.cameraImageEvent.images.length - 1;
-	    			break;
-	    		}
-	    		imagesBuffer[count] = this.cameraImageEvent.images[this.stripDisplayEnd];
-	    		count++;
-	    		this.stripDisplayEnd--;
-	    	}
+    		else {
+    			this.currentGroupIndex--;
+    		}
     	}
-
-    	this.displayedImages = imagesBuffer;
-
     },
 
     changeStripImagesForward: function(e) {
@@ -204,6 +214,17 @@
 
     changeStripImagesBackward: function(e) {
 		this.changeStripImages(false);
+    },
+
+    highlightCurrentFrame: function() {
+    	if(this.playing) {
+    		var start = this.currentGroupIndex * this.imagesInStrip;
+    		var end = start + this.imagesInStrip;
+
+    		if(!(this.currentIndex >= start && this.currentIndex < end)) {
+    			this.currentGroupIndex =  (this.currentIndex - (this.currentIndex % this.imagesInStrip)) / this.imagesInStrip;
+    		}
+    	}
     },
 
     currentIndexChanged: function(oldval, newval) {
@@ -215,14 +236,13 @@
     	}
     	if(newval !== 'undefined' && this.cameraImageEvent.images[newval]) {
     		this.cameraImageEvent.images[newval].classname = 'selected-frame';
+    		this.currentImage = this.cameraImageEvent.images[this.currentIndex];
     	}
     },
 
     selectFrame: function(evt, detail, target) {
     	var index = evt.target.attributes['data-strip-index'].value;
-    	console.log(this.stripDisplayEnd, index, (this.imagesInStrip - index));
-    	this.currentIndex = this.stripDisplayEnd - (this.imagesInStrip - index);
-    	this.currentImage = this.cameraImageEvent.images[this.currentIndex];
+    	this.currentIndex = index;
     }
 
   });
