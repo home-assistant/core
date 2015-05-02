@@ -15,7 +15,7 @@ import homeassistant.remote as rem
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS,
-    URL_API_CONFIG,
+    URL_API_CONFIG, URL_API_BOOTSTRAP,
     EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
     HTTP_UNPROCESSABLE_ENTITY)
@@ -45,6 +45,10 @@ def setup(hass, config):
 
     # /api/config
     hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config)
+
+    # /api/bootstrap
+    hass.http.register_path(
+        'GET', URL_API_BOOTSTRAP, _handle_get_api_bootstrap)
 
     # /states
     hass.http.register_path('GET', URL_API_STATES, _handle_get_api_states)
@@ -145,8 +149,20 @@ def _handle_get_api_stream(handler, path_match, data):
 
 
 def _handle_get_api_config(handler, path_match, data):
-    """ Returns a dict containing Home Assistant config. """
+    """ Returns the Home Assistant config. """
     handler.write_json(handler.server.hass.config.as_dict())
+
+
+def _handle_get_api_bootstrap(handler, path_match, data):
+    """ Returns all data needed to bootstrap Home Assistant. """
+    hass = handler.server.hass
+
+    handler.write_json({
+        'config': hass.config.as_dict(),
+        'states': hass.states.all(),
+        'events': _events_json(hass),
+        'services': _services_json(hass),
+    })
 
 
 def _handle_get_api_states(handler, path_match, data):
@@ -199,9 +215,7 @@ def _handle_post_state_entity(handler, path_match, data):
 
 def _handle_get_api_events(handler, path_match, data):
     """ Handles getting overview of event listeners. """
-    handler.write_json([{"event": key, "listener_count": value}
-                        for key, value
-                        in handler.server.hass.bus.listeners.items()])
+    handler.write_json(_events_json(handler.server.hass))
 
 
 def _handle_api_post_events_event(handler, path_match, event_data):
@@ -236,10 +250,7 @@ def _handle_api_post_events_event(handler, path_match, event_data):
 
 def _handle_get_api_services(handler, path_match, data):
     """ Handles getting overview of services. """
-    handler.write_json(
-        [{"domain": key, "services": value}
-         for key, value
-         in handler.server.hass.services.services.items()])
+    handler.write_json(_services_json(handler.server.hass))
 
 
 # pylint: disable=invalid-name
@@ -321,3 +332,13 @@ def _handle_get_api_components(handler, path_match, data):
     """ Returns all the loaded components. """
 
     handler.write_json(handler.server.hass.config.components)
+
+def _services_json(hass):
+    """ Generate services data to JSONify. """
+    return [{"domain": key, "services": value}
+            for key, value in hass.services.services.items()]
+
+def _events_json(hass):
+    """ Generate event data to JSONify. """
+    return [{"event": key, "listener_count": value}
+            for key, value in hass.bus.listeners.items()]
