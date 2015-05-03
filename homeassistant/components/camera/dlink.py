@@ -19,9 +19,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                            _LOGGER):
             return None
 
-        cameras = [DlinkCamera(hass, config)]
+        camera = DlinkCamera(hass, config)
+        cameras = [camera]
+        # cameras = cameras + camera.get_switches()
+        # get_component('switch').add_entities(camera.get_switches())
+        # print(get_component('switch.generic_switch'))
+        # get_component('switch.generic_switch').add_entities(camera.get_switches())
 
         add_devices_callback(cameras)
+
+
     except Exception as inst:
         _LOGGER.error("Could not find cameras: %s", inst)
         return False
@@ -54,6 +61,10 @@ class DlinkCamera(Camera):
         """ This should be implemented by different camera models. """
         return self.BASE_URL + 'image.jpg'
 
+    def refesh_all_settings_from_device(self):
+        self.get_all_settings()
+        self.update_switch_states()
+
     def get_all_settings(self):
         res = requests.get(self.BASE_URL + 'motion.htm', auth=(self.username, self.password))
         motion_settings = BeautifulSoup(res.content)
@@ -61,7 +72,7 @@ class DlinkCamera(Camera):
 
         settings = self.extract_form_fields(motion_settings)
         self._is_motion_detection_enabled = True if settings.get('MotionDetectionEnable') == '1' else False
-        # print(settings)
+
         self._web_ui_form_data['motion'] = settings
 
         # This is pretty lame, for some reason the motion detection area is returned like this
@@ -81,12 +92,6 @@ class DlinkCamera(Camera):
         u_settings = self.extract_form_fields(upload_settings)
         self._is_ftp_upload_enabled = True if u_settings.get('FTPScheduleEnable') == '1' else False
 
-        # print(self._is_ftp_upload_enabled)
-
-        # print(u_settings)
-
-
-
         self._web_ui_form_data['upload'] = u_settings
 
         self._is_ftp_configured = True if not u_settings.get('FTPHostAddress') == '' else False
@@ -99,7 +104,7 @@ class DlinkCamera(Camera):
         if ftp_comp != None and ftp_comp.ftp_server != None:
             self._ftp_path = os.path.join(ftp_comp.ftp_server.ftp_root_path, u_settings.get('FTPDirectoryPath', self.entity_id))
 
-
+        #self.refesh_all_settings_from_device()
 
         # print(self._is_ftp_configured)
         # print(self.get_ha_lan_address())
@@ -118,7 +123,8 @@ class DlinkCamera(Camera):
             self._web_ui_form_data['motion']['MotionDetectionBlockSet'] = '1111111111111111111111111'
         r = requests.post(self.BASE_URL + 'setSystemMotion', data=self._web_ui_form_data['motion'], auth=(self.username, self.password))
 
-        self.get_all_settings()
+        # self._is_motion_detection_enabled = False
+        self.refesh_all_settings_from_device()
         self.update_ha_state(True)
 
         return True
@@ -131,9 +137,9 @@ class DlinkCamera(Camera):
         self._web_ui_form_data['motion']['MotionDetectionEnable'] = 0
         r = requests.post(self.BASE_URL + 'setSystemMotion', data=self._web_ui_form_data['motion'], auth=(self.username, self.password))
 
-        self.get_all_settings()
+        self.refesh_all_settings_from_device()
         self.update_ha_state(True)
-
+        # self._is_motion_detection_enabled = False
         return True
 
     def set_ftp_details(self):
@@ -161,7 +167,7 @@ class DlinkCamera(Camera):
 
         r = requests.post(self.BASE_URL + 'setSystemFTP', data=self._web_ui_form_data['upload'], auth=(self.username, self.password))
 
-        self.get_all_settings()
+        self.refesh_all_settings_from_device()
         self.update_ha_state(True)
 
         return True

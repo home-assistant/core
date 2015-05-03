@@ -8,7 +8,10 @@ import mimetypes
 import requests
 import logging
 import time
+from homeassistant import bootstrap
 from homeassistant.helpers.entity import Entity
+# from homeassistant.components.switch.generic_switch import GenericSwitch
+
 import time
 import math
 import datetime
@@ -27,7 +30,15 @@ from homeassistant.const import (
     STATE_MOTION_DETECTED,
     STATE_STREAMING,
     STATE_ARMED,
-    STATE_IDLE
+    STATE_ON,
+    STATE_OFF,
+    STATE_IDLE,
+    EVENT_PLATFORM_DISCOVERED,
+    ATTR_SERVICE,
+    ATTR_DISCOVERED,
+    EVENT_STATE_CHANGED,
+    ATTR_DOMAIN,
+    EVENT_SERVICE_EXECUTED
     )
 
 
@@ -35,11 +46,14 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 
 DOMAIN = 'camera'
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['http', 'switch']
 GROUP_NAME_ALL_CAMERAS = 'all_cameras'
 SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 EVENT_CAMERA_MOTION_DETECTED = 'camera_motion_detected'
+
+SWITCH_ACTION_RECORD = 'record'
+SWITCH_ACTION_MOTION = 'motion_detection'
 
 # The number of seconds between images before being
 # considerd a new event
@@ -47,6 +61,7 @@ EVENT_GAP_THRESHOLD = 15
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {}
+DISCOVER_SWITCHES = "camera.switches"
 ATTR_FRIENDLY_LOG_MESSAGE = "friendly_log_message"
 
 
@@ -58,6 +73,30 @@ def setup(hass, config):
         DISCOVERY_PLATFORMS)
 
     component.setup(config)
+
+    for entity_id in component.entities.keys():
+        entity = component.entities[entity_id]
+        entity.refesh_all_settings_from_device()
+
+        data = {}
+        data['entity_id'] = entity_id
+        data[ATTR_DOMAIN] = DOMAIN
+        data['name'] = entity.name + ' Record'
+        data['parent_action'] = SWITCH_ACTION_RECORD
+        data['watched_attribute'] = 'is_recording'
+        hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
+                      {ATTR_SERVICE: DISCOVER_SWITCHES,
+                       ATTR_DISCOVERED: data})
+
+        data = {}
+        data['entity_id'] = entity_id
+        data[ATTR_DOMAIN] = DOMAIN
+        data['name'] = entity.name + ' Motion Detection'
+        data['parent_action'] = SWITCH_ACTION_MOTION
+        data['watched_attribute'] = 'is_motion_detection_enabled'
+        hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
+                      {ATTR_SERVICE: DISCOVER_SWITCHES,
+                       ATTR_DISCOVERED: data})
 
 
     def _proxy_camera_image(handler, path_match, data):
@@ -194,8 +233,6 @@ def setup(hass, config):
 
     return True
 
-
-
 class Camera(Entity):
     """ Base class for cameras. """
 
@@ -217,6 +254,8 @@ class Camera(Entity):
         self._is_motion_detection_supported = False
         self._is_motion_detection_enabled = False
 
+        self._is_recording = False
+
         self._is_ftp_upload_supported = False
         self._is_ftp_upload_enabled = False
 
@@ -226,6 +265,8 @@ class Camera(Entity):
         self._ftp_username = ''
         self._ftp_password = ''
 
+        self._logger = logging.getLogger(__name__)
+
         self._images_path = device_info.get('images_path', None)
 
         if self._images_path != None and not os.path.isdir(self._images_path):
@@ -234,15 +275,70 @@ class Camera(Entity):
         self._event_images_path = None
         self._ftp_path = None
 
+        self._child_entities = {}
+
         self.hass.bus.listen(
             EVENT_FTP_FILE_RECEIVED,
             self.process_file_event)
-        #print('5555555555555555555555555555555555555555555555555555555')
-        # self.hass.bus.listen_once(
-        #     EVENT_COMPONENT_LOADED,
-        #     self.ftp_server_loaded_event)
+
+        self.hass.bus.listen(
+            EVENT_STATE_CHANGED,
+            self.process_child_entity_change)
 
 
+
+    def process_child_entity_change(self, event):
+
+        if not event or not event.data:
+            return
+        new_state = event.data['new_state']
+        if new_state is None:
+            return
+
+        parent_entity_id = new_state.attributes.get('parent_entity_id', None)
+
+        if parent_entity_id == self.entity_id:
+            entity_action = new_state.attributes.get('parent_action', None)
+            if not entity_action:
+                return
+
+            # this is the first callback we get when the entity is registered
+            old_state_val = None
+            if not entity_action in self._child_entities.keys():
+                self._child_entities[entity_action] = new_state
+                old_state_val = self._child_entities[entity_action].state
+                self._logger.info('Registered {0} as a child of {1}'.format(
+                    new_state.entity_id, self.entity_id))
+                self.refesh_all_settings_from_device()
+            else:
+                old_state_val = self._child_entities[entity_action].state
+                self._child_entities[entity_action] = new_state
+                # new_state_val = new_state.state
+                #return
+
+
+            if self._child_entities[entity_action].state != old_state_val:
+                if entity_action == SWITCH_ACTION_MOTION:
+                    if new_state.state == STATE_ON and not self.is_motion_detection_enabled:
+                        self.enable_motion_detection()
+                        self._logger.info('Enabling motion detection on {0}'.format(self.entity_id))
+                    elif new_state.state == STATE_OFF and self.is_motion_detection_enabled:
+                        self.disable_motion_detection()
+                        self._logger.info('Disabling motion detection on {0}'.format(self.entity_id))
+                    else:
+                        self._logger.info('Ignoring state change {0} is {1} is already {2}'
+                            .format(self.entity_id, entity_action, self.is_motion_detection_enabled))
+
+
+
+
+        # print(event_data)
+    def update_switch_states(self):
+
+        pass
+
+    def refesh_all_settings_from_device(self):
+        pass
 
     def get_camera_image(self, stream=False):
         response = requests.get(self.still_image_url, auth=(self.username, self.password), stream=stream)
@@ -387,7 +483,7 @@ class Camera(Entity):
         for event_dir in event_dirs:
             if count < start:
                 continue
-            if count >= length:
+            if count >= start + length:
                 break
             event_data = {}
             event_data['directory'] = event_dir
@@ -458,6 +554,10 @@ class Camera(Entity):
         return self._is_motion_detection_enabled
 
     @property
+    def is_recording(self):
+        return self._is_recording
+
+    @property
     def is_ftp_upload_supported(self):
         return self._is_ftp_upload_supported
 
@@ -478,3 +578,13 @@ class Camera(Entity):
         attr['is_ftp_upload_enabled'] = self.is_ftp_upload_enabled
         attr['is_ftp_configured'] = self.is_ftp_configured
         return attr
+
+    # def get_switches(self):
+    #     switches = []
+    #     motion_btn_state = STATE_ON if self.is_motion_detection_enabled else STATE_OFF
+    #     if self.is_motion_detection_supported:
+    #         switches.append(GenericSwitch(self.name + ' Motion Detection', motion_btn_state))
+
+    #     switches.append(GenericSwitch(self.name + ' Record'))
+
+    #     return switches

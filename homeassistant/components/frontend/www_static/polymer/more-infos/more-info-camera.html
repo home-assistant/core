@@ -19,17 +19,21 @@
   }
 
   :host .camera-image {
-    max-width: 100%;
+    /*max-width: 100%;*/
+    width:640px;
+    height:480px;
   }
    @media (max-width: 720px) {
       :host .camera-image {
         max-width: calc(100%);
+        height: initial
       }
     }
 
     @media (max-width: 620px) {
       :host .camera-image {
         max-width: calc(100%);
+        height: initial
       }
     }
 

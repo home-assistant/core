@@ -31,6 +31,10 @@
 	        height:calc(100%);
 	      }
 	    }
+
+	    :host .list-controls {
+	    	width: 100%;
+	    }
 	</style>
 	<camera-recording cameraImageEvent="{{selectedCameraImageEvent}}" hidden?="{{!selectedCameraImageEvent}}"></camera-recording>
 	<div class='camera-image-events' hidden?="{{selectedCameraImageEvent}}">
@@ -44,6 +48,25 @@
 			      	</div>
 		     	</div>
 			</template>
+
+			<div horizontal layout class="list-controls">
+				<div>
+					<paper-button>
+						<paper-icon-button icon="chevron-left"></paper-icon-button>
+						Newer
+					</paper-button>
+				</div>
+				<div flex>
+					&nbsp;
+				</div>
+				<div>
+					<paper-button on-click='{{loadOlder}}'>
+						Older
+						<paper-icon-button icon="chevron-right"></paper-icon-button>
+					</paper-button>
+				</div>
+			</div>
+
 		</div>
 
 		<div hidden?="{{hasRecordings}}" class="message-page">
@@ -86,9 +109,9 @@
     	if(newVal) {
     		console.log(newVal.entityId, oldEntityId);
     		if(this.recordingType == 'motion') {
-		    	window.hass.callApi('GET', 'camera_events/' + this.stateObj.entityId + '?offset=' + this.offset + '&length=' + this.resultLength).then(function(data) {
-			        this.cameraImageEvents = data;
-			    }.bind(this));
+		    	this.offset = 0;
+		    	this.resultLength = 6;
+		    	this.loadRecordings();
 	    	}
 	    	else { //just for testing
 	    		this.cameraImageEvents = [];
@@ -119,6 +142,17 @@
     	else {
     		this.hasRecordings = false;
     	}
+    },
+
+    loadRecordings: function() {
+    	window.hass.callApi('GET', 'camera_events/' + this.stateObj.entityId + '?offset=' + this.offset + '&length=' + this.resultLength).then(function(data) {
+	        this.cameraImageEvents = data;
+	    }.bind(this));
+    },
+
+    loadOlder: function(evt) {
+    	this.offset += this.resultLength;
+    	this.loadRecordings();
     }
 
   });

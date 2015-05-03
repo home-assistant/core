@@ -107,6 +107,8 @@ CONF_DEVELOPMENT = "development"
 
 DATA_API_PASSWORD = 'api_password'
 
+SESSION_TIMEOUT_SECONDS=3600
+
 _LOGGER = logging.getLogger(__name__)
 
 session_lock = threading.RLock()
@@ -196,22 +198,28 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     def check_expired_sessions(self):
         """ Reemove any expired sessions. """
-        session_lock.acquire()
-        try:
-            keys = []
-            for key in self._sessions.keys():
-                keys.append(key)
+        if session_lock.acquire(False):
+            try:
+                keys = []
+                for key in self._sessions.keys():
+                    keys.append(key)
 
-            for key in keys:
-                if self._sessions[key].is_expired:
-                    del self._sessions[key]
-                    _LOGGER.info("Cleared expired session {0}".format(key))
-        finally:
-            session_lock.release()
+                for key in keys:
+                    if self._sessions[key].is_expired:
+                        del self._sessions[key]
+                        _LOGGER.info("Cleared expired session {0}".format(key))
+            finally:
+                session_lock.release()
 
     def add_session(self, key, session):
         self.check_expired_sessions()
-        self._sessions[key] = session
+
+        if not session_lock.acquire():
+            _LOGGER.error("Could not set session, list is locked by another thread {0}".format(key))
+        try:
+            self._sessions[key] = session
+        finally:
+            session_lock.release()
 
     def get_session(self, key):
         self.check_expired_sessions()
@@ -467,7 +475,7 @@ class ServerSession:
         self.cookie_values = {}
 
     def reset_expiry(self):
-        self._expiry = datetime.datetime.now() + datetime.timedelta(seconds=3600)
+        self._expiry = datetime.datetime.now() + datetime.timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
     @property
     def is_expired(self):

@@ -7,10 +7,12 @@ import logging
 from datetime import timedelta
 
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity import ToggleEntity
 
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group, discovery, wink, isy994
+import homeassistant.components.camera as camera
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -31,6 +33,7 @@ DISCOVERY_PLATFORMS = {
     discovery.services.BELKIN_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
+    camera.DISCOVER_SWITCHES: 'generic_switch',
 }
 
 _LOGGER = logging.getLogger(__name__)
