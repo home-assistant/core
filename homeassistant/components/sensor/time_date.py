@@ -26,7 +26,7 @@ These are the variables for the monitored_variables array:
 
 type
 *Required
-The variable you wish to display,see the configuration example above for a
+The variable you wish to display, see the configuration example above for a
 list of all available variables
 
 
