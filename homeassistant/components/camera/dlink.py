@@ -78,20 +78,27 @@ class DlinkCameraDcs930l(Camera):
 
 
     def get_all_settings(self):
-        """ Pull all the settings from the camera, there is no API so it's dirty
-        screen scraping time. """
-        res = requests.get(self.base_url + 'motion.htm', auth=(self.username, self.password))
+        """ Pull all the settings from the camera, there is no API so it's
+        dirty screen scraping time. """
+        res = requests.get(self.base_url + 'motion.htm',
+            auth=(self.username, self.password))
         motion_settings = BeautifulSoup(res.content)
 
 
         settings = self.extract_form_fields(motion_settings)
-        self._is_motion_detection_enabled = True if settings.get('MotionDetectionEnable') == '1' else False
+        self._is_motion_detection_enabled = (
+            True if
+            settings.get('MotionDetectionEnable') == '1' else
+            False)
 
         self._web_ui_form_data['motion'] = settings
 
-        # This is pretty lame, for some reason the motion detection area is returned like this
-        # instead on in the same way as the other or even JSON
-        res = requests.get(self.base_url + 'motion.cgi', auth=(self.username, self.password))
+        # This is pretty lame, for some reason the motion detection area is
+        # returned like this instead on in the same way as the other or
+        # even JSON
+        res = requests.get(self.base_url + 'motion.cgi',
+            auth=(self.username, self.password))
+
         lines = res.text.splitlines(True)
 
         for line in lines:
@@ -100,23 +107,32 @@ class DlinkCameraDcs930l(Camera):
             if len(keypair) > 1:
                 self._web_ui_form_data['motion'][keypair[0]] = keypair[1]
 
-        res = requests.get(self.base_url + 'upload.htm', auth=(self.username, self.password))
+        res = requests.get(self.base_url + 'upload.htm',
+            auth=(self.username, self.password))
+
         upload_settings = BeautifulSoup(res.content)
 
         u_settings = self.extract_form_fields(upload_settings)
-        self._is_ftp_upload_enabled = True if u_settings.get('FTPScheduleEnable') == '1' else False
+        self._is_ftp_upload_enabled = (True if
+            u_settings.get('FTPScheduleEnable') == '1' else
+            False)
 
         self._web_ui_form_data['upload'] = u_settings
 
-        self._is_ftp_configured = True if not u_settings.get('FTPHostAddress') == '' else False
+        self._is_ftp_configured = (True if not
+            u_settings.get('FTPHostAddress') == '' else
+            False)
         self._ftp_host = u_settings.get('FTPHostAddress')
         self._ftp_port = u_settings.get('FTPPortNumber')
         self._ftp_username = u_settings.get('FTPUserName')
         self._ftp_password = u_settings.get('FTPPassword')
 
         ftp_comp = get_component('ftp')
-        if ftp_comp != None and ftp_comp.ftp_server != None:
-            self._ftp_path = os.path.join(ftp_comp.ftp_server.ftp_root_path, u_settings.get('FTPDirectoryPath', self.entity_id))
+        if ftp_comp != None and ftp_comp.FTP_SERVER != None:
+            self._ftp_path = os.path.join(
+                ftp_comp.FTP_SERVER.ftp_root_path,
+                u_settings.get('FTPDirectoryPath',
+                self.entity_id))
 
 
     def enable_motion_detection(self):
@@ -129,9 +145,14 @@ class DlinkCameraDcs930l(Camera):
         self._web_ui_form_data['motion']['MotionDetectionScheduleMode'] = 0
         # The camera won't detect any motion if there are no blocks set
         # so we default them to all set if none are selected
-        if self._web_ui_form_data['motion']['MotionDetectionBlockSet'] == '0000000000000000000000000':
-            self._web_ui_form_data['motion']['MotionDetectionBlockSet'] = '1111111111111111111111111'
-        requests.post(self.base_url + 'setSystemMotion', data=self._web_ui_form_data['motion'], auth=(self.username, self.password))
+        if (self._web_ui_form_data['motion']['MotionDetectionBlockSet'] ==
+            '0000000000000000000000000'):
+            self._web_ui_form_data['motion']['MotionDetectionBlockSet'] = (
+                '1111111111111111111111111')
+        requests.post(self.base_url + 'setSystemMotion',
+            data=self._web_ui_form_data['motion'],
+            auth=(self.username,
+            self.password))
 
         # self._is_motion_detection_enabled = False
         self.refesh_all_settings_from_device()
@@ -163,24 +184,34 @@ class DlinkCameraDcs930l(Camera):
         if can_enable == False:
             return can_enable
 
-        ftp_server = get_component('ftp').ftp_server
+        ftp_server = get_component('ftp').FTP_SERVER
 
         ftp_path = self.ftp_path
 
         if not os.path.isdir(ftp_path):
             os.makedirs(ftp_path)
-            _LOGGER.info('Camera {0} image path did not exist and was atomatically created at {1}'.format(self.entity_id, ftp_path))
+            _LOGGER.info(
+                'Camera {0} image path did not exist and was \
+                atomatically created at {1}'
+                .format(self.entity_id, ftp_path))
 
-        self._web_ui_form_data['upload']['FTPHostAddress'] = ftp_server.server_ip
-        self._web_ui_form_data['upload']['FTPPortNumber'] = ftp_server.server_port
-        self._web_ui_form_data['upload']['FTPUserName'] = ftp_server.username
-        self._web_ui_form_data['upload']['FTPPassword'] = ftp_server.password
-        self._web_ui_form_data['upload']['FTPDirectoryPath'] = self.entity_id
+        self._web_ui_form_data['upload']['FTPHostAddress'] = (
+            ftp_server.server_ip)
+        self._web_ui_form_data['upload']['FTPPortNumber'] = (
+            ftp_server.server_port)
+        self._web_ui_form_data['upload']['FTPUserName'] = (
+            ftp_server.username)
+        self._web_ui_form_data['upload']['FTPPassword'] = (
+            ftp_server.password)
+        self._web_ui_form_data['upload']['FTPDirectoryPath'] = (
+            self.entity_id)
 
         self._web_ui_form_data['upload']['FTPScheduleEnable'] = '1'
         self._web_ui_form_data['upload']['FTPScheduleMode'] = '2'
 
-        requests.post(self.base_url + 'setSystemFTP', data=self._web_ui_form_data['upload'], auth=(self.username, self.password))
+        requests.post(self.base_url + 'setSystemFTP',
+            data=self._web_ui_form_data['upload'],
+            auth=(self.username, self.password))
 
         self.refesh_all_settings_from_device()
         self.update_ha_state(True)
@@ -192,42 +223,46 @@ class DlinkCameraDcs930l(Camera):
     def extract_form_fields(self, soup, include_without_name=False):
         "Turn a BeautifulSoup form in to a dict of fields and default values"
         fields = {}
-        for input in soup.findAll('input'):
+        for html_input in soup.findAll('input'):
             name = ''
             # ignore submit/image with no name attribute
-            if input['type'] in ('submit', 'image') and not input.has_attr('name'):
+            if (html_input['type'] in ('submit', 'image') and not
+                html_input.has_attr('name')):
                 continue
 
-            # print(input)
-            if input == None:
+            if html_input == None:
                 continue
 
-            if not input.has_attr('name') and not input.has_attr('id'):
+            if (not html_input.has_attr('name') and not
+                html_input.has_attr('id')):
                 continue
 
-            if not input.has_attr('name') and input.has_attr('id') and include_without_name:
-                name = input['id']
-            elif input.has_attr('name'):
-                name = input['name']
+            if (not html_input.has_attr('name') and
+                html_input.has_attr('id') and
+                include_without_name):
+
+                name = html_input['id']
+            elif html_input.has_attr('name'):
+                name = html_input['name']
             else:
                 continue
 
-
-
             # single element nome/value fields
-            if input['type'] in ('text', 'hidden', 'password', 'submit', 'image'):
+            if html_input['type'] in (
+                'text', 'hidden', 'password', 'submit', 'image'):
+
                 value = ''
-                if input.has_attr('value'):
-                    value = input['value']
+                if html_input.has_attr('value'):
+                    value = html_input['value']
                 fields[name] = value
                 continue
 
             # checkboxes and radios
-            if input['type'] in ('checkbox', 'radio'):
+            if html_input['type'] in ('checkbox', 'radio'):
                 value = ''
-                if input.has_attr('checked'):
-                    if input.has_attr('value'):
-                        value = input['value']
+                if html_input.has_attr('checked'):
+                    if html_input.has_attr('value'):
+                        value = html_input['value']
                     else:
                         value = 'on'
                 if name in fields.keys() and value:
@@ -237,8 +272,6 @@ class DlinkCameraDcs930l(Camera):
                     fields[name] = value
 
                 continue
-
-            # assert False, 'input type %s not supported' % input['type']
 
         # textareas
         for textarea in soup.findAll('textarea'):
@@ -262,11 +295,17 @@ class DlinkCameraDcs930l(Camera):
                 selected_options = [options[0]]
 
             if not is_multiple:
-                assert(len(selected_options) < 2)
+                assert len(selected_options) < 2
                 if len(selected_options) == 1:
-                    value = selected_options[0].text if not selected_options[0].has_attr('value') else selected_options[0]['value']
+                    value = (
+                        selected_options[0].text if not
+                        selected_options[0].has_attr('value') else
+                        selected_options[0]['value'])
             else:
-                value = [option.text if not option.has_attr('value') else option['value'] for option in selected_options]
+                value = (
+                    [option.text if not
+                    option.has_attr('value') else
+                    option['value'] for option in selected_options])
 
             fields[select['name']] = value
 

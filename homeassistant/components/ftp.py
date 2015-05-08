@@ -60,8 +60,6 @@ def setup(hass, config=None):
         lambda event:
         threading.Thread(target=server.start, daemon=True).start())
 
-    # hass.http = server
-    # hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
 
     return True
 
@@ -75,8 +73,12 @@ class HomeAssistantFTPServer(ThreadingMixIn, FTPServer):
         self._password = password
 
         authorizer = DummyAuthorizer()
-        authorizer.add_user(self._username, self._password, self._ftp_root_path, perm="elradfmw")
-        #authorizer.add_anonymous("/home/user0/Downloads")
+        authorizer.add_user(
+            self._username,
+            self._password,
+            self._ftp_root_path,
+            perm="elradfmw")
+
         request_handler_class.authorizer = authorizer
 
         super().__init__(server_address, request_handler_class)
@@ -84,8 +86,6 @@ class HomeAssistantFTPServer(ThreadingMixIn, FTPServer):
         self._server_address = server_address
         self.hass = hass
 
-        # server = FTPServer(("127.0.0.1", 21), handler)
-        # server.serve_forever()
 
     def start(self):
         """ Starts the server. """

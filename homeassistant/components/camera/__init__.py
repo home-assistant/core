@@ -676,9 +676,9 @@ class Camera(Entity):
             images from this device are stored """
         if self._ftp_path == None:
             ftp_comp = get_component('ftp')
-            if ftp_comp != None and ftp_comp.ftp_server != None:
+            if ftp_comp != None and ftp_comp.FTP_SERVER != None:
                 self._ftp_path = os.path.join(
-                    ftp_comp.ftp_server.ftp_root_path,
+                    ftp_comp.FTP_SERVER.ftp_root_path,
                     self.entity_id)
 
         return self._ftp_path
