@@ -14,7 +14,8 @@ sensor:
   monitored_variables:
     - type: 'time'
     - type: 'date'
-    - type: 'datetime'
+    - type: 'date_time'
+    - type: 'time_date'
 
 VARIABLES:
 
@@ -40,7 +41,8 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'time': 'Time',
     'date': 'Date',
-    'datetime': 'Date & Time'
+    'date_time': 'Date & Time',
+    'time_date': 'Time & Date'
 }
 
 
@@ -83,11 +85,16 @@ class TimeDateSensor(Entity):
 
     def update(self):
         """ Gets the latest data and updates the states. """
+
+        time_date = dt_util.now()
+        time = dt_util.datetime_to_short_time_str(time_date)
+        date = dt_util.datetime_to_short_date_str(time_date)
+
         if self.type == 'time':
-            self._state = dt_util.datetime_to_short_time_str(dt_util.now())
+            self._state = time
         elif self.type == 'date':
-            self._state = dt_util.datetime_to_short_date_str(dt_util.now())
-        elif self.type == 'datetime':
-            self._state = dt_util.datetime_to_short_date_str(dt_util.now()) + \
-                          ', ' + \
-                          dt_util.datetime_to_short_time_str(dt_util.now())
+            self._state = date
+        elif self.type == 'date_time':
+            self._state = date + ', ' + time
+        elif self.type == 'time_date':
+            self._state = time + ', ' + date
