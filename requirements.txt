@@ -55,3 +55,7 @@ beautifulsoup4>=4.3.2
 
 # used by the ftp component
 pyftpdlib>=1.4.0
+
+# OpenWeatherMap Web API
+pyowm>=2.2.0
+

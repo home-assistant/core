@@ -959,6 +959,17 @@ class Config(object):
             # Could not convert value to float
             return value, unit
 
+    def as_dict(self):
+        """ Converts config to a dictionary. """
+        return {
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'temperature_unit': self.temperature_unit,
+            'location_name': self.location_name,
+            'time_zone': self.time_zone.zone,
+            'components': self.components,
+        }
+
 
 class HomeAssistantError(Exception):
     """ General Home Assistant exception occured. """
