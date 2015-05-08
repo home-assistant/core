@@ -35,7 +35,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-
 # pylint: disable=too-many-instance-attributes
 class GenericSwitch(ToggleEntity):
     """ A generic switch the can be created during setup of another component
@@ -51,8 +50,6 @@ class GenericSwitch(ToggleEntity):
         self._watched_parent_attribute = info.get('watched_attribute', 'state')
         self.hass = hass
         self._logger = logging.getLogger(__name__)
-
-
 
         self.hass.bus.listen(
             EVENT_STATE_CHANGED,
@@ -77,11 +74,11 @@ class GenericSwitch(ToggleEntity):
 
             self._logger.info(msg)
 
-            if watched_val == STATE_ON or watched_val == STATE_OFF:
+            if watched_val is STATE_ON or watched_val is STATE_OFF:
                 self._state = watched_val
-            elif watched_val == True:
+            elif watched_val is True:
                 self._state = STATE_ON
-            elif watched_val == False:
+            elif watched_val is False:
                 self._state = STATE_OFF
 
             self.update_ha_state(True)

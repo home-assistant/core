@@ -19,17 +19,18 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
-    if not validate_config({DOMAIN: config},
-                       {DOMAIN: ['base_url', CONF_USERNAME, CONF_PASSWORD]},
-                       _LOGGER):
+    if not validate_config(
+            {DOMAIN: config},
+            {DOMAIN: ['base_url', CONF_USERNAME, CONF_PASSWORD]},
+            _LOGGER):
         return None
 
     model_map = {
-        'dcs-930l' : DlinkCameraDcs930l
+        'dcs-930l': DlinkCameraDcs930l
     }
 
     family_map = {
-        'dcs' : DlinkCameraDcs930l
+        'dcs': DlinkCameraDcs930l
     }
 
     # To load up the camera component we first check if there is component
@@ -46,7 +47,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if family and camera_class == DlinkCamera:
         family = family.lower()
         camera_class = family_map.get(family, DlinkCamera)
-
 
     camera = camera_class(hass, config)
     cameras = [camera]
@@ -81,20 +81,18 @@ class DlinkCameraDcs930l(Camera):
         self._web_ui_form_data = {}
         self.get_all_settings()
 
-
     def refesh_all_settings_from_device(self):
         """ Overrides the base class method that retrieved all setting
             from the device. """
         self.get_all_settings()
 
-
     def get_all_settings(self):
         """ Pull all the settings from the camera, there is no API so it's
         dirty screen scraping time. """
-        res = requests.get(self.base_url + 'motion.htm',
+        res = requests.get(
+            self.base_url + 'motion.htm',
             auth=(self.username, self.password))
         motion_settings = BeautifulSoup(res.content)
-
 
         settings = self.extract_form_fields(motion_settings)
         self._is_motion_detection_enabled = (
@@ -107,7 +105,8 @@ class DlinkCameraDcs930l(Camera):
         # This is pretty lame, for some reason the motion detection area is
         # returned like this instead on in the same way as the other or
         # even JSON
-        res = requests.get(self.base_url + 'motion.cgi',
+        res = requests.get(
+            self.base_url + 'motion.cgi',
             auth=(self.username, self.password))
 
         lines = res.text.splitlines(True)
@@ -118,19 +117,22 @@ class DlinkCameraDcs930l(Camera):
             if len(keypair) > 1:
                 self._web_ui_form_data['motion'][keypair[0]] = keypair[1]
 
-        res = requests.get(self.base_url + 'upload.htm',
+        res = requests.get(
+            self.base_url + 'upload.htm',
             auth=(self.username, self.password))
 
         upload_settings = BeautifulSoup(res.content)
 
         u_settings = self.extract_form_fields(upload_settings)
-        self._is_ftp_upload_enabled = (True if
+        self._is_ftp_upload_enabled = (
+            True if
             u_settings.get('FTPScheduleEnable') == '1' else
             False)
 
         self._web_ui_form_data['upload'] = u_settings
 
-        self._is_ftp_configured = (True if not
+        self._is_ftp_configured = (
+            True if not
             u_settings.get('FTPHostAddress') == '' else
             False)
         self._ftp_host = u_settings.get('FTPHostAddress')
@@ -139,18 +141,18 @@ class DlinkCameraDcs930l(Camera):
         self._ftp_password = u_settings.get('FTPPassword')
 
         ftp_comp = get_component('ftp')
-        if ftp_comp != None and ftp_comp.FTP_SERVER != None:
+        if ftp_comp is not None and ftp_comp.FTP_SERVER is not None:
             self._ftp_path = os.path.join(
                 ftp_comp.FTP_SERVER.ftp_root_path,
-                u_settings.get('FTPDirectoryPath',
-                self.entity_id))
-
+                u_settings.get(
+                    'FTPDirectoryPath',
+                    self.entity_id))
 
     def enable_motion_detection(self):
         """ Enable the motion detection settings for the camera. """
         # pylint: disable=missing-super-argument
         can_enable = super().enable_motion_detection()
-        if can_enable == False:
+        if can_enable is False:
             return can_enable
 
         self._web_ui_form_data['motion']['MotionDetectionEnable'] = 1
@@ -158,13 +160,13 @@ class DlinkCameraDcs930l(Camera):
         # The camera won't detect any motion if there are no blocks set
         # so we default them to all set if none are selected
         if (self._web_ui_form_data['motion']['MotionDetectionBlockSet'] ==
-            '0000000000000000000000000'):
+                '0000000000000000000000000'):
             self._web_ui_form_data['motion']['MotionDetectionBlockSet'] = (
                 '1111111111111111111111111')
-        requests.post(self.base_url + 'setSystemMotion',
+        requests.post(
+            self.base_url + 'setSystemMotion',
             data=self._web_ui_form_data['motion'],
-            auth=(self.username,
-            self.password))
+            auth=(self.username, self.password))
 
         # self._is_motion_detection_enabled = False
         self.refesh_all_settings_from_device()
@@ -176,13 +178,14 @@ class DlinkCameraDcs930l(Camera):
         """ Disable the motion detection settings for the camera. """
         # pylint: disable=missing-super-argument
         can_enable = super().disable_motion_detection()
-        if can_enable == False:
+        if can_enable is False:
             return can_enable
 
         self._web_ui_form_data['motion']['MotionDetectionEnable'] = 0
-        requests.post(self.base_url + 'setSystemMotion',
-                                        data=self._web_ui_form_data['motion'],
-                                        auth=(self.username, self.password))
+        requests.post(
+            self.base_url + 'setSystemMotion',
+            data=self._web_ui_form_data['motion'],
+            auth=(self.username, self.password))
 
         self.refesh_all_settings_from_device()
         self.update_ha_state(True)
@@ -195,7 +198,7 @@ class DlinkCameraDcs930l(Camera):
             values from the loaded ftp component """
         # pylint: disable=missing-super-argument
         can_enable = super().set_ftp_details()
-        if can_enable == False:
+        if can_enable is False:
             return can_enable
 
         ftp_server = get_component('ftp').FTP_SERVER
@@ -223,7 +226,8 @@ class DlinkCameraDcs930l(Camera):
         self._web_ui_form_data['upload']['FTPScheduleEnable'] = '1'
         self._web_ui_form_data['upload']['FTPScheduleMode'] = '2'
 
-        requests.post(self.base_url + 'setSystemFTP',
+        requests.post(
+            self.base_url + 'setSystemFTP',
             data=self._web_ui_form_data['upload'],
             auth=(self.username, self.password))
 
@@ -231,7 +235,6 @@ class DlinkCameraDcs930l(Camera):
         self.update_ha_state(True)
 
         return True
-
 
     # From https://gist.github.com/simonw/104413
     # pylint: disable=too-many-branches
@@ -243,20 +246,19 @@ class DlinkCameraDcs930l(Camera):
             name = ''
             # ignore submit/image with no name attribute
             if (html_input['type'] in ('submit', 'image') and not
-                html_input.has_attr('name')):
+                    html_input.has_attr('name')):
                 continue
 
-            if html_input == None:
+            if html_input is None:
                 continue
 
             if (not html_input.has_attr('name') and not
-                html_input.has_attr('id')):
+                    html_input.has_attr('id')):
                 continue
 
             if (not html_input.has_attr('name') and
-                html_input.has_attr('id') and
-                include_without_name):
-
+                    html_input.has_attr('id') and
+                    include_without_name):
                 name = html_input['id']
             elif html_input.has_attr('name'):
                 name = html_input['name']
@@ -265,7 +267,7 @@ class DlinkCameraDcs930l(Camera):
 
             # single element nome/value fields
             if html_input['type'] in (
-                'text', 'hidden', 'password', 'submit', 'image'):
+                    'text', 'hidden', 'password', 'submit', 'image'):
 
                 value = ''
                 if html_input.has_attr('value'):
@@ -284,7 +286,7 @@ class DlinkCameraDcs930l(Camera):
                 if name in fields.keys() and value:
                     fields[name] = value
 
-                if not name in fields.keys():
+                if name not in fields.keys():
                     fields[name] = value
 
                 continue
@@ -318,10 +320,12 @@ class DlinkCameraDcs930l(Camera):
                         selected_options[0].has_attr('value') else
                         selected_options[0]['value'])
             else:
-                value = (
-                    [option.text if not
+                value = ([
+                    option.text if not
                     option.has_attr('value') else
-                    option['value'] for option in selected_options])
+                    option['value'] for
+                    option in
+                    selected_options])
 
             fields[select['name']] = value
 

@@ -4,16 +4,13 @@ homeassistant.components.camera
 Component to interface with various cameras that can be monitored.
 """
 import urllib3
-import mimetypes
 import requests
 import logging
 import time
 import math
 import datetime
-from datetime import timedelta
 import re
 import os
-from homeassistant import bootstrap
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 from homeassistant.const import (
@@ -21,9 +18,7 @@ from homeassistant.const import (
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
     SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
     EVENT_FTP_FILE_RECEIVED,
-    EVENT_COMPONENT_LOADED,
     STATE_MOTION_DETECTED,
     STATE_STREAMING,
     STATE_ARMED,
@@ -34,8 +29,7 @@ from homeassistant.const import (
     ATTR_SERVICE,
     ATTR_DISCOVERED,
     EVENT_STATE_CHANGED,
-    ATTR_DOMAIN,
-    EVENT_SERVICE_EXECUTED
+    ATTR_DOMAIN
     )
 
 
@@ -60,6 +54,7 @@ EVENT_GAP_THRESHOLD = 15
 DISCOVERY_PLATFORMS = {}
 DISCOVER_SWITCHES = "camera.switches"
 ATTR_FRIENDLY_LOG_MESSAGE = "friendly_log_message"
+
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
@@ -113,7 +108,8 @@ def setup(hass, config):
         else:
             handler.send_response(HTTP_NOT_FOUND)
 
-    hass.http.register_path('GET',
+    hass.http.register_path(
+        'GET',
         re.compile(r'/api/camera_proxy/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _proxy_camera_image,
         require_auth=True)
@@ -133,14 +129,14 @@ def setup(hass, config):
                 camera.name, handler.address_string())
 
             hass.bus.fire(
-                "camera_stream_started", {"component": DOMAIN,
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_FRIENDLY_LOG_MESSAGE: message})
+                "camera_stream_started",
+                {"component": DOMAIN,
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_FRIENDLY_LOG_MESSAGE: message})
 
             try:
                 camera.is_streaming = True
                 camera.update_ha_state()
-
 
                 http = urllib3.PoolManager()
                 handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
@@ -155,47 +151,55 @@ def setup(hass, config):
                     headers = urllib3.util.make_headers(
                         basic_auth=camera.username + ':' + camera.password)
 
-                    req = http.request('GET', camera.still_image_url,
+                    req = http.request(
+                        'GET',
+                        camera.still_image_url,
                         headers=headers)
 
                     headers_str = ''
-                    headers_str = (headers_str + 'Content-length: ' +
+                    headers_str = (
+                        headers_str + 'Content-length: ' +
                         str(len(req.data)) + '\r\n')
                     headers_str = headers_str + 'Content-type: image/jpeg\r\n'
                     headers_str = headers_str + '\r\n'
 
-                    handler.request.sendall(bytes(
-                        headers_str, 'utf-8') + req.data + bytes('\r\n',
-                        'utf-8'))
+                    handler.request.sendall(
+                        bytes(headers_str, 'utf-8') +
+                        req.data +
+                        bytes('\r\n', 'utf-8'))
 
-                    handler.request.sendall(bytes('--jpgboundary\r\n',
-                        'utf-8'))
+                    handler.request.sendall(
+                        bytes('--jpgboundary\r\n', 'utf-8'))
 
-            # This needs to be a catchall exception as we need to stop streaming
-            # on any failure otherwise this will keep running forever
+            # This needs to be a catchall exception as we need to stop
+            # streaming on any failure otherwise this will keep running
+            # forever
             # pylint: disable=broad-except
             except Exception:
                 camera.is_streaming = False
                 camera.update_ha_state()
 
-            message = "{0} stopped streaming to {1}".format(camera.name,
+            message = "{0} stopped streaming to {1}".format(
+                camera.name,
                 handler.address_string())
 
             hass.bus.fire(
-                "camera_stream_stopped", {"component": DOMAIN,
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_FRIENDLY_LOG_MESSAGE: message})
+                "camera_stream_stopped",
+                {"component": DOMAIN,
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_FRIENDLY_LOG_MESSAGE: message})
 
         else:
             handler.send_response(HTTP_NOT_FOUND)
 
         camera.is_streaming = False
 
-    hass.http.register_path('GET',
-        re.compile(r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+    hass.http.register_path(
+        'GET',
+        re.compile(
+            r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _proxy_camera_mjpeg_stream,
         require_auth=True)
-
 
     def _get_camera_events(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
@@ -219,11 +223,11 @@ def setup(hass, config):
             handler.send_response(HTTP_NOT_FOUND)
             handler.end_headers()
 
-    hass.http.register_path('GET',
+    hass.http.register_path(
+        'GET',
         re.compile(r'/api/camera_events/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _get_camera_events,
         require_auth=True)
-
 
     def _saved_camera_image(handler, path_match, data):
         """ Get a saved camera image via the HA server. """
@@ -247,11 +251,11 @@ def setup(hass, config):
         else:
             handler.send_response(HTTP_NOT_FOUND)
 
-    hass.http.register_path('GET',
+    hass.http.register_path(
+        'GET',
         re.compile(r'/api/saved_camera_image/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _saved_camera_image,
         require_auth=True)
-
 
     def handle_motion_detection_service(service):
         """ Handles calls to the camera services. """
@@ -269,11 +273,13 @@ def setup(hass, config):
 
             camera.update_ha_state(True)
 
-    hass.services.register(DOMAIN,
+    hass.services.register(
+        DOMAIN,
         'camera_service',
         handle_motion_detection_service)
 
     return True
+
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
@@ -313,7 +319,8 @@ class Camera(Entity):
 
         self._images_path = device_info.get('images_path', None)
 
-        if self._images_path != None and not os.path.isdir(self._images_path):
+        if (self._images_path is not None and not
+                os.path.isdir(self._images_path)):
             os.makedirs(self._images_path)
 
         self._event_images_path = None
@@ -330,8 +337,6 @@ class Camera(Entity):
         self.hass.bus.listen(
             EVENT_STATE_CHANGED,
             self.process_child_entity_change)
-
-
 
     def process_child_entity_change(self, event):
         """ This handles reacting to state changes in the "generic" button
@@ -351,7 +356,7 @@ class Camera(Entity):
 
             # this is the first callback we get when the entity is registered
             old_state_val = None
-            if not entity_action in self._child_entities.keys():
+            if entity_action not in self._child_entities.keys():
                 self._child_entities[entity_action] = new_state
                 self._action_entities[entity_action] = new_state.entity_id
                 old_state_val = self._child_entities[entity_action].state
@@ -362,18 +367,17 @@ class Camera(Entity):
                 old_state_val = self._child_entities[entity_action].state
                 self._child_entities[entity_action] = new_state
 
-
             if self._child_entities[entity_action].state != old_state_val:
                 if entity_action == SWITCH_ACTION_MOTION:
                     if (new_state.state == STATE_ON and not
-                        self.is_motion_detection_enabled):
+                            self.is_motion_detection_enabled):
 
                         self.enable_motion_detection()
                         self._logger.info(
                             'Enabling motion detection on {0}'.format(
                                 self.entity_id))
                     elif (new_state.state == STATE_OFF and
-                        self.is_motion_detection_enabled):
+                            self.is_motion_detection_enabled):
                         self.disable_motion_detection()
                         self._logger.info(
                             'Disabling motion detection on {0}'.format(
@@ -381,10 +385,10 @@ class Camera(Entity):
                     else:
                         self._logger.info(
                             'Ignoring state change {0} is {1} is already {2}'
-                            .format(self.entity_id, entity_action,
+                            .format(
+                                self.entity_id,
+                                entity_action,
                                 self.is_motion_detection_enabled))
-
-
 
     def refesh_all_settings_from_device(self):
         """ A stub methos that should be overridden in derived classes to
@@ -410,11 +414,12 @@ class Camera(Entity):
     @property
     def state(self):
         """ Returns the state of the entity. """
-        seconds_since_last_motion = (datetime.datetime.now() -
+        seconds_since_last_motion = (
+            datetime.datetime.now() -
             self._last_motion_detected).total_seconds()
 
         if (self._is_detecting_motion and
-            seconds_since_last_motion > EVENT_GAP_THRESHOLD):
+                seconds_since_last_motion > EVENT_GAP_THRESHOLD):
             self._is_detecting_motion = False
 
         if self._is_detecting_motion:
@@ -426,7 +431,6 @@ class Camera(Entity):
         else:
             return STATE_IDLE
 
-
     @property
     def state_attributes(self):
         """ Returns optional state attributes. """
@@ -434,8 +438,10 @@ class Camera(Entity):
         attr['model_name'] = self.device_info.get('model', 'generic')
         attr['brand'] = self.device_info.get('brand', 'generic')
         attr['still_image_url'] = '/api/camera_proxy/' + self.entity_id
-        attr[ATTR_ENTITY_PICTURE] = ('/api/camera_proxy/' +
-            self.entity_id + '?time=' + str(time.time()))
+        attr[ATTR_ENTITY_PICTURE] = (
+            '/api/camera_proxy/' +
+            self.entity_id + '?time=' +
+            str(time.time()))
         attr['stream_url'] = '/api/camera_proxy_stream/' + self.entity_id
         motion_time = self._last_motion_detected.strftime('%Y-%m-%d %H-%M-%S')
         attr['last_motion_time'] = motion_time
@@ -473,17 +479,15 @@ class Camera(Entity):
         if not self.is_motion_detection_supported:
             return False
 
-
     def process_file_event(self, event):
         """ Event handler for a new FTP upload event from the FTP component.
             It checks the new file's path against the configured FTP directory
             to determine whether or not to process the file """
-        if self.ftp_path != None:
+        if self.ftp_path is not None:
             if event.data.get('file_name').startswith(self.ftp_path):
                 self._is_detecting_motion = True
                 self._last_motion_detected = datetime.datetime.now()
                 self.process_new_file(event.data.get('file_name'))
-
 
     def process_new_file(self, path):
         """ Used to process a new motion capture image, it finds the most
@@ -494,13 +498,14 @@ class Camera(Entity):
         if not os.path.isfile(path):
             return False
 
-        if self.event_images_path == None:
+        if self.event_images_path is None:
             return False
 
         if not os.path.isdir(self.event_images_path):
             os.makedirs(self.event_images_path)
 
-        all_subdirs = [d for d in os.listdir(self.event_images_path)
+        all_subdirs = [
+            d for d in os.listdir(self.event_images_path)
             if (os.path.isdir(os.path.join(self.event_images_path, d)) and
                 d.startswith('event-'))]
 
@@ -510,13 +515,14 @@ class Camera(Entity):
                 all_subdirs,
                 key=lambda x: os.path.getctime(
                     os.path.join(self.event_images_path, x)),
-                    reverse=True)[:1][0]
+                reverse=True)[:1][0]
 
             event_dir = os.path.join(self.event_images_path, event_dir)
             file_dt = datetime.datetime.fromtimestamp(os.path.getctime(path))
 
             # Get the newest file in the dir
-            all_subfiles = [f for f in os.listdir(event_dir)
+            all_subfiles = [
+                f for f in os.listdir(event_dir)
                 if (os.path.isfile(os.path.join(event_dir, f)) and
                     f.startswith('event_image-'))]
 
@@ -531,30 +537,33 @@ class Camera(Entity):
                     os.path.getctime(newest_image_path))
 
                 if ((file_dt - newest_file_dt)
-                    .total_seconds() > EVENT_GAP_THRESHOLD):
+                        .total_seconds() > EVENT_GAP_THRESHOLD):
                     event_dir = None
             else:
                 event_dir_dt = datetime.datetime.fromtimestamp(
                     os.path.getctime(event_dir))
 
                 if ((file_dt - event_dir_dt)
-                    .total_seconds() > EVENT_GAP_THRESHOLD):
+                        .total_seconds() > EVENT_GAP_THRESHOLD):
                     event_dir = None
 
-
-        if event_dir == None:
+        if event_dir is None:
             new_event_dir_name = 'event-' + datetime.datetime.fromtimestamp(
                 os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S')
 
-            event_dir = os.path.join(self.event_images_path, new_event_dir_name)
+            event_dir = os.path.join(
+                self.event_images_path,
+                new_event_dir_name)
+
             if not os.path.isdir(event_dir):
                 os.makedirs(event_dir)
 
             self.hass.bus.fire(
-                EVENT_CAMERA_MOTION_DETECTED, {"component": DOMAIN,
-                ATTR_ENTITY_ID: self.entity_id,
-                'event_images_path': event_dir,
-                'event_images_dir': new_event_dir_name})
+                EVENT_CAMERA_MOTION_DETECTED,
+                {"component": DOMAIN,
+                    ATTR_ENTITY_ID: self.entity_id,
+                    'event_images_path': event_dir,
+                    'event_images_dir': new_event_dir_name})
 
         new_file_name = 'event_image-' + datetime.datetime.fromtimestamp(
             os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S-%f') + '.jpg'
@@ -567,7 +576,6 @@ class Camera(Entity):
 
         return True
 
-
     # pylint: disable=too-many-locals
     def get_all_events(self, start=0, length=10):
         """ Looks on the file system for saved camera events such as motion
@@ -577,7 +585,8 @@ class Camera(Entity):
         if not os.path.isdir(self.event_images_path):
             return events_data
 
-        all_subdirs = [d for d in os.listdir(self.event_images_path)
+        all_subdirs = [
+            d for d in os.listdir(self.event_images_path)
             if (os.path.isdir(os.path.join(self.event_images_path, d)) and
                 d.startswith('event-'))]
 
@@ -606,9 +615,10 @@ class Camera(Entity):
                 os.path.getctime(
                     event_data['fullPath'])).strftime('%Y-%m-%d %H:%M:%S')
 
-            all_subfiles = [f for f in os.listdir(event_data['fullPath'])
+            all_subfiles = [
+                f for f in os.listdir(event_data['fullPath'])
                 if (os.path.isfile(os.path.join(event_data['fullPath'], f)) and
-                f.startswith('event_image-'))]
+                    f.startswith('event_image-'))]
 
             all_subfiles = sorted(
                 all_subfiles,
@@ -624,7 +634,8 @@ class Camera(Entity):
                 image_data = {}
                 image_data['fileName'] = image_file
                 image_data['path'] = event_dir + os.path.sep + image_file
-                image_data['url'] = ('api/saved_camera_image/' +
+                image_data['url'] = (
+                    'api/saved_camera_image/' +
                     self.entity_id +
                     '?image_path=' +
                     image_data['path'])
@@ -644,13 +655,13 @@ class Camera(Entity):
 
         return events_data
 
-
     @property
     def images_path(self):
         """ The base path for the location of images such as snapshots,
             recordings and motion capture events """
-        if self._images_path == None:
-            default_images_path = os.path.join(self.hass.config.config_dir,
+        if self._images_path is None:
+            default_images_path = os.path.join(
+                self.hass.config.config_dir,
                 'camera_data')
 
             default_images_path = os.path.join(
@@ -667,10 +678,10 @@ class Camera(Entity):
     @property
     def event_images_path(self):
         """ The base path for the location of motion capture images """
-        if self.images_path == None:
+        if self.images_path is None:
             return None
 
-        if self._event_images_path == None:
+        if self._event_images_path is None:
             self._event_images_path = os.path.join(
                 self.images_path, 'events')
 
@@ -680,9 +691,9 @@ class Camera(Entity):
     def ftp_path(self):
         """ Gets the path on the local filesystem where uploaded motion captured
             images from this device are stored """
-        if self._ftp_path == None:
+        if self._ftp_path is None:
             ftp_comp = get_component('ftp')
-            if ftp_comp != None and ftp_comp.FTP_SERVER != None:
+            if ftp_comp is not None and ftp_comp.FTP_SERVER is not None:
                 self._ftp_path = os.path.join(
                     ftp_comp.FTP_SERVER.ftp_root_path,
                     self.entity_id)
@@ -733,4 +744,3 @@ class Camera(Entity):
         attr['is_ftp_upload_enabled'] = self.is_ftp_upload_enabled
         attr['is_ftp_configured'] = self.is_ftp_configured
         return attr
-

@@ -7,10 +7,9 @@ import logging
 from datetime import timedelta
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
 
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group, discovery, wink, isy994
 import homeassistant.components.camera as camera
 
