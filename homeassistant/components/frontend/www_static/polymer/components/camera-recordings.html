@@ -51,7 +51,7 @@
 
 			<div horizontal layout class="list-controls">
 				<div>
-					<paper-button>
+					<paper-button on-click='{{loadNewer}}'>
 						<paper-icon-button icon="chevron-left"></paper-icon-button>
 						Newer
 					</paper-button>
@@ -70,8 +70,15 @@
 		</div>
 
 		<div hidden?="{{hasRecordings}}" class="message-page">
-			<p class="message-page">
+			<p class="message-page" hidden?="{{ displayedMessage != 0}}">
 				There are no recordings of this type available.
+			</p>
+			<p class="message-page" hidden?="{{ displayedMessage != 2}}">
+				The configured camera does not support motion detection.  It may just be that there is currently no Home Assistant
+				component for this specific model.
+				<br /><br />
+				If you are interested in adding this feature head to the Home Assistant forums
+				to get started.
 			</p>
 		</div>
 	</div>
@@ -89,6 +96,8 @@
     hasTabs: true,
     offset: 0,
     resultLength: 6,
+    stateObj: null,
+    displayedMessage: 0,
 
     selectCameraImageEvent: function(evt, detail, target) {
     	this.selectedCameraImageEvent = this.cameraImageEvents[evt.target.attributes['data-item'].value];
@@ -107,7 +116,6 @@
     		oldEntityId = oldVal.entityId;
     	}
     	if(newVal) {
-    		console.log(newVal.entityId, oldEntityId);
     		if(this.recordingType == 'motion') {
 		    	this.offset = 0;
 		    	this.resultLength = 6;
@@ -120,6 +128,7 @@
 	    else {
 	    	this.selectedCameraImageEvent = null;
 	    }
+	    this.displayedMessage = 0;
     },
 
     selectedCameraImageEventChanged: function(oldVal, newVal) {
@@ -142,16 +151,40 @@
     	else {
     		this.hasRecordings = false;
     	}
+    	if(!this.hasRecordings) {
+    		if(this.recordingType == 'motion') {
+	    		if(this.stateObj && this.stateObj.attributes['is_motion_detection_supported']) {
+	    			this.displayedMessage = 0;
+	    		}
+	    		else {
+	    			this.displayedMessage = 2;
+	    		}
+	    	}
+	    	else {
+	    		this.displayedMessage = 0;
+	    	}
+    	}
+
     },
 
     loadRecordings: function() {
     	window.hass.callApi('GET', 'camera_events/' + this.stateObj.entityId + '?offset=' + this.offset + '&length=' + this.resultLength).then(function(data) {
 	        this.cameraImageEvents = data;
+	    }.bind(this), function() {
+	    	this.cameraImageEvents = [];
 	    }.bind(this));
     },
 
     loadOlder: function(evt) {
     	this.offset += this.resultLength;
+    	this.loadRecordings();
+    },
+
+    loadNewer: function(ect) {
+    	this.offset -= this.resultLength;
+    	if(this.offset < 0) {
+    		this.offset = 0;
+    	}
     	this.loadRecordings();
     }
 

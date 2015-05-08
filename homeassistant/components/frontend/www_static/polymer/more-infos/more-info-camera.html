@@ -5,7 +5,6 @@
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../components/entity-logbook.html">
 <link rel="import" href="../components/camera-events.html">
-<!--<link rel="import" href="../bower_components/core-icons/image-icons.html">-->
 
 <polymer-element name="more-info-camera" attributes="stateObj dialogOpen">
 <template>
@@ -28,6 +27,11 @@
         max-width: calc(100%);
         height: initial
       }
+
+      :host .camera-page {
+        max-width: calc(100%);
+        max-height: calc(100%);
+      }
     }
 
     @media (max-width: 620px) {
@@ -38,15 +42,17 @@
     }
 
     @media (max-height: 780px) {
-      :host .camera-container {
+      /*:host .camera-container {
         height: 550px;
         max-width: calc(100%);
-      }
+      }*/
     }
 
     :host .camera-page {
-      max-width: calc(100%);
-      max-height: calc(100%);
+      /*max-width: calc(100%);
+      max-height: calc(100%);*/
+      width:640px;
+      height:520px;
     }
 
     :host paper-tabs.camera-tabs::shadow #selectionBar {
@@ -259,17 +265,17 @@
         this.configureFTP = true;
         return;
       }
+      else if(!this.stateObj.attributes['child_entities']['motion_detection']) {
+        console.log('Could not find motion detection switch');
+        return;
+      }
+
+      var motionDetectionSwitch = this.stateObj.attributes['child_entities']['motion_detection'];
 
       if(this.stateObj.attributes['is_motion_detection_enabled'] === true) {
-        serviceActions.callService("camera", "turn_off", {
-          entity_id: this.stateObj.entityId,
-          feature: 'motion_detection'
-        });
+        serviceActions.callTurnOff(motionDetectionSwitch);
       } else {
-        serviceActions.callService("camera", "turn_on", {
-          entity_id: this.stateObj.entityId,
-          feature: 'motion_detection'
-        });
+        serviceActions.callTurnOn(motionDetectionSwitch);
       }
     },
 

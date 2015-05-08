@@ -17,13 +17,19 @@
 	    }
 
 	    :host .camera-events {
-	    	width: calc(100%);
+	    	/*width: calc(100%);*/
+	    	width:640px;
+      		height:520px;
 	    }
 
-	    @media (max-width: 620px) {
-	      :host .camera-image {
-	        width: calc(100%);
-	      }
+	    @media (max-width: 780px) {
+			:host .camera-image {
+				width: calc(100%);
+			}
+	      	:host .camera-events {
+		    	width: calc(100%);
+		    	height: calc(100%);
+	    	}
 	    }
 	</style>
 

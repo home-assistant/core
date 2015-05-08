@@ -11,62 +11,76 @@ from bs4 import BeautifulSoup
 _LOGGER = logging.getLogger(__name__)
 
 
+
+
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
-    try:
-        if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['base_url', CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-            return None
+    if not validate_config({DOMAIN: config},
+                       {DOMAIN: ['base_url', CONF_USERNAME, CONF_PASSWORD]},
+                       _LOGGER):
+        return None
 
-        camera = DlinkCamera(hass, config)
-        cameras = [camera]
-        # cameras = cameras + camera.get_switches()
-        # get_component('switch').add_entities(camera.get_switches())
-        # print(get_component('switch.generic_switch'))
-        # get_component('switch.generic_switch').add_entities(camera.get_switches())
+    model_map = {
+        'dcs-930l' : DlinkCameraDcs930l
+    }
 
-        add_devices_callback(cameras)
+    family_map = {
+        'dcs' : DlinkCameraDcs930l
+    }
+
+    # To load up the camera component we first check if there is component
+    # for the specific model if not we then check the specified family,
+    # if that also fails we just load the generic comonent for this brand.
+
+    camera_class = DlinkCamera
+    model = config.get('model', False)
+    if model:
+        model = model.lower()
+        camera_class = model_map.get(model, DlinkCamera)
+
+    family = config.get('family', False)
+    if family and camera_class == DlinkCamera:
+        family = family.lower()
+        camera_class = family_map.get(family, DlinkCamera)
 
 
-    except Exception as inst:
-        _LOGGER.error("Could not find cameras: %s", inst)
-        return False
+    camera = camera_class(hass, config)
+    cameras = [camera]
 
-def get_camera(hass, device_info):
-    return DlinkCamera(hass, device_info)
+    add_devices_callback(cameras)
 
-
-# class DlinkCamera(Camera):
-#     def __init__(self, hass, device_info):
-#         super().__init__(hass, device_info)
-
-#     @property
-#     def still_image_url(self):
-#         """ This should be implemented by different camera models. """
-#         return self.BASE_URL + 'image.jpg'
 
 class DlinkCamera(Camera):
     def __init__(self, hass, device_info):
+        """ Initialise the generic D-Link camera class. """
+        super().__init__(hass, device_info)
+        self._still_image_url = device_info.get('still_image_url', 'image.jpg')
+
+
+class DlinkCameraDcs930l(Camera):
+    def __init__(self, hass, device_info):
+        """ Initialise the D-Link DCS-930L camera component. """
         super().__init__(hass, device_info)
         self._is_motion_detection_supported = True
         self._is_ftp_upload_supported = True
+        self._still_image_url = device_info.get('still_image_url', 'image.jpg')
 
         # Holds the form data so we can post updates back to the web UI
         self._web_ui_form_data = {}
         self.get_all_settings()
 
-    @property
-    def still_image_url(self):
-        """ This should be implemented by different camera models. """
-        return self.BASE_URL + 'image.jpg'
 
     def refesh_all_settings_from_device(self):
+        """ Overrides the base class method that retrieved all setting
+            from the device. """
         self.get_all_settings()
-        self.update_switch_states()
+
 
     def get_all_settings(self):
-        res = requests.get(self.BASE_URL + 'motion.htm', auth=(self.username, self.password))
+        """ Pull all the settings from the camera, there is no API so it's dirty
+        screen scraping time. """
+        res = requests.get(self.base_url + 'motion.htm', auth=(self.username, self.password))
         motion_settings = BeautifulSoup(res.content)
 
 
@@ -77,7 +91,7 @@ class DlinkCamera(Camera):
 
         # This is pretty lame, for some reason the motion detection area is returned like this
         # instead on in the same way as the other or even JSON
-        res = requests.get(self.BASE_URL + 'motion.cgi', auth=(self.username, self.password))
+        res = requests.get(self.base_url + 'motion.cgi', auth=(self.username, self.password))
         lines = res.text.splitlines(True)
 
         for line in lines:
@@ -86,7 +100,7 @@ class DlinkCamera(Camera):
             if len(keypair) > 1:
                 self._web_ui_form_data['motion'][keypair[0]] = keypair[1]
 
-        res = requests.get(self.BASE_URL + 'upload.htm', auth=(self.username, self.password))
+        res = requests.get(self.base_url + 'upload.htm', auth=(self.username, self.password))
         upload_settings = BeautifulSoup(res.content)
 
         u_settings = self.extract_form_fields(upload_settings)
@@ -104,13 +118,9 @@ class DlinkCamera(Camera):
         if ftp_comp != None and ftp_comp.ftp_server != None:
             self._ftp_path = os.path.join(ftp_comp.ftp_server.ftp_root_path, u_settings.get('FTPDirectoryPath', self.entity_id))
 
-        #self.refesh_all_settings_from_device()
-
-        # print(self._is_ftp_configured)
-        # print(self.get_ha_lan_address())
 
     def enable_motion_detection(self):
-
+        """ Enable the motion detection settings for the camera. """
         can_enable = super().enable_motion_detection()
         if can_enable == False:
             return can_enable
@@ -121,7 +131,7 @@ class DlinkCamera(Camera):
         # so we default them to all set if none are selected
         if self._web_ui_form_data['motion']['MotionDetectionBlockSet'] == '0000000000000000000000000':
             self._web_ui_form_data['motion']['MotionDetectionBlockSet'] = '1111111111111111111111111'
-        r = requests.post(self.BASE_URL + 'setSystemMotion', data=self._web_ui_form_data['motion'], auth=(self.username, self.password))
+        requests.post(self.base_url + 'setSystemMotion', data=self._web_ui_form_data['motion'], auth=(self.username, self.password))
 
         # self._is_motion_detection_enabled = False
         self.refesh_all_settings_from_device()
@@ -130,12 +140,15 @@ class DlinkCamera(Camera):
         return True
 
     def disable_motion_detection(self):
+        """ Disable the motion detection settings for the camera. """
         can_enable = super().disable_motion_detection()
         if can_enable == False:
             return can_enable
 
         self._web_ui_form_data['motion']['MotionDetectionEnable'] = 0
-        r = requests.post(self.BASE_URL + 'setSystemMotion', data=self._web_ui_form_data['motion'], auth=(self.username, self.password))
+        requests.post(self.base_url + 'setSystemMotion',
+                                        data=self._web_ui_form_data['motion'],
+                                        auth=(self.username, self.password))
 
         self.refesh_all_settings_from_device()
         self.update_ha_state(True)
@@ -143,6 +156,9 @@ class DlinkCamera(Camera):
         return True
 
     def set_ftp_details(self):
+        """ Sets the FTP details used by the camera to upload motion
+            detected images.  The details will be set to the appropriate
+            values from the loaded ftp component """
         can_enable = super().set_ftp_details()
         if can_enable == False:
             return can_enable
@@ -150,7 +166,6 @@ class DlinkCamera(Camera):
         ftp_server = get_component('ftp').ftp_server
 
         ftp_path = self.ftp_path
-        #os.path.join(ftp_server.ftp_root_path, self.entity_id)
 
         if not os.path.isdir(ftp_path):
             os.makedirs(ftp_path)
@@ -165,7 +180,7 @@ class DlinkCamera(Camera):
         self._web_ui_form_data['upload']['FTPScheduleEnable'] = '1'
         self._web_ui_form_data['upload']['FTPScheduleMode'] = '2'
 
-        r = requests.post(self.BASE_URL + 'setSystemFTP', data=self._web_ui_form_data['upload'], auth=(self.username, self.password))
+        requests.post(self.base_url + 'setSystemFTP', data=self._web_ui_form_data['upload'], auth=(self.username, self.password))
 
         self.refesh_all_settings_from_device()
         self.update_ha_state(True)

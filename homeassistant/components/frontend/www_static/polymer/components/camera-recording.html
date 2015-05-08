@@ -14,9 +14,6 @@
 			display:inline;
 		}
 
-		:host .camera-event {
-			width: calc(100%%);
-		}
 
 		:host .playback-controls {
 			text-align:center;
@@ -28,22 +25,45 @@
 		}
 
 		:host .strip-container {
-			width: calc(99%);
+			width:630px;
 		}
 
-		@media (max-width: 720px) {
-	      :host .camera-event-image {
-	        max-width: calc(100%);
-	      }
+        :host .camera-recording-container {
+            width:640px;
+            height:520px;
+        }
+
+        :host .camera-image-holder {
+            text-align: center;
+        }
+
+        :host .camera-event-image {
+            height:360px;
+
+        }
+
+		@media (max-width: 780px) {
+            :host .camera-event-image {
+                width: calc(100%);
+                height: initial;
+            }
+            :host .camera-recording-container {
+                width: calc(100%);
+                height: calc(100%);
+            }
+            :host .strip-container {
+                width: calc(100% - 10px);
+            }
+            :host .camera-thumb-list-item {
+                min-width: calc(20%);
+                max-width: calc(20%);
+                display:inline;
+            }
 	    }
 
-	    @media (max-width: 620px) {
-	      :host .camera-event-image {
-	        max-width: calc(100%);
-	      }
-	    }
+
 	</style>
-	<div class='camera-image-event'>
+	<div class='camera-recording-container' id='container'>
 		<div center horizontal layout>
 			<div>
 				<!--<core-tooltip label="Back to Events" position="right">
@@ -63,7 +83,9 @@
 		</div>
 		<!--<div horizontal layout center>-->
 		<div class='camera-event'>
-			<img class='camera-event-image' src="{{currentImage.url}}" />
+            <div class="camera-image-holder">
+                <img class='camera-event-image' src="{{currentImage.url}}" />
+            </div>
 
 			<div horizontal layout>
 				<div>
@@ -89,7 +111,7 @@
 						<template repeat="{{cameraImage, cameraImageIndex in displayedImages}}">
 					      <div flex class='camera-thumb-list-item'>
 					      	<img class='camera-event-thumb {{cameraImage.classname}}' data-strip-index='{{cameraImage.position}}' src="{{cameraImage.url}}" on-click='{{selectFrame}}' />
-					      	{{cameraImage.position}}
+					      	<!--{{cameraImage.position}}-->
 					      </div>
 						</template>
 					</div>
@@ -120,30 +142,21 @@
     currentGroupIndex: null,
 
 
-
     cameraImageEventChanged: function(oldval, newval) {
     	if(newval && newval.images) {
     		this.playing = false;
     		this.groupedImages = [];
     		this.currentIndex = 0;
 
+            if( window.innerWidth <= 780) {
+                this.imagesInStrip = 5;
+            }
+            else if( window.innerWidth > 780) {
+                this.imagesInStrip = 10;
+            }
 
-    		// This groups the images together for display in the strip of frames below the main image
-    		var count = 0;
-    		var currentGroup = 0;
-    		this.groupedImages[currentGroup] = [];
-    		for(var i = 0; i < this.cameraImageEvent.images.length; i++) {
-    			if(count == this.imagesInStrip) {
-    				count = 0;
-    				currentGroup++;
-    				this.groupedImages[currentGroup] = [];
-    			}
-    			this.cameraImageEvent.images[i].position = i;
-    			this.groupedImages[currentGroup][count] = this.cameraImageEvent.images[i];
+            this.groupFrames();
 
-    			count++;
-    		}
-    		this.currentGroupIndex = 0;
     	}
     	else {
     		this.playing = false;
@@ -152,6 +165,25 @@
     		this.currentGroupIndex = null;
     		this.groupedImages = [];
     	}
+    },
+
+    groupFrames: function() {
+        // This groups the images together for display in the strip of frames below the main image
+        var count = 0;
+        var currentGroup = 0;
+        this.groupedImages[currentGroup] = [];
+        for(var i = 0; i < this.cameraImageEvent.images.length; i++) {
+            if(count == this.imagesInStrip) {
+                count = 0;
+                currentGroup++;
+                this.groupedImages[currentGroup] = [];
+            }
+            this.cameraImageEvent.images[i].position = i;
+            this.groupedImages[currentGroup][count] = this.cameraImageEvent.images[i];
+
+            count++;
+        }
+        this.currentGroupIndex = 0;
     },
 
     closeCameraEvent: function(e) {
