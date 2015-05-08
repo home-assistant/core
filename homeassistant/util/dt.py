@@ -10,6 +10,8 @@ import datetime as dt
 import pytz
 
 DATE_STR_FORMAT = "%H:%M:%S %d-%m-%Y"
+DATE_SHORT_STR_FORMAT = "%Y-%m-%d"
+TIME_SHORT_STR_FORMAT = "%H:%M"
 UTC = DEFAULT_TIME_ZONE = pytz.utc
 
 
@@ -77,6 +79,22 @@ def datetime_to_str(dattim):
     @rtype : str
     """
     return dattim.strftime(DATE_STR_FORMAT)
+
+
+def datetime_to_short_time_str(dattim):
+    """ Converts datetime to a string format as short time.
+
+    @rtype : str
+    """
+    return dattim.strftime(TIME_SHORT_STR_FORMAT)
+
+
+def datetime_to_short_date_str(dattim):
+    """ Converts datetime to a string format as short date.
+
+    @rtype : str
+    """
+    return dattim.strftime(DATE_SHORT_STR_FORMAT)
 
 
 def str_to_datetime(dt_str):
