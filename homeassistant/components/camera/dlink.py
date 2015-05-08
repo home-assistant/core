@@ -1,3 +1,7 @@
+"""
+Support for D-Link IP Cameras.
+"""
+
 import logging
 import requests
 import os
@@ -6,14 +10,13 @@ from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.loader import get_component
+# pylint: disable=import-error
 from bs4 import BeautifulSoup
 
 _LOGGER = logging.getLogger(__name__)
 
 
-
-
-
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
     if not validate_config({DOMAIN: config},
@@ -51,16 +54,24 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(cameras)
 
 
+# pylint: disable=too-many-public-methods
 class DlinkCamera(Camera):
+    """ A generic D-Link camera class """
     def __init__(self, hass, device_info):
         """ Initialise the generic D-Link camera class. """
+        # pylint: disable=missing-super-argument
         super().__init__(hass, device_info)
         self._still_image_url = device_info.get('still_image_url', 'image.jpg')
 
 
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-instance-attributes
 class DlinkCameraDcs930l(Camera):
+    """ A class designed for the D-Link DCS-930L, it may also work with other
+    related devices """
     def __init__(self, hass, device_info):
         """ Initialise the D-Link DCS-930L camera component. """
+        # pylint: disable=missing-super-argument
         super().__init__(hass, device_info)
         self._is_motion_detection_supported = True
         self._is_ftp_upload_supported = True
@@ -137,6 +148,7 @@ class DlinkCameraDcs930l(Camera):
 
     def enable_motion_detection(self):
         """ Enable the motion detection settings for the camera. """
+        # pylint: disable=missing-super-argument
         can_enable = super().enable_motion_detection()
         if can_enable == False:
             return can_enable
@@ -162,6 +174,7 @@ class DlinkCameraDcs930l(Camera):
 
     def disable_motion_detection(self):
         """ Disable the motion detection settings for the camera. """
+        # pylint: disable=missing-super-argument
         can_enable = super().disable_motion_detection()
         if can_enable == False:
             return can_enable
@@ -180,6 +193,7 @@ class DlinkCameraDcs930l(Camera):
         """ Sets the FTP details used by the camera to upload motion
             detected images.  The details will be set to the appropriate
             values from the loaded ftp component """
+        # pylint: disable=missing-super-argument
         can_enable = super().set_ftp_details()
         if can_enable == False:
             return can_enable
@@ -220,6 +234,8 @@ class DlinkCameraDcs930l(Camera):
 
 
     # From https://gist.github.com/simonw/104413
+    # pylint: disable=too-many-branches
+    # pylint: disable=no-self-use
     def extract_form_fields(self, soup, include_without_name=False):
         "Turn a BeautifulSoup form in to a dict of fields and default values"
         fields = {}

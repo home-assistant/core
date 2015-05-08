@@ -80,7 +80,6 @@ import os
 import random
 import string
 import datetime
-from datetime import timedelta
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
@@ -107,7 +106,7 @@ CONF_DEVELOPMENT = "development"
 
 DATA_API_PASSWORD = 'api_password'
 
-SESSION_TIMEOUT_SECONDS=3600
+SESSION_TIMEOUT_SECONDS = 3600
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +154,6 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     allow_reuse_address = True
     daemon_threads = True
-
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
@@ -215,7 +213,8 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.check_expired_sessions()
 
         if not session_lock.acquire():
-            _LOGGER.error("Could not set session, list is locked by another thread {0}".format(key))
+            _LOGGER.error("Could not set session, \
+                list is locked by another thread {0}".format(key))
         try:
             self._sessions[key] = session
         finally:
@@ -281,7 +280,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if not api_password and self._session is not None:
             api_password = self._session.cookie_values.get('api_password')
 
-
         if '_METHOD' in data:
             method = data.pop('_METHOD')
 
@@ -323,8 +321,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 if self._session is None:
                     self.set_session(api_password)
 
-
-                # self.wfile.write(bytes(self.cookie.output() + '\r\n', 'utf-8'))
                 handle_request_method(self, path_match, data)
 
         elif path_matched_but_not_method:
@@ -368,7 +364,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header('Location', location)
 
         if self._session is not None:
-            self.send_header('Set-Cookie', 'sessionId='+self.cookie['sessionId'].value)
+            self.send_header(
+                'Set-Cookie',
+                'sessionId='+self.cookie['sessionId'].value)
 
         self.end_headers()
 
@@ -437,10 +435,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def get_session(self):
         """ Get the requested session object from cookie value """
-
-        # self.server.check_expired_sessions()
-
-        self.cookie=cookies.SimpleCookie()
+        self.cookie = cookies.SimpleCookie()
 
         if self.headers.get('Cookie', None) is not None:
             self.cookie.load(self.headers.get("Cookie"))
@@ -452,7 +447,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
             return session
         else:
             return None
-
 
     def set_session(self, api_password):
         """Session management"""
@@ -467,16 +461,21 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         self._session = self.server.get_session(session_id)
 
-class ServerSession:
 
+class ServerSession:
+    """ A very simple session class """
     def __init__(self):
+        """ Set up the expiry time on creation """
         self._expiry = 0
         self.reset_expiry()
         self.cookie_values = {}
 
     def reset_expiry(self):
-        self._expiry = datetime.datetime.now() + datetime.timedelta(seconds=SESSION_TIMEOUT_SECONDS)
+        """ Resets the expiry based on current time """
+        self._expiry = datetime.datetime.now() + datetime.timedelta(
+            seconds=SESSION_TIMEOUT_SECONDS)
 
     @property
     def is_expired(self):
+        """ Return true if the session is expired based on the expiry time """
         return (self._expiry < datetime.datetime.now())

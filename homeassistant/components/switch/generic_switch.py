@@ -1,15 +1,17 @@
+"""
+A generic switch that can be created by other componenets during setup
+"""
 import logging
-from datetime import timedelta
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    ATTR_DOMAIN, ATTR_ENTITY_ID, EVENT_STATE_CHANGED)
+    STATE_ON, STATE_OFF,
+    ATTR_DOMAIN, EVENT_STATE_CHANGED)
 
 
-
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the GenericSwitch platform. """
     logger = logging.getLogger(__name__)
@@ -19,7 +21,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         parent_component = get_component(parent_domain)
 
         if parent_component is None:
-            logger.error('Could not find parent component {0}'.format(parent_domain))
+            logger.error(
+                'Could not find parent component {0}'.format(parent_domain))
             return
 
         parent_entity_id = discovery_info.get('entity_id', None)
@@ -33,9 +36,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 
-
+# pylint: disable=too-many-instance-attributes
 class GenericSwitch(ToggleEntity):
-    def __init__(self, hass, name, info={}, state=STATE_OFF):
+    """ A generic switch the can be created during setup of another component
+    and will watch the state of a specified variable """
+    def __init__(self, hass, name, info=None, state=STATE_OFF):
+        info = {} if info is None else info
         self._state = state
         self._name = name
         self._info = info
@@ -53,15 +59,22 @@ class GenericSwitch(ToggleEntity):
             self.process_parent_entity_change)
 
     def process_parent_entity_change(self, event):
-
+        """ Handle changes to the state of the linked parent entity """
         if not event or not event.data:
             return
         new_state = event.data['new_state']
 
         if new_state.entity_id == self._parent_entity_id:
-            watched_val = new_state.attributes.get(self._watched_parent_attribute, None)
-            msg = 'The child entity {0} is now watching the value {1} on the parent entity {2}'
-            msg.format(self.entity_id, self._watched_parent_attribute, self._parent_entity_id)
+            watched_val = new_state.attributes.get(
+                self._watched_parent_attribute,
+                None)
+            msg = 'The child entity {0} is now watching the \
+            value {1} on the parent entity {2}'
+            msg.format(
+                self.entity_id,
+                self._watched_parent_attribute,
+                self._parent_entity_id)
+
             self._logger.info(msg)
 
             if watched_val == STATE_ON or watched_val == STATE_OFF:

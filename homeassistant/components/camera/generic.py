@@ -85,15 +85,16 @@ from homeassistant.components.camera import Camera
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
-    if not validate_config({DOMAIN: config},
-                       {DOMAIN: ['base_url', CONF_USERNAME, CONF_PASSWORD]},
-                       _LOGGER):
+    if not validate_config(
+            {DOMAIN: config},
+            {DOMAIN: ['base_url', CONF_USERNAME, CONF_PASSWORD]},
+            _LOGGER):
         return None
 
     camera = Camera(hass, config)
     cameras = [camera]
 
     add_devices_callback(cameras)
-

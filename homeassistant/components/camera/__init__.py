@@ -61,7 +61,7 @@ DISCOVERY_PLATFORMS = {}
 DISCOVER_SWITCHES = "camera.switches"
 ATTR_FRIENDLY_LOG_MESSAGE = "friendly_log_message"
 
-
+# pylint: disable=too-many-branches
 def setup(hass, config):
     """ Track states and offer events for sensors. """
 
@@ -98,7 +98,7 @@ def setup(hass, config):
                       {ATTR_SERVICE: DISCOVER_SWITCHES,
                        ATTR_DISCOVERED: data})
 
-
+    # pylint: disable=unused-argument
     def _proxy_camera_image(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
         entity_id = path_match.group('entity_id')
@@ -118,7 +118,7 @@ def setup(hass, config):
         _proxy_camera_image,
         require_auth=True)
 
-
+    # pylint: disable=unused-argument
     def _proxy_camera_mjpeg_stream(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
         entity_id = path_match.group('entity_id')
@@ -173,6 +173,7 @@ def setup(hass, config):
 
             # This needs to be a catchall exception as we need to stop streaming
             # on any failure otherwise this will keep running forever
+            # pylint: disable=broad-except
             except Exception:
                 camera.is_streaming = False
                 camera.update_ha_state()
@@ -274,7 +275,8 @@ def setup(hass, config):
 
     return True
 
-
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-public-methods
 class Camera(Entity):
     """ Base class for cameras. """
 
@@ -565,6 +567,8 @@ class Camera(Entity):
 
         return True
 
+
+    # pylint: disable=too-many-locals
     def get_all_events(self, start=0, length=10):
         """ Looks on the file system for saved camera events such as motion
         detection or user initiated recordings.  The are returned in
@@ -593,7 +597,9 @@ class Camera(Entity):
             event_data = {}
             event_data['directory'] = event_dir
             event_data['name'] = event_dir
-            event_data['fullPath'] = os.path.join(self.event_images_path, event_dir)
+            event_data['fullPath'] = os.path.join(
+                self.event_images_path,
+                event_dir)
             event_data['thumbUrl'] = ''
             event_data['images'] = []
             event_data['time'] = datetime.datetime.fromtimestamp(

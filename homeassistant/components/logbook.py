@@ -31,8 +31,15 @@ GROUP_BY_MINUTES = 15
 
 def setup(hass, config):
     """ Listens for download events to download files. """
-    hass.http.register_path('GET', re.compile('/api/logbook/(?P<entity_id>[a-zA-Z\._0-9]+)'), _handle_get_entity_logbook)
-    hass.http.register_path('GET', re.compile(URL_LOGBOOK), _handle_get_logbook)
+    hass.http.register_path(
+        'GET',
+        re.compile('/api/logbook/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+        _handle_get_entity_logbook)
+
+    hass.http.register_path(
+        'GET',
+        re.compile(URL_LOGBOOK),
+        _handle_get_logbook)
 
     return True
 
@@ -45,15 +52,17 @@ def _handle_get_logbook(handler, path_match, data):
         recorder.query_events(
             QUERY_EVENTS_AFTER, (dt_util.as_utc(start_today),))))
 
+
 def _handle_get_entity_logbook(handler, path_match, data):
     """ Return logbook entries. """
-    start_today = datetime.now().date()
+    start_today = dt_util.now().replace(hour=0, minute=0, second=0)
 
     entity_id = path_match.group('entity_id')
 
     handler.write_json(humanify(
-        recorder.query_events(QUERY_EVENTS_AFTER, (start_today,)),
-        entity_id))
+        recorder.query_events(
+            QUERY_EVENTS_AFTER,
+            (dt_util.as_utc(start_today),)), entity_id))
 
 
 class Entry(object):
@@ -112,7 +121,9 @@ def humanify(events, filter_entity_id=None):
                 # This should be rafactored so that the SQL query does
                 # the filtering, possibly by adding an option entity_id
                 # field to events
-                if filter_entity_id != None and filter_entity_id != entity_id:
+                if (filter_entity_id is not None and
+                        filter_entity_id != entity_id):
+
                     continue
 
                 if entity_id.startswith('sensor.'):
@@ -139,7 +150,8 @@ def humanify(events, filter_entity_id=None):
                 # This should be rafactored so that the SQL query does
                 # the filtering, possibly by adding an option entity_id
                 # field to events
-                if filter_entity_id != None and filter_entity_id != entity_id:
+                if (filter_entity_id is not None and
+                        filter_entity_id != entity_id):
                     continue
 
                 # Do not report on new entities
