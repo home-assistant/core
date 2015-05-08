@@ -84,13 +84,10 @@ class TimeDateSensor(Entity):
     def update(self):
         """ Gets the latest data and updates the states. """
         if self.type == 'time':
-            self._state = dt_util.datetime_to_short_time_str(
-                dt_util.now(dt_util.DEFAULT_TIME_ZONE))
-        if self.type == 'date':
-            self._state = dt_util.datetime_to_short_date_str(
-                dt_util.now(dt_util.DEFAULT_TIME_ZONE))
-        if self.type == 'datetime':
-            self._state = dt_util.datetime_to_short_date_str(
-                dt_util.now(dt_util.DEFAULT_TIME_ZONE)) + ', ' + \
-                dt_util.datetime_to_short_time_str(
-                    dt_util.now(dt_util.DEFAULT_TIME_ZONE))
+            self._state = dt_util.datetime_to_short_time_str(dt_util.now())
+        elif self.type == 'date':
+            self._state = dt_util.datetime_to_short_date_str(dt_util.now())
+        elif self.type == 'datetime':
+            self._state = dt_util.datetime_to_short_date_str(dt_util.now()) + \
+                          ', ' + \
+                          dt_util.datetime_to_short_time_str(dt_util.now())
