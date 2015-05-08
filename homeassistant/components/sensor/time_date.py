@@ -38,9 +38,9 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
-    'time': ['Time'],
-    'date': ['Date'],
-    'datetime': ['Date & Time']
+    'time': 'Time',
+    'date': 'Date',
+    'datetime': 'Date & Time'
 }
 
 
@@ -66,7 +66,7 @@ class TimeDateSensor(Entity):
     """ Implements a Time and Date sensor. """
 
     def __init__(self, sensor_type):
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._name = SENSOR_TYPES[sensor_type]
         self.type = sensor_type
         self._state = None
         self.update()
