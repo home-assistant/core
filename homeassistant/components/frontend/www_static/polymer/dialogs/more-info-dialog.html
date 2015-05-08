@@ -11,7 +11,9 @@
     <div>
       <state-card-content stateObj="{{stateObj}}" style='margin-bottom: 24px;'>
       </state-card-content>
-      <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingHistoryData}}"></state-timeline>
+      <template if="{{hasHistoryComponent}}">
+        <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingHistoryData}}"></state-timeline>
+      </template>
       <more-info-content
         stateObj="{{stateObj}}"
         dialogOpen="{{dialogOpen}}"></more-info-content>

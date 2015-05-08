@@ -46,3 +46,6 @@ python-pushover>=0.2
 
 # Transmission Torrent Client
 transmissionrpc>=0.11
+
+# OpenWeatherMap Web API
+pyowm>=2.2.0

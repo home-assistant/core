@@ -11,7 +11,7 @@
     "bower_components"
   ],
   "dependencies": {
-    "webcomponentsjs": "Polymer/webcomponentsjs#~0.5.5",
+    "webcomponentsjs": "Polymer/webcomponentsjs#~0.6",
     "font-roboto": "Polymer/font-roboto#~0.5.5",
     "core-header-panel": "polymer/core-header-panel#~0.5.5",
     "core-toolbar": "polymer/core-toolbar#~0.5.5",
@@ -36,9 +36,12 @@
     "paper-slider": "polymer/paper-slider#~0.5.5",
     "paper-checkbox": "polymer/paper-checkbox#~0.5.5",
     "color-picker-element": "~0.0.2",
-    "google-apis": "GoogleWebComponents/google-apis#~0.4.2",
+    "google-apis": "GoogleWebComponents/google-apis#~0.4.4",
     "core-drawer-panel": "polymer/core-drawer-panel#~0.5.5",
     "core-scroll-header-panel": "polymer/core-scroll-header-panel#~0.5.5",
-    "moment": "~2.9.0"
+    "moment": "~2.10.2"
+  },
+  "resolutions": {
+    "webcomponentsjs": "~0.6"
   }
 }
