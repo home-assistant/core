@@ -201,7 +201,7 @@ def setup(hass, config):
         _proxy_camera_mjpeg_stream,
         require_auth=True)
 
-    def _get_camera_events(handler, path_match, data):
+    def _get_camera_recordings(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
         entity_id = path_match.group('entity_id')
 
@@ -212,8 +212,17 @@ def setup(hass, config):
         if camera:
             offset = int(data.get('offset', 0))
             length = int(data.get('length', 10))
+            rec_type = data.get('type', 'snapshot')
 
-            data = camera.get_all_events(offset, length)
+            rec_path = None
+            if rec_type == 'snapshot':
+                rec_path = camera.snapshot_images_path
+            elif rec_type == 'recording':
+                rec_path = camera.recording_images_path
+            elif rec_type == 'motion':
+                rec_path = camera.event_images_path
+
+            data = camera.get_all_recordings(rec_path, offset, length)
             if len(data) == 0:
                 handler.send_response(HTTP_NOT_FOUND)
                 handler.end_headers()
@@ -225,8 +234,8 @@ def setup(hass, config):
 
     hass.http.register_path(
         'GET',
-        re.compile(r'/api/camera_events/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-        _get_camera_events,
+        re.compile(r'/api/camera_recordings/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+        _get_camera_recordings,
         require_auth=True)
 
     def _saved_camera_image(handler, path_match, data):
@@ -239,11 +248,11 @@ def setup(hass, config):
 
         if camera:
             image_path = os.path.normpath(os.path.join(
-                camera.event_images_path, data['image_path']))
+                camera.images_path, data['image_path']))
 
             # Check to see that someone is not trying to do something dodgey
             # with relative paths
-            if not image_path.startswith(camera.event_images_path):
+            if not image_path.startswith(camera.images_path):
                 handler.send_response(HTTP_NOT_FOUND)
 
             handler.write_file(image_path)
@@ -324,6 +333,8 @@ class Camera(Entity):
             os.makedirs(self._images_path)
 
         self._event_images_path = None
+        self._recording_images_path = None
+        self._snapshot_images_path = None
         self._ftp_path = None
 
         self._child_entities = {}
@@ -390,6 +401,30 @@ class Camera(Entity):
                                 entity_action,
                                 self.is_motion_detection_enabled))
 
+                elif entity_action is SWITCH_ACTION_RECORD:
+
+                    if (new_state.state == STATE_ON and not
+                                self.is_recording):
+                        self.record_stream()
+                        self._logger.info(
+                                'Started recording from on {0}'.format(
+                                    self.entity_id))
+                    elif (new_state.state == STATE_OFF and
+                                self.is_recording):
+                            self._is_recording = False
+                            self._logger.info(
+                                'Stopping recoding from {0}'.format(
+                                    self.entity_id))
+                    else:
+                            self._logger.info(
+                                'Ignoring state change {0} is {1} is already {2}'
+                                .format(
+                                    self.entity_id,
+                                    entity_action,
+                                    self.is_recording))
+
+
+
     def refesh_all_settings_from_device(self):
         """ A stub methos that should be overridden in derived classes to
             fetch the settings from the camera. """
@@ -447,6 +482,7 @@ class Camera(Entity):
         attr['last_motion_time'] = motion_time
         attr['last_connected_address'] = self.last_connected_address
         attr['child_entities'] = self._action_entities
+        attr['is_recording'] = self._is_recording
 
         attr.update(self.function_attributes)
 
@@ -485,7 +521,10 @@ class Camera(Entity):
             to determine whether or not to process the file """
         if self.ftp_path is not None:
             if event.data.get('file_name').startswith(self.ftp_path):
-                self._is_detecting_motion = True
+                if self._is_detecting_motion is False:
+                    self._is_detecting_motion = True
+                    self.update_ha_state()
+
                 self._last_motion_detected = datetime.datetime.now()
                 self.process_new_file(event.data.get('file_name'))
 
@@ -507,7 +546,7 @@ class Camera(Entity):
         all_subdirs = [
             d for d in os.listdir(self.event_images_path)
             if (os.path.isdir(os.path.join(self.event_images_path, d)) and
-                d.startswith('event-'))]
+                d.startswith('recording-'))]
 
         event_dir = None
         if len(all_subdirs) > 0:
@@ -524,7 +563,7 @@ class Camera(Entity):
             all_subfiles = [
                 f for f in os.listdir(event_dir)
                 if (os.path.isfile(os.path.join(event_dir, f)) and
-                    f.startswith('event_image-'))]
+                    f.startswith('recording_image-'))]
 
             if len(all_subfiles) > 0:
                 newest_image = sorted(
@@ -548,7 +587,7 @@ class Camera(Entity):
                     event_dir = None
 
         if event_dir is None:
-            new_event_dir_name = 'event-' + datetime.datetime.fromtimestamp(
+            new_event_dir_name = 'recording-' + datetime.datetime.fromtimestamp(
                 os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S')
 
             event_dir = os.path.join(
@@ -565,7 +604,7 @@ class Camera(Entity):
                     'event_images_path': event_dir,
                     'event_images_dir': new_event_dir_name})
 
-        new_file_name = 'event_image-' + datetime.datetime.fromtimestamp(
+        new_file_name = 'recording_image-' + datetime.datetime.fromtimestamp(
             os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S-%f') + '.jpg'
         new_file_path = os.path.join(event_dir, new_file_name)
 
@@ -577,23 +616,26 @@ class Camera(Entity):
         return True
 
     # pylint: disable=too-many-locals
-    def get_all_events(self, start=0, length=10):
-        """ Looks on the file system for saved camera events such as motion
+    def get_all_recordings(self, recording_path, start=0, length=10):
+        """ Looks on the file system for saved camera recordings such as motion
         detection or user initiated recordings.  The are returned in
         chronological order """
+
         events_data = []
-        if not os.path.isdir(self.event_images_path):
+        if not os.path.isdir(recording_path):
             return events_data
 
+        base_path = os.path.basename(os.path.normpath(recording_path))
+
         all_subdirs = [
-            d for d in os.listdir(self.event_images_path)
-            if (os.path.isdir(os.path.join(self.event_images_path, d)) and
-                d.startswith('event-'))]
+            d for d in os.listdir(recording_path)
+            if (os.path.isdir(os.path.join(recording_path, d)) and
+                d.startswith('recording-'))]
 
         event_dirs = sorted(
             all_subdirs,
             key=lambda x: os.path.getctime(
-                os.path.join(self.event_images_path, x)),
+                os.path.join(recording_path, x)),
             reverse=True)
 
         count = 0
@@ -607,7 +649,7 @@ class Camera(Entity):
             event_data['directory'] = event_dir
             event_data['name'] = event_dir
             event_data['fullPath'] = os.path.join(
-                self.event_images_path,
+                recording_path,
                 event_dir)
             event_data['thumbUrl'] = ''
             event_data['images'] = []
@@ -618,7 +660,7 @@ class Camera(Entity):
             all_subfiles = [
                 f for f in os.listdir(event_data['fullPath'])
                 if (os.path.isfile(os.path.join(event_data['fullPath'], f)) and
-                    f.startswith('event_image-'))]
+                    f.startswith('recording_image-'))]
 
             all_subfiles = sorted(
                 all_subfiles,
@@ -633,7 +675,13 @@ class Camera(Entity):
 
                 image_data = {}
                 image_data['fileName'] = image_file
-                image_data['path'] = event_dir + os.path.sep + image_file
+                image_data['path'] = (
+                    base_path +
+                    os.path.sep +
+                    event_dir +
+                    os.path.sep +
+                    image_file)
+
                 image_data['url'] = (
                     'api/saved_camera_image/' +
                     self.entity_id +
@@ -654,6 +702,44 @@ class Camera(Entity):
             count += 1
 
         return events_data
+
+
+    def record_stream(self):
+        """ Records individual frames to disk for a period of time """
+        if self.is_recording:
+            return
+        else:
+            self._is_recording = True
+
+        rec_dir = ('recording-' +
+            datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+
+        rec_dir_full = os.path.join(self.recording_images_path, rec_dir)
+
+        if not os.path.isdir(rec_dir_full):
+            os.makedirs(rec_dir_full)
+
+        recording_length = 10
+        recording_started = datetime.datetime.now()
+        recording_time = 0
+        while (recording_time < recording_length
+                and self._is_recording):
+
+            new_file_name = (
+                'recording_image-' +
+                datetime.datetime.now().strftime(
+                    '%Y-%m-%d_%H-%M-%S-%f') + '.jpg')
+
+            new_file_path = os.path.join(rec_dir_full, new_file_name)
+
+            response = self.get_camera_image()
+            open(new_file_path, 'wb').write(response.content)
+
+            recording_time = (
+                datetime.datetime.now() - recording_started).total_seconds()
+
+        self._is_recording = False
+        self.update_ha_state()
 
     @property
     def images_path(self):
@@ -686,6 +772,30 @@ class Camera(Entity):
                 self.images_path, 'events')
 
         return self._event_images_path
+
+    @property
+    def recording_images_path(self):
+        """ The base path for the location of recording images """
+        if self.images_path is None:
+            return None
+
+        if self._recording_images_path is None:
+            self._recording_images_path = os.path.join(
+                self.images_path, 'recordings')
+
+        return self._recording_images_path
+
+    @property
+    def snapshot_images_path(self):
+        """ The base path for the location of snapshot images """
+        if self.images_path is None:
+            return None
+
+        if self._snapshot_images_path is None:
+            self._snapshot_images_path = os.path.join(
+                self.images_path, 'snapshot')
+
+        return self._snapshot_images_path
 
     @property
     def ftp_path(self):

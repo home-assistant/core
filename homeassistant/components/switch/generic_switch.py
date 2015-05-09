@@ -51,6 +51,14 @@ class GenericSwitch(ToggleEntity):
         self.hass = hass
         self._logger = logging.getLogger(__name__)
 
+        msg = 'The child entity {0} is now watching the \
+            value {1} on the parent entity {2}'.format(
+                self.entity_id,
+                self._watched_parent_attribute,
+                self._parent_entity_id)
+
+        self._logger.info(msg)
+
         self.hass.bus.listen(
             EVENT_STATE_CHANGED,
             self.process_parent_entity_change)
@@ -65,14 +73,6 @@ class GenericSwitch(ToggleEntity):
             watched_val = new_state.attributes.get(
                 self._watched_parent_attribute,
                 None)
-            msg = 'The child entity {0} is now watching the \
-            value {1} on the parent entity {2}'
-            msg.format(
-                self.entity_id,
-                self._watched_parent_attribute,
-                self._parent_entity_id)
-
-            self._logger.info(msg)
 
             if watched_val is STATE_ON or watched_val is STATE_OFF:
                 self._state = watched_val

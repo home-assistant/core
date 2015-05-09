@@ -307,13 +307,19 @@
       }
       else {
         //this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
-        this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?t=' + Date.now();
+        this.stopImageStream();
       }
     },
 
     startImageStream: function() {
       //this.$.camera_image.src = this.stateObj.attributes['stream_url'] + '?api_password=' + authStore.authToken;
       this.$.camera_image.src = this.stateObj.attributes['stream_url'];
+      this.isStreaming = true;
+    },
+
+    stopImageStream: function() {
+      this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?t=' + Date.now();
+      this.isStreaming = false;
     },
 
     retry: function(event, detail, sender) {
@@ -322,7 +328,17 @@
 
     startRecording: function() {
       this.recordingIcon = 'av:videocam-off';
+    },
+
+    selectedChanged: function(oldVal, newVal) {
+      if(newVal == 0 && !this.isStreaming) {
+        this.startImageStream();
+      }
+      else if(newVal != 0){
+        this.stopImageStream();
+      }
     }
+
 
   });
 </script>
