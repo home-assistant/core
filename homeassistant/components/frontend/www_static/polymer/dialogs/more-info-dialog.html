@@ -64,7 +64,7 @@ Polymer(Polymer.mixin({
     if (newState !== this.stateObj) {
       this.stateObj = newState;
       this.moreInfoTypeClass = (this.stateObj) ? this.stateObj.moreInfoType : '';
-      this.showHistory = (this.stateObj) ? !_.contains(['camera'], this.stateObj.moreInfoType) : true;
+      this.showHistory = (this.stateObj) ? !_.contains(['camera', 'configurator'], this.stateObj.moreInfoType) : true;
     }
   },
 

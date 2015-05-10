@@ -38,15 +38,15 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=too-many-arguments
 def request_config(
         hass, name, callback, description=None, description_image=None,
-        submit_caption=None, fields=None):
+        submit_caption=None, fields=None, paragraphs=None):
     """ Create a new request for config.
     Will return an ID to be used for sequent calls. """
 
     instance = _get_instance(hass)
 
     request_id = instance.request_config(
-        name, callback,
-        description, description_image, submit_caption, fields)
+        name, callback, description,
+        description_image, submit_caption, fields, paragraphs)
 
     _REQUESTS[request_id] = instance
 
@@ -103,14 +103,17 @@ class Configurator(object):
 
     # pylint: disable=too-many-arguments
     def request_config(
-            self, name, callback,
-            description, description_image, submit_caption, fields):
+            self, name, callback, description,
+            description_image, submit_caption, fields, paragraphs=None):
         """ Setup a request for configuration. """
 
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
         if fields is None:
             fields = []
+
+        if paragraphs is None:
+            paragraphs = []
 
         request_id = self._generate_unique_id()
 
@@ -119,6 +122,7 @@ class Configurator(object):
         data = {
             ATTR_CONFIGURE_ID: request_id,
             ATTR_FIELDS: fields,
+            'paragraphs': paragraphs
         }
 
         data.update({

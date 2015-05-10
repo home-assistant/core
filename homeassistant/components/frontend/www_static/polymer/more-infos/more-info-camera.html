@@ -92,10 +92,10 @@
               <paper-icon-button on-click="{{toggleMotionDetection}}" icon="{{motionDetectionIcon}}"></paper-icon-button>
             </core-tooltip>
             <core-tooltip label="Take Picture" position="top">
-              <paper-icon-button on-click="" icon="image:camera-alt"></paper-icon-button>
+              <paper-icon-button on-click="{{takeSnapshot}}" icon="image:camera-alt"></paper-icon-button>
             </core-tooltip>
             <core-tooltip label="Record Camera" position="top">
-              <paper-icon-button on-click="{{startRecording}}" icon="{{recordingIcon}}"></paper-icon-button>
+              <paper-icon-button on-click="{{toggleRecording}}" icon="{{recordingIcon}}"></paper-icon-button>
             </core-tooltip>
           </div>
           <div flex>
@@ -249,11 +249,10 @@
     configureFtpComponent: false,
     hasTabs: true,
 
-
-    //document.querySelector("* /deep/ more-info-dialog").reposition(null, Date.now());
-
     stateObjChanged: function(oldVal, newVal) {
       this.motionDetectionIcon = (newVal.attributes['is_motion_detection_enabled']) ? 'visibility-off' : 'visibility';
+      this.recordingIcon = (newVal.attributes['is_recording']) ? 'av:videocam-off' : 'av:videocam';
+
     },
 
     toggleMotionDetection: function(ev) {
@@ -265,17 +264,11 @@
         this.configureFTP = true;
         return;
       }
-      else if(!this.stateObj.attributes['child_entities']['motion_detection']) {
-        console.log('Could not find motion detection switch');
-        return;
-      }
-
-      var motionDetectionSwitch = this.stateObj.attributes['child_entities']['motion_detection'];
 
       if(this.stateObj.attributes['is_motion_detection_enabled'] === true) {
-        serviceActions.callTurnOff(motionDetectionSwitch);
+        this.callCameraService('motion_detection', 'off');
       } else {
-        serviceActions.callTurnOn(motionDetectionSwitch);
+        this.callCameraService('motion_detection', 'on');
       }
     },
 
@@ -306,13 +299,11 @@
         this.recordingIcon = 'av:videocam';
       }
       else {
-        //this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?api_password=' + authStore.authToken + '&t=' + Date.now();
         this.stopImageStream();
       }
     },
 
     startImageStream: function() {
-      //this.$.camera_image.src = this.stateObj.attributes['stream_url'] + '?api_password=' + authStore.authToken;
       this.$.camera_image.src = this.stateObj.attributes['stream_url'];
       this.isStreaming = true;
     },
@@ -326,8 +317,13 @@
       this.startImageStream();
     },
 
-    startRecording: function() {
-      this.recordingIcon = 'av:videocam-off';
+
+    toggleRecording: function() {
+      if(this.stateObj.attributes['is_recording'] === true) {
+        this.callCameraService('record', 'off');
+      } else {
+        this.callCameraService('record', 'on');
+      }
     },
 
     selectedChanged: function(oldVal, newVal) {
@@ -337,8 +333,21 @@
       else if(newVal != 0){
         this.stopImageStream();
       }
-    }
+    },
 
+    takeSnapshot: function(evt) {
+      if(this.stateObj.attributes['is_taking_snapshot'] === false) {
+        this.callCameraService('snapshot', 'on');
+      }
+    },
+
+    callCameraService: function(action, state) {
+      var data = {};
+      data['entity_id'] = this.stateObj.entityId;
+      data['action'] = action;
+      data['state'] = state;
+      serviceActions.callService('camera', 'camera_service', data)
+    }
 
   });
 </script>

@@ -4,16 +4,20 @@ Support for D-Link IP Cameras.
 
 import logging
 import requests
+import datetime
 import os
+from datetime import timedelta
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.loader import get_component
+from homeassistant.util import Throttle
 # pylint: disable=import-error
 from bs4 import BeautifulSoup
 
 _LOGGER = logging.getLogger(__name__)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=25)
 
 
 # pylint: disable=unused-argument
@@ -75,20 +79,33 @@ class DlinkCameraDcs930l(Camera):
         super().__init__(hass, device_info)
         self._is_motion_detection_supported = True
         self._is_ftp_upload_supported = True
+        self._can_auto_configure_ftp = True
         self._still_image_url = device_info.get('still_image_url', 'image.jpg')
 
         # Holds the form data so we can post updates back to the web UI
         self._web_ui_form_data = {}
-        self.get_all_settings()
+        # self.refesh_all_settings_from_device()
 
     def refesh_all_settings_from_device(self):
         """ Overrides the base class method that retrieved all setting
             from the device. """
         self.get_all_settings()
+        # if self._lastconfig_update_from_device is None:
+        # self.check_for_required_configurators()
 
+
+    #@Throttle(MIN_TIME_BETWEEN_SCANS)
     def get_all_settings(self):
         """ Pull all the settings from the camera, there is no API so it's
         dirty screen scraping time. """
+        # seconds_since_last_call = 10000
+        # if self._lastconfig_update_from_device is not None:
+        #     seconds_since_last_call = (
+        #         datetime.datetime.now() -
+        #         self._lastconfig_update_from_device).total_seconds()
+        # if seconds_since_last_call < 25:
+        #     return
+
         res = requests.get(
             self.base_url + 'motion.htm',
             auth=(self.username, self.password))
@@ -131,22 +148,22 @@ class DlinkCameraDcs930l(Camera):
 
         self._web_ui_form_data['upload'] = u_settings
 
-        self._is_ftp_configured = (
-            True if not
-            u_settings.get('FTPHostAddress') == '' else
-            False)
         self._ftp_host = u_settings.get('FTPHostAddress')
         self._ftp_port = u_settings.get('FTPPortNumber')
         self._ftp_username = u_settings.get('FTPUserName')
         self._ftp_password = u_settings.get('FTPPassword')
+        self._ftp_relative_path = u_settings.get('FTPDirectoryPath')
 
         ftp_comp = get_component('ftp')
         if ftp_comp is not None and ftp_comp.FTP_SERVER is not None:
             self._ftp_path = os.path.join(
                 ftp_comp.FTP_SERVER.ftp_root_path,
-                u_settings.get(
-                    'FTPDirectoryPath',
-                    self.entity_id))
+                self._ftp_relative_path)
+
+        self._is_ftp_configured = self.check_ftp_settings()
+        self._lastconfig_update_from_device = datetime.datetime.now()
+        self.send_motion_state()
+        self.check_for_required_configurators()
 
     def enable_motion_detection(self):
         """ Enable the motion detection settings for the camera. """
@@ -172,6 +189,8 @@ class DlinkCameraDcs930l(Camera):
         self.refesh_all_settings_from_device()
         self.update_ha_state(True)
 
+        # self.send_motion_state()
+
         return True
 
     def disable_motion_detection(self):
@@ -189,7 +208,9 @@ class DlinkCameraDcs930l(Camera):
 
         self.refesh_all_settings_from_device()
         self.update_ha_state(True)
-        # self._is_motion_detection_enabled = False
+
+        # self.send_motion_state()
+
         return True
 
     def set_ftp_details(self):

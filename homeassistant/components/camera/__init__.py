@@ -42,9 +42,24 @@ GROUP_NAME_ALL_CAMERAS = 'all_cameras'
 SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 EVENT_CAMERA_MOTION_DETECTED = 'camera_motion_detected'
+EVENT_CHILD_CALLBACK_SUFFIX = '_callback'
+
+EVENT_CHANGE_RECORD = '_record_change'
+EVENT_CHANGE_MOTION = '_motion_enabled_change'
+EVENT_CHANGE_SNAPSHOT = '_snapshot_change'
+
+EVENT_CALLBACK_RECORD = '_record_callback'
+EVENT_CALLBACK_MOTION = '_motion_enabled_callback'
+EVENT_CALLBACK_SNAPSHOT = '_snapshot_callback'
 
 SWITCH_ACTION_RECORD = 'record'
 SWITCH_ACTION_MOTION = 'motion_detection'
+SWITCH_ACTION_SNAPSHOT = 'snapshot'
+
+SERVICE_CAMERA = 'camera_service'
+
+STATE_RECORDING = 'recording'
+
 
 # The number of seconds between images before being
 # considerd a new event
@@ -69,6 +84,8 @@ def setup(hass, config):
     for entity_id in component.entities.keys():
         entity = component.entities[entity_id]
         entity.refesh_all_settings_from_device()
+        entity.add_child_component_listeners()
+        # entity.update_ha_state()
 
         # This sets up and fired events for components that use the
         # camera as a discovery platform.
@@ -78,17 +95,34 @@ def setup(hass, config):
         data[ATTR_DOMAIN] = DOMAIN
         data['name'] = entity.name + ' Record'
         data['parent_action'] = SWITCH_ACTION_RECORD
-        data['watched_attribute'] = 'is_recording'
+        data['callback_service'] = SERVICE_CAMERA
+        data['callback_event'] = entity_id + EVENT_CALLBACK_RECORD
+        data['listen_event'] = entity_id + EVENT_CHANGE_RECORD
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
                       {ATTR_SERVICE: DISCOVER_SWITCHES,
                        ATTR_DISCOVERED: data})
 
+        if entity.is_motion_detection_supported:
+            data = {}
+            data['entity_id'] = entity_id
+            data[ATTR_DOMAIN] = DOMAIN
+            data['name'] = entity.name + ' Motion Detection'
+            data['parent_action'] = SWITCH_ACTION_MOTION
+            data['callback_event'] = entity_id + EVENT_CALLBACK_MOTION
+            data['callback_service'] = SERVICE_CAMERA
+            data['listen_event'] = entity_id + EVENT_CHANGE_MOTION
+            hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
+                          {ATTR_SERVICE: DISCOVER_SWITCHES,
+                           ATTR_DISCOVERED: data})
+
         data = {}
         data['entity_id'] = entity_id
         data[ATTR_DOMAIN] = DOMAIN
-        data['name'] = entity.name + ' Motion Detection'
-        data['parent_action'] = SWITCH_ACTION_MOTION
-        data['watched_attribute'] = 'is_motion_detection_enabled'
+        data['name'] = entity.name + ' Snapshot'
+        data['parent_action'] = SWITCH_ACTION_SNAPSHOT
+        data['callback_service'] = SERVICE_CAMERA
+        data['callback_event'] = entity_id + EVENT_CALLBACK_SNAPSHOT
+        data['listen_event'] = entity_id + EVENT_CHANGE_SNAPSHOT
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
                       {ATTR_SERVICE: DISCOVER_SWITCHES,
                        ATTR_DISCOVERED: data})
@@ -238,6 +272,8 @@ def setup(hass, config):
         _get_camera_recordings,
         require_auth=True)
 
+    """ This creates an API endpoint that serves a saved camera image """
+
     def _saved_camera_image(handler, path_match, data):
         """ Get a saved camera image via the HA server. """
         entity_id = path_match.group('entity_id')
@@ -268,23 +304,50 @@ def setup(hass, config):
 
     def handle_motion_detection_service(service):
         """ Handles calls to the camera services. """
+
+        action = service.data.get('action', None)
+        if action is None:
+            logging.getLogger(__name__).warning(
+                "Call to camera service did not specify an \
+                 action in the service data")
+            return
+
+        state = service.data.get('state', None)
+        if state is None:
+            logging.getLogger(__name__).warning(
+                "Call to camera service did not specify a \
+                 state in the service data")
+            return
+
         target_cameras = component.extract_from_service(service)
-        feature_name = service.data.get('feature', 'motion_detection')
+
         for camera in target_cameras:
-            if feature_name == 'configure_ftp':
-                if service.service == SERVICE_TURN_ON:
-                    camera.set_ftp_details()
-            else:
-                if service.service == SERVICE_TURN_ON:
+            if action == SWITCH_ACTION_MOTION:
+                if (state == STATE_ON and not
+                        camera.is_motion_detection_enabled):
                     camera.enable_motion_detection()
-                else:
+                elif (state == STATE_OFF and
+                        camera.is_motion_detection_enabled):
                     camera.disable_motion_detection()
+
+            elif action == SWITCH_ACTION_RECORD:
+                if (state == STATE_ON and not
+                        camera.is_recording):
+                    camera.record_stream()
+                elif (state == STATE_OFF and
+                        camera.is_recording):
+                    camera.stop_recording()
+
+            elif action == SWITCH_ACTION_SNAPSHOT:
+                if (state == STATE_ON and not
+                        camera.is_taking_snapshot):
+                    camera.take_snapshot()
 
             camera.update_ha_state(True)
 
     hass.services.register(
         DOMAIN,
-        'camera_service',
+        SERVICE_CAMERA,
         handle_motion_detection_service)
 
     return True
@@ -314,15 +377,18 @@ class Camera(Entity):
         self._is_motion_detection_enabled = False
 
         self._is_recording = False
+        self._is_taking_snapshot = False
 
         self._is_ftp_upload_supported = False
         self._is_ftp_upload_enabled = False
+        self._can_auto_configure_ftp = False
 
         self._is_ftp_configured = False
         self._ftp_host = ''
         self._ftp_port = 21
         self._ftp_username = ''
         self._ftp_password = ''
+        self._ftp_relative_path = ''
 
         self._logger = logging.getLogger(__name__)
 
@@ -341,89 +407,94 @@ class Camera(Entity):
 
         self._action_entities = {}
 
+        self._ftp_configurator = None
+
+        self._lastconfig_update_from_device = None
+
         self.hass.bus.listen(
             EVENT_FTP_FILE_RECEIVED,
             self.process_file_event)
 
+    def add_child_component_listeners(self):
         self.hass.bus.listen(
-            EVENT_STATE_CHANGED,
-            self.process_child_entity_change)
+            self.entity_id + EVENT_CALLBACK_MOTION,
+            self.process_motion_switch_creation)
 
-    def process_child_entity_change(self, event):
-        """ This handles reacting to state changes in the "generic" button
-        and sensors created by the camera when loaded """
+        self.hass.bus.listen(
+            self.entity_id + EVENT_CALLBACK_RECORD,
+            self.process_child_switch_creation)
+
+        self.hass.bus.listen(
+            self.entity_id + EVENT_CALLBACK_SNAPSHOT,
+            self.process_child_switch_creation)
+
+    def process_motion_switch_creation(self, event):
+        """ Called when a child motion detection switch is created """
+        self.process_child_switch_creation(event)
+        self.send_motion_state()
+
+    def process_child_switch_creation(self, event):
+        """ Called when a child switch is created """
         if not event or not event.data:
             return
-        new_state = event.data['new_state']
-        if new_state is None:
-            return
 
-        parent_entity_id = new_state.attributes.get('parent_entity_id', None)
+        child_entity_id = event.data.get('entity_id')
+        entity_action = event.data.get('parent_action')
+        self._action_entities[entity_action] = child_entity_id
 
-        if parent_entity_id == self.entity_id:
-            entity_action = new_state.attributes.get('parent_action', None)
-            if not entity_action:
-                return
-
-            # this is the first callback we get when the entity is registered
-            old_state_val = None
-            if entity_action not in self._child_entities.keys():
-                self._child_entities[entity_action] = new_state
-                self._action_entities[entity_action] = new_state.entity_id
-                old_state_val = self._child_entities[entity_action].state
-                self._logger.info('Registered {0} as a child of {1}'.format(
-                    new_state.entity_id, self.entity_id))
-                self.refesh_all_settings_from_device()
-            else:
-                old_state_val = self._child_entities[entity_action].state
-                self._child_entities[entity_action] = new_state
-
-            if self._child_entities[entity_action].state != old_state_val:
-                if entity_action == SWITCH_ACTION_MOTION:
-                    if (new_state.state == STATE_ON and not
-                            self.is_motion_detection_enabled):
-
-                        self.enable_motion_detection()
-                        self._logger.info(
-                            'Enabling motion detection on {0}'.format(
-                                self.entity_id))
-                    elif (new_state.state == STATE_OFF and
-                            self.is_motion_detection_enabled):
-                        self.disable_motion_detection()
-                        self._logger.info(
-                            'Disabling motion detection on {0}'.format(
-                                self.entity_id))
-                    else:
-                        self._logger.info(
-                            'Ignoring state change {0} is {1} is already {2}'
-                            .format(
-                                self.entity_id,
-                                entity_action,
-                                self.is_motion_detection_enabled))
-
-                elif entity_action is SWITCH_ACTION_RECORD:
-
-                    if (new_state.state == STATE_ON and not
-                                self.is_recording):
-                        self.record_stream()
-                        self._logger.info(
-                                'Started recording from on {0}'.format(
-                                    self.entity_id))
-                    elif (new_state.state == STATE_OFF and
-                                self.is_recording):
-                            self._is_recording = False
-                            self._logger.info(
-                                'Stopping recoding from {0}'.format(
-                                    self.entity_id))
-                    else:
-                            self._logger.info(
-                                'Ignoring state change {0} is {1} is already {2}'
-                                .format(
-                                    self.entity_id,
-                                    entity_action,
-                                    self.is_recording))
+        self._logger.info(
+            'Registerd child switch {0} for {1} on {2}'.format(
+                child_entity_id,
+                entity_action,
+                self.entity_id))
 
 
+    def send_motion_state(self):
+        """ Sends an event notifying listeners of the motion
+        detection state """
+        state = STATE_OFF
+        if self.is_motion_detection_enabled:
+            state = STATE_ON
+
+        self.hass.bus.fire(
+            self.entity_id + EVENT_CHANGE_MOTION,
+            {
+                'entity_id': self.entity_id,
+                'state': state
+            })
+
+    def send_recording_state(self):
+        """ Sends an event notifying listeners of the
+        recording state """
+        state = STATE_OFF
+        if self.is_recording:
+            state = STATE_ON
+
+        self.hass.bus.fire(
+            self.entity_id + EVENT_CHANGE_RECORD,
+            {
+                'entity_id': self.entity_id,
+                'state': state
+            })
+
+    def send_snapshot_state(self):
+        """ Sends an event notifying listeners of the
+        snapshot state """
+        state = STATE_OFF
+        if self.is_taking_snapshot:
+            state = STATE_ON
+
+        self.hass.bus.fire(
+            self.entity_id + EVENT_CHANGE_SNAPSHOT,
+            {
+                'entity_id': self.entity_id,
+                'state': state
+            })
+
+    def update(self):
+        """ Retrieve latest state. """
+        self.refesh_all_settings_from_device()
+        self.send_motion_state()
 
     def refesh_all_settings_from_device(self):
         """ A stub methos that should be overridden in derived classes to
@@ -459,6 +530,8 @@ class Camera(Entity):
 
         if self._is_detecting_motion:
             return STATE_MOTION_DETECTED
+        elif self.is_recording:
+            return STATE_RECORDING
         elif self.is_streaming:
             return STATE_STREAMING
         elif self._is_motion_detection_enabled:
@@ -483,6 +556,7 @@ class Camera(Entity):
         attr['last_connected_address'] = self.last_connected_address
         attr['child_entities'] = self._action_entities
         attr['is_recording'] = self._is_recording
+        attr['is_taking_snapshot'] = self.is_taking_snapshot
 
         attr.update(self.function_attributes)
 
@@ -711,6 +785,9 @@ class Camera(Entity):
         else:
             self._is_recording = True
 
+        self.update_ha_state(True)
+        self.send_recording_state()
+
         rec_dir = ('recording-' +
             datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
@@ -739,7 +816,40 @@ class Camera(Entity):
                 datetime.datetime.now() - recording_started).total_seconds()
 
         self._is_recording = False
+        self.update_ha_state(True)
+        self.send_recording_state()
+
+    def stop_recording(self):
+        """ Stop recording camera stream """
+        self._is_recording = False
+
+    def take_snapshot(self):
+        """ Records individual frames to disk for a period of time """
+        if self.is_taking_snapshot:
+            return
+        else:
+            self._is_taking_snapshot = True
+
+        self.send_snapshot_state()
+
+        time_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+        rec_dir = ('recording-' + time_str)
+
+        rec_dir_full = os.path.join(self.snapshot_images_path, rec_dir)
+
+        if not os.path.isdir(rec_dir_full):
+            os.makedirs(rec_dir_full)
+
+        new_file_name = ('recording_image-' + time_str + '.jpg')
+
+        new_file_path = os.path.join(rec_dir_full, new_file_name)
+
+        response = self.get_camera_image()
+        open(new_file_path, 'wb').write(response.content)
+
+        self._is_taking_snapshot = False
         self.update_ha_state()
+        self.send_snapshot_state()
 
     @property
     def images_path(self):
@@ -826,6 +936,11 @@ class Camera(Entity):
         return self._is_recording
 
     @property
+    def is_taking_snapshot(self):
+        """ Returns true the device is currently taking a snapshot """
+        return self._is_taking_snapshot
+
+    @property
     def is_ftp_upload_supported(self):
         """ Returns true the device supports uploading motion
         capture frames via FTP """
@@ -854,3 +969,117 @@ class Camera(Entity):
         attr['is_ftp_upload_enabled'] = self.is_ftp_upload_enabled
         attr['is_ftp_configured'] = self.is_ftp_configured
         return attr
+
+    def check_ftp_settings(self):
+        """ This comapres the FTP settings stored on the
+        device against the expected values """
+        ftp_server = get_component('ftp').FTP_SERVER
+
+        if ftp_server is None:
+            return False
+
+        if self._ftp_host != ftp_server.server_ip:
+            return False
+        if self._ftp_port != str(ftp_server.server_port):
+            return False
+        if self._ftp_username != ftp_server.username:
+            return False
+        if self._ftp_password != ftp_server.password:
+            return False
+        if self._ftp_relative_path != self.entity_id:
+            return False
+
+        return True
+
+    def check_for_required_configurators(self):
+        """ Launches any common camera configurators based on capabilities """
+        if (self.is_motion_detection_supported and
+                not self.is_ftp_configured):
+            self.request_ftp_configuration()
+
+    def request_ftp_configuration(self):
+        """ Request configuration steps from the user. """
+
+        configurator = get_component('configurator')
+
+        # self._is_ftp_configured = self.check_ftp_settings()
+        # if self._is_ftp_configured:
+        #     if self._ftp_configurator is not None:
+        #         configurator.request_done(self._ftp_configurator)
+        #         self._ftp_configurator = None
+        #     return
+
+        if self._ftp_configurator is not None:
+            return
+
+        if self.entity_id is None:
+            return
+
+        def camera_configuration_callback(data):
+            """ Actions to do when our configuration callback is called. """
+            if self._ftp_configurator is None:
+                return
+
+            if self._can_auto_configure_ftp:
+                self.set_ftp_details()
+            else:
+                self.refesh_all_settings_from_device()
+
+            self._is_ftp_configured = self.check_ftp_settings()
+
+            configurator = get_component('configurator')
+            if self._is_ftp_configured:
+                configurator.request_done(self._ftp_configurator)
+                self._ftp_configurator = None
+            else:
+                configurator.notify_errors(
+                    self._ftp_configurator,
+                    "Failed to set FTP values, please try again \
+                        and check the logs for info.")
+
+        paragraphs = []
+        paragraphs.append('The current FTP settings are:' +
+            '\nHost:{0}'.format(self._ftp_host) +
+            '\nPort:{0}'.format(self._ftp_port) +
+            '\nUsername:{0}'.format(self._ftp_username) +
+            '\nPassword:{0}'.format('*********'))
+
+        ftp_server = get_component('ftp').FTP_SERVER
+
+        if ftp_server is None:
+            return
+
+        paragraphs.append('They should be set to the following:' +
+            '\nHost:{0}'.format(ftp_server.server_ip) +
+            '\nPort:{0}'.format(ftp_server.server_port) +
+            '\nUsername:{0}'.format(ftp_server.username) +
+            '\nPassword:{0}'.format(ftp_server.password) +
+            '\nPath:{0}'.format(self.entity_id))
+
+        btn_text = 'I have configured my device'
+        if self._can_auto_configure_ftp:
+            paragraphs.append('This device supports automatically configuring' +
+                ' these values.  Click the button below to configure them now.')
+            btn_text = 'Configure Automatically'
+        else:
+            paragraphs.append('This device does not support automatic FTP' +
+                ' configuration.  You will need to log into your device and' +
+                ' manually set them.')
+
+        self._ftp_configurator = configurator.request_config(
+            self.hass, self.name + ' FTP', camera_configuration_callback,
+            description=("Your camera supports motion detection "
+                        "notifications via FTP but the settings on "
+                        "your camera don't seem to be configured correctly."),
+            # description_image="/static/images/config_philips_hue.jpg",
+            submit_caption=btn_text,
+            paragraphs=paragraphs
+        )
+
+        # _CONFIGURING[host] = configurator.request_config(
+        #     hass, "Philips Hue", camera_configuration_callback,
+        #     description=("Press the button on the bridge to register Philips Hue "
+        #                  "with Home Assistant."),
+        #     description_image="/static/images/config_philips_hue.jpg",
+        #     submit_caption="I have pressed the button"
+        #)
