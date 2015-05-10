@@ -113,7 +113,7 @@ class SendNotificationBot(sleekxmpp.ClientXMPP):
         self.add_event_handler("failed_auth", self.check_credentials)
         self.add_event_handler('session_start', self.start)
         self.connect()
-        self.process(threaded=False)
+        self.process(block=False)
 
     def start(self, event):
         """ Starts the communication and sends the message. """
