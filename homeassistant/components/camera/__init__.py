@@ -150,17 +150,15 @@ def setup(hass, config):
 
         entity.check_required_configurators()
 
-
-    # ---------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # CAMERA COMPONENT ENDPOINTS
-    # ---------------------------------------------------------------------------
-    # The following defines the endpoints for serving images from the camera via
-    # the HA http server.  This is means that you can access images from your
-    # camera outside of your LAN without the need for port forwards etc.
+    # -------------------------------------------------------------------------
+    # The following defines the endpoints for serving images from the camera
+    # via the HA http server.  This is means that you can access images from
+    # your camera outside of your LAN without the need for port forwards etc.
 
     # Because the authentication header can't be added in image requests these
     # endpoints are secured with session based security.
-
 
     # pylint: disable=unused-argument
     def _proxy_camera_image(handler, path_match, data):

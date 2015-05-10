@@ -28,6 +28,7 @@ ATTR_DESCRIPTION = "description"
 ATTR_DESCRIPTION_IMAGE = "description_image"
 ATTR_SUBMIT_CAPTION = "submit_caption"
 ATTR_FIELDS = "fields"
+ATTR_PARAGRAPHS= "paragraphs"
 ATTR_ERRORS = "errors"
 
 _REQUESTS = {}
@@ -122,7 +123,7 @@ class Configurator(object):
         data = {
             ATTR_CONFIGURE_ID: request_id,
             ATTR_FIELDS: fields,
-            'paragraphs': paragraphs
+            ATTR_PARAGRAPHS: paragraphs
         }
 
         data.update({
