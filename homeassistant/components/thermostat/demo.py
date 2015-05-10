@@ -1,7 +1,10 @@
 """
-Demo platform that offers a fake thermostat.
-"""
+homeassistant.components.thermostat.demo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Demo platform that offers a fake thermostat.
+
+"""
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS, TEMP_FAHRENHEIT
 
