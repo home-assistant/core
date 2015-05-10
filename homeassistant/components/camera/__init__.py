@@ -219,9 +219,11 @@ def setup(hass, config):
                 handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
 
                 while True:
+                    headers = urllib3.util.make_headers()
 
-                    headers = urllib3.util.make_headers(
-                        basic_auth=camera.username + ':' + camera.password)
+                    if camera.username and camera.password:
+                        headers = urllib3.util.make_headers(
+                            basic_auth=camera.username + ':' + camera.password)
 
                     req = http.request(
                         'GET',
