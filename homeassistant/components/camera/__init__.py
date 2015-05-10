@@ -1,7 +1,27 @@
 """
 homeassistant.components.camera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Component to interface with various cameras that can be monitored.
+Component to interface with various cameras.
+
+The following features are supported:
+-Recording
+-Snapshot
+-Motion Detection Recording(for supported cameras)
+-Automatic Configuration(for supported cameras)
+-Creation of child entities for supported functions
+-Collating motion event images passed via FTP into time based events
+-Returning recorded camera images and streams
+-Proxying image requests via HA for external access
+-Converting a still image url into a live video stream
+-A service for calling camera functions
+
+Upcoming features
+-Camera movement(panning)
+-Zoom
+-Light/Nightvision toggling
+-Support for more devices
+-A demo entity
+-Expanded documentation
 """
 import urllib3
 import requests
@@ -17,7 +37,6 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
     EVENT_FTP_FILE_RECEIVED,
     STATE_MOTION_DETECTED,
     STATE_STREAMING,
@@ -28,7 +47,6 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED,
     ATTR_SERVICE,
     ATTR_DISCOVERED,
-    EVENT_STATE_CHANGED,
     ATTR_DOMAIN
     )
 
@@ -131,6 +149,18 @@ def setup(hass, config):
 
         entity.check_for_required_configurators()
 
+    """
+    ---------------------------------------------------------------------------
+    CAMERA COMPONENT ENDPOINTS
+    ---------------------------------------------------------------------------
+    The following defines the endpoints for serving images from the camera via
+    the HA http server.  This is means that you can access images from your
+    camera outside of your LAN without the need for port forwards etc.
+
+    Because the authentication header can't be added in image requests these
+    endpoints are secured with session based security.
+
+    """
     # pylint: disable=unused-argument
     def _proxy_camera_image(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
@@ -154,7 +184,11 @@ def setup(hass, config):
 
     # pylint: disable=unused-argument
     def _proxy_camera_mjpeg_stream(handler, path_match, data):
-        """ Proxies the camera image via the HA server. """
+        """ Proxies the camera image as an mjpeg stream via the HA server.
+        This function takes still images from the IP camera and turns them
+        into an MJPEG stream.  This means that HA can return a live video
+        stream even with only a still image URL available.
+        """
         entity_id = path_match.group('entity_id')
 
         camera = None
@@ -240,7 +274,8 @@ def setup(hass, config):
         require_auth=True)
 
     def _get_camera_recordings(handler, path_match, data):
-        """ Proxies the camera image via the HA server. """
+        """ Returns a JSON object with a list of camera recording such as still
+        image snapshots, motion detection recordings and recordings. """
         entity_id = path_match.group('entity_id')
 
         camera = None
@@ -276,10 +311,10 @@ def setup(hass, config):
         _get_camera_recordings,
         require_auth=True)
 
-    """ This creates an API endpoint that serves a saved camera image """
-
     def _saved_camera_image(handler, path_match, data):
-        """ Get a saved camera image via the HA server. """
+        """ This creates an API endpoint that serves a saved camera image from
+        disk.  It also does some basic checking to make sure relative paths
+        outside of the legitimate locations cn't be used """
         entity_id = path_match.group('entity_id')
 
         camera = None
@@ -360,7 +395,14 @@ def setup(hass, config):
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
 class Camera(Entity):
-    """ Base class for cameras. """
+    """
+    Base class for cameras.
+    This is quite a large class but the camera component encompasses a lot of
+    functionality.  It should take care of most of the heavy lifting and
+    plumbing associated with adding support for additional models of camera.
+    If you are adding support for a new camera your entity class should inherit
+    from this.
+    """
 
     def __init__(self, hass, device_info):
         self.hass = hass
@@ -420,6 +462,7 @@ class Camera(Entity):
             self.process_file_event)
 
     def add_child_component_listeners(self):
+        """ Adds the child entity creation callback listeners """
         self.hass.bus.listen(
             self.entity_id + EVENT_CALLBACK_MOTION,
             self.process_motion_switch_creation)
@@ -451,7 +494,6 @@ class Camera(Entity):
                 child_entity_id,
                 entity_action,
                 self.entity_id))
-
 
     def send_motion_state(self):
         """ Sends an event notifying listeners of the motion
@@ -665,8 +707,9 @@ class Camera(Entity):
                     event_dir = None
 
         if event_dir is None:
-            new_event_dir_name = 'recording-' + datetime.datetime.fromtimestamp(
-                os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S')
+            new_event_dir_name = (
+                'recording-' + datetime.datetime.fromtimestamp(
+                    os.path.getctime(path)).strftime('%Y-%m-%d_%H-%M-%S'))
 
             event_dir = os.path.join(
                 self.event_images_path,
@@ -781,7 +824,6 @@ class Camera(Entity):
 
         return events_data
 
-
     def record_stream(self):
         """ Records individual frames to disk for a period of time """
         if self.is_recording:
@@ -792,7 +834,8 @@ class Camera(Entity):
         self.update_ha_state(True)
         self.send_recording_state()
 
-        rec_dir = ('recording-' +
+        rec_dir = (
+            'recording-' +
             datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
         rec_dir_full = os.path.join(self.recording_images_path, rec_dir)
@@ -1006,13 +1049,6 @@ class Camera(Entity):
 
         configurator = get_component('configurator')
 
-        # self._is_ftp_configured = self.check_ftp_settings()
-        # if self._is_ftp_configured:
-        #     if self._ftp_configurator is not None:
-        #         configurator.request_done(self._ftp_configurator)
-        #         self._ftp_configurator = None
-        #     return
-
         if self._ftp_configurator is not None:
             return
 
@@ -1042,18 +1078,21 @@ class Camera(Entity):
                         and check the logs for info.")
 
         paragraphs = []
-        paragraphs.append('The current FTP settings are:' +
+        paragraphs.append(
+            'The current FTP settings are:' +
             '\nHost:{0}'.format(self._ftp_host) +
             '\nPort:{0}'.format(self._ftp_port) +
             '\nUsername:{0}'.format(self._ftp_username) +
-            '\nPassword:{0}'.format('*********'))
+            '\nPassword:{0}'.format('*********') +
+            '\nPath:{0}'.format(self._ftp_relative_path))
 
         ftp_server = get_component('ftp').FTP_SERVER
 
         if ftp_server is None:
             return
 
-        paragraphs.append('They should be set to the following:' +
+        paragraphs.append(
+            'They should be set to the following:' +
             '\nHost:{0}'.format(ftp_server.server_ip) +
             '\nPort:{0}'.format(ftp_server.server_port) +
             '\nUsername:{0}'.format(ftp_server.username) +
@@ -1062,28 +1101,24 @@ class Camera(Entity):
 
         btn_text = 'I have configured my device'
         if self._can_auto_configure_ftp:
-            paragraphs.append('This device supports automatically configuring' +
-                ' these values.  Click the button below to configure them now.')
+            paragraphs.append(
+                'This device supports automatically' +
+                ' configuring these values.  Click the button' +
+                ' below to configure them now.')
             btn_text = 'Configure Automatically'
         else:
-            paragraphs.append('This device does not support automatic FTP' +
+            paragraphs.append(
+                'This device does not support automatic FTP' +
                 ' configuration.  You will need to log into your device and' +
                 ' manually set them.')
 
         self._ftp_configurator = configurator.request_config(
             self.hass, self.name + ' FTP', camera_configuration_callback,
-            description=("Your camera supports motion detection "
-                        "notifications via FTP but the settings on "
-                        "your camera don't seem to be configured correctly."),
-            # description_image="/static/images/config_philips_hue.jpg",
+            description=(
+                "Your camera supports motion detection "
+                "notifications via FTP but the settings on "
+                "your camera don't seem to be configured correctly."),
+            description_image=None,
             submit_caption=btn_text,
             paragraphs=paragraphs
         )
-
-        # _CONFIGURING[host] = configurator.request_config(
-        #     hass, "Philips Hue", camera_configuration_callback,
-        #     description=("Press the button on the bridge to register Philips Hue "
-        #                  "with Home Assistant."),
-        #     description_image="/static/images/config_philips_hue.jpg",
-        #     submit_caption="I have pressed the button"
-        #)

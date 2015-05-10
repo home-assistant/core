@@ -133,7 +133,7 @@ from homeassistant.loader import get_component
 
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID,
-    ATTR_DOMAIN, EVENT_STATE_CHANGED)
+    ATTR_DOMAIN)
 
 
 # pylint: disable=unused-argument
@@ -150,7 +150,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 'Could not find parent component {0}'.format(parent_domain))
             return
 
-        parent_entity_id = discovery_info.get('entity_id', None)
+        parent_entity_id = discovery_info.get(ATTR_ENTITY_ID, None)
         name = discovery_info.get('name', parent_entity_id + ' Switch')
 
         devices = []
@@ -162,7 +162,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass.bus.fire(
                 device.callback_event,
                 {
-                    'entity_id': device.entity_id,
+                    ATTR_ENTITY_ID: device.entity_id,
                     'parent_action': device._parent_action
                 })
 
@@ -190,7 +190,6 @@ class ChildSwitch(ToggleEntity):
         self.hass.bus.listen(
             self._listen_event,
             self.process_parent_entity_change)
-
 
     def process_parent_entity_change(self, event):
         """ Handle changes to the state of the linked parent entity """

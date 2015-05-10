@@ -12,7 +12,6 @@ from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.loader import get_component
-from homeassistant.util import Throttle
 # pylint: disable=import-error
 from bs4 import BeautifulSoup
 
@@ -84,27 +83,15 @@ class DlinkCameraDcs930l(Camera):
 
         # Holds the form data so we can post updates back to the web UI
         self._web_ui_form_data = {}
-        # self.refesh_all_settings_from_device()
 
     def refesh_all_settings_from_device(self):
         """ Overrides the base class method that retrieved all setting
             from the device. """
         self.get_all_settings()
-        # if self._lastconfig_update_from_device is None:
-        # self.check_for_required_configurators()
 
-
-    #@Throttle(MIN_TIME_BETWEEN_SCANS)
     def get_all_settings(self):
         """ Pull all the settings from the camera, there is no API so it's
         dirty screen scraping time. """
-        # seconds_since_last_call = 10000
-        # if self._lastconfig_update_from_device is not None:
-        #     seconds_since_last_call = (
-        #         datetime.datetime.now() -
-        #         self._lastconfig_update_from_device).total_seconds()
-        # if seconds_since_last_call < 25:
-        #     return
 
         res = requests.get(
             self.base_url + 'motion.htm',
