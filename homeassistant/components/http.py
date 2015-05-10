@@ -110,7 +110,7 @@ SESSION_TIMEOUT_SECONDS = 3600
 
 _LOGGER = logging.getLogger(__name__)
 
-session_lock = threading.RLock()
+SESSION_LOCK = threading.RLock()
 
 
 def setup(hass, config=None):
@@ -147,7 +147,7 @@ def setup(hass, config=None):
 
     return True
 
-
+# pylint: disable=too-many-instance-attributes
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
     # pylint: disable=too-few-public-methods
@@ -196,7 +196,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     def check_expired_sessions(self):
         """ Reemove any expired sessions. """
-        if session_lock.acquire(False):
+        if SESSION_LOCK.acquire(False):
             try:
                 keys = []
                 for key in self._sessions.keys():
@@ -205,22 +205,24 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
                 for key in keys:
                     if self._sessions[key].is_expired:
                         del self._sessions[key]
-                        _LOGGER.info("Cleared expired session {0}".format(key))
+                        _LOGGER.info("Cleared expired session %s", key)
             finally:
-                session_lock.release()
+                SESSION_LOCK.release()
 
     def add_session(self, key, session):
+        """ Add a new session to the list of tracked sessions """
         self.check_expired_sessions()
 
-        if not session_lock.acquire():
+        if not SESSION_LOCK.acquire():
             _LOGGER.error("Could not set session, \
-                list is locked by another thread {0}".format(key))
+                list is locked by another thread %s", key)
         try:
             self._sessions[key] = session
         finally:
-            session_lock.release()
+            SESSION_LOCK.release()
 
     def get_session(self, key):
+        """ get a session by key """
         self.check_expired_sessions()
         session = self._sessions.get(key, None)
         if session is not None and session.is_expired:
@@ -237,6 +239,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
     can use the guess content type methods.
     """
     server_version = "HomeAssistant/1.0"
+
+    def __init__(self, req, client_addr, server):
+        SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+        self._session = None
+        self.cookie = None
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
@@ -478,4 +485,4 @@ class ServerSession:
     @property
     def is_expired(self):
         """ Return true if the session is expired based on the expiry time """
-        return (self._expiry < datetime.datetime.now())
+        return self._expiry < datetime.datetime.now()

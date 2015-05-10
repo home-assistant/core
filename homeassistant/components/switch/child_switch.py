@@ -147,7 +147,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if parent_component is None:
             logger.error(
-                'Could not find parent component {0}'.format(parent_domain))
+                'Could not find parent component %s', parent_domain)
             return
 
         parent_entity_id = discovery_info.get(ATTR_ENTITY_ID, None)
@@ -163,7 +163,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device.callback_event,
                 {
                     ATTR_ENTITY_ID: device.entity_id,
-                    'parent_action': device._parent_action
+                    'parent_action': device.parent_action
                 })
 
     return True
@@ -245,3 +245,8 @@ class ChildSwitch(ToggleEntity):
     def callback_event(self):
         """ Returns the name of the entity. """
         return self._callback_event
+
+    @property
+    def parent_action(self):
+        """ Returns the parent action of the child. """
+        return self._parent_action

@@ -33,7 +33,7 @@ def setup(hass, config):
     """ Listens for download events to download files. """
     hass.http.register_path(
         'GET',
-        re.compile('/api/logbook/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+        re.compile(r'/api/logbook/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _handle_get_entity_logbook)
 
     hass.http.register_path(

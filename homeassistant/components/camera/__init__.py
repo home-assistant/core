@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 homeassistant.components.camera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -147,20 +148,20 @@ def setup(hass, config):
                       {ATTR_SERVICE: DISCOVER_SWITCHES,
                        ATTR_DISCOVERED: data})
 
-        entity.check_for_required_configurators()
+        entity.check_required_configurators()
 
-    """
-    ---------------------------------------------------------------------------
-    CAMERA COMPONENT ENDPOINTS
-    ---------------------------------------------------------------------------
-    The following defines the endpoints for serving images from the camera via
-    the HA http server.  This is means that you can access images from your
-    camera outside of your LAN without the need for port forwards etc.
 
-    Because the authentication header can't be added in image requests these
-    endpoints are secured with session based security.
+    # ---------------------------------------------------------------------------
+    # CAMERA COMPONENT ENDPOINTS
+    # ---------------------------------------------------------------------------
+    # The following defines the endpoints for serving images from the camera via
+    # the HA http server.  This is means that you can access images from your
+    # camera outside of your LAN without the need for port forwards etc.
 
-    """
+    # Because the authentication header can't be added in image requests these
+    # endpoints are secured with session based security.
+
+
     # pylint: disable=unused-argument
     def _proxy_camera_image(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
@@ -202,7 +203,8 @@ def setup(hass, config):
 
             hass.bus.fire(
                 "camera_stream_started",
-                {"component": DOMAIN,
+                {
+                    "component": DOMAIN,
                     ATTR_ENTITY_ID: entity_id,
                     ATTR_FRIENDLY_LOG_MESSAGE: message})
 
@@ -259,7 +261,8 @@ def setup(hass, config):
 
             hass.bus.fire(
                 "camera_stream_stopped",
-                {"component": DOMAIN,
+                {
+                    "component": DOMAIN,
                     ATTR_ENTITY_ID: entity_id,
                     ATTR_FRIENDLY_LOG_MESSAGE: message})
 
@@ -367,7 +370,8 @@ def setup(hass, config):
                 if (state == STATE_ON and not
                         camera.is_motion_detection_enabled):
                     camera.enable_motion_detection()
-                elif (state == STATE_OFF and
+                elif (
+                        state == STATE_OFF and
                         camera.is_motion_detection_enabled):
                     camera.disable_motion_detection()
 
@@ -375,7 +379,8 @@ def setup(hass, config):
                 if (state == STATE_ON and not
                         camera.is_recording):
                     camera.record_stream()
-                elif (state == STATE_OFF and
+                elif (
+                        state == STATE_OFF and
                         camera.is_recording):
                     camera.stop_recording()
 
@@ -492,10 +497,10 @@ class Camera(Entity):
         self._action_entities[entity_action] = child_entity_id
 
         self._logger.info(
-            'Registerd child switch {0} for {1} on {2}'.format(
-                child_entity_id,
-                entity_action,
-                self.entity_id))
+            'Registerd child switch %s for %s on %s',
+            child_entity_id,
+            entity_action,
+            self.entity_id)
 
     def send_motion_state(self):
         """ Sends an event notifying listeners of the motion
@@ -722,7 +727,8 @@ class Camera(Entity):
 
             self.hass.bus.fire(
                 EVENT_CAMERA_MOTION_DETECTED,
-                {"component": DOMAIN,
+                {
+                    "component": DOMAIN,
                     ATTR_ENTITY_ID: self.entity_id,
                     'event_images_path': event_dir,
                     'event_images_dir': new_event_dir_name})
@@ -762,6 +768,7 @@ class Camera(Entity):
             reverse=True)
 
         count = 0
+        event_data = {}
         for event_dir in event_dirs:
             if count < start:
                 count += 1
@@ -848,7 +855,8 @@ class Camera(Entity):
         recording_length = DEFAULT_RECORDING_SECONDS
         recording_started = datetime.datetime.now()
         recording_time = 0
-        while (recording_time < recording_length
+        while (
+                recording_time < recording_length
                 and self._is_recording):
 
             new_file_name = (
@@ -1019,6 +1027,7 @@ class Camera(Entity):
         attr['is_ftp_configured'] = self.is_ftp_configured
         return attr
 
+    # pylint: disable=too-many-return-statements
     def check_ftp_settings(self):
         """ This comapres the FTP settings stored on the
         device against the expected values """
@@ -1040,7 +1049,7 @@ class Camera(Entity):
 
         return True
 
-    def check_for_required_configurators(self):
+    def check_required_configurators(self):
         """ Launches any common camera configurators based on capabilities """
         if (self.is_motion_detection_supported and
                 not self.is_ftp_configured):

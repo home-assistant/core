@@ -150,7 +150,7 @@ class DlinkCameraDcs930l(Camera):
         self._is_ftp_configured = self.check_ftp_settings()
         self._lastconfig_update_from_device = datetime.datetime.now()
         self.send_motion_state()
-        self.check_for_required_configurators()
+        self.check_required_configurators()
 
     def enable_motion_detection(self):
         """ Enable the motion detection settings for the camera. """
@@ -216,9 +216,10 @@ class DlinkCameraDcs930l(Camera):
         if not os.path.isdir(ftp_path):
             os.makedirs(ftp_path)
             _LOGGER.info(
-                'Camera {0} image path did not exist and was \
-                atomatically created at {1}'
-                .format(self.entity_id, ftp_path))
+                'Camera %s image path did not exist and was \
+                atomatically created at %s',
+                self.entity_id,
+                ftp_path)
 
         self._web_ui_form_data['upload']['FTPHostAddress'] = (
             ftp_server.server_ip)

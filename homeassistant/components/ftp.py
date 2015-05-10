@@ -60,7 +60,7 @@ def setup(hass, config=None):
     if not os.path.isdir(ftp_root_path):
         os.makedirs(ftp_root_path)
         _LOGGER.info('FTP component root path did not exist and was \
-            automatically created at {0}'.format(ftp_root_path))
+            automatically created at %s', ftp_root_path)
 
     server = HomeAssistantFTPServer(
         (server_host, server_port), FtpRequestHandler, hass,
