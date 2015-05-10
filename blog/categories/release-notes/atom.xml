@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-05-01T17:00:04-07:00</updated>
+  <updated>2015-05-09T23:58:15-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -109,7 +109,7 @@ switch:
   <entry>
     <title type="html"><![CDATA[Release notes for March 22, 2015]]></title>
     <link href="https://home-assistant.io/blog/2015/03/22/release-notes/"/>
-    <updated>2015-03-22T01:21:00-07:00</updated>
+    <updated>2015-03-22T00:21:00-08:00</updated>
     <id>https://home-assistant.io/blog/2015/03/22/release-notes</id>
     <content type="html"><![CDATA[<p>A new version of Home Assistant has just been pushed out. It contains bugfixes contributed by <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/trainman419">trainman419</a> and <a href="https://github.com/balloob">me</a>. It also adds a bunch of great new features:</p>
 
@@ -189,7 +189,7 @@ notify:
   <entry>
     <title type="html"><![CDATA[Release notes for March 11, 2015]]></title>
     <link href="https://home-assistant.io/blog/2015/03/11/release-notes/"/>
-    <updated>2015-03-11T19:36:00-07:00</updated>
+    <updated>2015-03-11T18:36:00-08:00</updated>
     <id>https://home-assistant.io/blog/2015/03/11/release-notes</id>
     <content type="html"><![CDATA[<p>It has only been a little over a week since Theodor introduced YAML support for Home Assistant but so much has already happened that it is time for a summary of recent changes. Before mentioning the highlights I want to thank <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/jamespcole">jamespcole</a> and <a href="https://github.com/theolind">theolind</a> for numerous bug fixes, enhancements and new contributions. Thanks!</p>
 

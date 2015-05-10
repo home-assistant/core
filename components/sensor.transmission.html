@@ -104,7 +104,7 @@
   
 
   <p><img src='/images/supported_brands/transmission.png' class='brand pull-right' />
-James Cole has contributed support to integrate Transmission. This will allow you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
+The <a href="http://www.transmissionbt.com/">Transmission</a> platform allows you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -132,6 +132,22 @@ James Cole has contributed support to integrate Transmission. This will allow yo
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;upload_speed&#39;</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<p>To use the monitoring, your transmission client needs to allow remote access. If you are running the graphical transmission client (transmission-gtk) go to <strong>Edit</strong> -> <strong>Perferences</strong> and choose the tab <strong>Remote</strong>. Check <strong>Allow remote access</strong>, enter your username and your password, and uncheck the network restriction as needed.</p>
+
+<p class='img'>
+  <img src='/images/screenshots/transmission-perf.png' />
+</p>
+
+
+<p>If everthing is setup correctly, the details will show up in the frontend.</p>
+
+<p class='img'>
+  <img src='/images/screenshots/transmission.png' />
+</p>
+
+
+<p>James Cole has contributed the transmission platform.</p>
 
 
 </article>

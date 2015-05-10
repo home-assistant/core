@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Category: component - Home Assistant</title>
+    <title>UTC & Time zone awareness - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Category: component">
+    <meta name="description" content="The Home Assistant core now uses UTC as the internal date time.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Category: component">
+    <meta property="og:title" content="UTC & Time zone awareness">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/categories/component/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Category: component">
+    <meta property="og:description" content="The Home Assistant core now uses UTC as the internal date time.">
     
     
     
@@ -92,176 +92,101 @@
         <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
-          <article class="page">
-
-  
+          <article class="post">
   <header>
-    <h1 class="title indent">
-      Category: Component
-    </h1>
-  </header>
-  <hr class="divider">
+  
+  <h1 class="title indent">UTC & Time zone awareness</h1>
   
 
-  <div id="archive-list">
   
-  
-  
+  <div class="meta clearfix">
     
-    <h2>2015</h2>
+
+
+
+
+
+
+
+
   
-    <article>
-      
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-02-08T09:01:23-08:00" pubdate>
-      <span class='month'>Feb</span> <span class='day'>08</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/02/08/looking-at-the-past/">Looking at the past</a></h1>
+<time datetime="2015-05-09T23:08:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> May 9, 2015</time>
     
-    <footer class="meta">
-      
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    
 
   <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
       
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-        <li><a class='category' href='/blog/categories/frontend/'>frontend</a></li>
+        <li><a class='category' href='/blog/categories/core/'>core</a></li>
       
     
     </ul>
   </span>
 
-    </footer>
     
-    <hr class="divider">
+      <a class='comments'
+         href="#disqus_thread"
+         >Comments</a>
+    
   </div>
-
-</div>
-    </article>
   
-  
-  
-    <article>
-      
+</header>
 
-<div class="grid">
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-13T08:29:04-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>13</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/13/nest-in-da-house/">Nest in the house!</a></h1>
-    
-    <footer class="meta">
-      
 
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
 
-    </footer>
-    
-    <hr class="divider">
-  </div>
+  <p>I have recently merged code to refactor Home Assistant to use only UTC times internally. A much needed refactor. I&rsquo;ve added some extra test coverage to time sensitive parts to ensure stability. The code has been live in the dev branch for the last 9 days and will be soon released to the master branch.</p>
 
-</div>
-    </article>
-  
-  
-  
-    <article>
-      
+<p>From now on all internal communication will be done in UTC: time changed events, datetime attributes of states, etc. To get the current time in UTC you can call <code>homeassistant.util.dt.utcnow()</code>. This is a timezone aware UTC datetime object. <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/util/dt.py"><code>homeassistant.util.dt</code></a> is a new util package with date helpers.</p>
 
-<div class="grid">
+<p>There is also such a thing as local time. Local time is based on the time zone that you have setup in your <code>configuration.yaml</code>. Local times should only be used for user facing information: logs, frontend and automation settings in <code>configuration.yaml</code>.</p>
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-11T21:49:08-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>11</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/">Bootstrapping your setup with Discovery</a></h1>
-    
-    <footer class="meta">
-      
+<h3>Setting up your time zone</h3>
 
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
+<p>Setting up a time zone happens in <code>configuration.yaml</code>. If you have no time zone setup, it will be auto detected using the existing detection code using <a href="https://freegeoip.net">freegeoip.net</a>. You can find a list of compatible time zones on <a href="http://en.wikipedia.org/wiki/List_of_tz_database_time_zones">Wikipedia</a>.</p>
 
-    </footer>
-    
-    <hr class="divider">
-  </div>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">time_zone</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">America/Los_Angeles</span>
+</span></code></pre></td></tr></table></div></figure>
 
-</div>
-    </article>
-  
-  
-  
-    <article>
-      
 
-<div class="grid">
+<h3>Compatibility</h3>
 
-  <div class="grid__item one-fifth palm-one-whole">
-    <time datetime="2015-01-04T13:29:07-08:00" pubdate>
-      <span class='month'>Jan</span> <span class='day'>04</span>
-    </time>
-  </div>
-  <div class="grid__item four-fifths palm-one-whole">
-    <h1 class="gamma"><a href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/">Hello PushBullet, nice talking to you</a></h1>
-    
-    <footer class="meta">
-      
+<p>The changes to the code are mostly backwards compatible. The old <code>hass.track_time_change</code> and <code>hass.track_point_in_time</code> use now internally two new methods: <code>hass.track_utc_time_change</code> and <code>hass.track_point_in_utc_time</code>. The usage of the old methods have not changed and should be backwards compatible.</p>
 
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
+<p>This refactor adds a new migration for the database adding a <code>utc_offset</code> column to events and states. This information is currently not used but can prove useful in the future when we start analyzing the historical data.</p>
 
-    </footer>
-    
-    <hr class="divider">
-  </div>
+<h3>Backwards incompatible stuff</h3>
 
-</div>
-    </article>
-  
-</div>
+<p>All built-in components have been upgraded. The following list is only for people that run custom components:</p>
+
+<ul>
+<li><code>hass.track_time_change</code> and <code>hass.track_point_in_time</code> will now return a time zone aware datetime object. Python does not allow comparing a naive with an aware datetime object.</li>
+<li>the sun attributes for rising and setting are now in UTC. The methods <code>sun.next_rising(hass)</code> and <code>sun.next_setting(hass)</code> are backwards compatible, just be careful if you used to read the raw attributes.</li>
+<li>the API sends all times in UTC. If you use anything else besides the frontend to talk to HA, make sure it handles it differently.</li>
+</ul>
+
 
 
 </article>
+
+ 
+<section id="disqus">
+  <h3 class="indent title">Comments</h3>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
 
 
         </div>
@@ -278,15 +203,15 @@
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/categories/component/index.html"
-     data-counturl="https://home-assistant.io/blog/categories/component/index.html" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/"
+     data-counturl="https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/categories/component/index.html"
+         data-href="https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/"
          data-layout="button_count">
     </div>
   
@@ -317,10 +242,6 @@
   <h1 class="title delta">Other Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2015/05/09/utc-time-zone-awareness/">UTC & Time zone awareness</a>
-        </li>
       
     
       
@@ -393,7 +314,10 @@
   var disqus_shortname = 'home-assistant';
   
     
-    var disqus_script = 'count.js';
+    // var disqus_developer = 1;
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/';
+    var disqus_script = 'embed.js';
   
   (function () {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
