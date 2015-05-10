@@ -49,3 +49,6 @@ transmissionrpc>=0.11
 
 # OpenWeatherMap Web API
 pyowm>=2.2.0
+
+# Arduino Firmata
+PyMata>=2.06
