@@ -32,7 +32,7 @@ DISCOVERY_PLATFORMS = {
     discovery.services.BELKIN_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
-    camera.DISCOVER_SWITCHES: 'generic_switch',
+    camera.DISCOVER_SWITCHES: 'child_switch',
 }
 
 _LOGGER = logging.getLogger(__name__)

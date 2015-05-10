@@ -88,7 +88,7 @@
         <img  hidden?="{{connectionFailed}}" src="" onload="" id="camera_image" class="camera-image" />
         <div center horizontal layout>
           <div>
-            <core-tooltip label="Toggle Motion Detection" position="top">
+            <core-tooltip label="Toggle Motion Detection" position="top" hidden?="{{ !supportsMotion }}">
               <paper-icon-button on-click="{{toggleMotionDetection}}" icon="{{motionDetectionIcon}}"></paper-icon-button>
             </core-tooltip>
             <core-tooltip label="Take Picture" position="top">
@@ -248,11 +248,14 @@
     ftpComponentLoaded: false,
     configureFtpComponent: false,
     hasTabs: true,
+    supportsMotion: false,
 
     stateObjChanged: function(oldVal, newVal) {
-      this.motionDetectionIcon = (newVal.attributes['is_motion_detection_enabled']) ? 'visibility-off' : 'visibility';
-      this.recordingIcon = (newVal.attributes['is_recording']) ? 'av:videocam-off' : 'av:videocam';
-
+      if(newVal) {
+        this.motionDetectionIcon = (newVal.attributes['is_motion_detection_enabled']) ? 'visibility-off' : 'visibility';
+        this.supportsMotion = newVal.attributes['is_motion_detection_supported'];
+        this.recordingIcon = (newVal.attributes['is_recording']) ? 'av:videocam-off' : 'av:videocam';
+      }
     },
 
     toggleMotionDetection: function(ev) {

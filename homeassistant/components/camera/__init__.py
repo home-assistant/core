@@ -60,6 +60,8 @@ SERVICE_CAMERA = 'camera_service'
 
 STATE_RECORDING = 'recording'
 
+DEFAULT_RECORDING_SECONDS = 30
+
 
 # The number of seconds between images before being
 # considerd a new event
@@ -126,6 +128,8 @@ def setup(hass, config):
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
                       {ATTR_SERVICE: DISCOVER_SWITCHES,
                        ATTR_DISCOVERED: data})
+
+        entity.check_for_required_configurators()
 
     # pylint: disable=unused-argument
     def _proxy_camera_image(handler, path_match, data):
@@ -796,7 +800,7 @@ class Camera(Entity):
         if not os.path.isdir(rec_dir_full):
             os.makedirs(rec_dir_full)
 
-        recording_length = 10
+        recording_length = DEFAULT_RECORDING_SECONDS
         recording_started = datetime.datetime.now()
         recording_time = 0
         while (recording_time < recording_length
