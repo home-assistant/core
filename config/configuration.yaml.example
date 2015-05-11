@@ -28,7 +28,8 @@ wink:
   access_token: 'YOUR_TOKEN'
 
 device_tracker:
-  # The following types are available: netgear, tomato, luci, nmap_tracker
+  # The following types are available: ddwrt, netgear, tomato, luci,
+  # and nmap_tracker
   platform: netgear
   host: 192.168.1.1
   username: admin
