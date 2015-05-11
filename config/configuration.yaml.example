@@ -66,7 +66,7 @@ device_sun_light_trigger:
   # Optional: disable lights being turned off when everybody leaves the house
   # disable_turn_off: 1
 
-# A comma seperated list of states that have to be tracked as a single group
+# A comma separated list of states that have to be tracked as a single group
 # Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
 group: 
   living_room:
