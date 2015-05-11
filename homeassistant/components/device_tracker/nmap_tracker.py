@@ -1,4 +1,25 @@
-""" Supports scanning using nmap. """
+"""
+homeassistant.components.device_tracker.nmap
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Device tracker platform that supports scanning a network with nmap.
+
+Configuration:
+
+To use the nmap tracker you will need to add something like the following
+to your config/configuration.yaml
+
+device_tracker:
+  platform: nmap_tracker
+  hosts: 192.168.1.1/24
+
+Variables:
+
+hosts
+*Required
+The IP addresses to scan in the network-prefix notation (192.168.1.1/24) or
+the range notation (192.168.1.1-255).
+"""
 import logging
 from datetime import timedelta, datetime
 from collections import namedtuple
@@ -36,7 +57,7 @@ Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 def _arp(ip_address):
-    """ Get the MAC address for a given IP """
+    """ Get the MAC address for a given IP. """
     cmd = ['arp', '-n', ip_address]
     arp = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     out, _ = arp.communicate()
