@@ -30,6 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
+PLATFORM_FORMAT = '{}.{}'
+
 
 def setup_component(hass, domain, config=None):
     """ Setup a component and all its dependencies. """
@@ -93,6 +95,35 @@ def _setup_component(hass, domain, config):
         _LOGGER.exception("Error during setup of component %s", domain)
 
     return False
+
+
+def prepare_setup_platform(hass, config, domain, platform_name):
+    """ Loads a platform and makes sure dependencies are setup. """
+    _ensure_loader_prepared(hass)
+
+    platform_path = PLATFORM_FORMAT.format(domain, platform_name)
+
+    platform = loader.get_component(platform_path)
+
+    # Not found
+    if platform is None:
+        _LOGGER.error('Unable to find platform %s', platform_path)
+        return None
+
+    # Already loaded or no dependencies
+    elif (platform_path in hass.config.components or
+          not hasattr(platform, 'DEPENDENCIES')):
+        return platform
+
+    # Load dependencies
+    for component in platform.DEPENDENCIES:
+        if not setup_component(hass, component, config):
+            _LOGGER.error(
+                'Unable to prepare setup for platform %s because not all '
+                'dependencies could be initialized', platform_path)
+            return None
+
+    return platform
 
 
 # pylint: disable=too-many-branches, too-many-statements
