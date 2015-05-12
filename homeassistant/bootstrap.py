@@ -119,8 +119,8 @@ def prepare_setup_platform(hass, config, domain, platform_name):
     for component in platform.DEPENDENCIES:
         if not setup_component(hass, component, config):
             _LOGGER.error(
-                'Unable to prepare setup for platform %s because not all '
-                'dependencies could be initialized', platform_path)
+                'Unable to prepare setup for platform %s because dependency '
+                '%s could not be initialized', platform_path, component)
             return None
 
     return platform
