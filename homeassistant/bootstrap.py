@@ -28,7 +28,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_COMPONENT = "component"
+ATTR_COMPONENT = 'component'
 
 PLATFORM_FORMAT = '{}.{}'
 
@@ -69,7 +69,7 @@ def _setup_component(hass, domain, config):
 
     if missing_deps:
         _LOGGER.error(
-            "Not initializing %s because not all dependencies loaded: %s",
+            'Not initializing %s because not all dependencies loaded: %s',
             domain, ", ".join(missing_deps))
 
         return False
@@ -89,10 +89,10 @@ def _setup_component(hass, domain, config):
             return True
 
         else:
-            _LOGGER.error("component %s failed to initialize", domain)
+            _LOGGER.error('component %s failed to initialize', domain)
 
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error during setup of component %s", domain)
+        _LOGGER.exception('Error during setup of component %s', domain)
 
     return False
 
@@ -153,12 +153,12 @@ def from_config_dict(config, hass=None):
                   if ' ' not in key and key != homeassistant.DOMAIN)
 
     if not core_components.setup(hass, config):
-        _LOGGER.error("Home Assistant core failed to initialize. "
-                      "Further initialization aborted.")
+        _LOGGER.error('Home Assistant core failed to initialize. '
+                      'Further initialization aborted.')
 
         return hass
 
-    _LOGGER.info("Home Assistant core initialized")
+    _LOGGER.info('Home Assistant core initialized')
 
     # Setup the components
     for domain in loader.load_order_components(components):
@@ -189,7 +189,7 @@ def enable_logging(hass):
     logging.basicConfig(level=logging.INFO)
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.path("home-assistant.log")
+    err_log_path = hass.config.path('home-assistant.log')
     err_path_exists = os.path.isfile(err_log_path)
 
     # Check if we can write to the error log if it exists or that
@@ -208,7 +208,7 @@ def enable_logging(hass):
 
     else:
         _LOGGER.error(
-            "Unable to setup error log %s (access denied)", err_log_path)
+            'Unable to setup error log %s (access denied)', err_log_path)
 
 
 def process_ha_core_config(hass, config):
@@ -226,7 +226,7 @@ def process_ha_core_config(hass, config):
             hac.time_zone = time_zone
             date_util.set_default_time_zone(time_zone)
         else:
-            _LOGGER.error("Received invalid time zone %s", time_zone_str)
+            _LOGGER.error('Received invalid time zone %s', time_zone_str)
 
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),

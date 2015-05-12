@@ -137,15 +137,16 @@ class EntityComponent(object):
             # Support old deprecated method for now - 3/1/2015
             if hasattr(platform, 'get_devices'):
                 self.logger.warning(
-                    "Please upgrade %s to return new entities using "
-                    "setup_platform. See %s/demo.py for an example.",
+                    'Please upgrade %s to return new entities using '
+                    'setup_platform. See %s/demo.py for an example.',
                     platform_name, self.domain)
-                self.add_entities(platform.get_devices(self.hass, config))
+                self.add_entities(
+                    platform.get_devices(self.hass, platform_config))
 
             else:
                 self.logger.exception(
-                    "Error while setting up platform %s", platform_type)
+                    'Error while setting up platform %s', platform_type)
 
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
-                "Error while setting up platform %s", platform_type)
+                'Error while setting up platform %s', platform_type)
