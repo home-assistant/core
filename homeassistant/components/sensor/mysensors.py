@@ -32,6 +32,8 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF)
 
 CONF_PORT = "port"
+CONF_DEBUG = "debug"
+CONF_PERSISTENCE = "persistence"
 
 ATTR_NODE_ID = "node_id"
 ATTR_CHILD_ID = "child_id"
@@ -81,9 +83,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Missing required key 'port'")
         return False
 
-    gateway = mysensors.SerialGateway(port, sensor_update)
-    gateway.start()
+    persistence = config.get(CONF_PERSISTENCE, True)
+
+    gateway = mysensors.SerialGateway(port, sensor_update,
+                                      persistence=persistence)
     gateway.metric = is_metric
+    gateway.debug = config.get(CONF_DEBUG, False)
+    gateway.start()
+
+    if persistence:
+        for nid in gateway.sensors:
+            sensor_update('sensor_update', nid)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                          lambda event: gateway.stop())
