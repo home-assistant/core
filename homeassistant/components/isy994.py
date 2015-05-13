@@ -1,4 +1,7 @@
 """
+homeassistant.components.isy994
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Connects to an ISY-994 controller and loads relevant components to control its
 devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
 """
@@ -32,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """
-    Setup isy994 component.
+    Setup ISY994 component.
     This will automatically import associated lights, switches, and sensors.
     """
     try:
@@ -101,7 +104,7 @@ def stop(event):
 
 
 class ISYDeviceABC(ToggleEntity):
-    """ Abstract Class for an ISY device within home assistant. """
+    """ Abstract Class for an ISY device. """
 
     _attrs = {}
     _onattrs = []
@@ -142,7 +145,7 @@ class ISYDeviceABC(ToggleEntity):
 
     @property
     def value(self):
-        """ returns the unclean value from the controller """
+        """ Returns the unclean value from the controller. """
         # pylint: disable=protected-access
         return self.node.status._val
 
@@ -156,7 +159,7 @@ class ISYDeviceABC(ToggleEntity):
 
     @property
     def unique_id(self):
-        """ Returns the id of this isy sensor """
+        """ Returns the id of this ISY sensor. """
         # pylint: disable=protected-access
         return self.node._id
 
@@ -199,7 +202,7 @@ class ISYDeviceABC(ToggleEntity):
         return self.value
 
     def turn_on(self, **kwargs):
-        """ turns the device on """
+        """ Turns the device on. """
         if self.domain is not 'sensor':
             attrs = [kwargs.get(name) for name in self._onattrs]
             self.node.on(*attrs)
@@ -207,7 +210,7 @@ class ISYDeviceABC(ToggleEntity):
             _LOGGER.error('ISY cannot turn on sensors.')
 
     def turn_off(self, **kwargs):
-        """ turns the device off """
+        """ Turns the device off. """
         if self.domain is not 'sensor':
             self.node.off()
         else:

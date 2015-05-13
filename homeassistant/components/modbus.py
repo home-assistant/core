@@ -1,9 +1,12 @@
 """
-components.modbus
-~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.modbus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Modbus component, using pymodbus (python3 branch)
 
-typical declaration in configuration.yaml
+Configuration:
+
+To use the Modbus component you will need to add something like the following
+to your config/configuration.yaml
 
 #Modbus TCP
 modbus:
@@ -27,10 +30,8 @@ import logging
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
-# The domain of your component. Should be equal to the name of your component
 DOMAIN = "modbus"
 
-# List of component names (string) your component depends upon
 DEPENDENCIES = []
 
 # Type of network
@@ -86,11 +87,11 @@ def setup(hass, config):
         return False
 
     def stop_modbus(event):
-        """ Stop Modbus service"""
+        """ Stop Modbus service. """
         NETWORK.close()
 
     def start_modbus(event):
-        """ Start Modbus service"""
+        """ Start Modbus service. """
         NETWORK.connect()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 

@@ -1,4 +1,7 @@
 """
+homeassistant.components.notify.pushover
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Pushover platform for notify component.
 
 Configuration:
@@ -11,7 +14,7 @@ notify:
     api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
     user_key: ABCDEFGHJKLMNOPQRSTUVXYZ
 
-VARIABLES:
+Variables:
 
 api_key
 *Required

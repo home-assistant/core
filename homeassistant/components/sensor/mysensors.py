@@ -1,13 +1,23 @@
 """
 homeassistant.components.sensor.mysensors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-MySensors sensors.
+Support for MySensors sensors.
 
-Config:
-  sensor:
-    - platform: mysensors
-      port: '/dev/ttyACM0'
+Configuration:
+
+To use the MySensors sensor you will need to add something like the
+following to your config/configuration.yaml
+
+sensor:
+  platform: mysensors
+  port: '/dev/ttyACM0'
+
+Variables:
+
+port
+*Required
+Port of your connection to your MySensors device.
 """
 import logging
 

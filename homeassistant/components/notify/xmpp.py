@@ -15,7 +15,7 @@ notify:
   password: YOUR_JABBER_ACCOUNT_PASSWORD
   recipient: YOUR_RECIPIENT
 
-VARIABLES:
+Variables:
 
 sender
 *Required
@@ -110,7 +110,7 @@ class SendNotificationBot(sleekxmpp.ClientXMPP):
 
         self.use_tls = True
         self.use_ipv6 = False
-        self.add_event_handler("failed_auth", self.check_credentials)
+        self.add_event_handler('failed_auth', self.check_credentials)
         self.add_event_handler('session_start', self.start)
         self.connect()
         self.process(block=False)

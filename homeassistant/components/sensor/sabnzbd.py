@@ -1,6 +1,6 @@
 """
 homeassistant.components.sensor.sabnzbd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Monitors SABnzbd NZB client API
 
@@ -22,14 +22,12 @@ sensor:
         - type: 'disk_size'
         - type: 'disk_free'
 
-VARIABLES:
+Variables:
 
 base_url
 *Required
 This is the base URL of your SABnzbd instance including the port number if not
-running on 80
-Example: http://192.168.1.32:8124/
-
+running on 80. Example: http://192.168.1.32:8124/
 
 name
 *Optional
@@ -44,9 +42,7 @@ These are the variables for the monitored_variables array:
 type
 *Required
 The variable you wish to monitor, see the configuration example above for a
-list of all available variables
-
-
+list of all available variables.
 """
 
 from homeassistant.util import Throttle
@@ -75,7 +71,7 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors """
+    """ Sets up the sensors. """
     api_key = config.get("api_key")
     base_url = config.get("base_url")
     name = config.get("name", "SABnzbd")

@@ -1,8 +1,8 @@
 """
 homeassistant.components.logbook
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Parses events and generates a human log
+Parses events and generates a human log.
 """
 from itertools import groupby
 

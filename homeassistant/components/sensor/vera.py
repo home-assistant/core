@@ -1,7 +1,11 @@
 """
+homeassistant.components.sensor.vera
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Support for Vera sensors.
 
 Configuration:
+
 To use the Vera sensors you will need to add something like the following to
 your config/configuration.yaml
 
@@ -15,7 +19,7 @@ sensor:
         13:
             name: Another sensor
 
-VARIABLES:
+Variables:
 
 vera_controller_url
 *Required
@@ -96,12 +100,12 @@ def get_devices(hass, config):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Performs setup for Vera controller devices """
+    """ Performs setup for Vera controller devices. """
     add_devices(get_devices(hass, config))
 
 
 class VeraSensor(Entity):
-    """ Represents a Vera Sensor """
+    """ Represents a Vera Sensor. """
 
     def __init__(self, vera_device, extra_data=None):
         self.vera_device = vera_device

@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def create_event_listener(schedule, event_listener_data):
-    """ Create a TimeEvent based on the description """
+    """ Create a TimeEvent based on the description. """
 
     service = event_listener_data['service']
     (hour, minute, second) = [int(x) for x in
@@ -33,7 +33,7 @@ def create_event_listener(schedule, event_listener_data):
 
 # pylint: disable=too-few-public-methods
 class TimeEventListener(ServiceEventListener):
-    """ The time event that the scheduler uses """
+    """ The time event that the scheduler uses. """
 
     # pylint: disable=too-many-arguments
     def __init__(self, schedule, service, hour, minute, second):
@@ -44,7 +44,7 @@ class TimeEventListener(ServiceEventListener):
         self.second = second
 
     def schedule(self, hass):
-        """ Schedule this event so that it will be called """
+        """ Schedule this event so that it will be called. """
 
         next_time = datetime.now().replace(hour=self.hour,
                                            minute=self.minute,

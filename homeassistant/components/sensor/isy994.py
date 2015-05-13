@@ -1,8 +1,11 @@
-""" Support for ISY994 sensors. """
-# system imports
+"""
+homeassistant.components.sensor.isy994
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Support for ISY994 sensors.
+"""
 import logging
 
-# homeassistant imports
 from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
                                              HIDDEN_STRING)
 from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_HOME,
@@ -24,7 +27,7 @@ DEFAULT_HIDDEN_WEATHER = ['Temperature_High', 'Temperature_Low', 'Feels_Like',
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the isy994 platform. """
+    """ Sets up the ISY994 platform. """
     # pylint: disable=protected-access
     logger = logging.getLogger(__name__)
     devs = []
@@ -81,7 +84,7 @@ class WeatherPseudoNode(object):
 
 
 class ISYSensorDevice(ISYDeviceABC):
-    """ represents a isy sensor within home assistant. """
+    """ Represents a ISY sensor. """
 
     _domain = 'sensor'
 

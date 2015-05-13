@@ -22,7 +22,7 @@ DOMAIN = "example"
 
 # List of component names (string) your component depends upon
 # We depend on group because group will be loaded after all the components that
-# initalize devices have been setup.
+# initialize devices have been setup.
 DEPENDENCIES = ['group']
 
 # Configuration key for the entity id we are targetting
@@ -115,5 +115,5 @@ def setup(hass, config):
     # Register our service with HASS.
     hass.services.register(DOMAIN, SERVICE_FLASH, flash_service)
 
-    # Tells the bootstrapper that the component was succesfully initialized
+    # Tells the bootstrapper that the component was successfully initialized
     return True

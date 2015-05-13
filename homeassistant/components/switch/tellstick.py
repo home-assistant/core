@@ -1,4 +1,9 @@
-""" Support for Tellstick switches. """
+"""
+homeassistant.components.switch.tellstick
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Support for Tellstick switches.
+"""
 import logging
 
 
@@ -9,7 +14,7 @@ import tellcore.constants as tellcore_constants
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return tellstick switches. """
+    """ Find and return Tellstick switches. """
     try:
         import tellcore.telldus as telldus
     except ImportError:
@@ -30,7 +35,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TellstickSwitchDevice(ToggleEntity):
-    """ represents a Tellstick switch within home assistant. """
+    """ Represents a Tellstick switch within Home Assistant. """
     last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                               tellcore_constants.TELLSTICK_TURNOFF)
 

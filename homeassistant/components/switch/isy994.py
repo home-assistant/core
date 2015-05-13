@@ -1,8 +1,11 @@
-""" Support for ISY994 switch. """
-# system imports
+"""
+homeassistant.components.switch.isy994
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Support for ISY994 switches.
+"""
 import logging
 
-# homeassistant imports
 from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
                                              HIDDEN_STRING)
 from homeassistant.const import STATE_ON, STATE_OFF  # STATE_OPEN, STATE_CLOSED
@@ -12,7 +15,7 @@ from homeassistant.const import STATE_ON, STATE_OFF  # STATE_OPEN, STATE_CLOSED
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the isy994 platform. """
+    """ Sets up the ISY994 platform. """
     # pylint: disable=too-many-locals
     logger = logging.getLogger(__name__)
     devs = []
@@ -54,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ISYSwitchDevice(ISYDeviceABC):
-    """ represents as isy light within home assistant. """
+    """ Represents as ISY light. """
 
     _domain = 'switch'
     _dtype = 'binary'
@@ -62,7 +65,7 @@ class ISYSwitchDevice(ISYDeviceABC):
 
 
 class ISYProgramDevice(ISYSwitchDevice):
-    """ represents a door that can be manipulated within home assistant. """
+    """ Represents a door that can be manipulated. """
 
     _domain = 'switch'
     _dtype = 'binary'
@@ -74,9 +77,9 @@ class ISYProgramDevice(ISYSwitchDevice):
         self.action_node = actions
 
     def turn_on(self, **kwargs):
-        """ turns the device on/closes the device """
+        """ Turns the device on/closes the device. """
         self.action_node.runThen()
 
     def turn_off(self, **kwargs):
-        """ turns the device off/opens the device """
+        """ Turns the device off/opens the device. """
         self.action_node.runElse()

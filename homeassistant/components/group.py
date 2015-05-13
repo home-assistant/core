@@ -1,6 +1,6 @@
 """
-homeassistant.components.groups
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to group devices that can be turned on or off.
 """

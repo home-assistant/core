@@ -1,11 +1,13 @@
 """
+homeassistant.components.discovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Starts a service to scan in intervals for new devices.
 
 Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
 
 Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
-
 """
 import logging
 import threading
