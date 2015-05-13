@@ -1,4 +1,6 @@
 """
+homeassistant.components.scheduler.time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An event in the scheduler component that will call the service
 every specified day at the time specified.
 A time event need to have the type 'time', which service to call and at
@@ -11,7 +13,6 @@ which time.
 }
 
 """
-
 from datetime import datetime, timedelta
 import logging
 
