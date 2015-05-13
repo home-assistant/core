@@ -217,13 +217,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             try:
                 data.update(json.loads(body_content))
             except (TypeError, ValueError):
-                # TypeError if JSON object is not a dict
-                # ValueError if we could not parse JSON
-                _LOGGER.exception(
-                    "Exception parsing JSON: %s", body_content)
-                self.write_json_message(
-                    "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
-                return
+                _LOGGER.info("POST Request body not JSON - ignoring.");
 
         if self.server.no_password_set:
             api_password = self.server.api_password
