@@ -11,26 +11,26 @@ following to your config/configuration.yaml
 
 sensor:
   platform: time_date
-  monitored_variables:
+  display_options:
     - type: 'time'
     - type: 'date'
     - type: 'date_time'
     - type: 'time_date'
+    - type: 'time_utc'
+    - type: 'beat'
 
-VARIABLES:
+Variables:
 
-monitored_variables
+display_options
 *Required
-An array specifying the variables to monitor.
+An array specifying the variables to display.
 
-These are the variables for the monitored_variables array:
+These are the variables for the display_options array.:
 
 type
 *Required
 The variable you wish to display, see the configuration example above for a
-list of all available variables
-
-
+list of all available variables.
 """
 import logging
 
@@ -38,11 +38,13 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-SENSOR_TYPES = {
+OPTION_TYPES = {
     'time': 'Time',
     'date': 'Date',
     'date_time': 'Date & Time',
-    'time_date': 'Time & Date'
+    'time_date': 'Time & Date',
+    'beat': 'Time (beat)',
+    'time_utc': 'Time (UTC)',
 }
 
 
@@ -54,9 +56,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     dev = []
-    for variable in config['monitored_variables']:
-        if variable['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable['type'])
+    for variable in config['display_options']:
+        if variable['type'] not in OPTION_TYPES:
+            _LOGGER.error('Option type: "%s" does not exist', variable['type'])
         else:
             dev.append(TimeDateSensor(variable['type']))
 
@@ -67,9 +69,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TimeDateSensor(Entity):
     """ Implements a Time and Date sensor. """
 
-    def __init__(self, sensor_type):
-        self._name = SENSOR_TYPES[sensor_type]
-        self.type = sensor_type
+    def __init__(self, option_type):
+        self._name = OPTION_TYPES[option_type]
+        self.type = option_type
         self._state = None
         self.update()
 
@@ -86,9 +88,15 @@ class TimeDateSensor(Entity):
     def update(self):
         """ Gets the latest data and updates the states. """
 
-        time_date = dt_util.now()
-        time = dt_util.datetime_to_short_time_str(time_date)
-        date = dt_util.datetime_to_short_date_str(time_date)
+        time_date = dt_util.utcnow()
+        time = dt_util.datetime_to_short_time_str(dt_util.as_local(time_date))
+        time_utc = dt_util.datetime_to_short_time_str(time_date)
+        date = dt_util.datetime_to_short_date_str(dt_util.as_local(time_date))
+
+        # Calculate the beat (Swatch Internet Time) time without date.
+        hours, minutes, seconds = time_date.strftime('%H:%M:%S').split(':')
+        beat = ((int(seconds) + (int(minutes) * 60) + ((int(hours) + 1) *
+                                                       3600)) / 86.4)
 
         if self.type == 'time':
             self._state = time
@@ -98,3 +106,7 @@ class TimeDateSensor(Entity):
             self._state = date + ', ' + time
         elif self.type == 'time_date':
             self._state = time + ', ' + date
+        elif self.type == 'time_utc':
+            self._state = time_utc
+        elif self.type == 'beat':
+            self._state = '{0:.2f}'.format(beat)
