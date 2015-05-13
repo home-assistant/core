@@ -1,7 +1,7 @@
 """
 homeassistant.components.scheduler
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A component that will act as a scheduler and performe actions based
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A component that will act as a scheduler and perform actions based
 on the events in the schedule.
 
 It will read a json object from schedule.json in the config dir
