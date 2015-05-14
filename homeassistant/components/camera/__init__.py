@@ -220,9 +220,13 @@ def setup(hass, config):
                 while True:
 
                     if camera.username and camera.password:
-                      response = requests.get(camera.still_image_url, auth=HTTPBasicAuth(camera.username, camera.password))
+                        response = requests.get(
+                            camera.still_image_url,
+                            auth=HTTPBasicAuth(
+                                camera.username,
+                                camera.password))
                     else:
-                      response = requests.get(camera.still_image_url)
+                        response = requests.get(camera.still_image_url)
 
                     headers_str = '\r\n'.join((
                         'Content-length: {}'.format(len(response.content)),
