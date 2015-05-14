@@ -1,6 +1,6 @@
 """
 homeassistant.components.sensor.transmission
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Monitors Transmission BitTorrent client API
 
@@ -21,17 +21,15 @@ sensor:
         - type: 'download_speed'
         - type: 'upload_speed'
 
-VARIABLES:
+Variables:
 
 host
 *Required
-This is the IP address of your Transmission Daemon
-Example: 192.168.1.32
+This is the IP address of your Transmission daemon. Example: 192.168.1.32
 
 port
 *Optional
-The port your Transmission daemon uses, defaults to 9091
-Example: 8080
+The port your Transmission daemon uses, defaults to 9091. Example: 8080
 
 username
 *Required
@@ -43,7 +41,7 @@ Your Transmission password
 
 name
 *Optional
-The name to use when displaying this Transmission instance
+The name to use when displaying this Transmission instance.
 
 monitored_variables
 *Required
@@ -54,9 +52,7 @@ These are the variables for the monitored_variables array:
 type
 *Required
 The variable you wish to monitor, see the configuration example above for a
-list of all available variables
-
-
+list of all available variables.
 """
 
 from homeassistant.util import Throttle
@@ -84,7 +80,7 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors """
+    """ Sets up the sensors. """
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
@@ -123,7 +119,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TransmissionSensor(Entity):
-    """ A Transmission sensor """
+    """ A Transmission sensor. """
 
     def __init__(self, sensor_type, transmission_client, client_name):
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -158,7 +154,7 @@ class TransmissionSensor(Entity):
                 )
 
     def update(self):
-        """ Gets the latest from Transmission and updates the state. """
+        """ Gets the latest data from Transmission and updates the state. """
         self.refresh_transmission_data()
         if self.type == 'current_status':
             if self.transmission_client.session:

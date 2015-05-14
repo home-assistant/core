@@ -196,11 +196,13 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 continue
 
-            elif event.event_type == EVENT_STATE_CHANGED:
-                self.record_state(
-                    event.data['entity_id'], event.data.get('new_state'))
+            event_id = self.record_event(event)
 
-            self.record_event(event)
+            if event.event_type == EVENT_STATE_CHANGED:
+                self.record_state(
+                    event.data['entity_id'], event.data.get('new_state'),
+                    event_id)
+
             self.queue.task_done()
 
     def event_listener(self, event):
@@ -212,22 +214,30 @@ class Recorder(threading.Thread):
         """ Tells the recorder to shut down. """
         self.queue.put(self.quit_object)
 
-    def record_state(self, entity_id, state):
+    def record_state(self, entity_id, state, event_id):
         """ Save a state to the database. """
         now = date_util.utcnow()
 
         # State got deleted
         if state is None:
-            info = (entity_id, '', "{}", now, now, now)
+            state_state = ''
+            state_attr = '{}'
+            last_changed = last_updated = now
         else:
-            info = (
-                entity_id.lower(), state.state, json.dumps(state.attributes),
-                state.last_changed, state.last_updated, now, self.utc_offset)
+            state_state = state.state
+            state_attr = json.dumps(state.attributes)
+            last_changed = state.last_changed
+            last_updated = state.last_updated
+
+        info = (
+            entity_id, state_state, state_attr, last_changed, last_updated,
+            now, self.utc_offset, event_id)
 
         self.query(
             "INSERT INTO states ("
             "entity_id, state, attributes, last_changed, last_updated,"
-            "created, utc_offset) VALUES (?, ?, ?, ?, ?, ?, ?)", info)
+            "created, utc_offset, event_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            info)
 
     def record_event(self, event):
         """ Save an event to the database. """
@@ -237,10 +247,10 @@ class Recorder(threading.Thread):
             self.utc_offset
         )
 
-        self.query(
+        return self.query(
             "INSERT INTO events ("
             "event_type, event_data, origin, created, time_fired, utc_offset"
-            ") VALUES (?, ?, ?, ?, ?, ?)", info)
+            ") VALUES (?, ?, ?, ?, ?, ?)", info, RETURN_LASTROWID)
 
     def query(self, sql_query, data=None, return_value=None):
         """ Query the database. """
@@ -376,6 +386,19 @@ class Recorder(threading.Thread):
 
             save_migration(3)
 
+        if migration_id < 4:
+            # We had a bug where we did not save utc offset for recorder runs
+            self.query(
+                """UPDATE recorder_runs SET utc_offset=?
+                   WHERE utc_offset IS NULL""", [self.utc_offset])
+
+            self.query("""
+                ALTER TABLE states
+                ADD COLUMN event_id integer
+            """)
+
+            save_migration(4)
+
     def _close_connection(self):
         """ Close connection to the database. """
         _LOGGER.info("Closing database")
@@ -391,8 +414,9 @@ class Recorder(threading.Thread):
             _LOGGER.warning("Found unfinished sessions")
 
         self.query(
-            "INSERT INTO recorder_runs (start, created) VALUES (?, ?)",
-            (self.recording_start, date_util.utcnow()))
+            """INSERT INTO recorder_runs (start, created, utc_offset)
+               VALUES (?, ?, ?)""",
+            (self.recording_start, date_util.utcnow(), self.utc_offset))
 
     def _close_run(self):
         """ Save end time for current run. """

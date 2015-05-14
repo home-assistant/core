@@ -51,6 +51,7 @@ it should be set to "true" if you want this device excluded
 import logging
 import time
 from requests.exceptions import RequestException
+import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
@@ -132,11 +133,12 @@ class VeraSwitch(ToggleEntity):
 
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.refresh_value('LastTrip')
-            trip_time_str = time.strftime(
-                "%Y-%m-%d %H:%M",
-                time.localtime(int(last_tripped))
-            )
-            attr[ATTR_LAST_TRIP_TIME] = trip_time_str
+            if last_tripped is not None:
+                utc_time = dt_util.utc_from_timestamp(int(last_tripped))
+                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_local_str(
+                    utc_time)
+            else:
+                attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.refresh_value('Tripped')
             attr[ATTR_TRIPPED] = 'True' if tripped == '1' else 'False'
 

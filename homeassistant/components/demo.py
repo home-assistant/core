@@ -1,8 +1,8 @@
 """
 homeassistant.components.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sets up a demo environment that mimics interaction with devices
+Sets up a demo environment that mimics interaction with devices.
 """
 import time
 

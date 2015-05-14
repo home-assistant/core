@@ -1,6 +1,6 @@
 """
 homeassistant.components.notify
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to notify people.
 """
@@ -73,7 +73,7 @@ def setup(hass, config):
 
 # pylint: disable=too-few-public-methods
 class BaseNotificationService(object):
-    """ Provides an ABC for notifcation services. """
+    """ Provides an ABC for notification services. """
 
     def send_message(self, message, **kwargs):
         """

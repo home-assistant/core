@@ -1,4 +1,10 @@
-""" Provides demo lights. """
+"""
+homeassistant.components.light.demo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Demo platform that implements lights.
+
+"""
 import random
 
 from homeassistant.helpers.entity import ToggleEntity

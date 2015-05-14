@@ -937,9 +937,9 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = os.path.join(os.getcwd(), 'config')
 
-    def path(self, path):
+    def path(self, *path):
         """ Returns path to the file within the config dir. """
-        return os.path.join(self.config_dir, path)
+        return os.path.join(self.config_dir, *path)
 
     def temperature(self, value, unit):
         """ Converts temperature to user preferred unit if set. """

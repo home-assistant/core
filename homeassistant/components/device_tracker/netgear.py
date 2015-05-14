@@ -1,4 +1,35 @@
-""" Supports scanning a Netgear router. """
+"""
+homeassistant.components.device_tracker.netgear
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Device tracker platform that supports scanning a Netgear router for device
+presence.
+
+Configuration:
+
+To use the Netgear tracker you will need to add something like the following
+to your config/configuration.yaml
+
+device_tracker:
+  platform: netgear
+  host: YOUR_ROUTER_IP
+  username: YOUR_ADMIN_USERNAME
+  password: YOUR_ADMIN_PASSWORD
+
+Variables:
+
+host
+*Required
+The IP address of your router, e.g. 192.168.1.1.
+
+username
+*Required
+The username of an user with administrative privileges, usually 'admin'.
+
+password
+*Required
+The password for your given admin account.
+"""
 import logging
 from datetime import timedelta
 import threading
@@ -30,7 +61,7 @@ def get_scanner(hass, config):
 
 
 class NetgearDeviceScanner(object):
-    """ This class queries a Netgear wireless router using the SOAP-api. """
+    """ This class queries a Netgear wireless router using the SOAP-API. """
 
     def __init__(self, host, username, password):
         self.last_results = []

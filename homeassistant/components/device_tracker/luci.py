@@ -1,4 +1,39 @@
-""" Supports scanning a OpenWRT router. """
+"""
+homeassistant.components.device_tracker.luci
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Device tracker platform that supports scanning a OpenWRT router for device
+presence.
+
+
+It's required that the luci RPC package is installed on the OpenWRT router:
+# opkg install luci-mod-rpc
+
+Configuration:
+
+To use the Luci tracker you will need to add something like the following
+to your config/configuration.yaml
+
+device_tracker:
+  platform: luci
+  host: YOUR_ROUTER_IP
+  username: YOUR_ADMIN_USERNAME
+  password: YOUR_ADMIN_PASSWORD
+
+Variables:
+
+host
+*Required
+The IP address of your router, e.g. 192.168.1.1.
+
+username
+*Required
+The username of an user with administrative privileges, usually 'admin'.
+
+password
+*Required
+The password for your given admin account.
+"""
 import logging
 import json
 from datetime import timedelta

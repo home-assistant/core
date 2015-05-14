@@ -20,7 +20,7 @@ DEPENDENCIES = ['group', 'device_tracker', 'light']
 CONF_KNOWN_LIGHT = "known_light"
 
 # Attribute to tell which light has to flash whem an unknown person comes home
-# If ommitted will flash all.
+# If omitted will flash all.
 CONF_UNKNOWN_LIGHT = "unknown_light"
 
 # Services to test the alarms

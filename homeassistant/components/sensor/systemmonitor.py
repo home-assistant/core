@@ -1,9 +1,46 @@
 """
 homeassistant.components.sensor.systemmonitor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Shows system monitor values such as: disk, memory and processor use
 
+Configuration:
+
+To use the System monitor sensor you will need to add something like the
+following to your config/configuration.yaml
+
+sensor:
+  platform: systemmonitor
+  resources:
+    - type: 'disk_use_percent'
+      arg: '/'
+    - type: 'disk_use'
+      arg: '/home'
+    - type: 'disk_free'
+      arg: '/'
+    - type: 'memory_use_percent'
+    - type: 'memory_use'
+    - type: 'memory_free'
+    - type: 'processor_use'
+    - type: 'process'
+      arg: 'octave-cli'
+
+Variables:
+
+resources
+*Required
+An array specifying the variables to monitor.
+
+These are the variables for the resources array:
+
+type
+*Required
+The variable you wish to monitor, see the configuration example above for a
+sample list of variables.
+
+arg
+*Optional
+Additional details for the type, eg. path, binary name, etc.
 """
 
 from homeassistant.helpers.entity import Entity
@@ -28,7 +65,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors """
+    """ Sets up the sensors. """
 
     dev = []
     for resource in config['resources']:
@@ -43,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SystemMonitorSensor(Entity):
-    """ A system monitor sensor """
+    """ A system monitor sensor. """
 
     def __init__(self, sensor_type, argument=''):
         self._name = SENSOR_TYPES[sensor_type][0] + ' ' + argument

@@ -1,4 +1,10 @@
-""" Demo platform that has two fake switches. """
+"""
+homeassistant.components.switch.demo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Demo platform that has two fake switches.
+
+"""
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
 
