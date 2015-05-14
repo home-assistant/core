@@ -47,9 +47,6 @@ python-pushover>=0.2
 # Transmission Torrent Client
 transmissionrpc>=0.11
 
-# used by ipcamera for mjpeg streams
-urllib3>=1.7.1
-
 # used for various scraping tasks
 beautifulsoup4>=4.3.2
 

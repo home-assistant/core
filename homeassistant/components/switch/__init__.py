@@ -11,7 +11,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group, discovery, wink, isy994
-import homeassistant.components.camera as camera
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -27,12 +26,14 @@ ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
+DISCOVER_CHILD_SWITCHES = 'switch.child_switches'
+
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     discovery.services.BELKIN_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
-    camera.DISCOVER_SWITCHES: 'child_switch',
+    DISCOVER_CHILD_SWITCHES: 'child_switch',
 }
 
 _LOGGER = logging.getLogger(__name__)

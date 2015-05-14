@@ -9,16 +9,10 @@ entity you can do the following:
 NOTE: the following examples use the camera component for demonstration
 you will need to change the values for you particular component
 
-STEP 1: Add you component a switch discoverable
-In the switch component __init__.py file add the following you component
-to the DISCOVERY_PLATFORMS dictionary, eg:
+STEP 1: Import the DISCOVER_CHILD_SWITCHES constant to your component
 
-DISCOVERY_PLATFORMS = {
-    camera.DISCOVER_SWITCHES: 'child_switch',
-}
-
-and also add import your compnent, eg:
-import homeassistant.components.camera as camera
+from homeassistant.components.switch import (
+    DISCOVER_CHILD_SWITCHES)
 
 STEP 2: Set up switch discoverability in your component
 In you component you need to fire the discovery event on entity creation.
@@ -43,7 +37,7 @@ def setup(hass, config):
         data['callback_event'] = entity_id + EVENT_CALLBACK_RECORD
         data['listen_event'] = entity_id + EVENT_CHANGE_RECORD
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                      {ATTR_SERVICE: DISCOVER_SWITCHES,
+                      {ATTR_SERVICE: DISCOVER_CHILD_SWITCHES,
                        ATTR_DISCOVERED: data})
 
 The parameters:
@@ -197,9 +191,8 @@ class ChildSwitch(ToggleEntity):
             return
         new_state_value = event.data.get('state')
 
-        if self._state != new_state_value:
-            self._state = new_state_value
-            self.update_ha_state(True)
+        self._state = new_state_value
+        self.update_ha_state(True)
 
     @property
     def name(self):
@@ -230,7 +223,8 @@ class ChildSwitch(ToggleEntity):
         self.hass.services.call(
             self._parent_entity_domain,
             self._callback_service,
-            service_data)
+            service_data,
+            blocking=True)
 
     @property
     def state_attributes(self):
@@ -250,3 +244,8 @@ class ChildSwitch(ToggleEntity):
     def parent_action(self):
         """ Returns the parent action of the child. """
         return self._parent_action
+
+    @property
+    def should_poll(self):
+        """ Tells Home Assistant not to poll this entity. """
+        return False

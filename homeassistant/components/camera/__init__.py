@@ -24,8 +24,8 @@ Upcoming features
 -A demo entity
 -Expanded documentation
 """
-import urllib3
 import requests
+from requests.auth import HTTPBasicAuth
 import logging
 import time
 import math
@@ -51,7 +51,8 @@ from homeassistant.const import (
     ATTR_DOMAIN
     )
 
-
+from homeassistant.components.switch import (
+    DISCOVER_CHILD_SWITCHES)
 from homeassistant.helpers.entity_component import EntityComponent
 
 
@@ -88,7 +89,6 @@ EVENT_GAP_THRESHOLD = 15
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {}
-DISCOVER_SWITCHES = "camera.switches"
 ATTR_FRIENDLY_LOG_MESSAGE = "friendly_log_message"
 
 
@@ -120,7 +120,7 @@ def setup(hass, config):
         data['callback_event'] = entity_id + EVENT_CALLBACK_RECORD
         data['listen_event'] = entity_id + EVENT_CHANGE_RECORD
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                      {ATTR_SERVICE: DISCOVER_SWITCHES,
+                      {ATTR_SERVICE: DISCOVER_CHILD_SWITCHES,
                        ATTR_DISCOVERED: data})
 
         if entity.is_motion_detection_supported:
@@ -133,7 +133,7 @@ def setup(hass, config):
             data['callback_service'] = SERVICE_CAMERA
             data['listen_event'] = entity_id + EVENT_CHANGE_MOTION
             hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                          {ATTR_SERVICE: DISCOVER_SWITCHES,
+                          {ATTR_SERVICE: DISCOVER_CHILD_SWITCHES,
                            ATTR_DISCOVERED: data})
 
         data = {}
@@ -145,7 +145,7 @@ def setup(hass, config):
         data['callback_event'] = entity_id + EVENT_CALLBACK_SNAPSHOT
         data['listen_event'] = entity_id + EVENT_CHANGE_SNAPSHOT
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                      {ATTR_SERVICE: DISCOVER_SWITCHES,
+                      {ATTR_SERVICE: DISCOVER_CHILD_SWITCHES,
                        ATTR_DISCOVERED: data})
 
         entity.check_required_configurators()
@@ -171,7 +171,7 @@ def setup(hass, config):
 
         if camera:
             response = camera.get_camera_image()
-            handler.wfile.write(response.content)
+            handler.wfile.write(response)
         else:
             handler.send_response(HTTP_NOT_FOUND)
 
@@ -210,7 +210,6 @@ def setup(hass, config):
                 camera.is_streaming = True
                 camera.update_ha_state()
 
-                http = urllib3.PoolManager()
                 handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
                 handler.request.sendall(bytes(
                     'Content-type: multipart/x-mixed-replace; \
@@ -219,37 +218,26 @@ def setup(hass, config):
                 handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
 
                 while True:
-                    headers = urllib3.util.make_headers()
 
                     if camera.username and camera.password:
-                        headers = urllib3.util.make_headers(
-                            basic_auth=camera.username + ':' + camera.password)
+                      response = requests.get(camera.still_image_url, auth=HTTPBasicAuth(camera.username, camera.password))
+                    else:
+                      response = requests.get(camera.still_image_url)
 
-                    req = http.request(
-                        'GET',
-                        camera.still_image_url,
-                        headers=headers)
-
-                    headers_str = ''
-                    headers_str = (
-                        headers_str + 'Content-length: ' +
-                        str(len(req.data)) + '\r\n')
-                    headers_str = headers_str + 'Content-type: image/jpeg\r\n'
-                    headers_str = headers_str + '\r\n'
+                    headers_str = '\r\n'.join((
+                        'Content-length: {}'.format(len(response.content)),
+                        'Content-type: image/jpeg',
+                    )) + '\r\n\r\n'
 
                     handler.request.sendall(
                         bytes(headers_str, 'utf-8') +
-                        req.data +
+                        response.content +
                         bytes('\r\n', 'utf-8'))
 
                     handler.request.sendall(
                         bytes('--jpgboundary\r\n', 'utf-8'))
 
-            # This needs to be a catchall exception as we need to stop
-            # streaming on any failure otherwise this will keep running
-            # forever
-            # pylint: disable=broad-except
-            except Exception:
+            except (requests.RequestException, IOError):
                 camera.is_streaming = False
                 camera.update_ha_state()
 
@@ -552,21 +540,18 @@ class Camera(Entity):
             fetch the settings from the camera. """
         pass
 
-    def get_camera_image(self, stream=False):
+    def get_camera_image(self):
         """ Return a still image reponse from the camera """
         response = requests.get(
             self.still_image_url,
-            auth=(self.username, self.password), stream=stream)
+            auth=(self.username, self.password))
 
-        return response
+        return response.content
 
     @property
     def name(self):
         """ Return the name of this device """
-        if self.device_info.get('name'):
-            return self.device_info.get('name')
-        else:
-            return super().name
+        return self.device_info.get('name') or super().name
 
     @property
     def state(self):
@@ -865,7 +850,7 @@ class Camera(Entity):
             new_file_path = os.path.join(rec_dir_full, new_file_name)
 
             response = self.get_camera_image()
-            open(new_file_path, 'wb').write(response.content)
+            open(new_file_path, 'wb').write(response)
 
             recording_time = (
                 datetime.datetime.now() - recording_started).total_seconds()
@@ -900,7 +885,7 @@ class Camera(Entity):
         new_file_path = os.path.join(rec_dir_full, new_file_name)
 
         response = self.get_camera_image()
-        open(new_file_path, 'wb').write(response.content)
+        open(new_file_path, 'wb').write(response)
 
         self._is_taking_snapshot = False
         self.update_ha_state()
