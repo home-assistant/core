@@ -51,7 +51,6 @@ it should be set to "true" if you want this device excluded
 
 """
 import logging
-import time
 from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
 
@@ -149,7 +148,8 @@ class VeraSensor(Entity):
             last_tripped = self.vera_device.refresh_value('LastTrip')
             if last_tripped is not None:
                 utc_time = dt_util.utc_from_timestamp(int(last_tripped))
-                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_local_str(utc_time)
+                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_local_str(
+                    utc_time)
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.refresh_value('Tripped')
