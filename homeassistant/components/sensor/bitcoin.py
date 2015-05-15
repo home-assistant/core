@@ -70,8 +70,9 @@ The variable you wish to display, see the configuration example above for a
 list of all available variables.
 """
 import logging
-from blockchain import statistics, exchangerates
+from datetime import timedelta
 
+from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 
@@ -101,6 +102,9 @@ OPTION_TYPES = {
     'market_price_usd': ['Market price', 'USD']
 }
 
+# Return cached results if last scan was less then this time ago
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Bitcoin sensor. """
@@ -128,8 +132,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         wallet.get_balance()
-    except exceptions.APIException as e:
-        _LOGGER.error(e)
+    except exceptions.APIException as error:
+        _LOGGER.error(error)
         wallet = None
 
     dev = []
@@ -174,8 +178,10 @@ class BitcoinSensor(Entity):
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data and updates the states. """
+        from blockchain import statistics, exchangerates
 
         stats = statistics.get()
         ticker = exchangerates.get_ticker()
