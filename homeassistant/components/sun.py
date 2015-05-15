@@ -22,7 +22,7 @@ which event (sunset or sunrise) and the offset.
 
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 try:
     import ephem
@@ -233,7 +233,7 @@ class SunEventListener(ServiceEventListener):
         else:
             next_time = next_event + self.offset
 
-        while next_time < datetime.now() or \
+        while next_time < dt_util.now() or \
                 next_time.weekday() not in self.my_schedule.days:
             next_time = next_time + timedelta(days=1)
 
