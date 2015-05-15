@@ -22,7 +22,7 @@ sensor:
     - type: 'rain'
     - type: 'snow'
 
-VARIABLES:
+Variables:
 
 api_key
 *Required
@@ -42,7 +42,6 @@ list of all available variables
 Details for the API : http://bugs.openweathermap.org/projects/api/wiki
 
 Only metric measurements are supported at the moment.
-
 """
 import logging
 
@@ -136,8 +135,7 @@ class OpenWeatherMapSensor(Entity):
 
         if self.type == 'weather':
             self._state = data.get_detailed_status()
-
-        if self.type == 'temperature':
+        elif self.type == 'temperature':
             if self._unit == TEMP_CELCIUS:
                 self._state = round(data.get_temperature('celsius')['temp'],
                                     1)
@@ -146,26 +144,20 @@ class OpenWeatherMapSensor(Entity):
                                     1)
             else:
                 self._state = round(data.get_temperature()['temp'], 1)
-
         elif self.type == 'wind_speed':
             self._state = data.get_wind()['speed']
-
         elif self.type == 'humidity':
             self._state = data.get_humidity()
-
         elif self.type == 'pressure':
             self._state = round(data.get_pressure()['press'], 0)
-
         elif self.type == 'clouds':
             self._state = data.get_clouds()
-
         elif self.type == 'rain':
             if data.get_rain():
                 self._state = round(data.get_rain()['3h'], 0)
             else:
                 self._state = 'not raining'
                 self._unit_of_measurement = ''
-
         elif self.type == 'snow':
             if data.get_snow():
                 self._state = round(data.get_snow(), 0)
