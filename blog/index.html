@@ -22,7 +22,7 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="UTC & Time zone awareness May 9, 2015 Paulus Schoutsen two minutes reading time core Comments I have recently merged code to refactor Home Assistant to use only UTC times internally. A much needed &hellip;">
+    <meta property="og:description" content="Release notes for May 14, 2015 May 14, 2015 Paulus Schoutsen five minutes reading time release-notes Comments Almost three busy weeks have past since the last release. We used this time to finally &hellip;">
     
     
     
@@ -70,12 +70,13 @@
       <li><a href="/developers/add_new_platform.html">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">Rest API</a></li>
+      <li><a href="/developers/api.html">API</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
 </ul>
+
   </nav>
 </div>
 
@@ -93,6 +94,231 @@
         
 
             
+  
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/05/14/release-notes/">Release notes for May 14, 2015</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-05-14T22:25:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> May 14, 2015</time>
+    
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> five minutes reading time</span>
+    
+
+  <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+
+    
+      <a class='comments'
+         href="/blog/2015/05/14/release-notes/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+
+
+  <p>Almost three busy weeks have past since the last release. We used this time to finally make the overhaul to use UTC as the internal date time format. We added a bunch of test coverage in the process to make sure the transition went smoothly. Pleas see <a href="/blog/2015/05/09/utc-time-zone-awareness/#backwards-incompatible-stuff">the blog post about the UTC refactor</a> for backwards incompatible changes.</p>
+
+<p>This release includes a significant startup boost for the frontend and a fix for Wemo discovery after their latest firmware upgrade.</p>
+
+<p>I would like to give a big shout out to our newest contributor <a href="https://github.com/fabaff">fabaff</a> for taking the time to improve the documentation.</p>
+
+<p class='note'>
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
+</p>
+
+
+<p><strong>Overwriting Entity Attributes</strong><br>
+Before diving into the newly supported devices and services, I want to highlight an awesome configuration enhancement by <a href="https://github.com/rmkraus">rmkraus</a>: overwriting entity attributes.</p>
+
+<p>These new configuration settings allow you to overwrite entity state attributes. The main usage for this is being able to overwrite attributes that influence how an entity is shown in the interface.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">light.bowl</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="c1"># hides this entity from the interface</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">light.ceiling</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="c1"># Replaces the state badge with given picture</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://graph.facebook.com/schoutsen/picture</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>MySensors</strong><br>
+<img src='/images/supported_brands/mysensors.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/andythigpen">Andythigpen</a> and <a href="https://github.com/theolind">Theolind</a> have added support for the <a href="http://www.mysensors.org">MySensors platform</a> to Home Assistant.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysensors</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/dev/ttyACM0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>OpenWeatherMap</strong><br>
+<img src='/images/supported_brands/openweathermap.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://openweathermap.org">OpenWeatherMap</a>. This will allow you to integrate local meteorological data into Home Assistant.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">openweathermap</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_API_KEY</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;weather&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;wind_speed&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;humidity&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;pressure&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;clouds&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;rain&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;snow&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>InstaPush</strong><br>
+<img src='/images/supported_brands/instapush.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="https://instapush.im">InstaPush</a>. This will allow you send messages from Home Assistant to your iOS and Android devices.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">instapush</span>
+</span><span class='line'>    <span class="c1"># Get those by creating a new application, event, and tracker on https://instapush.im</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">app_secret</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">tracker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>XMPP</strong><br>
+<img src='/images/supported_brands/xmpp.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/fabaff">Fabaff</a> has contributed support for Jabber/XMPP. This will allow you send messages from Home Assistant to anyone on Jabber/XMPP.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">xmpp</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">sender</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JID</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JABBER_ACCOUNT_PASSWORD</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">recipient</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_RECIPIENT</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Notify My Android</strong><br>
+<img src='/images/supported_brands/nma.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://www.notifymyandroid.com/">Notify My Android</a>. This will allow you to send messages from Home Assistant to your Android device.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">nma</span>
+</span><span class='line'>    <span class="c1"># Get this by registering a new application on http://www.notifymyandroid.com/</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Time &amp; Date sensor</strong><br>
+<a href="https://github.com/fabaff">Fabaff</a> has contributed a time &amp; date sensor. This will allow you to show the current time/date on the dashboard.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time_date</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;time&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;date&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;date_time&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;time_date&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+  </article>
+  <hr>
   
   
   <article class="listing">
@@ -172,7 +398,7 @@
 
 <p>This refactor adds a new migration for the database adding a <code>utc_offset</code> column to events and states. This information is currently not used but can prove useful in the future when we start analyzing the historical data.</p>
 
-<h3>Backwards incompatible stuff</h3>
+<h3><a class='title-link' name='backwards-incompatible-stuff' href='#backwards-incompatible-stuff'></a> Backwards incompatible stuff</h3>
 
 <p>All built-in components have been upgraded. The following list is only for people that run custom components:</p>
 
@@ -1068,86 +1294,6 @@ Home Assistant should now throw better errors and offer solutions if you do not 
 
 <p><strong>Streamlined first launch</strong><br>
 Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
-
-
-  </article>
-  <hr>
-  
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/01/13/nest-in-da-house/">Nest in the house!</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-13T08:29:04-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 13, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> less than one minute reading time</span>
-    
-
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
-
-    
-      <a class='comments'
-         href="/blog/2015/01/13/nest-in-da-house/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-
-
-  <p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we&rsquo;re expanding the supported devices. Today, we&rsquo;re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
-
-<p class='img'>
-  <img src='/images/screenshots/nest-thermostat-card.png' />
-</p>
-
-
-<p>The new integration exists out of two parts: a generic thermostat component and a Nest platform implementation. The initial version implements provides a read-only card and services to control it. The plan is in the future to add temperature and away mode controls from the thermostat card and more info dialog. Internally, we are using the Python package <a href="https://github.com/jkoelker/python-nest">python-nest by jkoelker</a> to talk to the Nest.</p>
-
-<p>If you own a Nest thermostat, add the following lines to your <code>home-assistant.conf</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[thermostat]
-</span><span class='line'>platform=nest
-</span><span class='line'>username=YOUR_USERNAME
-</span><span class='line'>password=YOUR_PASSWORD</span></code></pre></td></tr></table></div></figure>
-
 
 
   </article>

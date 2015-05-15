@@ -4,7 +4,7 @@
   <title><![CDATA[Category: core | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/core/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-05-09T23:58:15-07:00</updated>
+  <updated>2015-05-14T22:51:27-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -38,7 +38,7 @@
 
 <p>This refactor adds a new migration for the database adding a <code>utc_offset</code> column to events and states. This information is currently not used but can prove useful in the future when we start analyzing the historical data.</p>
 
-<h3>Backwards incompatible stuff</h3>
+<h3><a class='title-link' name='backwards-incompatible-stuff' href='#backwards-incompatible-stuff'></a> Backwards incompatible stuff </h3>
 
 <p>All built-in components have been upgraded. The following list is only for people that run custom components:</p>
 

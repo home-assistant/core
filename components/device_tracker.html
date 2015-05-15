@@ -70,12 +70,13 @@
       <li><a href="/developers/add_new_platform.html">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">Rest API</a></li>
+      <li><a href="/developers/api.html">API</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
 </ul>
+
   </nav>
 </div>
 
@@ -103,7 +104,17 @@
   <hr class="divider">
   
 
-  <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers: <a href="/components/device_tracker.tomato.html">tomato</a>, <a href="/components/device_tracker.netgear.html">netgear</a> and <a href="/components/device_tracker.luci.html">luci (OpenWRT)</a>. You can also decide to directly scan the network for devices by using the <a href="/components/device_tracker.nmap_scanner.html">nmap scanner</a>.</p>
+  <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers:</p>
+
+<ul>
+<li><a href="/components/device_tracker.ddwrt.html">DD-WRT</a></li>
+<li><a href="/components/device_tracker.tomato.html">tomato</a></li>
+<li><a href="/components/device_tracker.netgear.html">netgear</a></li>
+<li><a href="/components/device_tracker.luci.html">luci (OpenWRT)</a></li>
+</ul>
+
+
+<p>You can also decide to directly scan the network for devices by using the <a href="/components/device_tracker.nmap_scanner.html">nmap scanner</a>.</p>
 
 <p>To get started add the following lines to your <code>configuration.yaml</code> (example for Netgear):</p>
 

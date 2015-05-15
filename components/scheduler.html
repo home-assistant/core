@@ -70,12 +70,13 @@
       <li><a href="/developers/add_new_platform.html">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">Rest API</a></li>
+      <li><a href="/developers/api.html">API</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
 </ul>
+
   </nav>
 </div>
 
@@ -118,6 +119,59 @@ on the events in the schedule.</p>
 <li>events is an array of objects that describe the different events that is
   supported. Read in the events descriptions for more information</li>
 </ul>
+
+
+<p>Example <code>schedule.json</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">[</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;window_lamps&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Window lamps&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Turn on window lamps on sunset and turn off at 22:30&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nt">&quot;days&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+</span><span class='line'>        <span class="nt">&quot;entity_ids&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span class='line'>            <span class="s2">&quot;group.window_lamps&quot;</span>
+</span><span class='line'>        <span class="p">],</span>
+</span><span class='line'>        <span class="nt">&quot;events&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span class='line'>            <span class="p">{</span>
+</span><span class='line'>                <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="nt">&quot;service&quot;</span><span class="p">:</span> <span class="s2">&quot;switch.turn_off&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="nt">&quot;time&quot;</span><span class="p">:</span> <span class="s2">&quot;22:30:00&quot;</span>
+</span><span class='line'>            <span class="p">},</span>
+</span><span class='line'>            <span class="p">{</span>
+</span><span class='line'>                <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;sun&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="nt">&quot;service&quot;</span><span class="p">:</span> <span class="s2">&quot;switch.turn_on&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="nt">&quot;event&quot;</span><span class="p">:</span> <span class="s2">&quot;sunset&quot;</span><span class="p">,</span>
+</span><span class='line'>                <span class="nt">&quot;offset&quot;</span><span class="p">:</span> <span class="s2">&quot;-00:45:00&quot;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">]</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
