@@ -35,17 +35,21 @@ class EntityComponent(object):
         self.group = None
         self.is_polling = False
 
+        self.config = None
+
     def setup(self, config):
         """
         Sets up a full entity component:
          - Loads the platforms from the config
          - Will listen for supported discovered platforms
         """
+        self.config = config
+
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in \
                 config_per_platform(config, self.domain, self.logger):
 
-            self._setup_platform(config, p_type, p_config)
+            self._setup_platform(p_type, p_config)
 
         if self.discovery_platforms:
             discovery.listen(self.hass, self.discovery_platforms.keys(),
@@ -115,11 +119,11 @@ class EntityComponent(object):
             self._update_entity_states,
             second=range(0, 60, self.scan_interval))
 
-    def _setup_platform(self, config, platform_type, platform_config,
+    def _setup_platform(self, platform_type, platform_config,
                         discovery_info=None):
         """ Tries to setup a platform for this component. """
         platform = prepare_setup_platform(
-            self.hass, config, self.domain, platform_type)
+            self.hass, self.config, self.domain, platform_type)
 
         if platform is None:
             return

@@ -107,7 +107,6 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
     # Not found
     if platform is None:
-        _LOGGER.error('Unable to find platform %s', platform_path)
         return None
 
     # Already loaded or no dependencies
