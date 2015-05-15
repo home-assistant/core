@@ -1,6 +1,7 @@
 # required for Home Assistant core
 requests>=2.0
 pyyaml>=3.11
+pytz>=2015.2
 
 # optional, needed for specific components
 
@@ -40,8 +41,15 @@ PyISY>=1.0.2
 # sensor.systemmonitor 
 psutil>=2.2.1
 
-#pushover notifications
+# pushover notifications
 python-pushover>=0.2
 
 # Transmission Torrent Client
 transmissionrpc>=0.11
+
+# OpenWeatherMap Web API
+pyowm>=2.2.0
+
+# XMPP Bindings (notify.xmpp)
+sleekxmpp>=1.3.1
+

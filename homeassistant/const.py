@@ -11,7 +11,7 @@ CONF_LONGITUDE = "longitude"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_NAME = "name"
 CONF_TIME_ZONE = "time_zone"
-CONF_VISIBILITY = "visibility"
+CONF_CUSTOMIZE = "customize"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
@@ -111,6 +111,7 @@ SERVER_PORT = 8123
 URL_ROOT = "/"
 URL_API = "/api/"
 URL_API_STREAM = "/api/stream"
+URL_API_CONFIG = "/api/config"
 URL_API_STATES = "/api/states"
 URL_API_STATES_ENTITY = "/api/states/{}"
 URL_API_EVENTS = "/api/events"
@@ -119,6 +120,7 @@ URL_API_SERVICES = "/api/services"
 URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
 URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
+URL_API_BOOTSTRAP = "/api/bootstrap"
 
 HTTP_OK = 200
 HTTP_CREATED = 201

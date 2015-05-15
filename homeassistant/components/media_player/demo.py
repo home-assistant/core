@@ -1,10 +1,10 @@
 """
-homeassistant.components.media_player.chromecast
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.media_player.demo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Demo implementation of the media player.
-"""
 
+"""
 from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_DURATION,

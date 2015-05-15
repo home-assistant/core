@@ -1,4 +1,7 @@
 """
+homeassistant.components.isy994
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Connects to an ISY-994 controller and loads relevant components to control its
 devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
 """
@@ -13,7 +16,8 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, EVENT_PLATFORM_DISCOVERED,
-    ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
+    EVENT_HOMEASSISTANT_STOP, ATTR_SERVICE, ATTR_DISCOVERED,
+    ATTR_FRIENDLY_NAME)
 
 # homeassistant constants
 DOMAIN = "isy994"
@@ -31,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """
-    Setup isy994 component.
+    Setup ISY994 component.
     This will automatically import associated lights, switches, and sensors.
     """
     try:
@@ -77,6 +81,9 @@ def setup(hass, config):
     if not ISY.connected:
         return False
 
+    # listen for HA stop to disconnect
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
+
     # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
                                   ('light', DISCOVER_LIGHTS),
@@ -91,8 +98,13 @@ def setup(hass, config):
     return True
 
 
+def stop(event):
+    """ Cleanup the ISY subscription. """
+    ISY.auto_update = False
+
+
 class ISYDeviceABC(ToggleEntity):
-    """ Abstract Class for an ISY device within home assistant. """
+    """ Abstract Class for an ISY device. """
 
     _attrs = {}
     _onattrs = []
@@ -133,7 +145,7 @@ class ISYDeviceABC(ToggleEntity):
 
     @property
     def value(self):
-        """ returns the unclean value from the controller """
+        """ Returns the unclean value from the controller. """
         # pylint: disable=protected-access
         return self.node.status._val
 
@@ -147,7 +159,7 @@ class ISYDeviceABC(ToggleEntity):
 
     @property
     def unique_id(self):
-        """ Returns the id of this isy sensor """
+        """ Returns the id of this ISY sensor. """
         # pylint: disable=protected-access
         return self.node._id
 
@@ -190,7 +202,7 @@ class ISYDeviceABC(ToggleEntity):
         return self.value
 
     def turn_on(self, **kwargs):
-        """ turns the device on """
+        """ Turns the device on. """
         if self.domain is not 'sensor':
             attrs = [kwargs.get(name) for name in self._onattrs]
             self.node.on(*attrs)
@@ -198,7 +210,7 @@ class ISYDeviceABC(ToggleEntity):
             _LOGGER.error('ISY cannot turn on sensors.')
 
     def turn_off(self, **kwargs):
-        """ turns the device off """
+        """ Turns the device off. """
         if self.domain is not 'sensor':
             self.node.off()
         else:

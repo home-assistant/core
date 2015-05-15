@@ -4,7 +4,7 @@ homeassistant.helpers.entity_component
 
 Provides helpers for components that manage entities.
 """
-from homeassistant.loader import get_component
+from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.helpers import (
     generate_entity_id, config_per_platform, extract_entity_ids)
 from homeassistant.components import group, discovery
@@ -35,12 +35,16 @@ class EntityComponent(object):
         self.group = None
         self.is_polling = False
 
+        self.config = None
+
     def setup(self, config):
         """
         Sets up a full entity component:
          - Loads the platforms from the config
          - Will listen for supported discovered platforms
         """
+        self.config = config
+
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in \
                 config_per_platform(config, self.domain, self.logger):
@@ -115,18 +119,20 @@ class EntityComponent(object):
             self._update_entity_states,
             second=range(0, 60, self.scan_interval))
 
-    def _setup_platform(self, platform_type, config, discovery_info=None):
+    def _setup_platform(self, platform_type, platform_config,
+                        discovery_info=None):
         """ Tries to setup a platform for this component. """
-        platform_name = '{}.{}'.format(self.domain, platform_type)
-        platform = get_component(platform_name)
+        platform = prepare_setup_platform(
+            self.hass, self.config, self.domain, platform_type)
 
         if platform is None:
-            self.logger.error('Unable to find platform %s', platform_type)
             return
+
+        platform_name = '{}.{}'.format(self.domain, platform_type)
 
         try:
             platform.setup_platform(
-                self.hass, config, self.add_entities, discovery_info)
+                self.hass, platform_config, self.add_entities, discovery_info)
 
             self.hass.config.components.append(platform_name)
 
@@ -135,15 +141,16 @@ class EntityComponent(object):
             # Support old deprecated method for now - 3/1/2015
             if hasattr(platform, 'get_devices'):
                 self.logger.warning(
-                    "Please upgrade %s to return new entities using "
-                    "setup_platform. See %s/demo.py for an example.",
+                    'Please upgrade %s to return new entities using '
+                    'setup_platform. See %s/demo.py for an example.',
                     platform_name, self.domain)
-                self.add_entities(platform.get_devices(self.hass, config))
+                self.add_entities(
+                    platform.get_devices(self.hass, platform_config))
 
             else:
                 self.logger.exception(
-                    "Error while setting up platform %s", platform_type)
+                    'Error while setting up platform %s', platform_type)
 
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
-                "Error while setting up platform %s", platform_type)
+                'Error while setting up platform %s', platform_type)

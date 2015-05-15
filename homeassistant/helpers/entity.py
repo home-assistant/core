@@ -5,14 +5,17 @@ homeassistant.helpers.entity
 Provides ABC for entities in HA.
 """
 
+from collections import defaultdict
+
 from homeassistant import NoEntitySpecifiedError
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN, STATE_ON,
-    STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN,
+    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS,
+    TEMP_FAHRENHEIT)
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
-_OVERWRITE_HIDDEN = {}
+_OVERWRITE = defaultdict(dict)
 
 
 class Entity(object):
@@ -121,8 +124,15 @@ class Entity(object):
         if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
             attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
-        if _OVERWRITE_HIDDEN.get(self.entity_id, self.hidden):
-            attr[ATTR_HIDDEN] = True
+        if self.hidden:
+            attr[ATTR_HIDDEN] = self.hidden
+
+        # overwrite properties that have been set in the config file
+        attr.update(_OVERWRITE.get(self.entity_id, {}))
+
+        # remove hidden property if false so it won't show up
+        if not attr.get(ATTR_HIDDEN, True):
+            attr.pop(ATTR_HIDDEN)
 
         # Convert temperature if we detect one
         if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,
@@ -143,15 +153,18 @@ class Entity(object):
         return "<Entity {}: {}>".format(self.name, self.state)
 
     @staticmethod
-    def overwrite_hidden(entity_id, hidden):
+    def overwrite_attribute(entity_id, attrs, vals):
         """
-        Overwrite the hidden property of an entity.
-        Set hidden to None to remove any overwritten value in place.
+        Overwrite any attribute of an entity.
+        This function should receive a list of attributes and a
+        list of values. Set attribute to None to remove any overwritten
+        value in place.
         """
-        if hidden is None:
-            _OVERWRITE_HIDDEN.pop(entity_id, None)
-        else:
-            _OVERWRITE_HIDDEN[entity_id.lower()] = hidden
+        for attr, val in zip(attrs, vals):
+            if val is None:
+                _OVERWRITE[entity_id.lower()].pop(attr, None)
+            else:
+                _OVERWRITE[entity_id.lower()][attr] = val
 
 
 class ToggleEntity(Entity):

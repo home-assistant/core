@@ -10,25 +10,27 @@ start by calling homeassistant.start_home_assistant(bus)
 """
 
 import os
-import configparser
-import yaml
-import io
 import logging
 from collections import defaultdict
 
 import homeassistant
+import homeassistant.util as util
+import homeassistant.util.dt as date_util
+import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_VISIBILITY,
+    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_COMPONENT = "component"
+ATTR_COMPONENT = 'component'
+
+PLATFORM_FORMAT = '{}.{}'
 
 
 def setup_component(hass, domain, config=None):
@@ -67,7 +69,7 @@ def _setup_component(hass, domain, config):
 
     if missing_deps:
         _LOGGER.error(
-            "Not initializing %s because not all dependencies loaded: %s",
+            'Not initializing %s because not all dependencies loaded: %s',
             domain, ", ".join(missing_deps))
 
         return False
@@ -87,12 +89,40 @@ def _setup_component(hass, domain, config):
             return True
 
         else:
-            _LOGGER.error("component %s failed to initialize", domain)
+            _LOGGER.error('component %s failed to initialize', domain)
 
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error during setup of component %s", domain)
+        _LOGGER.exception('Error during setup of component %s', domain)
 
     return False
+
+
+def prepare_setup_platform(hass, config, domain, platform_name):
+    """ Loads a platform and makes sure dependencies are setup. """
+    _ensure_loader_prepared(hass)
+
+    platform_path = PLATFORM_FORMAT.format(domain, platform_name)
+
+    platform = loader.get_component(platform_path)
+
+    # Not found
+    if platform is None:
+        return None
+
+    # Already loaded or no dependencies
+    elif (platform_path in hass.config.components or
+          not hasattr(platform, 'DEPENDENCIES')):
+        return platform
+
+    # Load dependencies
+    for component in platform.DEPENDENCIES:
+        if not setup_component(hass, component, config):
+            _LOGGER.error(
+                'Unable to prepare setup for platform %s because dependency '
+                '%s could not be initialized', platform_path, component)
+            return None
+
+    return platform
 
 
 # pylint: disable=too-many-branches, too-many-statements
@@ -122,12 +152,12 @@ def from_config_dict(config, hass=None):
                   if ' ' not in key and key != homeassistant.DOMAIN)
 
     if not core_components.setup(hass, config):
-        _LOGGER.error("Home Assistant core failed to initialize. "
-                      "Further initialization aborted.")
+        _LOGGER.error('Home Assistant core failed to initialize. '
+                      'Further initialization aborted.')
 
         return hass
 
-    _LOGGER.info("Home Assistant core initialized")
+    _LOGGER.info('Home Assistant core initialized')
 
     # Setup the components
     for domain in loader.load_order_components(components):
@@ -148,26 +178,7 @@ def from_config_file(config_path, hass=None):
     # Set config dir to directory holding config file
     hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
 
-    config_dict = {}
-    # check config file type
-    if os.path.splitext(config_path)[1] == '.yaml':
-        # Read yaml
-        config_dict = yaml.load(io.open(config_path, 'r'))
-
-        # If YAML file was empty
-        if config_dict is None:
-            config_dict = {}
-
-    else:
-        # Read config
-        config = configparser.ConfigParser()
-        config.read(config_path)
-
-        for section in config.sections():
-            config_dict[section] = {}
-
-            for key, val in config.items(section):
-                config_dict[section][key] = val
+    config_dict = config_util.load_config_file(config_path)
 
     return from_config_dict(config_dict, hass)
 
@@ -177,7 +188,7 @@ def enable_logging(hass):
     logging.basicConfig(level=logging.INFO)
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.path("home-assistant.log")
+    err_log_path = hass.config.path('home-assistant.log')
     err_path_exists = os.path.isfile(err_log_path)
 
     # Check if we can write to the error log if it exists or that
@@ -196,30 +207,73 @@ def enable_logging(hass):
 
     else:
         _LOGGER.error(
-            "Unable to setup error log %s (access denied)", err_log_path)
+            'Unable to setup error log %s (access denied)', err_log_path)
 
 
 def process_ha_core_config(hass, config):
     """ Processes the [homeassistant] section from the config. """
+    hac = hass.config
+
+    def set_time_zone(time_zone_str):
+        """ Helper method to set time zone in HA. """
+        if time_zone_str is None:
+            return
+
+        time_zone = date_util.get_time_zone(time_zone_str)
+
+        if time_zone:
+            hac.time_zone = time_zone
+            date_util.set_default_time_zone(time_zone)
+        else:
+            _LOGGER.error('Received invalid time zone %s', time_zone_str)
+
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name'),
-                      (CONF_TIME_ZONE, 'time_zone')):
+                      (CONF_NAME, 'location_name')):
         if key in config:
-            setattr(hass.config, attr, config[key])
+            setattr(hac, attr, config[key])
 
-    for entity_id, hidden in config.get(CONF_VISIBILITY, {}).items():
-        Entity.overwrite_hidden(entity_id, hidden == 'hide')
+    set_time_zone(config.get(CONF_TIME_ZONE))
+
+    for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
+        Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
 
     if CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]
 
         if unit == 'C':
-            hass.config.temperature_unit = TEMP_CELCIUS
+            hac.temperature_unit = TEMP_CELCIUS
         elif unit == 'F':
-            hass.config.temperature_unit = TEMP_FAHRENHEIT
+            hac.temperature_unit = TEMP_FAHRENHEIT
 
-    hass.config.auto_detect()
+    # If we miss some of the needed values, auto detect them
+    if None not in (
+            hac.latitude, hac.longitude, hac.temperature_unit, hac.time_zone):
+        return
+
+    _LOGGER.info('Auto detecting location and temperature unit')
+
+    info = util.detect_location_info()
+
+    if info is None:
+        _LOGGER.error('Could not detect location information')
+        return
+
+    if hac.latitude is None and hac.longitude is None:
+        hac.latitude = info.latitude
+        hac.longitude = info.longitude
+
+    if hac.temperature_unit is None:
+        if info.use_fahrenheit:
+            hac.temperature_unit = TEMP_FAHRENHEIT
+        else:
+            hac.temperature_unit = TEMP_CELCIUS
+
+    if hac.location_name is None:
+        hac.location_name = info.city
+
+    if hac.time_zone is None:
+        set_time_zone(info.time_zone)
 
 
 def _ensure_loader_prepared(hass):

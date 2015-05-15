@@ -1,4 +1,7 @@
 """
+homeassistant.components.wink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Connects to a Wink hub and loads relevant components to control its devices.
 """
 import logging
@@ -53,14 +56,14 @@ def setup(hass, config):
 
 
 class WinkToggleDevice(ToggleEntity):
-    """ represents a Wink switch within home assistant. """
+    """ Represents a Wink switch within Home Assistant. """
 
     def __init__(self, wink):
         self.wink = wink
 
     @property
     def unique_id(self):
-        """ Returns the id of this WeMo switch """
+        """ Returns the id of this Wink switch. """
         return "{}.{}".format(self.__class__, self.wink.deviceId())
 
     @property

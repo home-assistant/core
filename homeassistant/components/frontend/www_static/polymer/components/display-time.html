@@ -8,16 +8,17 @@
   </template>
   <script>
   (function() {
-    var timeFormatOptions = {hour: 'numeric', minute: '2-digit'};
+    var uiUtil = window.hass.uiUtil;
+
     Polymer({
       time: "",
 
       dateObjChanged: function(oldVal, newVal) {
-        if (!newVal) {
+        if (newVal) {
+          this.time = uiUtil.formatTime(newVal);
+        } else {
           this.time = "";
         }
-
-        this.time = newVal.toLocaleTimeString([], timeFormatOptions);
       },
     });
   })();

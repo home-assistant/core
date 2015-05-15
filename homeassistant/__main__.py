@@ -7,6 +7,14 @@ import argparse
 import importlib
 
 
+# Home Assistant dependencies, mapped module -> package name
+DEPENDENCIES = {
+    'requests': 'requests',
+    'yaml': 'pyyaml',
+    'pytz': 'pytz',
+}
+
+
 def validate_python():
     """ Validate we're running the right Python version. """
     major, minor = sys.version_info[:2]
@@ -20,13 +28,13 @@ def validate_dependencies():
     """ Validate all dependencies that HA uses. """
     import_fail = False
 
-    for module in ['requests']:
+    for module, name in DEPENDENCIES.items():
         try:
             importlib.import_module(module)
         except ImportError:
             import_fail = True
             print(
-                'Fatal Error: Unable to find dependency {}'.format(module))
+                'Fatal Error: Unable to find dependency {}'.format(name))
 
     if import_fail:
         print(("Install dependencies by running: "
@@ -72,24 +80,13 @@ def ensure_config_path(config_dir):
                'directory {} ').format(config_dir))
         sys.exit()
 
-    # Try to use yaml configuration first
-    config_path = os.path.join(config_dir, 'configuration.yaml')
-    if not os.path.isfile(config_path):
-        config_path = os.path.join(config_dir, 'home-assistant.conf')
+    import homeassistant.config as config_util
 
-    # Ensure a config file exists to make first time usage easier
-    if not os.path.isfile(config_path):
-        config_path = os.path.join(config_dir, 'configuration.yaml')
-        try:
-            with open(config_path, 'w') as conf:
-                conf.write("frontend:\n\n")
-                conf.write("discovery:\n\n")
-                conf.write("history:\n\n")
-                conf.write("logbook:\n\n")
-        except IOError:
-            print(('Fatal Error: No configuration file found and unable '
-                   'to write a default one to {}').format(config_path))
-            sys.exit()
+    config_path = config_util.ensure_config_exists(config_dir)
+
+    if config_path is None:
+        print('Error getting configuration path')
+        sys.exit()
 
     return config_path
 

@@ -1,4 +1,9 @@
-""" Support for WeMo switchces. """
+"""
+homeassistant.components.switch.wemo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Support for WeMo switches.
+"""
 import logging
 
 from homeassistant.helpers.entity import ToggleEntity
@@ -8,7 +13,7 @@ from homeassistant.components.switch import (
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return wemo switches. """
+    """ Find and return WeMo switches. """
     try:
         # pylint: disable=no-name-in-module, import-error
         import homeassistant.external.pywemo.pywemo as pywemo
@@ -39,7 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class WemoSwitch(ToggleEntity):
-    """ represents a WeMo switch within home assistant. """
+    """ Represents a WeMo switch within Home Assistant. """
     def __init__(self, wemo):
         self.wemo = wemo
 
@@ -78,5 +83,5 @@ class WemoSwitch(ToggleEntity):
         self.wemo.off()
 
     def update(self):
-        """ Update Wemo state. """
+        """ Update WeMo state. """
         self.wemo.get_state(True)

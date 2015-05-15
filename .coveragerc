@@ -2,6 +2,8 @@
 source = homeassistant
 
 omit =
+    homeassistant/__main__.py
+
     homeassistant/external/*
 
     # omit pieces of code that rely on external devices being present
@@ -11,29 +13,37 @@ omit =
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
+    homeassistant/components/modbus.py
+    homeassistant/components/*/modbus.py
+
+    homeassistant/components/isy994.py
+    homeassistant/components/*/isy994.py
+
     homeassistant/components/*/tellstick.py
     homeassistant/components/*/vera.py
 
-    homeassistant/components/keyboard.py
-    homeassistant/components/switch/wemo.py
-    homeassistant/components/thermostat/nest.py
-    homeassistant/components/light/hue.py
-    homeassistant/components/sensor/systemmonitor.py
-    homeassistant/components/sensor/sabnzbd.py
-    homeassistant/components/notify/pushbullet.py
-    homeassistant/components/notify/pushover.py
-    homeassistant/components/media_player/cast.py
+    homeassistant/components/browser.py
+    homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/luci.py
-    homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
-    homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/device_tracker/tomato.py
+    homeassistant/components/keyboard.py
+    homeassistant/components/light/hue.py
+    homeassistant/components/media_player/cast.py
+    homeassistant/components/notify/instapush.py
+    homeassistant/components/notify/nma.py
+    homeassistant/components/notify/pushbullet.py
+    homeassistant/components/notify/pushover.py
+    homeassistant/components/notify/xmpp.py
+    homeassistant/components/sensor/mysensors.py
+    homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/systemmonitor.py
+    homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
-
-    homeassistant/components/isy994.py
-    homeassistant/components/light/isy994.py
-    homeassistant/components/switch/isy994.py
-    homeassistant/components/sensor/isy994.py
+    homeassistant/components/switch/wemo.py
+    homeassistant/components/thermostat/nest.py
 
 
 [report]

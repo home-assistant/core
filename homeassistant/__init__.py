@@ -12,10 +12,7 @@ import logging
 import threading
 import enum
 import re
-import datetime as dt
 import functools as ft
-
-import requests
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
@@ -24,6 +21,7 @@ from homeassistant.const import (
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 import homeassistant.util as util
+import homeassistant.util.dt as date_util
 
 DOMAIN = "homeassistant"
 
@@ -109,7 +107,20 @@ class HomeAssistant(object):
 
     def track_point_in_time(self, action, point_in_time):
         """
-        Adds a listener that fires once at or after a spefic point in time.
+        Adds a listener that fires once after a spefic point in time.
+        """
+        utc_point_in_time = date_util.as_utc(point_in_time)
+
+        @ft.wraps(action)
+        def utc_converter(utc_now):
+            """ Converts passed in UTC now to local now. """
+            action(date_util.as_local(utc_now))
+
+        self.track_point_in_utc_time(utc_converter, utc_point_in_time)
+
+    def track_point_in_utc_time(self, action, point_in_time):
+        """
+        Adds a listener that fires once after a specific point in UTC time.
         """
 
         @ft.wraps(action)
@@ -136,10 +147,18 @@ class HomeAssistant(object):
         return point_in_time_listener
 
     # pylint: disable=too-many-arguments
+    def track_utc_time_change(self, action,
+                              year=None, month=None, day=None,
+                              hour=None, minute=None, second=None):
+        """ Adds a listener that will fire if time matches a pattern. """
+        self.track_time_change(
+            action, year, month, day, hour, minute, second, utc=True)
+
+    # pylint: disable=too-many-arguments
     def track_time_change(self, action,
                           year=None, month=None, day=None,
-                          hour=None, minute=None, second=None):
-        """ Adds a listener that will fire if time matches a pattern. """
+                          hour=None, minute=None, second=None, utc=False):
+        """ Adds a listener that will fire if UTC time matches a pattern. """
 
         # We do not have to wrap the function with time pattern matching logic
         # if no pattern given
@@ -154,6 +173,9 @@ class HomeAssistant(object):
             def time_listener(event):
                 """ Listens for matching time_changed events. """
                 now = event.data[ATTR_NOW]
+
+                if not utc:
+                    now = date_util.as_local(now)
 
                 mat = _matcher
 
@@ -305,7 +327,7 @@ def create_worker_pool():
 
         for start, job in current_jobs:
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
-                            util.datetime_to_str(start), job)
+                            date_util.datetime_to_local_str(start), job)
 
     return util.ThreadPool(job_handler, MIN_WORKER_THREAD, busy_callback)
 
@@ -333,7 +355,7 @@ class Event(object):
         self.data = data or {}
         self.origin = origin
         self.time_fired = util.strip_microseconds(
-            time_fired or dt.datetime.now())
+            time_fired or date_util.utcnow())
 
     def as_dict(self):
         """ Returns a dict representation of this Event. """
@@ -341,7 +363,7 @@ class Event(object):
             'event_type': self.event_type,
             'data': dict(self.data),
             'origin': str(self.origin),
-            'time_fired': util.datetime_to_str(self.time_fired),
+            'time_fired': date_util.datetime_to_str(self.time_fired),
         }
 
     def __repr__(self):
@@ -353,6 +375,13 @@ class Event(object):
         else:
             return "<Event {}[{}]>".format(self.event_type,
                                            str(self.origin)[0])
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.event_type == other.event_type and
+                self.data == other.data and
+                self.origin == other.origin and
+                self.time_fired == other.time_fired)
 
 
 class EventBus(object):
@@ -376,6 +405,9 @@ class EventBus(object):
 
     def fire(self, event_type, event_data=None, origin=EventOrigin.local):
         """ Fire an event. """
+        if not self._pool.running:
+            raise HomeAssistantError('Home Assistant has shut down.')
+
         with self._lock:
             # Copy the list of the current listeners because some listeners
             # remove themselves as a listener while being executed which
@@ -474,13 +506,14 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
-        self.last_updated = last_updated or dt.datetime.now()
+        self.last_updated = date_util.strip_microseconds(
+            last_updated or date_util.utcnow())
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
         # This behavior occurs because to_dict uses datetime_to_str
         # which does not preserve microseconds
-        self.last_changed = util.strip_microseconds(
+        self.last_changed = date_util.strip_microseconds(
             last_changed or self.last_updated)
 
     @property
@@ -512,8 +545,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': self.attributes,
-                'last_changed': util.datetime_to_str(self.last_changed),
-                'last_updated': util.datetime_to_str(self.last_updated)}
+                'last_changed': date_util.datetime_to_str(self.last_changed),
+                'last_updated': date_util.datetime_to_str(self.last_updated)}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -528,12 +561,12 @@ class State(object):
         last_changed = json_dict.get('last_changed')
 
         if last_changed:
-            last_changed = util.str_to_datetime(last_changed)
+            last_changed = date_util.str_to_datetime(last_changed)
 
         last_updated = json_dict.get('last_updated')
 
         if last_updated:
-            last_updated = util.str_to_datetime(last_updated)
+            last_updated = date_util.str_to_datetime(last_updated)
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated)
@@ -550,7 +583,7 @@ class State(object):
 
         return "<state {}={}{} @ {}>".format(
             self.entity_id, self.state, attr,
-            util.datetime_to_str(self.last_changed))
+            date_util.datetime_to_local_str(self.last_changed))
 
 
 class StateMachine(object):
@@ -587,7 +620,7 @@ class StateMachine(object):
         """
         Returns all states that have been changed since point_in_time.
         """
-        point_in_time = util.strip_microseconds(point_in_time)
+        point_in_time = date_util.strip_microseconds(point_in_time)
 
         with self._lock:
             return [state for state in self._states.values()
@@ -849,7 +882,7 @@ class Timer(threading.Thread):
 
         last_fired_on_second = -1
 
-        calc_now = dt.datetime.now
+        calc_now = date_util.utcnow
         interval = self.interval
 
         while not self._stop_event.isSet():
@@ -875,7 +908,13 @@ class Timer(threading.Thread):
 
             last_fired_on_second = now.second
 
-            self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+            # Event might have been set while sleeping
+            if not self._stop_event.isSet():
+                try:
+                    self.hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
+                except HomeAssistantError:
+                    # HA raises error if firing event after it has shut down
+                    break
 
 
 class Config(object):
@@ -898,44 +937,9 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = os.path.join(os.getcwd(), 'config')
 
-    def auto_detect(self):
-        """ Will attempt to detect config of Home Assistant. """
-        # Only detect if location or temp unit missing
-        if None not in (self.latitude, self.longitude, self.temperature_unit):
-            return
-
-        _LOGGER.info('Auto detecting location and temperature unit')
-
-        try:
-            info = requests.get(
-                'https://freegeoip.net/json/', timeout=5).json()
-        except requests.RequestException:
-            return
-
-        if self.latitude is None and self.longitude is None:
-            self.latitude = info['latitude']
-            self.longitude = info['longitude']
-
-        if self.temperature_unit is None:
-            # From Wikipedia:
-            # Fahrenheit is used in the Bahamas, Belize, the Cayman Islands,
-            # Palau, and the United States and associated territories of
-            # American Samoa and the U.S. Virgin Islands
-            if info['country_code'] in ('BS', 'BZ', 'KY', 'PW',
-                                        'US', 'AS', 'VI'):
-                self.temperature_unit = TEMP_FAHRENHEIT
-            else:
-                self.temperature_unit = TEMP_CELCIUS
-
-        if self.location_name is None:
-            self.location_name = info['city']
-
-        if self.time_zone is None:
-            self.time_zone = info['time_zone']
-
-    def path(self, path):
+    def path(self, *path):
         """ Returns path to the file within the config dir. """
-        return os.path.join(self.config_dir, path)
+        return os.path.join(self.config_dir, *path)
 
     def temperature(self, value, unit):
         """ Converts temperature to user preferred unit if set. """
@@ -954,6 +958,17 @@ class Config(object):
         except ValueError:
             # Could not convert value to float
             return value, unit
+
+    def as_dict(self):
+        """ Converts config to a dictionary. """
+        return {
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'temperature_unit': self.temperature_unit,
+            'location_name': self.location_name,
+            'time_zone': self.time_zone.zone,
+            'components': self.components,
+        }
 
 
 class HomeAssistantError(Exception):

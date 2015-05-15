@@ -1,19 +1,19 @@
 """
 homeassistant.components.scheduler
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A component that will act as a scheduler and performe actions based
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A component that will act as a scheduler and perform actions based
 on the events in the schedule.
 
 It will read a json object from schedule.json in the config dir
 and create a schedule based on it.
 Each schedule is a JSON with the keys id, name, description,
 entity_ids, and events.
-- days is an array with the weekday number (monday=0) that the schdule
+- days is an array with the weekday number (monday=0) that the schedule
     is active
 - entity_ids an array with entity ids that the events in the schedule should
     effect (can also be groups)
 - events is an array of objects that describe the different events that is
-    supported. Read in the events descriptions for more information
+    supported. Read in the events descriptions for more information.
 """
 import logging
 import json
@@ -22,7 +22,6 @@ from homeassistant import bootstrap
 from homeassistant.loader import get_component
 from homeassistant.const import ATTR_ENTITY_ID
 
-# The domain of your component. Should be equal to the name of your component
 DOMAIN = 'scheduler'
 
 DEPENDENCIES = []
@@ -33,10 +32,10 @@ _SCHEDULE_FILE = 'schedule.json'
 
 
 def setup(hass, config):
-    """ Create the schedules """
+    """ Create the schedules. """
 
     def setup_listener(schedule, event_data):
-        """ Creates the event listener based on event_data """
+        """ Creates the event listener based on event_data. """
         event_type = event_data['type']
         component = event_type
 
@@ -52,7 +51,7 @@ def setup(hass, config):
                                                               event_data)
 
     def setup_schedule(schedule_data):
-        """ setup a schedule based on the description """
+        """ Setup a schedule based on the description. """
 
         schedule = Schedule(schedule_data['id'],
                             name=schedule_data['name'],
@@ -97,17 +96,17 @@ class Schedule(object):
         self.__event_listeners = []
 
     def add_event_listener(self, event_listener):
-        """ Add a event to the schedule """
+        """ Add a event to the schedule. """
         self.__event_listeners.append(event_listener)
 
     def schedule(self, hass):
-        """ Schedule all the events in the schdule """
+        """ Schedule all the events in the schedule. """
         for event in self.__event_listeners:
             event.schedule(hass)
 
 
 class EventListener(object):
-    """ The base EventListner class that the schedule uses """
+    """ The base EventListener class that the schedule uses. """
     def __init__(self, schedule):
         self.my_schedule = schedule
 
@@ -122,7 +121,7 @@ class EventListener(object):
 
 # pylint: disable=too-few-public-methods
 class ServiceEventListener(EventListener):
-    """ A EventListner that calls a service when executed """
+    """ A EventListener that calls a service when executed. """
 
     def __init__(self, schdule, service):
         EventListener.__init__(self, schdule)
@@ -130,7 +129,7 @@ class ServiceEventListener(EventListener):
         (self.domain, self.service) = service.split('.')
 
     def execute(self, hass):
-        """ Call the service """
+        """ Call the service. """
         data = {ATTR_ENTITY_ID: self.my_schedule.entity_ids}
         hass.call_service(self.domain, self.service, data)
 

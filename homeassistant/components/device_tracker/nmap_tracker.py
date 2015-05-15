@@ -1,6 +1,27 @@
-""" Supports scanning using nmap. """
+"""
+homeassistant.components.device_tracker.nmap
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Device tracker platform that supports scanning a network with nmap.
+
+Configuration:
+
+To use the nmap tracker you will need to add something like the following
+to your config/configuration.yaml
+
+device_tracker:
+  platform: nmap_tracker
+  hosts: 192.168.1.1/24
+
+Variables:
+
+hosts
+*Required
+The IP addresses to scan in the network-prefix notation (192.168.1.1/24) or
+the range notation (192.168.1.1-255).
+"""
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 from collections import namedtuple
 import subprocess
 import re
@@ -8,6 +29,7 @@ import re
 from libnmap.process import NmapProcess
 from libnmap.parser import NmapParser, NmapParserException
 
+import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_HOSTS
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle, convert
@@ -36,7 +58,7 @@ Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 def _arp(ip_address):
-    """ Get the MAC address for a given IP """
+    """ Get the MAC address for a given IP. """
     cmd = ['arp', '-n', ip_address]
     arp = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     out, _ = arp.communicate()
@@ -85,7 +107,7 @@ class NmapDeviceScanner(object):
             Returns True if successful, False otherwise. """
         try:
             results = NmapParser.parse(stdout)
-            now = datetime.now()
+            now = dt_util.now()
             self.last_results = []
             for host in results.hosts:
                 if host.is_up():
@@ -119,7 +141,7 @@ class NmapDeviceScanner(object):
         options = "-F --host-timeout 5"
         exclude_targets = set()
         if self.home_interval:
-            now = datetime.now()
+            now = dt_util.now()
             for host in self.last_results:
                 if host.last_update + self.home_interval > now:
                     exclude_targets.add(host)

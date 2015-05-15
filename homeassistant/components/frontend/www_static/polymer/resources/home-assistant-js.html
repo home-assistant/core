@@ -7,18 +7,6 @@
       'light', 'group', 'sun', 'configurator', 'thermostat', 'script'
     ];
 
-    // Register some polymer filters
-
-    PolymerExpressions.prototype.HATimeToDate = function(timeString) {
-      if (!timeString) return;
-
-      return window.hass.util.parseDateTime(timeString);
-    };
-
-    PolymerExpressions.prototype.HATimeStripDate = function(timeString) {
-      return (timeString || "").split(' ')[0];
-    };
-
     // Add some frontend specific helpers to the models
     Object.defineProperties(window.hass.stateModel.prototype, {
       // how to render the card for this state
@@ -81,3 +69,5 @@
     window.hass.uiUtil = {};
   })();
 </script>
+
+<link rel="import" href="./moment-js.html">

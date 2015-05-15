@@ -1,4 +1,7 @@
 """
+homeassistant.components.switch.modbus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Support for Modbus switches.
 
 Configuration:
@@ -53,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ModbusSwitch(ToggleEntity):
-    """ Represents a Modbus Switch """
+    """ Represents a Modbus switch. """
 
     def __init__(self, name, slave, register, bit):
         self._name = name

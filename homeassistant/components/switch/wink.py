@@ -1,4 +1,9 @@
-""" Support for WeMo switchces. """
+"""
+homeassistant.components.switch.wink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Support for Wink switches.
+"""
 import logging
 
 # pylint: disable=no-name-in-module, import-error

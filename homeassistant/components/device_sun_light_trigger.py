@@ -6,8 +6,9 @@ Provides functionality to turn on lights based on
 the state of the sun and devices.
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
+import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from . import light, sun, device_tracker, group
 
@@ -115,7 +116,7 @@ def setup(hass, config):
            new_state.state == STATE_HOME:
 
             # These variables are needed for the elif check
-            now = datetime.now()
+            now = dt_util.now()
             start_point = calc_time_for_light_when_sunset()
 
             # Do we need lights?
