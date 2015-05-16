@@ -1,79 +1,80 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
-<link rel="import" href="../bower_components/core-label/core-label.html">
+<link rel="import" href="../bower_components/layout/layout.html">
+
+<!-- WIP <link rel="import" href="../bower_components/core-label/core-label.html"> -->
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
-<link rel="import" href="../bower_components/core-input/core-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-container.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-error.html">
+<link rel="import" href="../bower_components/iron-input/iron-input.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 
-<polymer-element name="login-form">
+<link rel="import" href="../resources/store-listener-behavior.html">
+
+<dom-module id="login-form">
+  <style>
+    #passwordDecorator {
+      display: block;
+      height: 57px;
+    }
+
+    paper-checkbox {
+      margin-right: 8px;
+    }
+
+    paper-checkbox::shadow #checkbox.checked {
+      background-color: #03a9f4;
+      border-color: #03a9f4;
+    }
+
+    paper-checkbox::shadow #ink[checked] {
+      color: #03a9f4;
+    }
+
+    paper-button {
+      margin-left: 72px;
+    }
+
+    .interact {
+      height: 125px;
+    }
+
+    #validatebox {
+      text-align: center;
+    }
+
+    .validatemessage {
+      margin-top: 10px;
+    }
+  </style>
+
   <template>
-    <style>
-      #passwordDecorator {
-        display: block;
-        height: 57px;
-      }
-
-      paper-checkbox {
-        margin-right: 8px;
-      }
-
-      paper-checkbox::shadow #checkbox.checked {
-        background-color: #03a9f4;
-        border-color: #03a9f4;
-      }
-
-      paper-checkbox::shadow #ink[checked] {
-        color: #03a9f4;
-      }
-
-      paper-button {
-        margin-left: 72px;
-      }
-
-      .interact {
-        height: 125px;
-      }
-
-      #validatebox {
-        text-align: center;
-      }
-
-      .validatemessage {
-        margin-top: 10px;
-      }
-    </style>
-
-    <div layout horizontal center fit class='login' id="splash">
-      <div layout vertical center flex>
+    <div class="layout horizontal center fit login" id="splash">
+      <div class="layout vertical center flex">
 
         <img src="/static/favicon-192x192.png" />
         <h1>Home Assistant</h1>
 
         <a href="#" id="hideKeyboardOnFocus"></a>
 
-        <div class='interact' layout vertical>
+        <div class='interact'>
+          <div id='loginform' hidden$="[[isValidating]]">
+            <paper-input-container id="passwordDecorator" invalid="[[isInvalid]]">
+              <label>Password</label>
+              <input is="iron-input" type="password" id="passwordInput" />
+              <paper-input-error invalid="[[isInvalid]]">[[errorMessage]]</paper-input-error>
+            </paper-input-container>
 
-          <div id='loginform' hidden?="{{isValidating || isLoggedIn}}">
-            <paper-input-decorator label="Password" id="passwordDecorator">
-              <input is="core-input" type="password" id="passwordInput"
-                     value="{{authToken}}" on-keyup="{{passwordKeyup}}">
-            </paper-input-decorator>
-
-            <div horizontal center layout>
-              <core-label horizontal layout>
-                <paper-checkbox for checked={{rememberLogin}}></paper-checkbox>
-                Remember
-              </core-label>
-
-              <paper-button on-click={{validatePassword}}>Log In</paper-button>
+            <div class="layout horizontal center">
+              <paper-checkbox for id='rememberLogin'>Remember</paper-checkbox>
+              <paper-button id='loginButton'>Log In</paper-button>
             </div>
           </div>
 
-          <div id="validatebox" hidden?="{{!(isValidating || isLoggedIn)}}">
+          <div id="validatebox" hidden$="[[!isValidating]]">
             <paper-spinner active="true"></paper-spinner><br />
-            <div class="validatemessage">{{spinnerMessage}}</div>
+            <div class="validatemessage">Loading data…</div>
           </div>
         </div>
       </div>
@@ -81,43 +82,53 @@
 
   </template>
 
-  <script>
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
+</dom-module>
+
+<script>
+(function() {
   var uiActions = window.hass.uiActions;
 
-  Polymer(Polymer.mixin({
-    MSG_VALIDATING: "Validating password…",
-    MSG_LOADING_DATA: "Loading data…",
+  Polymer({
+    is: 'login-form',
 
-    authToken: "",
-    rememberLogin: false,
+    behaviors: [StoreListenerBehavior],
 
-    isValidating: false,
-    isLoggedIn: false,
+    properties: {
+      isValidating: {
+        type: Boolean,
+        value: false,
+      },
 
-    spinnerMessage: "",
+      isInvalid: {
+        type: Boolean,
+        value: false,
+      },
+
+      errorMessage: {
+        type: String,
+        value: '',
+      }
+    },
+
+    listeners: {
+      'passwordInput.keydown': 'passwordKeyDown',
+      'loginButton.click': 'validatePassword',
+    },
 
     attached: function() {
       this.focusPassword();
-      this.listenToStores(true);
-    },
-
-    detached: function() {
-      this.stopListeningToStores();
     },
 
     authStoreChanged: function(authStore) {
       this.isValidating = authStore.isValidating;
-      this.isLoggedIn = authStore.isLoggedIn;
-      this.spinnerMessage = this.isValidating ? this.MSG_VALIDATING : this.MSG_LOADING_DATA;
 
       if (authStore.lastAttemptInvalid) {
-        this.$.passwordDecorator.error = authStore.lastAttemptMessage;
-        this.$.passwordDecorator.isInvalid = true;
+        this.errorMessage = authStore.lastAttemptMessage;
+        this.isInvalid = true;
       }
 
-      if (!(this.isValidating && this.isLoggedIn)) {
-        this.job('focusPasswordBox', this.focusPassword.bind(this));
+      if (!this.isValidating) {
+        setTimeout(this.focusPassword.bind(this), 0);
       }
     },
 
@@ -125,23 +136,25 @@
       this.$.passwordInput.focus();
     },
 
-    passwordKeyup: function(ev) {
+    passwordKeyDown: function(ev) {
       // validate on enter
       if(ev.keyCode === 13) {
         this.validatePassword();
+        ev.preventDefault();
 
       // clear error after we start typing again
-      } else if(this.$.passwordDecorator.isInvalid) {
-        this.$.passwordDecorator.isInvalid = false;
+      } else if(this.isInvalid) {
+        this.isInvalid = false;
       }
     },
 
     validatePassword: function() {
       this.$.hideKeyboardOnFocus.focus();
 
-      uiActions.validateAuth(this.authToken, this.rememberLogin);
+      uiActions.validateAuth(this.$.passwordInput.value, this.$.rememberLogin.checked);
     },
-  }, storeListenerMixIn));
-  </script>
-</polymer-element>
+  });
+})();
+</script>
+
 

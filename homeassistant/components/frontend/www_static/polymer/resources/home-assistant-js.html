@@ -12,24 +12,16 @@
       // how to render the card for this state
       cardType: {
         get: function() {
-          if(DOMAINS_WITH_CARD.indexOf(this.domain) !== -1) {
-            return this.domain;
-          } else if(this.canToggle) {
-            return "toggle";
-          } else {
-            return "display";
-          }
+          console.warning('Deprecated method. Please use hass.uiUtil.stateCardType');
+          return window.hass.uiUtil.stateCardType(this);
         }
       },
 
       // how to render the more info of this state
       moreInfoType: {
         get: function() {
-          if(DOMAINS_WITH_MORE_INFO.indexOf(this.domain) !== -1) {
-            return this.domain;
-          } else {
-            return 'default';
-          }
+          console.warning('Deprecated method. Please use hass.uiUtil.stateMoreInfoType');
+          return window.hass.uiUtil.stateMoreInfoType(this);
         }
       },
     });
@@ -66,7 +58,25 @@
     };
 
     // UI specific util methods
-    window.hass.uiUtil = {};
+    window.hass.uiUtil = {
+      stateCardType: function(state) {
+        if(DOMAINS_WITH_CARD.indexOf(state.domain) !== -1) {
+          return state.domain;
+        } else if(state.canToggle) {
+          return "toggle";
+        } else {
+          return "display";
+        }
+      },
+
+      stateMoreInfoType: function(state) {
+        if(DOMAINS_WITH_MORE_INFO.indexOf(state.domain) !== -1) {
+          return state.domain;
+        } else {
+          return 'default';
+        }
+      },
+    };
   })();
 </script>
 

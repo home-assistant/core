@@ -3,45 +3,61 @@
 
 <link rel="import" href="resources/home-assistant-style.html">
 <link rel="import" href="resources/home-assistant-js.html">
+<link rel="import" href="resources/store-listener-behavior.html">
 
 <link rel="import" href="layouts/login-form.html">
-<link rel="import" href="layouts/home-assistant-main.html">
+<!-- <link rel="import" href="layouts/home-assistant-main.html"> -->
 
-<polymer-element name="home-assistant" attributes="auth">
+<dom-module id="home-assistant">
+
+  <style>
+    :host {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      font-weight: 300;
+    }
+  </style>
+
   <template>
-    <style>
-
-      :host {
-        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
-        font-weight: 300;
-      }
-
-    </style>
-
-    <home-assistant-api auth="{{auth}}"></home-assistant-api>
-
-    <template if="{{!loaded}}">
+    <template is="dom-if" if="[[!loaded]]">
       <login-form></login-form>
     </template>
 
-    <template if="{{loaded}}">
-      <home-assistant-main></home-assistant-main>
+      <!-- <home-assistant-main></home-assistant-main> -->
+    <template is="dom-if" if="[[loaded]]">
+      Hello HA
     </template>
 
-  </template>
-  <script>
+  </template> 
+</dom-module>
+
+<script>
+(function() {
+
   var storeListenerMixIn = window.hass.storeListenerMixIn,
       uiActions = window.hass.uiActions,
       preferenceStore = window.hass.preferenceStore;
 
-  Polymer(Polymer.mixin({
-    loaded: false,
+  Polymer({
+    is: 'home-assistant',
+
+    hostAttributes: {
+      auth: null,
+    },
+
+    behaviors: [StoreListenerBehavior],
+
+    properties: {
+      loaded: {
+        type: Boolean,
+        value: false,
+      },
+    },
 
     ready: function() {
       // remove the HTML init message
       document.getElementById('init').remove();
 
-      // if auth was given, tell the backend
+      // if auth was given, tell the backend 
       if(this.auth) {
         uiActions.validateAuth(this.auth, false);    
       } else if (preferenceStore.hasAuthToken) {
@@ -49,17 +65,10 @@
       }
     },
 
-    attached: function() {
-      this.listenToStores(true);
-    },
-
-    detached: function() {
-      this.stopListeningToStores();
-    },
-
     syncStoreChanged: function(syncStore) {
       this.loaded = syncStore.initialLoadDone;
     },
-  }, storeListenerMixIn));
-  </script>  
-</polymer-element>
+});
+
+})();
+</script> 
