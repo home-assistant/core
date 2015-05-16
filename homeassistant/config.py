@@ -103,6 +103,18 @@ def load_yaml_config_file(config_path):
     """ Parse a YAML configuration file. """
     import yaml
 
+    def yaml_include(loader, node):
+        """
+        Loads another YAML file and embeds it using the !include tag.
+
+        Example:
+            device_tracker: !include device_tracker.yaml
+        """
+        fname = os.path.join(os.path.dirname(config_path), node.value)
+        return load_yaml_config_file(fname)
+
+    yaml.add_constructor('!include', yaml_include)
+
     try:
         with open(config_path) as conf_file:
             # If configuration file is empty YAML returns None
