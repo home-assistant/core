@@ -20,28 +20,27 @@ sensor:
   password: YOUR_ACCOUNT_PASSWORD
   currency: YOUR CURRENCY
   display_options:
-    - type: 'exchangerate'
-    - type: 'trade_volume_btc'
-    - type: 'miners_revenue_usd'
-    - type: 'btc_mined'
-    - type: 'trade_volume_usd'
-    - type: 'difficulty'
-    - type: 'minutes_between_blocks'
-    - type: 'number_of_transactions'
-    - type: 'hash_rate'
-    - type: 'timestamp'
-    - type: 'mined_blocks'
-    - type: 'blocks_size'
-    - type: 'total_fees_btc'
-    - type: 'total_btc_sent'
-    - type: 'estimated_btc_sent'
-    - type: 'total_btc'
-    - type: 'total_blocks'
-    - type: 'next_retarget'
-    - type: 'estimated_transaction_volume_usd'
-    - type: 'miners_revenue_btc'
-    - type: 'market_price_usd'
-
+    - exchangerate
+    - trade_volume_btc
+    - miners_revenue_usd
+    - btc_mined
+    - trade_volume_usd
+    - difficulty
+    - minutes_between_blocks
+    - number_of_transactions
+    - hash_rate
+    - timestamp
+    - mined_blocks
+    - blocks_size
+    - total_fees_btc
+    - total_btc_sent
+    - estimated_btc_sent
+    - total_btc
+    - total_blocks
+    - next_retarget
+    - estimated_transaction_volume_usd
+    - miners_revenue_btc
+    - market_price_usd
 
 Variables:
 
@@ -62,12 +61,8 @@ display_options
 *Required
 An array specifying the variables to display.
 
-These are the variables for the display_options array.:
-
-type
-*Required
-The variable you wish to display, see the configuration example above for a
-list of all available variables.
+These are the variables for the display_options array. See the configuration
+example above for a list of all available variables.
 """
 import logging
 from datetime import timedelta
@@ -141,10 +136,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(BitcoinSensor('wallet', currency, wallet))
 
     for variable in config['display_options']:
-        if variable['type'] not in OPTION_TYPES:
-            _LOGGER.error('Option type: "%s" does not exist', variable['type'])
+        if variable not in OPTION_TYPES:
+            _LOGGER.error('Option type: "%s" does not exist', variable)
         else:
-            dev.append(BitcoinSensor(variable['type'], currency))
+            print("############ ", variable)
+            dev.append(BitcoinSensor(variable, currency))
 
     add_devices(dev)
 
