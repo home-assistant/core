@@ -39,6 +39,9 @@
     "google-apis": "GoogleWebComponents/google-apis#~0.4.4",
     "core-drawer-panel": "polymer/core-drawer-panel#~0.5.5",
     "core-scroll-header-panel": "polymer/core-scroll-header-panel#~0.5.5",
+    "moment": "~2.9.0",
+    "paper-tabs": "Polymer/paper-tabs#~0.5.5",
+    "core-pages": "Polymer/core-pages#~0.5.5",
     "moment": "~2.10.2"
   },
   "resolutions": {

@@ -77,9 +77,13 @@ import logging
 import time
 import gzip
 import os
+import random
+import string
+import datetime
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
+from http import cookies
 
 import homeassistant as ha
 from homeassistant.const import (
@@ -102,7 +106,11 @@ CONF_DEVELOPMENT = "development"
 
 DATA_API_PASSWORD = 'api_password'
 
+SESSION_TIMEOUT_SECONDS = 3600
+
 _LOGGER = logging.getLogger(__name__)
+
+SESSION_LOCK = threading.RLock()
 
 
 def setup(hass, config=None):
@@ -140,6 +148,7 @@ def setup(hass, config=None):
     return True
 
 
+# pylint: disable=too-many-instance-attributes
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
     # pylint: disable=too-few-public-methods
@@ -158,6 +167,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.development = development
         self.no_password_set = no_password_set
         self.paths = []
+        self._sessions = {}
 
         # We will lazy init this one if needed
         self.event_forwarder = None
@@ -185,6 +195,41 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         """ Regitsters a path wit the server. """
         self.paths.append((method, url, callback, require_auth))
 
+    def check_expired_sessions(self):
+        """ Reemove any expired sessions. """
+        if SESSION_LOCK.acquire(False):
+            try:
+                keys = []
+                for key in self._sessions.keys():
+                    keys.append(key)
+
+                for key in keys:
+                    if self._sessions[key].is_expired:
+                        del self._sessions[key]
+                        _LOGGER.info("Cleared expired session %s", key)
+            finally:
+                SESSION_LOCK.release()
+
+    def add_session(self, key, session):
+        """ Add a new session to the list of tracked sessions """
+        self.check_expired_sessions()
+
+        if not SESSION_LOCK.acquire():
+            _LOGGER.error("Could not set session, \
+                list is locked by another thread %s", key)
+        try:
+            self._sessions[key] = session
+        finally:
+            SESSION_LOCK.release()
+
+    def get_session(self, key):
+        """ get a session by key """
+        self.check_expired_sessions()
+        session = self._sessions.get(key, None)
+        if session is not None and session.is_expired:
+            return None
+        return session
+
 
 # pylint: disable=too-many-public-methods,too-many-locals
 class RequestHandler(SimpleHTTPRequestHandler):
@@ -194,12 +239,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
     We extend from SimpleHTTPRequestHandler instead of Base so we
     can use the guess content type methods.
     """
-
     server_version = "HomeAssistant/1.0"
+
+    def __init__(self, req, client_addr, server):
+        SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+        self._session = None
+        self.cookie = None
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
+        self._session = None
 
         # Read query input
         data = parse_qs(url.query)
@@ -232,6 +282,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             if not api_password and DATA_API_PASSWORD in data:
                 api_password = data[DATA_API_PASSWORD]
+
+        self._session = self.get_session()
+
+        if not api_password and self._session is not None:
+            api_password = self._session.cookie_values.get('api_password')
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -271,6 +326,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "API password missing or incorrect.", HTTP_UNAUTHORIZED)
 
             else:
+                if self._session is None:
+                    self.set_session(api_password)
+
                 handle_request_method(self, path_match, data)
 
         elif path_matched_but_not_method:
@@ -312,6 +370,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         if location:
             self.send_header('Location', location)
+
+        if self._session is not None:
+            self.send_header(
+                'Set-Cookie',
+                'sessionId='+self.cookie['sessionId'].value)
 
         self.end_headers()
 
@@ -377,3 +440,50 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header(
                 HTTP_HEADER_EXPIRES,
                 self.date_time_string(time.time()+cache_time))
+
+    def get_session(self):
+        """ Get the requested session object from cookie value """
+        self.cookie = cookies.SimpleCookie()
+
+        if self.headers.get('Cookie', None) is not None:
+            self.cookie.load(self.headers.get("Cookie"))
+
+        if self.cookie is not None and self.cookie.get("sessionId", False):
+            session = self.server.get_session(self.cookie["sessionId"].value)
+            if session is not None:
+                session.reset_expiry()
+            return session
+        else:
+            return None
+
+    def set_session(self, api_password):
+        """Session management"""
+        chars = string.ascii_letters + string.digits
+        session_id = ''.join([random.choice(chars) for i in range(20)])
+        session = ServerSession()
+        session.cookie_values['api_password'] = api_password
+        self.server.add_session(session_id, session)
+
+        self.cookie = cookies.SimpleCookie()
+        self.cookie["sessionId"] = session_id
+
+        self._session = self.server.get_session(session_id)
+
+
+class ServerSession:
+    """ A very simple session class """
+    def __init__(self):
+        """ Set up the expiry time on creation """
+        self._expiry = 0
+        self.reset_expiry()
+        self.cookie_values = {}
+
+    def reset_expiry(self):
+        """ Resets the expiry based on current time """
+        self._expiry = datetime.datetime.now() + datetime.timedelta(
+            seconds=SESSION_TIMEOUT_SECONDS)
+
+    @property
+    def is_expired(self):
+        """ Return true if the session is expired based on the expiry time """
+        return self._expiry < datetime.datetime.now()

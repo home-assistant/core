@@ -31,6 +31,7 @@ EVENT_SERVICE_EXECUTED = "service_executed"
 EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 EVENT_COMPONENT_LOADED = "component_loaded"
 EVENT_SERVICE_REGISTERED = "service_registered"
+EVENT_FTP_FILE_RECEIVED = "ftp_file_received"
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -40,6 +41,10 @@ STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = "unknown"
 STATE_OPEN = 'open'
 STATE_CLOSED = 'closed'
+STATE_MOTION_DETECTED = 'motion_detected'
+STATE_ARMED = 'armed'
+STATE_STREAMING = 'streaming'
+STATE_IDLE = 'idle'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event

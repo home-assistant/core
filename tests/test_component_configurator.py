@@ -47,11 +47,12 @@ class TestConfigurator(unittest.TestCase):
 
         values = [
             "config_description", "config image url",
-            "config submit caption", []]
+            "config submit caption", [], []]
 
         keys = [
             configurator.ATTR_DESCRIPTION, configurator.ATTR_DESCRIPTION_IMAGE,
-            configurator.ATTR_SUBMIT_CAPTION, configurator.ATTR_FIELDS]
+            configurator.ATTR_SUBMIT_CAPTION, configurator.ATTR_FIELDS,
+            configurator.ATTR_PARAGRAPHS]
 
         exp_attr = dict(zip(keys, values))
 

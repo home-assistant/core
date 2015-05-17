@@ -44,6 +44,16 @@
         {{stateObj.attributes.description}}
       </p>
 
+      <div id="paragraph_template">
+        <template repeat="{{paragraphLines in splitParagraphs}}">
+          <p class="newlines">
+            <template repeat="{{paragraphLine in paragraphLines}}">
+              {{paragraphLine}}<br />
+            </template>
+          </p>
+        </template>
+      </div>
+
       <p class='error' hidden?="{{!stateObj.attributes.errors}}">
         {{stateObj.attributes.errors}}
       </p>
@@ -74,6 +84,7 @@
   Polymer(Polymer.mixin({
     action: "display",
     isStreaming: false,
+    splitParagraphs: [],
 
     attached: function() {
       this.listenToStores(true);
@@ -85,6 +96,16 @@
 
     streamStoreChanged: function(streamStore) {
       this.isStreaming = streamStore.isStreaming;
+    },
+
+    stateObjChanged: function(oldVal, newVal) {
+      var splitParagraphs = [];
+      if(newVal && newVal.attributes.paragraphs) {
+        for(var i = 0; i < newVal.attributes.paragraphs.length; i++) {
+          splitParagraphs.push(newVal.attributes.paragraphs[i].split('\n'));
+        }
+      }
+      this.splitParagraphs = splitParagraphs;
     },
 
     submitClicked: function() {

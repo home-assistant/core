@@ -1,0 +1,357 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/core-pages/core-pages.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../components/entity-logbook.html">
+<link rel="import" href="../components/camera-events.html">
+
+<polymer-element name="more-info-camera" attributes="stateObj dialogOpen">
+<template>
+  <style>
+
+  #retry_btn {
+    color: #4285f4;
+  }
+  paper-button.colored {
+    color: #4285f4;
+  }
+
+  :host .camera-image {
+    /*max-width: 100%;*/
+    width:640px;
+    height:480px;
+  }
+   @media (max-width: 720px) {
+      :host .camera-image {
+        max-width: calc(100%);
+        height: initial
+      }
+
+      :host .camera-page {
+        max-width: calc(100%);
+        max-height: calc(100%);
+      }
+    }
+
+    @media (max-width: 620px) {
+      :host .camera-image {
+        max-width: calc(100%);
+        height: initial
+      }
+    }
+
+    @media (max-height: 780px) {
+      /*:host .camera-container {
+        height: 550px;
+        max-width: calc(100%);
+      }*/
+    }
+
+    :host .camera-page {
+      /*max-width: calc(100%);
+      max-height: calc(100%);*/
+      width:640px;
+      height:520px;
+    }
+
+    :host paper-tabs.camera-tabs::shadow #selectionBar {
+      background-color: #00bcd4;
+    }
+
+    :host paper-tabs.camera-tabs paper-tab::shadow #ink {
+      color: #00bcd4;
+    }
+
+    :host paper-tabs.camera-tabs paper-tab::shadow .tab-content {
+      cursor: pointer;
+    }
+
+  </style>
+
+  <div hidden?="{{configureFTP || configureFtpComponent}}">
+    <paper-tabs selected="{{selected}}" class="camera-tabs" hidden?='{{!hasTabs}}'>
+      <paper-tab>Camera</paper-tab>
+      <paper-tab>Events</paper-tab>
+      <paper-tab>Settings</paper-tab>
+    </paper-tabs>
+
+    <!--<core-pages selected="{{selected}}">-->
+      <div id="camera_container" class="camera-container camera-page" hidden?="{{ selected != 0 }}">
+        <template if="{{ connectionFailed }}">
+          <div center vertical layout>
+            <div>Could not connect to camera...</div>
+            <paper-button ink id="retry_btn" on-click="{{retry}}">Retry</paper-button>
+          <div>
+        </template>
+
+        <img  hidden?="{{connectionFailed}}" src="" onload="" id="camera_image" class="camera-image" />
+        <div center horizontal layout>
+          <div>
+            <core-tooltip label="Toggle Motion Detection" position="top" hidden?="{{ !supportsMotion }}">
+              <paper-icon-button on-click="{{toggleMotionDetection}}" icon="{{motionDetectionIcon}}"></paper-icon-button>
+            </core-tooltip>
+            <core-tooltip label="Take Picture" position="top">
+              <paper-icon-button on-click="{{takeSnapshot}}" icon="image:camera-alt"></paper-icon-button>
+            </core-tooltip>
+            <core-tooltip label="Record Camera" position="top">
+              <paper-icon-button on-click="{{toggleRecording}}" icon="{{recordingIcon}}"></paper-icon-button>
+            </core-tooltip>
+          </div>
+          <div flex>
+            &nbsp;
+          </div>
+          <div>
+            {{stateObj.attributes['brand']}} - {{stateObj.attributes['model_name']}}
+          </div>
+        </div>
+
+        <div horizontal layout center hidden="true">
+
+          <div flex four>
+            &nbsp;
+          </div>
+
+                    <div flex four>
+                      <template if="{{ !configureFTP }}">
+
+                        <div horizontal layout center center-justified>
+
+                            <paper-icon-button on-click="" icon=""></paper-icon-button>
+
+                            <paper-icon-button on-click="" icon="hardware:keyboard-arrow-up"></paper-icon-button>
+
+                            <paper-icon-button on-click="" icon=""></paper-icon-button>
+
+                        </div>
+
+                        <div horizontal layout center center-justified>
+
+                            <paper-icon-button on-click="" icon="hardware:keyboard-arrow-left"></paper-icon-button>
+
+                            <paper-icon-button on-click="" icon=""></paper-icon-button>
+
+                            <paper-icon-button on-click="" icon="hardware:keyboard-arrow-right"></paper-icon-button>
+
+                        </div>
+
+                        <div horizontal layout center center-justified>
+
+                            <paper-icon-button on-click="" icon=""></paper-icon-button>
+
+                            <paper-icon-button on-click="" icon="hardware:keyboard-arrow-down"></paper-icon-button>
+
+                            <paper-icon-button on-click="" icon=""></paper-icon-button>
+
+                        </div>
+
+                      </template>
+                    </div>
+
+
+          <div flex four>
+            &nbsp;
+          </div>
+
+
+        </div>
+
+
+      </div>
+      <div class="camera-container camera-page" hidden?="{{ selected != 1 }}">
+        <camera-events stateObj="{{stateObj}}" dialogOpen="{{dialogOpen}}" hasTabs='{{hasTabs}}'></camera-events>
+        <!--<entity-logbook entityId="{{stateObj.entityId}}"></entity-logbook>-->
+      </div>
+      <div class="camera-container camera-page" hidden?="{{ selected != 2 }}">
+        <p>
+          Depending on the level of support for your current model of camera some settings may not be
+          available here and will need to be set by accessing the camera's web interface directly.
+        </p>
+      </div>
+    <!--</core-pages>-->
+
+  </div>
+
+  <div hidden?="{{!configureFTP}}">
+    <h3>Configure FTP Settings</h3>
+    <p>
+      In order for this camera to notify Home Assistant when motion occurs the FTP details
+      need to be configured in the camera settings first.  Home Assistant can configure these
+      settings for you automatically, this process will overwrite any existing settings.
+    </p>
+    <p>Would you like Home Assistant to automatically configure your camera's FTP settings now?</p>
+    <div center horizontal layout>
+      <div>
+        <paper-button on-click="{{closeFtpConfigDialog}}">
+          <core-icon icon="close"></core-icon>
+          Cancel
+        </paper-button>
+      </div>
+      <div flex>
+        &nbsp;
+      </div>
+      <div>
+        <paper-button class="colored" on-click="{{setFtpDetails}}">
+          <core-icon icon="check"></core-icon>
+          OK
+        </paper-button>
+      </div>
+    </div>
+  </div>
+
+  <div hidden?="{{!configureFtpComponent}}">
+    <h3>Configure FTP Component</h3>
+    <p>
+      In order for this camera to notify Home Assistant when motion occurs the FTP component
+      must also be loaded.  To enable the FTP component you will need to add it to your
+      &quot;configuration.yaml&quot; file and then restart Home Assistant.
+    </p>
+
+    <p>
+      To load the FTP component with default settings your just need to add &quot;ftp:&quot;
+      to your &quot;configuration.yaml&quot; file.  To view all the available configuration
+      options check the comments at the top of the &quot;components/ftp.py&quot; file.
+    </p>
+
+    <div center horizontal layout>
+    <div flex>
+        &nbsp;
+      </div>
+      <div>
+        <paper-button class="colored" on-click="{{closeFtpCompConfigDialog}}">
+          <core-icon icon="check"></core-icon>
+          OK
+        </paper-button>
+      </div>
+    </div>
+  </div>
+
+</template>
+<script>
+
+  var authStore = window.hass.authStore;
+  var serviceActions = window.hass.serviceActions;
+  var componentStore = window.hass.componentStore;
+
+  Polymer({
+    stateObj: null,
+    isStreaming: false,
+    stillImage: null,
+    reloadTime: null,
+    dialogOpen: false,
+    errorCount: 0,
+    connectionFailed: false,
+    motionDetectionIcon: 'visibility',
+    configureFTP: false,
+    selected: 0,
+    recordingIcon: 'av:videocam',
+    ftpComponentLoaded: false,
+    configureFtpComponent: false,
+    hasTabs: true,
+    supportsMotion: false,
+
+    stateObjChanged: function(oldVal, newVal) {
+      if(newVal) {
+        this.motionDetectionIcon = (newVal.attributes['is_motion_detection_enabled']) ? 'visibility-off' : 'visibility';
+        this.supportsMotion = newVal.attributes['is_motion_detection_supported'];
+        this.recordingIcon = (newVal.attributes['is_recording']) ? 'av:videocam-off' : 'av:videocam';
+      }
+    },
+
+    toggleMotionDetection: function(ev) {
+      if(!this.ftpComponentLoaded) {
+        this.configureFtpComponent = true;
+        return;
+      }
+      else if(!this.stateObj.attributes['is_ftp_configured']) {
+        this.configureFTP = true;
+        return;
+      }
+
+      if(this.stateObj.attributes['is_motion_detection_enabled'] === true) {
+        this.callCameraService('motion_detection', 'off');
+      } else {
+        this.callCameraService('motion_detection', 'on');
+      }
+    },
+
+    closeFtpConfigDialog: function(ev) {
+      this.configureFTP = false;
+    },
+
+    closeFtpCompConfigDialog: function(ev) {
+      this.configureFtpComponent = false;
+    },
+
+    setFtpDetails: function(ev) {
+      serviceActions.callService("camera", "turn_on", {
+          entity_id: this.stateObj.entityId,
+          feature: 'configure_ftp'
+        }).then(function() {
+          this.configureFTP = false;
+        }.bind(this));
+    },
+
+    dialogOpenChanged: function(oldVal, newVal) {
+      this.ftpComponentLoaded = componentStore.loaded.contains('ftp');
+      if(newVal == true) {
+        this.configureFTP = false;
+        this.configureFtpComponent = false;
+        this.startImageStream();
+        this.selected = 0;
+        this.recordingIcon = 'av:videocam';
+      }
+      else {
+        this.stopImageStream();
+      }
+    },
+
+    startImageStream: function() {
+      this.$.camera_image.src = this.stateObj.attributes['stream_url'];
+      this.isStreaming = true;
+    },
+
+    stopImageStream: function() {
+      this.$.camera_image.src = this.stateObj.attributes['still_image_url'] + '?t=' + Date.now();
+      this.isStreaming = false;
+    },
+
+    retry: function(event, detail, sender) {
+      this.startImageStream();
+    },
+
+
+    toggleRecording: function() {
+      if(this.stateObj.attributes['is_recording'] === true) {
+        this.callCameraService('record', 'off');
+      } else {
+        this.callCameraService('record', 'on');
+      }
+    },
+
+    selectedChanged: function(oldVal, newVal) {
+      if(newVal == 0 && !this.isStreaming) {
+        this.startImageStream();
+      }
+      else if(newVal != 0){
+        this.stopImageStream();
+      }
+    },
+
+    takeSnapshot: function(evt) {
+      if(this.stateObj.attributes['is_taking_snapshot'] === false) {
+        this.callCameraService('snapshot', 'on');
+      }
+    },
+
+    callCameraService: function(action, state) {
+      var data = {};
+      data['entity_id'] = this.stateObj.entityId;
+      data['action'] = action;
+      data['state'] = state;
+      serviceActions.callService('camera', 'camera_service', data)
+    }
+
+  });
+</script>
+</polymer-element>
