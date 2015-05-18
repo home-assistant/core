@@ -103,15 +103,32 @@ def load_yaml_config_file(config_path):
     """ Parse a YAML configuration file. """
     import yaml
 
-    try:
-        with open(config_path) as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            conf_dict = yaml.load(conf_file) or {}
+    def parse(fname):
+        """ Actually parse the file.  """
+        try:
+            with open(fname) as conf_file:
+                # If configuration file is empty YAML returns None
+                # We convert that to an empty dict
+                conf_dict = yaml.load(conf_file) or {}
+        except yaml.YAMLError:
+            _LOGGER.exception('Error reading YAML configuration file %s',
+                              fname)
+            raise HomeAssistantError()
+        return conf_dict
 
-    except yaml.YAMLError:
-        _LOGGER.exception('Error reading YAML configuration file')
-        raise HomeAssistantError()
+    def yaml_include(loader, node):
+        """
+        Loads another YAML file and embeds it using the !include tag.
+
+        Example:
+            device_tracker: !include device_tracker.yaml
+        """
+        fname = os.path.join(os.path.dirname(loader.name), node.value)
+        return parse(fname)
+
+    yaml.add_constructor('!include', yaml_include)
+
+    conf_dict = parse(config_path)
 
     if not isinstance(conf_dict, dict):
         _LOGGER.error(
