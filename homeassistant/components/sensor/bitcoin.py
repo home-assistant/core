@@ -58,7 +58,7 @@ currency
 The currency to exchange to. Eg. CHF, USD, EUR,etc.
 
 display_options
-*Required
+*Optional
 An array specifying the variables to display.
 
 These are the variables for the display_options array. See the configuration
@@ -66,6 +66,8 @@ example above for a list of all available variables.
 """
 import logging
 from datetime import timedelta
+
+from blockchain import statistics, exchangerates
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
@@ -98,7 +100,7 @@ OPTION_TYPES = {
 }
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -131,16 +133,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(error)
         wallet = None
 
+    data = BitcoinData()
     dev = []
     if wallet is not None and password:
-        dev.append(BitcoinSensor('wallet', currency, wallet))
+        dev.append(BitcoinSensor(data, 'wallet', currency, wallet))
 
     for variable in config['display_options']:
         if variable not in OPTION_TYPES:
             _LOGGER.error('Option type: "%s" does not exist', variable)
         else:
-            print("############ ", variable)
-            dev.append(BitcoinSensor(variable, currency))
+            dev.append(BitcoinSensor(data, variable, currency))
 
     add_devices(dev)
 
@@ -149,8 +151,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BitcoinSensor(Entity):
     """ Implements a Bitcoin sensor. """
 
-    def __init__(self, option_type, currency, wallet=''):
-
+    def __init__(self, data, option_type, currency, wallet=''):
+        self.data = data
         self._name = OPTION_TYPES[option_type][0]
         self._unit_of_measurement = OPTION_TYPES[option_type][1]
         self._currency = currency
@@ -174,13 +176,12 @@ class BitcoinSensor(Entity):
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data and updates the states. """
-        from blockchain import statistics, exchangerates
 
-        stats = statistics.get()
-        ticker = exchangerates.get_ticker()
+        self.data.update()
+        stats = self.data.stats
+        ticker = self.data.ticker
 
         # pylint: disable=no-member
         if self.type == 'wallet' and self._wallet is not None:
@@ -232,3 +233,13 @@ class BitcoinSensor(Entity):
                                            0.00000001)
         elif self.type == 'market_price_usd':
             self._state = '{0:.2f}'.format(stats.market_price_usd)
+
+class BitcoinData(object):
+    def __init__(self):
+        self.stats = None
+        self.ticker = None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        self.stats = statistics.get()
+        self.ticker = exchangerates.get_ticker()
