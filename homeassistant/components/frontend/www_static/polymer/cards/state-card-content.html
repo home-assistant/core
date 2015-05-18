@@ -1,10 +1,10 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
 <link rel="import" href="state-card-display.html">
-<!-- <link rel="import" href="state-card-toggle.html">
+<link rel="import" href="state-card-toggle.html">
 <link rel="import" href="state-card-thermostat.html">
 <link rel="import" href="state-card-configurator.html">
-<link rel="import" href="state-card-scene.html"> -->
+<link rel="import" href="state-card-scene.html">
 
 <dom-module is="state-card-content">
   <style>
@@ -12,50 +12,46 @@
       display: block;
     }
   </style>
-  <template>
-    <state-card-display state-obj="[[stateObj]]"></state-card-display>
-    <!-- <div id='cardContainer'></div> -->
-  </template>
 </dom-module>
 
 <script>
-Polymer({
-  is: 'state-card-content',
+(function() {
+  var uiUtil = window.hass.uiUtil;
 
-  properties: {
-    stateObj: {
-      type: Object,
-      value: {},
-      observe: 'stateObjChanged',
-    }
-  },
+  Polymer({
+    is: 'state-card-content',
 
-  stateObjChanged: function(oldVal, newVal) {
-    console.log('stateObjChanged');
-    return;
-    var cardContainer = this.$.cardContainer;
-
-    if (!newVal) {
-      if (cardContainer.lastChild) {
-        cardContainer.removeChild(cardContainer.lastChild);
+    properties: {
+      stateObj: {
+        type: Object,
+        observer: 'stateObjChanged',
       }
-      return;
-    }
+    },
 
-    if (!oldVal || oldVal.cardType != newVal.cardType) {
-      if (cardContainer.lastChild) {
-        cardContainer.removeChild(cardContainer.lastChild);
+    stateObjChanged: function(newVal, oldVal) {
+      var root = Polymer.dom(this);
+
+      if (!newVal) {
+        if (root.lastChild) {
+          root.removeChild(root.lastChild);
+        }
+        return;
       }
 
-      var stateCard = document.createElement("state-card-" + newVal.cardType);
-      stateCard.stateObj = newVal;
-      cardContainer.appendChild(stateCard);
+      var newCardType = uiUtil.stateCardType(newVal);
 
-    } else {
+      if (!oldVal || uiUtil.stateCardType(oldVal) != newCardType) {
+        if (root.lastChild) {
+          root.removeChild(root.lastChild);
+        }
 
-      cardContainer.lastChild.stateObj = newVal;
-
-    }
-  },
-});
+        var stateCard = document.createElement("state-card-" + newCardType);
+        stateCard.stateObj = newVal;
+        root.appendChild(stateCard);
+      } else {
+        root.lastChild.stateObj = newVal;
+      }
+    },
+  });
+})();
 </script>

@@ -12,7 +12,7 @@
       // how to render the card for this state
       cardType: {
         get: function() {
-          console.warning('Deprecated method. Please use hass.uiUtil.stateCardType');
+          console.warn('Deprecated method. Please use hass.uiUtil.stateCardType');
           return window.hass.uiUtil.stateCardType(this);
         }
       },
@@ -20,7 +20,7 @@
       // how to render the more info of this state
       moreInfoType: {
         get: function() {
-          console.warning('Deprecated method. Please use hass.uiUtil.stateMoreInfoType');
+          console.warn('Deprecated method. Please use hass.uiUtil.stateMoreInfoType');
           return window.hass.uiUtil.stateMoreInfoType(this);
         }
       },

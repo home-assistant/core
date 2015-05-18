@@ -2,8 +2,7 @@
 
 <link rel="import" href="../components/state-info.html">
 
-<polymer-element name="state-card-thermostat" attributes="stateObj api">
-<template>
+<dom-module is="state-card-thermostat">
   <style>
   .state {
     margin-left: 16px;
@@ -21,21 +20,33 @@
       margin-top: -2px;
   }
   </style>
+  <template>
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]"></state-info>
+      <div class='state'>
+        <div class='target'>[[stateObj.stateDisplay]]</div>
 
-  <div horizontal justified layout> 
-    <state-info stateObj="{{stateObj}}"></state-info>
-    <div class='state'>
-      <div class='target'>
-        {{stateObj.stateDisplay}}
-      </div>
-
-      <div class='current'>
-        Currently: {{stateObj.attributes.current_temperature}} {{stateObj.attributes.unit_of_measurement}}
+        <div class='current'>
+          <span>Currently: </span>
+          <span>[[stateObj.attributes.current_temperature]]</span>
+          <span> </span>
+          <span>[[stateObj.attributes.unit_of_measurement]]</span>
+        </div>
       </div>
     </div>
-  </div>
-</template>
+  </template>
+</dom-module>
+
 <script>
-Polymer({});
+(function() {
+  Polymer({
+    is: 'state-card-thermostat',
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+    },
+  });
+})();
 </script>
-</polymer-element>

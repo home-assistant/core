@@ -34,8 +34,6 @@
   </style>
 
   <template>
-    <!-- <core-style ref="ha-animations"></core-style> -->
-
     <partial-base narrow="[[narrow]]" togglePanel="[[togglePanel]]">
       <span header-title>{{headerTitle}}</span>
 
@@ -207,7 +205,7 @@
           return !(state.domain in uiConstants.STATE_FILTERS);
         });
       }
-      
+
       this.states = states.toArray().filter(
               function (el) {return !el.attributes.hidden;});
     },
