@@ -154,6 +154,7 @@ def setup(hass, config=None):
 
     return True
 
+
 # pylint: disable=too-many-instance-attributes
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """ Handle HTTP requests in a threaded fashion. """
