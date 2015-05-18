@@ -1,48 +1,64 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/core-tooltip/core-tooltip.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
+<!-- <link rel="import" href="../bower_components/core-tooltip/core-tooltip.html"> -->
 
 <link rel="import" href="state-badge.html">
 <link rel="import" href="relative-ha-datetime.html">
 
-<polymer-element name="state-info" attributes="stateObj" noscript>
+<dom-module is="state-info">
+  <style>
+  state-badge {
+    float: left;
+  }
+
+  .name {
+    text-transform: capitalize;  
+    font-weight: 300;
+    font-size: 1.3rem;
+  }
+
+  .info {
+    margin-left: 60px;
+  }
+
+  .time-ago {
+    color: darkgrey;
+    margin-top: -2px;
+  }
+  </style>
+
   <template>
-    <style>
-    state-badge {
-      float: left;
-    }
-
-    .name {
-      text-transform: capitalize;  
-      font-weight: 300;
-      font-size: 1.3rem;
-    }
-
-    .info {
-      margin-left: 60px;
-    }
-
-    .time-ago {
-      color: darkgrey;
-      margin-top: -2px;
-    }
-    </style>
-
     <div>
-      <state-badge stateObj="{{stateObj}}"></state-badge>
+      <state-badge state-obj='[[stateObj]]'></state-badge>
 
       <div class='info'>
-        <div class='name'>
-          {{stateObj.entityDisplay}}
-        </div>
+        <div class='name'>[[stateObj.entityDisplay]]</div>
 
-        <div class="time-ago">
-          <core-tooltip label="{{stateObj.lastChangedAsDate | formatDateTime}}" position="bottom">
-            <relative-ha-datetime datetimeObj="{{stateObj.lastChangedAsDate}}"></relative-ha-datetime>
-          </core-tooltip>
+        <div class='time-ago'>
+          <!-- <core-tooltip label="[[computeTooltipLabel(stateObj)]]" position="bottom"> -->
+            <relative-ha-datetime datetime-obj='[[stateObj.lastChangedAsDate]]'></relative-ha-datetime>
+          <!-- </core-tooltip> -->
         </div>
         
       </div>
     </div>
   </template>
-</polymer-element>
+</dom-module>
+
+<script>
+(function() {
+  Polymer({
+    is: 'state-info',
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+    },
+
+    computeTooltipLabel: function(stateObj) {
+      // stateObj.lastChangedAsDate | formatDateTime
+      return 'Label TODO';
+    },
+  });
+})();
+</script>

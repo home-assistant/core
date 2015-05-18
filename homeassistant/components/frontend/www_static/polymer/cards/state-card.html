@@ -2,8 +2,7 @@
 
 <link rel="import" href="state-card-content.html">
 
-<polymer-element name="state-card" attributes="stateObj" on-click="cardClicked">
-<template>
+<dom-module is="state-card">
   <style>
     :host {
       border-radius: 2px;
@@ -19,15 +18,31 @@
     }
   </style>
 
-  <state-card-content stateObj={{stateObj}}></state-card-content>
-</template>
-<script>
-var uiActions = window.hass.uiActions;
+  <template>
+    <state-card-content state-obj="[[stateObj]]"></state-card-content>
+  </template>
+</dom-module>
 
-Polymer({
-  cardClicked: function() {
-    uiActions.showMoreInfoDialog(this.stateObj.entityId);
-  },
-});
+<script>
+(function(){
+  var uiActions = window.hass.uiActions;
+
+  Polymer({
+    is: 'state-card',
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+    },
+
+    listeners: {
+      'click': 'cardClicked',
+    },
+
+    cardClicked: function() {
+      uiActions.showMoreInfoDialog(this.stateObj.entityId);
+    },
+  });
+})();
 </script>
-</polymer-element>

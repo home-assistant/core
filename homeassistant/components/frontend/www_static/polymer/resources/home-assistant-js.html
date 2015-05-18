@@ -44,7 +44,7 @@
     window.hass.uiActions = {
       showMoreInfoDialog: function(entityId) {
         dispatcher.dispatch({
-          actionType: this.ACTION_SHOW_DIALOG_MORE_INFO,
+          actionType: window.hass.uiConstants.ACTION_SHOW_DIALOG_MORE_INFO,
           entityId: entityId,
         });
       },

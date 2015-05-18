@@ -1,7 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
 <style is="custom-style">
-
   * {
     --dark-primary-color: #0288D1;
     --default-primary-color: #03A9F4;
@@ -19,6 +18,31 @@
     --paper-toggle-button-checked-bar-color: #039be5;
   }
 
+  @-webkit-keyframes ha-spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(359deg);
+      transform: rotate(359deg);
+    }
+  }
+  @keyframes ha-spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(359deg);
+      transform: rotate(359deg);
+    }
+  }
+
+  body /deep/ .ha-spin {
+    -webkit-animation: ha-spin 2s infinite linear;
+    animation: ha-spin 2s infinite linear;
+  }
 </style>
 
 <core-style id='ha-main'>

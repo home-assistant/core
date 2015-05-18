@@ -9,8 +9,8 @@
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
-<!-- <link rel="import" href="../layouts/partial-states.html">
-<link rel="import" href="../layouts/partial-history.html">
+<link rel="import" href="../layouts/partial-states.html">
+<!-- <link rel="import" href="../layouts/partial-history.html">
 <link rel="import" href="../layouts/partial-logbook.html">
 <link rel="import" href="../layouts/partial-dev-fire-event.html">
 <link rel="import" href="../layouts/partial-dev-call-service.html">
@@ -56,7 +56,7 @@
     <!-- <ha-modals></ha-modals> -->
 
     <paper-drawer-panel id="drawer" on-paper-responsive-change="responsiveChanged">
-      <paper-header-panel mode="scroll" drawer class='sidenav layout fit'>
+      <paper-header-panel mode="scroll" drawer class='sidenav fit'>
         <paper-toolbar>
           Home Assistant
         </paper-toolbar>
@@ -148,12 +148,12 @@
           This is the main partial, never remove it from the DOM but hide it
           to speed up when people click on states.
       -->
-<!--       <partial-states hidden?="{{hideStates}}"
+      <partial-states hidden?="{{hideStates}}"
         main narrow="{{narrow}}"
         togglePanel="{{togglePanel}}"
         filter="{{stateFilter}}">
       </partial-states>
-
+      <!--
       <template is='dom-if' if="{{selected == 'history'}}">
         <partial-history main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-history>
       </template>
@@ -169,10 +169,6 @@
       <template is='dom-if' if="{{selected == 'call-service'}}">
         <partial-dev-call-service main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-call-service>
       </template>--> 
-      <div main>
-        <p>Selected: <span>[[selected]]</span></p>
-        <p>Narrow: <span>[[narrow]]</span></p>
-      </div>
     </paper-drawer-panel>
 
   </template>
@@ -235,11 +231,6 @@
         type: Boolean,
         value: false,
       },
-
-      hasGroupStates: {
-        type: Boolean,
-        computed: '',
-      }
     },
 
     listeners: {
