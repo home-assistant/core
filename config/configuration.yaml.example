@@ -19,6 +19,7 @@ http:
   api_password: mypass
   # Set to 1 to enable development mode
   # development: 1
+  # sessions_enabled: True
 
 light:
 #  platform: hue
@@ -68,7 +69,7 @@ device_sun_light_trigger:
 
 # A comma separated list of states that have to be tracked as a single group
 # Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
-group: 
+group:
   living_room:
     - light.Bowl
     - light.Ceiling
