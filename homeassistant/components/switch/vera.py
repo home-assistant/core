@@ -136,7 +136,7 @@ class VeraSwitch(ToggleEntity):
             last_tripped = self.vera_device.refresh_value('LastTrip')
             if last_tripped is not None:
                 utc_time = dt_util.utc_from_timestamp(int(last_tripped))
-                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_local_str(
+                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
                     utc_time)
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
