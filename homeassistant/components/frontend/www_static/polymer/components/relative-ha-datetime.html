@@ -20,12 +20,12 @@
     properties: {
       datetime: {
         type: String,
-        observe: 'datetimeChanged',
+        observer: 'datetimeChanged',
       },
 
       datetimeObj: {
         type: Object,
-        observe: 'datetimeObjChanged',
+        observer: 'datetimeObjChanged',
       },
 
       parsedDateTime: {
@@ -47,27 +47,19 @@
 
     attached: function() {
       this._interval = setInterval(this.updateRelative, UPDATE_INTERVAL);
-
-      if (this.datetimeObj) {
-        this.parsedDateTime = this.datetimeObj;
-      } else if (this.datetime) {
-        this.parsedDateTime = parseDateTime(this.datetime);
-      }
-
-      this.updateRelative();
     },
 
     detached: function() {
       clearInterval(this._interval);
     },
 
-    datetimeChanged: function(oldVal, newVal) {
+    datetimeChanged: function(newVal) {
       this.parsedDateTime = newVal ? parseDateTime(newVal) : null;
 
       this.updateRelative();
     },
 
-    datetimeObjChanged: function(oldVal, newVal) {
+    datetimeObjChanged: function(newVal) {
       this.parsedDateTime = newVal;
 
       this.updateRelative();

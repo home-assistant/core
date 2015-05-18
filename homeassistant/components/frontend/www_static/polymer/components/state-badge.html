@@ -58,23 +58,21 @@ Polymer({
   properties: {
     stateObj: {
       type: Object,
-      observe: 'updateIconColor',
+      observer: 'updateIconColor',
     },
   },
 
   /**
    * Called when an attribute changes that influences the color of the icon.
    */
-  updateIconColor: function(oldVal, newVal) {
-    var state = this.stateObj;
-
+  updateIconColor: function(newVal) {
     // for domain light, set color of icon to light color if available
-    if(state.domain == "light" && state.state == "on" &&
-       state.attributes.brightness && state.attributes.xy_color) {
+    if(newVal.domain == "light" && newVal.state == "on" &&
+       newVal.attributes.brightness && newVal.attributes.xy_color) {
 
-      var rgb = this.xyBriToRgb(state.attributes.xy_color[0],
-                                state.attributes.xy_color[1],
-                                state.attributes.brightness);
+      var rgb = this.xyBriToRgb(newVal.attributes.xy_color[0],
+                                newVal.attributes.xy_color[1],
+                                newVal.attributes.brightness);
       this.$.icon.style.color = "rgb(" + rgb.map(Math.floor).join(",") + ")";
     } else {
       this.$.icon.style.color = null;

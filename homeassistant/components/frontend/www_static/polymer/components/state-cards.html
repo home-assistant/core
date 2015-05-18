@@ -45,7 +45,7 @@
         <state-card class="state-card" state-obj="[[item]]"></state-card>
       </template>
 
-      <template if="{{emptyStates}}">
+      <template if="[[computeEmptyStates(states)]]">
         <div class='no-states-content'>
           <content></content>
         </div>
@@ -65,15 +65,10 @@
         type: Array,
         value: [],
       },
-
-      emptyStates: {
-        type: Boolean,
-        computed: 'computeEmptyStates(states)',
-      },
     },
 
     computeEmptyStates: function(states) {
-      return states.length == 0;
+      return states.length === 0;
     },
   });
 })();

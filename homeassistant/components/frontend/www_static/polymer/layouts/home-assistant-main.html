@@ -10,8 +10,8 @@
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="../layouts/partial-states.html">
-<!-- <link rel="import" href="../layouts/partial-history.html">
 <link rel="import" href="../layouts/partial-logbook.html">
+<!-- <link rel="import" href="../layouts/partial-history.html">
 <link rel="import" href="../layouts/partial-dev-fire-event.html">
 <link rel="import" href="../layouts/partial-dev-call-service.html">
 <link rel="import" href="../layouts/partial-dev-set-state.html"> -->
@@ -28,6 +28,10 @@
       overflow: hidden;
     }
 
+    .sidenav paper-toolbar {
+      padding-left: 16px;
+    }
+
     .sidenav paper-menu {
       --paper-menu-color: #757575;
     }
@@ -37,7 +41,7 @@
     }
 
     .divider {
-      border-top: 1px solid #e0e0e0;       
+      border-top: 1px solid #e0e0e0;
     }
 
     .text {
@@ -132,13 +136,13 @@
           <div class='text label divider'>Developer Tools</div>
           <div class='dev-tools layout horizontal justified'>
             <paper-icon-button
-              icon="settings-remote" data-panel='call-service'
+              icon="settings-remote" data-panel='[[selectedDevService]]'
               on-click="handleDevClick"></paper-icon-button>
             <paper-icon-button
-              icon="settings-ethernet" data-panel='set-state'
+              icon="settings-ethernet" data-panel='[[selectedSetState]]'
               on-click="handleDevClick"></paper-icon-button>
             <paper-icon-button
-              icon="settings-input-antenna" data-panel='fire-event'
+              icon="settings-input-antenna" data-panel='[[selectedDevEvent]]'
               on-click="handleDevClick"></paper-icon-button>
           </div>
         </paper-menu>
@@ -148,27 +152,27 @@
           This is the main partial, never remove it from the DOM but hide it
           to speed up when people click on states.
       -->
-      <partial-states hidden?="{{hideStates}}"
+      <partial-states hidden$="{{hideStates}}"
         main narrow="{{narrow}}"
-        togglePanel="{{togglePanel}}"
         filter="{{stateFilter}}">
       </partial-states>
+
+      <template is='dom-if' if="{{isSelectedLogbook}}">
+        <partial-logbook main narrow="{{narrow}}"></partial-logbook>
+      </template>
       <!--
       <template is='dom-if' if="{{selected == 'history'}}">
-        <partial-history main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-history>
-      </template>
-      <template is='dom-if' if="{{selected == 'logbook'}}">
-        <partial-logbook main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-logbook>
+        <partial-history main narrow="{{narrow}}"></partial-history>
       </template>
       <template is='dom-if' if="{{selected == 'fire-event'}}">
-        <partial-dev-fire-event main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-fire-event>
+        <partial-dev-fire-event main narrow="{{narrow}}"></partial-dev-fire-event>
       </template>
       <template is='dom-if' if="{{selected == 'set-state'}}">
-        <partial-dev-set-state main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-set-state>
+        <partial-dev-set-state main narrow="{{narrow}}"></partial-dev-set-state>
       </template>
       <template is='dom-if' if="{{selected == 'call-service'}}">
-        <partial-dev-call-service main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-call-service>
-      </template>--> 
+        <partial-dev-call-service main narrow="{{narrow}}"></partial-dev-call-service>
+      </template>-->
     </paper-drawer-panel>
 
   </template>
@@ -231,14 +235,67 @@
         type: Boolean,
         value: false,
       },
+
+      selectedHistory: {
+        type: String,
+        value: 'history',
+        readOnly: true,
+      },
+
+      isSelectedHistory: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedHistory)',
+      },
+
+      selectedLogbook: {
+        type: String,
+        value: 'logbook',
+        readOnly: true,
+      },
+
+      isSelectedLogbook: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedLogbook)',
+      },
+
+      selectedDevEvent: {
+        type: String,
+        value: 'devEvent',
+        readOnly: true,
+      },
+
+      isSelectedDevEvent: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedDevEvent)',
+      },
+
+      selectedDevState: {
+        type: String,
+        value: 'devState',
+        readOnly: true,
+      },
+
+      isSelectedDevState: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedDevState)',
+      },
+
+      selectedDevService: {
+        type: String,
+        value: 'devService',
+        readOnly: true,
+      },
+
+      isSelectedDevService: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedDevService)',
+      },
+
+
     },
 
     listeners: {
       'menu.core-select': 'menuSelect',
-    },
-
-    attached: function() {
-      this.togglePanel = this.togglePanel.bind(this);
     },
 
     stateStoreChanged: function(stateStore) {
@@ -270,7 +327,7 @@
         return;
       }
 
-      this.togglePanel();
+      this.closeDrawer();
       this.selected = newChoice;
 
       if (newChoice.substr(0, 7) === 'states_') {
@@ -286,8 +343,8 @@
       this.narrow = detail.narrow;
     },
 
-    togglePanel: function() {
-      this.$.drawer.togglePanel();
+    closeDrawer: function() {
+      this.$.drawer.closeDrawer();
     },
 
     handleLogOut: function() {
@@ -309,6 +366,10 @@
 
     // /temp work around
 
+    computeIsSelected: function(selected, selectedType) {
+      return selected === selectedType;
+    },
+
     filterIcon: function(filter) {
       return uiUtil.domainIcon(filter);
     },
@@ -322,4 +383,4 @@
     }
   });
 })();
-</script>  
+</script>

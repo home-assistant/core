@@ -1,43 +1,50 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/ha-logbook.html">
 
-<polymer-element name="partial-logbook" attributes="narrow togglePanel">
-<template>
+<dom-module is="partial-logbook">
   <style>
     .content {
       background-color: white;
       padding: 8px;
     }
   </style>
-  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
-    <span header-title>Logbook</span>
+  <template>
+    <partial-base narrow="[[narrow]]">
+      <span header-title>Logbook</span>
 
-    <span header-buttons>
-      <paper-icon-button icon="refresh"
-        on-click="{{handleRefreshClick}}"></paper-icon-button>
-    </span>
+      <paper-icon-button icon="refresh" header-buttons
+        on-click="handleRefresh"></paper-icon-button>
 
-    <div flex class="{{ {content: true, narrow: narrow, wide: !narrow} | tokenList }}">
-      <ha-logbook entries="{{entries}}"></ha-logbook>
-    </div>
-  </partial-base>
-</template>
+      <ha-logbook entries="[[entries]]"></ha-logbook>
+    </partial-base>
+  </template>
+</dom-module>
+
 <script>
+(function() {
   var storeListenerMixIn = window.hass.storeListenerMixIn;
   var logbookActions = window.hass.logbookActions;
 
-  Polymer(Polymer.mixin({
-    entries: null,
+  Polymer({
+    is: 'partial-logbook',
 
-    attached: function() {
-      this.listenToStores(true);
-    },
+    behaviors: [StoreListenerBehavior],
 
-    detached: function() {
-      this.stopListeningToStores();
+    properties: {
+      narrow: {
+        type: Boolean,
+        value: false,
+      },
+
+      entries: {
+        type: Array,
+        value: [],
+      },
     },
 
     logbookStoreChanged: function(logbookStore) {
@@ -48,9 +55,9 @@
       this.entries = logbookStore.all.toArray();
     },
 
-    handleRefreshClick: function() {
+    handleRefresh: function() {
       logbookActions.fetch();
     },
-  }, storeListenerMixIn));
+  });
+})();
 </script>
-</polymer>

@@ -7,7 +7,7 @@
 
 <link rel="import" href="../components/state-cards.html">
 
-<dom-module is="partial-states" attributes="narrow togglePanel filter">
+<dom-module is="partial-states">
   <style>
     .listening {
       position: absolute;
@@ -34,7 +34,7 @@
   </style>
 
   <template>
-    <partial-base narrow="[[narrow]]" togglePanel="[[togglePanel]]">
+    <partial-base narrow="[[narrow]]">
       <span header-title>{{headerTitle}}</span>
 
       <span header-buttons>
@@ -92,14 +92,6 @@
       narrow: {
         type: Boolean,
         value: false,
-      },
-
-      /**
-       * Function to toggle panel visibility.
-       */
-      togglePanel: {
-        type: Function,
-        value: function() {},
       },
 
       filter: {

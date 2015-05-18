@@ -12,8 +12,7 @@
 <template>
   <paper-header-panel class='fit'>
     <paper-toolbar>
-      <paper-icon-button icon="menu" hidden$="[[!narrow]]"
-        on-click="togglePanel"></paper-icon-button>
+      <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
       <div class='flex'>
         <content select="[header-title]"></content>
       </div>
@@ -37,11 +36,6 @@
       narrow: {
         type: Boolean,
         value: false,
-      },
-
-      togglePanel: {
-        type: Function,
-        value: function() {},
       },
     },
   });
