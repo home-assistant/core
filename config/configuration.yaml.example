@@ -19,7 +19,6 @@ http:
   api_password: mypass
   # Set to 1 to enable development mode
   # development: 1
-  # sessions_enabled: True
 
 light:
 #  platform: hue
