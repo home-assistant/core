@@ -12,6 +12,14 @@ LEDme
 dekolight
 iLight
 
+light:
+  platform: limitlessled
+  host: 192.168.1.10
+  group_1_name: Living Room
+  group_2_name: Bedroom
+  group_3_name: Office
+  group_4_name: Kitchen
+
 """
 import random
 import logging
