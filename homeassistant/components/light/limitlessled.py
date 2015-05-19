@@ -66,7 +66,7 @@ class LimitlessLED(ToggleEntity):
 
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = STATE_OFF
-        self._brightness = brightness
+        self._brightness = 100
 
     @property
     def should_poll(self):
