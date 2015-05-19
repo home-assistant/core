@@ -47,8 +47,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 LimitlessLED(
                     led,
                     i,
-                    config['group_%d_name' % (i)],
-                    STATE_OFF
+                    config['group_%d_name' % (i)]
                 )
             )
 
@@ -58,7 +57,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class LimitlessLED(ToggleEntity):
     """ Represents a LimitlessLED light """
 
-    def __init__(self, led, group, name, state, brightness=180):
+    def __init__(self, led, group, name):
         self.led = led
         self.group = group
 
@@ -66,7 +65,7 @@ class LimitlessLED(ToggleEntity):
         self.led.off(self.group)
 
         self._name = name or DEVICE_DEFAULT_NAME
-        self._state = state
+        self._state = STATE_OFF
         self._brightness = brightness
 
     @property
