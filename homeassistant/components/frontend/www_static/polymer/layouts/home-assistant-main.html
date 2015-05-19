@@ -72,40 +72,12 @@
             <iron-icon icon="apps"></iron-icon> States
           </paper-item>
 
-          <!--
-          Disabling because data-panel attribute not persisted in dom-repeat
-
           <template is="dom-repeat" items="{{activeFilters}}">
-            <paper-item data-panel="[[filterType(item)]]">
+            <paper-item data-panel$="[[filterType(item)]]">
               <iron-icon icon="[[filterIcon(item)]]"></iron-icon>
               <span>[[filterName(item)]]</span>
             </paper-item>
           </template>
-          -->
-
-          <template is="dom-if" if="[[hasGroupFilter(activeFilters)]]">
-            <paper-item data-panel="states_group">
-              <iron-icon icon="homeassistant-24:group"></iron-icon>
-              <span>Groups</span>
-            </paper-item>
-          </template>
-
-          <template is="dom-if" if="[[hasScriptFilter(activeFilters)]]">
-            <paper-item data-panel="states_script">
-              <iron-icon icon="description"></iron-icon>
-              <span>Scripts</span>
-            </paper-item>
-          </template>
-
-          <template is="dom-if" if="[[hasSceneFilter(activeFilters)]]">
-            <paper-item data-panel="states_scene">
-              <iron-icon icon="social:pages"></iron-icon>
-              <span>Scenes</span>
-            </paper-item>
-          </template>
-
-          <!-- /TEMP WORK AROUND -->
-
 
           <template is="dom-if" if="[[hasHistoryComponent]]">
             <paper-item data-panel="history">
@@ -350,21 +322,6 @@
     handleLogOut: function() {
       authActions.logOut();
     },
-
-    // temporary work around for dom-repeat weirdness
-    hasGroupFilter: function(activeFilters) {
-      return activeFilters.indexOf('group') !== -1;
-    },
-
-    hasScriptFilter: function(activeFilters) {
-      return activeFilters.indexOf('script') !== -1;
-    },
-
-    hasSceneFilter: function(activeFilters) {
-      return activeFilters.indexOf('scene') !== -1;
-    },
-
-    // /temp work around
 
     computeIsSelected: function(selected, selectedType) {
       return selected === selectedType;
