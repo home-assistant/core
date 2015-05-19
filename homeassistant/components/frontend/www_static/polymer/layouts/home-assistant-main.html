@@ -11,12 +11,12 @@
 
 <link rel="import" href="../layouts/partial-states.html">
 <link rel="import" href="../layouts/partial-logbook.html">
-<!-- <link rel="import" href="../layouts/partial-history.html">
-<link rel="import" href="../layouts/partial-dev-fire-event.html">
+<link rel="import" href="../layouts/partial-history.html">
+<!-- <link rel="import" href="../layouts/partial-dev-fire-event.html">
 <link rel="import" href="../layouts/partial-dev-call-service.html">
-<link rel="import" href="../layouts/partial-dev-set-state.html"> -->
+<link rel="import" href="../layouts/partial-dev-set-state.html">
 
-<!-- <link rel="import" href="../components/ha-notifications.html">
+<link rel="import" href="../components/ha-notifications.html">
 <link rel="import" href="../components/ha-modals.html"> -->
 <link rel="import" href="../components/stream-status.html">
 
@@ -132,10 +132,10 @@
       <template is='dom-if' if="{{isSelectedLogbook}}">
         <partial-logbook main narrow="{{narrow}}"></partial-logbook>
       </template>
-      <!--
-      <template is='dom-if' if="{{selected == 'history'}}">
+      <template is='dom-if' if="{{isSelectedHistory}}">
         <partial-history main narrow="{{narrow}}"></partial-history>
       </template>
+      <!--
       <template is='dom-if' if="{{selected == 'fire-event'}}">
         <partial-dev-fire-event main narrow="{{narrow}}"></partial-dev-fire-event>
       </template>
