@@ -299,7 +299,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
             else:
                 if self._session is None and require_auth:
-                    self._session = self.server.sessions.create_session(
+                    self._session = self.server.sessions.create(
                         api_password)
 
                 handle_request_method(self, path_match, data)
@@ -429,7 +429,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         session_id = self.get_current_session_id()
         if session_id is not None:
-            session = self.server.sessions.get_session(session_id)
+            session = self.server.sessions.get(session_id)
             if session is not None:
                 session.reset_expiry()
             return session
@@ -481,7 +481,7 @@ class SessionStore:
         self.session_lock = threading.RLock()
 
     @Throttle(MIN_SEC_SESSION_CLEARING)
-    def remove_expired_sessions(self):
+    def remove_expired(self):
         """ Remove any expired sessions. """
         if self.session_lock.acquire(False):
             try:
@@ -496,21 +496,21 @@ class SessionStore:
             finally:
                 self.session_lock.release()
 
-    def add_session(self, key, session):
+    def add(self, key, session):
         """ Add a new session to the list of tracked sessions """
-        self.remove_expired_sessions()
+        self.remove_expired()
         with self.session_lock:
             self._sessions[key] = session
 
-    def get_session(self, key):
+    def get(self, key):
         """ get a session by key """
-        self.remove_expired_sessions()
+        self.remove_expired()
         session = self._sessions.get(key, None)
         if session is not None and session.is_expired:
             return None
         return session
 
-    def create_session(self, api_password):
+    def create(self, api_password):
         """ Creates a new session and adds it to the sessions """
         if self.enabled is not True:
             return None
@@ -519,5 +519,5 @@ class SessionStore:
         session_id = ''.join([random.choice(chars) for i in range(20)])
         session = ServerSession(session_id)
         session.cookie_values[CONF_API_PASSWORD] = api_password
-        self.add_session(session_id, session)
+        self.add(session_id, session)
         return session
