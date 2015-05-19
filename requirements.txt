@@ -14,6 +14,9 @@ pyephem>=3.7
 # lights.hue
 phue>=0.8
 
+# lights.limitlessled
+ledcontroller>=1.0.7
+
 # media_player.cast
 pychromecast>=0.5
 
