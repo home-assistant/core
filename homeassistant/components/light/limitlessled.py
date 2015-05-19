@@ -21,7 +21,6 @@ light:
   group_4_name: Kitchen
 
 """
-import random
 import logging
 
 from homeassistant.helpers.entity import ToggleEntity
@@ -32,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+    """ Gets the LimitlessLED lights. """
     try:
         import ledcontroller
     except ImportError:
@@ -56,6 +56,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class LimitlessLED(ToggleEntity):
+    """ Represents a LimitlessLED light """
+
     def __init__(self, led, group, name, state, brightness=180):
         self.led = led
         self.group = group
