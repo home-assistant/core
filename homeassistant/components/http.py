@@ -216,8 +216,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, req, client_addr, server):
         """ Contructor, call the base constructor and set up session """
-        SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
         self._session = None
+        SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
@@ -433,8 +433,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
             if session is not None:
                 session.reset_expiry()
             return session
-        else:
-            return None
+
+        return None
 
     def get_current_session_id(self):
         """
