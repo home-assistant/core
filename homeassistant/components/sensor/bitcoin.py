@@ -11,8 +11,8 @@ To do that log in and move to 'Account Setting', choose 'IP Restrictions', and
 check 'Enable Api Access'. You will get an email message from blockchain.info
 where you must authorize the API access.
 
-To use the Bitcoin sensor you will need to add something like the
-following to your config/configuration.yaml
+To use the Bitcoin sensor you will need to add something like the following
+to your config/configuration.yaml
 
 sensor:
   platform: bitcoin
@@ -45,17 +45,17 @@ sensor:
 Variables:
 
 wallet
-*Required
+*Optional
 This is your wallet identifier from https://blockchain.info to access the
 online wallet.
 
 password
-*Required
+*Optional
 Password your your online wallet.
 
 currency
-*Required
-The currency to exchange to. Eg. CHF, USD, EUR,etc.
+*Optional
+The currency to exchange to, eg. CHF, USD, EUR,etc. Default is USD.
 
 display_options
 *Optional
@@ -66,8 +66,6 @@ example above for a list of all available variables.
 """
 import logging
 from datetime import timedelta
-
-from blockchain import statistics, exchangerates
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
@@ -100,7 +98,7 @@ OPTION_TYPES = {
 }
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -135,7 +133,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = BitcoinData()
     dev = []
-    if wallet is not None and password:
+    if wallet is not None and password is not None:
         dev.append(BitcoinSensor(data, 'wallet', currency, wallet))
 
     for variable in config['display_options']:
@@ -234,12 +232,19 @@ class BitcoinSensor(Entity):
         elif self.type == 'market_price_usd':
             self._state = '{0:.2f}'.format(stats.market_price_usd)
 
+
 class BitcoinData(object):
+    """ Gets the latest data and updates the states. """
+
     def __init__(self):
         self.stats = None
         self.ticker = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+        """ Gets the latest data from blockchain.info. """
+
+        from blockchain import statistics, exchangerates
+
         self.stats = statistics.get()
         self.ticker = exchangerates.get_ticker()
