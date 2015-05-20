@@ -12,11 +12,11 @@
 <link rel="import" href="../layouts/partial-states.html">
 <link rel="import" href="../layouts/partial-logbook.html">
 <link rel="import" href="../layouts/partial-history.html">
-<!-- <link rel="import" href="../layouts/partial-dev-fire-event.html">
 <link rel="import" href="../layouts/partial-dev-call-service.html">
+<link rel="import" href="../layouts/partial-dev-fire-event.html">
 <link rel="import" href="../layouts/partial-dev-set-state.html">
 
-<link rel="import" href="../components/ha-notifications.html">
+<!--<link rel="import" href="../components/ha-notifications.html">
 <link rel="import" href="../components/ha-modals.html"> -->
 <link rel="import" href="../components/stream-status.html">
 
@@ -59,7 +59,7 @@
     <!-- <ha-notifications></ha-notifications> -->
     <!-- <ha-modals></ha-modals> -->
 
-    <paper-drawer-panel id="drawer" on-paper-responsive-change="responsiveChanged">
+    <paper-drawer-panel id="drawer" narrow='{{narrow}}'>
       <paper-header-panel mode="scroll" drawer class='sidenav fit'>
         <paper-toolbar>
           Home Assistant
@@ -108,13 +108,13 @@
           <div class='text label divider'>Developer Tools</div>
           <div class='dev-tools layout horizontal justified'>
             <paper-icon-button
-              icon="settings-remote" data-panel='[[selectedDevService]]'
+              icon="settings-remote" data-panel$='[[selectedDevService]]'
               on-click="handleDevClick"></paper-icon-button>
             <paper-icon-button
-              icon="settings-ethernet" data-panel='[[selectedSetState]]'
+              icon="settings-ethernet" data-panel$='[[selectedDevState]]'
               on-click="handleDevClick"></paper-icon-button>
             <paper-icon-button
-              icon="settings-input-antenna" data-panel='[[selectedDevEvent]]'
+              icon="settings-input-antenna" data-panel$='[[selectedDevEvent]]'
               on-click="handleDevClick"></paper-icon-button>
           </div>
         </paper-menu>
@@ -124,27 +124,26 @@
           This is the main partial, never remove it from the DOM but hide it
           to speed up when people click on states.
       -->
-      <partial-states hidden$="{{hideStates}}"
-        main narrow="{{narrow}}"
-        filter="{{stateFilter}}">
+      <partial-states hidden$="[[hideStates]]"
+        main narrow="[[narrow]]"
+        filter="[[stateFilter]]">
       </partial-states>
 
-      <template is='dom-if' if="{{isSelectedLogbook}}">
-        <partial-logbook main narrow="{{narrow}}"></partial-logbook>
+      <template is='dom-if' if="[[isSelectedLogbook]]">
+        <partial-logbook main narrow="[[narrow]]"></partial-logbook>
       </template>
-      <template is='dom-if' if="{{isSelectedHistory}}">
-        <partial-history main narrow="{{narrow}}"></partial-history>
+      <template is='dom-if' if="[[isSelectedHistory]]">
+        <partial-history main narrow="[[narrow]]"></partial-history>
       </template>
-      <!--
-      <template is='dom-if' if="{{selected == 'fire-event'}}">
-        <partial-dev-fire-event main narrow="{{narrow}}"></partial-dev-fire-event>
+      <template is='dom-if' if="[[isSelectedDevService]]">
+        <partial-dev-call-service main narrow="[[narrow]]"></partial-dev-call-service>
       </template>
-      <template is='dom-if' if="{{selected == 'set-state'}}">
-        <partial-dev-set-state main narrow="{{narrow}}"></partial-dev-set-state>
+      <template is='dom-if' if="[[isSelectedDevEvent]]">
+        <partial-dev-fire-event main narrow="[[narrow]]"></partial-dev-fire-event>
       </template>
-      <template is='dom-if' if="{{selected == 'call-service'}}">
-        <partial-dev-call-service main narrow="{{narrow}}"></partial-dev-call-service>
-      </template>-->
+      <template is='dom-if' if="[[isSelectedDevState]]">
+        <partial-dev-set-state main narrow="[[narrow]]"></partial-dev-set-state>
+      </template>
     </paper-drawer-panel>
 
   </template>
@@ -309,10 +308,6 @@
         this.hideStates = newChoice !== 'states';
         this.stateFilter = null;
       }
-    },
-
-    responsiveChanged: function(ev, detail, sender) {
-      this.narrow = detail.narrow;
     },
 
     closeDrawer: function() {
