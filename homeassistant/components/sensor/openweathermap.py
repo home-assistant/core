@@ -13,14 +13,14 @@ sensor:
   platform: openweathermap
   api_key: YOUR_APP_KEY
   monitored_variables:
-    - type: 'weather'
-    - type: 'temperature'
-    - type: 'wind_speed'
-    - type: 'humidity'
-    - type: 'pressure'
-    - type: 'clouds'
-    - type: 'rain'
-    - type: 'snow'
+    - weather
+    - temperature
+    - wind_speed
+    - humidity
+    - pressure
+    - clouds
+    - rain
+    - snow
 
 Variables:
 
@@ -28,16 +28,16 @@ api_key
 *Required
 To retrieve this value log into your account at http://openweathermap.org/
 
-monitored_variables
+monitored_conditions
 *Required
 An array specifying the variables to monitor.
 
-These are the variables for the monitored_variables array:
+These are the variables for the monitored_conditions array:
 
 type
 *Required
 The variable you wish to monitor, see the configuration example above for a
-list of all available variables
+list of all available conditions to monitor.
 
 Details for the API : http://bugs.openweathermap.org/projects/api/wiki
 
@@ -49,7 +49,6 @@ from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-_THROTTLED_REFRESH = None
 SENSOR_TYPES = {
     'weather': ['Condition', ''],
     'temperature': ['Temperature', ''],
@@ -91,11 +90,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return None
 
     dev = []
-    for variable in config['monitored_variables']:
-        if variable['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable['type'])
+    for variable in config['monitored_conditions']:
+        if variable not in SENSOR_TYPES:
+            _LOGGER.error('Sensor type: "%s" does not exist', variable)
         else:
-            dev.append(OpenWeatherMapSensor(variable['type'], obs, unit))
+            dev.append(OpenWeatherMapSensor(variable, obs, unit))
 
     add_devices(dev)
 
