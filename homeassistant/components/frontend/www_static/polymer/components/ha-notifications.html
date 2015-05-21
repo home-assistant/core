@@ -1,37 +1,47 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 
-<polymer-element name="ha-notifications">
+<dom-module id="ha-notifications">
+  <style>
+    paper-toast {
+      z-index: 1;
+    }
+  </style>
   <template>
-    <paper-toast id="toast" role="alert" text=""></paper-toast>
+    <paper-toast id="toast" text='{{text}}'></paper-toast>
   </template>
-  <script>
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
+</dom-module>
 
-  Polymer(Polymer.mixin({
-    lastId: null,
+<script>
+(function() {
+  Polymer({
+    is: 'ha-notifications',
 
-    attached: function() {
-      this.listenToStores(true);
-    },
+    behaviors: [StoreListenerBehavior],
 
-    detached: function() {
-      this.stopListeningToStores();
+    properties: {
+      text: {
+        type: String,
+        value: '',
+      },
+
+      lastId: {
+        type: Number,
+      },
     },
 
     notificationStoreChanged: function(notificationStore) {
       if (notificationStore.hasNewNotifications(this.lastId)) {
-        var toast = this.$.toast;
         var notification = notificationStore.lastNotification;
 
-        if (notification) {
-          this.lastId = notification.id;
-          toast.text = notification.message;
-          toast.show();
-        }
+        this.lastId = notification.id;
+        this.text = notification.message;
+
+        this.$.toast.show();
       }
     },
 
-  }, storeListenerMixIn));
-  </script>
-</polymer-element>
+  });
+})();
+</script>
