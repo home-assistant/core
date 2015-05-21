@@ -3,7 +3,12 @@
 
 <link rel="import" href="../components/state-info.html">
 
-<dom-module is="state-card-toggle">
+<dom-module id="state-card-toggle">
+  <style>
+    paper-toggle-button {
+      margin-left: 16px;
+    }
+  </style>
   <template>
     <div class='horizontal justified layout'>
       <state-info state-obj="[[stateObj]]"></state-info>

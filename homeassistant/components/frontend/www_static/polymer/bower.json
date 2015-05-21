@@ -21,6 +21,7 @@
     "iron-image": "PolymerElements/iron-image#^0.9",
     "paper-toast": "PolymerElements/paper-toast#^0.9",
     "paper-dialog": "PolymerElements/paper-dialog#^0.9",
+    "paper-dialog-scrollable": "polymerelements/paper-dialog-scrollable#^0.9",
     "paper-spinner": "PolymerElements/paper-spinner#^0.9",
     "paper-button": "PolymerElements/paper-button#^0.9",
     "paper-input": "PolymerElements/paper-input#^0.9",

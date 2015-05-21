@@ -16,11 +16,12 @@
 <link rel="import" href="../layouts/partial-dev-fire-event.html">
 <link rel="import" href="../layouts/partial-dev-set-state.html">
 
-<link rel="import" href="../components/ha-notifications.html">
-<!--<link rel="import" href="../components/ha-modals.html"> -->
+<link rel="import" href="../managers/notification-manager.html">
+<link rel="import" href="../managers/modal-manager.html">
+
 <link rel="import" href="../components/stream-status.html">
 
-<dom-module is="home-assistant-main">
+<dom-module id="home-assistant-main">
   <style>
     .sidenav {
       background: #fafafa;
@@ -54,10 +55,9 @@
     }
   </style>
 
-
   <template>
-    <ha-notifications></ha-notifications>
-    <!-- <ha-modals></ha-modals> -->
+    <notification-manager></notification-manager>
+    <modal-manager></modal-manager>
 
     <paper-drawer-panel id="drawer" narrow='{{narrow}}'>
       <paper-header-panel mode="scroll" drawer class='sidenav fit'>
