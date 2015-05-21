@@ -46,4 +46,4 @@ The last command will start the Home Assistant server and launch its webinterfac
 
 If you are still exploring if you want to use Home Assistant in the first place, you can enable the demo mode by adding the `--demo-mode` argument to the last command.
 
-Please see [the getting started guide](https://home-assistant.io/getting-started/) on how to further configure Home Asssitant.
+Please see [the getting started guide](https://home-assistant.io/getting-started/) on how to further configure Home Assistant.
