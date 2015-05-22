@@ -23,6 +23,10 @@
 
 <dom-module id="home-assistant-main">
   <style>
+    paper-drawer-panel {
+      background-color: #E5E5E5;
+    }
+
     .sidenav {
       background: #fafafa;
       box-shadow: 1px 0 1px rgba(0, 0, 0, 0.1);
@@ -35,6 +39,10 @@
 
     .sidenav paper-menu {
       --paper-menu-color: #757575;
+    }
+
+    .sidenav paper-item[data-panel] {
+      cursor: pointer;
     }
 
     .sidenav iron-icon {
