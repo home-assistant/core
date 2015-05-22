@@ -44,7 +44,9 @@ Details for the API : http://bugs.openweathermap.org/projects/api/wiki
 Only metric measurements are supported at the moment.
 """
 import logging
+from datetime import timedelta
 
+from homeassistant.util import Throttle
 from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
@@ -59,6 +61,9 @@ SENSOR_TYPES = {
     'rain': ['Rain', 'mm'],
     'snow': ['Snow', 'mm']
 }
+
+# Return cached results if last scan was less then this time ago
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -81,7 +86,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
     owm = OWM(config.get(CONF_API_KEY, None))
-    obs = owm.weather_at_coords(hass.config.latitude, hass.config.longitude)
 
     if not owm:
         _LOGGER.error(
@@ -89,12 +93,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Please check your settings for OpenWeatherMap.")
         return None
 
+    data = WeatherData(owm, hass.config.latitude, hass.config.longitude)
     dev = []
     for variable in config['monitored_conditions']:
         if variable not in SENSOR_TYPES:
             _LOGGER.error('Sensor type: "%s" does not exist', variable)
         else:
-            dev.append(OpenWeatherMapSensor(variable, obs, unit))
+            dev.append(OpenWeatherMapSensor(data, variable, unit))
 
     add_devices(dev)
 
@@ -103,7 +108,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OpenWeatherMapSensor(Entity):
     """ Implements an OpenWeatherMap sensor. """
 
-    def __init__(self, sensor_type, weather_data, unit):
+    def __init__(self, weather_data, sensor_type, unit):
         self.client_name = 'Weather - '
         self._name = SENSOR_TYPES[sensor_type][0]
         self.owa_client = weather_data
@@ -130,7 +135,9 @@ class OpenWeatherMapSensor(Entity):
     # pylint: disable=too-many-branches
     def update(self):
         """ Gets the latest data from OWM and updates the states. """
-        data = self.owa_client.get_weather()
+
+        self.owa_client.update()
+        data = self.owa_client.data
 
         if self.type == 'weather':
             self._state = data.get_detailed_status()
@@ -163,3 +170,20 @@ class OpenWeatherMapSensor(Entity):
             else:
                 self._state = 'not snowing'
                 self._unit_of_measurement = ''
+
+
+class WeatherData(object):
+    """ Gets the latest data from OpenWeatherMap. """
+
+    def __init__(self, owm, latitude, longitude):
+        self.owm = owm
+        self.latitude = latitude
+        self.longitude = longitude
+        self.data = None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """ Gets the latest data from OpenWeatherMap. """
+
+        obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        self.data = obs.get_weather()
