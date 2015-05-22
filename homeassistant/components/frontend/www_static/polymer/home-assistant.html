@@ -1,16 +1,16 @@
-<link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/font-roboto/roboto.html">
+<link rel='import' href='bower_components/polymer/polymer.html'>
+<!-- <link rel='import' href='bower_components/font-roboto/roboto.html'> -->
 
-<link rel="import" href="resources/home-assistant-js.html">
-<link rel="import" href="resources/home-assistant-icons.html">
-<link rel="import" href="resources/store-listener-behavior.html">
+<link rel='import' href='resources/home-assistant-js.html'>
+<link rel='import' href='resources/home-assistant-icons.html'>
+<link rel='import' href='resources/store-listener-behavior.html'>
 
-<link rel="import" href="layouts/login-form.html">
-<link rel="import" href="layouts/home-assistant-main.html">
+<link rel='import' href='layouts/login-form.html'>
+<link rel='import' href='layouts/home-assistant-main.html'>
 
-<link rel="import" href="resources/home-assistant-style.html">
+<link rel='import' href='resources/home-assistant-style.html'>
 
-<dom-module id="home-assistant">
+<dom-module id='home-assistant'>
   <style>
     :host {
       font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
@@ -21,11 +21,11 @@
   <home-assistant-icons></home-assistant-icons>
 
   <template>
-    <template is="dom-if" if="[[!loaded]]">
+    <template is='dom-if' if='[[!loaded]]'>
       <login-form></login-form>
     </template>
 
-    <template is="dom-if" if="[[loaded]]">
+    <template is='dom-if' if='[[loaded]]'>
       <home-assistant-main></home-assistant-main>
     </template>
 

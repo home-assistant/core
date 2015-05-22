@@ -22,7 +22,7 @@
       <paper-icon-button icon="refresh" header-buttons
         on-click="handleRefreshClick"></paper-icon-button>
 
-      <div flex class="[[computeContentClasses(narrow)]]">
+      <div class$="[[computeContentClasses(narrow)]]">
         <state-history-charts state-history="[[stateHistory]]"
           is-loading-data="[[isLoadingData]]"></state-history-charts>
       </div>
@@ -39,6 +39,10 @@
     behaviors: [StoreListenerBehavior],
 
     properties: {
+      narrow: {
+        type: Boolean,
+      },
+
       stateHistory: {
         type: Object,
       },
@@ -67,7 +71,7 @@
     },
 
     computeContentClasses: function(narrow) {
-      return 'content ' + (this.narrow ? 'narrow' : 'wide');
+      return 'flex content ' + (narrow ? 'narrow' : 'wide');
     },
   });
 })();

@@ -11,16 +11,17 @@
   :host {
     display: block;
   }
+
+  .loading-container {
+    text-align: center;
+    padding: 8px;
+  }
   </style>
   <template>
     <google-legacy-loader on-api-load="googleApiLoaded"></google-legacy-loader>
 
-    <div hidden$="{{!isLoading}}" >
-      <div class='layout horizontal center'>
-        <div class='layout vertical center'>
-        <loading-box>Loading history data</loading-box>
-        </div>
-      </div>
+    <div hidden$="{{!isLoading}}" class='loading-container'>
+      <loading-box>Loading history data</loading-box>
     </div>
 
     <template is='dom-if' if='[[!isLoading]]'>
