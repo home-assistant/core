@@ -79,12 +79,16 @@
     },
 
     computeIsSingleDevice: function(stateHistory) {
-      return stateHistory.length == 1;
+      return stateHistory && stateHistory.length == 1;
     },
 
     computeGroupedStateHistory: function(stateHistory) {
       var lineChartDevices = {};
       var timelineDevices = [];
+
+      if (!stateHistory) {
+        return {line: unitStates, timeline: timelineDevices};
+      }
 
       stateHistory.forEach(function(stateInfo) {
         if (!stateInfo || stateInfo.length === 0) {

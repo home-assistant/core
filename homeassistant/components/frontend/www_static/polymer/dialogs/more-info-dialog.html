@@ -20,8 +20,8 @@
       <div>
         <state-card-content state-obj="[[stateObj]]"></state-card-content>
         <template is='dom-if' if="[[hasHistoryComponent]]">
-          <state-history-charts stateHistory="[[stateHistory]]"
-            isLoadingData="[[isLoadingHistoryData]]"></state-history-charts>
+          <state-history-charts state-history="[[stateHistory]]"
+            is-loading-data="[[isLoadingHistoryData]]"></state-history-charts>
         </template>
         <paper-dialog-scrollable>
           <more-info-content state-obj="[[stateObj]]"
@@ -89,7 +89,7 @@
       var newHistory;
 
       if (this.hasHistoryComponent && this.entityId) {
-        newHistory = stateHistoryStore.get(this.entityId);
+        newHistory = [stateHistoryStore.get(this.entityId)];
       } else {
         newHistory = null;
       }

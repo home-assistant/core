@@ -36,16 +36,16 @@
       }
 
       var root = Polymer.dom(this);
-      var data = this.data;
+      var stateHistory = this.data;
 
       while (root.lastChild) {
         root.removeChild(root.lastChild);
       }
 
-      if (data.length === 0) {
+      if (!stateHistory || stateHistory.length === 0) {
         return;
       }
-
+      // debugger;
       var chart = new google.visualization.Timeline(this);
       var dataTable = new google.visualization.DataTable();
 
@@ -60,13 +60,13 @@
       };
 
       // people can pass in history of 1 entityId or a collection.
-      var stateHistory;
-      if (_.isArray(data[0])) {
-        stateHistory = data;
-      } else {
-        stateHistory = [data];
-        isSingleDevice = true;
-      }
+      // var stateHistory;
+      // if (_.isArray(data[0])) {
+      //   stateHistory = data;
+      // } else {
+      //   stateHistory = [data];
+      //   isSingleDevice = true;
+      // }
 
       var numTimelines = 0;
       // stateHistory is a list of lists of sorted state objects
