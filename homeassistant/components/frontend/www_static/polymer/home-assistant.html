@@ -1,5 +1,5 @@
 <link rel='import' href='bower_components/polymer/polymer.html'>
-<!-- <link rel='import' href='bower_components/font-roboto/roboto.html'> -->
+<link rel='import' href='bower_components/font-roboto/roboto.html'>
 
 <link rel='import' href='resources/home-assistant-js.html'>
 <link rel='import' href='resources/home-assistant-icons.html'>
@@ -29,7 +29,7 @@
       <home-assistant-main></home-assistant-main>
     </template>
 
-  </template> 
+  </template>
 </dom-module>
 
 <script>
@@ -59,11 +59,11 @@
       // remove the HTML init message
       document.getElementById('init').remove();
 
-      // if auth was given, tell the backend 
+      // if auth was given, tell the backend
       if(this.auth) {
-        uiActions.validateAuth(this.auth, false);    
+        uiActions.validateAuth(this.auth, false);
       } else if (preferenceStore.hasAuthToken) {
-        uiActions.validateAuth(preferenceStore.authToken, false);    
+        uiActions.validateAuth(preferenceStore.authToken, false);
       }
     },
 
@@ -73,4 +73,4 @@
 });
 
 })();
-</script> 
+</script>

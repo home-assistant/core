@@ -1,10 +1,9 @@
-<link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/paper-slider/paper-slider.html'>
 
-<link rel="import" href="../bower_components/color-picker-element/dist/color-picker.html">
+<link rel='import' href='../bower_components/color-picker-element/dist/color-picker.html'>
 
-<polymer-element name="more-info-light" attributes="stateObj">
-<template>
+<dom-module id='more-info-light'>
   <style>
     .brightness {
       margin-bottom: 8px;
@@ -29,78 +28,81 @@
       transition: max-height .5s ease-in .3s;
     }
 
-    :host-context(.has-brightness) .brightness {
+    /*:host-context(.has-brightness)*/ .brightness {
       max-height: 500px;
     }
 
-    :host-context(.has-xy_color) color-picker {
+    /*:host-context(.has-xy_color)*/ color-picker {
       max-height: 500px;
     }
-
   </style>
-  <div>
-    <div class='brightness'>
-      <div center horizontal layout>
-        <div>Brightness</div>
-        <paper-slider
-          max="255" flex id='brightness' value='{{brightnessSliderValue}}'
-          on-change="{{brightnessSliderChanged}}">
-        </paper-slider>
+  <template>
+    <div>
+      <div class='brightness'>
+        <div center horizontal layout>
+          <div>Brightness</div>
+          <paper-slider
+            max='255' flex id='brightness' value='{{brightnessSliderValue}}'
+            on-change='brightnessSliderChanged'>
+          </paper-slider>
+        </div>
       </div>
+
+      <color-picker on-colorselected='colorPicked' width='350' height='200'>
+      </color-picker>
     </div>
+  </template>
+</dom-module>
 
-    <color-picker id="colorpicker" width="350" height="200">
-    </color-picker>
-  </div>
-</template>
 <script>
-var serviceActions = window.hass.serviceActions;
+(function() {
+  var serviceActions = window.hass.serviceActions;
 
-Polymer({
-  brightnessSliderValue: 0,
+  Polymer({
+    is: 'more-info-light',
 
-  observe: {
-    'stateObj.attributes.brightness': 'stateObjBrightnessChanged',
-  },
+    properties: {
+      stateObj: {
+        type: Object,
+        observer: 'stateObjChanged',
+      },
 
-  stateObjChanged: function(oldVal, newVal) {
-    if (newVal && newVal.state === 'on') {
-      this.brightnessSliderValue = newVal.attributes.brightness;
-    }    
-  },
+      brightnessSliderValue: {
+        type: Number,
+        value: 0,
+      }
+    },
 
-  stateObjBrightnessChanged: function(oldVal, newVal) {
-    this.brightnessSliderValue = newVal;
-  },
+    stateObjChanged: function(newVal, oldVal) {
+      if (newVal && newVal.state === 'on') {
+        this.brightnessSliderValue = newVal.attributes.brightness;
+      }
+    },
 
-  domReady: function() {
-    this.$.colorpicker.addEventListener('colorselected', this.colorPicked.bind(this));
-  },
+    brightnessSliderChanged: function(ev) {
+      var bri = parseInt(ev.target.value);
 
-  brightnessSliderChanged: function(ev, details, target) {
-    var bri = parseInt(target.value);
+      if(isNaN(bri)) return;
 
-    if(isNaN(bri)) return;
+      if(bri === 0) {
+        serviceActions.callTurnOff(this.stateObj.entityId);
+      } else {
+        serviceActions.callService('light', 'turn_on', {
+          entity_id: this.stateObj.entityId,
+          brightness: bri
+        });
+      }
+    },
 
-    if(bri === 0) {
-      serviceActions.callTurnOff(this.stateObj.entityId);
-    } else {
-      serviceActions.callService("light", "turn_on", {
+    colorPicked: function(ev) {
+      var color = ev.detail.rgb;
+
+      serviceActions.callService('light', 'turn_on', {
         entity_id: this.stateObj.entityId,
-        brightness: bri
+        rgb_color: [color.r, color.g, color.b]
       });
     }
-  },
 
-  colorPicked: function(ev) {
-    var color = ev.detail.rgb;
-
-    serviceActions.callService("light", "turn_on", {
-      entity_id: this.stateObj.entityId,
-      rgb_color: [color.r, color.g, color.b]
-    });
-  }
-
-});
+  });
+})();
 </script>
-</polymer-element>

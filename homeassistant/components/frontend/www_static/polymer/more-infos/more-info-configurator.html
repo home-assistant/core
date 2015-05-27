@@ -1,9 +1,9 @@
-<link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/paper-button/paper-button.html'>
 
-<polymer-element name="more-info-configurator" attributes="stateObj">
-<template>
+<link rel='import' href='../components/loading-box.html'>
+
+<dom-module id='more-info-configurator'>
   <style>
     p {
       margin: 8px 0;
@@ -25,62 +25,78 @@
       text-align: center;
       height: 41px;
     }
-
-    p.submit paper-spinner {
-      margin-right: 16px;
-    }
-
-    p.submit span {
-      display: inline-block;
-      vertical-align: top;
-      margin-top: 6px;
-    }
   </style>
+  <template>
+    <div class='layout vertical'>
+      <template is='dom-if' if='[[isConfigurable]]'>
 
-  <div layout vertical>
-    <template if="{{stateObj.state == 'configure'}}">
+        <p hidden$='[[!stateObj.attributes.description]]'>[[stateObj.attributes.description]]</p>
 
-      <p hidden?="{{!stateObj.attributes.description}}">
-        {{stateObj.attributes.description}}
-      </p>
+        <p class='error' hidden$='[[!stateObj.attributes.errors]]'>[[stateObj.attributes.errors]]</p>
 
-      <p class='error' hidden?="{{!stateObj.attributes.errors}}">
-        {{stateObj.attributes.errors}}
-      </p>
+        <p class='center' hidden$='[[!stateObj.attributes.description_image]]'>
+          <img src='[[stateObj.attributes.description_image]]' />
+        </p>
 
-      <p class='center' hidden?="{{!stateObj.attributes.description_image}}">
-        <img src='{{stateObj.attributes.description_image}}' />
-      </p>
+        <p class='submit'>
+          <paper-button raised on-click='submitClicked'
+                        hidden$='[[isConfiguring]]'>[[submitCaption]]</paper-button>
 
-      <p class='submit'>
-        <paper-button raised on-click="{{submitClicked}}"
-                      hidden?="{{action !== 'display'}}">
-          {{stateObj.attributes.submit_caption || "Set configuration"}}
-        </paper-button>
+          <loading-box hidden$='[[!isConfiguring]]'>Configuring</loading-box>
+        </p>
 
-        <span hidden?="{{action !== 'configuring'}}">
-          <paper-spinner active="true"></paper-spinner><span>Configuring…</span>
-        </span>
-      </p>
+      </template>
+    </div>
+  </template>
+</dom-module>
 
-    </template>
-  </div>
-</template>
 <script>
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
+(function() {
   var syncActions = window.hass.syncActions;
   var serviceActions = window.hass.serviceActions;
 
-  Polymer(Polymer.mixin({
-    action: "display",
-    isStreaming: false,
+  Polymer({
+    is: 'more-info-configurator',
 
-    attached: function() {
-      this.listenToStores(true);
+    behaviors: [StoreListenerBehavior],
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+
+      action: {
+        type: String,
+        value: 'display',
+      },
+
+      isStreaming: {
+        type: Boolean,
+        value: false,
+      },
+
+      isConfigurable: {
+        type: Boolean,
+        computed: 'computeIsConfigurable(stateObj)',
+      },
+
+      isConfiguring: {
+        type: Boolean,
+        value: false,
+      },
+
+      submitCaption: {
+        type: String,
+        computed: 'computeSubmitCaption(stateObj)',
+      },
     },
 
-    detached: function() {
-      this.stopListeningToStores();
+    computeIsConfigurable: function(stateObj) {
+      return stateObj.state == 'configure';
+    },
+
+    computeSubmitCaption: function(stateObj) {
+      return stateObj.attributes.submit_caption || 'Set configuration';
     },
 
     streamStoreChanged: function(streamStore) {
@@ -88,15 +104,15 @@
     },
 
     submitClicked: function() {
-      this.action = "configuring";
+      this.isConfiguring = true;
+
       var data = {
         configure_id: this.stateObj.attributes.configure_id
       };
 
       serviceActions.callService('configurator', 'configure', data).then(
-
         function() {
-          this.action = 'display';
+          this.isConfiguring = false;
 
           if (!this.isStreaming) {
             syncActions.fetchAll();
@@ -104,9 +120,9 @@
         }.bind(this),
 
         function() {
-          this.action = 'display';
+          this.isConfiguring = false;
         }.bind(this));
     },
-  }, storeListenerMixIn));
+  });
+})();
 </script>
-</polymer-element>

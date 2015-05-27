@@ -6,6 +6,9 @@
     var DOMAINS_WITH_MORE_INFO = [
       'light', 'group', 'sun', 'configurator', 'thermostat', 'script'
     ];
+    var DOMAINS_HIDE_MORE_INFO = [
+      'sensor',
+    ];
 
     // Add some frontend specific helpers to the models
     Object.defineProperties(window.hass.stateModel.prototype, {
@@ -70,7 +73,9 @@
       },
 
       stateMoreInfoType: function(state) {
-        if(DOMAINS_WITH_MORE_INFO.indexOf(state.domain) !== -1) {
+        if(DOMAINS_HIDE_MORE_INFO.indexOf(state.domain) !== -1) {
+          return false;
+        } else if(DOMAINS_WITH_MORE_INFO.indexOf(state.domain) !== -1) {
           return state.domain;
         } else {
           return 'default';

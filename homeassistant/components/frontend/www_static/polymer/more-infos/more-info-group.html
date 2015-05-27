@@ -2,8 +2,7 @@
 
 <link rel="import" href="../cards/state-card-content.html">
 
-<polymer-element name="more-info-group" attributes="stateObj">
-<template>
+<dom-module id="more-info-group">
   <style>
     .child-card {
       margin-bottom: 8px;
@@ -13,37 +12,44 @@
       margin-bottom: 0;
     }
   </style>
-
-  <template repeat="{{states as state}}">
-    <state-card-content stateObj="{{state}}" class='child-card'>
-    </state-card-content>
+  <template>
+    <template is='dom-repeat' items="[[states]]" as='state'>
+      <div class='child-card'>
+        <state-card-content state-obj="[[state]]"></state-card-content>
+      </div>
+    </template>
   </template>
-</template>
+</dom-module>
+
 <script>
-var storeListenerMixIn = window.hass.storeListenerMixIn;
-var stateStore = window.hass.stateStore;
+(function() {
+  var stateStore = window.hass.stateStore;
 
-Polymer(Polymer.mixin({
-  attached: function() {
-    this.listenToStores(true);
-  },
+  Polymer({
+    is: 'more-info-group',
 
-  detached: function() {
-    this.stopListeningToStores();
-  },
+    behaviors: [StoreListenerBehavior],
 
-  stateStoreChanged: function() {
-    this.updateStates();
-  },
+    properties: {
+      stateObj: {
+        type: Object,
+        observer: 'updateStates',
+      },
 
-  stateObjChanged: function() {
-    this.updateStates();
-  },
+      states: {
+        type: Array,
+        value: [],
+      },
+    },
 
-  updateStates: function() {
-    this.states = this.stateObj && this.stateObj.attributes.entity_id ?
-      stateStore.gets(this.stateObj.attributes.entity_id).toArray() : [];
-  },
-}, storeListenerMixIn));
+    stateStoreChanged: function() {
+      this.updateStates();
+    },
+
+    updateStates: function() {
+      this.states = this.stateObj && this.stateObj.attributes.entity_id ?
+        stateStore.gets(this.stateObj.attributes.entity_id).toArray() : [];
+    },
+  });
+})();
 </script>
-</polymer-element>

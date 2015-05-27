@@ -33,14 +33,14 @@
     "paper-drawer-panel": "PolymerElements/paper-drawer-panel#^0.9",
     "google-apis": "GoogleWebComponents/google-apis#0.8-preview",
     "moment": "^2.10.3",
-    "layout": "Polymer/layout"
+    "layout": "Polymer/layout",
+    "color-picker-element": "~0.0.3"
   },
   "stillUpgrading": {
     "core-tooltip": "Polymer/core-tooltip#~0.9",
     "core-item": "Polymer/core-item#~0.9",
     "core-style": "polymer/core-style#~0.9",
     "paper-dropdown": "PolymerElements/paper-dropdown#~0.9",
-    "color-picker-element": "~0.0.2",
     "google-apis": "GoogleWebComponents/google-apis#~0.4.4",
     "core-scroll-header-panel": "polymer/core-scroll-header-panel#~0.9",
     "paper-menu-button": "PolymerElements/paper-menu-button#~0.9"
