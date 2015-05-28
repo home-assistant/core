@@ -139,7 +139,8 @@ class TransmissionSwitch(ToggleEntity):
     def toggle_turtle_mode(self):
 
         self.transmission_client.set_session(alt_speed_enabled=not self.turtle_mode_active)
-
+        self.update()
+        
     def update(self):
         """ Gets the latest data from Transmission and updates the state. """
 
