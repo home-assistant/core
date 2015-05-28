@@ -25,7 +25,7 @@
 
       max-height: 0px;
       overflow: hidden;
-      transition: max-height .5s ease-in .3s;
+      transition: max-height .5s ease-in;
     }
 
     .has-brightness .brightness {
@@ -79,6 +79,10 @@
       if (newVal && newVal.state === 'on') {
         this.brightnessSliderValue = newVal.attributes.brightness;
       }
+
+      this.debounce('more-info-light-animation-finish', function() {
+        this.fire('iron-resize');
+      }.bind(this), 500);
     },
 
     computeClassNames: function(stateObj) {
