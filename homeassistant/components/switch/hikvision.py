@@ -8,7 +8,7 @@ CGI API Guide:
 http://www.hikvisioneurope.com/portal/index.php?dir=Integration%20and%20Development%20Materials/00%20%20%20CGI/
 
 """
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_PICTURE
+from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF
 import logging
@@ -16,11 +16,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from xml.etree import ElementTree
 
-# List of component names (string) your component depends upon
-DEPENDENCIES = []
-
 log = logging.getLogger(__name__)
-DOMAIN = "enigma"
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -70,7 +66,7 @@ class HikvisionMotionDetectionSwitch(ToggleEntity):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo switch. """
+        """ Poll for status regularly. """
         return True
 
     @property
