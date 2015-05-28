@@ -15,16 +15,16 @@ scripts/build_js $1
 cd homeassistant/components/frontend/www_static/polymer
 bower install
 cd ..
-cp polymer/bower_components/webcomponentsjs/webcomponents.min.js .
+cp polymer/bower_components/webcomponentsjs/webcomponents-lite.min.js .
 
-# Let Polymer refer to the minified JS version before we compile
-sed -i.bak 's/polymer\.js/polymer\.min\.js/' polymer/bower_components/polymer/polymer.html
+# Prevent vulcanize choking on a url starting with //
+sed -i.bak 's/"\/\/fonts/"https:\/\/fonts/' polymer/bower_components/paper-styles/typography.html
 
-vulcanize -o frontend.html --inline --strip polymer/home-assistant.html
+vulcanize --inline-css --inline-scripts --strip-comments polymer/home-assistant.html > frontend.html
 
-# Revert back the change to the Polymer component
-rm polymer/bower_components/polymer/polymer.html
-mv polymer/bower_components/polymer/polymer.html.bak polymer/bower_components/polymer/polymer.html
+# Revert back the change to the paper-styles component
+rm polymer/bower_components/paper-styles/typography.html
+mv polymer/bower_components/paper-styles/typography.html.bak polymer/bower_components/paper-styles/typography.html
 
 # Generate the MD5 hash of the new frontend
 cd ..

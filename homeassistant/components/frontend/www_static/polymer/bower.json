@@ -11,14 +11,14 @@
     "bower_components"
   ],
   "devDependencies": {
-    "polymer": "Polymer/polymer#^1.0.0",
+    "polymer": "Polymer/polymer#^1.0",
     "webcomponentsjs": "Polymer/webcomponentsjs#^0.7",
-    "paper-header-panel": "PolymerElements/paper-header-panel#^0.9",
-    "paper-toolbar": "PolymerElements/paper-toolbar#^0.9",
+    "paper-header-panel": "PolymerElements/paper-header-panel#^1.0",
+    "paper-toolbar": "PolymerElements/paper-toolbar#^1.0",
     "paper-menu": "PolymerElements/paper-menu#^0.9",
     "iron-input": "PolymerElements/iron-input#^0.9",
-    "iron-icons": "PolymerElements/iron-icons#^0.9",
-    "iron-image": "PolymerElements/iron-image#^0.9",
+    "iron-icons": "PolymerElements/iron-icons#^1.0",
+    "iron-image": "PolymerElements/iron-image#^1.0",
     "paper-toast": "PolymerElements/paper-toast#^0.9",
     "paper-dialog": "PolymerElements/paper-dialog#^0.9",
     "paper-dialog-scrollable": "polymerelements/paper-dialog-scrollable#^0.9",
@@ -26,19 +26,29 @@
     "paper-button": "PolymerElements/paper-button#^0.9",
     "paper-input": "PolymerElements/paper-input#^0.9",
     "paper-toggle-button": "PolymerElements/paper-toggle-button#^0.9",
-    "paper-icon-button": "PolymerElements/paper-icon-button#^0.9",
+    "paper-icon-button": "PolymerElements/paper-icon-button#^1.0",
     "paper-item": "PolymerElements/paper-item#^0.9",
     "paper-slider": "PolymerElements/paper-slider#^0.9",
     "paper-checkbox": "PolymerElements/paper-checkbox#^0.9",
     "paper-drawer-panel": "PolymerElements/paper-drawer-panel#^0.9",
-    "paper-scroll-header-panel": "polymerelements/paper-scroll-header-panel#~0.9.0",
+    "paper-scroll-header-panel": "polymerelements/paper-scroll-header-panel#~0.9",
     "google-apis": "GoogleWebComponents/google-apis#0.8-preview",
     "moment": "^2.10.3",
     "layout": "Polymer/layout",
-    "color-picker-element": "~0.0.3"
+    "color-picker-element": "~0.0.3",
+    "paper-styles": "polymerelements/paper-styles#~1.0.1"
   },
   "resolutions": {
-    "polymer": "^1.0.0",
-    "webcomponentsjs": "^0.7.2"
+    "polymer": "^1.0",
+    "webcomponentsjs": "^0.7.2",
+    "iron-flex-layout": "^1.0",
+    "paper-styles": "~1.0.1",
+    "iron-a11y-keys-behavior": "^1.0.0",
+    "iron-meta": "^1.0.0",
+    "paper-ripple": "^1.0.0",
+    "paper-behaviors": "^1.0.0",
+    "iron-behaviors": "^1.0.0",
+    "paper-toolbar": "^1.0",
+    "iron-icons": "^1.0.0"
   }
 }
