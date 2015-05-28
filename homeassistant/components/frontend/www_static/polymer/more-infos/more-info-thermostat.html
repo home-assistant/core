@@ -13,25 +13,27 @@
       margin-top: 16px;
     }
 
-    /*:host-context(.has-away_mode)*/ .away-mode-toggle {
+    .has-away_mode .away-mode-toggle {
       display: block;
     }
   </style>
   <template>
-    <div>
-      <div>Target Temperature</div>
-      <paper-slider
-        min='[[tempMin]]' max='[[tempMax]]'
-        value='[[targetTemperatureSliderValue]]' pin
-        on-change='targetTemperatureSliderChanged'>
-      </paper-slider>
-    </div>
+    <div class$='[[computeClassNames(stateObj)]]'>
+      <div>
+        <div>Target Temperature</div>
+        <paper-slider
+          min='[[tempMin]]' max='[[tempMax]]'
+          value='[[targetTemperatureSliderValue]]' pin
+          on-change='targetTemperatureSliderChanged'>
+        </paper-slider>
+      </div>
 
-    <div class='away-mode-toggle'>
-      <div center horizontal layout>
-        <div flex>Away Mode</div>
-        <paper-toggle-button checked='[[awayToggleChecked]]' on-change='toggleChanged'>
-        </paper-toggle-button>
+      <div class='away-mode-toggle'>
+        <div center horizontal layout>
+          <div flex>Away Mode</div>
+          <paper-toggle-button checked='[[awayToggleChecked]]' on-change='toggleChanged'>
+          </paper-toggle-button>
+        </div>
       </div>
     </div>
   </template>
@@ -41,6 +43,8 @@
 (function() {
   var constants = window.hass.constants;
   var serviceActions = window.hass.serviceActions;
+  var uiUtil = window.hass.uiUtil;
+  var ATTRIBUTE_CLASSES = ['away_mode'];
 
   Polymer({
     is: 'more-info-thermostat',
@@ -79,6 +83,10 @@
         this.tempMin = 7;
         this.tempMax = 35;
       }
+    },
+
+    computeClassNames: function(stateObj) {
+      return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
     },
 
     targetTemperatureSliderChanged: function(ev) {

@@ -33,24 +33,13 @@
         type: Boolean,
         value: false,
       },
-
-      classNames: {
-        type: String,
-        value: '',
-      }
-    },
-    classNames: '',
-    dialogOpen: false,
-
-    observe: {
-      'stateObj.attributes': 'stateAttributesChanged',
     },
 
     dialogOpenChanged: function(newVal, oldVal) {
-      var moreInfoContainer = this.$.moreInfoContainer;
+      var root = Polymer.dom(this);
 
-      if (moreInfoContainer.lastChild) {
-        moreInfoContainer.lastChild.dialogOpen = newVal;
+      if (root.lastChild) {
+        root.lastChild.dialogOpen = newVal;
       }
     },
 
@@ -82,9 +71,6 @@
         root.lastChild.stateObj = newVal;
 
       }
-
-      this.classNames = Object.keys(newVal.attributes).map(
-        function(key) { return 'has-' + key; }).join(' ');
     },
   });
 })();

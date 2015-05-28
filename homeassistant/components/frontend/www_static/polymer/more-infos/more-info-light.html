@@ -28,16 +28,16 @@
       transition: max-height .5s ease-in .3s;
     }
 
-    /*:host-context(.has-brightness)*/ .brightness {
+    .has-brightness .brightness {
       max-height: 500px;
     }
 
-    /*:host-context(.has-xy_color)*/ color-picker {
+    .has-xy_color color-picker {
       max-height: 500px;
     }
   </style>
   <template>
-    <div>
+    <div class$='[[computeClassNames(stateObj)]]'>
       <div class='brightness'>
         <div center horizontal layout>
           <div>Brightness</div>
@@ -57,6 +57,8 @@
 <script>
 (function() {
   var serviceActions = window.hass.serviceActions;
+  var uiUtil = window.hass.uiUtil;
+  var ATTRIBUTE_CLASSES = ['brightness', 'xy_color'];
 
   Polymer({
     is: 'more-info-light',
@@ -77,6 +79,10 @@
       if (newVal && newVal.state === 'on') {
         this.brightnessSliderValue = newVal.attributes.brightness;
       }
+    },
+
+    computeClassNames: function(stateObj) {
+      return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
     },
 
     brightnessSliderChanged: function(ev) {
