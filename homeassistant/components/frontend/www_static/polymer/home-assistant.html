@@ -1,5 +1,6 @@
 <link rel='import' href='bower_components/polymer/polymer.html'>
-<link rel='import' href='bower_components/font-roboto/roboto.html'>
+
+<link rel='import' href='bower_components/paper-styles/typography.html'>
 
 <link rel='import' href='resources/home-assistant-js.html'>
 <link rel='import' href='resources/home-assistant-icons.html'>
@@ -13,8 +14,10 @@
 <dom-module id='home-assistant'>
   <style>
     :host {
-      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      font-family: 'Roboto', 'Noto', sans-serif;
       font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
   </style>
 

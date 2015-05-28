@@ -13,7 +13,6 @@
   "devDependencies": {
     "polymer": "Polymer/polymer#^1.0.0",
     "webcomponentsjs": "Polymer/webcomponentsjs#^0.7",
-    "font-roboto": "Polymer/font-roboto#^0.5.6",
     "paper-header-panel": "PolymerElements/paper-header-panel#^0.9",
     "paper-toolbar": "PolymerElements/paper-toolbar#^0.9",
     "paper-menu": "PolymerElements/paper-menu#^0.9",
