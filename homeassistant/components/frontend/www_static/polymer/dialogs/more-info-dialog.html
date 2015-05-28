@@ -2,9 +2,9 @@
 
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
-
-<!-- <link rel="import" href="ha-dialog.html"> -->
-
+<!-- <link rel="import" href="../bower_components/neon-animation/animations/slide-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/slide-down-animation.html">
+ -->
 <link rel="import" href="../cards/state-card-content.html">
 <link rel="import" href="../components/state-history-charts.html">
 <link rel="import" href="../more-infos/more-info-content.html">
@@ -16,9 +16,10 @@
     }
   </style>
   <template>
-    <paper-dialog id="dialog" on-core-overlay-open="dialogOpenChanged" with-backdrop>
+    <!-- entry-animation='slide-up-animation' exit-animation='slide-down-animation' -->
+    <paper-dialog id="dialog" with-backdrop>
+      <h2><state-card-content state-obj="[[stateObj]]"></state-card-content></h2>
       <div>
-        <state-card-content state-obj="[[stateObj]]"></state-card-content>
         <template is='dom-if' if="[[hasHistoryComponent]]">
           <state-history-charts state-history="[[stateHistory]]"
             is-loading-data="[[isLoadingHistoryData]]"></state-history-charts>
@@ -50,7 +51,6 @@
 
       stateObj: {
         type: Object,
-        observer: 'reposition',
       },
 
       stateHistory: {
@@ -71,6 +71,11 @@
         type: Boolean,
         value: false,
       },
+    },
+
+    listeners: {
+      'iron-overlay-opened': 'onIronOverlayOpened',
+      'iron-overlay-closed': 'onIronOverlayClosed'
     },
 
     componentStoreChanged: function(componentStore) {
@@ -101,12 +106,12 @@
       }
     },
 
-    dialogOpenChanged: function(ev) {
-      // we get CustomEvent, undefined and true/false from polymer…
-      console.log('debug', ev);
-      if (typeof ev === 'object') {
-        this.dialogOpen = ev.detail;
-      }
+    onIronOverlayOpened: function() {
+      this.dialogOpen = true;
+    },
+
+    onIronOverlayClosed: function() {
+      this.dialogOpen = false;
     },
 
     changeEntityId: function(entityId) {
@@ -118,19 +123,6 @@
       if (this.hasHistoryComponent && stateHistoryStore.isStale(entityId)) {
         this.isLoadingHistoryData = true;
         stateHistoryActions.fetch(entityId);
-      }
-    },
-
-    /**
-     * Whenever the attributes change, the more info component can
-     * hide or show elements. We will reposition the dialog.
-     */
-    reposition: function(newVal, oldVal) {
-      // Only resize if already open
-      if(this.dialogOpen) {
-        this.debounce('resizeAfterLayoutChange', function() {
-          this.$.dialog.resizeHandler();
-        }.bind(this), 1000);
       }
     },
 
