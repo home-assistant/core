@@ -14,6 +14,20 @@
     state-card-content {
       margin-bottom: 24px;
     }
+
+    @media all and (max-width: 450px) {
+      paper-dialog {
+        margin: 0;
+        width: 100%;
+        max-height: calc(100% - 64px);
+
+        position: fixed !important;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        overflow: scroll;
+      }
+    }
   </style>
   <template>
     <!-- entry-animation='slide-up-animation' exit-animation='slide-down-animation' -->
