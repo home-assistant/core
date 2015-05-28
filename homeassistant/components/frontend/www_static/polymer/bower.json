@@ -10,7 +10,7 @@
   "ignore": [
     "bower_components"
   ],
-  "dependencies": {
+  "devDependencies": {
     "polymer": "Polymer/polymer#^1.0.0",
     "webcomponentsjs": "Polymer/webcomponentsjs#^0.7",
     "font-roboto": "Polymer/font-roboto#^0.5.6",
@@ -32,6 +32,7 @@
     "paper-slider": "PolymerElements/paper-slider#^0.9",
     "paper-checkbox": "PolymerElements/paper-checkbox#^0.9",
     "paper-drawer-panel": "PolymerElements/paper-drawer-panel#^0.9",
+    "paper-scroll-header-panel": "polymerelements/paper-scroll-header-panel#~0.9.0",
     "google-apis": "GoogleWebComponents/google-apis#0.8-preview",
     "moment": "^2.10.3",
     "layout": "Polymer/layout",
