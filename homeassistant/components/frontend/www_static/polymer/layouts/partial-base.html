@@ -9,7 +9,7 @@
   <template>
     <paper-scroll-header-panel class='fit'>
       <paper-toolbar>
-        <paper-icon-button icon='menu' paper-drawer-toggle></paper-icon-button>
+        <paper-icon-button icon='menu' hidden$='[[!narrow]]' on-click='toggleMenu'></paper-icon-button>
         <div class='flex'>
           <content select='[header-title]'></content>
         </div>
@@ -31,6 +31,10 @@
         type: Boolean,
         value: false,
       },
+    },
+
+    toggleMenu: function() {
+      this.fire('open-menu');
     },
   });
 })();

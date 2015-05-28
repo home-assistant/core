@@ -271,6 +271,7 @@
 
     listeners: {
       'menu.core-select': 'menuSelect',
+      'open-menu': 'openDrawer',
     },
 
     stateStoreChanged: function(stateStore) {
@@ -312,6 +313,10 @@
         this.hideStates = newChoice !== 'states';
         this.stateFilter = null;
       }
+    },
+
+    openDrawer: function() {
+      this.$.drawer.openDrawer();
     },
 
     closeDrawer: function() {
