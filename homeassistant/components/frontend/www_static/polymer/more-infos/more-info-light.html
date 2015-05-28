@@ -38,14 +38,12 @@
   </style>
   <template>
     <div class$='[[computeClassNames(stateObj)]]'>
-      <div class='brightness'>
-        <div center horizontal layout>
-          <div>Brightness</div>
-          <paper-slider
-            max='255' flex id='brightness' value='{{brightnessSliderValue}}'
-            on-change='brightnessSliderChanged'>
-          </paper-slider>
-        </div>
+      <div class='brightness center horizontal layout'>
+        <div>Brightness</div>
+        <paper-slider
+          max='255' id='brightness' value='{{brightnessSliderValue}}'
+          on-change='brightnessSliderChanged' class='flex'>
+        </paper-slider>
       </div>
 
       <color-picker on-colorselected='colorPicked' width='350' height='200'>
