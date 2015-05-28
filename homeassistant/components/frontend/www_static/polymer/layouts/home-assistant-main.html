@@ -120,14 +120,12 @@
         </paper-menu>
       </paper-header-panel>
 
-      <!--
-          This is the main partial, never remove it from the DOM but hide it
-          to speed up when people click on states.
-      -->
-      <partial-states hidden$='[[hideStates]]'
-        main narrow='[[narrow]]'
-        filter='[[stateFilter]]'>
-      </partial-states>
+      <template is='dom-if' if='[[!hideStates]]'>
+        <partial-states
+          main narrow='[[narrow]]'
+          filter='[[stateFilter]]'>
+        </partial-states>
+      </template>
 
       <template is='dom-if' if='[[isSelectedLogbook]]'>
         <partial-logbook main narrow='[[narrow]]'></partial-logbook>
