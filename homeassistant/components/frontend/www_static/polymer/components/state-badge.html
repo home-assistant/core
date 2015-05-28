@@ -1,9 +1,9 @@
-<link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/iron-image/iron-image.html'>
 
-<link rel="import" href="domain-icon.html">
+<link rel='import' href='domain-icon.html'>
 
-<dom-module id="state-badge">
+<dom-module id='state-badge'>
   <style>
   :host {
     position: relative;
@@ -12,7 +12,6 @@
     background-color: #4fc3f7;
     color: white;
     border-radius: 50%;
-    transition: all .3s ease-in-out;
   }
 
   div {
@@ -26,6 +25,7 @@
 
   domain-icon {
     margin: 0 auto;
+    transition: color .3s ease-in-out;
   }
 
   /* Color the icon if light or sun is on */
@@ -38,14 +38,14 @@
 
   <template>
     <div class='layout horizontal center'>
-      <domain-icon id="icon"
-        domain="[[stateObj.domain]]" data-domain="[[stateObj.domain]]"
-        state="[[stateObj.state]]" data-state="[[stateObj.state]]">
+      <domain-icon id='icon'
+        domain='[[stateObj.domain]]' data-domain$='[[stateObj.domain]]'
+        state='[[stateObj.state]]' data-state$='[[stateObj.state]]'>
       </domain-icon>
-      <template is='dom-if' if="[[stateObj.attributes.entity_picture]]">
+      <template is='dom-if' if='[[stateObj.attributes.entity_picture]]'>
         <iron-image
-          sizing="cover" class='fit'
-          src="[[stateObj.attributes.entity_picture]]"></iron-image>
+          sizing='cover' class='fit'
+          src$="[[stateObj.attributes.entity_picture]]"></iron-image>
       </template>
     </div>
   </template>
