@@ -7,6 +7,7 @@
 <link rel='import' href='../bower_components/paper-menu/paper-menu.html'>
 <link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
 <link rel='import' href='../bower_components/paper-item/paper-item.html'>
+<link rel='import' href='../bower_components/paper-item/paper-icon-item.html'>
 <link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
 
 <link rel='import' href='../layouts/partial-states.html'>
@@ -29,20 +30,13 @@
       overflow: hidden;
     }
 
-    .sidenav paper-toolbar {
-      padding-left: 16px;
-    }
-
     .sidenav paper-menu {
-      --paper-menu-color: #757575;
+      --paper-menu-color: var(--secondary-text-color);
+      --paper-menu-background-color: #fafafa;
     }
 
-    .sidenav paper-item[data-panel] {
+    paper-icon-item {
       cursor: pointer;
-    }
-
-    .sidenav iron-icon {
-      margin-right: 24px;
     }
 
     .divider {
@@ -66,43 +60,45 @@
     <paper-drawer-panel id='drawer' narrow='{{narrow}}'>
       <paper-header-panel mode='scroll' drawer class='sidenav fit'>
         <paper-toolbar>
-          Home Assistant
+          <!-- forces paper toolbar to style title appropriate -->
+          <paper-icon-button hidden></paper-icon-button>
+          <div title>Home Assistant</div>
         </paper-toolbar>
 
         <paper-menu id='menu' class='layout vertical fit'
           selectable='[data-panel]' attr-for-selected='data-panel'
           on-iron-select='menuSelect' selected='[[selected]]'>
-          <paper-item data-panel='states'>
-            <iron-icon icon='apps'></iron-icon> States
-          </paper-item>
+          <paper-icon-item data-panel='states'>
+            <iron-icon item-icon icon='apps'></iron-icon> States
+          </paper-icon-item>
 
           <template is='dom-repeat' items='{{activeFilters}}'>
-            <paper-item data-panel$='[[filterType(item)]]'>
-              <iron-icon icon='[[filterIcon(item)]]'></iron-icon>
+            <paper-icon-item data-panel$='[[filterType(item)]]'>
+              <iron-icon item-icon icon='[[filterIcon(item)]]'></iron-icon>
               <span>[[filterName(item)]]</span>
-            </paper-item>
+            </paper-icon-item>
           </template>
 
           <template is='dom-if' if='[[hasHistoryComponent]]'>
-            <paper-item data-panel='history'>
-              <iron-icon icon='assessment'></iron-icon>
+            <paper-icon-item data-panel='history'>
+              <iron-icon item-icon icon='assessment'></iron-icon>
               History
-            </paper-item>
+            </paper-icon-item>
           </template>
 
           <template is='dom-if' if='[[hasLogbookComponent]]'>
-            <paper-item data-panel='logbook'>
-              <iron-icon icon='list'></iron-icon>
+            <paper-icon-item data-panel='logbook'>
+              <iron-icon item-icon icon='list'></iron-icon>
               Logbook
-            </paper-item>
+            </paper-icon-item>
           </template>
 
           <div class='flex'></div>
 
-          <paper-item data-panel='logout'>
-            <iron-icon icon='exit-to-app'></iron-icon>
+          <paper-icon-item data-panel='logout'>
+            <iron-icon item-icon icon='exit-to-app'></iron-icon>
             Log Out
-          </paper-item>
+          </paper-icon-item>
 
           <paper-item class='divider horizontal layout justified'>
             <div>Streaming updates</div>
@@ -178,7 +174,6 @@
 
       narrow: {
         type: Boolean,
-        value: false,
       },
 
       activeFilters: {
