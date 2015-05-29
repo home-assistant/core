@@ -137,9 +137,9 @@ class CastDevice(MediaPlayerDevice):
         """ Service to send the chromecast the command for play/pause. """
         media_state = self.state_attributes[ATTR_MEDIA_STATE]
         if media_state == MEDIA_STATE_STOPPED or media_state == MEDIA_STATE_PAUSED:
-            self.media_pause()
+            self.cast.media_controller.play()
         elif media_state == MEDIA_STATE_PLAYING:
-            self.media_play()
+            self.cast.media_controller.pause()
 
     def media_play(self):
         """ Service to send the chromecast the command for play/pause. """
