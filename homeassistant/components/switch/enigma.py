@@ -39,14 +39,11 @@ from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_HOST
 import logging
-import requests
-from xml.etree import ElementTree
+import openwebif.api
 
 _LOGGING = logging.getLogger(__name__)
-DOMAIN = "enigma"
 
 # pylint: disable=unused-argument
-
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return enigma2 boxes. """
@@ -59,8 +56,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGING.error('Missing config variable-host')
         return False
 
+    e2_box = openwebif.api.Client(host, port=port)
     add_devices_callback([
-        EnigmaSwitch(name, host, port)
+        EnigmaSwitch(name, e2_box)
     ])
 
 
@@ -68,10 +66,9 @@ class EnigmaSwitch(ToggleEntity):
 
     """ Provides a switch to toggle standby on an Enigma2 box. """
 
-    def __init__(self, name, host, port):
+    def __init__(self, name, e2_box):
         self._name = name
-        self._host = host
-        self._port = port
+        self._e2_box = e2_box
         self._state = STATE_OFF
         self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": In Standby"}
         self.update()
@@ -118,55 +115,21 @@ class EnigmaSwitch(ToggleEntity):
         """
         # See http://bit.ly/1Qf9Wgv
         """
-        url = 'http://%s/web/powerstate?newstate=0' % self._host
-        _LOGGING.info('url: %s', url)
 
-        response = requests.get(url)
-
-        try:
-            tree = ElementTree.fromstring(response.content)
-            result = tree.find('e2instandby').text.strip()
-            _LOGGING.info('e2instandby: %s', result)
-
-            if result == 'true':
-                self._state = STATE_OFF
-            else:
-                self._state = STATE_ON
-        except AttributeError as attib_err:
-            _LOGGING.error(
-                'There was a problem toggling standby: %s', attib_err)
-            _LOGGING.error('Entire response: %s', response.content)
-            return
+        result = self._e2_box.toggle_standby()
+        self._state = STATE_ON if result else STATE_OFF
 
     def update(self):
         """ Update state of the sensor. """
         _LOGGING.info("updating status enigma")
 
-        url = 'http://%s/api/statusinfo' % self._host
-        _LOGGING.info('url: %s', url)
+        in_standby = self._e2_box.is_box_in_standby()
+        _LOGGING.info('inStandby: %s', in_standby)
 
-        response = requests.get(url)
-
-        _LOGGING.info('response: %s', response)
-        _LOGGING.info("status_code %s", response.status_code)
-
-        if response.status_code != 200:
-            _LOGGING.error("There was an error connecting to %s", url)
-            _LOGGING.error("status_code %s", response.status_code)
-            _LOGGING.error("error %s", response.error)
-            return
-
-        _LOGGING.info('r.json: %s', response.json())
-
-        in_standby = response.json()['inStandby']
-        _LOGGING.info('r.json inStandby: %s', in_standby)
-
-        if in_standby == 'true':
+        if in_standby:
             self._state = STATE_OFF
             self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": In Standby"}
 
         else:
             self._state = STATE_ON
-            # currservice_name = r.json()['currservice_name']
-            # currservice_station = r.json()['currservice_station']
             self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": Active"}

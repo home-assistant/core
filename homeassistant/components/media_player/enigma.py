@@ -43,7 +43,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED)
 
 import logging
-import requests
+import openwebif.api
 _LOGGING = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
@@ -60,8 +60,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGING.error('Missing config variable-host')
         return False
 
+    e2_box = openwebif.api.Client(host, port=port)
+
     add_devices([
-        EnigmaMediaPlayer(name, host, port)
+        EnigmaMediaPlayer(name, e2_box)
     ])
 
 
@@ -69,10 +71,9 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
 
     """ An Enigma2 media player. """
 
-    def __init__(self, name, host, port):
+    def __init__(self, name, e2_box):
         self._name = name
-        self._host = host
-        # self._port = port
+        self._e2_box = e2_box
         self.state_attr = {ATTR_MEDIA_STATE: MEDIA_STATE_STOPPED}
         # self.update()
 
@@ -137,25 +138,11 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         """ Update state of the media_player. """
         _LOGGING.info("updating status enigma media_player")
 
-        url = 'http://%s/api/statusinfo' % self._host
-        _LOGGING.info('url: %s', url)
+        status_info = self._e2_box.get_status_info()
+        _LOGGING.info('status_info: %s', status_info)
 
-        response = requests.get(url)
-
-        _LOGGING.info('response: %s', response)
-        _LOGGING.info("status_code %s", response.status_code)
-
-        if response.status_code != 200:
-            _LOGGING.error("There was an error connecting to %s", url)
-            _LOGGING.error("status_code %s", response.status_code)
-            _LOGGING.error("error %s", response.error)
-
-            return
-
-        _LOGGING.info('r.json: %s', response.json())
-
-        in_standby = response.json()['inStandby']
-        _LOGGING.info('r.json inStandby: %s', in_standby)
+        in_standby = status_info['inStandby']
+        _LOGGING.info('inStandby: %s', in_standby)
 
         if in_standby == 'true':
             self.state_attr = {
@@ -165,8 +152,8 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
             self.media_title = None
         else:
             self.is_playing = True
-            self.media_title = response.json()['currservice_name']
-            self.channel_title = response.json()['currservice_station']
+            self.media_title = status_info['currservice_name']
+            self.channel_title = status_info['currservice_station']
 
             self.state_attr = {
                 ATTR_MEDIA_CONTENT_ID: self.channel_title,
