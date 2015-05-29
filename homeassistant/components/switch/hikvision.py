@@ -51,7 +51,8 @@ from xml.etree import ElementTree
 
 _LOGGING = logging.getLogger(__name__)
 
-# pylint: disable=unused-argument
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-instance-attributes
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -75,17 +76,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return False
 
     add_devices_callback([
-        HikvisionMotionDetectionSwitch(
+        HikvisionMotionSwitch(
             name, host, port, username, password, channel_id, xml_namespace)
     ])
 
 
-class HikvisionMotionDetectionSwitch(ToggleEntity):
+class HikvisionMotionSwitch(ToggleEntity):
 
     """ Provides a switch to toggle on/off motion detection. """
 
-    def __init__(self, name, host, port,
-                 username, password, channel_id, xml_namespace):
+    def __init__(self, name, host, port, username,
+                 password, channel_id, xml_namespace):
         self._name = name
         self._username = username
         self._password = password
@@ -152,8 +153,8 @@ class HikvisionMotionDetectionSwitch(ToggleEntity):
         _LOGGING.info('Response: %s', response.text)
 
         if response.status_code != 200:
-            _LOGGING.error("There was an error connecting to %s" % self.url)
-            _LOGGING.error("status_code %s" % response.esponsestatus_code)
+            _LOGGING.error("There was an error connecting to %s", self.url)
+            _LOGGING.error("status_code %s", response.esponsestatus_code)
             return
 
         try:
@@ -170,7 +171,7 @@ class HikvisionMotionDetectionSwitch(ToggleEntity):
 
         except AttributeError as attib_err:
             _LOGGING.error(
-                'There was a problem parsing the response: %s' % attib_err)
+                'There was a problem parsing the response: %s', attib_err)
             self.update()
             return
 
@@ -185,8 +186,8 @@ class HikvisionMotionDetectionSwitch(ToggleEntity):
         _LOGGING.info('Response: %s', response.text)
 
         if response.status_code != 200:
-            _LOGGING.error("There was an error connecting to %s" % self.url)
-            _LOGGING.error("status_code %s" % response.status_code)
+            _LOGGING.error("There was an error connecting to %s", self.url)
+            _LOGGING.error("status_code %s", response.status_code)
             return
 
         try:
@@ -197,7 +198,8 @@ class HikvisionMotionDetectionSwitch(ToggleEntity):
                 return
 
             result = find_result[0].text.strip()
-            _LOGGING.info('Current motion detection state? enabled: %s', result)
+            _LOGGING.info(
+                'Current motion detection state? enabled: %s', result)
 
             if result == 'true':
                 self._state = STATE_ON
@@ -215,5 +217,5 @@ class HikvisionMotionDetectionSwitch(ToggleEntity):
         except AttributeError as attib_err:
             _LOGGING.error(
                 'There was a problem parsing '
-                'camera motion detection state: %s' % attib_err)
+                'camera motion detection state: %s', attib_err)
             return

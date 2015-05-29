@@ -147,14 +147,13 @@ class EnigmaSwitch(ToggleEntity):
 
         response = requests.get(url)
 
-        _LOGGING.info('response: %s' % response)
-        _LOGGING.info("status_code %s" % response.status_code)
+        _LOGGING.info('response: %s', response)
+        _LOGGING.info("status_code %s", response.status_code)
 
         if response.status_code != 200:
             _LOGGING.error("There was an error connecting to %s", url)
             _LOGGING.error("status_code %s", response.status_code)
-            _LOGGING.error("error %s",  response.error)
-
+            _LOGGING.error("error %s", response.error)
             return
 
         _LOGGING.info('r.json: %s', response.json())
