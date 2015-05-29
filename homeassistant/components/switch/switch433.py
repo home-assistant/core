@@ -33,8 +33,9 @@ class Switch443(ToggleEntity):
     @staticmethod
     def _switch(system_code, unit_code, command):
         assert (subprocess.call(['sudo',
-                                 os.path.join(os.path.dirname(__file__),
-                                              '../../external/rcswitch-pi/send'),
+                                 os.path.join(
+                                     os.path.dirname(__file__),
+                                     '../../external/rcswitch-pi/send'),
                                  system_code,
                                  str(unit_code),
                                  str(command)]) == 0)
