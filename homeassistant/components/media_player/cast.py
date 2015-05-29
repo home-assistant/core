@@ -10,6 +10,7 @@ import logging
 
 try:
     import pychromecast
+    import pychromecast.controllers.youtube as youtube
 except ImportError:
     # We will throw error later
     pass
@@ -18,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_ALBUM, ATTR_MEDIA_IMAGE_URL, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED)
+    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED)
 
 
 # pylint: disable=unused-argument
@@ -57,7 +58,9 @@ class CastDevice(MediaPlayerDevice):
     """ Represents a Cast device on the network. """
 
     def __init__(self, host):
-        self.cast = pychromecast.PyChromecast(host)
+        self.cast = pychromecast.Chromecast(host)
+        self.youtube = youtube.YouTubeController()
+        self.cast.register_handler(self.youtube)
 
     @property
     def name(self):
@@ -67,45 +70,52 @@ class CastDevice(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the state of the device. """
-        status = self.cast.app
+        status = self.cast.status
 
-        if status is None or status.app_id == pychromecast.APP_ID['HOME']:
-            return STATE_NO_APP
+        if self.cast.app_display_name:
+            return self.cast.app_display_name
         else:
-            return status.description
+            return STATE_NO_APP
 
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
+        mc = self.cast.media_controller;
 
-        if ramp and ramp.state != pychromecast.RAMP_STATE_UNKNOWN:
+        if mc:
             state_attr = {}
 
-            if ramp.state == pychromecast.RAMP_STATE_PLAYING:
+            if mc.is_playing:
                 state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_PLAYING
-            else:
+            elif mc.is_paused:
+                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_PAUSED
+            elif mc.is_idle:
                 state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_STOPPED
 
-            if ramp.content_id:
-                state_attr[ATTR_MEDIA_CONTENT_ID] = ramp.content_id
+            media_status = self.cast.status
 
-            if ramp.title:
-                state_attr[ATTR_MEDIA_TITLE] = ramp.title
+            if media_status:
 
-            if ramp.artist:
-                state_attr[ATTR_MEDIA_ARTIST] = ramp.artist
+                """ These status properties seem not to be present anymore in pychromecast """
+                #if ramp.content_id:
+                #    state_attr[ATTR_MEDIA_CONTENT_ID] = mc.ramp.content_id
 
-            if ramp.album:
-                state_attr[ATTR_MEDIA_ALBUM] = ramp.album
+                #if ramp.title:
+                #    state_attr[ATTR_MEDIA_TITLE] = ramp.title
 
-            if ramp.image_url:
-                state_attr[ATTR_MEDIA_IMAGE_URL] = ramp.image_url
+                #if ramp.artist:
+                #    state_attr[ATTR_MEDIA_ARTIST] = ramp.artist
 
-            if ramp.duration:
-                state_attr[ATTR_MEDIA_DURATION] = ramp.duration
+                #if ramp.album:
+                #    state_attr[ATTR_MEDIA_ALBUM] = ramp.album
 
-            state_attr[ATTR_MEDIA_VOLUME] = ramp.volume
+                #if ramp.image_url:
+                #    state_attr[ATTR_MEDIA_IMAGE_URL] = ramp.image_url
+
+                if hasattr(media_status, 'duration'):
+                    state_attr[ATTR_MEDIA_DURATION] = media_status.duration
+
+                state_attr[ATTR_MEDIA_VOLUME] = media_status.volume_level
 
             return state_attr
 
@@ -117,46 +127,38 @@ class CastDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """ Service to send the chromecast the command for volume up. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp:
-            ramp.volume_up()
+        self.cast.volume_up()
 
     def volume_down(self):
         """ Service to send the chromecast the command for volume down. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp:
-            ramp.volume_down()
+        self.cast.volume_down()
 
     def media_play_pause(self):
         """ Service to send the chromecast the command for play/pause. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp:
-            ramp.playpause()
+        media_state = self.state_attributes[ATTR_MEDIA_STATE]
+        if media_state == MEDIA_STATE_STOPPED or media_state == MEDIA_STATE_PAUSED:
+            self.media_pause()
+        elif media_state == MEDIA_STATE_PLAYING:
+            self.media_play()
 
     def media_play(self):
         """ Service to send the chromecast the command for play/pause. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp and ramp.state == pychromecast.RAMP_STATE_STOPPED:
-            ramp.playpause()
+        if self.state_attributes[ATTR_MEDIA_STATE] == MEDIA_STATE_STOPPED:
+            self.media_play_pause()
 
     def media_pause(self):
         """ Service to send the chromecast the command for play/pause. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
+        if self.state_attributes[ATTR_MEDIA_STATE] == MEDIA_STATE_PLAYING:
+            self.media_play_pause()
 
-        if ramp and ramp.state == pychromecast.RAMP_STATE_PLAYING:
-            ramp.playpause()
+    """ This one seems not to be present anymore in pychromecast, needs porting or cleanup """
+    #def media_next_track(self):
+    #    """ Service to send the chromecast the command for next track. """
+    #    ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
 
-    def media_next_track(self):
-        """ Service to send the chromecast the command for next track. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp:
-            ramp.next()
+    #    if ramp:
+    #        ramp.next()
 
     def play_youtube_video(self, video_id):
         """ Plays specified video_id on the Chromecast's YouTube channel. """
-        pychromecast.play_youtube_video(video_id, self.cast.host)
+        self.youtube.play_video(video_id)

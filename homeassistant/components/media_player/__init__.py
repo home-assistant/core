@@ -41,6 +41,7 @@ ATTR_MEDIA_DURATION = 'media_duration'
 
 MEDIA_STATE_UNKNOWN = 'unknown'
 MEDIA_STATE_PLAYING = 'playing'
+MEDIA_STATE_PAUSED = 'paused'
 MEDIA_STATE_STOPPED = 'stopped'
 
 
