@@ -2,7 +2,39 @@
 homeassistant.components.media_player.enigma
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Demo implementation of the media player.
+Beta implementation of the Enigma2 media player.
+Currently only shows whats playing on the box.
+
+You should have a recent version of OpenWebIf installed
+on your E2 box.
+
+There is no support for username/password authentication
+at this time.
+
+Configuration:
+
+To use the media_player you will need to add something like the
+following to your config/configuration.yaml
+
+media_player:
+    platform: enigma
+    name: Vu Duo2
+    host: 192.168.1.26
+    port: 80
+
+Variables:
+
+host
+*Required
+This is the IP address of your Enigma2 box. Example: 192.168.1.32
+
+port
+*Optional
+The port your Enigma2 box uses, defaults to 80. Example: 8080
+
+name
+*Optional
+The name to use when displaying this Enigma2 switch instance.
 
 """
 from homeassistant.components.media_player import (
@@ -17,16 +49,11 @@ log = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the cast platform. """
-    log.info('Config: %s', config)
-    e2config = config
+    """ Sets up the enigma media player platform. """
 
-    host = e2config.get('host', None)
-    port = e2config.get('port', "80")
-    name = e2config.get('name', "Enigma2")
-
-    log.info('host: %s', host)
-    log.info('name: %s', name)
+    host = config.get('host', None)
+    port = config.get('port', "80")
+    name = config.get('name', "Enigma2")
 
     if not host:
         log.error('Missing config variable-host')
@@ -40,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EnigmaMediaPlayer(MediaPlayerDevice):
-    """ A Demo media player that only supports YouTube. """
+    """ An Enigma2 media player. """
 
     def __init__(self, name, host, port):
         self._name = name
@@ -56,7 +83,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo componentn. """
+        """ Need to refresh ourselves. """
         return True
 
     @property
