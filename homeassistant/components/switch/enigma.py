@@ -2,19 +2,46 @@
 homeassistant.components.switch.enigma
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Demo platform that has two fake switches.
+Enable or disable standby mode on Enigma2 receivers.
+
+You should have a recent version of OpenWebIf installed.
+
+There is no support for username/password authentication
+at this time.
+
+Configuration:
+
+To use the switch you will need to add something like the
+following to your config/configuration.yaml
+
+switch:
+    platform: enigma
+    name: Vu Duo2
+    host: 192.168.1.26
+    port: 80
+
+Variables:
+
+host
+*Required
+This is the IP address of your Enigma2 box. Example: 192.168.1.32
+
+port
+*Optional
+The port your Enigma2 box uses, defaults to 80. Example: 8080
+
+name
+*Optional
+The name to use when displaying this Enigma2 switch instance.
 
 """
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_BATTERY_LEVEL, ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME
+from homeassistant.const import STATE_ON, STATE_OFF, CONF_HOST
 import logging
 import requests
 import json
 from xml.etree import ElementTree
-
-# List of component names (string) your component depends upon
-DEPENDENCIES = []
 
 log = logging.getLogger(__name__)
 DOMAIN = "enigma"
@@ -23,15 +50,9 @@ DOMAIN = "enigma"
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return enigma2 boxes. """
 
-    log.info('Config: %s', config)
-    e2config = config
-
-    host = e2config.get('host', None)
-    port = e2config.get('port', "80")
-    name = e2config.get('name', "Enigma2")
-
-    log.info('host: %s', host)
-    log.info('name: %s', name)
+    host = config.get(CONF_HOST, None)
+    port = config.get('port', "80")
+    name = config.get('name', "Enigma2")
 
     if not host:
         log.error('Missing config variable-host')
@@ -43,18 +64,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class EnigmaSwitch(ToggleEntity):
-    """ Provides a demo switch. """
+    """ Provides a switch to toggle standby on an Enigma2 box. """
     def __init__(self, name, host, port):
         self._name = name
         self._host = host
         self._port = port
         self._state = STATE_OFF
-        self.state_attr = {ATTR_FRIENDLY_NAME: name}
+        self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": In Standby"}
         self.update()
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo switch. """
+        """ Need to refresh ourselves. """
         return True
 
     @property
@@ -141,13 +162,11 @@ class EnigmaSwitch(ToggleEntity):
         if in_standby == 'true':
             self._state = STATE_OFF
             self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": In Standby"}
-            #self.state_attr[ATTR_BATTERY_LEVEL] = ""
 
         else:
             self._state = STATE_ON
             currservice_name = r.json()['currservice_name']
             currservice_station = r.json()['currservice_station']
-            self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": " + currservice_station + "-" + currservice_name}
-            #self.state_attr[ATTR_BATTERY_LEVEL] = currservice_name
+            self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": Active"}
 
 

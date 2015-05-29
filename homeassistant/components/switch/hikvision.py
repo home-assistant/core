@@ -4,13 +4,46 @@ homeassistant.components.switch.hikvision
 
 Support turning on/off motion detection on Hikvision cameras.
 
+Note: Currently works using default https port only.
+
 CGI API Guide:
 http://www.hikvisioneurope.com/portal/index.php?dir=Integration%20and%20Development%20Materials/00%20%20%20CGI/
+
+
+Configuration:
+
+To use the Hikvision motion detection switch you will need to add something like the
+following to your config/configuration.yaml
+
+switch:
+    platform: hikvision
+    name: Hikvision Cam 1 Motion Detection
+    host: 192.168.1.26
+    username: YOUR_USERNAME
+    password: YOUR_PASSWORD
+
+Variables:
+
+host
+*Required
+This is the IP address of your Hikvision camera. Example: 192.168.1.32
+
+username
+*Required
+Your Hikvision camera username
+
+password
+*Required
+Your Hikvision camera username
+
+name
+*Optional
+The name to use when displaying this switch instance.
 
 """
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 import logging
 import requests
 from requests.auth import HTTPBasicAuth
@@ -22,18 +55,13 @@ log = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup Hikvision Camera config. """
 
-    log.info('Config: %s', config)
-
-    host = config.get('host', None)
+    host = config.get(CONF_HOST, None)
     port = config.get('port', "80")
     name = config.get('name', "Hikvision Camera Motion Detection")
-    username = config.get('username', "admin")
-    password = config.get('password', "12345")
+    username = config.get(CONF_USERNAME, "admin")
+    password = config.get(CONF_PASSWORD, "12345")
     channel_id = config.get('channel_id', "1")
     xml_namespace = config.get('xml_namespace', "http://www.hikvision.com/ver10/XMLSchema")
-
-    log.info('host: %s', host)
-    log.info('name: %s', name)
 
     # Required to parse and change xml with the host camera
     log.info('ElementTree.register_namespace: %s', xml_namespace)

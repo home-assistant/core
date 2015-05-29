@@ -6,7 +6,7 @@ Enable or disable Transmission BitTorrent client Turtle Mode
 
 Configuration:
 
-To use the Transmission sensor you will need to add something like the
+To use the Transmission switch you will need to add something like the
 following to your config/configuration.yaml
 
 switch:
@@ -28,27 +28,18 @@ port
 The port your Transmission daemon uses, defaults to 9091. Example: 8080
 
 username
-*Required
-Your Transmission username
+*Optional
+Your Transmission username, if you use authentication
 
 password
-*Required
-Your Transmission password
+*Optional
+Your Transmission username, if you use authentication
 
 name
 *Optional
 The name to use when displaying this Transmission instance.
 
-monitored_variables
-*Required
-An array specifying the variables to monitor.
 
-These are the variables for the monitored_variables array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
-list of all available variables.
 """
 
 from datetime import timedelta
@@ -140,7 +131,7 @@ class TransmissionSwitch(ToggleEntity):
 
         self.transmission_client.set_session(alt_speed_enabled=not self.turtle_mode_active)
         self.update()
-        
+
     def update(self):
         """ Gets the latest data from Transmission and updates the state. """
 
