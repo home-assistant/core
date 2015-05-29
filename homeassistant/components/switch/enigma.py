@@ -35,18 +35,19 @@ name
 The name to use when displaying this Enigma2 switch instance.
 
 """
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_BATTERY_LEVEL, ATTR_ENTITY_PICTURE
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_HOST
 import logging
 import requests
-import json
 from xml.etree import ElementTree
 
-log = logging.getLogger(__name__)
+_LOGGING = logging.getLogger(__name__)
 DOMAIN = "enigma"
 
 # pylint: disable=unused-argument
+
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return enigma2 boxes. """
 
@@ -55,7 +56,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     name = config.get('name', "Enigma2")
 
     if not host:
-        log.error('Missing config variable-host')
+        _LOGGING.error('Missing config variable-host')
         return False
 
     add_devices_callback([
@@ -64,7 +65,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class EnigmaSwitch(ToggleEntity):
+
     """ Provides a switch to toggle standby on an Enigma2 box. """
+
     def __init__(self, name, host, port):
         self._name = name
         self._host = host
@@ -99,65 +102,65 @@ class EnigmaSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        #self._state = STATE_ON
+        self._state = STATE_ON
 
-        log.info("Turning on Enigma ")
+        _LOGGING.info("Turning on Enigma ")
         self.toggle_standby()
-
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        #self._state = STATE_OFF
+        self._state = STATE_OFF
 
-        log.info("Turning off Enigma ")
+        _LOGGING.info("Turning off Enigma ")
         self.toggle_standby()
 
     def toggle_standby(self):
         """
-        # See http://www.opensat4all.com/forums/tutorials/article/15-dreambox-enigma2-busybox-telnet-commands/
+        # See http://bit.ly/1Qf9Wgv
         """
         url = 'http://%s/web/powerstate?newstate=0' % self._host
-        log.info('url: %s', url)
+        _LOGGING.info('url: %s', url)
 
-        r = requests.get(url)
+        response = requests.get(url)
 
         try:
-            tree = ElementTree.fromstring(r.content)
+            tree = ElementTree.fromstring(response.content)
             result = tree.find('e2instandby').text.strip()
-            log.info('e2instandby: %s', result)
+            _LOGGING.info('e2instandby: %s', result)
 
             if result == 'true':
                 self._state = STATE_OFF
             else:
                 self._state = STATE_ON
-        except AttributeError as e:
-            log.error('There was a problem toggling standby: %s' % e)
-            log.error('Entire response: %s' % r.content)
+        except AttributeError as attib_err:
+            _LOGGING.error(
+                'There was a problem toggling standby: %s', attib_err)
+            _LOGGING.error('Entire response: %s', response.content)
             return
 
     def update(self):
         """ Update state of the sensor. """
-        log.info("updating status enigma")
+        _LOGGING.info("updating status enigma")
 
         url = 'http://%s/api/statusinfo' % self._host
-        log.info('url: %s', url)
+        _LOGGING.info('url: %s', url)
 
-        r = requests.get(url)
+        response = requests.get(url)
 
-        log.info('response: %s' % r)
-        log.info("status_code %s" % r.status_code)
+        _LOGGING.info('response: %s' % response)
+        _LOGGING.info("status_code %s" % response.status_code)
 
-        if r.status_code != 200:
-            log.error("There was an error connecting to %s" % url)
-            log.error("status_code %s" % r.status_code)
-            log.error("error %s" % r.error)
+        if response.status_code != 200:
+            _LOGGING.error("There was an error connecting to %s", url)
+            _LOGGING.error("status_code %s", response.status_code)
+            _LOGGING.error("error %s",  response.error)
 
             return
 
-        log.info('r.json: %s' % r.json())
+        _LOGGING.info('r.json: %s', response.json())
 
-        in_standby = r.json()['inStandby']
-        log.info('r.json inStandby: %s' % in_standby)
+        in_standby = response.json()['inStandby']
+        _LOGGING.info('r.json inStandby: %s', in_standby)
 
         if in_standby == 'true':
             self._state = STATE_OFF
@@ -165,8 +168,6 @@ class EnigmaSwitch(ToggleEntity):
 
         else:
             self._state = STATE_ON
-            currservice_name = r.json()['currservice_name']
-            currservice_station = r.json()['currservice_station']
+            # currservice_name = r.json()['currservice_name']
+            # currservice_station = r.json()['currservice_station']
             self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": Active"}
-
-

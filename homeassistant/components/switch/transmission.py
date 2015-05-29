@@ -42,7 +42,6 @@ The name to use when displaying this Transmission instance.
 
 """
 
-from datetime import timedelta
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import STATE_ON, STATE_OFF
 
@@ -54,8 +53,7 @@ from transmissionrpc.error import TransmissionError
 
 import logging
 
-
-log = logging.getLogger(__name__)
+_LOGGING = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
@@ -68,7 +66,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     name = config.get("name", "Transmission Turtle Mode")
     if not host:
-        log.error('Missing config variable %s', CONF_HOST)
+        _LOGGING.error('Missing config variable %s', CONF_HOST)
         return False
 
     # import logging
@@ -79,14 +77,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     try:
         transmission_api.session_stats()
     except TransmissionError:
-        log.exception("Connection to Transmission API failed.")
+        _LOGGING.exception("Connection to Transmission API failed.")
         return False
 
     add_devices_callback([
         TransmissionSwitch(transmission_api, name)
     ])
 
+
 class TransmissionSwitch(ToggleEntity):
+
     """ A Transmission sensor. """
 
     def __init__(self, transmission_client, name):
@@ -117,23 +117,25 @@ class TransmissionSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
 
-        log.info("Turning on Turtle Mode")
+        _LOGGING.info("Turning on Turtle Mode")
         self.toggle_turtle_mode()
-
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
 
-        log.info("Turning off Turtle Mode ")
+        _LOGGING.info("Turning off Turtle Mode ")
         self.toggle_turtle_mode()
 
     def toggle_turtle_mode(self):
+        """ Toggle turtle mode. """
 
-        self.transmission_client.set_session(alt_speed_enabled=not self.turtle_mode_active)
+        self.transmission_client.set_session(
+            alt_speed_enabled=not self.turtle_mode_active)
         self.update()
 
     def update(self):
         """ Gets the latest data from Transmission and updates the state. """
 
-        self.turtle_mode_active = self.transmission_client.get_session().alt_speed_enabled
+        self.turtle_mode_active = self.transmission_client.get_session(
+        ).alt_speed_enabled
         self._state = STATE_ON if self.turtle_mode_active else STATE_OFF

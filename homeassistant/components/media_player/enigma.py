@@ -40,14 +40,15 @@ The name to use when displaying this Enigma2 switch instance.
 from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED,
-    YOUTUBE_COVER_URL_FORMAT)
-from homeassistant.const import ATTR_ENTITY_PICTURE
+    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED)
+
 import logging
 import requests
-log = logging.getLogger(__name__)
+_LOGGING = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the enigma media player platform. """
 
@@ -56,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get('name', "Enigma2")
 
     if not host:
-        log.error('Missing config variable-host')
+        _LOGGING.error('Missing config variable-host')
         return False
 
     add_devices([
@@ -64,9 +65,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-
-
 class EnigmaMediaPlayer(MediaPlayerDevice):
+
     """ An Enigma2 media player. """
 
     def __init__(self, name, host, port):
@@ -133,31 +133,29 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self.media_title = 'Demo media title'
         self.is_playing = True
 
-
     def update(self):
         """ Update state of the media_player. """
-        log.info("updating status enigma media_player")
+        _LOGGING.info("updating status enigma media_player")
 
         url = 'http://%s/api/statusinfo' % self._host
-        log.info('url: %s', url)
+        _LOGGING.info('url: %s', url)
 
-        r = requests.get(url)
+        response = requests.get(url)
 
-        log.info('response: %s' % r)
-        log.info("status_code %s" % r.status_code)
+        _LOGGING.info('response: %s' % response)
+        _LOGGING.info("status_code %s" % response.status_code)
 
-        if r.status_code != 200:
-            log.error("There was an error connecting to %s" % url)
-            log.error("status_code %s" % r.status_code)
-            log.error("error %s" % r.error)
+        if response.status_code != 200:
+            _LOGGING.error("There was an error connecting to %s" % url)
+            _LOGGING.error("status_code %s" % response.status_code)
+            _LOGGING.error("error %s" % response.error)
 
             return
 
-        log.info('r.json: %s' % r.json())
+        _LOGGING.info('r.json: %s' % response.json())
 
-        in_standby = r.json()['inStandby']
-        log.info('r.json inStandby: %s' % in_standby)
-
+        in_standby = response.json()['inStandby']
+        _LOGGING.info('r.json inStandby: %s' % in_standby)
 
         if in_standby == 'true':
             self.state_attr = {
@@ -167,8 +165,8 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
             self.media_title = None
         else:
             self.is_playing = True
-            self.media_title = r.json()['currservice_name']
-            self.channel_title = r.json()['currservice_station']
+            self.media_title = response.json()['currservice_name']
+            self.channel_title = response.json()['currservice_station']
 
             self.state_attr = {
                 ATTR_MEDIA_CONTENT_ID: self.channel_title,
@@ -176,7 +174,4 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
                 ATTR_MEDIA_DURATION: 100,
                 ATTR_MEDIA_VOLUME: self.volume,
                 ATTR_MEDIA_STATE: MEDIA_STATE_PLAYING
-                # ATTR_ENTITY_PICTURE:
-                # YOUTUBE_COVER_URL_FORMAT.format(self.youtube_id)
             }
-
