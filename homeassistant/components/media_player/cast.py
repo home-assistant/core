@@ -12,8 +12,7 @@ try:
     import pychromecast
     import pychromecast.controllers.youtube as youtube
 except ImportError:
-    # We will throw error later
-    pass
+    pychromecast = None
 
 from homeassistant.const import ATTR_ENTITY_PICTURE
 
@@ -31,15 +30,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the cast platform. """
     logger = logging.getLogger(__name__)
 
-    try:
-        # pylint: disable=redefined-outer-name
-        import pychromecast
-    except ImportError:
-        logger.exception(("Failed to import pychromecast. "
-                          "Did you maybe not install the 'pychromecast' "
-                          "dependency?"))
+    if pychromecast is None:
+        logger.error((
+            "Failed to import pychromecast. Did you maybe not install the "
+            "'pychromecast' dependency?"))
 
-        return
+        return False
 
     if discovery_info:
         hosts = [discovery_info[0]]
