@@ -15,10 +15,12 @@ except ImportError:
     # We will throw error later
     pass
 
+from homeassistant.const import ATTR_ENTITY_PICTURE
+
 # ATTR_MEDIA_ALBUM, ATTR_MEDIA_IMAGE_URL,
-# ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST,
+# ATTR_MEDIA_ARTIST,
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
+    MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE, ATTR_MEDIA_TITLE,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_DURATION, ATTR_MEDIA_VOLUME,
     MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED,
     MEDIA_STATE_UNKNOWN)
@@ -95,7 +97,8 @@ class CastDevice(MediaPlayerDevice):
     def state_attributes(self):
         """ Returns the state attributes. """
         cast_status = self.cast.status
-        media_status = self.cast.media_status
+        media_controller = self.cast.media_controller
+        media_status = media_controller.status
 
         state_attr = {
             ATTR_MEDIA_STATE: self.media_state,
@@ -105,12 +108,17 @@ class CastDevice(MediaPlayerDevice):
         if cast_status:
             state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level,
 
-        if media_status:
-            if media_status.content_id:
-                state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
+        if media_status.content_id:
+            state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
 
-            if media_status.duration:
-                state_attr[ATTR_MEDIA_DURATION] = media_status.duration
+        if media_status.duration:
+            state_attr[ATTR_MEDIA_DURATION] = media_status.duration
+
+        if media_controller.title:
+            state_attr[ATTR_MEDIA_TITLE] = media_controller.title
+
+        if media_controller.thumbnail:
+            state_attr[ATTR_ENTITY_PICTURE] = media_controller.thumbnail
 
         return state_attr
 
