@@ -41,7 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts = [discovery_info[0]]
 
     else:
-        hosts = pychromecast.discover_chromecasts()
+        hosts = (host_port[0] for host_port
+                 in pychromecast.discover_chromecasts())
 
     casts = []
 
