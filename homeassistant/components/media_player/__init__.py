@@ -10,7 +10,7 @@ from homeassistant.components import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_UP,
     SERVICE_VOLUME_DOWN, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK)
 
@@ -56,6 +56,13 @@ def is_on(hass, entity_id=None):
 
     return any(not hass.states.is_state(entity_id, STATE_NO_APP)
                for entity_id in entity_ids)
+
+
+def turn_on(hass, entity_id=None):
+    """ Will turn on specified media player or all. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
@@ -115,6 +122,7 @@ def media_prev_track(hass, entity_id=None):
 
 
 SERVICE_TO_METHOD = {
+    SERVICE_TURN_ON: 'turn_on',
     SERVICE_TURN_OFF: 'turn_off',
     SERVICE_VOLUME_UP: 'volume_up',
     SERVICE_VOLUME_DOWN: 'volume_down',
@@ -175,8 +183,12 @@ def setup(hass, config):
 class MediaPlayerDevice(Entity):
     """ ABC for media player devices. """
 
+    def turn_on(self):
+        """ turn media player on. """
+        pass
+
     def turn_off(self):
-        """ turn_off media player. """
+        """ turn media player off. """
         pass
 
     def volume_up(self):

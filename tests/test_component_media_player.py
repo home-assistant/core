@@ -10,7 +10,7 @@ import unittest
 
 import homeassistant as ha
 from homeassistant.const import (
-    SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK, ATTR_ENTITY_ID)
 import homeassistant.components.media_player as media_player
@@ -48,6 +48,7 @@ class TestMediaPlayer(unittest.TestCase):
         Test if the call service methods conver to correct service calls.
         """
         services = {
+            SERVICE_TURN_ON: media_player.turn_on,
             SERVICE_TURN_OFF: media_player.turn_off,
             SERVICE_VOLUME_UP: media_player.volume_up,
             SERVICE_VOLUME_DOWN: media_player.volume_down,
