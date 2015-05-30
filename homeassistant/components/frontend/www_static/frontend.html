@@ -6000,7 +6000,7 @@ function(t,e,n){function r(){this._events=this._events||{},this._maxListeners=th
 
 <script>
   (function() {
-    var DOMAINS_WITH_CARD = ['thermostat', 'configurator', 'scene'];
+    var DOMAINS_WITH_CARD = ['thermostat', 'configurator', 'scene', 'media_player'];
     var DOMAINS_WITH_MORE_INFO = [
       'light', 'group', 'sun', 'configurator', 'thermostat', 'script'
     ];
@@ -21647,26 +21647,32 @@ Polymer({
   <style>
   :host {
     line-height: normal;
+    min-width: 150px;
+    white-space: nowrap;
   }
 
   state-badge {
     float: left;
   }
 
-  .name {
-    text-transform: capitalize;  
-    font-weight: 300;
-    font-size: 1.3rem;
-  }
-
   .info {
     margin-left: 60px;
+  }
+
+  .name {
+    text-transform: capitalize;
+    font-weight: 300;
+    font-size: 1.3rem;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
   }
 
   .time-ago {
     color: darkgrey;
     margin-top: -2px;
     font-size: 1rem;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
   }
   </style>
 
@@ -21682,7 +21688,7 @@ Polymer({
             <relative-ha-datetime datetime-obj="[[stateObj.lastChangedAsDate]]"></relative-ha-datetime>
           
         </div>
-        
+
       </div>
     </div>
   </template>
@@ -21705,7 +21711,8 @@ Polymer({
     },
   });
 })();
-</script><dom-module id="state-card-display" assetpath="cards/">
+</script>
+<dom-module id="state-card-display" assetpath="cards/">
   <style>
   .state {
     margin-left: 16px;
@@ -22171,7 +22178,62 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
   });
 })();
-</script><dom-module id="state-card-content" assetpath="cards/">
+</script><dom-module id="state-card-media_player" assetpath="cards/">
+  <style>
+  :host {
+    line-height: normal;
+  }
+
+  .state {
+    margin-left: 16px;
+    text-align: right;
+  }
+
+  .main-text {
+      white-space: nowrap;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      text-transform: capitalize;
+      font-weight: 300;
+      font-size: 1.3rem;
+  }
+
+  .secondary-text {
+      color: darkgrey;
+      margin-top: -2px;
+      font-size: 1rem;
+  }
+  </style>
+  <template>
+    <div class="horizontal justified layout">
+      <state-info state-obj="[[stateObj]]"></state-info>
+      <div class="state">
+        <template is="dom-if" if="[[stateObj.attributes.media_title]]">
+          <div class="main-text">[[stateObj.attributes.media_title]]</div>
+          <div class="secondary-text">[[stateObj.stateDisplay]]</div>
+        </template>
+        <template is="dom-if" if="[[!stateObj.attributes.media_title]]">
+          <div class="main-text">[[stateObj.stateDisplay]]</div>
+        </template>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+(function() {
+  Polymer({
+    is: 'state-card-media_player',
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+    },
+  });
+})();
+</script>
+<dom-module id="state-card-content" assetpath="cards/">
   <style>
     :host {
       display: block;
