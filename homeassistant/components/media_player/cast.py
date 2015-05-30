@@ -10,15 +10,18 @@ import logging
 
 try:
     import pychromecast
+    import pychromecast.controllers.youtube as youtube
 except ImportError:
     # We will throw error later
     pass
 
+# ATTR_MEDIA_ALBUM, ATTR_MEDIA_IMAGE_URL,
+# ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST,
 from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_ALBUM, ATTR_MEDIA_IMAGE_URL, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED)
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_DURATION, ATTR_MEDIA_VOLUME,
+    MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED,
+    MEDIA_STATE_UNKNOWN)
 
 
 # pylint: disable=unused-argument
@@ -57,7 +60,9 @@ class CastDevice(MediaPlayerDevice):
     """ Represents a Cast device on the network. """
 
     def __init__(self, host):
-        self.cast = pychromecast.PyChromecast(host)
+        self.cast = pychromecast.Chromecast(host)
+        self.youtube = youtube.YouTubeController()
+        self.cast.register_handler(self.youtube)
 
     @property
     def name(self):
@@ -67,47 +72,47 @@ class CastDevice(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the state of the device. """
-        status = self.cast.app
-
-        if status is None or status.app_id == pychromecast.APP_ID['HOME']:
+        if self.cast.is_idle:
             return STATE_NO_APP
         else:
-            return status.description
+            return self.cast.app_display_name
+
+    @property
+    def media_state(self):
+        """ Returns the media state. """
+        media_controller = self.cast.media_controller
+
+        if media_controller.is_playing:
+            return MEDIA_STATE_PLAYING
+        elif media_controller.is_paused:
+            return MEDIA_STATE_PAUSED
+        elif media_controller.is_idle:
+            return MEDIA_STATE_STOPPED
+        else:
+            return MEDIA_STATE_UNKNOWN
 
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
+        cast_status = self.cast.status
+        media_status = self.cast.media_status
 
-        if ramp and ramp.state != pychromecast.RAMP_STATE_UNKNOWN:
-            state_attr = {}
+        state_attr = {
+            ATTR_MEDIA_STATE: self.media_state,
+            'application_id': self.cast.app_id,
+        }
 
-            if ramp.state == pychromecast.RAMP_STATE_PLAYING:
-                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_PLAYING
-            else:
-                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_STOPPED
+        if cast_status:
+            state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level,
 
-            if ramp.content_id:
-                state_attr[ATTR_MEDIA_CONTENT_ID] = ramp.content_id
+        if media_status:
+            if media_status.content_id:
+                state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
 
-            if ramp.title:
-                state_attr[ATTR_MEDIA_TITLE] = ramp.title
+            if media_status.duration:
+                state_attr[ATTR_MEDIA_DURATION] = media_status.duration
 
-            if ramp.artist:
-                state_attr[ATTR_MEDIA_ARTIST] = ramp.artist
-
-            if ramp.album:
-                state_attr[ATTR_MEDIA_ALBUM] = ramp.album
-
-            if ramp.image_url:
-                state_attr[ATTR_MEDIA_IMAGE_URL] = ramp.image_url
-
-            if ramp.duration:
-                state_attr[ATTR_MEDIA_DURATION] = ramp.duration
-
-            state_attr[ATTR_MEDIA_VOLUME] = ramp.volume
-
-            return state_attr
+        return state_attr
 
     def turn_off(self):
         """ Service to exit any running app on the specimedia player ChromeCast and
@@ -117,46 +122,31 @@ class CastDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """ Service to send the chromecast the command for volume up. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp:
-            ramp.volume_up()
+        self.cast.volume_up()
 
     def volume_down(self):
         """ Service to send the chromecast the command for volume down. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp:
-            ramp.volume_down()
+        self.cast.volume_down()
 
     def media_play_pause(self):
         """ Service to send the chromecast the command for play/pause. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
+        media_state = self.media_state
 
-        if ramp:
-            ramp.playpause()
+        if media_state in (MEDIA_STATE_STOPPED, MEDIA_STATE_PAUSED):
+            self.cast.media_controller.play()
+        elif media_state == MEDIA_STATE_PLAYING:
+            self.cast.media_controller.pause()
 
     def media_play(self):
         """ Service to send the chromecast the command for play/pause. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp and ramp.state == pychromecast.RAMP_STATE_STOPPED:
-            ramp.playpause()
+        if self.media_state in (MEDIA_STATE_STOPPED, MEDIA_STATE_PAUSED):
+            self.cast.media_controller.play()
 
     def media_pause(self):
         """ Service to send the chromecast the command for play/pause. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp and ramp.state == pychromecast.RAMP_STATE_PLAYING:
-            ramp.playpause()
-
-    def media_next_track(self):
-        """ Service to send the chromecast the command for next track. """
-        ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-        if ramp:
-            ramp.next()
+        if self.media_state == MEDIA_STATE_PLAYING:
+            self.cast.media_controller.pause()
 
     def play_youtube_video(self, video_id):
         """ Plays specified video_id on the Chromecast's YouTube channel. """
-        pychromecast.play_youtube_video(video_id, self.cast.host)
+        self.youtube.play_video(video_id)
