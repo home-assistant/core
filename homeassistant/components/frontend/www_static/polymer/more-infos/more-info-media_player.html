@@ -1,0 +1,91 @@
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+
+<link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
+
+<dom-module id='more-info-media_player'>
+  <style>
+    .media-state {
+      text-transform: capitalize;
+    }
+
+    paper-button, paper-icon-button {
+      color: var(--accent-color);
+    }
+  </style>
+  <template>
+    <div class='layout horizontal'>
+      <div class='flex'>
+        <paper-button on-tap='handleTogglePower'>[[computePowerButtonCaption(isIdle)]]</paper-button>
+      </div>
+      <div class=''>
+        <template is='dom-if' if='[[!isIdle]]'>
+          <paper-icon-button icon='av:skip-previous'
+            on-tap='handlePrevious'></paper-icon-button>
+          <paper-icon-button icon='[[computePlayPauseIcon(stateObj)]]'
+            on-tap='handlePlayPause'></paper-icon-button>
+          <paper-icon-button icon='av:skip-next'
+            on-tap='handleNext'></paper-icon-button>
+        </template>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+(function() {
+  var serviceActions = window.hass.serviceActions;
+
+  Polymer({
+    is: 'more-info-media_player',
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+
+      isIdle: {
+        type: Boolean,
+        computed: 'computeIsIdle(stateObj)',
+      },
+    },
+
+    computeMediaState: function(stateObj) {
+      return stateObj.state == 'idle' ? 'idle' : stateObj.attributes.media_state;
+    },
+
+    computeIsIdle: function(stateObj) {
+      return stateObj.state == 'idle';
+    },
+
+    computePowerButtonCaption: function(isIdle) {
+      return isIdle ? 'Turn on' : 'Turn off';
+    },
+
+    computePlayPauseIcon: function(stateObj) {
+      return stateObj.attributes.media_state == 'playing' ? 'av:pause' : 'av:play-arrow';
+    },
+
+    handleTogglePower: function() {
+      this.callService(this.isIdle ? 'turn_on' : 'turn_off');
+    },
+
+    handlePrevious: function() {
+      this.callService('media_prev_track');
+    },
+
+    handlePlayPause: function() {
+      this.callService('media_play_pause');
+    },
+
+    handleNext: function() {
+      this.callService('media_next_track');
+    },
+
+    callService: function(service) {
+      var data = {entity_id: this.stateObj.entityId};
+      serviceActions.callService('media_player', service, data);
+    },
+  });
+})();
+</script>
