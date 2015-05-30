@@ -8,26 +8,32 @@
   <style>
   :host {
     line-height: normal;
+    min-width: 150px;
+    white-space: nowrap;
   }
 
   state-badge {
     float: left;
   }
 
-  .name {
-    text-transform: capitalize;  
-    font-weight: 300;
-    font-size: 1.3rem;
-  }
-
   .info {
     margin-left: 60px;
+  }
+
+  .name {
+    text-transform: capitalize;
+    font-weight: 300;
+    font-size: 1.3rem;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
   }
 
   .time-ago {
     color: darkgrey;
     margin-top: -2px;
     font-size: 1rem;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
   }
   </style>
 
@@ -43,7 +49,7 @@
             <relative-ha-datetime datetime-obj='[[stateObj.lastChangedAsDate]]'></relative-ha-datetime>
           <!-- </core-tooltip> -->
         </div>
-        
+
       </div>
     </div>
   </template>
