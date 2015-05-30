@@ -2,87 +2,100 @@
 
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
-<link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
 
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/services-list.html">
 
-<polymer-element name="partial-dev-call-service" attributes="narrow togglePanel">
-<template>
-
+<dom-module id="partial-dev-call-service">
   <style>
-  .form {
-    padding: 24px;
-    background-color: white;
-  }
+    .form {
+      padding: 24px;
+      background-color: white;
+    }
+
+    .ha-form {
+      margin-right: 16px;
+    }
   </style>
+  <template>
+    <partial-base narrow="[[narrow]]">
+      <span header-title>Call Service</span>
 
-  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
-    <span header-title>Call Service</span>
+      <div class='form fit'>
+        <p>
+          Call a service from a component.
+        </p>
 
-    <div class='form' fit>
-      <p>
-        Call a service from a component.
-      </p>
+        <div class$='[[computeFormClasses(narrow)]]'>
+          <div class='ha-form flex'>
+            <paper-input label="Domain" autofocus value='{{domain}}'></paper-input>
+            <paper-input label="Service" value='{{service}}'></paper-input>
+            <paper-textarea label="Service Data (JSON, optional)" value='{{serviceData}}'></paper-textarea>
+            <paper-button on-click='callService' raised>Call Service</paper-button>
+          </div>
 
-      <div layout horizontal?="{{!narrow}}" vertical?="{{narrow}}">
-        <div class='ha-form' flex?="{{!narrow}}">
-          <paper-input id="inputDomain" label="Domain" floatingLabel="true" autofocus required></paper-input>
-          <paper-input id="inputService" label="Service" floatingLabel="true" required></paper-input>
-          <paper-input-decorator
-            label="Service Data (JSON, optional)"
-            floatingLabel="true">
-
-            <paper-autogrow-textarea id="inputDataWrapper">
-              <textarea id="inputData"></textarea>
-            </paper-autogrow-textarea>
-
-          </paper-input-decorator>
-          <paper-button on-click={{clickCallService}}>Call Service</paper-button>
-        </div>
-
-        <div class='sidebar'>
-          <b>Available services:</b>
-          <services-list cbServiceClicked={{serviceSelected}}></services-list>
+          <div>
+            <h4>Available services:</h4>
+            <services-list on-service-selected='serviceSelected'></services-list>
+          </div>
         </div>
       </div>
-    </div>
+    </partial-base>
+  </template>
+</dom-module>
 
-
-  </partial-base>
-
-</template>
 <script>
-var serviceActions = window.hass.serviceActions;
+(function() {
+  var serviceActions = window.hass.serviceActions;
 
-Polymer({
-  ready: function() {
-    // to ensure callback methods work..
-    this.serviceSelected = this.serviceSelected.bind(this);
-  },
+  Polymer({
+    is: 'partial-dev-call-service',
 
-  setService: function(domain, service) {
-    this.$.inputDomain.value = domain;
-    this.$.inputService.value = service;
-  },
+    properties: {
+      narrow: {
+        type: Boolean,
+        value: false,
+      },
 
-  serviceSelected: function(domain, service) {
-    this.setService(domain, service);
-  },
+      domain: {
+        type: String,
+        value: '',
+      },
 
-  clickCallService: function() {
-    try {
-      serviceActions.callService(
-        this.$.inputDomain.value,
-        this.$.inputService.value,
-        this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
-    } catch (err) {
-      alert("Error parsing JSON: " + err);
-    }
-  }
+      service: {
+        type: String,
+        value: '',
+      },
 
-});
+      serviceData: {
+        type: String,
+        value: '',
+      },
+    },
+
+    serviceSelected: function(ev) {
+      this.domain = ev.detail.domain;
+      this.service = ev.detail.service;
+    },
+
+    callService: function() {
+      var serviceData;
+
+      try {
+        serviceData = this.serviceData ? JSON.parse(this.serviceData): {};
+      } catch (err) {
+        alert("Error parsing JSON: " + err);
+        return;
+      }
+
+      serviceActions.callService(this.domain, this.service, serviceData);
+    },
+
+    computeFormClasses: function(narrow) {
+      return 'layout ' + (narrow ? 'vertical' : 'horizontal');
+    },
+  });
+})();
 </script>
-</polymer-element>
