@@ -15,11 +15,13 @@ except ImportError:
     # We will throw error later
     pass
 
+# ATTR_MEDIA_ALBUM, ATTR_MEDIA_IMAGE_URL,
+# ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST,
 from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_ALBUM, ATTR_MEDIA_IMAGE_URL, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED)
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_DURATION, ATTR_MEDIA_VOLUME,
+    MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED,
+    MEDIA_STATE_UNKNOWN)
 
 
 # pylint: disable=unused-argument
@@ -70,54 +72,47 @@ class CastDevice(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the state of the device. """
-        status = self.cast.status
-
-        if self.cast.app_display_name:
-            return self.cast.app_display_name
-        else:
+        if self.cast.is_idle:
             return STATE_NO_APP
+        else:
+            return self.cast.app_display_name
+
+    @property
+    def media_state(self):
+        """ Returns the media state. """
+        media_controller = self.cast.media_controller
+
+        if media_controller.is_playing:
+            return MEDIA_STATE_PLAYING
+        elif media_controller.is_paused:
+            return MEDIA_STATE_PAUSED
+        elif media_controller.is_idle:
+            return MEDIA_STATE_STOPPED
+        else:
+            return MEDIA_STATE_UNKNOWN
 
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        mc = self.cast.media_controller;
+        cast_status = self.cast.status
+        media_status = self.cast.media_status
 
-        if mc:
-            state_attr = {}
+        state_attr = {
+            ATTR_MEDIA_STATE: self.media_state,
+            'application_id': self.cast.app_id,
+        }
 
-            if mc.is_playing:
-                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_PLAYING
-            elif mc.is_paused:
-                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_PAUSED
-            elif mc.is_idle:
-                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_STOPPED
+        if cast_status:
+            state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level,
 
-            media_status = self.cast.status
+        if media_status:
+            if media_status.content_id:
+                state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
 
-            if media_status:
+            if media_status.duration:
+                state_attr[ATTR_MEDIA_DURATION] = media_status.duration
 
-                """ These status properties seem not to be present anymore in pychromecast """
-                #if ramp.content_id:
-                #    state_attr[ATTR_MEDIA_CONTENT_ID] = mc.ramp.content_id
-
-                #if ramp.title:
-                #    state_attr[ATTR_MEDIA_TITLE] = ramp.title
-
-                #if ramp.artist:
-                #    state_attr[ATTR_MEDIA_ARTIST] = ramp.artist
-
-                #if ramp.album:
-                #    state_attr[ATTR_MEDIA_ALBUM] = ramp.album
-
-                #if ramp.image_url:
-                #    state_attr[ATTR_MEDIA_IMAGE_URL] = ramp.image_url
-
-                if hasattr(media_status, 'duration'):
-                    state_attr[ATTR_MEDIA_DURATION] = media_status.duration
-
-                state_attr[ATTR_MEDIA_VOLUME] = media_status.volume_level
-
-            return state_attr
+        return state_attr
 
     def turn_off(self):
         """ Service to exit any running app on the specimedia player ChromeCast and
@@ -135,29 +130,22 @@ class CastDevice(MediaPlayerDevice):
 
     def media_play_pause(self):
         """ Service to send the chromecast the command for play/pause. """
-        media_state = self.state_attributes[ATTR_MEDIA_STATE]
-        if media_state == MEDIA_STATE_STOPPED or media_state == MEDIA_STATE_PAUSED:
+        media_state = self.media_state
+
+        if media_state in (MEDIA_STATE_STOPPED, MEDIA_STATE_PAUSED):
             self.cast.media_controller.play()
         elif media_state == MEDIA_STATE_PLAYING:
             self.cast.media_controller.pause()
 
     def media_play(self):
         """ Service to send the chromecast the command for play/pause. """
-        if self.state_attributes[ATTR_MEDIA_STATE] == MEDIA_STATE_STOPPED:
-            self.media_play_pause()
+        if self.media_state in (MEDIA_STATE_STOPPED, MEDIA_STATE_PAUSED):
+            self.cast.media_controller.play()
 
     def media_pause(self):
         """ Service to send the chromecast the command for play/pause. """
-        if self.state_attributes[ATTR_MEDIA_STATE] == MEDIA_STATE_PLAYING:
-            self.media_play_pause()
-
-    """ This one seems not to be present anymore in pychromecast, needs porting or cleanup """
-    #def media_next_track(self):
-    #    """ Service to send the chromecast the command for next track. """
-    #    ramp = self.cast.get_protocol(pychromecast.PROTOCOL_RAMP)
-
-    #    if ramp:
-    #        ramp.next()
+        if self.media_state == MEDIA_STATE_PLAYING:
+            self.cast.media_controller.pause()
 
     def play_youtube_video(self, video_id):
         """ Plays specified video_id on the Chromecast's YouTube channel. """
