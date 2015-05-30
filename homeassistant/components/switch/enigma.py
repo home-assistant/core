@@ -45,6 +45,7 @@ _LOGGING = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return enigma2 boxes. """
 
