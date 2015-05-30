@@ -114,12 +114,13 @@ class LuciDeviceScanner(object):
                     hosts = [x for x in result.values()
                              if x['.type'] == 'host' and
                              'mac' in x and 'name' in x]
-                    mac2name_list = [(x['mac'], x['name']) for x in hosts]
+                    mac2name_list = [
+                        (x['mac'].upper(), x['name']) for x in hosts]
                     self.mac2name = dict(mac2name_list)
                 else:
                     # Error, handled in the _req_json_rpc
                     return
-            return self.mac2name.get(device, None)
+            return self.mac2name.get(device.upper(), None)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
