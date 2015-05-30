@@ -9,7 +9,13 @@
 
 <dom-module id="partial-states">
   <style>
-    .listening {
+    .content-wrapper {
+      position: relative;
+      height: 100%;
+      background-color: #E5E5E5;
+    }
+
+    .content-wrapper ::content .listening {
       position: absolute;
       top: 0;
       left: 0;
@@ -31,11 +37,6 @@
     .listening paper-spinner {
       float: right;
     }
-
-    state-cards {
-      height: 100%;
-      background-color: #E5E5E5;
-    }
   </style>
 
   <template>
@@ -49,22 +50,24 @@
           on-click="handleListenClick"></paper-icon-button>
       </span>
 
-      <div class='listening' hidden$="[[!showListenInterface]]"
-        on-click="handleListenClick">
-        <iron-icon icon="av:hearing"></iron-icon> <span>{{finalTranscript}}</span>
-        <span class='interimTranscript'>[[interimTranscript]]</span>
-        <paper-spinner active$="[[isTransmitting]]" alt="Sending voice command to Home Assistant"></paper-spinner>
-      </div>
+      <div class='content-wrapper'>
+        <div class='listening' hidden$="[[!showListenInterface]]"
+          on-click="handleListenClick">
+          <iron-icon icon="av:hearing"></iron-icon> <span>{{finalTranscript}}</span>
+          <span class='interimTranscript'>[[interimTranscript]]</span>
+          <paper-spinner active$="[[isTransmitting]]" alt="Sending voice command to Home Assistant"></paper-spinner>
+        </div>
 
-      <state-cards states="[[states]]">
-        <h3>Hi there!</h3>
-        <p>
-          It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
-        </p>
-        <p>
-          Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
-        </p>
-      </state-cards>
+        <state-cards states="[[states]]">
+          <h3>Hi there!</h3>
+          <p>
+            It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
+          </p>
+          <p>
+            Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
+          </p>
+        </state-cards>
+      </div>
     </partial-base>
   </template>
 
