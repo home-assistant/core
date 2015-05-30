@@ -18,7 +18,7 @@ phue>=0.8
 ledcontroller>=1.0.7
 
 # media_player.cast
-pychromecast>=0.6
+pychromecast>=0.6.0.3
 
 # keyboard
 pyuserinput>=0.1.9
@@ -41,7 +41,7 @@ pydispatcher>=2.0.5
 # isy994
 PyISY>=1.0.2
 
-# sensor.systemmonitor 
+# sensor.systemmonitor
 psutil>=2.2.1
 
 # pushover notifications
