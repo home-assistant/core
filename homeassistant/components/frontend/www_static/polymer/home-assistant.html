@@ -1,41 +1,62 @@
-<link rel="import" href="bower_components/polymer/polymer.html">
-<link rel="import" href="bower_components/font-roboto/roboto.html">
+<link rel='import' href='bower_components/polymer/polymer.html'>
 
-<link rel="import" href="resources/home-assistant-style.html">
-<link rel="import" href="resources/home-assistant-js.html">
+<link rel='import' href='bower_components/paper-styles/typography.html'>
 
-<link rel="import" href="layouts/login-form.html">
-<link rel="import" href="layouts/home-assistant-main.html">
+<link rel='import' href='resources/home-assistant-js.html'>
+<link rel='import' href='resources/home-assistant-icons.html'>
+<link rel='import' href='resources/store-listener-behavior.html'>
 
-<polymer-element name="home-assistant" attributes="auth">
+<link rel='import' href='layouts/login-form.html'>
+<link rel='import' href='layouts/home-assistant-main.html'>
+
+<link rel='import' href='resources/home-assistant-style.html'>
+
+<dom-module id='home-assistant'>
+  <style>
+    :host {
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+  </style>
+
+  <home-assistant-icons></home-assistant-icons>
+
   <template>
-    <style>
-
-      :host {
-        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
-        font-weight: 300;
-      }
-
-    </style>
-
-    <home-assistant-api auth="{{auth}}"></home-assistant-api>
-
-    <template if="{{!loaded}}">
+    <template is='dom-if' if='[[!loaded]]'>
       <login-form></login-form>
     </template>
 
-    <template if="{{loaded}}">
+    <template is='dom-if' if='[[loaded]]'>
       <home-assistant-main></home-assistant-main>
     </template>
 
   </template>
-  <script>
+</dom-module>
+
+<script>
+(function() {
+
   var storeListenerMixIn = window.hass.storeListenerMixIn,
       uiActions = window.hass.uiActions,
       preferenceStore = window.hass.preferenceStore;
 
-  Polymer(Polymer.mixin({
-    loaded: false,
+  Polymer({
+    is: 'home-assistant',
+
+    hostAttributes: {
+      auth: null,
+    },
+
+    behaviors: [StoreListenerBehavior],
+
+    properties: {
+      loaded: {
+        type: Boolean,
+        value: false,
+      },
+    },
 
     ready: function() {
       // remove the HTML init message
@@ -43,23 +64,16 @@
 
       // if auth was given, tell the backend
       if(this.auth) {
-        uiActions.validateAuth(this.auth, false);    
+        uiActions.validateAuth(this.auth, false);
       } else if (preferenceStore.hasAuthToken) {
-        uiActions.validateAuth(preferenceStore.authToken, false);    
+        uiActions.validateAuth(preferenceStore.authToken, false);
       }
-    },
-
-    attached: function() {
-      this.listenToStores(true);
-    },
-
-    detached: function() {
-      this.stopListeningToStores();
     },
 
     syncStoreChanged: function(syncStore) {
       this.loaded = syncStore.initialLoadDone;
     },
-  }, storeListenerMixIn));
-  </script>  
-</polymer-element>
+});
+
+})();
+</script>

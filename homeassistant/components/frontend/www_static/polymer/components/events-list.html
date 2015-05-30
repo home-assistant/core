@@ -1,62 +1,56 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
-<polymer-element name="events-list" attributes="cbEventClicked">
+<dom-module id="events-list">
+  <style>
+    ul {
+      margin: 0;
+      padding: 0;
+    }
+
+    li {
+      list-style: none;
+      line-height: 2em;
+    }
+
+    a {
+      color: var(--accent-color);
+    }
+  </style>
+
   <template>
-    <style>
-    :host {
-      display: block;
-    }
-
-    .eventContainer {
-      font-size: 1rem;
-    }
-
-    </style>
-
-    <template if={{cbEventClicked}}>
-      <style>
-      a {
-        text-decoration: underline;
-        cursor: pointer;
-      }
-      </style>
-    </template>
-
-    <div>
-      <template repeat="{{event in events}}">
-        <div class='eventContainer'>
-          <a on-click={{handleClick}}>{{event.event}}</a>
-          ({{event.listener_count}} listeners)
-        </div>
+    <ul>
+      <template is='dom-repeat' items='[[events]]' as='event'>
+        <li>
+          <a href='#' on-click='eventSelected'>{{event.event}}</a>
+          <span> (</span><span>{{event.listener_count}}</span><span> listeners)</span>
+        </li>
       </template>
-
-    </div>
+    </ul>
   </template>
-  <script>
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
+</dom-module>
 
-  Polymer(Polymer.mixin({
-    cbEventClicked: null,
-    events: [],
+<script>
+(function() {
+  Polymer({
+    is: 'events-list',
 
-    attached: function() {
-      this.listenToStores(true);
-    },
+    behaviors: [StoreListenerBehavior],
 
-    detached: function() {
-      this.stopListeningToStores();
+    properties: {
+      events: {
+        type: Array,
+        value: [],
+      },
     },
 
     eventStoreChanged: function(eventStore) {
       this.events = eventStore.all.toArray();
     },
 
-    handleClick: function(ev) {
-      if(this.cbEventClicked) {
-        this.cbEventClicked(ev.path[0].innerHTML);
-      }
+    eventSelected: function(ev) {
+      ev.preventDefault();
+      this.fire('event-selected', {eventType: ev.model.event.event});
     },
-
-  }, storeListenerMixIn));
-  </script>
-</polymer-element>
+  });
+})();
+</script>

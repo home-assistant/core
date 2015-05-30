@@ -1,0 +1,145 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/google-apis/google-legacy-loader.html">
+
+<link rel="import" href="./loading-box.html">
+<link rel="import" href="./state-history-chart-timeline.html">
+<link rel="import" href="./state-history-chart-line.html">
+
+<dom-module id="state-history-charts">
+  <style>
+  :host {
+    display: block;
+  }
+
+  .loading-container {
+    text-align: center;
+    padding: 8px;
+  }
+  </style>
+  <template>
+    <google-legacy-loader on-api-load="googleApiLoaded"></google-legacy-loader>
+
+    <div hidden$="{{!isLoading}}" class='loading-container'>
+      <loading-box>Loading history data</loading-box>
+    </div>
+
+    <template is='dom-if' if='[[!isLoading]]'>
+      <template is='dom-if' if='[[groupedStateHistory.timeline]]'>
+        <state-history-chart-timeline data='[[groupedStateHistory.timeline]]'
+                                      is-single-device='[[isSingleDevice]]'>
+        </state-history-chart-timeline>
+      </template>
+
+      <template is='dom-if' if='[[groupedStateHistory.line]]'>
+        <template is='dom-repeat' items='[[groupedStateHistory.line]]'>
+          <state-history-chart-line unit='[[extractUnit(item)]]'
+            data='[[extractData(item)]]' is-single-device='[[isSingleDevice]]'>
+          </state-history-chart-line>
+        </template>
+      </template>
+    </template>
+  </template>
+</dom-module>
+
+<script>
+(function() {
+  Polymer({
+    is: 'state-history-charts',
+
+    properties: {
+      stateHistory: {
+        type: Object,
+      },
+
+      isLoadingData: {
+        type: Boolean,
+        value: false,
+      },
+
+      apiLoaded: {
+        type: Boolean,
+        value: false,
+      },
+
+      isLoading: {
+        type: Boolean,
+        computed: 'computeIsLoading(isLoadingData, apiLoaded)',
+      },
+
+      groupedStateHistory: {
+        type: Object,
+        computed: 'computeGroupedStateHistory(stateHistory)',
+      },
+
+      isSingleDevice: {
+        type: Boolean,
+        computed: 'computeIsSingleDevice(stateHistory)',
+      },
+    },
+
+    computeIsSingleDevice: function(stateHistory) {
+      return stateHistory && stateHistory.length == 1;
+    },
+
+    computeGroupedStateHistory: function(stateHistory) {
+      var lineChartDevices = {};
+      var timelineDevices = [];
+
+      if (!stateHistory) {
+        return {line: unitStates, timeline: timelineDevices};
+      }
+
+      stateHistory.forEach(function(stateInfo) {
+        if (!stateInfo || stateInfo.length === 0) {
+          return;
+        }
+
+        var unit;
+
+        for (var i = 0; i < stateInfo.length && !unit; i++) {
+          unit = stateInfo[i].attributes.unit_of_measurement;
+        }
+
+        if (unit) {
+          if (!(unit in lineChartDevices)) {
+            lineChartDevices[unit] = [stateInfo];
+          } else {
+            lineChartDevices[unit].push(stateInfo);
+          }
+        } else {
+          timelineDevices.push(stateInfo);
+        }
+      });
+
+      timelineDevices = timelineDevices.length > 0 && timelineDevices;
+
+      var unitStates = Object.keys(lineChartDevices).map(function(unit) {
+        return [unit, lineChartDevices[unit]]; });
+
+      return {line: unitStates, timeline: timelineDevices};
+    },
+
+    googleApiLoaded: function() {
+      google.load("visualization", "1", {
+        packages: ["timeline", "corechart"],
+        callback: function() {
+          this.apiLoaded = true;
+        }.bind(this)
+      });
+    },
+
+    computeIsLoading: function(isLoadingData, apiLoaded) {
+      return isLoadingData || !apiLoaded;
+    },
+
+    extractUnit: function(arr) {
+      return arr[0];
+    },
+
+    extractData: function(arr) {
+      return arr[1];
+    },
+  });
+})();
+</script>

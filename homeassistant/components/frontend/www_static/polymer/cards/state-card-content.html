@@ -6,43 +6,52 @@
 <link rel="import" href="state-card-configurator.html">
 <link rel="import" href="state-card-scene.html">
 
-<polymer-element name="state-card-content" attributes="stateObj">
-<template>
+<dom-module id="state-card-content">
   <style>
     :host {
       display: block;
     }
   </style>
+</dom-module>
 
-  <div id='cardContainer'></div>
-</template>
 <script>
-Polymer({
-  stateObjChanged: function(oldVal, newVal) {
-    var cardContainer = this.$.cardContainer;
+(function() {
+  var uiUtil = window.hass.uiUtil;
 
-    if (!newVal) {
-      if (cardContainer.lastChild) {
-        cardContainer.removeChild(cardContainer.lastChild);
+  Polymer({
+    is: 'state-card-content',
+
+    properties: {
+      stateObj: {
+        type: Object,
+        observer: 'stateObjChanged',
       }
-      return;
-    }
+    },
 
-    if (!oldVal || oldVal.cardType != newVal.cardType) {
-      if (cardContainer.lastChild) {
-        cardContainer.removeChild(cardContainer.lastChild);
+    stateObjChanged: function(newVal, oldVal) {
+      var root = Polymer.dom(this);
+
+      if (!newVal) {
+        if (root.lastChild) {
+          root.removeChild(root.lastChild);
+        }
+        return;
       }
 
-      var stateCard = document.createElement("state-card-" + newVal.cardType);
-      stateCard.stateObj = newVal;
-      cardContainer.appendChild(stateCard);
+      var newCardType = uiUtil.stateCardType(newVal);
 
-    } else {
+      if (!oldVal || uiUtil.stateCardType(oldVal) != newCardType) {
+        if (root.lastChild) {
+          root.removeChild(root.lastChild);
+        }
 
-      cardContainer.lastChild.stateObj = newVal;
-
-    }
-  },
-});
+        var stateCard = document.createElement("state-card-" + newCardType);
+        stateCard.stateObj = newVal;
+        root.appendChild(stateCard);
+      } else {
+        root.lastChild.stateObj = newVal;
+      }
+    },
+  });
+})();
 </script>
-</polymer-element>

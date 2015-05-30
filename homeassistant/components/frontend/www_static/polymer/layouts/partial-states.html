@@ -1,18 +1,21 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/core-icon/core-icon.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/state-cards.html">
 
-<polymer-element name="partial-states" attributes="narrow togglePanel filter">
-<template>
-  <core-style ref="ha-animations"></core-style>
-
+<dom-module id="partial-states">
   <style>
-    .listening {
+    .content-wrapper {
+      position: relative;
+      height: 100%;
+      background-color: #E5E5E5;
+    }
+
+    .content-wrapper ::content .listening {
       position: absolute;
       top: 0;
       left: 0;
@@ -36,65 +39,124 @@
     }
   </style>
 
-  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
-    <span header-title>{{headerTitle}}</span>
+  <template>
+    <partial-base narrow="[[narrow]]">
+      <span header-title>{{headerTitle}}</span>
 
-    <span header-buttons>
-      <paper-icon-button icon="refresh" class="{{isFetching && 'ha-spin'}}"
-        on-click="{{handleRefreshClick}}" hidden?="{{isStreaming}}"></paper-icon-button>
-      <paper-icon-button icon="{{isListening ? 'av:mic-off' : 'av:mic' }}" hidden?={{!canListen}}
-        on-click="{{handleListenClick}}"></paper-icon-button>
-    </span>
+      <span header-buttons>
+        <paper-icon-button icon="refresh" class$="[[computeRefreshButtonClass(isFetching)]]"
+          on-click="handleRefresh" hidden$="[[isStreaming]]"></paper-icon-button>
+        <paper-icon-button icon="[[listenButtonIcon]]" hidden$={{!canListen}}
+          on-click="handleListenClick"></paper-icon-button>
+      </span>
 
-    <div class='listening' hidden?="{{!isListening && !isTransmitting}}" on-click={{handleListenClick}}>
-      <core-icon icon="av:hearing"></core-icon> {{finalTranscript}}
-      <span class='interimTranscript'>{{interimTranscript}}</span>
-      <paper-spinner active?="{{isTransmitting}}"></paper-spinner>
-    </div>
+      <div class='content-wrapper'>
+        <div class='listening' hidden$="[[!showListenInterface]]"
+          on-click="handleListenClick">
+          <iron-icon icon="av:hearing"></iron-icon> <span>{{finalTranscript}}</span>
+          <span class='interimTranscript'>[[interimTranscript]]</span>
+          <paper-spinner active$="[[isTransmitting]]" alt="Sending voice command to Home Assistant"></paper-spinner>
+        </div>
 
-    <state-cards states="{{states}}">
-      <h3>Hi there!</h3>
-      <p>
-        It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
-      </p>
-      <p>
-        Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
-      </p>
-    </state-cards>
-  </partial-base>
-</template>
+        <state-cards states="[[states]]">
+          <h3>Hi there!</h3>
+          <p>
+            It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
+          </p>
+          <p>
+            Please see the <a href='https://home-assistant.io/getting-started/' target='_blank'>Getting Started</a> section on how to setup your devices.
+          </p>
+        </state-cards>
+      </div>
+    </partial-base>
+  </template>
+
+</dom-module>
+
 <script>
 (function(){
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
   var syncActions = window.hass.syncActions;
   var voiceActions = window.hass.voiceActions;
   var stateStore = window.hass.stateStore;
   var uiConstants = window.hass.uiConstants;
 
-  Polymer(Polymer.mixin({
-    headerTitle: "States",
-    states: [],
-    isFetching: false,
-    isStreaming: false,
+  Polymer({
+    is: 'partial-states',
 
-    canListen: false,
-    voiceSupported: false,
-    hasConversationComponent: false,
-    isListening: false,
-    isTransmittingVoice: false,
-    interimTranscript: '',
-    finalTranscript: '',
+    behaviors: [StoreListenerBehavior],
 
-    ready: function() {
-      this.voiceSupported = voiceActions.isSupported();
-    },
+    properties: {
+      /**
+       * Title to show in the header
+       */
+      headerTitle: {
+        type: String,
+        value: 'States',
+      },
 
-    attached: function() {
-      this.listenToStores(true);
-    },
+      /**
+       * If header is to be shown in narrow mode.
+       */
+      narrow: {
+        type: Boolean,
+        value: false,
+      },
 
-    detached: function() {
-      this.stopListeningToStores();
+      filter: {
+        type: String,
+        value: null,
+        observer: 'filterChanged',
+      },
+
+      voiceSupported: {
+        type: Boolean,
+        value: voiceActions.isSupported(),
+      },
+
+      isFetching: {
+        type: Boolean,
+        value: false,
+      },
+
+      isStreaming: {
+        type: Boolean,
+        value: false,
+      },
+
+      canListen: {
+        type: Boolean,
+        value: false,
+      },
+
+      isListening: {
+        type: Boolean,
+        value: false,
+      },
+
+      isTransmitting: {
+        type: Boolean,
+        value: false,
+      },
+
+      interimTranscript: {
+        type: String,
+        value: '',
+      },
+
+      finalTranscript: {
+        type: String,
+        value: '',
+      },
+
+      listenButtonIcon: {
+        type: String,
+        computed: 'computeListenButtonIcon(isListening)'
+      },
+
+      showListenInterface: {
+        type: Boolean,
+        computed: 'computeShowListenInterface(isListening,isTransmitting)'
+      }
     },
 
     componentStoreChanged: function(componentStore) {
@@ -143,12 +205,12 @@
           return !(state.domain in uiConstants.STATE_FILTERS);
         });
       }
-      
+
       this.states = states.toArray().filter(
-              function (el) {return !el.attributes.hidden});
+              function (el) {return !el.attributes.hidden;});
     },
 
-    handleRefreshClick: function() {
+    handleRefresh: function() {
       syncActions.fetchAll();
     },
 
@@ -159,7 +221,20 @@
         voiceActions.listen();
       }
     },
-  }, storeListenerMixIn));
+
+    computeListenButtonIcon: function(isListening) {
+      return isListening ? 'av:mic-off' : 'av:mic';
+    },
+
+    computeShowListenInterface: function(isListening,isTransmitting) {
+      return isListening || isTransmitting;
+    },
+
+    computeRefreshButtonClass: function(isFetching) {
+      if (isFetching) {
+        return 'ha-spin';
+      }
+    },
+  });
 })();
 </script>
-</polymer>
