@@ -63,6 +63,17 @@ class CastDevice(MediaPlayerDevice):
         self.youtube = youtube.YouTubeController()
         self.cast.register_handler(self.youtube)
 
+        self.cast.socket_client.receiver_controller.register_status_listener(
+            self)
+        self.cast.socket_client.media_controller.register_status_listener(self)
+
+        self.cast_status = self.cast.status
+        self.media_status = self.cast.media_controller.status
+
+    @property
+    def should_poll(self):
+        return False
+
     @property
     def name(self):
         """ Returns the name of the device. """
@@ -93,9 +104,9 @@ class CastDevice(MediaPlayerDevice):
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        cast_status = self.cast.status
+        cast_status = self.cast_status
+        media_status = self.media_status
         media_controller = self.cast.media_controller
-        media_status = media_controller.status
 
         state_attr = {
             ATTR_MEDIA_STATE: self.media_state,
@@ -155,3 +166,13 @@ class CastDevice(MediaPlayerDevice):
     def play_youtube_video(self, video_id):
         """ Plays specified video_id on the Chromecast's YouTube channel. """
         self.youtube.play_video(video_id)
+
+    def new_cast_status(self, status):
+        """ Called when a new cast status is received. """
+        self.cast_status = status
+        self.update_ha_state()
+
+    def new_media_status(self, status):
+        """ Called when a new media status is received. """
+        self.media_status = status
+        self.update_ha_state()
