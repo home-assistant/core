@@ -156,6 +156,14 @@ class CastDevice(MediaPlayerDevice):
         """ Service to send the chromecast the command for volume down. """
         self.cast.volume_down()
 
+    def volume_mute(self):
+        """ Service to send the chromecast the command for volume up. """
+        self.cast.set_volume(0)
+
+    def volume_set(self, volume):
+        """ Service to send the chromecast the command for volume down. """
+        self.cast.set_volume(volume)
+
     def media_play_pause(self):
         """ Service to send the chromecast the command for play/pause. """
         media_state = self.media_state
