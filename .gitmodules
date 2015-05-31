@@ -22,3 +22,6 @@
 [submodule "homeassistant/external/pymysensors"]
 	path = homeassistant/external/pymysensors
 	url = https://github.com/theolind/pymysensors
+[submodule "homeassistant/external/rcswitch-pi"]
+	path = homeassistant/external/rcswitch-pi
+	url = https://github.com/r10r/rcswitch-pi.git
