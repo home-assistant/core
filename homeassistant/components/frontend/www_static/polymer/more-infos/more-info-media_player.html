@@ -11,22 +11,48 @@
     paper-button, paper-icon-button {
       color: var(--accent-color);
     }
+
+    .volume {
+      margin-bottom: 8px;
+
+      max-height: 0px;
+      overflow: hidden;
+      transition: max-height .5s ease-in;
+    }
+
+    .volume paper-slider::shadow #sliderKnobInner,
+    .volume paper-slider::shadow #sliderBar::shadow #activeProgress {
+      background-color: var(--accent-color);
+    }
+
+    .has-volume .volume {
+      max-height: 500px;
+    }
   </style>
   <template>
-    <div class='layout horizontal'>
-      <div class='flex'>
-        <paper-icon-button icon='power-settings-new'
-          on-tap='handleTogglePower'></paper-icon-button>
+    <div class$='[[computeClassNames(stateObj)]]'>
+      <div class='volume center horizontal layout'>
+        <div>Volume</div>
+        <paper-slider
+                max='100' id='volume' value='{{volumeSliderValue}}'
+                on-change='volumeSliderChanged' class='flex'>
+        </paper-slider>
       </div>
-      <div>
-        <template is='dom-if' if='[[!isIdle]]'>
-          <paper-icon-button icon='av:skip-previous'
-            on-tap='handlePrevious'></paper-icon-button>
-          <paper-icon-button icon='[[computePlayPauseIcon(stateObj)]]'
-            on-tap='handlePlayPause'></paper-icon-button>
-          <paper-icon-button icon='av:skip-next'
-            on-tap='handleNext'></paper-icon-button>
-        </template>
+      <div class='layout horizontal'>
+        <div class='flex'>
+          <paper-icon-button icon='power-settings-new'
+                             on-tap='handleTogglePower'></paper-icon-button>
+        </div>
+        <div>
+          <template is='dom-if' if='[[!isIdle]]'>
+            <paper-icon-button icon='av:skip-previous'
+                               on-tap='handlePrevious'></paper-icon-button>
+            <paper-icon-button icon='[[computePlayPauseIcon(stateObj)]]'
+                               on-tap='handlePlayPause'></paper-icon-button>
+            <paper-icon-button icon='av:skip-next'
+                               on-tap='handleNext'></paper-icon-button>
+          </template>
+        </div>
       </div>
     </div>
   </template>
@@ -35,6 +61,8 @@
 <script>
 (function() {
   var serviceActions = window.hass.serviceActions;
+  var uiUtil = window.hass.uiUtil;
+  var ATTRIBUTE_CLASSES = ['volume'];
 
   Polymer({
     is: 'more-info-media_player',
@@ -42,12 +70,32 @@
     properties: {
       stateObj: {
         type: Object,
+        observer: 'stateObjChanged',
       },
 
       isIdle: {
         type: Boolean,
         computed: 'computeIsIdle(stateObj)',
       },
+
+      volumeSliderValue: {
+        type: Number,
+        value: 0,
+      }
+    },
+
+    stateObjChanged: function(newVal, oldVal) {
+      if (newVal) {
+        this.volumeSliderValue = newVal.attributes.volume;
+      }
+
+      //this.debounce('more-info-volume-animation-finish', function() {
+      //  this.fire('iron-resize');
+      //}.bind(this), 500);
+    },
+
+    computeClassNames: function(stateObj) {
+      return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
     },
 
     computeMediaState: function(stateObj) {
@@ -80,6 +128,20 @@
 
     handleNext: function() {
       this.callService('media_next_track');
+    },
+
+    volumeSliderChanged: function(ev) {
+      var volPercentage = parseInt(ev.target.value);
+
+      if(isNaN(volPercentage)) return;
+
+      var vol = volPercentage / 100;
+
+      serviceActions.callService('media_player', 'volume_set', {
+        entity_id: this.stateObj.entityId,
+        volume: vol
+      });
+
     },
 
     callService: function(service) {
