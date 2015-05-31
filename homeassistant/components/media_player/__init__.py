@@ -2,7 +2,7 @@
 homeassistant.components.media_player
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Component to interface with various media players
+Component to interface with various media players.
 """
 import logging
 
