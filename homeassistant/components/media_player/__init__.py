@@ -87,11 +87,13 @@ def volume_down(hass, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
 
+
 def volume_mute(hass, entity_id=None):
     """ Send the media player the command for volume down. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
+
 
 def volume_set(hass, entity_id=None, volume=None):
     """ Send the media player the command for volume down. """
