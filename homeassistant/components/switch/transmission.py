@@ -92,7 +92,6 @@ class TransmissionSwitch(ToggleEntity):
     def __init__(self, transmission_client, name):
         self._name = name
         self.transmission_client = transmission_client
-        self.turtle_mode_active = False
         self._state = STATE_OFF
 
     @property
@@ -117,27 +116,20 @@ class TransmissionSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
 
-        if self._state == STATE_OFF:
-            _LOGGING.info("Turning on Turtle Mode")
-            self.toggle_turtle_mode()
+        _LOGGING.info("Turning on Turtle Mode")
+        self.transmission_client.set_session(
+            alt_speed_enabled=True)
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
 
-        if self._state == STATE_ON:
-            _LOGGING.info("Turning off Turtle Mode ")
-            self.toggle_turtle_mode()
-
-    def toggle_turtle_mode(self):
-        """ Toggle turtle mode. """
-
+        _LOGGING.info("Turning off Turtle Mode ")
         self.transmission_client.set_session(
-            alt_speed_enabled=not self.turtle_mode_active)
-        self.update()
+            alt_speed_enabled=False)
 
     def update(self):
         """ Gets the latest data from Transmission and updates the state. """
 
-        self.turtle_mode_active = self.transmission_client.get_session(
+        active = self.transmission_client.get_session(
         ).alt_speed_enabled
-        self._state = STATE_ON if self.turtle_mode_active else STATE_OFF
+        self._state = STATE_ON if active else STATE_OFF
