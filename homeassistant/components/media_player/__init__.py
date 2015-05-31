@@ -40,6 +40,7 @@ ATTR_MEDIA_ALBUM = 'media_album'
 ATTR_MEDIA_IMAGE_URL = 'media_image_url'
 ATTR_MEDIA_VOLUME = 'media_volume'
 ATTR_MEDIA_DURATION = 'media_duration'
+ATTR_MEDIA_DATE = 'media_date'
 
 MEDIA_STATE_UNKNOWN = 'unknown'
 MEDIA_STATE_PLAYING = 'playing'
