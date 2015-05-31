@@ -116,7 +116,7 @@ class CastDevice(MediaPlayerDevice):
         }
 
         if cast_status:
-            state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level,
+            state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level
 
         if media_status.content_id:
             state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
