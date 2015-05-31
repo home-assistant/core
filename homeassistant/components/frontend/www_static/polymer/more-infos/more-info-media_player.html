@@ -8,7 +8,8 @@
       text-transform: capitalize;
     }
 
-    paper-icon-button {
+    /* Accent the power button because the user should use that first */
+    paper-icon-button[icon="power-settings-new"] {
       color: var(--accent-color);
     }
 
@@ -43,7 +44,8 @@
         </div>
       </div>
       <div class='volume center horizontal layout'>
-        <div>Volume</div>
+        <paper-icon-button on-tap="handleVolumeTap"
+                       icon="[[computeMuteVolumeIcon(stateObj)]]"></paper-icon-button>
         <paper-slider
           min='0' max='100' value='{{volumeSliderValue}}'
           on-change='volumeSliderChanged' class='flex'>
@@ -73,6 +75,11 @@
         computed: 'computeIsIdle(stateObj)',
       },
 
+      isMuted: {
+        type: Boolean,
+        value: false
+      },
+
       volumeSliderValue: {
         type: Number,
         value: 0,
@@ -82,6 +89,7 @@
     stateObjChanged: function(newVal, oldVal) {
       if (newVal) {
         this.volumeSliderValue = newVal.attributes.media_volume * 100;
+        this.isMuted = newVal.attributes.media_is_muted;
       }
 
       this.debounce('more-info-volume-animation-finish', function() {
@@ -105,6 +113,10 @@
       return isIdle ? 'Turn on' : 'Turn off';
     },
 
+    computeMuteVolumeIcon: function(stateObj) {
+      return this.isMuted ? 'av:volume-up' : 'av:av:volume-off';
+    },
+
     computePlayPauseIcon: function(stateObj) {
       return stateObj.attributes.media_state == 'playing' ? 'av:pause' : 'av:play-arrow';
     },
@@ -125,11 +137,15 @@
       this.callService('media_next_track');
     },
 
+    handleVolumeTap: function() {
+      this.callService('volume_mute', { mute: !this.isMuted });
+    },
+
     volumeSliderChanged: function(ev) {
       var volPercentage = parseFloat(ev.target.value);
       var vol = volPercentage > 0 ? volPercentage / 100 : 0;
 
-      this.callService('volume_set', {volume: vol});
+      this.callService('volume_set', { volume: vol });
     },
 
     callService: function(service, data) {
