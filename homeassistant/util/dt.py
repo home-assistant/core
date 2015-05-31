@@ -108,6 +108,7 @@ def str_to_datetime(dt_str):
     except ValueError:  # If dt_str did not match our format
         return None
 
+
 def timestamp_to_short_time_str(timestamp):
     """ Converts a UNIX timestamp to a short time string format.
 
