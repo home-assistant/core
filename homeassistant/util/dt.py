@@ -108,6 +108,14 @@ def str_to_datetime(dt_str):
     except ValueError:  # If dt_str did not match our format
         return None
 
+def timestamp_to_short_time_str(timestamp):
+    """ Converts a UNIX timestamp to a short time string format.
+
+    @rtype: str
+    """
+    return dt.datetime.fromtimestamp(
+        int(timestamp)).strftime(TIME_SHORT_STR_FORMAT)
+
 
 def strip_microseconds(dattim):
     """ Returns a copy of dattime object but with microsecond set to 0. """
