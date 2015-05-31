@@ -10,9 +10,11 @@ from homeassistant.components import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_UP,
-    SERVICE_VOLUME_DOWN, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK)
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK)
 
 DOMAIN = 'media_player'
 DEPENDENCIES = []
@@ -86,6 +88,25 @@ def volume_down(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
 
 
+def volume_mute(hass, entity_id=None):
+    """ Send the media player the command for volume down. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
+
+
+def volume_set(hass, entity_id=None, volume=None):
+    """ Send the media player the command for volume down. """
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_MEDIA_VOLUME, volume),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_VOLUME_SET, data)
+
+
 def media_play_pause(hass, entity_id=None):
     """ Send the media player the command for play/pause. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -126,6 +147,7 @@ SERVICE_TO_METHOD = {
     SERVICE_TURN_OFF: 'turn_off',
     SERVICE_VOLUME_UP: 'volume_up',
     SERVICE_VOLUME_DOWN: 'volume_down',
+    SERVICE_VOLUME_MUTE: 'volume_mute',
     SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
     SERVICE_MEDIA_PLAY: 'media_play',
     SERVICE_MEDIA_PAUSE: 'media_pause',
@@ -156,6 +178,19 @@ def setup(hass, config):
 
     for service in SERVICE_TO_METHOD:
         hass.services.register(DOMAIN, service, media_player_service_handler)
+
+    def volume_set_service(service, volume):
+        """ Set specified volume on the media player. """
+        target_players = component.extract_from_service(service)
+
+        if volume:
+            for player in target_players:
+                player.volume_set(volume)
+
+    hass.services.register(DOMAIN, SERVICE_VOLUME_SET,
+                           lambda service:
+                           volume_set_service(
+                               service, service.data.get('volume')))
 
     def play_youtube_video_service(service, media_id):
         """ Plays specified media_id on the media player. """
@@ -198,6 +233,14 @@ class MediaPlayerDevice(Entity):
 
     def volume_down(self):
         """ volume_down media player. """
+        pass
+
+    def volume_mute(self):
+        """ mute media player. """
+        pass
+
+    def volume_set(self, volume):
+        """ set volume level of media player. """
         pass
 
     def media_play_pause(self):
