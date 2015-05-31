@@ -117,14 +117,16 @@ class TransmissionSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
 
-        _LOGGING.info("Turning on Turtle Mode")
-        self.toggle_turtle_mode()
+        if self._state == STATE_OFF:
+            _LOGGING.info("Turning on Turtle Mode")
+            self.toggle_turtle_mode()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
 
-        _LOGGING.info("Turning off Turtle Mode ")
-        self.toggle_turtle_mode()
+        if self._state == STATE_ON:
+            _LOGGING.info("Turning off Turtle Mode ")
+            self.toggle_turtle_mode()
 
     def toggle_turtle_mode(self):
         """ Toggle turtle mode. """
