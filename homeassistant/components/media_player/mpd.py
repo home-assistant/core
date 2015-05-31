@@ -11,17 +11,20 @@ config/configuration.yaml
 
 media_player:
   platform: mpd
+  location: bedroom
   server: 127.0.0.1
   port: 6600
 
 """
 import logging
+import socket
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_ALBUM, ATTR_MEDIA_DATE, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED)
+    ATTR_MEDIA_VOLUME, MEDIA_STATE_PAUSED, MEDIA_STATE_PLAYING,
+    MEDIA_STATE_STOPPED, MEDIA_STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +35,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     daemon = config.get('server', None)
     port = config.get('port', 6600)
+    location = config.get('location', 'MPD')
 
+    # pylint: disable=unused-argument
     try:
-        from mpd import MPDClient, ConnectionError
+        from mpd import MPDClient
 
     except ImportError:
         _LOGGER.exception(
@@ -43,9 +48,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         return None
 
+    # pylint: disable=unused-argument
+    try:
+        mpd_client = MPDClient()
+        mpd_client.connect(daemon, port)
+    except socket.error:
+        _LOGGER.error(
+            "Unable to connect to MPD. "
+            "Please check your settings")
+
+        return None
+
     mpd = []
     if daemon is not None and port is not None:
-        mpd.append(MpdDevice(daemon, port))
+        mpd.append(MpdDevice(daemon, port, location))
 
     add_devices(mpd)
 
@@ -53,12 +69,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MpdDevice(MediaPlayerDevice):
     """ Represents a MPD server. """
 
-    def __init__(self, server, port):
+    def __init__(self, server, port, location):
         from mpd import MPDClient
 
         self.server = server
         self.port = port
-        self._name = 'MPD'
+        self._name = location
         self.state_attr = {ATTR_MEDIA_STATE: MEDIA_STATE_STOPPED}
 
         self.client = MPDClient()
@@ -82,6 +98,20 @@ class MpdDevice(MediaPlayerDevice):
         else:
             return self.client.currentsong()['artist']
 
+    @property
+    def media_state(self):
+        """ Returns the media state. """
+        media_controller = self.client.status()
+
+        if media_controller['state'] == 'play':
+            return MEDIA_STATE_PLAYING
+        elif media_controller['state'] == 'pause':
+            return MEDIA_STATE_PAUSED
+        elif media_controller['state'] == 'stop':
+            return MEDIA_STATE_STOPPED
+        else:
+            return MEDIA_STATE_UNKNOWN
+
     # pylint: disable=no-member
     @property
     def state_attributes(self):
@@ -91,11 +121,6 @@ class MpdDevice(MediaPlayerDevice):
 
         if not status and not current_song:
             state_attr = {}
-
-            if status['state'] == 'play':
-                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_PLAYING
-            else:
-                state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_STOPPED
 
             if current_song['id']:
                 state_attr[ATTR_MEDIA_CONTENT_ID] = current_song['id']
@@ -121,25 +146,25 @@ class MpdDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """ Service to exit the running MPD. """
-        self.client.close()
+        self.client.stop()
 
     def volume_up(self):
         """ Service to send the MPD the command for volume up. """
         current_volume = self.client.status()['volume']
 
-        if current_volume != '-1':
+        if int(current_volume) <= 100:
             self.client.setvol(int(current_volume) + 5)
 
     def volume_down(self):
         """ Service to send the MPD the command for volume down. """
         current_volume = self.client.status()['volume']
 
-        if current_volume != '-1':
+        if int(current_volume) >= 0:
             self.client.setvol(int(current_volume) - 5)
 
     def media_play_pause(self):
         """ Service to send the MPD the command for play/pause. """
-        self.client.stop()
+        self.client.pause()
 
     def media_play(self):
         """ Service to send the MPD the command for play/pause. """
