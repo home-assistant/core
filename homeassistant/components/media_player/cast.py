@@ -24,6 +24,8 @@ from homeassistant.components.media_player import (
     MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED,
     MEDIA_STATE_UNKNOWN)
 
+CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -130,6 +132,13 @@ class CastDevice(MediaPlayerDevice):
 
         return state_attr
 
+    def turn_on(self):
+        """ Turns on the ChromeCast. """
+        # The only way we can turn the Chromecast is on is by launching an app
+        if not self.cast.status.is_active_input:
+            self.cast.play_media(
+                CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+
     def turn_off(self):
         """ Service to exit any running app on the specimedia player ChromeCast and
         shows idle screen. Will quit all ChromeCasts if nothing specified.
@@ -163,6 +172,14 @@ class CastDevice(MediaPlayerDevice):
         if self.media_state == MEDIA_STATE_PLAYING:
             self.cast.media_controller.pause()
 
+    def media_prev_track(self):
+        """ media_prev_track media player. """
+        self.cast.media_controller.rewind()
+
+    def media_next_track(self):
+        """ media_next_track media player. """
+        self.cast.media_controller.skip()
+
     def play_youtube_video(self, video_id):
         """ Plays specified video_id on the Chromecast's YouTube channel. """
         self.youtube.play_video(video_id)
@@ -170,7 +187,6 @@ class CastDevice(MediaPlayerDevice):
     def new_cast_status(self, status):
         """ Called when a new cast status is received. """
         self.cast_status = status
-        self.media_status = None
         self.update_ha_state()
 
     def new_media_status(self, status):

@@ -1,6 +1,5 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 
-<link rel='import' href='../bower_components/paper-button/paper-button.html'>
 <link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
 
 <dom-module id='more-info-media_player'>
@@ -16,9 +15,10 @@
   <template>
     <div class='layout horizontal'>
       <div class='flex'>
-        <paper-button on-tap='handleTogglePower'>[[computePowerButtonCaption(isIdle)]]</paper-button>
+        <paper-icon-button icon='power-settings-new'
+          on-tap='handleTogglePower'></paper-icon-button>
       </div>
-      <div class=''>
+      <div>
         <template is='dom-if' if='[[!isIdle]]'>
           <paper-icon-button icon='av:skip-previous'
             on-tap='handlePrevious'></paper-icon-button>

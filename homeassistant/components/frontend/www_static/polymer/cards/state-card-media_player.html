@@ -32,13 +32,8 @@
     <div class='horizontal justified layout'>
       <state-info state-obj="[[stateObj]]"></state-info>
       <div class='state'>
-        <template is='dom-if' if='[[stateObj.attributes.media_title]]'>
-          <div class='main-text'>[[stateObj.attributes.media_title]]</div>
-          <div class='secondary-text'>[[stateObj.stateDisplay]]</div>
-        </template>
-        <template is='dom-if' if='[[!stateObj.attributes.media_title]]'>
-          <div class='main-text'>[[stateObj.stateDisplay]]</div>
-        </template>
+        <div class='main-text'>[[computePrimaryText(stateObj)]]</div>
+        <div class='secondary-text'>[[computeSecondaryText(stateObj)]]</div>
       </div>
     </div>
   </template>
@@ -53,6 +48,14 @@
       stateObj: {
         type: Object,
       },
+    },
+
+    computePrimaryText: function(stateObj) {
+      return stateObj.attributes.media_title || stateObj.stateDisplay;
+    },
+
+    computeSecondaryText: function(stateObj) {
+      return stateObj.attributes.media_title ? stateObj.stateDisplay : '';
     },
   });
 })();

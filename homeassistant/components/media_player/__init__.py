@@ -130,6 +130,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PLAY: 'media_play',
     SERVICE_MEDIA_PAUSE: 'media_pause',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
+    SERVICE_MEDIA_PREV_TRACK: 'media_prev_track',
 }
 
 
@@ -209,6 +210,10 @@ class MediaPlayerDevice(Entity):
 
     def media_pause(self):
         """ media_pause media player. """
+        pass
+
+    def media_prev_track(self):
+        """ media_prev_track media player. """
         pass
 
     def media_next_track(self):

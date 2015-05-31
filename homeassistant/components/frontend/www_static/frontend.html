@@ -22208,13 +22208,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class="horizontal justified layout">
       <state-info state-obj="[[stateObj]]"></state-info>
       <div class="state">
-        <template is="dom-if" if="[[stateObj.attributes.media_title]]">
-          <div class="main-text">[[stateObj.attributes.media_title]]</div>
-          <div class="secondary-text">[[stateObj.stateDisplay]]</div>
-        </template>
-        <template is="dom-if" if="[[!stateObj.attributes.media_title]]">
-          <div class="main-text">[[stateObj.stateDisplay]]</div>
-        </template>
+        <div class="main-text">[[computePrimaryText(stateObj)]]</div>
+        <div class="secondary-text">[[computeSecondaryText(stateObj)]]</div>
       </div>
     </div>
   </template>
@@ -22229,6 +22224,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       stateObj: {
         type: Object,
       },
+    },
+
+    computePrimaryText: function(stateObj) {
+      return stateObj.attributes.media_title || stateObj.stateDisplay;
+    },
+
+    computeSecondaryText: function(stateObj) {
+      return stateObj.attributes.media_title ? stateObj.stateDisplay : '';
     },
   });
 })();
@@ -25726,9 +25729,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <template>
     <div class="layout horizontal">
       <div class="flex">
-        <paper-button on-tap="handleTogglePower">[[computePowerButtonCaption(isIdle)]]</paper-button>
+        <paper-icon-button icon="power-settings-new" on-tap="handleTogglePower"></paper-icon-button>
       </div>
-      <div class="">
+      <div>
         <template is="dom-if" if="[[!isIdle]]">
           <paper-icon-button icon="av:skip-previous" on-tap="handlePrevious"></paper-icon-button>
           <paper-icon-button icon="[[computePlayPauseIcon(stateObj)]]" on-tap="handlePlayPause"></paper-icon-button>
