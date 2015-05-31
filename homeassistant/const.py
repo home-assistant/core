@@ -99,6 +99,7 @@ SERVICE_TURN_OFF = 'turn_off'
 SERVICE_VOLUME_UP = "volume_up"
 SERVICE_VOLUME_DOWN = "volume_down"
 SERVICE_VOLUME_MUTE = "volume_mute"
+SERVICE_VOLUME_SET = "volume_set"
 SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
 SERVICE_MEDIA_PLAY = "media_play"
 SERVICE_MEDIA_PAUSE = "media_pause"

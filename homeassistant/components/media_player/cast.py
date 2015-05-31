@@ -116,7 +116,7 @@ class CastDevice(MediaPlayerDevice):
         }
 
         if cast_status:
-            state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level,
+            state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level
 
         if media_status.content_id:
             state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
@@ -155,6 +155,14 @@ class CastDevice(MediaPlayerDevice):
     def volume_down(self):
         """ Service to send the chromecast the command for volume down. """
         self.cast.volume_down()
+
+    def volume_mute(self):
+        """ Service to send the chromecast the command for volume up. """
+        self.cast.set_volume(0)
+
+    def volume_set(self, volume):
+        """ Service to send the chromecast the command for volume down. """
+        self.cast.set_volume(volume)
 
     def media_play_pause(self):
         """ Service to send the chromecast the command for play/pause. """
