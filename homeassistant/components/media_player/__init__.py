@@ -39,6 +39,7 @@ ATTR_MEDIA_ARTIST = 'media_artist'
 ATTR_MEDIA_ALBUM = 'media_album'
 ATTR_MEDIA_IMAGE_URL = 'media_image_url'
 ATTR_MEDIA_VOLUME = 'media_volume'
+ATTR_MEDIA_IS_MUTED = 'media_is_muted'
 ATTR_MEDIA_DURATION = 'media_duration'
 
 MEDIA_STATE_UNKNOWN = 'unknown'
@@ -89,14 +90,14 @@ def volume_down(hass, entity_id=None):
 
 
 def volume_mute(hass, entity_id=None):
-    """ Send the media player the command for volume down. """
+    """ Send the media player the command to toggle its mute state. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
 
 
 def volume_set(hass, entity_id=None, volume=None):
-    """ Send the media player the command for volume down. """
+    """ Send the media player the command to set the volume at a given level. """
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -147,7 +148,6 @@ SERVICE_TO_METHOD = {
     SERVICE_TURN_OFF: 'turn_off',
     SERVICE_VOLUME_UP: 'volume_up',
     SERVICE_VOLUME_DOWN: 'volume_down',
-    SERVICE_VOLUME_MUTE: 'volume_mute',
     SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
     SERVICE_MEDIA_PLAY: 'media_play',
     SERVICE_MEDIA_PAUSE: 'media_pause',
@@ -192,6 +192,18 @@ def setup(hass, config):
                            volume_set_service(
                                service, service.data.get('volume')))
 
+    def volume_mute_service(service, mute):
+        """ Mute (true) or unmute (false) the media player. """
+        target_players = component.extract_from_service(service)
+
+        for player in target_players:
+            player.volume_mute(mute)
+
+    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE,
+                           lambda service:
+                           volume_mute_service(
+                               service, service.data.get('mute')))
+
     def play_youtube_video_service(service, media_id):
         """ Plays specified media_id on the media player. """
         target_players = component.extract_from_service(service)
@@ -235,8 +247,8 @@ class MediaPlayerDevice(Entity):
         """ volume_down media player. """
         pass
 
-    def volume_mute(self):
-        """ mute media player. """
+    def volume_mute(self, mute):
+        """ mute (true) or unmute (false) media player. """
         pass
 
     def volume_set(self, volume):

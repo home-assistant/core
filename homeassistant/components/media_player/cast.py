@@ -20,7 +20,8 @@ from homeassistant.const import ATTR_ENTITY_PICTURE
 # ATTR_MEDIA_ARTIST,
 from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE, ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_DURATION, ATTR_MEDIA_VOLUME,
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_VOLUME, ATTR_MEDIA_IS_MUTED,
     MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED,
     MEDIA_STATE_UNKNOWN)
 
@@ -118,6 +119,9 @@ class CastDevice(MediaPlayerDevice):
         if cast_status:
             state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level
 
+        if cast_status:
+            state_attr[ATTR_MEDIA_IS_MUTED] = cast_status.volume_muted
+
         if media_status.content_id:
             state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
 
@@ -156,12 +160,12 @@ class CastDevice(MediaPlayerDevice):
         """ Service to send the chromecast the command for volume down. """
         self.cast.volume_down()
 
-    def volume_mute(self):
-        """ Service to send the chromecast the command for volume up. """
-        self.cast.set_volume(0)
+    def volume_mute(self, mute):
+        """ Service to send the chromecast the command to mute (true) or unmute (false). """
+        self.cast.set_volume_muted(mute)
 
     def volume_set(self, volume):
-        """ Service to send the chromecast the command for volume down. """
+        """ Service to send the chromecast the command to set the volume level. """
         self.cast.set_volume(volume)
 
     def media_play_pause(self):
