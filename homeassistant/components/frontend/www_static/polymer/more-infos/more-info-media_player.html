@@ -8,7 +8,7 @@
       text-transform: capitalize;
     }
 
-    paper-button, paper-icon-button {
+    paper-icon-button {
       color: var(--accent-color);
     }
 
@@ -20,24 +20,12 @@
       transition: max-height .5s ease-in;
     }
 
-    .volume paper-slider::shadow #sliderKnobInner,
-    .volume paper-slider::shadow #sliderBar::shadow #activeProgress {
-      background-color: var(--accent-color);
-    }
-
-    .has-volume .volume {
-      max-height: 500px;
+    .has-media_volume .volume {
+      max-height: 40px;
     }
   </style>
   <template>
     <div class$='[[computeClassNames(stateObj)]]'>
-      <div class='volume center horizontal layout'>
-        <div>Volume</div>
-        <paper-slider
-                max='100' id='volume' value='{{volumeSliderValue}}'
-                on-change='volumeSliderChanged' class='flex'>
-        </paper-slider>
-      </div>
       <div class='layout horizontal'>
         <div class='flex'>
           <paper-icon-button icon='power-settings-new'
@@ -54,6 +42,13 @@
           </template>
         </div>
       </div>
+      <div class='volume center horizontal layout'>
+        <div>Volume</div>
+        <paper-slider
+          min='0' max='100' value='{{volumeSliderValue}}'
+          on-change='volumeSliderChanged' class='flex'>
+        </paper-slider>
+      </div>
     </div>
   </template>
 </dom-module>
@@ -62,7 +57,7 @@
 (function() {
   var serviceActions = window.hass.serviceActions;
   var uiUtil = window.hass.uiUtil;
-  var ATTRIBUTE_CLASSES = ['volume'];
+  var ATTRIBUTE_CLASSES = ['media_volume'];
 
   Polymer({
     is: 'more-info-media_player',
@@ -86,12 +81,12 @@
 
     stateObjChanged: function(newVal, oldVal) {
       if (newVal) {
-        this.volumeSliderValue = newVal.attributes.volume;
+        this.volumeSliderValue = newVal.attributes.media_volume * 100;
       }
 
-      //this.debounce('more-info-volume-animation-finish', function() {
-      //  this.fire('iron-resize');
-      //}.bind(this), 500);
+      this.debounce('more-info-volume-animation-finish', function() {
+       this.fire('iron-resize');
+      }.bind(this), 500);
     },
 
     computeClassNames: function(stateObj) {
@@ -131,21 +126,15 @@
     },
 
     volumeSliderChanged: function(ev) {
-      var volPercentage = parseInt(ev.target.value);
+      var volPercentage = parseFloat(ev.target.value);
+      var vol = volPercentage > 0 ? volPercentage / 100 : 0;
 
-      if(isNaN(volPercentage)) return;
-
-      var vol = volPercentage / 100;
-
-      serviceActions.callService('media_player', 'volume_set', {
-        entity_id: this.stateObj.entityId,
-        volume: vol
-      });
-
+      this.callService('volume_set', {volume: vol});
     },
 
-    callService: function(service) {
-      var data = {entity_id: this.stateObj.entityId};
+    callService: function(service, data) {
+      data = data || {};
+      data.entity_id = this.stateObj.entityId;
       serviceActions.callService('media_player', service, data);
     },
   });
