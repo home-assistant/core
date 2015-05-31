@@ -135,7 +135,10 @@ class CastDevice(MediaPlayerDevice):
     def turn_on(self):
         """ Turns on the ChromeCast. """
         # The only way we can turn the Chromecast is on is by launching an app
-        if not self.cast.status.is_active_input:
+        if not self.cast.status or not self.cast.status.is_active_input:
+            if self.cast.app_id:
+                self.cast.quit_app()
+
             self.cast.play_media(
                 CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
 
