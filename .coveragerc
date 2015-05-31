@@ -40,6 +40,7 @@ omit =
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
