@@ -11,10 +11,23 @@ config/configuration.yaml
 
 media_player:
   platform: mpd
-  location: bedroom
   server: 127.0.0.1
   port: 6600
+  location: bedroom
 
+Variables:
+
+server
+*Required
+IP address of the Music Player Daemon. Example: 192.168.1.32
+
+port
+*Optional
+Port of the Music Player Daemon, defaults to 6600. Example: 6600
+
+location
+*Optional
+Location of your Music Player Daemon.
 """
 import logging
 import socket
