@@ -32,6 +32,7 @@ Details for the API : http://transport.opendata.ch
 """
 import logging
 from datetime import timedelta
+from requests import get
 
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -46,17 +47,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Swiss public transport sensor. """
-
-    try:
-        # pylint: disable=unused-variable
-        from requests import get
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import requests. "
-            "Did you maybe not install the 'Requests' package?")
-
-        return None
 
     # journal contains [0] Station ID start, [1] Station ID destination
     # [2] Station name start, and [3] Station name destination
@@ -120,8 +110,6 @@ class PublicTransportData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from opendata.ch. """
-
-        from requests import get
 
         response = get(
             _RESOURCE +
