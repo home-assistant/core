@@ -50,9 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # journal contains [0] Station ID start, [1] Station ID destination
     # [2] Station name start, and [3] Station name destination
-    journey = []
-    journey.append(config.get('from', None))
-    journey.append(config.get('to', None))
+    journey = [config.get('from'), config.get('to')]
     try:
         for location in [config.get('from', None), config.get('to', None)]:
             # transport.opendata.ch doesn't play nice with requests.Session
