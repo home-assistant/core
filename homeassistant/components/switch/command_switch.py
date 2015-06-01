@@ -33,6 +33,10 @@ class CommandSwitch(ToggleEntity):
 
     @staticmethod
     def _switch(command):
+        _LOGGER.info\
+
+            ('Running command: {}'.format(command))
+
         success = (subprocess.call(command, shell=True) == 0)
 
         if not success:
