@@ -5,121 +5,136 @@ homeassistant.components.media_player.demo
 Demo implementation of the media player.
 
 """
+from homeassistant.const import (
+    STATE_PLAYING, STATE_PAUSED, STATE_OFF)
+
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED,
-    YOUTUBE_COVER_URL_FORMAT, ATTR_MEDIA_IS_VOLUME_MUTED)
-from homeassistant.const import ATTR_ENTITY_PICTURE
+    MediaPlayerDevice, YOUTUBE_COVER_URL_FORMAT, MEDIA_TYPE_VIDEO,
+    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_YOUTUBE,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the cast platform. """
     add_devices([
-        DemoMediaPlayer(
+        DemoYoutubePlayer(
             'Living Room', 'eyU3bRy2x44',
             '♥♥ The Best Fireplace Video (3 hours)'),
-        DemoMediaPlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours')
+        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours')
     ])
 
 
-class DemoMediaPlayer(MediaPlayerDevice):
+YOUTUBE_PLAYER_SUPPORT = \
+    SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_YOUTUBE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+
+
+class DemoYoutubePlayer(MediaPlayerDevice):
     """ A Demo media player that only supports YouTube. """
+    # We only implement the methods that we support
+    # pylint: disable=abstract-method
 
     def __init__(self, name, youtube_id=None, media_title=None):
         self._name = name
-        self.is_playing = youtube_id is not None
+        self._player_state = STATE_PLAYING
         self.youtube_id = youtube_id
-        self.media_title = media_title
-        self.volume = 1.0
-        self.is_volume_muted = False
+        self._media_title = media_title
+        self._volume_level = 1.0
+        self._volume_muted = False
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo componentn. """
+        """ We will push an update after each command. """
         return False
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """ Name of the media player. """
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
-        return STATE_NO_APP if self.youtube_id is None else "YouTube"
+        """ State of the player. """
+        return self._player_state
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        if self.youtube_id is None:
-            return
+    def volume_level(self):
+        """ Volume level of the media player (0..1). """
+        return self._volume_level
 
-        state_attr = {
-            ATTR_MEDIA_CONTENT_ID: self.youtube_id,
-            ATTR_MEDIA_TITLE: self.media_title,
-            ATTR_MEDIA_DURATION: 100,
-            ATTR_MEDIA_VOLUME: self.volume,
-            ATTR_MEDIA_IS_VOLUME_MUTED: self.is_volume_muted,
-            ATTR_ENTITY_PICTURE:
-            YOUTUBE_COVER_URL_FORMAT.format(self.youtube_id)
-        }
+    @property
+    def is_volume_muted(self):
+        """ Boolean if volume is currently muted. """
+        return self._volume_muted
 
-        if self.is_playing:
-            state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_PLAYING
-        else:
-            state_attr[ATTR_MEDIA_STATE] = MEDIA_STATE_STOPPED
+    @property
+    def media_content_id(self):
+        """ Content ID of current playing media. """
+        return self.youtube_id
 
-        return state_attr
+    @property
+    def media_content_type(self):
+        """ Content type of current playing media. """
+        return MEDIA_TYPE_VIDEO
+
+    @property
+    def media_duration(self):
+        """ Duration of current playing media in seconds. """
+        return 360
+
+    @property
+    def media_image_url(self):
+        """ Image url of current playing media. """
+        return YOUTUBE_COVER_URL_FORMAT.format(self.youtube_id)
+
+    @property
+    def media_title(self):
+        """ Title of current playing media. """
+        return self._media_title
+
+    @property
+    def app_name(self):
+        """ Current running app. """
+        return "YouTube"
+
+    @property
+    def supported_media_commands(self):
+        """ Flags of media commands that are supported. """
+        return YOUTUBE_PLAYER_SUPPORT
 
     def turn_on(self):
-        """ turn_off media player. """
-        self.youtube_id = "eyU3bRy2x44"
-        self.is_playing = False
+        """ turn the media player on. """
+        self._player_state = STATE_PLAYING
         self.update_ha_state()
 
     def turn_off(self):
-        """ turn_off media player. """
-        self.youtube_id = None
-        self.is_playing = False
+        """ turn the media player off. """
+        self._player_state = STATE_OFF
         self.update_ha_state()
 
-    def volume_up(self):
-        """ volume_up media player. """
-        if self.volume < 1:
-            self.volume += 0.1
-            self.update_ha_state()
-
-    def volume_down(self):
-        """ volume_down media player. """
-        if self.volume > 0:
-            self.volume -= 0.1
-            self.update_ha_state()
-
-    def volume_mute(self, mute):
-        """ mute (true) or unmute (false) media player. """
-        self.is_volume_muted = mute
+    def mute_volume(self, mute):
+        """ mute the volume. """
+        self._volume_muted = mute
         self.update_ha_state()
 
-    def media_play_pause(self):
-        """ media_play_pause media player. """
-        self.is_playing = not self.is_playing
+    def set_volume_level(self, volume):
+        """ set volume level, range 0..1. """
+        self._volume_level = volume
         self.update_ha_state()
 
     def media_play(self):
-        """ media_play media player. """
-        self.is_playing = True
+        """ Send play commmand. """
+        self._player_state = STATE_PLAYING
         self.update_ha_state()
 
     def media_pause(self):
-        """ media_pause media player. """
-        self.is_playing = False
+        """ Send pause command. """
+        self._player_state = STATE_PAUSED
         self.update_ha_state()
 
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """
         self.youtube_id = media_id
-        self.media_title = 'Demo media title'
-        self.is_playing = True
+        self._media_title = 'some YouTube video'
         self.update_ha_state()

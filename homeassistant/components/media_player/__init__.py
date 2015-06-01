@@ -10,11 +10,12 @@ from homeassistant.components import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING,
+    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK)
 
 DOMAIN = 'media_player'
 DEPENDENCIES = []
@@ -28,28 +29,66 @@ DISCOVERY_PLATFORMS = {
 
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 
-STATE_NO_APP = 'idle'
-
-ATTR_STATE = 'state'
-ATTR_OPTIONS = 'options'
-ATTR_MEDIA_STATE = 'media_state'
+ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
+ATTR_MEDIA_VOLUME_MUTED = 'volume_muted'
 ATTR_MEDIA_CONTENT_ID = 'media_content_id'
+ATTR_MEDIA_CONTENT_TYPE = 'media_content_type'
+ATTR_MEDIA_DURATION = 'media_duration'
 ATTR_MEDIA_TITLE = 'media_title'
 ATTR_MEDIA_ARTIST = 'media_artist'
 ATTR_MEDIA_ALBUM = 'media_album'
-ATTR_MEDIA_IMAGE_URL = 'media_image_url'
-ATTR_MEDIA_VOLUME = 'media_volume'
-ATTR_MEDIA_IS_VOLUME_MUTED = 'media_is_volume_muted'
-ATTR_MEDIA_DURATION = 'media_duration'
-ATTR_MEDIA_DATE = 'media_date'
+ATTR_MEDIA_SERIES_TITLE = 'media_series_title'
+ATTR_MEDIA_SEASON = 'media_season'
+ATTR_MEDIA_EPISODE = 'media_episode'
+ATTR_APP_ID = 'app_id'
+ATTR_APP_NAME = 'app_name'
+ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 
-MEDIA_STATE_UNKNOWN = 'unknown'
-MEDIA_STATE_PLAYING = 'playing'
-MEDIA_STATE_PAUSED = 'paused'
-MEDIA_STATE_STOPPED = 'stopped'
+MEDIA_TYPE_MUSIC = 'music'
+MEDIA_TYPE_TVSHOW = 'tvshow'
+MEDIA_TYPE_VIDEO = 'movie'
 
+SUPPORT_PAUSE = 1
+SUPPORT_SEEK = 2
+SUPPORT_VOLUME_SET = 4
+SUPPORT_VOLUME_MUTE = 8
+SUPPORT_PREVIOUS_TRACK = 16
+SUPPORT_NEXT_TRACK = 32
+SUPPORT_YOUTUBE = 64
+SUPPORT_TURN_ON = 128
+SUPPORT_TURN_OFF = 256
 
 YOUTUBE_COVER_URL_FORMAT = 'http://img.youtube.com/vi/{}/1.jpg'
+
+SERVICE_TO_METHOD = {
+    SERVICE_TURN_ON: 'turn_on',
+    SERVICE_TURN_OFF: 'turn_off',
+    SERVICE_VOLUME_UP: 'volume_up',
+    SERVICE_VOLUME_DOWN: 'volume_down',
+    SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
+    SERVICE_MEDIA_PLAY: 'media_play',
+    SERVICE_MEDIA_PAUSE: 'media_pause',
+    SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
+    SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
+}
+
+ATTR_TO_PROPERTY = {
+    ATTR_MEDIA_VOLUME_LEVEL: 'volume_level',
+    ATTR_MEDIA_VOLUME_MUTED: 'is_volume_muted',
+    ATTR_MEDIA_CONTENT_ID: 'media_content_id',
+    ATTR_MEDIA_CONTENT_TYPE: 'media_content_type',
+    ATTR_MEDIA_DURATION: 'media_duration',
+    ATTR_ENTITY_PICTURE: 'media_image_url',
+    ATTR_MEDIA_TITLE: 'media_title',
+    ATTR_MEDIA_ARTIST: 'media_artist',
+    ATTR_MEDIA_ALBUM: 'media_album',
+    ATTR_MEDIA_SERIES_TITLE: 'media_series_title',
+    ATTR_MEDIA_SEASON: 'media_season',
+    ATTR_MEDIA_EPISODE: 'media_episode',
+    ATTR_APP_ID: 'app_id',
+    ATTR_APP_NAME: 'app_name',
+    ATTR_SUPPORTED_MEDIA_COMMANDS: 'supported_media_commands',
+}
 
 
 def is_on(hass, entity_id=None):
@@ -58,7 +97,7 @@ def is_on(hass, entity_id=None):
 
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
 
-    return any(not hass.states.is_state(entity_id, STATE_NO_APP)
+    return any(not hass.states.is_state(entity_id, STATE_OFF)
                for entity_id in entity_ids)
 
 
@@ -90,21 +129,22 @@ def volume_down(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
 
 
-def volume_mute(hass, entity_id=None):
-    """ Send the media player the command to toggle its mute state. """
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+def mute_volume(hass, mute, entity_id=None):
+    """ Send the media player the command for volume down. """
+    data = {ATTR_MEDIA_VOLUME_MUTED: mute}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
 
 
-def volume_set(hass, entity_id=None, volume=None):
-    """ Set volume on media player. """
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_MEDIA_VOLUME, volume),
-        ] if value is not None
-    }
+def set_volume_level(hass, volume, entity_id=None):
+    """ Send the media player the command for volume down. """
+    data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_VOLUME_SET, data)
 
@@ -137,24 +177,11 @@ def media_next_track(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
 
 
-def media_prev_track(hass, entity_id=None):
+def media_previous_track(hass, entity_id=None):
     """ Send the media player the command for prev track. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PREV_TRACK, data)
-
-
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: 'turn_on',
-    SERVICE_TURN_OFF: 'turn_off',
-    SERVICE_VOLUME_UP: 'volume_up',
-    SERVICE_VOLUME_DOWN: 'volume_down',
-    SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
-    SERVICE_MEDIA_PLAY: 'media_play',
-    SERVICE_MEDIA_PAUSE: 'media_pause',
-    SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
-    SERVICE_MEDIA_PREV_TRACK: 'media_prev_track',
-}
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
 
 def setup(hass, config):
@@ -183,17 +210,16 @@ def setup(hass, config):
     def volume_set_service(service, volume):
         """ Set specified volume on the media player. """
         target_players = component.extract_from_service(service)
+        volume = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
 
-        for player in target_players:
-            player.volume_set(volume)
+        if volume is not None:
+            for player in target_players:
+                player.set_volume_level(volume)
 
-            if player.should_poll:
-                player.update_ha_state(True)
+                if player.should_poll:
+                    player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_SET,
-                           lambda service:
-                           volume_set_service(
-                               service, service.data.get('volume')))
+    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service)
 
     def volume_mute_service(service, mute):
         """ Mute (true) or unmute (false) the media player. """
@@ -239,51 +265,198 @@ def setup(hass, config):
 
 class MediaPlayerDevice(Entity):
     """ ABC for media player devices. """
+    # pylint: disable=too-many-public-methods,no-self-use
+
+    # Implement these for your media player
+
+    @property
+    def state(self):
+        """ State of the player. """
+        return STATE_UNKNOWN
+
+    @property
+    def volume_level(self):
+        """ Volume level of the media player (0..1). """
+        return None
+
+    @property
+    def is_volume_muted(self):
+        """ Boolean if volume is currently muted. """
+        return None
+
+    @property
+    def media_content_id(self):
+        """ Content ID of current playing media. """
+        return None
+
+    @property
+    def media_content_type(self):
+        """ Content type of current playing media. """
+        return None
+
+    @property
+    def media_duration(self):
+        """ Duration of current playing media in seconds. """
+        return None
+
+    @property
+    def media_image_url(self):
+        """ Image url of current playing media. """
+        return None
+
+    @property
+    def media_title(self):
+        """ Title of current playing media. """
+        return None
+
+    @property
+    def media_artist(self):
+        """ Artist of current playing media. (Music track only) """
+        return None
+
+    @property
+    def media_album(self):
+        """ Album of current playing media. (Music track only) """
+        return None
+
+    @property
+    def media_series_title(self):
+        """ Series title of current playing media. (TV Show only)"""
+        return None
+
+    @property
+    def media_season(self):
+        """ Season of current playing media. (TV Show only) """
+        return None
+
+    @property
+    def media_episode(self):
+        """ Episode of current playing media. (TV Show only) """
+        return None
+
+    @property
+    def app_id(self):
+        """  ID of the current running app. """
+        return None
+
+    @property
+    def app_name(self):
+        """  Name of the current running app. """
+        return None
+
+    @property
+    def supported_media_commands(self):
+        """ Flags of media commands that are supported. """
+        return 0
+
+    @property
+    def device_state_attributes(self):
+        """ Extra attributes a device wants to expose. """
+        return None
 
     def turn_on(self):
-        """ turn media player on. """
-        pass
+        """ turn the media player on. """
+        raise NotImplementedError()
 
     def turn_off(self):
-        """ turn media player off. """
-        pass
+        """ turn the media player off. """
+        raise NotImplementedError()
 
-    def volume_up(self):
-        """ volume_up media player. """
-        pass
+    def mute_volume(self, mute):
+        """ mute the volume. """
+        raise NotImplementedError()
 
-    def volume_down(self):
-        """ volume_down media player. """
-        pass
-
-    def volume_mute(self, mute):
-        """ mute (true) or unmute (false) media player. """
-        pass
-
-    def volume_set(self, volume):
-        """ set volume level of media player. """
-        pass
-
-    def media_play_pause(self):
-        """ media_play_pause media player. """
-        pass
+    def set_volume_level(self, volume):
+        """ set volume level, range 0..1. """
+        raise NotImplementedError()
 
     def media_play(self):
-        """ media_play media player. """
-        pass
+        """ Send play commmand. """
+        raise NotImplementedError()
 
     def media_pause(self):
-        """ media_pause media player. """
-        pass
+        """ Send pause command. """
+        raise NotImplementedError()
 
-    def media_prev_track(self):
-        """ media_prev_track media player. """
-        pass
+    def media_previous_track(self):
+        """ Send previous track command. """
+        raise NotImplementedError()
 
     def media_next_track(self):
-        """ media_next_track media player. """
-        pass
+        """ Send next track command. """
+        raise NotImplementedError()
 
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """
-        pass
+        raise NotImplementedError()
+
+    # No need to overwrite these.
+    @property
+    def support_pause(self):
+        """ Boolean if pause is supported. """
+        return bool(self.supported_media_commands & SUPPORT_PAUSE)
+
+    @property
+    def support_seek(self):
+        """ Boolean if seek is supported. """
+        return bool(self.supported_media_commands & SUPPORT_SEEK)
+
+    @property
+    def support_volume_set(self):
+        """ Boolean if setting volume is supported. """
+        return bool(self.supported_media_commands & SUPPORT_VOLUME_SET)
+
+    @property
+    def support_volume_mute(self):
+        """ Boolean if muting volume is supported. """
+        return bool(self.supported_media_commands & SUPPORT_VOLUME_MUTE)
+
+    @property
+    def support_previous_track(self):
+        """ Boolean if previous track command supported. """
+        return bool(self.supported_media_commands & SUPPORT_PREVIOUS_TRACK)
+
+    @property
+    def support_next_track(self):
+        """ Boolean if next track command supported. """
+        return bool(self.supported_media_commands & SUPPORT_NEXT_TRACK)
+
+    @property
+    def support_youtube(self):
+        """ Boolean if YouTube is supported. """
+        return bool(self.supported_media_commands & SUPPORT_YOUTUBE)
+
+    def volume_up(self):
+        """ volume_up media player. """
+        if self.volume_level < 1:
+            self.set_volume_level(min(1, self.volume_level + .1))
+
+    def volume_down(self):
+        """ volume_down media player. """
+        if self.volume_level > 0:
+            self.set_volume_level(max(0, self.volume_level - .1))
+
+    def media_play_pause(self):
+        """ media_play_pause media player. """
+        if self.player_state == STATE_PLAYING:
+            self.media_pause()
+        else:
+            self.media_play()
+
+    @property
+    def state_attributes(self):
+        """ Return the state attributes. """
+        if self.state == STATE_OFF:
+            state_attr = {}
+        else:
+            state_attr = {
+                attr: getattr(self, prop) for attr, prop
+                in ATTR_TO_PROPERTY.items() if getattr(self, prop)
+            }
+
+        device_attr = self.device_state_attributes
+
+        if device_attr:
+            state_attr.update(device_attr)
+
+        return state_attr
