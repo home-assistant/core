@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get('port', 6600)
     location = config.get('location', 'MPD')
 
-    # pylint: disable=unused-argument
     try:
         from mpd import MPDClient
 
@@ -59,23 +58,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Unable to import mpd2. "
             "Did you maybe not install the 'python-mpd2' package?")
 
-        return None
+        return False
 
-    # pylint: disable=unused-argument
+    # pylint: disable=no-member
     try:
         mpd_client = MPDClient()
         mpd_client.connect(daemon, port)
+        mpd_client.close()
+        mpd_client.disconnect()
     except socket.error:
         _LOGGER.error(
             "Unable to connect to MPD. "
             "Please check your settings")
 
-        return None
+        return False
 
     mpd = []
-    if daemon is not None and port is not None:
-        mpd.append(MpdDevice(daemon, port, location))
-
+    mpd.append(MpdDevice(daemon, port, location))
     add_devices(mpd)
 
 
