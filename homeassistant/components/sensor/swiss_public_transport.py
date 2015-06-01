@@ -47,10 +47,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Swiss public transport sensor. """
 
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
-
     try:
         # pylint: disable=unused-variable
         from requests import get
