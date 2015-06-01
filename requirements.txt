@@ -18,7 +18,7 @@ phue>=0.8
 ledcontroller>=1.0.7
 
 # media_player.cast
-pychromecast>=0.6.3
+pychromecast>=0.6.4
 
 # keyboard
 pyuserinput>=0.1.9

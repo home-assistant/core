@@ -9,7 +9,7 @@
     }
 
     /* Accent the power button because the user should use that first */
-    paper-icon-button[icon="power-settings-new"] {
+    paper-icon-button[focus] {
       color: var(--accent-color);
     }
 
@@ -29,14 +29,14 @@
     <div class$='[[computeClassNames(stateObj)]]'>
       <div class='layout horizontal'>
         <div class='flex'>
-          <paper-icon-button icon='power-settings-new'
+          <paper-icon-button icon='power-settings-new' focus$='[[isIdle]]'
                              on-tap='handleTogglePower'></paper-icon-button>
         </div>
         <div>
           <template is='dom-if' if='[[!isIdle]]'>
             <paper-icon-button icon='av:skip-previous'
                                on-tap='handlePrevious'></paper-icon-button>
-            <paper-icon-button icon='[[computePlayPauseIcon(stateObj)]]'
+            <paper-icon-button icon='[[computePlayPauseIcon(stateObj)]]' focus$
                                on-tap='handlePlayPause'></paper-icon-button>
             <paper-icon-button icon='av:skip-next'
                                on-tap='handleNext'></paper-icon-button>
@@ -45,8 +45,8 @@
       </div>
       <div class='volume center horizontal layout'>
         <paper-icon-button on-tap="handleVolumeTap"
-                       icon="[[computeMuteVolumeIcon(stateObj)]]"></paper-icon-button>
-        <paper-slider
+          icon="[[computeMuteVolumeIcon(isMuted)]]"></paper-icon-button>
+        <paper-slider hidden='[[isMuted]]'
           min='0' max='100' value='{{volumeSliderValue}}'
           on-change='volumeSliderChanged' class='flex'>
         </paper-slider>
@@ -89,7 +89,7 @@
     stateObjChanged: function(newVal, oldVal) {
       if (newVal) {
         this.volumeSliderValue = newVal.attributes.media_volume * 100;
-        this.isMuted = newVal.attributes.media_is_muted;
+        this.isMuted = newVal.attributes.media_is_volume_muted;
       }
 
       this.debounce('more-info-volume-animation-finish', function() {
@@ -113,8 +113,8 @@
       return isIdle ? 'Turn on' : 'Turn off';
     },
 
-    computeMuteVolumeIcon: function(stateObj) {
-      return this.isMuted ? 'av:volume-up' : 'av:volume-off';
+    computeMuteVolumeIcon: function(isMuted) {
+      return isMuted ? 'av:volume-off' : 'av:volume-up';
     },
 
     computePlayPauseIcon: function(stateObj) {
