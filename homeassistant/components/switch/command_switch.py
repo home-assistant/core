@@ -59,7 +59,7 @@ class CommandSwitch(ToggleEntity):
         return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
-        if CommandSwitch._switch(self._command_off):
+        if CommandSwitch._switch(self._command_on):
             self._state = STATE_ON
 
     def turn_off(self, **kwargs):
