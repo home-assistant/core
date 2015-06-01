@@ -109,7 +109,7 @@ class SwissPublicTransportSensor(Entity):
         """ Gets the latest data from opendata.ch and updates the states. """
         times = self.data.update()
         if times is not None:
-            self._state = times[0] + ', ' + times[1]
+            self._state = ', '.join(times)
 
 
 # pylint: disable=too-few-public-methods
