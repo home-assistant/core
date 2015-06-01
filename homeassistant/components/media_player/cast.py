@@ -159,11 +159,11 @@ class CastDevice(MediaPlayerDevice):
         self.cast.volume_down()
 
     def volume_mute(self, mute):
-        """ Service to send the chromecast the command to mute (true) or unmute (false). """
+        """ Set media player to mute volume. """
         self.cast.set_volume_muted(mute)
 
     def volume_set(self, volume):
-        """ Service to send the chromecast the command to set the volume level. """
+        """ Set media player volume, range of volume 0..1 """
         self.cast.set_volume(volume)
 
     def media_play_pause(self):

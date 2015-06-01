@@ -97,7 +97,7 @@ def volume_mute(hass, entity_id=None):
 
 
 def volume_set(hass, entity_id=None, volume=None):
-    """ Send the media player the command to set the volume at a given level. """
+    """ Set volume on media player. """
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
