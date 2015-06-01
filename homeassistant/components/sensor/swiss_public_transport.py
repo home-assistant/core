@@ -77,7 +77,7 @@ class SwissPublicTransportSensor(Entity):
 
     def __init__(self, data, journey):
         self.data = data
-        self._name = journey[2] + '-' + journey[3]
+        self._name = '{}-{}'.format(journey[2], journey[3])
         self.update()
 
     @property
