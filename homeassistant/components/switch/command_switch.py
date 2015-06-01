@@ -18,8 +18,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         devices.append(
             CommandSwitch(
                 k,
-                v.get('on', 'true'),
-                v.get('off', 'true')))
+                v.get('oncmd', 'true'),
+                v.get('offcmd', 'true')))
 
     add_devices_callback(devices)
 
