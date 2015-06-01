@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             result = get(_RESOURCE + 'locations?query=%s' % location)
             journey.append(result.json()['stations'][0]['name'])
     except KeyError:
-        _LOGGER.error(
+        _LOGGER.exception(
             "Unable to determine stations. "
             "Check your settings and/or the availability of opendata.ch")
 
