@@ -90,7 +90,6 @@
       if (newVal) {
         this.volumeSliderValue = newVal.attributes.media_volume * 100;
         this.isMuted = newVal.attributes.media_is_volume_muted;
-        console.log(this.isMuted);
       }
 
       this.debounce('more-info-volume-animation-finish', function() {
