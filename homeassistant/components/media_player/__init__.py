@@ -39,7 +39,7 @@ ATTR_MEDIA_ARTIST = 'media_artist'
 ATTR_MEDIA_ALBUM = 'media_album'
 ATTR_MEDIA_IMAGE_URL = 'media_image_url'
 ATTR_MEDIA_VOLUME = 'media_volume'
-ATTR_MEDIA_IS_MUTED = 'media_is_muted'
+ATTR_MEDIA_IS_VOLUME_MUTED = 'media_is_volume_muted'
 ATTR_MEDIA_DURATION = 'media_duration'
 
 MEDIA_STATE_UNKNOWN = 'unknown'
@@ -183,9 +183,11 @@ def setup(hass, config):
         """ Set specified volume on the media player. """
         target_players = component.extract_from_service(service)
 
-        if volume:
-            for player in target_players:
-                player.volume_set(volume)
+        for player in target_players:
+            player.volume_set(volume)
+
+            if player.should_poll:
+                player.update_ha_state(True)
 
     hass.services.register(DOMAIN, SERVICE_VOLUME_SET,
                            lambda service:
@@ -199,6 +201,9 @@ def setup(hass, config):
         for player in target_players:
             player.volume_mute(mute)
 
+            if player.should_poll:
+                player.update_ha_state(True)
+
     hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE,
                            lambda service:
                            volume_mute_service(
@@ -211,6 +216,9 @@ def setup(hass, config):
         if media_id:
             for player in target_players:
                 player.play_youtube(media_id)
+
+                if player.should_poll:
+                    player.update_ha_state(True)
 
     hass.services.register(DOMAIN, "start_fireplace",
                            lambda service:

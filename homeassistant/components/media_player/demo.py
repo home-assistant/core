@@ -9,7 +9,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE, ATTR_MEDIA_DURATION,
     ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED,
-    YOUTUBE_COVER_URL_FORMAT)
+    YOUTUBE_COVER_URL_FORMAT, ATTR_MEDIA_IS_VOLUME_MUTED)
 from homeassistant.const import ATTR_ENTITY_PICTURE
 
 
@@ -33,6 +33,7 @@ class DemoMediaPlayer(MediaPlayerDevice):
         self.youtube_id = youtube_id
         self.media_title = media_title
         self.volume = 1.0
+        self.is_volume_muted = False
 
     @property
     def should_poll(self):
@@ -60,6 +61,7 @@ class DemoMediaPlayer(MediaPlayerDevice):
             ATTR_MEDIA_TITLE: self.media_title,
             ATTR_MEDIA_DURATION: 100,
             ATTR_MEDIA_VOLUME: self.volume,
+            ATTR_MEDIA_IS_VOLUME_MUTED: self.is_volume_muted,
             ATTR_ENTITY_PICTURE:
             YOUTUBE_COVER_URL_FORMAT.format(self.youtube_id)
         }
@@ -71,35 +73,53 @@ class DemoMediaPlayer(MediaPlayerDevice):
 
         return state_attr
 
+    def turn_on(self):
+        """ turn_off media player. """
+        self.youtube_id = "eyU3bRy2x44"
+        self.is_playing = False
+        self.update_ha_state()
+
     def turn_off(self):
         """ turn_off media player. """
         self.youtube_id = None
         self.is_playing = False
+        self.update_ha_state()
 
     def volume_up(self):
         """ volume_up media player. """
         if self.volume < 1:
             self.volume += 0.1
+            self.update_ha_state()
 
     def volume_down(self):
         """ volume_down media player. """
         if self.volume > 0:
             self.volume -= 0.1
+            self.update_ha_state()
+
+    def volume_mute(self, mute):
+        """ mute (true) or unmute (false) media player. """
+        self.is_volume_muted = mute
+        self.update_ha_state()
 
     def media_play_pause(self):
         """ media_play_pause media player. """
         self.is_playing = not self.is_playing
+        self.update_ha_state()
 
     def media_play(self):
         """ media_play media player. """
         self.is_playing = True
+        self.update_ha_state()
 
     def media_pause(self):
         """ media_pause media player. """
         self.is_playing = False
+        self.update_ha_state()
 
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """
         self.youtube_id = media_id
         self.media_title = 'Demo media title'
         self.is_playing = True
+        self.update_ha_state()

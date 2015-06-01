@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.components.media_player import (
     MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE, ATTR_MEDIA_TITLE,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_VOLUME, ATTR_MEDIA_IS_MUTED,
+    ATTR_MEDIA_VOLUME, ATTR_MEDIA_IS_VOLUME_MUTED,
     MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED,
     MEDIA_STATE_UNKNOWN)
 
@@ -118,9 +118,7 @@ class CastDevice(MediaPlayerDevice):
 
         if cast_status:
             state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level
-
-        if cast_status:
-            state_attr[ATTR_MEDIA_IS_MUTED] = cast_status.volume_muted
+            state_attr[ATTR_MEDIA_IS_VOLUME_MUTED] = cast_status.volume_muted
 
         if media_status.content_id:
             state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
