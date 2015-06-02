@@ -80,11 +80,11 @@ class NestThermostat(ThermostatDevice):
             low, high = target
 
             if self.current_temperature < low:
-                target = low
+                temp = low
             elif self.current_temperature > high:
-                target = high
+                temp = high
             else:
-                target = low + high
+                temp = (low + high)/2
         else:
             temp = target
 
