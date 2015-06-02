@@ -1,0 +1,106 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
+
+<link rel="import" href="./partial-base.html">
+
+<link rel="import" href="../components/entity-list.html">
+
+<polymer-element name="partial-dev-set-state" attributes="narrow togglePanel">
+<template>
+
+  <style>
+  .form {
+    padding: 24px;
+    background-color: white;
+  }
+  </style>
+
+  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
+    <span header-title>Set State</span>
+
+    <div class='form' fit>
+      <div>
+        Set the representation of a device within Home Assistant.<br />
+        This will not communicate with the actual device.
+      </div>
+
+      <div layout horizontal?="{{!narrow}}" vertical?="{{narrow}}">
+        <div class='ha-form' flex?="{{!narrow}}">
+          <paper-input id="inputEntityID" label="Entity ID" floatingLabel="true" autofocus required></paper-input>
+          <paper-input id="inputState" label="State" floatingLabel="true" required></paper-input>
+          <paper-input-decorator
+            label="State attributes (JSON, optional)"
+            floatingLabel="true">
+            
+            <paper-autogrow-textarea id="inputDataWrapper">
+              <textarea id="inputData"></textarea>
+            </paper-autogrow-textarea>
+            
+          </paper-input-decorator>
+
+          <paper-button on-click={{clickSetState}}>Set State</paper-button>
+        </div>
+
+        <div class='sidebar'>
+          <b>Current entities:</b>
+          <entity-list cbEntityClicked={{entitySelected}}></entity-list>
+        </div>
+      </div>
+
+    </div>
+  </partial-base>
+
+</template>
+<script>
+var stateStore = window.hass.stateStore;
+var stateActions = window.hass.stateActions;
+
+Polymer({
+  ready: function() {
+    // to ensure callback methods work..
+    this.entitySelected = this.entitySelected.bind(this);
+  },
+
+  setEntityId: function(entityId) {
+    this.$.inputEntityID.value = entityId;      
+  },
+
+  setState: function(state) {
+    this.$.inputState.value = state;      
+  },
+
+  setStateData: function(stateData) {
+    var value = stateData ? JSON.stringify(stateData, null, '  ') : "";
+
+    this.$.inputData.value = value;
+
+    // not according to the spec but it works...
+    this.$.inputDataWrapper.update(this.$.inputData);
+  },
+
+  entitySelected: function(entityId) {
+    this.setEntityId(entityId);
+
+    var state = stateStore.get(entityId);
+    this.setState(state.state);
+    this.setStateData(state.attributes);
+  },
+
+  clickSetState: function(ev) {
+    try {
+      stateActions.set(
+        this.$.inputEntityID.value,
+        this.$.inputState.value,
+        this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {}
+      );
+    } catch (err) {
+      alert("Error parsing JSON: " + err);
+    }
+  }
+});
+</script>
+</polymer-element>

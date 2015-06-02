@@ -1,0 +1,81 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<link rel="import" href="../components/state-info.html">
+
+<polymer-element name="state-card-toggle" attributes="stateObj">
+  <template>
+    <core-style ref='ha-paper-toggle'></core-style>
+
+    <div horizontal justified layout>      
+      <state-info flex stateObj="{{stateObj}}"></state-info>
+
+      <paper-toggle-button self-center
+        checked="{{toggleChecked}}"
+        on-change="{{toggleChanged}}"
+        on-click="{{toggleClicked}}">
+      </paper-toggle-button>
+    </div>
+
+  </template>
+  <script>
+  var serviceActions = window.hass.serviceActions;
+
+  Polymer({
+    toggleChecked: false,
+
+    observe: {
+      'stateObj.state': 'stateChanged'
+    },
+
+    ready: function() {
+      this.forceStateChange = this.forceStateChange.bind(this);
+    },
+
+    toggleClicked: function(ev) {
+      ev.stopPropagation();
+    },
+
+    toggleChanged: function(ev) {
+      var newVal = ev.target.checked;
+
+      if(newVal && this.stateObj.state === "off") {
+        this.turn_on();
+      } else if(!newVal && this.stateObj.state === "on") {
+        this.turn_off();
+      }
+    },
+
+    stateObjChanged: function(oldVal, newVal) {
+      if (newVal) {
+        this.stateChanged(null, newVal.state);
+      }
+    },
+
+    stateChanged: function(oldVal, newVal) {
+      this.toggleChecked = newVal === "on";
+    },
+
+    forceStateChange: function() {
+      this.stateChanged(null, this.stateObj.state);
+    },
+
+    turn_on: function() {
+      // We call stateChanged after a successful call to re-sync the toggle
+      // with the state. It will be out of sync if our service call did not
+      // result in the entity to be turned on. Since the state is not changing,
+      // the resync is not called automatic.
+      serviceActions.callTurnOn(this.stateObj.entityId).then(this.forceStateChange);
+    },
+
+    turn_off: function() {
+      // We call stateChanged after a successful call to re-sync the toggle
+      // with the state. It will be out of sync if our service call did not
+      // result in the entity to be turned on. Since the state is not changing,
+      // the resync is not called automatic.
+      serviceActions.callTurnOff(this.stateObj.entityId).then(this.forceStateChange);
+    },
+  });
+  </script>
+</polymer-element>

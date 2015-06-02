@@ -1,0 +1,26 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../resources/moment-js.html">
+
+<polymer-element name="display-time" attributes="dateObj">
+  <template>
+    {{ time }}
+  </template>
+  <script>
+  (function() {
+    var uiUtil = window.hass.uiUtil;
+
+    Polymer({
+      time: "",
+
+      dateObjChanged: function(oldVal, newVal) {
+        if (newVal) {
+          this.time = uiUtil.formatTime(newVal);
+        } else {
+          this.time = "";
+        }
+      },
+    });
+  })();
+  </script>
+</polymer-element>

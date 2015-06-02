@@ -1,0 +1,106 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+
+<link rel="import" href="../bower_components/color-picker-element/dist/color-picker.html">
+
+<polymer-element name="more-info-light" attributes="stateObj">
+<template>
+  <style>
+    .brightness {
+      margin-bottom: 8px;
+
+      max-height: 0px;
+      overflow: hidden;
+      transition: max-height .5s ease-in;
+    }
+
+    .brightness paper-slider::shadow #sliderKnobInner,
+    .brightness paper-slider::shadow #sliderBar::shadow #activeProgress {
+      background-color: #039be5;
+    }
+
+    color-picker {
+      display: block;
+      width: 350px;
+      margin: 0 auto;
+
+      max-height: 0px;
+      overflow: hidden;
+      transition: max-height .5s ease-in .3s;
+    }
+
+    :host-context(.has-brightness) .brightness {
+      max-height: 500px;
+    }
+
+    :host-context(.has-xy_color) color-picker {
+      max-height: 500px;
+    }
+
+  </style>
+  <div>
+    <div class='brightness'>
+      <div center horizontal layout>
+        <div>Brightness</div>
+        <paper-slider
+          max="255" flex id='brightness' value='{{brightnessSliderValue}}'
+          on-change="{{brightnessSliderChanged}}">
+        </paper-slider>
+      </div>
+    </div>
+
+    <color-picker id="colorpicker" width="350" height="200">
+    </color-picker>
+  </div>
+</template>
+<script>
+var serviceActions = window.hass.serviceActions;
+
+Polymer({
+  brightnessSliderValue: 0,
+
+  observe: {
+    'stateObj.attributes.brightness': 'stateObjBrightnessChanged',
+  },
+
+  stateObjChanged: function(oldVal, newVal) {
+    if (newVal && newVal.state === 'on') {
+      this.brightnessSliderValue = newVal.attributes.brightness;
+    }    
+  },
+
+  stateObjBrightnessChanged: function(oldVal, newVal) {
+    this.brightnessSliderValue = newVal;
+  },
+
+  domReady: function() {
+    this.$.colorpicker.addEventListener('colorselected', this.colorPicked.bind(this));
+  },
+
+  brightnessSliderChanged: function(ev, details, target) {
+    var bri = parseInt(target.value);
+
+    if(isNaN(bri)) return;
+
+    if(bri === 0) {
+      serviceActions.callTurnOff(this.stateObj.entityId);
+    } else {
+      serviceActions.callService("light", "turn_on", {
+        entity_id: this.stateObj.entityId,
+        brightness: bri
+      });
+    }
+  },
+
+  colorPicked: function(ev) {
+    var color = ev.detail.rgb;
+
+    serviceActions.callService("light", "turn_on", {
+      entity_id: this.stateObj.entityId,
+      rgb_color: [color.r, color.g, color.b]
+    });
+  }
+
+});
+</script>
+</polymer-element>

@@ -1,0 +1,18 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog-transition.html">
+
+<polymer-element name="ha-dialog" extends="paper-dialog">
+<template>
+  <core-style ref='ha-dialog'></core-style>
+  <shadow></shadow>
+</template>
+<script>
+  Polymer({
+    layered: true,
+    backdrop: true,
+    transition: 'core-transition-bottom',
+  });
+</script>
+</polymer-element>

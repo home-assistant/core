@@ -1,0 +1,17 @@
+# Builds the JS for production
+
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
+cd homeassistant/components/frontend/www_static/polymer/home-assistant-js
+
+npm install
+
+if [ "$1" = "demo" ]; then
+  echo "Building a demo mode build!"
+  npm run demo
+else
+  npm run prod
+fi

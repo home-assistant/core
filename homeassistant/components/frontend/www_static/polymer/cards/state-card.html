@@ -1,0 +1,33 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="state-card-content.html">
+
+<polymer-element name="state-card" attributes="stateObj" on-click="cardClicked">
+<template>
+  <style>
+    :host {
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+      transition: all 0.30s ease-out;
+
+      position: relative;
+      background-color: white;
+      padding: 16px;
+      width: 100%;
+
+      cursor: pointer;
+    }
+  </style>
+
+  <state-card-content stateObj={{stateObj}}></state-card-content>
+</template>
+<script>
+var uiActions = window.hass.uiActions;
+
+Polymer({
+  cardClicked: function() {
+    uiActions.showMoreInfoDialog(this.stateObj.entityId);
+  },
+});
+</script>
+</polymer-element>

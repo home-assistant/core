@@ -1,0 +1,11 @@
+# Builds the JS for developing, rebuilds when files change
+
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
+cd homeassistant/components/frontend/www_static/polymer/home-assistant-js
+
+npm install
+npm run dev

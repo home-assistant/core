@@ -1,0 +1,80 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
+
+<link rel="import" href="./partial-base.html">
+
+<link rel="import" href="../components/events-list.html">
+
+<polymer-element name="partial-dev-fire-event" attributes="narrow togglePanel">
+<template>
+
+  <style>
+  .form {
+    padding: 24px;
+    background-color: white;
+  }
+  </style>
+
+  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
+    <span header-title>Fire Event</span>
+
+    <div class='form' fit>
+      <p>
+        Fire an event on the event bus.
+      </p>
+
+      <div layout horizontal?="{{!narrow}}" vertical?="{{narrow}}">
+        <div class='ha-form'  flex?="{{!narrow}}">
+          <paper-input
+            id="inputType" label="Event Type" floatingLabel="true"
+            autofocus required></paper-input>
+          <paper-input-decorator
+            label="Event Data (JSON, optional)"
+            floatingLabel="true">
+
+            <paper-autogrow-textarea id="inputDataWrapper">
+              <textarea id="inputData"></textarea>
+            </paper-autogrow-textarea>
+          </paper-input-decorator>
+
+          <paper-button on-click={{clickFireEvent}}>Fire Event</paper-button>
+        </div>
+
+        <div class='sidebar'>
+          <b>Available events:</b>
+          <events-list cbEventClicked={{eventSelected}}></event-list>
+        </div>
+      </div>
+    </div>
+  </partial-base>
+
+</template>
+<script>
+var eventActions = window.hass.eventActions;
+
+Polymer({
+  ready: function() {
+    // to ensure callback methods work..
+    this.eventSelected = this.eventSelected.bind(this);
+  },
+
+  eventSelected: function(eventType) {
+    this.$.inputType.value = eventType;
+  },
+
+  clickFireEvent: function() {
+    try {
+      eventActions.fire(
+        this.$.inputType.value,
+        this.$.inputData.value ? JSON.parse(this.$.inputData.value) : {});
+    } catch (err) {
+      alert("Error parsing JSON: " + err);
+    }
+  }
+});
+</script>
+</polymer-element>

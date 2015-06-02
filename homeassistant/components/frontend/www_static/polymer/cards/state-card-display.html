@@ -1,0 +1,22 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../components/state-info.html">
+
+<polymer-element name="state-card-display" attributes="stateObj" noscript>
+  <template>
+    <style>
+    .state {
+      margin-left: 16px;
+      text-transform: capitalize;  
+      font-weight: 300;
+      font-size: 1.3rem;
+      text-align: right;
+    }
+    </style>
+
+    <div horizontal justified layout> 
+      <state-info stateObj="{{stateObj}}"></state-info>
+      <div class='state'>{{stateObj.stateDisplay}}</div>
+    </div>
+  </template>
+</polymer-element>

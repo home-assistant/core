@@ -1,0 +1,9 @@
+# Run style checks
+
+# If current pwd is scripts, go 1 up.
+if [ ${PWD##*/} == "scripts" ]; then
+    cd ..
+fi
+
+pylint homeassistant
+flake8 homeassistant --exclude bower_components,external

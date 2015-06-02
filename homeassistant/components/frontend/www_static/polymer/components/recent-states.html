@@ -1,0 +1,50 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<link rel="import" href="./loading-box.html">
+<link rel="import" href="relative-ha-datetime.html">
+
+<polymer-element name="recent-states" attributes="stateObj">
+  <template>
+    <core-style ref='ha-data-table'></core-style>
+
+    <template if="{{recentStates === null}}">
+      <loading-box text="Loading recent states"></loading-box>
+    </template>
+
+    <template if="{{recentStates !== null}}">
+      <div layout vertical>
+        <template repeat="{{recentStates as state}}">
+          <div layout justified horizontal class='data-entry'>
+            <div>
+              {{state.state}}
+            </div>
+            <div class='data'>
+              <relative-ha-datetime datetime="{{stateObj.last_changed}}">
+              </relative-ha-datetime>
+            </div>
+          </div>
+        </template>
+
+        <template if="{{recentStates.length == 0}}">
+          There are no recent states.
+        </template>
+      </div>
+    </template>
+  </template>
+  <script>
+  Polymer({
+    recentStates: null,
+
+    stateObjChanged: function() {
+      this.recentStates = null;
+
+      window.hass.callApi(
+        'GET', 'history/entity/' + this.stateObj.entityId + '/recent_states').then(
+          function(states) {
+            this.recentStates = states.slice(1);
+          }.bind(this));
+    },
+  });
+  </script>
+</polymer-element>

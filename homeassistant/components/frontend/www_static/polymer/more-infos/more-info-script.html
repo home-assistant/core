@@ -1,0 +1,22 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<polymer-element name="more-info-script" attributes="stateObj" noscript>
+<template>
+  <core-style ref='ha-key-value-table'></core-style>
+  <style>
+    .data-entry .value {
+      max-width: 200px;
+    }
+  </style>
+
+  <div layout vertical>
+    <div layout justified horizontal class='data-entry'>
+      <div class='key'>Last Action</div>
+      <div class='value'>
+        {{stateObj.attributes.last_action}}
+      </div>
+    </div>
+  </div>
+</template>
+</polymer-element>

@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.4"
+install:
+  - pip install -r requirements.txt
+  - pip install flake8 pylint coveralls
+script:
+  - flake8 homeassistant --exclude bower_components,external
+  - pylint homeassistant
+  - coverage run -m unittest discover tests
+after_success:
+  - coveralls

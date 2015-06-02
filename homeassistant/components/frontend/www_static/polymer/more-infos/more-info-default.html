@@ -1,0 +1,34 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
+
+<polymer-element name="more-info-default" attributes="stateObj">
+<template>
+  <core-style ref='ha-key-value-table'></core-style>
+  <style>
+    .data-entry .value {
+      max-width: 200px;
+    }
+  </style>
+
+  <div layout vertical>
+
+    <template repeat="{{key in stateObj.attributes | getKeys}}">
+      <div layout justified horizontal class='data-entry'>
+        <div class='key'>
+          {{key}}
+        </div>
+        <div class='value'>
+          {{stateObj.attributes[key]}}
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
+<script>
+  Polymer({
+    getKeys: function(obj) {
+      return Object.keys(obj || {});
+    }
+  });
+</script>
+</polymer-element>

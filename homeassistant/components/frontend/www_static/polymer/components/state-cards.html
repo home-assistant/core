@@ -1,0 +1,56 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../cards/state-card.html">
+
+<polymer-element name="state-cards" attributes="states" noscript>
+  <template>
+    <style>
+    :host {
+      display: block;
+      width: 100%;
+    }
+
+    @media all and (min-width: 1020px) {
+      .state-card {
+        width: calc(50% - 44px);
+        margin: 8px 0 0 8px;
+      }
+    }
+
+    @media all and (min-width: 1356px) {
+      .state-card {
+        width: calc(33% - 38px);
+      }
+    }
+
+    @media all and (min-width: 1706px) {
+      .state-card {
+        width: calc(25% - 42px);
+      }
+    }
+
+    .no-states-content {
+      max-width: 500px;
+      background-color: #fff;
+      border-radius: 2px;
+      box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
+      padding: 16px;
+      margin: 16px auto;
+    }
+    </style>
+
+    <div horizontal layout wrap>
+
+      <template repeat="{{states as state}}">
+        <state-card class="state-card" stateObj={{state}}></state-card>
+      </template>
+
+      <template if="{{states.length == 0}}">
+        <div class='no-states-content'>
+          <content></content>
+        </div>
+      </template>
+
+    </div>
+  </template>
+</polymer-element>
