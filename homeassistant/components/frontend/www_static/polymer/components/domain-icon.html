@@ -1,37 +1,24 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
-<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
-
 <link rel="import" href="../resources/home-assistant-icons.html">
 
-<dom-module id="domain-icon">
+<polymer-element name="domain-icon"
+  attributes="domain state" constructor="DomainIcon">
   <template>
-    <iron-icon icon="[[computeIcon(domain, state)]]"></iron-icon>
+    <core-icon icon="{{icon}}"></core-icon>
   </template>
-</dom-module>
-
-<script>
-(function() {
-  var uiUtil = window.hass.uiUtil;
-
+  <script>
   Polymer({
-    is: 'domain-icon',
+    icon: '',
 
-    properties: {
-      domain: {
-        type: String,
-        value: '',
-      },
-
-      state: {
-        type: String,
-        value: '',
-      },
+    observe: {
+      'domain': 'updateIcon',
+      'state' : 'updateIcon',
     },
 
-    computeIcon: function(domain, state) {
-      return uiUtil.domainIcon(domain, state);
+    updateIcon: function() {
+      this.icon = window.hass.uiUtil.domainIcon(this.domain, this.state);
     },
   });
-})();
-</script>
+  </script>
+</polymer-element>

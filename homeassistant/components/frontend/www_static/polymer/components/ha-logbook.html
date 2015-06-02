@@ -2,31 +2,16 @@
 
 <link rel="import" href="../components/logbook-entry.html">
 
-<dom-module id="ha-logbook">
+<polymer-element name="ha-logbook" attributes="entries" noscript>
+<template>
   <style>
-    :host {
-      display: block;
-      padding: 16px;
+    .logbook {
     }
   </style>
-  <template>
-    <template is='dom-repeat' items="[[entries]]">
-      <logbook-entry entry-obj="[[item]]"></logbook-entry>
+  <div class='logbook'>
+    <template repeat="{{entries as entry}}">
+      <logbook-entry entryObj="{{entry}}"></logbook-entry>
     </template>
-  </template>
-</dom-module>
-
-<script>
-(function() {
-  Polymer({
-    is: 'ha-logbook',
-
-    properties: {
-      entries: {
-        type: Object,
-        value: [],
-      },
-    },
-  });
-})();
-</script>
+  </div>
+</template>
+</polymer>

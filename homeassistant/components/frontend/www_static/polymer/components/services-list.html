@@ -1,58 +1,72 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-
-<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/core-menu/core-menu.html">
+<link rel="import" href="../bower_components/core-menu/core-submenu.html">
+<link rel="import" href="../bower_components/core-item/core-item.html">
 
 <link rel="import" href="domain-icon.html">
 
-<dom-module id="services-list">
-  <style>
-    ul {
-      margin: 0;
-      padding: 0;
+<polymer-element name="services-list" attributes="cbServiceClicked">
+  <template>
+    <style>
+    :host {
+      display: block;
     }
 
-    li {
-      list-style: none;
-      line-height: 2em;
+    core-menu {
+      margin-top: 0;
+      font-size: 1rem;
     }
 
     a {
-      color: var(--accent-color);
+      display: block;
     }
-  </style>
+    </style>
 
-  <template>
-    <ul>
-      <template is='dom-repeat' items="[[domains]]" as="domain">
-          <template is='dom-repeat' items="[[computeServices(domain)]]" as="service">
-            <li><a href='#' on-click='serviceClicked'>
-              <span>[[domain]]</span>/<span>[[service]]</span>
-            </a></li>
-          </template>
-      </template>
-    </ul>
+    <template if={{cbServiceClicked}}>
+      <style>
+      a, core-submenu {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      </style>
+    </template>
+
+    <div>
+      <core-menu selected="0">
+      
+        <template repeat="{{domain in domains}}">
+          <core-submenu icon="{{domain | getIcon}}" label="{{domain}}">
+            <template repeat="{{service in domain | getServices}}">
+              <a on-click={{serviceClicked}} data-domain={{domain}}>{{service}}</a>
+            </template>
+          </core-submenu>
+        </template>
+        
+      </core-menu>
+
+    </div>
   </template>
-</dom-module>
+  <script>
+  var storeListenerMixIn = window.hass.storeListenerMixIn;
 
-<script>
-(function() {
-  Polymer({
-    is: 'services-list',
+  Polymer(Polymer.mixin({
+    domains: [],
+    services: null,
+    cbServiceClicked: null,
 
-    behaviors: [StoreListenerBehavior],
-
-    properties: {
-      domains: {
-        type: Array,
-        value: [],
-      },
-
-      services: {
-        type: Object,
-      },
+    attached: function() {
+      this.listenToStores(true);
     },
 
-    computeServices: function(domain) {
+    detached: function() {
+      this.stopListeningToStores();
+    },
+
+    getIcon: function(domain) {
+      return hass.uiUtil.domainIcon(domain);
+    },
+
+    getServices: function(domain) {
       return this.services.get(domain).toArray();
     },
 
@@ -62,10 +76,15 @@
     },
 
     serviceClicked: function(ev) {
-      ev.preventDefault();
-      this.fire(
-        'service-selected', {domain: ev.model.domain, service: ev.model.service});
-    },
-  });
-})();
-</script>
+      if(this.cbServiceClicked) {
+        var target = ev.path[0];
+        var domain = target.getAttributeNode("data-domain").value;
+        var service = target.innerHTML;
+
+        this.cbServiceClicked(domain, service);
+      }
+    }
+
+  }, storeListenerMixIn));
+  </script>
+</polymer-element>

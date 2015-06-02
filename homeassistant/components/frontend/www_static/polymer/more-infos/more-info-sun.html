@@ -1,71 +1,53 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
 
 <link rel="import" href="../components/relative-ha-datetime.html">
 
-<dom-module id="more-info-sun">
-  <template>
-    <div class='data-entry layout justified horizontal' id='rising'>
+<polymer-element name="more-info-sun" attributes="stateObj">
+<template>
+  <core-style ref='ha-key-value-table'></core-style>
+
+  <div layout vertical id='sunData'>
+
+    <div layout justified horizontal class='data-entry' id='rising'>
       <div class='key'>
-        Rising <relative-ha-datetime datetime-obj="[[risingDate]]"></relative-ha-datetime>
+        Rising <relative-ha-datetime datetimeObj="{{rising}}"></relative-ha-datetime>
       </div>
-      <div class='value'>[[risingTime]]</div>
+      <div class='value'>
+        {{rising | formatTime}}
+      </div>
     </div>
 
-    <div class='data-entry layout justified horizontal' id='setting'>
+    <div layout justified horizontal class='data-entry' id='setting'>
       <div class='key'>
-        Setting <relative-ha-datetime datetime-obj="[[settingDate]]"></relative-ha-datetime>
+        Setting <relative-ha-datetime datetimeObj="{{setting}}"></relative-ha-datetime>
       </div>
-      <div class='value'>[[settingTime]]</div>
+      <div class='value'>
+        {{setting | formatTime}}
+      </div>
     </div>
-  </template>
-</dom-module>
 
+  </div>
+</template>
 <script>
 (function() {
-  var parseDateTime = window.hass.util.parseDateTime;
-  var formatTime = window.hass.uiUtil.formatTime;
+var parseDateTime = window.hass.util.parseDateTime;
 
-  Polymer({
-    is: 'more-info-sun',
+Polymer({
+  rising: null,
+  setting: null,
 
-    properties: {
-      stateObj: {
-        type: Object,
-        observer: 'stateObjChanged',
-      },
+  stateObjChanged: function() {
+    this.rising = parseDateTime(this.stateObj.attributes.next_rising);
+    this.setting = parseDateTime(this.stateObj.attributes.next_setting);
 
-      risingDate: {
-        type: Object,
-      },
-
-      settingDate: {
-        type: Object,
-      },
-
-      risingTime: {
-        type: String,
-      },
-
-      settingTime: {
-        type: String,
-      },
-    },
-
-    stateObjChanged: function() {
-      this.risingDate = parseDateTime(this.stateObj.attributes.next_rising);
-      this.risingTime = formatTime(this.risingDate);
-
-      this.settingDate = parseDateTime(this.stateObj.attributes.next_setting);
-      this.settingTime = formatTime(this.settingDate);
-
-      var root = Polymer.dom(this);
-
-      if(self.risingDate > self.settingDate) {
-        root.appendChild(this.$.rising);
-      } else {
-        root.appendChild(this.$.setting);
-      }
+    if(self.rising > self.setting) {
+      this.$.sunData.appendChild(this.$.rising);
+    } else {
+      this.$.sunData.appendChild(this.$.setting);
     }
-  });
+  }
+});
 })();
 </script>
+</polymer-element>

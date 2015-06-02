@@ -12,6 +12,7 @@ It offers the following functionality through built-in components:
  * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast)
  * Track running services by monitoring `ps` output
  * Track and control [Tellstick devices and sensors](http://www.telldus.se/products/tellstick)
+ * Control low-cost 433 MHz remote control wall-socket devices (https://github.com/r10r/rcswitch-pi) and other switches that can be turned on/off with shell commands
  * Turn on the lights when people get home after sun set
  * Turn on lights slowly during sun set to compensate for light loss
  * Turn off all lights and devices when everybody leaves the house

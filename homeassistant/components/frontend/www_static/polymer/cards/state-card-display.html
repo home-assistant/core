@@ -2,35 +2,21 @@
 
 <link rel="import" href="../components/state-info.html">
 
-<dom-module id="state-card-display">
-  <style>
-  .state {
-    margin-left: 16px;
-    text-transform: capitalize;  
-    font-weight: 300;
-    font-size: 1.3rem;
-    text-align: right;
-  }
-  </style>
-
+<polymer-element name="state-card-display" attributes="stateObj" noscript>
   <template>
-    <div class='horizontal justified layout'>
-      <state-info state-obj="[[stateObj]]"></state-info>
-      <div class='state'>[[stateObj.stateDisplay]]</div>
+    <style>
+    .state {
+      margin-left: 16px;
+      text-transform: capitalize;  
+      font-weight: 300;
+      font-size: 1.3rem;
+      text-align: right;
+    }
+    </style>
+
+    <div horizontal justified layout> 
+      <state-info stateObj="{{stateObj}}"></state-info>
+      <div class='state'>{{stateObj.stateDisplay}}</div>
     </div>
   </template>
-</dom-module>
-
-<script>
-(function() {
-  Polymer({
-    is: 'state-card-display',
-
-    properties: {
-      stateObj: {
-        type: Object,
-      },
-    },
-  });
-})();
-</script>
+</polymer-element>

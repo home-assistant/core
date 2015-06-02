@@ -1,50 +1,40 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/core-style/core-style.html">
 
 <link rel="import" href="../components/state-info.html">
 
-<dom-module id="state-card-toggle">
-  <style>
-    paper-toggle-button {
-      margin-left: 16px;
-    }
-  </style>
+<polymer-element name="state-card-toggle" attributes="stateObj">
   <template>
-    <div class='horizontal justified layout'>
-      <state-info state-obj="[[stateObj]]"></state-info>
+    <core-style ref='ha-paper-toggle'></core-style>
 
-      <paper-toggle-button class='self-center'
-        checked="[[toggleChecked]]"
-        on-change="toggleChanged"
-        on-click="toggleClicked">
+    <div horizontal justified layout>      
+      <state-info flex stateObj="{{stateObj}}"></state-info>
+
+      <paper-toggle-button self-center
+        checked="{{toggleChecked}}"
+        on-change="{{toggleChanged}}"
+        on-click="{{toggleClicked}}">
       </paper-toggle-button>
     </div>
 
   </template>
-</dom-module>
-
-<script>
-(function() {
+  <script>
   var serviceActions = window.hass.serviceActions;
 
   Polymer({
-    is: 'state-card-toggle',
+    toggleChecked: false,
 
-    properties: {
-      stateObj: {
-        type: Object,
-        observer: 'stateObjChanged',
-      },
-
-      toggleChecked: {
-        type: Boolean,
-        value: false,
-      },
+    observe: {
+      'stateObj.state': 'stateChanged'
     },
 
     ready: function() {
       this.forceStateChange = this.forceStateChange.bind(this);
-      this.forceStateChange();
+    },
+
+    toggleClicked: function(ev) {
+      ev.stopPropagation();
     },
 
     toggleChanged: function(ev) {
@@ -57,22 +47,22 @@
       }
     },
 
-    stateObjChanged: function(newVal) {
+    stateObjChanged: function(oldVal, newVal) {
       if (newVal) {
-        this.updateToggle(newVal);
+        this.stateChanged(null, newVal.state);
       }
     },
 
-    updateToggle: function(stateObj) {
-      this.toggleChecked = stateObj && stateObj.state === "on";
+    stateChanged: function(oldVal, newVal) {
+      this.toggleChecked = newVal === "on";
     },
 
     forceStateChange: function() {
-      this.updateToggle(this.stateObj);
+      this.stateChanged(null, this.stateObj.state);
     },
 
     turn_on: function() {
-      // We call updateToggle after a successful call to re-sync the toggle
+      // We call stateChanged after a successful call to re-sync the toggle
       // with the state. It will be out of sync if our service call did not
       // result in the entity to be turned on. Since the state is not changing,
       // the resync is not called automatic.
@@ -80,12 +70,12 @@
     },
 
     turn_off: function() {
-      // We call updateToggle after a successful call to re-sync the toggle
+      // We call stateChanged after a successful call to re-sync the toggle
       // with the state. It will be out of sync if our service call did not
       // result in the entity to be turned on. Since the state is not changing,
       // the resync is not called automatic.
       serviceActions.callTurnOff(this.stateObj.entityId).then(this.forceStateChange);
     },
   });
-})();
-</script>
+  </script>
+</polymer-element>

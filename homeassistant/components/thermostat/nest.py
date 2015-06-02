@@ -74,21 +74,7 @@ class NestThermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """ Returns the temperature we try to reach. """
-        target = self.device.target
-
-        if isinstance(target, tuple):
-            low, high = target
-
-            if self.current_temperature < low:
-                temp = low
-            elif self.current_temperature > high:
-                temp = high
-            else:
-                temp = (low + high)/2
-        else:
-            temp = target
-
-        return round(temp, 1)
+        return round(self.device.target, 1)
 
     @property
     def is_away_mode_on(self):

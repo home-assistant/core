@@ -1,78 +1,73 @@
-<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html">
 
-<link rel='import' href='more-info-default.html'>
-<link rel='import' href='more-info-group.html'>
-<link rel='import' href='more-info-sun.html'>
-<link rel='import' href='more-info-configurator.html'>
-<link rel='import' href='more-info-thermostat.html'>
-<link rel='import' href='more-info-script.html'>
-<link rel='import' href='more-info-light.html'>
-<link rel='import' href='more-info-media_player.html'>
+<link rel="import" href="more-info-default.html">
+<link rel="import" href="more-info-light.html">
+<link rel="import" href="more-info-group.html">
+<link rel="import" href="more-info-sun.html">
+<link rel="import" href="more-info-configurator.html">
+<link rel="import" href="more-info-thermostat.html">
+<link rel="import" href="more-info-script.html">
 
-<dom-module id='more-info-content'>
+<polymer-element name="more-info-content" attributes="stateObj dialogOpen">
+<template>
   <style>
     :host {
       display: block;
     }
   </style>
-</dom-module>
-
+  <div id='moreInfoContainer' class='{{classNames}}'></div>
+</template>
 <script>
-(function() {
-  var uiUtil = window.hass.uiUtil;
+Polymer({
+  classNames: '',
+  dialogOpen: false,
 
-  Polymer({
-    is: 'more-info-content',
+  observe: {
+    'stateObj.attributes': 'stateAttributesChanged',
+  },
 
-    properties: {
-      stateObj: {
-        type: Object,
-        observer: 'stateObjChanged',
-      },
+  dialogOpenChanged: function(oldVal, newVal) {
+    var moreInfoContainer = this.$.moreInfoContainer;
 
-      dialogOpen: {
-        type: Boolean,
-        value: false,
-      },
-    },
+    if (moreInfoContainer.lastChild) {
+      moreInfoContainer.lastChild.dialogOpen = newVal;
+    }
+  },
 
-    dialogOpenChanged: function(newVal, oldVal) {
-      var root = Polymer.dom(this);
+  stateObjChanged: function(oldVal, newVal) {
+    var moreInfoContainer = this.$.moreInfoContainer;
 
-      if (root.lastChild) {
-        root.lastChild.dialogOpen = newVal;
+    if (!newVal) {
+      if (moreInfoContainer.lastChild) {
+        moreInfoContainer.removeChild(moreInfoContainer.lastChild);
       }
-    },
+      return;
+    }
 
-    stateObjChanged: function(newVal, oldVal) {
-      var root = Polymer.dom(this);
-      var newMoreInfoType;
-
-      if (!newVal || !(newMoreInfoType = uiUtil.stateMoreInfoType(newVal))) {
-        if (root.lastChild) {
-          root.removeChild(root.lastChild);
-        }
-        return;
+    if (!oldVal || oldVal.moreInfoType != newVal.moreInfoType) {
+      if (moreInfoContainer.lastChild) {
+        moreInfoContainer.removeChild(moreInfoContainer.lastChild);
       }
 
-      if (!oldVal || uiUtil.stateMoreInfoType(oldVal) != newMoreInfoType) {
+      var moreInfo = document.createElement("more-info-" + newVal.moreInfoType);
+      moreInfo.stateObj = newVal;
+      moreInfo.dialogOpen = this.dialogOpen;
+      moreInfoContainer.appendChild(moreInfo);
 
-        if (root.lastChild) {
-          root.removeChild(root.lastChild);
-        }
+    } else {
 
-        var moreInfo = document.createElement('more-info-' + newMoreInfoType);
-        moreInfo.stateObj = newVal;
-        moreInfo.dialogOpen = this.dialogOpen;
-        root.appendChild(moreInfo);
+      moreInfoContainer.lastChild.dialogOpen = this.dialogOpen;
+      moreInfoContainer.lastChild.stateObj = newVal;
 
-      } else {
+    }
+  },
 
-        root.lastChild.dialogOpen = this.dialogOpen;
-        root.lastChild.stateObj = newVal;
+  stateAttributesChanged: function(oldVal, newVal) {
+    if (!newVal) return;
 
-      }
-    },
-  });
-})();
+    this.classNames = Object.keys(newVal).map(
+      function(key) { return "has-" + key; }).join(' ');
+  },
+});
 </script>
+</polymer-element>

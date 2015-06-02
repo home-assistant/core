@@ -1,11 +1,17 @@
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/paper-slider/paper-slider.html'>
-<link rel='import' href='../bower_components/paper-toggle-button/paper-toggle-button.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
 
-<dom-module id='more-info-thermostat'>
+<polymer-element name="more-info-thermostat" attributes="stateObj">
+<template>
   <style>
     paper-slider {
       width: 100%;
+    }
+
+    paper-slider::shadow #sliderKnobInner,
+    paper-slider::shadow #sliderBar::shadow #activeProgress {
+      background-color: #039be5;
     }
 
     .away-mode-toggle {
@@ -13,116 +19,96 @@
       margin-top: 16px;
     }
 
-    .has-away_mode .away-mode-toggle {
+    :host-context(.has-away_mode) .away-mode-toggle {
       display: block;
     }
   </style>
-  <template>
-    <div class$='[[computeClassNames(stateObj)]]'>
-      <div>
-        <div>Target Temperature</div>
-        <paper-slider
-          min='[[tempMin]]' max='[[tempMax]]'
-          value='[[targetTemperatureSliderValue]]' pin
-          on-change='targetTemperatureSliderChanged'>
-        </paper-slider>
-      </div>
 
-      <div class='away-mode-toggle'>
-        <div class='center horizontal layout'>
-          <div class='flex'>Away Mode</div>
-          <paper-toggle-button checked='[[awayToggleChecked]]' on-change='toggleChanged'>
-          </paper-toggle-button>
-        </div>
+  <div>
+    <div>
+      <div>Target Temperature</div>
+      <paper-slider
+        min="{{tempMin}}" max="{{tempMax}}"
+        value='{{targetTemperatureSliderValue}}' pin
+        on-change="{{targetTemperatureSliderChanged}}">
+      </paper-slider>
+    </div>
+
+    <div class='away-mode-toggle'>
+      <div center horizontal layout>
+        <div flex>Away Mode</div>
+        <paper-toggle-button
+          checked="{{awayToggleChecked}}"
+          on-change="{{toggleChanged}}">
+        </paper-toggle-button>
       </div>
     </div>
-  </template>
-</dom-module>
-
+  </div>
+</template>
 <script>
-(function() {
-  var constants = window.hass.constants;
-  var serviceActions = window.hass.serviceActions;
-  var uiUtil = window.hass.uiUtil;
-  var ATTRIBUTE_CLASSES = ['away_mode'];
+var constants = window.hass.constants;
 
-  Polymer({
-    is: 'more-info-thermostat',
+Polymer({
+  tempMin: 10,
+  tempMax: 40,
+  targetTemperatureSliderValue: 0,
 
-    properties: {
-      stateObj: {
-        type: Object,
-        observer: 'stateObjChanged',
-      },
+  awayToggleChecked: false,
 
-      tempMin: {
-        type: Number,
-      },
+  observe: {
+    'stateObj.attributes.away_mode': 'awayChanged'
+  },
 
-      tempMax: {
-        type: Number,
-      },
+  stateObjChanged: function(oldVal, newVal) {
+    this.targetTemperatureSliderValue = this.stateObj.state;
 
-      targetTemperatureSliderValue: {
-        type: Number,
-      },
+    if (this.stateObj.attributes.unit_of_measurement === constants.UNIT_TEMP_F) {
+      this.tempMin = 45;
+      this.tempMax = 95;
+    } else {
+      this.tempMin = 7;
+      this.tempMax = 35;
+    }
+  },
 
-      awayToggleChecked: {
-        type: Boolean,
-      },
-    },
+  targetTemperatureSliderChanged: function(ev, details, target) {
+    var temp = parseInt(target.value);
 
-    stateObjChanged: function(newVal, oldVal) {
-      this.targetTemperatureSliderValue = this.stateObj.state;
-      this.awayToggleChecked = this.stateObj.attributes.away_mode == 'on';
+    if(isNaN(temp)) return;
 
-      if (this.stateObj.attributes.unit_of_measurement === constants.UNIT_TEMP_F) {
-        this.tempMin = 45;
-        this.tempMax = 95;
-      } else {
-        this.tempMin = 7;
-        this.tempMax = 35;
-      }
-    },
+    serviceActions.callService("thermostat", "set_temperature", {
+      entity_id: this.stateObj.entityId,
+      temperature: temp
+    });
+  },
 
-    computeClassNames: function(stateObj) {
-      return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
-    },
+  toggleChanged: function(ev) {
+    var newVal = ev.target.checked;
 
-    targetTemperatureSliderChanged: function(ev) {
-      var temp = parseInt(ev.target.value);
+    if(newVal && this.stateObj.attributes.away_mode === 'off') {
+      this.service_set_away(true);
+    } else if(!newVal && this.stateObj.attributes.away_mode === 'on') {
+      this.service_set_away(false);
+    }
+  },
 
-      if(isNaN(temp)) return;
+  awayChanged: function(oldVal, newVal) {
+    this.awayToggleChecked = newVal == 'on';
+  },
 
-      serviceActions.callService('thermostat', 'set_temperature', {
-        entity_id: this.stateObj.entityId,
-        temperature: temp
-      });
-    },
+  service_set_away: function(away_mode) {
+    // We call stateChanged after a successful call to re-sync the toggle
+    // with the state. It will be out of sync if our service call did not
+    // result in the entity to be turned on. Since the state is not changing,
+    // the resync is not called automatic.
+    serviceActions.callService(
+      'thermostat', 'set_away_mode',
+      {entity_id: this.stateObj.entityId, away_mode: away_mode})
 
-    toggleChanged: function(ev) {
-      var newVal = ev.target.checked;
-
-      if(newVal && this.stateObj.attributes.away_mode === 'off') {
-        this.service_set_away(true);
-      } else if(!newVal && this.stateObj.attributes.away_mode === 'on') {
-        this.service_set_away(false);
-      }
-    },
-
-    service_set_away: function(away_mode) {
-      // We call stateChanged after a successful call to re-sync the toggle
-      // with the state. It will be out of sync if our service call did not
-      // result in the entity to be turned on. Since the state is not changing,
-      // the resync is not called automatic.
-      serviceActions.callService(
-        'thermostat', 'set_away_mode',
-        {entity_id: this.stateObj.entityId, away_mode: away_mode})
-
-      .then(function() {
-        this.stateObjChanged(this.stateObj);
-      }.bind(this));
-    },
-  });
-})();
+    .then(function() {
+      this.awayChanged(null, this.stateObj.attributes.away_mode);
+    }.bind(this));
+  },
+});
 </script>
+</polymer-element>

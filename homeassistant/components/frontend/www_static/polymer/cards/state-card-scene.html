@@ -3,37 +3,25 @@
 <link rel="import" href="./state-card-display.html">
 <link rel="import" href="./state-card-toggle.html">
 
-<dom-module id="state-card-scene">
+<polymer-element name="state-card-scene" attributes="stateObj">
   <template>
-    <template is='dom-if' if=[[allowToggle]]>
-      <state-card-toggle state-obj="[[stateObj]]"></state-card-toggle>
+    <template if={{allowToggle}}>
+      <state-card-toggle stateObj="{{stateObj}}"></state-card-toggle>
     </template>
-    <template is='dom-if' if=[[!allowToggle]]>
-      <state-card-display state-obj="[[stateObj]]"></state-card-display>
+    <template if={{!allowToggle}}>
+      <state-card-display stateObj="{{stateObj}}"></state-card-display>
     </template>
   </template>
-</dom-module>
-
-<script>
+  <script>
 (function() {
   Polymer({
-    is: 'state-card-scene',
+    allowToggle: false,
 
-    properties: {
-      stateObj: {
-        type: Object,
-      },
-
-      allowToggle: {
-        type: Boolean,
-        value: false,
-        computed: 'computeAllowToggle(stateObj)',
-      },
-    },
-
-    computeAllowToggle: function(stateObj) {
-      return stateObj.state === 'off' || stateObj.attributes.active_requested;
+    stateObjChanged: function(oldVal, newVal) {
+      this.allowToggle = newVal.state === 'off' ||
+                         newVal.attributes.active_requested;
     },
   });
 })();
-</script>
+  </script>
+</polymer-element>
