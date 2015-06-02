@@ -9,9 +9,11 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF)
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, YOUTUBE_COVER_URL_FORMAT, MEDIA_TYPE_VIDEO,
+    MediaPlayerDevice, YOUTUBE_COVER_URL_FORMAT,
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_YOUTUBE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF)
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK)
 
 
 # pylint: disable=unused-argument
@@ -21,7 +23,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoYoutubePlayer(
             'Living Room', 'eyU3bRy2x44',
             '♥♥ The Best Fireplace Video (3 hours)'),
-        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours')
+        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours'),
+        DemoMusicPlayer(),
     ])
 
 
@@ -29,17 +32,17 @@ YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_YOUTUBE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
+MUSIC_PLAYER_SUPPORT = \
+    SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_NEXT_TRACK
 
-class DemoYoutubePlayer(MediaPlayerDevice):
-    """ A Demo media player that only supports YouTube. """
-    # We only implement the methods that we support
-    # pylint: disable=abstract-method
 
-    def __init__(self, name, youtube_id=None, media_title=None):
+class AbstractDemoPlayer(MediaPlayerDevice):
+    """ Base class for demo media players. """
+    def __init__(self, name):
         self._name = name
         self._player_state = STATE_PLAYING
-        self.youtube_id = youtube_id
-        self._media_title = media_title
         self._volume_level = 1.0
         self._volume_muted = False
 
@@ -67,6 +70,47 @@ class DemoYoutubePlayer(MediaPlayerDevice):
     def is_volume_muted(self):
         """ Boolean if volume is currently muted. """
         return self._volume_muted
+
+    def turn_on(self):
+        """ turn the media player on. """
+        self._player_state = STATE_PLAYING
+        self.update_ha_state()
+
+    def turn_off(self):
+        """ turn the media player off. """
+        self._player_state = STATE_OFF
+        self.update_ha_state()
+
+    def mute_volume(self, mute):
+        """ mute the volume. """
+        self._volume_muted = mute
+        self.update_ha_state()
+
+    def set_volume_level(self, volume):
+        """ set volume level, range 0..1. """
+        self._volume_level = volume
+        self.update_ha_state()
+
+    def media_play(self):
+        """ Send play commmand. """
+        self._player_state = STATE_PLAYING
+        self.update_ha_state()
+
+    def media_pause(self):
+        """ Send pause command. """
+        self._player_state = STATE_PAUSED
+        self.update_ha_state()
+
+
+class DemoYoutubePlayer(AbstractDemoPlayer):
+    """ A Demo media player that only supports YouTube. """
+    # We only implement the methods that we support
+    # pylint: disable=abstract-method
+
+    def __init__(self, name, youtube_id=None, media_title=None):
+        super().__init__(name)
+        self.youtube_id = youtube_id
+        self._media_title = media_title
 
     @property
     def media_content_id(self):
@@ -103,38 +147,96 @@ class DemoYoutubePlayer(MediaPlayerDevice):
         """ Flags of media commands that are supported. """
         return YOUTUBE_PLAYER_SUPPORT
 
-    def turn_on(self):
-        """ turn the media player on. """
-        self._player_state = STATE_PLAYING
-        self.update_ha_state()
-
-    def turn_off(self):
-        """ turn the media player off. """
-        self._player_state = STATE_OFF
-        self.update_ha_state()
-
-    def mute_volume(self, mute):
-        """ mute the volume. """
-        self._volume_muted = mute
-        self.update_ha_state()
-
-    def set_volume_level(self, volume):
-        """ set volume level, range 0..1. """
-        self._volume_level = volume
-        self.update_ha_state()
-
-    def media_play(self):
-        """ Send play commmand. """
-        self._player_state = STATE_PLAYING
-        self.update_ha_state()
-
-    def media_pause(self):
-        """ Send pause command. """
-        self._player_state = STATE_PAUSED
-        self.update_ha_state()
-
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """
         self.youtube_id = media_id
         self._media_title = 'some YouTube video'
         self.update_ha_state()
+
+
+class DemoMusicPlayer(AbstractDemoPlayer):
+    """ A Demo media player that only supports YouTube. """
+    # We only implement the methods that we support
+    # pylint: disable=abstract-method
+
+    tracks = [
+        ('Technohead', 'I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)'),
+        ('Paul Elstak', 'Luv U More'),
+        ('Dune', 'Hardcore Vibes'),
+        ('Nakatomi', 'Children Of The Night'),
+        ('Party Animals',
+         'Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)'),
+        ('Rob G.*', 'Ecstasy, You Got What I Need'),
+        ('Lipstick', "I'm A Raver"),
+        ('4 Tune Fairytales', 'My Little Fantasy (Radio Edit)'),
+        ('Prophet', "The Big Boys Don't Cry"),
+        ('Lovechild', 'All Out Of Love (DJ Weirdo & Sim Remix)'),
+        ('Stingray & Sonic Driver', 'Cold As Ice (El Bruto Remix)'),
+        ('Highlander', 'Hold Me Now (Bass-D & King Matthew Remix)'),
+        ('Juggernaut', 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
+        ('Diss Reaction', 'Jiiieehaaaa '),
+        ('Flamman And Abraxas', 'Good To Go (Radio Mix)'),
+        ('Critical Mass', 'Dancing Together'),
+        ('Charly Lownoise & Mental Theo', 'Ultimate Sex Track (Bass-D & King Matthew Remix)'),
+    ]
+
+    def __init__(self):
+        super().__init__('Walkman')
+        self._cur_track = 0
+
+    @property
+    def media_content_id(self):
+        """ Content ID of current playing media. """
+        return 'bounzz-1'
+
+    @property
+    def media_content_type(self):
+        """ Content type of current playing media. """
+        return MEDIA_TYPE_MUSIC
+
+    @property
+    def media_duration(self):
+        """ Duration of current playing media in seconds. """
+        return 213
+
+    @property
+    def media_image_url(self):
+        """ Image url of current playing media. """
+        return 'http://graph.facebook.com/107771475912710/picture'
+
+    @property
+    def media_title(self):
+        """ Title of current playing media. """
+        return self.tracks[self._cur_track][1]
+
+    @property
+    def media_artist(self):
+        """ Artist of current playing media. (Music track only) """
+        return self.tracks[self._cur_track][0]
+
+    @property
+    def media_album(self):
+        """ Album of current playing media. (Music track only) """
+        return "Bounzz"
+
+    @property
+    def media_track(self):
+        """ Track number of current playing media. (Music track only) """
+        return self._cur_track + 1
+
+    @property
+    def supported_media_commands(self):
+        """ Flags of media commands that are supported. """
+        return MUSIC_PLAYER_SUPPORT
+
+    def media_previous_track(self):
+        """ Send previous track command. """
+        if self._cur_track > 0:
+            self._cur_track -= 1
+            self.update_ha_state()
+
+    def media_next_track(self):
+        """ Send next track command. """
+        if self._cur_track < len(self.tracks)-1:
+            self._cur_track += 1
+            self.update_ha_state()

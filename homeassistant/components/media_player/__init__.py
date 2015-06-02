@@ -37,6 +37,7 @@ ATTR_MEDIA_DURATION = 'media_duration'
 ATTR_MEDIA_TITLE = 'media_title'
 ATTR_MEDIA_ARTIST = 'media_artist'
 ATTR_MEDIA_ALBUM = 'media_album'
+ATTR_MEDIA_TRACK = 'media_track'
 ATTR_MEDIA_SERIES_TITLE = 'media_series_title'
 ATTR_MEDIA_SEASON = 'media_season'
 ATTR_MEDIA_EPISODE = 'media_episode'
@@ -82,6 +83,7 @@ ATTR_TO_PROPERTY = {
     ATTR_MEDIA_TITLE: 'media_title',
     ATTR_MEDIA_ARTIST: 'media_artist',
     ATTR_MEDIA_ALBUM: 'media_album',
+    ATTR_MEDIA_TRACK: 'media_track',
     ATTR_MEDIA_SERIES_TITLE: 'media_series_title',
     ATTR_MEDIA_SEASON: 'media_season',
     ATTR_MEDIA_EPISODE: 'media_episode',
@@ -320,6 +322,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def media_track(self):
+        """ Track number of current playing media. (Music track only) """
+        return None
+
+    @property
     def media_series_title(self):
         """ Series title of current playing media. (TV Show only)"""
         return None
@@ -438,7 +445,7 @@ class MediaPlayerDevice(Entity):
 
     def media_play_pause(self):
         """ media_play_pause media player. """
-        if self.player_state == STATE_PLAYING:
+        if self.state == STATE_PLAYING:
             self.media_pause()
         else:
             self.media_play()
