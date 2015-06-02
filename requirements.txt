@@ -38,7 +38,7 @@ python-nest>=2.3.1
 # Z-Wave (*.zwave)
 pydispatcher>=2.0.5
 
-# ISY994 bindings (*.isy994
+# ISY994 bindings (*.isy994)
 PyISY>=1.0.2
 
 # PSutil (sensor.systemmonitor)
