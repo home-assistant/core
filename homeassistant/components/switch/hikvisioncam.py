@@ -133,7 +133,7 @@ class HikvisionMotionSwitch(ToggleEntity):
 
     def update(self):
         """ Update Motion Detection state """
-        enabled = self._hikvision_cam.hik_camera.is_motion_detection_enabled()
+        enabled = self._hikvision_cam.is_motion_detection_enabled()
         _LOGGING.info('enabled: %s', enabled)
 
         self._state = STATE_ON if enabled else STATE_OFF
