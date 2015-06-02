@@ -42,6 +42,7 @@ STATE_OPEN = 'open'
 STATE_CLOSED = 'closed'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
+STATE_IDLE = 'idle'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
