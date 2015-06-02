@@ -6,11 +6,11 @@ Home Assistant is a home automation platform running on Python 3. The goal of Ho
 
 It offers the following functionality through built-in components:
 
- * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), [DD-WRT](http://www.dd-wrt.com/site/index))
+ * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), and [DD-WRT](http://www.dd-wrt.com/site/index))
  * Track and control [Philips Hue](http://meethue.com) lights
  * Track and control [WeMo switches](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/)
- * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast)
- * Track running services by monitoring `ps` output
+ * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast) and [Music Player Daemon](http://www.musicpd.org/)
+ * Track running system services and monitoring your system stats (Memory, disk usage, and more)
  * Track and control [Tellstick devices and sensors](http://www.telldus.se/products/tellstick)
  * Control low-cost 433 MHz remote control wall-socket devices (https://github.com/r10r/rcswitch-pi) and other switches that can be turned on/off with shell commands
  * Turn on the lights when people get home after sun set
@@ -19,6 +19,7 @@ It offers the following functionality through built-in components:
  * Offers web interface to monitor and control Home Assistant
  * Offers a [REST API](https://home-assistant.io/developers/api.html) for easy integration with other projects
  * [Ability to have multiple instances of Home Assistant work together](https://home-assistant.io/developers/architecture.html)
+ * Allow sending notifications using [Instapush](https://instapush.im), [Notify My Android (NMA)](http://www.notifymyandroid.com/), [PushBullet](https://www.pushbullet.com/), [PushOver](https://pushover.net/), and [Jabber (XMPP)](http://xmpp.org)
 
 Home Assistant also includes functionality for controlling HTPCs:
 
