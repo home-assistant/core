@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the enigma media player platform. """
 
     if openwebif.api is None:
-        logger.error((
+        _LOGGING.error((
             "Failed to import openwebif. Did you maybe not install the "
             "'openwebif.py' dependency?"))
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get('name', "Enigma2")
 
     try:
-        e2_box = openwebif.api.Client(host, port=port)
+        e2_box = openwebif.api.CreateDevice(host, port=port)
     except MissingParamError as param_err:
         _LOGGING.error("Missing required param: %s", param_err)
         return False
@@ -89,9 +89,6 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
     def __init__(self, name, e2_box):
         self._name = name
         self._e2_box = e2_box
-        self.state_attr = {ATTR_MEDIA_STATE: MEDIA_STATE_STOPPED}
-        # self.update()
-
         self.is_playing = False
         self.media_title = None
         self.volume = 1.0
@@ -118,7 +115,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         _LOGGING.info('inStandby: %s', in_standby)
 
         if in_standby == 'true':
-            self.state_attr = {
+            state_attr = {
                 ATTR_MEDIA_STATE: MEDIA_STATE_STOPPED
             }
             self.is_playing = False
@@ -128,7 +125,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
             self.media_title = status_info['currservice_name']
             self.channel_title = status_info['currservice_station']
 
-            self.state_attr = {
+            state_attr = {
                 ATTR_MEDIA_CONTENT_ID: self.channel_title,
                 ATTR_MEDIA_TITLE: self.media_title,
                 ATTR_MEDIA_DURATION: 100,
@@ -136,8 +133,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
                 ATTR_MEDIA_STATE: MEDIA_STATE_PLAYING
             }
 
-        return self.state_attr
-
+        return state_attr
 
     def update(self):
         """ Update state of the media_player. """

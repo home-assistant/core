@@ -35,7 +35,6 @@ name
 The name to use when displaying this Enigma2 switch instance.
 
 """
-from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_HOST
 import logging
@@ -54,7 +53,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return enigma2 boxes. """
 
     if openwebif.api is None:
-        logger.error((
+        _LOGGING.error((
             "Failed to import openwebif. Did you maybe not install the "
             "'openwebif.py' dependency?"))
 
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     name = config.get('name', "Enigma2 Active")
 
     try:
-        e2_box = openwebif.api.Client(host, port=port)
+        e2_box = openwebif.api.CreateDevice(host, port=port)
     except MissingParamError as param_err:
         _LOGGING.error("Missing required param: %s", param_err)
         return False
@@ -102,10 +101,6 @@ class EnigmaSwitch(ToggleEntity):
     def state(self):
         """ Returns the state of the device if any. """
         return self._state
-
-    @property
-    def state_attributes(self):
-        return self.state_attr
 
     @property
     def is_on(self):
