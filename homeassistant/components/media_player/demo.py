@@ -10,7 +10,7 @@ from homeassistant.const import (
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, YOUTUBE_COVER_URL_FORMAT,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_YOUTUBE,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_NEXT_TRACK)
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'Living Room', 'eyU3bRy2x44',
             '♥♥ The Best Fireplace Video (3 hours)'),
         DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours'),
-        DemoMusicPlayer(),
+        DemoMusicPlayer(), DemoTVShowPlayer(),
     ])
 
 
@@ -33,6 +33,11 @@ YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_YOUTUBE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 MUSIC_PLAYER_SUPPORT = \
+    SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_NEXT_TRACK
+
+NETFLIX_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK
@@ -202,7 +207,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """ Image url of current playing media. """
-        return 'http://graph.facebook.com/107771475912710/picture'
+        return 'https://graph.facebook.com/107771475912710/picture'
 
     @property
     def media_title(self):
@@ -239,4 +244,77 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """ Send next track command. """
         if self._cur_track < len(self.tracks)-1:
             self._cur_track += 1
+            self.update_ha_state()
+
+
+class DemoTVShowPlayer(AbstractDemoPlayer):
+    """ A Demo media player that only supports YouTube. """
+    # We only implement the methods that we support
+    # pylint: disable=abstract-method
+
+    def __init__(self):
+        super().__init__('Lounge room')
+        self._cur_episode = 1
+        self._episode_count = 13
+
+    @property
+    def media_content_id(self):
+        """ Content ID of current playing media. """
+        return 'house-of-cards-1'
+
+    @property
+    def media_content_type(self):
+        """ Content type of current playing media. """
+        return MEDIA_TYPE_TVSHOW
+
+    @property
+    def media_duration(self):
+        """ Duration of current playing media in seconds. """
+        return 3600
+
+    @property
+    def media_image_url(self):
+        """ Image url of current playing media. """
+        return 'https://graph.facebook.com/HouseofCards/picture'
+
+    @property
+    def media_title(self):
+        """ Title of current playing media. """
+        return 'Chapter {}'.format(self._cur_episode)
+
+    @property
+    def media_series_title(self):
+        """ Series title of current playing media. (TV Show only)"""
+        return 'House of Cards'
+
+    @property
+    def media_season(self):
+        """ Season of current playing media. (TV Show only) """
+        return 1
+
+    @property
+    def media_episode(self):
+        """ Episode of current playing media. (TV Show only) """
+        return self._cur_episode
+
+    @property
+    def app_name(self):
+        """ Current running app. """
+        return "Netflix"
+
+    @property
+    def supported_media_commands(self):
+        """ Flags of media commands that are supported. """
+        return NETFLIX_PLAYER_SUPPORT
+
+    def media_previous_track(self):
+        """ Send previous track command. """
+        if self._cur_episode > 1:
+            self._cur_episode -= 1
+            self.update_ha_state()
+
+    def media_next_track(self):
+        """ Send next track command. """
+        if self._cur_episode < self._episode_count:
+            self._cur_episode += 1
             self.update_ha_state()

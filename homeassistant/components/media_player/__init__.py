@@ -59,7 +59,7 @@ SUPPORT_YOUTUBE = 64
 SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
 
-YOUTUBE_COVER_URL_FORMAT = 'http://img.youtube.com/vi/{}/1.jpg'
+YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
 
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: 'turn_on',
