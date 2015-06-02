@@ -1,7 +1,6 @@
 # Adding support for a new device
 
-For help on building your component, please see the [developer documentation](https://home-assistant.io/developers/) on [home-assistant.io](https://home-assistant.io/) .
-.
+For help on building your component, please see the [developer documentation](https://home-assistant.io/developers/) on [home-assistant.io](https://home-assistant.io/).
 
 After you finish adding support for your device:
 
