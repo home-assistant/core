@@ -76,7 +76,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     try:
         hikvision_cam = hikvision.api.CreateDevice(
-            host, port=port, username=username, password=password)
+            host, port=port, username=username,
+            password=password, is_https=False)
     except MissingParamError as param_err:
         _LOGGING.error("Missing required param: %s", param_err)
         return False
