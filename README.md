@@ -7,11 +7,10 @@ Home Assistant is a home automation platform running on Python 3. The goal of Ho
 It offers the following functionality through built-in components:
 
  * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), and [DD-WRT](http://www.dd-wrt.com/site/index))
- * Track and control [Philips Hue](http://meethue.com) lights
- * Track and control [WeMo switches](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/)
+ * Track and control [Philips Hue](http://meethue.com) lights, [WeMo](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/) switches, and [Tellstick](http://www.telldus.se/products/tellstick) devices and sensors.
  * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast) and [Music Player Daemon](http://www.musicpd.org/)
+ * Support for [ISY994](https://www.universal-devices.com/residential/isy994i-series/) (Insteon and X10 devices) and [Modbus](http://www.modbus.org/)
  * Track running system services and monitoring your system stats (Memory, disk usage, and more)
- * Track and control [Tellstick devices and sensors](http://www.telldus.se/products/tellstick)
  * Control low-cost 433 MHz remote control wall-socket devices (https://github.com/r10r/rcswitch-pi) and other switches that can be turned on/off with shell commands
  * Turn on the lights when people get home after sun set
  * Turn on lights slowly during sun set to compensate for light loss
