@@ -92,16 +92,17 @@ class SwissPublicTransportSensor(Entity):
     def update(self):
         """ Gets the latest data from opendata.ch and updates the states. """
         times = self.data.update()
-        if times is not None:
+        try:
             self._state = ', '.join(times)
+        except TypeError:
+            pass
 
 
 # pylint: disable=too-few-public-methods
 class PublicTransportData(object):
-    """ Class for handling the data retrieval.  """
+    """ Class for handling the data retrieval. """
 
     def __init__(self, journey):
-        self.times = ['n/a', 'n/a']
         self.start = journey[0]
         self.destination = journey[1]
 
@@ -117,14 +118,15 @@ class PublicTransportData(object):
             'fields[]=connections/from/departureTimestamp/&' +
             'fields[]=connections/')
 
-        try:
-            self.times.insert(0, dt_util.timestamp_to_short_time_str(
-                response.json()['connections'][0]['from']
-                ['departureTimestamp']))
-            self.times.insert(1, dt_util.timestamp_to_short_time_str(
-                response.json()['connections'][1]['from']
-                ['departureTimestamp']))
-            return self.times
+        connections = response.json()['connections'][:2]
 
+        try:
+            return [
+                dt_util.datetime_to_short_time_str(
+                    dt_util.as_local(dt_util.utc_from_timestamp(
+                        item['from']['departureTimestamp']))
+                )
+                for item in connections
+            ]
         except KeyError:
-            return self.times
+            return ['n/a']
