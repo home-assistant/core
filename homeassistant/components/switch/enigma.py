@@ -39,7 +39,11 @@ from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_HOST
 import logging
-import openwebif.api
+try:
+    import openwebif.api
+    from openwebif.error import OpenWebIfError, MissingParamError
+except ImportError:
+    openwebif.api = None
 
 _LOGGING = logging.getLogger(__name__)
 
@@ -49,15 +53,26 @@ _LOGGING = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return enigma2 boxes. """
 
-    host = config.get(CONF_HOST, None)
-    port = config.get('port', "80")
-    name = config.get('name', "Enigma2")
+    if openwebif.api is None:
+        logger.error((
+            "Failed to import openwebif. Did you maybe not install the "
+            "'openwebif.py' dependency?"))
 
-    if not host:
-        _LOGGING.error('Missing config variable-host')
         return False
 
-    e2_box = openwebif.api.Client(host, port=port)
+    host = config.get(CONF_HOST, None)
+    port = config.get('port', "80")
+    name = config.get('name', "Enigma2 Active")
+
+    try:
+        e2_box = openwebif.api.Client(host, port=port)
+    except MissingParamError as param_err:
+        _LOGGING.error("Missing required param: %s", param_err)
+        return False
+    except OpenWebIfError as conn_err:
+        _LOGGING.error("Unable to connect: %s", conn_err)
+        return False
+
     add_devices_callback([
         EnigmaSwitch(name, e2_box)
     ])
@@ -71,7 +86,6 @@ class EnigmaSwitch(ToggleEntity):
         self._name = name
         self._e2_box = e2_box
         self._state = STATE_OFF
-        self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": In Standby"}
         self.update()
 
     @property
@@ -100,14 +114,12 @@ class EnigmaSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        self._state = STATE_ON
 
         _LOGGING.info("Turning on Enigma ")
         self.toggle_standby()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        self._state = STATE_OFF
 
         _LOGGING.info("Turning off Enigma ")
         self.toggle_standby()
@@ -116,9 +128,7 @@ class EnigmaSwitch(ToggleEntity):
         """
         # See http://bit.ly/1Qf9Wgv
         """
-
-        result = self._e2_box.toggle_standby()
-        self._state = STATE_ON if result else STATE_OFF
+        self._e2_box.toggle_standby()
 
     def update(self):
         """ Update state of the sensor. """
@@ -129,8 +139,5 @@ class EnigmaSwitch(ToggleEntity):
 
         if in_standby:
             self._state = STATE_OFF
-            self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": In Standby"}
-
         else:
             self._state = STATE_ON
-            self.state_attr = {ATTR_FRIENDLY_NAME: self._name + ": Active"}

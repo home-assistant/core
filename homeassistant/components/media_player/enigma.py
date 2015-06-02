@@ -43,7 +43,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME, MEDIA_STATE_PLAYING, MEDIA_STATE_STOPPED)
 
 import logging
-import openwebif.api
+try:
+    import openwebif.api
+    from openwebif.error import OpenWebIfError, MissingParamError
+except ImportError:
+    openwebif.api = None
+
 _LOGGING = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
@@ -52,15 +57,25 @@ _LOGGING = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the enigma media player platform. """
 
+    if openwebif.api is None:
+        logger.error((
+            "Failed to import openwebif. Did you maybe not install the "
+            "'openwebif.py' dependency?"))
+
+        return False
+
     host = config.get('host', None)
     port = config.get('port', "80")
     name = config.get('name', "Enigma2")
 
-    if not host:
-        _LOGGING.error('Missing config variable-host')
+    try:
+        e2_box = openwebif.api.Client(host, port=port)
+    except MissingParamError as param_err:
+        _LOGGING.error("Missing required param: %s", param_err)
         return False
-
-    e2_box = openwebif.api.Client(host, port=port)
+    except OpenWebIfError as conn_err:
+        _LOGGING.error("Unable to connect: %s", conn_err)
+        return False
 
     add_devices([
         EnigmaMediaPlayer(name, e2_box)
@@ -83,11 +98,6 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self.channel_title = None
 
     @property
-    def should_poll(self):
-        """ Need to refresh ourselves. """
-        return True
-
-    @property
     def name(self):
         """ Returns the name of the device. """
         return self._name
@@ -95,48 +105,11 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the state of the device. """
-        return STATE_NO_APP if self.is_playing is False else self.channel_title
+        return self.channel_title if self.is_playing else STATE_NO_APP
 
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-
-        return self.state_attr
-
-    def turn_off(self):
-        """ turn_off media player. """
-        self.is_playing = False
-
-    def volume_up(self):
-        """ volume_up media player. """
-        if self.volume < 1:
-            self.volume += 0.1
-
-    def volume_down(self):
-        """ volume_down media player. """
-        if self.volume > 0:
-            self.volume -= 0.1
-
-    def media_play_pause(self):
-        """ media_play_pause media player. """
-        self.is_playing = not self.is_playing
-
-    def media_play(self):
-        """ media_play media player. """
-        self.is_playing = True
-
-    def media_pause(self):
-        """ media_pause media player. """
-        self.is_playing = False
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        self.media_title = 'Demo media title'
-        self.is_playing = True
-
-    def update(self):
-        """ Update state of the media_player. """
-        _LOGGING.info("updating status enigma media_player")
 
         status_info = self._e2_box.get_status_info()
         _LOGGING.info('status_info: %s', status_info)
@@ -162,3 +135,10 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
                 ATTR_MEDIA_VOLUME: self.volume,
                 ATTR_MEDIA_STATE: MEDIA_STATE_PLAYING
             }
+
+        return self.state_attr
+
+
+    def update(self):
+        """ Update state of the media_player. """
+        _LOGGING.info("updating status enigma media_player")
