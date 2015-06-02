@@ -2,7 +2,7 @@
 homeassistant.components.media_player
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Component to interface with various media players
+Component to interface with various media players.
 """
 import logging
 
@@ -41,6 +41,7 @@ ATTR_MEDIA_IMAGE_URL = 'media_image_url'
 ATTR_MEDIA_VOLUME = 'media_volume'
 ATTR_MEDIA_IS_VOLUME_MUTED = 'media_is_volume_muted'
 ATTR_MEDIA_DURATION = 'media_duration'
+ATTR_MEDIA_DATE = 'media_date'
 
 MEDIA_STATE_UNKNOWN = 'unknown'
 MEDIA_STATE_PLAYING = 'playing'
