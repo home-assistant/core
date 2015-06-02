@@ -20,6 +20,7 @@ It offers the following functionality through built-in components:
  * Offers a [REST API](https://home-assistant.io/developers/api.html) for easy integration with other projects
  * [Ability to have multiple instances of Home Assistant work together](https://home-assistant.io/developers/architecture.html)
  * Allow sending notifications using [Instapush](https://instapush.im), [Notify My Android (NMA)](http://www.notifymyandroid.com/), [PushBullet](https://www.pushbullet.com/), [PushOver](https://pushover.net/), and [Jabber (XMPP)](http://xmpp.org)
+ * Allow to display details about a running [Transmission](http://www.transmissionbt.com/) client, the [Bitcoin](https://bitcoin.org) network, local meteorological data from [OpenWeatherMap](http://openweathermap.org/), the time, the date, and the downloads from [SABnzbd](http://sabnzbd.org)
 
 Home Assistant also includes functionality for controlling HTPCs:
 
