@@ -235,8 +235,13 @@ def process_ha_core_config(hass, config):
 
     set_time_zone(config.get(CONF_TIME_ZONE))
 
-    for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
-        Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
+    customize = config.get(CONF_CUSTOMIZE)
+
+    if isinstance(customize, dict):
+        for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
+            if not isinstance(attrs, dict):
+                continue
+            Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
 
     if CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]

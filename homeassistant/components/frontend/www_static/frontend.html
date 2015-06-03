@@ -12326,9 +12326,9 @@ window.hass.uiUtil.formatDate = function(dateObj) {
     --paper-deep-orange-a400: #ff3d00;
     --paper-deep-orange-a700: #dd2c00;
  
-    --paper-brown-50: #795548;
-    --paper-brown-100: #efebe9;
-    --paper-brown-200: #d7ccc8;
+    --paper-brown-50: #efebe9;
+    --paper-brown-100: #d7ccc8;
+    --paper-brown-200: #bcaaa4;
     --paper-brown-300: #a1887f;
     --paper-brown-400: #8d6e63;
     --paper-brown-500: #795548;
@@ -12569,13 +12569,18 @@ is separate from validation, and `allowed-pattern` does not affect how the input
       _previousValidInput: {
         type: String,
         value: ''
+      },
+
+      _patternAlreadyChecked: {
+        type: Boolean,
+        value: false
       }
 
     },
 
     listeners: {
       'input': '_onInput',
-      'keydown': '_onKeydown'
+      'keypress': '_onKeypress'
     },
 
     get _patternRegExp() {
@@ -12600,33 +12605,54 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
     _bindValueChanged: function() {
       if (this.value !== this.bindValue) {
-        this.value = this.bindValue;
+        this.value = !this.bindValue ? '' : this.bindValue;
       }
       // manually notify because we don't want to notify until after setting value
       this.fire('bind-value-changed', {value: this.bindValue});
     },
 
     _onInput: function() {
+      // Need to validate each of the characters pasted if they haven't
+      // been validated inside `_onKeypress` already.
+      if (this.preventInvalidInput && !this._patternAlreadyChecked) {
+        var valid = this._checkPatternValidity();
+        if (!valid) {
+          this.value = this._previousValidInput;
+        }
+      }
+
       this.bindValue = this.value;
+      this._previousValidInput = this.value;
+      this._patternAlreadyChecked = false;
     },
 
-    _isPrintable: function(keyCode) {
-      var printable =
-        (keyCode > 47 && keyCode < 58)   || // number keys
-        keyCode == 32 || keyCode == 13   || // spacebar & return key
-        (keyCode > 64 && keyCode < 91)   || // letter keys
-        (keyCode > 95 && keyCode < 112)  || // numpad keys
-        (keyCode > 185 && keyCode < 193) || // ;=,-./` (in order)
-        (keyCode > 218 && keyCode < 223);   // [\]' (in order)
-      return printable;
+    _isPrintable: function(event) {
+      // What a control/printable character is varies wildly based on the browser.
+      // - most control characters (arrows, backspace) do not send a `keypress` event
+      //   in Chrome, but the *do* on Firefox
+      // - in Firefox, when they do send a `keypress` event, control chars have
+      //   a charCode = 0, keyCode = xx (for ex. 40 for down arrow)
+      // - printable characters always send a keypress event.
+      // - in Firefox, printable chars always have a keyCode = 0. In Chrome, the keyCode
+      //   always matches the charCode.
+      // None of this makes any sense.
+
+      var nonPrintable =
+        (event.keyCode == 8)   ||  // backspace
+        (event.keyCode == 19)  ||  // pause
+        (event.keyCode == 20)  ||  // caps lock
+        (event.keyCode == 27)  ||  // escape
+        (event.keyCode == 45)  ||  // insert
+        (event.keyCode == 46)  ||  // delete
+        (event.keyCode == 144) ||  // num lock
+        (event.keyCode == 145) ||  // scroll lock
+        (event.keyCode > 32 && event.keyCode < 41)   || // page up/down, end, home, arrows
+        (event.keyCode > 111 && event.keyCode < 124); // fn keys
+
+      return !(event.charCode == 0 && nonPrintable);
     },
 
-    // convert printable numpad keys to number keys
-    _correctNumpadKeys: function(keyCode) {
-      return (keyCode > 95 && keyCode < 112) ? keyCode - 48 : keyCode;
-    },
-
-    _onKeydown: function(event) {
+    _onKeypress: function(event) {
       if (!this.preventInvalidInput && this.type !== 'number') {
         return;
       }
@@ -12634,10 +12660,31 @@ is separate from validation, and `allowed-pattern` does not affect how the input
       if (!regexp) {
         return;
       }
-      var thisChar = String.fromCharCode(this._correctNumpadKeys(event.keyCode));
-      if (this._isPrintable(event.keyCode) && !regexp.test(thisChar)) {
+
+      // Handle special keys and backspace
+      if (event.metaKey || event.ctrlKey || event.altKey)
+        return;
+
+      // Check the pattern either here or in `_onInput`, but not in both.
+      this._patternAlreadyChecked = true;
+
+      var thisChar = String.fromCharCode(event.charCode);
+      if (this._isPrintable(event) && !regexp.test(thisChar)) {
         event.preventDefault();
       }
+    },
+
+    _checkPatternValidity: function() {
+      var regexp = this._patternRegExp;
+      if (!regexp) {
+        return true;
+      }
+      for (var i = 0; i < this.value.length; i++) {
+        if (!regexp.test(this.value[i])) {
+          return false;
+        }
+      }
+      return true;
     },
 
     /**
@@ -12649,7 +12696,7 @@ is separate from validation, and `allowed-pattern` does not affect how the input
       // Empty, non-required input is valid.
       if (!this.required && this.value == '')
         return true;
-        
+
       var valid;
       if (this.hasValidator()) {
         valid = Polymer.IronValidatableBehavior.validate.call(this, this.value);
@@ -13660,6 +13707,47 @@ is separate from validation, and `allowed-pattern` does not affect how the input
   }
 </style>
 
+<script>
+(function() {
+  var uiUtil = window.hass.uiUtil;
+
+  Polymer({
+    is: 'state-card-content',
+
+    properties: {
+      stateObj: {
+        type: Object,
+        observer: 'stateObjChanged',
+      }
+    },
+
+    stateObjChanged: function(newVal, oldVal) {
+      var root = Polymer.dom(this);
+
+      if (!newVal) {
+        if (root.lastChild) {
+          root.removeChild(root.lastChild);
+        }
+        return;
+      }
+
+      var newCardType = uiUtil.stateCardType(newVal);
+
+      if (!oldVal || uiUtil.stateCardType(oldVal) != newCardType) {
+        if (root.lastChild) {
+          root.removeChild(root.lastChild);
+        }
+
+        var stateCard = document.createElement("state-card-" + newCardType);
+        stateCard.stateObj = newVal;
+        root.appendChild(stateCard);
+      } else {
+        root.lastChild.stateObj = newVal;
+      }
+    },
+  });
+})();
+</script>
 <script>
 (function() {
   "use strict";
@@ -21995,7 +22083,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class="horizontal justified layout">
       <state-info state-obj="[[stateObj]]"></state-info>
 
-      <paper-toggle-button class="self-center" checked="[[toggleChecked]]" on-change="toggleChanged" on-click="toggleClicked">
+      <paper-toggle-button class="self-center" checked="[[toggleChecked]]" on-change="toggleChanged" on-tap="toggleTapped">
       </paper-toggle-button>
     </div>
 
@@ -22024,6 +22112,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     ready: function() {
       this.forceStateChange = this.forceStateChange.bind(this);
       this.forceStateChange();
+    },
+
+    toggleTapped: function(ev) {
+      ev.stopPropagation();
     },
 
     toggleChanged: function(ev) {
@@ -22187,6 +22279,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   .state {
     margin-left: 16px;
     text-align: right;
+    overflow-x: hidden;
   }
 
   .main-text {
@@ -22236,55 +22329,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 })();
 </script>
-<dom-module id="state-card-content" assetpath="cards/">
-  <style>
-    :host {
-      display: block;
-    }
-  </style>
-</dom-module>
-
-<script>
-(function() {
-  var uiUtil = window.hass.uiUtil;
-
-  Polymer({
-    is: 'state-card-content',
-
-    properties: {
-      stateObj: {
-        type: Object,
-        observer: 'stateObjChanged',
-      }
-    },
-
-    stateObjChanged: function(newVal, oldVal) {
-      var root = Polymer.dom(this);
-
-      if (!newVal) {
-        if (root.lastChild) {
-          root.removeChild(root.lastChild);
-        }
-        return;
-      }
-
-      var newCardType = uiUtil.stateCardType(newVal);
-
-      if (!oldVal || uiUtil.stateCardType(oldVal) != newCardType) {
-        if (root.lastChild) {
-          root.removeChild(root.lastChild);
-        }
-
-        var stateCard = document.createElement("state-card-" + newCardType);
-        stateCard.stateObj = newVal;
-        root.appendChild(stateCard);
-      } else {
-        root.lastChild.stateObj = newVal;
-      }
-    },
-  });
-})();
-</script>
 <dom-module id="state-card" assetpath="cards/">
   <style>
     :host {
@@ -22320,10 +22364,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     listeners: {
-      'click': 'cardClicked',
+      'tap': 'cardTapped',
     },
 
-    cardClicked: function() {
+    cardTapped: function() {
       uiActions.showMoreInfoDialog(this.stateObj.entityId);
     },
   });
@@ -25792,7 +25836,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       if (newVal) {
         this.volumeSliderValue = newVal.attributes.media_volume * 100;
         this.isMuted = newVal.attributes.media_is_volume_muted;
-        console.log(this.isMuted);
       }
 
       this.debounce('more-info-volume-animation-finish', function() {
