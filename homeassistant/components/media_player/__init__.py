@@ -209,26 +209,34 @@ def setup(hass, config):
     for service in SERVICE_TO_METHOD:
         hass.services.register(DOMAIN, service, media_player_service_handler)
 
-    def volume_set_service(service, volume):
+    def volume_set_service(service):
         """ Set specified volume on the media player. """
         target_players = component.extract_from_service(service)
-        volume = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
 
-        if volume is not None:
-            for player in target_players:
-                player.set_volume_level(volume)
+        if ATTR_MEDIA_VOLUME_LEVEL not in service.data:
+            return
 
-                if player.should_poll:
-                    player.update_ha_state(True)
+        volume = service.data[ATTR_MEDIA_VOLUME_LEVEL]
+
+        for player in target_players:
+            player.set_volume_level(volume)
+
+            if player.should_poll:
+                player.update_ha_state(True)
 
     hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service)
 
-    def volume_mute_service(service, mute):
+    def volume_mute_service(service):
         """ Mute (true) or unmute (false) the media player. """
         target_players = component.extract_from_service(service)
 
+        if ATTR_MEDIA_VOLUME_MUTED not in service.data:
+            return
+
+        mute = service.data[ATTR_MEDIA_VOLUME_MUTED]
+
         for player in target_players:
-            player.volume_mute(mute)
+            player.mute_volume(mute)
 
             if player.should_poll:
                 player.update_ha_state(True)
@@ -236,7 +244,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE,
                            lambda service:
                            volume_mute_service(
-                               service, service.data.get('mute')))
+                               service, ))
 
     def play_youtube_video_service(service, media_id):
         """ Plays specified media_id on the media player. """
