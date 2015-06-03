@@ -15,8 +15,8 @@
     <link rel='shortcut icon' href='/static/favicon.ico' />
     <link rel='icon' type='image/png'
          href='/static/favicon-192x192.png' sizes='192x192'>
-    <link rel='apple-touch-icon' sizes='192x192'
-         href='/static/favicon-192x192.png'>
+    <link rel='apple-touch-icon' sizes='180x180'
+         href='/static/favicon-apple-180x180.png'>
     <meta name='theme-color' content='#03a9f4'>
    </head>
    <body fullbleed>
