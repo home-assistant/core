@@ -17,7 +17,7 @@ import homeassistant.util.dt as dt_util
 
 from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME,
-    CONF_PLATFORM)
+    CONF_PLATFORM, DEVICE_DEFAULT_NAME)
 from homeassistant.components import group
 
 DOMAIN = "device_tracker"
@@ -169,66 +169,28 @@ class DeviceTracker(object):
         if not self.lock.acquire(False):
             return
 
-        found_devices = set(dev.upper() for dev in
-                            self.device_scanner.scan_devices())
+        try:
+            found_devices = set(dev.upper() for dev in
+                                self.device_scanner.scan_devices())
 
-        for device in self.tracked:
-            is_home = device in found_devices
+            for device in self.tracked:
+                is_home = device in found_devices
 
-            self._update_state(now, device, is_home)
+                self._update_state(now, device, is_home)
 
-            if is_home:
-                found_devices.remove(device)
+                if is_home:
+                    found_devices.remove(device)
 
-        # Did we find any devices that we didn't know about yet?
-        new_devices = found_devices - self.untracked_devices
+            # Did we find any devices that we didn't know about yet?
+            new_devices = found_devices - self.untracked_devices
 
-        if new_devices:
-            if not self.track_new_devices:
-                self.untracked_devices.update(new_devices)
+            if new_devices:
+                if not self.track_new_devices:
+                    self.untracked_devices.update(new_devices)
 
-            # Write new devices to known devices file
-            if not self.invalid_known_devices_file:
-
-                known_dev_path = self.hass.config.path(KNOWN_DEVICES_FILE)
-
-                try:
-                    # If file does not exist we will write the header too
-                    is_new_file = not os.path.isfile(known_dev_path)
-
-                    with open(known_dev_path, 'a') as outp:
-                        _LOGGER.info(
-                            "Found %d new devices, updating %s",
-                            len(new_devices), known_dev_path)
-
-                        writer = csv.writer(outp)
-
-                        if is_new_file:
-                            writer.writerow((
-                                "device", "name", "track", "picture"))
-
-                        for device in new_devices:
-                            # See if the device scanner knows the name
-                            # else defaults to unknown device
-                            dname = self.device_scanner.get_device_name(device)
-                            name = dname or "unknown device"
-
-                            track = 0
-                            if self.track_new_devices:
-                                self._track_device(device, name)
-                                track = 1
-
-                            writer.writerow((device, name, track, ""))
-
-                    if self.track_new_devices:
-                        self._generate_entity_ids(new_devices)
-
-                except IOError:
-                    _LOGGER.exception(
-                        "Error updating %s with %d new devices",
-                        known_dev_path, len(new_devices))
-
-        self.lock.release()
+                self._update_known_devices_file(new_devices)
+        finally:
+            self.lock.release()
 
     # pylint: disable=too-many-branches
     def _read_known_devices_file(self):
@@ -308,6 +270,44 @@ class DeviceTracker(object):
 
             finally:
                 self.lock.release()
+
+    def _update_known_devices_file(self, new_devices):
+        """ Add new devices to known devices file. """
+        if not self.invalid_known_devices_file:
+            known_dev_path = self.hass.config.path(KNOWN_DEVICES_FILE)
+
+            try:
+                # If file does not exist we will write the header too
+                is_new_file = not os.path.isfile(known_dev_path)
+
+                with open(known_dev_path, 'a') as outp:
+                    _LOGGER.info("Found %d new devices, updating %s",
+                                 len(new_devices), known_dev_path)
+
+                    writer = csv.writer(outp)
+
+                    if is_new_file:
+                        writer.writerow(("device", "name", "track", "picture"))
+
+                    for device in new_devices:
+                        # See if the device scanner knows the name
+                        # else defaults to unknown device
+                        name = self.device_scanner.get_device_name(device) or \
+                            DEVICE_DEFAULT_NAME
+
+                        track = 0
+                        if self.track_new_devices:
+                            self._track_device(device, name)
+                            track = 1
+
+                        writer.writerow((device, name, track, ""))
+
+                if self.track_new_devices:
+                    self._generate_entity_ids(new_devices)
+
+            except IOError:
+                _LOGGER.exception("Error updating %s with %d new devices",
+                                  known_dev_path, len(new_devices))
 
     def _track_device(self, device, name):
         """
