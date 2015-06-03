@@ -61,3 +61,6 @@ blockchain>=1.1.2
 
 # MPD Bindings (media_player.mpd)
 python-mpd2>=0.5.4
+
+# Hikvision (switch.hikvisioncam)
+hikvision>=0.4
