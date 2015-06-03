@@ -37,10 +37,10 @@
     },
 
     listeners: {
-      'click': 'cardClicked',
+      'tap': 'cardTapped',
     },
 
-    cardClicked: function() {
+    cardTapped: function() {
       uiActions.showMoreInfoDialog(this.stateObj.entityId);
     },
   });
