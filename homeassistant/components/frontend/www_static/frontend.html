@@ -16975,7 +16975,7 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
     case "media_player":
       var icon = "hardware:cast";
 
-      if (state && state !== "idle") {
+      if (state && state !== "off" && state !== 'idle') {
         icon += "-connected";
       }
 
@@ -22301,8 +22301,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class="horizontal justified layout">
       <state-info state-obj="[[stateObj]]"></state-info>
       <div class="state">
-        <div class="main-text">[[computePrimaryText(stateObj)]]</div>
-        <div class="secondary-text">[[computeSecondaryText(stateObj)]]</div>
+        <div class="main-text">[[computePrimaryText(stateObj, isPlaying)]]</div>
+        <div class="secondary-text">[[computeSecondaryText(stateObj, isPlaying)]]</div>
       </div>
     </div>
   </template>
@@ -22310,6 +22310,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <script>
 (function() {
+  var PLAYING_STATES = ['playing', 'paused'];
   Polymer({
     is: 'state-card-media_player',
 
@@ -22317,14 +22318,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       stateObj: {
         type: Object,
       },
+
+      isPlaying: {
+        type: Boolean,
+        computed: 'computeIsPlaying(stateObj)',
+      },
     },
 
-    computePrimaryText: function(stateObj) {
-      return stateObj.attributes.media_title || stateObj.stateDisplay;
+    computeIsPlaying: function(stateObj) {
+      return PLAYING_STATES.indexOf(stateObj.state) !== -1;
     },
 
-    computeSecondaryText: function(stateObj) {
-      return stateObj.attributes.media_title ? stateObj.stateDisplay : '';
+    computePrimaryText: function(stateObj, isPlaying) {
+      return isPlaying ? stateObj.attributes.media_title : stateObj.stateDisplay;
+    },
+
+    computeSecondaryText: function(stateObj, isPlaying) {
+      var text;
+
+      if (stateObj.attributes.media_content_type == 'music') {
+        return stateObj.attributes.media_artist;
+
+      } else if (stateObj.attributes.media_content_type == 'tvshow') {
+        text = stateObj.attributes.media_series_title;
+
+        if (stateObj.attributes.media_season && stateObj.attributes.media_episode) {
+          text += ' S' + stateObj.attributes.media_season + 'E' + stateObj.attributes.media_episode;
+        }
+        return text;
+
+      } else if (stateObj.attributes.app_name) {
+        return stateObj.attributes.app_name;
+
+      } else {
+        return '';
+      }
     },
   });
 })();
@@ -22342,6 +22370,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       width: 100%;
 
       cursor: pointer;
+      overflow: hidden;
     }
   </style>
 
@@ -25761,8 +25790,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       text-transform: capitalize;
     }
 
-    /* Accent the power button because the user should use that first */
-    paper-icon-button[focus] {
+    paper-icon-button[highlight] {
       color: var(--accent-color);
     }
 
@@ -25774,7 +25802,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       transition: max-height .5s ease-in;
     }
 
-    .has-media_volume .volume {
+    .has-volume_level .volume {
       max-height: 40px;
     }
   </style>
@@ -25782,19 +25810,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class$="[[computeClassNames(stateObj)]]">
       <div class="layout horizontal">
         <div class="flex">
-          <paper-icon-button icon="power-settings-new" focus$="[[isIdle]]" on-tap="handleTogglePower"></paper-icon-button>
+          <paper-icon-button icon="power-settings-new" highlight$="[[isOff]]" on-tap="handleTogglePower"></paper-icon-button>
         </div>
         <div>
-          <template is="dom-if" if="[[!isIdle]]">
-            <paper-icon-button icon="av:skip-previous" on-tap="handlePrevious"></paper-icon-button>
-            <paper-icon-button icon="[[computePlayPauseIcon(stateObj)]]" focus$="" on-tap="handlePlayPause"></paper-icon-button>
-            <paper-icon-button icon="av:skip-next" on-tap="handleNext"></paper-icon-button>
+          <template is="dom-if" if="[[!isOff]]">
+            <paper-icon-button icon="av:skip-previous" on-tap="handlePrevious" hidden$="[[!supportsPreviousTrack]]"></paper-icon-button>
+            <paper-icon-button icon="[[computePlaybackControlIcon(stateObj)]]" on-tap="handlePlaybackControl" highlight=""></paper-icon-button>
+            <paper-icon-button icon="av:skip-next" on-tap="handleNext" hidden$="[[!supportsNextTrack]]"></paper-icon-button>
           </template>
         </div>
       </div>
-      <div class="volume center horizontal layout">
+      <div class="volume center horizontal layout" hidden$="[[!supportsVolumeSet]]">
         <paper-icon-button on-tap="handleVolumeTap" icon="[[computeMuteVolumeIcon(isMuted)]]"></paper-icon-button>
-        <paper-slider hidden="[[isMuted]]" min="0" max="100" value="{{volumeSliderValue}}" on-change="volumeSliderChanged" class="flex">
+        <paper-slider disabled$="[[isMuted]]" min="0" max="100" value="{{volumeSliderValue}}" on-change="volumeSliderChanged" class="flex">
         </paper-slider>
       </div>
     </div>
@@ -25805,7 +25833,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 (function() {
   var serviceActions = window.hass.serviceActions;
   var uiUtil = window.hass.uiUtil;
-  var ATTRIBUTE_CLASSES = ['media_volume'];
+  var ATTRIBUTE_CLASSES = ['volume_level'];
 
   Polymer({
     is: 'more-info-media_player',
@@ -25816,9 +25844,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         observer: 'stateObjChanged',
       },
 
-      isIdle: {
+      isOff: {
         type: Boolean,
-        computed: 'computeIsIdle(stateObj)',
+        value: false,
+      },
+
+      isPlaying: {
+        type: Boolean,
+        value: false,
       },
 
       isMuted: {
@@ -25829,13 +25862,58 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       volumeSliderValue: {
         type: Number,
         value: 0,
-      }
+      },
+
+      supportsPause: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsVolumeSet: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsVolumeMute: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsPreviousTrack: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsNextTrack: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsTurnOn: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsTurnOff: {
+        type: Boolean,
+        value: false,
+      },
+
     },
 
     stateObjChanged: function(newVal, oldVal) {
       if (newVal) {
-        this.volumeSliderValue = newVal.attributes.media_volume * 100;
-        this.isMuted = newVal.attributes.media_is_volume_muted;
+        this.isOff = newVal.state == 'off';
+        this.isPlaying = newVal.state == 'playing';
+        this.volumeSliderValue = newVal.attributes.volume_level * 100;
+        this.isMuted = newVal.attributes.volume_muted;
+        this.supportsPause = (newVal.attributes.supported_media_commands & 1) !== 0;
+        this.supportsVolumeSet = (newVal.attributes.supported_media_commands & 4) !== 0;
+        this.supportsVolumeMute = (newVal.attributes.supported_media_commands & 8) !== 0;
+        this.supportsPreviousTrack = (newVal.attributes.supported_media_commands & 16) !== 0;
+        this.supportsNextTrack = (newVal.attributes.supported_media_commands & 32) !== 0;
+        this.supportsTurnOn = (newVal.attributes.supported_media_commands & 128) !== 0;
+        this.supportsTurnOff = (newVal.attributes.supported_media_commands & 256) !== 0;
       }
 
       this.debounce('more-info-volume-animation-finish', function() {
@@ -25847,35 +25925,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
     },
 
-    computeMediaState: function(stateObj) {
-      return stateObj.state == 'idle' ? 'idle' : stateObj.attributes.media_state;
+    computeIsOff: function(stateObj) {
+      return stateObj.state == 'off';
     },
 
-    computeIsIdle: function(stateObj) {
-      return stateObj.state == 'idle';
-    },
-
-    computePowerButtonCaption: function(isIdle) {
-      return isIdle ? 'Turn on' : 'Turn off';
+    computePowerButtonCaption: function(isOff) {
+      return isOff ? 'Turn on' : 'Turn off';
     },
 
     computeMuteVolumeIcon: function(isMuted) {
       return isMuted ? 'av:volume-off' : 'av:volume-up';
     },
 
-    computePlayPauseIcon: function(stateObj) {
-      return stateObj.attributes.media_state == 'playing' ? 'av:pause' : 'av:play-arrow';
+    computePlaybackControlIcon: function(stateObj) {
+      if (this.isPlaying) {
+        return this.supportsPause ? 'av:pause' : 'av:stop';
+      }
+      return 'av:play-arrow';
     },
 
     handleTogglePower: function() {
-      this.callService(this.isIdle ? 'turn_on' : 'turn_off');
+      this.callService(this.isOff ? 'turn_on' : 'turn_off');
     },
 
     handlePrevious: function() {
-      this.callService('media_prev_track');
+      this.callService('media_previous_track');
     },
 
-    handlePlayPause: function() {
+    handlePlaybackControl: function() {
+      if (this.isPlaying && !this.supportsPause) {
+        alert('This case is not supported yet');
+      }
       this.callService('media_play_pause');
     },
 
@@ -25884,14 +25964,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     handleVolumeTap: function() {
-      this.callService('volume_mute', { mute: !this.isMuted });
+      if (!this.supportsVolumeMute) {
+        return;
+      }
+      this.callService('volume_mute', { volume_muted: !this.isMuted });
     },
 
     volumeSliderChanged: function(ev) {
       var volPercentage = parseFloat(ev.target.value);
       var vol = volPercentage > 0 ? volPercentage / 100 : 0;
-
-      this.callService('volume_set', { volume: vol });
+      this.callService('volume_set', { volume_level: vol });
     },
 
     callService: function(service, data) {
