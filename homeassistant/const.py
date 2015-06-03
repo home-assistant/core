@@ -108,6 +108,7 @@ SERVICE_MEDIA_PLAY = "media_play"
 SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
+SERVICE_MEDIA_SEEK = "media_seek"
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123

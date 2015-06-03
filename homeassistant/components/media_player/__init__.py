@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
 DOMAIN = 'media_player'
 DEPENDENCIES = []
@@ -31,6 +31,7 @@ SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'volume_muted'
+ATTR_MEDIA_SEEK_POSITION = 'seek_position'
 ATTR_MEDIA_CONTENT_ID = 'media_content_id'
 ATTR_MEDIA_CONTENT_TYPE = 'media_content_type'
 ATTR_MEDIA_DURATION = 'media_duration'
@@ -246,6 +247,26 @@ def setup(hass, config):
                            volume_mute_service(
                                service, ))
 
+    def media_seek_service(service):
+        """ Seek to a position. """
+        target_players = component.extract_from_service(service)
+
+        if ATTR_MEDIA_SEEK_POSITION not in service.data:
+            return
+
+        position = service.data[ATTR_MEDIA_SEEK_POSITION]
+
+        for player in target_players:
+            player.seek(position)
+
+            if player.should_poll:
+                player.update_ha_state(True)
+
+    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK,
+                           lambda service:
+                           media_seek_service(
+                               service, ))
+
     def play_youtube_video_service(service, media_id):
         """ Plays specified media_id on the media player. """
         target_players = component.extract_from_service(service)
@@ -399,6 +420,10 @@ class MediaPlayerDevice(Entity):
 
     def media_next_track(self):
         """ Send next track command. """
+        raise NotImplementedError()
+
+    def media_seek(self, position):
+        """ Send seek command. """
         raise NotImplementedError()
 
     def play_youtube(self, media_id):
