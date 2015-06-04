@@ -186,6 +186,22 @@ def from_config_file(config_path, hass=None):
 def enable_logging(hass):
     """ Setup the logging for home assistant. """
     logging.basicConfig(level=logging.INFO)
+    try:
+        from colorlog import ColoredFormatter
+        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+            "%(log_color)s%(asctime)s (%(threadName)s) [%(name)s] %(message)s%(reset)s",
+            datefmt=None,
+            reset=True,
+            log_colors={
+                'DEBUG':    'cyan',
+                'INFO':     'green',
+                'WARNING':  'yellow',
+                'ERROR':    'red',
+                'CRITICAL': 'red',
+            }
+        ))
+    except:
+        _LOGGER.warn("No colorlog package found")
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path('home-assistant.log')
