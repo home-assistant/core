@@ -35,7 +35,7 @@ If you run into issues while using Home Assistant or during development of a com
 
 ## Installation instructions / Quick-start guide
 
-Running Home Assistant requires that python 3.4 and the package requests are installed. Run the following code to install and start Home Assistant:
+Running Home Assistant requires that [Python](https://www.python.org/) 3.4 and the package [requests](http://docs.python-requests.org/en/latest/) are installed. Run the following code to install and start Home Assistant:
 
 ```python
 git clone --recursive https://github.com/balloob/home-assistant.git
@@ -44,7 +44,7 @@ pip3 install -r requirements.txt
 python3 -m homeassistant --open-ui
 ```
 
-The last command will start the Home Assistant server and launch its webinterface. By default Home Assistant looks for the configuration file `config/home-assistant.conf`. A standard configuration file will be written if none exists.
+The last command will start the Home Assistant server and launch its web interface. By default Home Assistant looks for the configuration file `config/home-assistant.conf`. A standard configuration file will be written if none exists.
 
 If you are still exploring if you want to use Home Assistant in the first place, you can enable the demo mode by adding the `--demo-mode` argument to the last command.
 
