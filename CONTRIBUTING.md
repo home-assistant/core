@@ -1,13 +1,13 @@
 # Contributing to Home Assistant
 
-Everybody is invited and welcome to contribute to Home Assistant. There is a lot to do...if you are not a developer perhaps you would like to help with the documentation on [home-assistant.io](https://home-assistant.io/)? If you are a developer and have devices in your home which aren't working with Home Assistant, why not spent a couple of hours and help to integrate them? 
+Everybody is invited and welcome to contribute to Home Assistant. There is a lot to do...if you are not a developer perhaps you would like to help with the documentation on [home-assistant.io](https://home-assistant.io/)? If you are a developer and have devices in your home which aren't working with Home Assistant yet, why not spent a couple of hours and help to integrate them? 
 
-The process is straigh-forward.
+The process is straight-forward.
 
  - Fork the Home Assistant [git repository](https://github.com/balloob/home-assistant).
  - Write the code for your device, notification service, sensor, or IoT thing.
  - Check it with ``pylint`` and ``flake8``.
- - Create a Pull Request against the **dev** branch of Home Assistant.
+ - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
 
 Still interested? Then you should read the next sections and get more details. 
 
@@ -27,7 +27,7 @@ After you finish adding support for your device:
 
 If you've added a component:
 
- - Update the file [`domain-icon.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/domain-icon.html) with an icon for your domain ([pick from this list](https://www.polymer-project.org/0.5/components/core-elements/demo.html#core-icon))
+ - Update the file [`domain-icon.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/domain-icon.html) with an icon for your domain ([pick from this list](https://www.polymer-project.org/1.0/components/core-elements/demo.html#core-icon))
  - Update the demo component with two states that it provides
  - Add your component to home-assistant.conf.example
 
