@@ -27,11 +27,11 @@ After you finish adding support for your device:
 
 If you've added a component:
 
- - Update the file [`domain-icon.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/domain-icon.html) with an icon for your domain ([pick from this list](https://www.polymer-project.org/1.0/components/core-elements/demo.html#core-icon))
+ - Update the file [`home-assistant-icons.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/frontend/www_static/polymer/resources/home-assistant-icons.html) with an icon for your domain ([pick one from this list](https://www.polymer-project.org/1.0/components/core-elements/demo.html#core-icon)).
  - Update the demo component with two states that it provides
  - Add your component to home-assistant.conf.example
 
-Since you've updated `domain-icon.html`, you've made changes to the frontend:
+Since you've updated `home-assistant-icons.html`, you've made changes to the frontend:
 
  - Run `build_frontend`. This will build a new version of the frontend. Make sure you add the changed files `frontend.py` and `frontend.html` to the commit.
 
