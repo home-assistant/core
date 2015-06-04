@@ -11,9 +11,9 @@ to your config/configuration.yaml
 
 notify:
   platform: syslog
-  facility: MAIL_SERVER
-  option: YOUR_SMTP_PORT
-  priority: SENDER_EMAIL_ADDRESS
+  facility: SYSLOG_FACILITY
+  option: SYSLOG_LOG_OPTION
+  priority: SYSLOG_PRIORITY
 
 Variables:
 
