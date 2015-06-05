@@ -1,0 +1,106 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+
+
+<dom-module id='more-info-camera'>
+
+  <style>
+
+  :host .camera-image {
+    width:640px;
+    height:480px;
+  }
+   @media (max-width: 720px) {
+      :host .camera-image {
+        max-width: calc(100%);
+        height: initial
+      }
+
+      :host .camera-page {
+        max-width: calc(100%);
+        max-height: calc(100%);
+      }
+    }
+
+    @media (max-width: 620px) {
+      :host .camera-image {
+        max-width: calc(100%);
+        height: initial
+      }
+    }
+
+    :host .camera-page {
+      width:640px;
+      height:520px;
+    }
+
+  </style>
+
+  <template>
+    <div class$='[[computeClassNames(stateObj)]]'>
+      <div id="camera_container" class="camera-container camera-page">        
+        <img src="{{camera_image_url}}" id="camera_image" class="camera-image" />
+      </div>
+    </div>
+  </template>
+
+</dom-module>
+
+<script>
+(function() {
+  var serviceActions = window.hass.serviceActions;
+  var uiUtil = window.hass.uiUtil;
+  var ATTRIBUTE_CLASSES = ['camera'];
+
+  Polymer({
+    is: 'more-info-camera',
+
+    properties: {
+      stateObj: {
+        type: Object,
+        observer: 'stateObjChanged',
+      },
+      dialogOpen: {
+        type: Object,
+        observer: 'dialogOpenChanged',
+      },
+      camera_image_url: {
+        type: String,
+      }
+    },
+
+    stateObjChanged: function(newVal, oldVal) {
+      if (newVal) {
+        
+      }
+
+    },
+
+    computeClassNames: function(stateObj) {
+      return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
+    },
+
+    dialogOpenChanged: function(newVal, oldVal) {      
+      if (newVal) {
+        this.startImageStream();
+      }
+      else {
+        this.stopImageStream();
+      }
+    },
+
+    startImageStream: function() {      
+      this.camera_image_url = this.stateObj.attributes['stream_url'];
+      this.isStreaming = true;
+    },
+
+    stopImageStream: function() {      
+      this.camera_image_url = this.stateObj.attributes['still_image_url'] + '?t=' + Date.now();
+      this.isStreaming = false;
+    },
+
+  });
+})();
+</script>
+</polymer-element>
