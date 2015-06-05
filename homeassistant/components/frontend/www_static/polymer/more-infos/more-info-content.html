@@ -8,6 +8,7 @@
 <link rel='import' href='more-info-script.html'>
 <link rel='import' href='more-info-light.html'>
 <link rel='import' href='more-info-media_player.html'>
+<link rel='import' href='more-info-camera.html'>
 
 <dom-module id='more-info-content'>
   <style>
@@ -33,6 +34,7 @@
       dialogOpen: {
         type: Boolean,
         value: false,
+        observer: 'dialogOpenChanged',
       },
     },
 
