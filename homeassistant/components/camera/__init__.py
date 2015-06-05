@@ -179,11 +179,13 @@ class Camera(Entity):
     """ The base class for camera components """
 
     @property
+    # pylint: disable=no-self-use
     def is_recording(self):
         """ Returns true if the device is recording """
         return False
 
     @property
+    # pylint: disable=no-self-use
     def is_streaming(self):
         """ Returns true if the device is streaming """
         return False
@@ -194,41 +196,49 @@ class Camera(Entity):
         pass
 
     @property
+    # pylint: disable=no-self-use
     def brand(self):
         """ Should return a string of the camera brand """
         return None
 
     @property
+    # pylint: disable=no-self-use
     def model(self):
         """ Returns string of camera model """
         return None
 
     @property
+    # pylint: disable=no-self-use
     def base_url(self):
         """ Return the configured base URL for the camera """
         return None
 
     @property
+    # pylint: disable=no-self-use
     def image_url(self):
         """ Return the still image segment of the URL """
         return None
 
     @property
+    # pylint: disable=no-self-use
     def device_info(self):
         """ Get the configuration object """
         return None
 
     @property
+    # pylint: disable=no-self-use
     def username(self):
         """ Get the configured username """
         return None
 
     @property
+    # pylint: disable=no-self-use
     def password(self):
         """ Get the configured password """
         return None
 
     @property
+    # pylint: disable=no-self-use
     def still_image_url(self):
         """ Get the URL of a camera still image """
         return None
