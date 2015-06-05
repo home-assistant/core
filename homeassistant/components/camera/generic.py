@@ -165,6 +165,7 @@ class GenericCamera(Camera):
         return self._is_streaming
 
     @is_streaming.setter
+    # pylint: disable=arguments-differ
     def is_streaming(self, value):
         self._is_streaming = value
 
