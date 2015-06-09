@@ -21,11 +21,14 @@ from homeassistant.const import (
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_YOUTUBE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK)
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
+SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
 
 
 # pylint: disable=unused-argument
@@ -61,6 +64,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CastDevice(MediaPlayerDevice):
     """ Represents a Cast device on the network. """
 
+    # pylint: disable=too-many-public-methods
+
     def __init__(self, host):
         self.cast = pychromecast.Chromecast(host)
         self.youtube = youtube.YouTubeController()
@@ -73,7 +78,7 @@ class CastDevice(MediaPlayerDevice):
         self.cast_status = self.cast.status
         self.media_status = self.cast.media_controller.status
 
-    """Entity properties and methods"""
+    # Entity properties and methods
 
     @property
     def should_poll(self):
@@ -84,18 +89,18 @@ class CastDevice(MediaPlayerDevice):
         """ Returns the name of the device. """
         return self.cast.device.friendly_name
 
-    """MediaPlayerDevice properties and methods"""
+    # MediaPlayerDevice properties and methods
 
     @property
     def state(self):
         """ State of the player. """
-        media_controller = self.cast.media_controller
-
-        if media_controller.is_playing:
+        if self.media_status is None:
+            return STATE_UNKNOWN
+        elif self.media_status.player_is_playing:
             return STATE_PLAYING
-        elif media_controller.is_paused:
+        elif self.media_status.player_is_paused:
             return STATE_PAUSED
-        elif media_controller.is_idle:
+        elif self.media_status.player_is_idle:
             return STATE_IDLE
         elif self.cast.is_idle:
             return STATE_OFF
@@ -105,79 +110,85 @@ class CastDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """ Volume level of the media player (0..1). """
-        if self.cast_status is None:
-            return None
-        else:
-            return self.cast_status.volume_level
+        return self.cast_status.volume_level if self.cast_status else None
 
     @property
     def is_volume_muted(self):
         """ Boolean if volume is currently muted. """
-        if self.cast_status is None:
-            return None
-        else:
-            return self.cast_status.volume_muted
+        return self.cast_status.volume_muted if self.cast_status else None
 
     @property
     def media_content_id(self):
         """ Content ID of current playing media. """
-        if self.media_status is None:
-            return None
-        else:
-            return self.media_status.content_id
+        return self.media_status.content_id if self.media_status else None
 
     @property
     def media_content_type(self):
         """ Content type of current playing media. """
+        if self.media_status is None:
+            return None
+        elif self.media_status.media_is_tvshow:
+            return MEDIA_TYPE_TVSHOW
+        elif self.media_status.media_is_movie:
+            return MEDIA_TYPE_VIDEO
+        elif self.media_status.media_is_musictrack:
+            return MEDIA_TYPE_MUSIC
         return None
 
     @property
     def media_duration(self):
         """ Duration of current playing media in seconds. """
-        if self.media_status is None:
-            return None
-        else:
-            return self.media_status.duration
+        return self.media_status.duration if self.media_status else None
 
     @property
     def media_image_url(self):
         """ Image url of current playing media. """
-        return self.cast.media_controller.thumbnail
+        if self.media_status is None:
+            return None
+
+        images = self.media_status.images
+
+        return images[0].url if images else None
 
     @property
     def media_title(self):
         """ Title of current playing media. """
-        return self.cast.media_controller.title
+        return self.media_status.title if self.media_status else None
 
     @property
     def media_artist(self):
         """ Artist of current playing media. (Music track only) """
-        return None
+        return self.media_status.artist if self.media_status else None
 
     @property
     def media_album(self):
         """ Album of current playing media. (Music track only) """
-        return None
+        return self.media_status.album_name if self.media_status else None
+
+    @property
+    def media_album_artist(self):
+        """ Album arist of current playing media. (Music track only) """
+        return self.media_status.album_artist if self.media_status else None
 
     @property
     def media_track(self):
         """ Track number of current playing media. (Music track only) """
-        return None
+        return self.media_status.track if self.media_status else None
 
     @property
     def media_series_title(self):
         """ Series title of current playing media. (TV Show only)"""
-        return None
+        return self.media_status.series_title if self.media_status else None
 
     @property
     def media_season(self):
         """ Season of current playing media. (TV Show only) """
-        return None
+        return self.media_status.season if self.media_status else None
 
     @property
     def media_episode(self):
         """ Episode of current playing media. (TV Show only) """
-        return None
+        return self.media_status.episode if self.media_status else None
 
     @property
     def app_id(self):
@@ -192,14 +203,7 @@ class CastDevice(MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """ Flags of media commands that are supported. """
-        return SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-            SUPPORT_NEXT_TRACK
-
-    @property
-    def device_state_attributes(self):
-        """ Extra attributes a device wants to expose. """
-        return None
+        return SUPPORT_CAST
 
     def turn_on(self):
         """ Turns on the ChromeCast. """
@@ -211,11 +215,8 @@ class CastDevice(MediaPlayerDevice):
             self.cast.play_media(
                 CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
 
-
     def turn_off(self):
-        """ Service to exit any running app on the specimedia player ChromeCast and
-        shows idle screen. Will quit all ChromeCasts if nothing specified.
-        """
+        """ Turns Chromecast off. """
         self.cast.quit_app()
 
     def mute_volume(self, mute):
@@ -244,13 +245,13 @@ class CastDevice(MediaPlayerDevice):
 
     def media_seek(self, position):
         """ Seek the media to a specific location. """
-        self.case.media_controller.seek(position)
+        self.cast.media_controller.seek(position)
 
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """
         self.youtube.play_video(media_id)
 
-    """implementation of chromecast status_listener methods"""
+    # implementation of chromecast status_listener methods
 
     def new_cast_status(self, status):
         """ Called when a new cast status is received. """
