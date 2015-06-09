@@ -34,16 +34,17 @@ YOUTUBE_PLAYER_SUPPORT = \
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 NETFLIX_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
     """ Base class for demo media players. """
+    # We only implement the methods that we support
+    # pylint: disable=abstract-method
+
     def __init__(self, name):
         self._name = name
         self._player_state = STATE_PLAYING
@@ -181,7 +182,8 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         ('Diss Reaction', 'Jiiieehaaaa '),
         ('Flamman And Abraxas', 'Good To Go (Radio Mix)'),
         ('Critical Mass', 'Dancing Together'),
-        ('Charly Lownoise & Mental Theo', 'Ultimate Sex Track (Bass-D & King Matthew Remix)'),
+        ('Charly Lownoise & Mental Theo',
+         'Ultimate Sex Track (Bass-D & King Matthew Remix)'),
     ]
 
     def __init__(self):
@@ -221,6 +223,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_album(self):
         """ Album of current playing media. (Music track only) """
+        # pylint: disable=no-self-use
         return "Bounzz"
 
     @property
@@ -231,7 +234,15 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def supported_media_commands(self):
         """ Flags of media commands that are supported. """
-        return MUSIC_PLAYER_SUPPORT
+        support = MUSIC_PLAYER_SUPPORT
+
+        if self._cur_track > 1:
+            support |= SUPPORT_PREVIOUS_TRACK
+
+        if self._cur_track < len(self.tracks)-1:
+            support |= SUPPORT_NEXT_TRACK
+
+        return support
 
     def media_previous_track(self):
         """ Send previous track command. """
@@ -304,7 +315,15 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def supported_media_commands(self):
         """ Flags of media commands that are supported. """
-        return NETFLIX_PLAYER_SUPPORT
+        support = NETFLIX_PLAYER_SUPPORT
+
+        if self._cur_episode > 1:
+            support |= SUPPORT_PREVIOUS_TRACK
+
+        if self._cur_episode < self._episode_count:
+            support |= SUPPORT_NEXT_TRACK
+
+        return support
 
     def media_previous_track(self):
         """ Send previous track command. """
