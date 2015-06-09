@@ -36,6 +36,8 @@ omit =
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushover.py
+    homeassistant/components/notify/smtp.py
+    homeassistant/components/notify/syslog.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/mysensors.py

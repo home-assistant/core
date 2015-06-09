@@ -42,7 +42,11 @@
     },
 
     cardTapped: function() {
-      uiActions.showMoreInfoDialog(this.stateObj.entityId);
+      // Debounce wrapper added as workaround for bug
+      // https://github.com/PolymerElements/iron-overlay-behavior/issues/14
+      this.debounce('show-more-info-dialog', function() {
+        uiActions.showMoreInfoDialog(this.stateObj.entityId);
+      }, 1);
     },
   });
 })();
