@@ -21188,7 +21188,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
     <paper-scroll-header-panel class="fit">
       <paper-toolbar>
         <paper-icon-button icon="menu" hidden$="[[!narrow]]" on-click="toggleMenu"></paper-icon-button>
-        <div title="">
+        <div class="title">
           <content select="[header-title]"></content>
         </div>
         <content select="[header-buttons]"></content>
@@ -26314,6 +26314,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       cursor: pointer;
     }
 
+    paper-icon-item.logout {
+      margin-top: 16px;
+    }
+
     .divider {
       border-top: 1px solid #e0e0e0;
     }
@@ -26337,10 +26341,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-toolbar>
           
           <paper-icon-button hidden=""></paper-icon-button>
-          <div title="">Home Assistant</div>
+          <div class="title">Home Assistant</div>
         </paper-toolbar>
 
-        <paper-menu id="menu" class="layout vertical fit" selectable="[data-panel]" attr-for-selected="data-panel" on-iron-select="menuSelect" selected="[[selected]]">
+        <paper-menu id="menu" selectable="[data-panel]" attr-for-selected="data-panel" on-iron-select="menuSelect" selected="[[selected]]">
           <paper-icon-item data-panel="states">
             <iron-icon item-icon="" icon="apps"></iron-icon> States
           </paper-icon-item>
@@ -26366,9 +26370,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </paper-icon-item>
           </template>
 
-          <div class="flex"></div>
-
-          <paper-icon-item data-panel="logout">
+          <paper-icon-item data-panel="logout" class="logout">
             <iron-icon item-icon="" icon="exit-to-app"></iron-icon>
             Log Out
           </paper-icon-item>
