@@ -221,7 +221,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         return self.tracks[self._cur_track][0]
 
     @property
-    def media_album(self):
+    def media_album_name(self):
         """ Album of current playing media. (Music track only) """
         # pylint: disable=no-self-use
         return "Bounzz"
