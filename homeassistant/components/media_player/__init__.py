@@ -30,14 +30,15 @@ DISCOVERY_PLATFORMS = {
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
-ATTR_MEDIA_VOLUME_MUTED = 'volume_muted'
+ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
 ATTR_MEDIA_SEEK_POSITION = 'seek_position'
 ATTR_MEDIA_CONTENT_ID = 'media_content_id'
 ATTR_MEDIA_CONTENT_TYPE = 'media_content_type'
 ATTR_MEDIA_DURATION = 'media_duration'
 ATTR_MEDIA_TITLE = 'media_title'
 ATTR_MEDIA_ARTIST = 'media_artist'
-ATTR_MEDIA_ALBUM = 'media_album'
+ATTR_MEDIA_ALBUM_NAME = 'media_album_name'
+ATTR_MEDIA_ALBUM_ARTIST = 'media_album_artist'
 ATTR_MEDIA_TRACK = 'media_track'
 ATTR_MEDIA_SERIES_TITLE = 'media_series_title'
 ATTR_MEDIA_SEASON = 'media_season'
@@ -74,24 +75,24 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
 }
 
-ATTR_TO_PROPERTY = {
-    ATTR_MEDIA_VOLUME_LEVEL: 'volume_level',
-    ATTR_MEDIA_VOLUME_MUTED: 'is_volume_muted',
-    ATTR_MEDIA_CONTENT_ID: 'media_content_id',
-    ATTR_MEDIA_CONTENT_TYPE: 'media_content_type',
-    ATTR_MEDIA_DURATION: 'media_duration',
-    ATTR_ENTITY_PICTURE: 'media_image_url',
-    ATTR_MEDIA_TITLE: 'media_title',
-    ATTR_MEDIA_ARTIST: 'media_artist',
-    ATTR_MEDIA_ALBUM: 'media_album',
-    ATTR_MEDIA_TRACK: 'media_track',
-    ATTR_MEDIA_SERIES_TITLE: 'media_series_title',
-    ATTR_MEDIA_SEASON: 'media_season',
-    ATTR_MEDIA_EPISODE: 'media_episode',
-    ATTR_APP_ID: 'app_id',
-    ATTR_APP_NAME: 'app_name',
-    ATTR_SUPPORTED_MEDIA_COMMANDS: 'supported_media_commands',
-}
+ATTR_TO_PROPERTY = [
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ALBUM_ARTIST,
+    ATTR_MEDIA_TRACK,
+    ATTR_MEDIA_SERIES_TITLE,
+    ATTR_MEDIA_SEASON,
+    ATTR_MEDIA_EPISODE,
+    ATTR_APP_ID,
+    ATTR_APP_NAME,
+    ATTR_SUPPORTED_MEDIA_COMMANDS,
+]
 
 
 def is_on(hass, entity_id=None):
@@ -242,10 +243,7 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE,
-                           lambda service:
-                           volume_mute_service(
-                               service, ))
+    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service)
 
     def media_seek_service(service):
         """ Seek to a position. """
@@ -262,10 +260,7 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK,
-                           lambda service:
-                           media_seek_service(
-                               service, ))
+    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service)
 
     def play_youtube_video_service(service, media_id):
         """ Plays specified media_id on the media player. """
@@ -346,8 +341,13 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    def media_album(self):
-        """ Album of current playing media. (Music track only) """
+    def media_album_name(self):
+        """ Album name of current playing media. (Music track only) """
+        return None
+
+    @property
+    def media_album_artist(self):
+        """ Album arist of current playing media. (Music track only) """
         return None
 
     @property
@@ -490,9 +490,12 @@ class MediaPlayerDevice(Entity):
             state_attr = {}
         else:
             state_attr = {
-                attr: getattr(self, prop) for attr, prop
-                in ATTR_TO_PROPERTY.items() if getattr(self, prop)
+                attr: getattr(self, attr) for attr
+                in ATTR_TO_PROPERTY if getattr(self, attr)
             }
+
+            if self.media_image_url:
+                state_attr[ATTR_ENTITY_PICTURE] = self.media_image_url
 
         device_attr = self.device_state_attributes
 
