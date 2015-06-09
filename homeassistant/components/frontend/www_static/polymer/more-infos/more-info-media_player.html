@@ -131,7 +131,7 @@
         this.isOff = newVal.state == 'off';
         this.isPlaying = newVal.state == 'playing';
         this.volumeSliderValue = newVal.attributes.volume_level * 100;
-        this.isMuted = newVal.attributes.volume_muted;
+        this.isMuted = newVal.attributes.is_volume_muted;
         this.supportsPause = (newVal.attributes.supported_media_commands & 1) !== 0;
         this.supportsVolumeSet = (newVal.attributes.supported_media_commands & 4) !== 0;
         this.supportsVolumeMute = (newVal.attributes.supported_media_commands & 8) !== 0;
@@ -192,7 +192,7 @@
       if (!this.supportsVolumeMute) {
         return;
       }
-      this.callService('volume_mute', { volume_muted: !this.isMuted });
+      this.callService('volume_mute', { is_volume_muted: !this.isMuted });
     },
 
     volumeSliderChanged: function(ev) {
