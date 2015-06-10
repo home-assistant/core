@@ -37,15 +37,13 @@
     },
 
     listeners: {
-      'tap': 'cardTapped',
+      // listening for click instead of tap as a work around
+      // https://github.com/PolymerElements/iron-overlay-behavior/issues/14
+      'click': 'cardTapped',
     },
 
     cardTapped: function() {
-      // Debounce wrapper added as workaround for bug
-      // https://github.com/PolymerElements/iron-overlay-behavior/issues/14
-      this.debounce('show-more-info-dialog', function() {
-        uiActions.showMoreInfoDialog(this.stateObj.entityId);
-      }, 1);
+      uiActions.showMoreInfoDialog(this.stateObj.entityId);
     },
   });
 })();
