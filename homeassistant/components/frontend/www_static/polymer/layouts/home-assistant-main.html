@@ -39,6 +39,10 @@
       cursor: pointer;
     }
 
+    paper-icon-item.logout {
+      margin-top: 16px;
+    }
+
     .divider {
       border-top: 1px solid #e0e0e0;
     }
@@ -62,10 +66,10 @@
         <paper-toolbar>
           <!-- forces paper toolbar to style title appropriate -->
           <paper-icon-button hidden></paper-icon-button>
-          <div title>Home Assistant</div>
+          <div class="title">Home Assistant</div>
         </paper-toolbar>
 
-        <paper-menu id='menu' class='layout vertical fit'
+        <paper-menu id='menu'
           selectable='[data-panel]' attr-for-selected='data-panel'
           on-iron-select='menuSelect' selected='[[selected]]'>
           <paper-icon-item data-panel='states'>
@@ -93,9 +97,7 @@
             </paper-icon-item>
           </template>
 
-          <div class='flex'></div>
-
-          <paper-icon-item data-panel='logout'>
+          <paper-icon-item data-panel='logout' class='logout'>
             <iron-icon item-icon icon='exit-to-app'></iron-icon>
             Log Out
           </paper-icon-item>
