@@ -9,7 +9,7 @@ Configuration:
 To use the hello_word component you will need to add the following to your
 config/configuration.yaml
 
-hello_word:
+hello_world:
 
 """
 
