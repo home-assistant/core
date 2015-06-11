@@ -487,7 +487,9 @@ class MediaPlayerDevice(Entity):
     def state_attributes(self):
         """ Return the state attributes. """
         if self.state == STATE_OFF:
-            state_attr = {}
+            state_attr = {
+                ATTR_SUPPORTED_MEDIA_COMMANDS: self.supported_media_commands,
+            }
         else:
             state_attr = {
                 attr: getattr(self, attr) for attr
