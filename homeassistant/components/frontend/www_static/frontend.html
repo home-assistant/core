@@ -21188,7 +21188,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
     <paper-scroll-header-panel class="fit">
       <paper-toolbar>
         <paper-icon-button icon="menu" hidden$="[[!narrow]]" on-click="toggleMenu"></paper-icon-button>
-        <div title="">
+        <div class="title">
           <content select="[header-title]"></content>
         </div>
         <content select="[header-buttons]"></content>
@@ -22404,15 +22404,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     listeners: {
-      'tap': 'cardTapped',
+      // listening for click instead of tap as a work around
+      // https://github.com/PolymerElements/iron-overlay-behavior/issues/14
+      'click': 'cardTapped',
     },
 
     cardTapped: function() {
-      // Debounce wrapper added as workaround for bug
-      // https://github.com/PolymerElements/iron-overlay-behavior/issues/14
-      this.debounce('show-more-info-dialog', function() {
-        uiActions.showMoreInfoDialog(this.stateObj.entityId);
-      }, 1);
+      uiActions.showMoreInfoDialog(this.stateObj.entityId);
     },
   });
 })();
@@ -25870,7 +25868,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class$="[[computeClassNames(stateObj)]]">
       <div class="layout horizontal">
         <div class="flex">
-          <paper-icon-button icon="power-settings-new" highlight$="[[isOff]]" on-tap="handleTogglePower"></paper-icon-button>
+          <paper-icon-button icon="power-settings-new" highlight$="[[isOff]]" on-tap="handleTogglePower" hidden$="[[computeHidePowerButton(isOff, supportsTurnOn, supportsTurnOff)]]"></paper-icon-button>
         </div>
         <div>
           <template is="dom-if" if="[[!isOff]]">
@@ -25882,7 +25880,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </div>
       <div class="volume center horizontal layout" hidden$="[[!supportsVolumeSet]]">
         <paper-icon-button on-tap="handleVolumeTap" icon="[[computeMuteVolumeIcon(isMuted)]]"></paper-icon-button>
-        <paper-slider disabled$="[[isMuted]]" min="0" max="100" value="{{volumeSliderValue}}" on-change="volumeSliderChanged" class="flex">
+        <paper-slider disabled$="[[isMuted]]" min="0" max="100" value="[[volumeSliderValue]]" on-change="volumeSliderChanged" class="flex">
         </paper-slider>
       </div>
     </div>
@@ -25989,10 +25987,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       return stateObj.state == 'off';
     },
 
-    computePowerButtonCaption: function(isOff) {
-      return isOff ? 'Turn on' : 'Turn off';
-    },
-
     computeMuteVolumeIcon: function(isMuted) {
       return isMuted ? 'av:volume-off' : 'av:volume-up';
     },
@@ -26002,6 +25996,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return this.supportsPause ? 'av:pause' : 'av:stop';
       }
       return 'av:play-arrow';
+    },
+
+    computeHidePowerButton: function(isOff, supportsTurnOn, supportsTurnOff) {
+      return isOff && !supportsTurnOn || !isOff && supportsTurnOff;
     },
 
     handleTogglePower: function() {
@@ -26396,6 +26394,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       cursor: pointer;
     }
 
+    paper-icon-item.logout {
+      margin-top: 16px;
+    }
+
     .divider {
       border-top: 1px solid #e0e0e0;
     }
@@ -26419,10 +26421,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-toolbar>
           
           <paper-icon-button hidden=""></paper-icon-button>
-          <div title="">Home Assistant</div>
+          <div class="title">Home Assistant</div>
         </paper-toolbar>
 
-        <paper-menu id="menu" class="layout vertical fit" selectable="[data-panel]" attr-for-selected="data-panel" on-iron-select="menuSelect" selected="[[selected]]">
+        <paper-menu id="menu" selectable="[data-panel]" attr-for-selected="data-panel" on-iron-select="menuSelect" selected="[[selected]]">
           <paper-icon-item data-panel="states">
             <iron-icon item-icon="" icon="apps"></iron-icon> States
           </paper-icon-item>
@@ -26448,9 +26450,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </paper-icon-item>
           </template>
 
-          <div class="flex"></div>
-
-          <paper-icon-item data-panel="logout">
+          <paper-icon-item data-panel="logout" class="logout">
             <iron-icon item-icon="" icon="exit-to-app"></iron-icon>
             Log Out
           </paper-icon-item>
