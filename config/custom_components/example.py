@@ -47,6 +47,7 @@ CONF_TARGET = 'target'
 # Name of the service that we expose
 SERVICE_FLASH = 'flash'
 
+# Shortcut for the logger
 _LOGGER = logging.getLogger(__name__)
 
 
