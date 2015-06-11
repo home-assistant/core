@@ -10,9 +10,10 @@ import unittest
 
 import homeassistant as ha
 from homeassistant.const import (
+    STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK, ATTR_ENTITY_ID)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, ATTR_ENTITY_ID)
 import homeassistant.components.media_player as media_player
 from helpers import mock_service
 
@@ -29,7 +30,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.hass = ha.HomeAssistant()
 
         self.test_entity = media_player.ENTITY_ID_FORMAT.format('living_room')
-        self.hass.states.set(self.test_entity, media_player.STATE_NO_APP)
+        self.hass.states.set(self.test_entity, STATE_OFF)
 
         self.test_entity2 = media_player.ENTITY_ID_FORMAT.format('bedroom')
         self.hass.states.set(self.test_entity2, "YouTube")
@@ -56,7 +57,7 @@ class TestMediaPlayer(unittest.TestCase):
             SERVICE_MEDIA_PLAY: media_player.media_play,
             SERVICE_MEDIA_PAUSE: media_player.media_pause,
             SERVICE_MEDIA_NEXT_TRACK: media_player.media_next_track,
-            SERVICE_MEDIA_PREV_TRACK: media_player.media_prev_track
+            SERVICE_MEDIA_PREVIOUS_TRACK: media_player.media_previous_track
         }
 
         for service_name, service_method in services.items():
