@@ -64,3 +64,6 @@ python-mpd2>=0.5.4
 
 # Hikvision (switch.hikvisioncam)
 hikvision>=0.4
+
+# console log coloring
+colorlog>=2.6.0
