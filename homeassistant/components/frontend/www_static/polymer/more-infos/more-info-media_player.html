@@ -29,7 +29,8 @@
       <div class='layout horizontal'>
         <div class='flex'>
           <paper-icon-button icon='power-settings-new' highlight$='[[isOff]]'
-            on-tap='handleTogglePower'></paper-icon-button>
+            on-tap='handleTogglePower'
+            hidden$='[[computeHidePowerButton(isOff, supportsTurnOn, supportsTurnOff)]]'></paper-icon-button>
         </div>
         <div>
           <template is='dom-if' if='[[!isOff]]'>
@@ -46,7 +47,7 @@
         <paper-icon-button on-tap="handleVolumeTap"
           icon="[[computeMuteVolumeIcon(isMuted)]]"></paper-icon-button>
         <paper-slider disabled$='[[isMuted]]'
-          min='0' max='100' value='{{volumeSliderValue}}'
+          min='0' max='100' value='[[volumeSliderValue]]'
           on-change='volumeSliderChanged' class='flex'>
         </paper-slider>
       </div>
@@ -154,10 +155,6 @@
       return stateObj.state == 'off';
     },
 
-    computePowerButtonCaption: function(isOff) {
-      return isOff ? 'Turn on' : 'Turn off';
-    },
-
     computeMuteVolumeIcon: function(isMuted) {
       return isMuted ? 'av:volume-off' : 'av:volume-up';
     },
@@ -167,6 +164,10 @@
         return this.supportsPause ? 'av:pause' : 'av:stop';
       }
       return 'av:play-arrow';
+    },
+
+    computeHidePowerButton: function(isOff, supportsTurnOn, supportsTurnOff) {
+      return isOff && !supportsTurnOn || !isOff && supportsTurnOff;
     },
 
     handleTogglePower: function() {
