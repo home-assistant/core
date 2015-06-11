@@ -2,24 +2,29 @@
 
 <link rel="import" href="../dialogs/more-info-dialog.html">
 
-<polymer-element name="ha-modals">
+<dom-module id="modal-manager">
   <template>
     <more-info-dialog id="moreInfoDialog"></more-info-dialog>
   </template>
-  <script>
-  var uiActions = window.hass.uiActions,
+</dom-module>
+
+<script>
+(function() {
+  var uiConstants = window.hass.uiConstants,
       dispatcher = window.hass.dispatcher;
 
   Polymer({
+    is: 'modal-manager',
+
     ready: function() {
       dispatcher.register(function(payload) {
         switch (payload.actionType) {
-          case uiActions.ACTION_SHOW_DIALOG_MORE_INFO:
+          case uiConstants.ACTION_SHOW_DIALOG_MORE_INFO:
             this.$.moreInfoDialog.show(payload.entityId);
             break;
-        }  
+        }
       }.bind(this));
     },
   });
-  </script>
-</polymer-element>
+})();
+</script>

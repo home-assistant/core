@@ -1,0 +1,21 @@
+<script>
+
+(function() {
+
+  var StoreListenerMixIn = window.hass.storeListenerMixIn;
+
+  window.StoreListenerBehavior = {
+
+    attached: function() {
+      StoreListenerMixIn.listenToStores(true, this);
+    },
+
+    detached: function() {
+      StoreListenerMixIn.stopListeningToStores(this);
+    },
+
+  };
+
+})();
+
+</script>

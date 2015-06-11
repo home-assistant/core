@@ -8,23 +8,19 @@ fi
 
 scripts/build_js $1
 
-# To build the frontend, you need node, bower and vulcanize
-# npm install -g bower vulcanize
+# To build the frontend, you need node, bower, vulcanize and html-minifier
+# npm install -g bower vulcanize html-minifier
 
 # Install dependencies
 cd homeassistant/components/frontend/www_static/polymer
 bower install
 cd ..
-cp polymer/bower_components/webcomponentsjs/webcomponents.min.js .
+cp polymer/bower_components/webcomponentsjs/webcomponents-lite.min.js .
 
-# Let Polymer refer to the minified JS version before we compile
-sed -i.bak 's/polymer\.js/polymer\.min\.js/' polymer/bower_components/polymer/polymer.html
+vulcanize --inline-css --inline-scripts --strip-comments polymer/home-assistant.html > frontend.html
 
-vulcanize -o frontend.html --inline --strip polymer/home-assistant.html
-
-# Revert back the change to the Polymer component
-rm polymer/bower_components/polymer/polymer.html
-mv polymer/bower_components/polymer/polymer.html.bak polymer/bower_components/polymer/polymer.html
+# html-minifier crashes on frontend, minimize kills the CSS
+# html-minifier --config-file polymer/html-minifier.conf -o frontend.html frontend.html
 
 # Generate the MD5 hash of the new frontend
 cd ..

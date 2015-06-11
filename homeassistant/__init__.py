@@ -961,12 +961,14 @@ class Config(object):
 
     def as_dict(self):
         """ Converts config to a dictionary. """
+        time_zone = self.time_zone or date_util.UTC
+
         return {
             'latitude': self.latitude,
             'longitude': self.longitude,
             'temperature_unit': self.temperature_unit,
             'location_name': self.location_name,
-            'time_zone': self.time_zone.zone,
+            'time_zone': time_zone.zone,
             'components': self.components,
         }
 

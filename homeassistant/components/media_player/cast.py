@@ -12,18 +12,23 @@ try:
     import pychromecast
     import pychromecast.controllers.youtube as youtube
 except ImportError:
-    # We will throw error later
-    pass
+    pychromecast = None
 
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.const import (
+    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_OFF,
+    STATE_UNKNOWN)
 
-# ATTR_MEDIA_ALBUM, ATTR_MEDIA_IMAGE_URL,
-# ATTR_MEDIA_ARTIST,
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, STATE_NO_APP, ATTR_MEDIA_STATE, ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_DURATION, ATTR_MEDIA_VOLUME,
-    MEDIA_STATE_PLAYING, MEDIA_STATE_PAUSED, MEDIA_STATE_STOPPED,
-    MEDIA_STATE_UNKNOWN)
+    MediaPlayerDevice,
+    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
+
+CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
+SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
 
 
 # pylint: disable=unused-argument
@@ -31,21 +36,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the cast platform. """
     logger = logging.getLogger(__name__)
 
-    try:
-        # pylint: disable=redefined-outer-name
-        import pychromecast
-    except ImportError:
-        logger.exception(("Failed to import pychromecast. "
-                          "Did you maybe not install the 'pychromecast' "
-                          "dependency?"))
+    if pychromecast is None:
+        logger.error((
+            "Failed to import pychromecast. Did you maybe not install the "
+            "'pychromecast' dependency?"))
 
-        return
+        return False
 
     if discovery_info:
         hosts = [discovery_info[0]]
 
     else:
-        hosts = pychromecast.discover_chromecasts()
+        hosts = (host_port[0] for host_port
+                 in pychromecast.discover_chromecasts())
 
     casts = []
 
@@ -61,100 +64,201 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CastDevice(MediaPlayerDevice):
     """ Represents a Cast device on the network. """
 
+    # pylint: disable=too-many-public-methods
+
     def __init__(self, host):
         self.cast = pychromecast.Chromecast(host)
         self.youtube = youtube.YouTubeController()
         self.cast.register_handler(self.youtube)
+
+        self.cast.socket_client.receiver_controller.register_status_listener(
+            self)
+        self.cast.socket_client.media_controller.register_status_listener(self)
+
+        self.cast_status = self.cast.status
+        self.media_status = self.cast.media_controller.status
+
+    # Entity properties and methods
+
+    @property
+    def should_poll(self):
+        return False
 
     @property
     def name(self):
         """ Returns the name of the device. """
         return self.cast.device.friendly_name
 
+    # MediaPlayerDevice properties and methods
+
     @property
     def state(self):
-        """ Returns the state of the device. """
-        if self.cast.is_idle:
-            return STATE_NO_APP
+        """ State of the player. """
+        if self.media_status is None:
+            return STATE_UNKNOWN
+        elif self.media_status.player_is_playing:
+            return STATE_PLAYING
+        elif self.media_status.player_is_paused:
+            return STATE_PAUSED
+        elif self.media_status.player_is_idle:
+            return STATE_IDLE
+        elif self.cast.is_idle:
+            return STATE_OFF
         else:
-            return self.cast.app_display_name
+            return STATE_UNKNOWN
 
     @property
-    def media_state(self):
-        """ Returns the media state. """
-        media_controller = self.cast.media_controller
-
-        if media_controller.is_playing:
-            return MEDIA_STATE_PLAYING
-        elif media_controller.is_paused:
-            return MEDIA_STATE_PAUSED
-        elif media_controller.is_idle:
-            return MEDIA_STATE_STOPPED
-        else:
-            return MEDIA_STATE_UNKNOWN
+    def volume_level(self):
+        """ Volume level of the media player (0..1). """
+        return self.cast_status.volume_level if self.cast_status else None
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        cast_status = self.cast.status
-        media_controller = self.cast.media_controller
-        media_status = media_controller.status
+    def is_volume_muted(self):
+        """ Boolean if volume is currently muted. """
+        return self.cast_status.volume_muted if self.cast_status else None
 
-        state_attr = {
-            ATTR_MEDIA_STATE: self.media_state,
-            'application_id': self.cast.app_id,
-        }
+    @property
+    def media_content_id(self):
+        """ Content ID of current playing media. """
+        return self.media_status.content_id if self.media_status else None
 
-        if cast_status:
-            state_attr[ATTR_MEDIA_VOLUME] = cast_status.volume_level,
+    @property
+    def media_content_type(self):
+        """ Content type of current playing media. """
+        if self.media_status is None:
+            return None
+        elif self.media_status.media_is_tvshow:
+            return MEDIA_TYPE_TVSHOW
+        elif self.media_status.media_is_movie:
+            return MEDIA_TYPE_VIDEO
+        elif self.media_status.media_is_musictrack:
+            return MEDIA_TYPE_MUSIC
+        return None
 
-        if media_status.content_id:
-            state_attr[ATTR_MEDIA_CONTENT_ID] = media_status.content_id
+    @property
+    def media_duration(self):
+        """ Duration of current playing media in seconds. """
+        return self.media_status.duration if self.media_status else None
 
-        if media_status.duration:
-            state_attr[ATTR_MEDIA_DURATION] = media_status.duration
+    @property
+    def media_image_url(self):
+        """ Image url of current playing media. """
+        if self.media_status is None:
+            return None
 
-        if media_controller.title:
-            state_attr[ATTR_MEDIA_TITLE] = media_controller.title
+        images = self.media_status.images
 
-        if media_controller.thumbnail:
-            state_attr[ATTR_ENTITY_PICTURE] = media_controller.thumbnail
+        return images[0].url if images else None
 
-        return state_attr
+    @property
+    def media_title(self):
+        """ Title of current playing media. """
+        return self.media_status.title if self.media_status else None
+
+    @property
+    def media_artist(self):
+        """ Artist of current playing media. (Music track only) """
+        return self.media_status.artist if self.media_status else None
+
+    @property
+    def media_album(self):
+        """ Album of current playing media. (Music track only) """
+        return self.media_status.album_name if self.media_status else None
+
+    @property
+    def media_album_artist(self):
+        """ Album arist of current playing media. (Music track only) """
+        return self.media_status.album_artist if self.media_status else None
+
+    @property
+    def media_track(self):
+        """ Track number of current playing media. (Music track only) """
+        return self.media_status.track if self.media_status else None
+
+    @property
+    def media_series_title(self):
+        """ Series title of current playing media. (TV Show only)"""
+        return self.media_status.series_title if self.media_status else None
+
+    @property
+    def media_season(self):
+        """ Season of current playing media. (TV Show only) """
+        return self.media_status.season if self.media_status else None
+
+    @property
+    def media_episode(self):
+        """ Episode of current playing media. (TV Show only) """
+        return self.media_status.episode if self.media_status else None
+
+    @property
+    def app_id(self):
+        """  ID of the current running app. """
+        return self.cast.app_id
+
+    @property
+    def app_name(self):
+        """  Name of the current running app. """
+        return self.cast.app_display_name
+
+    @property
+    def supported_media_commands(self):
+        """ Flags of media commands that are supported. """
+        return SUPPORT_CAST
+
+    def turn_on(self):
+        """ Turns on the ChromeCast. """
+        # The only way we can turn the Chromecast is on is by launching an app
+        if not self.cast.status or not self.cast.status.is_active_input:
+            if self.cast.app_id:
+                self.cast.quit_app()
+
+            self.cast.play_media(
+                CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
 
     def turn_off(self):
-        """ Service to exit any running app on the specimedia player ChromeCast and
-        shows idle screen. Will quit all ChromeCasts if nothing specified.
-        """
+        """ Turns Chromecast off. """
         self.cast.quit_app()
 
-    def volume_up(self):
-        """ Service to send the chromecast the command for volume up. """
-        self.cast.volume_up()
+    def mute_volume(self, mute):
+        """ mute the volume. """
+        self.cast.set_volume_muted(mute)
 
-    def volume_down(self):
-        """ Service to send the chromecast the command for volume down. """
-        self.cast.volume_down()
-
-    def media_play_pause(self):
-        """ Service to send the chromecast the command for play/pause. """
-        media_state = self.media_state
-
-        if media_state in (MEDIA_STATE_STOPPED, MEDIA_STATE_PAUSED):
-            self.cast.media_controller.play()
-        elif media_state == MEDIA_STATE_PLAYING:
-            self.cast.media_controller.pause()
+    def set_volume_level(self, volume):
+        """ set volume level, range 0..1. """
+        self.cast.set_volume(volume)
 
     def media_play(self):
-        """ Service to send the chromecast the command for play/pause. """
-        if self.media_state in (MEDIA_STATE_STOPPED, MEDIA_STATE_PAUSED):
-            self.cast.media_controller.play()
+        """ Send play commmand. """
+        self.cast.media_controller.play()
 
     def media_pause(self):
-        """ Service to send the chromecast the command for play/pause. """
-        if self.media_state == MEDIA_STATE_PLAYING:
-            self.cast.media_controller.pause()
+        """ Send pause command. """
+        self.cast.media_controller.pause()
 
-    def play_youtube_video(self, video_id):
-        """ Plays specified video_id on the Chromecast's YouTube channel. """
-        self.youtube.play_video(video_id)
+    def media_previous_track(self):
+        """ Send previous track command. """
+        self.cast.media_controller.rewind()
+
+    def media_next_track(self):
+        """ Send next track command. """
+        self.cast.media_controller.skip()
+
+    def media_seek(self, position):
+        """ Seek the media to a specific location. """
+        self.cast.media_controller.seek(position)
+
+    def play_youtube(self, media_id):
+        """ Plays a YouTube media. """
+        self.youtube.play_video(media_id)
+
+    # implementation of chromecast status_listener methods
+
+    def new_cast_status(self, status):
+        """ Called when a new cast status is received. """
+        self.cast_status = status
+        self.update_ha_state()
+
+    def new_media_status(self, status):
+        """ Called when a new media status is received. """
+        self.media_status = status
+        self.update_ha_state()

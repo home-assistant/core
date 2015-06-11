@@ -141,9 +141,9 @@ def main():
 
         def open_browser(event):
             """ Open the webinterface in a browser. """
-            if hass.local_api is not None:
+            if hass.config.api is not None:
                 import webbrowser
-                webbrowser.open(hass.local_api.base_url)
+                webbrowser.open(hass.config.api.base_url)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
 

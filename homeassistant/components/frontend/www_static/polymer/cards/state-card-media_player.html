@@ -1,0 +1,91 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../components/state-info.html">
+
+<dom-module id="state-card-media_player">
+  <style>
+  :host {
+    line-height: normal;
+  }
+
+  .state {
+    margin-left: 16px;
+    text-align: right;
+    overflow-x: hidden;
+  }
+
+  .main-text {
+      white-space: nowrap;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      text-transform: capitalize;
+      font-weight: 300;
+      font-size: 1.3rem;
+  }
+
+  .secondary-text {
+      color: darkgrey;
+      margin-top: -2px;
+      font-size: 1rem;
+  }
+  </style>
+  <template>
+    <div class='horizontal justified layout'>
+      <state-info state-obj="[[stateObj]]"></state-info>
+      <div class='state'>
+        <div class='main-text'>[[computePrimaryText(stateObj, isPlaying)]]</div>
+        <div class='secondary-text'>[[computeSecondaryText(stateObj, isPlaying)]]</div>
+      </div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+(function() {
+  var PLAYING_STATES = ['playing', 'paused'];
+  Polymer({
+    is: 'state-card-media_player',
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+
+      isPlaying: {
+        type: Boolean,
+        computed: 'computeIsPlaying(stateObj)',
+      },
+    },
+
+    computeIsPlaying: function(stateObj) {
+      return PLAYING_STATES.indexOf(stateObj.state) !== -1;
+    },
+
+    computePrimaryText: function(stateObj, isPlaying) {
+      return isPlaying ? stateObj.attributes.media_title : stateObj.stateDisplay;
+    },
+
+    computeSecondaryText: function(stateObj, isPlaying) {
+      var text;
+
+      if (stateObj.attributes.media_content_type == 'music') {
+        return stateObj.attributes.media_artist;
+
+      } else if (stateObj.attributes.media_content_type == 'tvshow') {
+        text = stateObj.attributes.media_series_title;
+
+        if (stateObj.attributes.media_season && stateObj.attributes.media_episode) {
+          text += ' S' + stateObj.attributes.media_season + 'E' + stateObj.attributes.media_episode;
+        }
+        return text;
+
+      } else if (stateObj.attributes.app_name) {
+        return stateObj.attributes.app_name;
+
+      } else {
+        return '';
+      }
+    },
+  });
+})();
+</script>
