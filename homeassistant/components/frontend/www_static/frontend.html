@@ -22445,8 +22445,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     background-color: #fff;
     border-radius: 2px;
     box-shadow: rgba(0, 0, 0, 0.098) 0px 2px 4px, rgba(0, 0, 0, 0.098) 0px 0px 3px;
-    padding: 16px;
-    margin: 16px auto;
+    padding: 0 16px 8px;
+    margin: 16px;
   }
   </style>
 
@@ -22457,9 +22457,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <state-card class="state-card" state-obj="[[item]]"></state-card>
       </template>
 
-      <template if="[[computeEmptyStates(states)]]">
+      <template is="dom-if" if="[[computeEmptyStates(states)]]">
         <div class="no-states-content">
-          <content></content>
+          <h3>Hi there!</h3>
+          <p>
+            It looks like we have nothing to show you right now. It could be that we have not yet discovered all your devices but it is more likely that you have not configured Home Assistant yet.
+          </p>
+          <p>
+            Please see the <a href="https://home-assistant.io/getting-started/" target="_blank">Getting Started</a> section on how to setup your devices.
+          </p>
         </div>
       </template>
 
@@ -25999,7 +26005,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     computeHidePowerButton: function(isOff, supportsTurnOn, supportsTurnOff) {
-      return isOff && !supportsTurnOn || !isOff && supportsTurnOff;
+      return isOff ? !supportsTurnOn : !supportsTurnOff;
     },
 
     handleTogglePower: function() {
