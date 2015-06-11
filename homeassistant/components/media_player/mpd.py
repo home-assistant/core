@@ -32,6 +32,12 @@ Location of your Music Player Daemon.
 import logging
 import socket
 
+try:
+    from mpd import MPDClient, ConnectionError
+except ImportError:
+    MPDClient = None
+
+
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF)
 
@@ -56,10 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get('port', 6600)
     location = config.get('location', 'MPD')
 
-    try:
-        from mpd import MPDClient
-
-    except ImportError:
+    if MPDClient is None:
         _LOGGER.exception(
             "Unable to import mpd2. "
             "Did you maybe not install the 'python-mpd2' package?")
@@ -91,16 +94,25 @@ class MpdDevice(MediaPlayerDevice):
     # pylint: disable=no-member, abstract-method
 
     def __init__(self, server, port, location):
-        from mpd import MPDClient
-
         self.server = server
         self.port = port
         self._name = location
+        self.status = None
+        self.currentsong = None
 
         self.client = MPDClient()
         self.client.timeout = 10
         self.client.idletimeout = None
-        self.client.connect(self.server, self.port)
+        self.update()
+
+    def update(self):
+        try:
+            self.status = self.client.status()
+            self.currentsong = self.client.currentsong()
+        except ConnectionError:
+            self.client.connect(self.server, self.port)
+            self.status = self.client.status()
+            self.currentsong = self.client.currentsong()
 
     @property
     def name(self):
@@ -110,11 +122,9 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the media state. """
-        status = self.client.status()
-
-        if status['state'] == 'play':
+        if self.status['state'] == 'play':
             return STATE_PLAYING
-        elif status['state'] == 'pause':
+        elif self.status['state'] == 'pause':
             return STATE_PAUSED
         else:
             return STATE_OFF
@@ -122,8 +132,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """ Content ID of current playing media. """
-        current_song = self.client.currentsong()
-        return current_song['id']
+        return self.currentsong['id']
 
     @property
     def media_content_type(self):
@@ -133,31 +142,32 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """ Duration of current playing media in seconds. """
-        current_song = self.client.currentsong()
-        return current_song['time']
+        # Time does not exist for streams
+        return self.currentsong.get('time')
 
     @property
     def media_title(self):
         """ Title of current playing media. """
-        current_song = self.client.currentsong()
-        return current_song['title']
+        return self.currentsong['title']
 
     @property
     def media_artist(self):
         """ Artist of current playing media. (Music track only) """
-        current_song = self.client.currentsong()
-        return current_song['artist']
+        return self.currentsong.get('artist')
 
     @property
     def media_album_name(self):
         """ Album of current playing media. (Music track only) """
-        current_song = self.client.currentsong()
-        return current_song['album']
+        return self.currentsong.get('album')
 
     @property
     def volume_level(self):
-        status = self.client.status()
-        return int(status['volume'])/100
+        return int(self.status['volume'])/100
+
+    @property
+    def supported_media_commands(self):
+        """ Flags of media commands that are supported. """
+        return SUPPORT_MPD
 
     def turn_off(self):
         """ Service to exit the running MPD. """
@@ -169,17 +179,17 @@ class MpdDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """ Service to send the MPD the command for volume up. """
-        current_volume = self.client.status()['volume']
+        current_volume = int(self.status['volume'])
 
-        if int(current_volume) <= 100:
-            self.client.setvol(int(current_volume) + 5)
+        if current_volume <= 100:
+            self.client.setvol(current_volume + 5)
 
     def volume_down(self):
         """ Service to send the MPD the command for volume down. """
-        current_volume = self.client.status()['volume']
+        current_volume = int(self.status['volume'])
 
-        if int(current_volume) >= 0:
-            self.client.setvol(int(current_volume) - 5)
+        if current_volume >= 0:
+            self.client.setvol(current_volume - 5)
 
     def media_play(self):
         """ Service to send the MPD the command for play/pause. """
