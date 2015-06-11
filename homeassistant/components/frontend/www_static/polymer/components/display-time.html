@@ -1,26 +1,25 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
-<link rel="import" href="../resources/moment-js.html">
+<dom-module id="display-time">
+  <template>[[computeTime(dateObj)]]</template>
+</dom-module>
 
-<polymer-element name="display-time" attributes="dateObj">
-  <template>
-    {{ time }}
-  </template>
-  <script>
-  (function() {
-    var uiUtil = window.hass.uiUtil;
+<script>
+(function() {
+  var uiUtil = window.hass.uiUtil;
 
-    Polymer({
-      time: "",
+  Polymer({
+    is: 'display-time',
 
-      dateObjChanged: function(oldVal, newVal) {
-        if (newVal) {
-          this.time = uiUtil.formatTime(newVal);
-        } else {
-          this.time = "";
-        }
+    properties: {
+      dateObj: {
+        type: Object,
       },
-    });
-  })();
-  </script>
-</polymer-element>
+    },
+
+    computeTime: function(dateObj) {
+      return dateObj ? uiUtil.formatTime(dateObj) : '';
+    },
+  });
+})();
+</script>

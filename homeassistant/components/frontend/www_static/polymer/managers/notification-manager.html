@@ -1,0 +1,47 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+
+<dom-module id="notification-manager">
+  <style>
+    paper-toast {
+      z-index: 1;
+    }
+  </style>
+  <template>
+    <paper-toast id="toast" text='{{text}}'></paper-toast>
+  </template>
+</dom-module>
+
+<script>
+(function() {
+  Polymer({
+    is: 'notification-manager',
+
+    behaviors: [StoreListenerBehavior],
+
+    properties: {
+      text: {
+        type: String,
+        value: '',
+      },
+
+      lastId: {
+        type: Number,
+      },
+    },
+
+    notificationStoreChanged: function(notificationStore) {
+      if (notificationStore.hasNewNotifications(this.lastId)) {
+        var notification = notificationStore.lastNotification;
+
+        this.lastId = notification.id;
+        this.text = notification.message;
+
+        this.$.toast.show();
+      }
+    },
+
+  });
+})();
+</script>

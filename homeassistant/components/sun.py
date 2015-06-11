@@ -4,13 +4,13 @@ homeassistant.components.sun
 
 Provides functionality to keep track of the sun.
 
-
 Event listener
 --------------
-The suns event listener will call the service
-when the sun rises or sets with an offset.
-The sun evnt need to have the type 'sun', which service to call,
-which event (sunset or sunrise) and the offset.
+The suns event listener will call the service when the sun rises or sets with
+an offset.
+
+The sun event need to have the type 'sun', which service to call, which event
+(sunset or sunrise) and the offset.
 
 {
     "type": "sun",
@@ -18,8 +18,6 @@ which event (sunset or sunrise) and the offset.
     "event": "sunset",
     "offset": "-01:00:00"
 }
-
-
 """
 import logging
 from datetime import timedelta
@@ -240,12 +238,12 @@ class SunEventListener(ServiceEventListener):
         return next_time
 
     def schedule_next_event(self, hass, next_event):
-        """ Schedule the event """
+        """ Schedule the event. """
         next_time = self.__get_next_time(next_event)
 
         # pylint: disable=unused-argument
         def execute(now):
-            """ Call the execute method """
+            """ Call the execute method. """
             self.execute(hass)
 
         hass.track_point_in_time(execute, next_time)
@@ -272,7 +270,7 @@ class SunriseEventListener(SunEventListener):
     """ This class is used the call a service when the sun rises. """
 
     def schedule(self, hass):
-        """ Schedule the event """
+        """ Schedule the event. """
         next_rising_dt = next_rising(hass)
 
         next_time_dt = self.schedule_next_event(hass, next_rising_dt)

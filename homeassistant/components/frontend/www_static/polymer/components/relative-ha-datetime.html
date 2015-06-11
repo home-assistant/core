@@ -2,49 +2,73 @@
 
 <link rel="import" href="../resources/moment-js.html">
 
-<polymer-element name="relative-ha-datetime" attributes="datetime datetimeObj">
+<dom-module id="relative-ha-datetime">
   <template>
-    {{ relativeTime }}
+    <span>[[relativeTime]]</span>
   </template>
-  <script>
-  (function() {
-    var UPDATE_INTERVAL = 60000; // 60 seconds
+</dom-module>
 
-    var parseDateTime = window.hass.util.parseDateTime;
+<script>
+(function() {
+  var UPDATE_INTERVAL = 60000; // 60 seconds
 
-    Polymer({
-      relativeTime: "",
-      parsedDateTime: null,
+  var parseDateTime = window.hass.util.parseDateTime;
 
-      created: function() {
-        this.updateRelative = this.updateRelative.bind(this);
+  Polymer({
+    is: 'relative-ha-datetime',
+
+    properties: {
+      datetime: {
+        type: String,
+        observer: 'datetimeChanged',
       },
 
-      attached: function() {
-        this._interval = setInterval(this.updateRelative, UPDATE_INTERVAL);
+      datetimeObj: {
+        type: Object,
+        observer: 'datetimeObjChanged',
       },
 
-      detached: function() {
-        clearInterval(this._interval);
+      parsedDateTime: {
+        type: Object,
       },
 
-      datetimeChanged: function(oldVal, newVal) {
-        this.parsedDateTime = newVal ? parseDateTime(newVal) : null;
-
-        this.updateRelative();
+      relativeTime: {
+        type: String,
+        value: 'not set',
       },
+    },
 
-      datetimeObjChanged: function(oldVal, newVal) {
-        this.parsedDateTime = newVal;
+    relativeTime: "",
+    parsedDateTime: null,
 
-        this.updateRelative();
-      },
+    created: function() {
+      this.updateRelative = this.updateRelative.bind(this);
+    },
 
-      updateRelative: function() {
-        this.relativeTime = this.parsedDateTime ?
-          moment(this.parsedDateTime).fromNow() : "";
-      },
-    });
-  })();
-  </script>
-</polymer-element>
+    attached: function() {
+      this._interval = setInterval(this.updateRelative, UPDATE_INTERVAL);
+    },
+
+    detached: function() {
+      clearInterval(this._interval);
+    },
+
+    datetimeChanged: function(newVal) {
+      this.parsedDateTime = newVal ? parseDateTime(newVal) : null;
+
+      this.updateRelative();
+    },
+
+    datetimeObjChanged: function(newVal) {
+      this.parsedDateTime = newVal;
+
+      this.updateRelative();
+    },
+
+    updateRelative: function() {
+      this.relativeTime = this.parsedDateTime ?
+        moment(this.parsedDateTime).fromNow() : "";
+    },
+  });
+})();
+</script>

@@ -40,6 +40,9 @@ STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = "unknown"
 STATE_OPEN = 'open'
 STATE_CLOSED = 'closed'
+STATE_PLAYING = 'playing'
+STATE_PAUSED = 'paused'
+STATE_IDLE = 'idle'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -99,11 +102,13 @@ SERVICE_TURN_OFF = 'turn_off'
 SERVICE_VOLUME_UP = "volume_up"
 SERVICE_VOLUME_DOWN = "volume_down"
 SERVICE_VOLUME_MUTE = "volume_mute"
+SERVICE_VOLUME_SET = "volume_set"
 SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
 SERVICE_MEDIA_PLAY = "media_play"
 SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
-SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
+SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
+SERVICE_MEDIA_SEEK = "media_seek"
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
