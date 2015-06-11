@@ -22,7 +22,7 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Release notes for May 14, 2015 May 14, 2015 Paulus Schoutsen five minutes reading time release-notes Comments Almost three busy weeks have past since the last release. We used this time to finally &hellip;">
+    <meta property="og:description" content="Release notes for June 10, 2015 June 10, 2015 Paulus Schoutsen seven minutes reading time release-notes Comments Wow, almost a month has gone by since the last release and this release is packed. &hellip;">
     
     
     
@@ -100,6 +100,90 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2015/06/10/release-notes/">Release notes for June 10, 2015</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-06-10T18:54:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> June 10, 2015</time>
+    
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> seven minutes reading time</span>
+    
+
+  <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+
+    
+      <a class='comments'
+         href="/blog/2015/06/10/release-notes/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+
+
+<div class="entry-content clearfix">
+  <p>Wow, almost a month has gone by since the last release and this release is <em>packed</em>. The biggest part of this release is probably one that you won&rsquo;t notice: the frontend has been upgraded from Polymer 0.5 to the brand new released Polymer 1.0. Polymer has been declared stable by the Google overlords which will allow us to expand functionality that was waiting for this moment to arrive.</p>
+
+<p>This release sets a record for the amount of people involved: 8! <a href="https://github.com/Andythigpen">Andythigpen</a>, <a href="https://github.com/Jamespcole">Jamespcole</a>, <a href="https://github.com/Azelphur">Azelphur</a>, <a href="https://github.com/Fabaff">Fabaff</a>, <a href="https://github.com/Dutchy-">Dutchy-</a>, <a href="https://github.com/Fbradyirl">Fbradyirl</a>, <a href="https://github.com/wind-rider">wind-rider</a> and <a href="https://github.com/ettisan">ettisan</a>, thanks a lot for your contributions!</p>
+
+<p>A big improvement has been brought this release by wind-rider. He took the time to revive the Chromecast support and started improving the media player integration. This triggered other people to join in resulting in a revamped media player experience and support for the Music Player Daemon.</p>
+
+<p class='img'>
+  <img src='/images/screenshots/media_player-card.png' />
+  Example of the new media player cards
+</p>
+
+
+
+
+<p class='note'>
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
+</p>
+
+
+
+
+
+  <a class="btn pull-right" href="/blog/2015/06/10/release-notes/#read-more">Read on &rarr;</a>
+</div>
+
+  </article>
+  <hr>
+  
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2015/05/14/release-notes/">Release notes for May 14, 2015</a>
   </h1>
   
@@ -150,6 +234,7 @@
 
 
 
+<div class="entry-content clearfix">
   <p>Almost three busy weeks have past since the last release. We used this time to finally make the overhaul to use UTC as the internal date time format. We added a bunch of test coverage in the process to make sure the transition went smoothly. Pleas see <a href="/blog/2015/05/09/utc-time-zone-awareness/#backwards-incompatible-stuff">the blog post about the UTC refactor</a> for backwards incompatible changes.</p>
 
 <p>This release includes a significant startup boost for the frontend and a fix for Wemo discovery after their latest firmware upgrade.</p>
@@ -161,161 +246,11 @@ To update to the latest version, run <code>scripts/update</code>. Please report 
 </p>
 
 
-<p><strong>Overwriting Entity Attributes</strong><br>
-Before diving into the newly supported devices and services, I want to highlight an awesome configuration enhancement by <a href="https://github.com/rmkraus">rmkraus</a>: overwriting entity attributes.</p>
-
-<p>These new configuration settings allow you to overwrite entity state attributes. The main usage for this is being able to overwrite attributes that influence how an entity is shown in the interface.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">light.bowl</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="c1"># hides this entity from the interface</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">light.ceiling</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="c1"># Replaces the state badge with given picture</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://graph.facebook.com/schoutsen/picture</span>
-</span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>MySensors</strong><br>
-<img src='/images/supported_brands/mysensors.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/andythigpen">Andythigpen</a> and <a href="https://github.com/theolind">Theolind</a> have added support for the <a href="http://www.mysensors.org">MySensors platform</a> to Home Assistant.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysensors</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/dev/ttyACM0</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>OpenWeatherMap</strong><br>
-<img src='/images/supported_brands/openweathermap.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://openweathermap.org">OpenWeatherMap</a>. This will allow you to integrate local meteorological data into Home Assistant.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">openweathermap</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_API_KEY</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;weather&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;wind_speed&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;humidity&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;pressure&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;clouds&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;rain&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;snow&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>InstaPush</strong><br>
-<img src='/images/supported_brands/instapush.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="https://instapush.im">InstaPush</a>. This will allow you send messages from Home Assistant to your iOS and Android devices.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">instapush</span>
-</span><span class='line'>    <span class="c1"># Get those by creating a new application, event, and tracker on https://instapush.im</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">app_secret</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">tracker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>XMPP</strong><br>
-<img src='/images/supported_brands/xmpp.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for Jabber/XMPP. This will allow you send messages from Home Assistant to anyone on Jabber/XMPP.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">xmpp</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">sender</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JID</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JABBER_ACCOUNT_PASSWORD</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">recipient</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_RECIPIENT</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Notify My Android</strong><br>
-<img src='/images/supported_brands/nma.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://www.notifymyandroid.com/">Notify My Android</a>. This will allow you to send messages from Home Assistant to your Android device.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">nma</span>
-</span><span class='line'>    <span class="c1"># Get this by registering a new application on http://www.notifymyandroid.com/</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Time &amp; Date sensor</strong><br>
-<a href="https://github.com/fabaff">Fabaff</a> has contributed a time &amp; date sensor. This will allow you to show the current time/date on the dashboard.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time_date</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;time&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;date&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;date_time&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;time_date&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
+  <a class="btn pull-right" href="/blog/2015/05/14/release-notes/#read-more">Read on &rarr;</a>
+</div>
 
   </article>
   <hr>
@@ -468,6 +403,7 @@ Before diving into the newly supported devices and services, I want to highlight
 
 
 
+<div class="entry-content clearfix">
   <p>It&rsquo;s been a month since the latest update and a lot has happened again. Here a quick overview of the new things.</p>
 
 <p><strong>Line Charts</strong><br>
@@ -503,111 +439,11 @@ I (Paulus) have added a logbook component. The logbook component provides a diff
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>Transmission support</strong><br>
-<img src='/images/supported_brands/transmission.png' style='border:none; box-shadow: none; float: right;' height='50' />
-James has also contributed support for integrating Transmission into Home Assistant.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.26</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9091</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;current_status&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;download_speed&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;upload_speed&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>Modbus support</strong><br>
-<a href="https://github.com/kixam">Kixam</a> has contributed support for modbus, a serial communication protocol to control PLCs. It currently supports sensors and switches which can be controlled over serial, TCP and UDP connections.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">modbus</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">serial</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">method</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rtu</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/dev/ttyUSB0</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">baudrate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9600</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">stopbits</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">bytesize</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">parity</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">N</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">modbus</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">slave</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">registers</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">16</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My integer sensor</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">unit</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">C</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">24</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">bits</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">0</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My boolean sensor</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">2</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My other boolean sensor</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">modbus</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">slave</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">registers</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">24</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">bits</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">0</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My switch</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">2</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My other switch</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
+  <a class="btn pull-right" href="/blog/2015/04/25/release-notes/#read-more">Read on &rarr;</a>
+</div>
 
   </article>
   <hr>
@@ -667,6 +503,7 @@ James has also contributed support for integrating Transmission into Home Assist
 
 
 
+<div class="entry-content clearfix">
   <p>A new version of Home Assistant has just been pushed out. It contains bugfixes contributed by <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/trainman419">trainman419</a> and <a href="https://github.com/balloob">me</a>. It also adds a bunch of great new features:</p>
 
 <p><strong>Script</strong><br>
@@ -709,88 +546,11 @@ Andythigpen has contributed a script component. This allows users to create a se
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>Scene</strong><br>
-I (Paulus) have contributed a scene component. A user can create scenes that capture the states you want certain entities to be. For example a scene can contain that light A should be turned on and light B should be bright red. Deactivating a scene will restore the previous state from before the scene was activated. Just like scripts, scenes have their own separate page to see which scenes are on.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">scene</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Romantic</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">light.tv_back_light</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">light.ceiling</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">color</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.33</span><span class="p-Indicator">,</span> <span class="nv">0.66</span><span class="p-Indicator">]</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">brightness</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">200</span>
-</span></code></pre></td></tr></table></div></figure>
 
 
-<p><a name='sabnzbd'></a>
-<strong>SABnzbd</strong><br>
-<img src='/images/supported_brands/sabnzbd.png' style='border:none; box-shadow: none; float: right;' height='50' />
-James Cole has contributed support to integrate SABnzbd. This will allow you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sabnzbd</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SAB</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_API_KEY</span>
-</span><span class='line'>    <span class="c1"># Example: http://192.168.1.32:8124/</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">base_url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_SABNZBD_BASE_URL</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;current_status&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;speed&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;queue_size&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;queue_remaining&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;disk_size&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;disk_free&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name='pushover'></a>
-<strong>PushOver</strong><br>
-<img src='/images/supported_brands/pushover.png' style='border:none; box-shadow: none; float: right;' height='50' />
-James Cole has also contributed support for <a href='https://pushover.net/'>the PushOver service</a> as a platform for the notify component. This allows components to send messages to the user using PushOver.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pushover</span>
-</span><span class='line'>    <span class="c1"># Get this by registering a new application on https://pushover.net</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="c1"># Get this by logging into your account on https://pushover.net</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">user_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
+  <a class="btn pull-right" href="/blog/2015/03/22/release-notes/#read-more">Read on &rarr;</a>
+</div>
 
   </article>
   <hr>
@@ -1210,91 +970,6 @@ Events are saved in a local database. Google Graphs is used to draw the graph. D
 
   <a class="btn pull-right" href="/blog/2015/02/08/looking-at-the-past/#read-more">Read on &rarr;</a>
 </div>
-
-  </article>
-  <hr>
-  
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/01/24/release-notes/">Release notes for January 24, 2015</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-24T18:36:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 24, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
-      
-    
-    </ul>
-  </span>
-
-    
-      <a class='comments'
-         href="/blog/2015/01/24/release-notes/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-
-
-  <p>I have just merged the latest version of the development branch into master. Here are some of the highlights of this release:</p>
-
-<p><strong>Configuration via the frontend</strong><br>
-Phliips Hue will now be auto discovered and uses the new <code>configurator</code> component to interact with the user to finish the setup process.</p>
-
-<p><strong>Wink Hub support</strong><br>
-Thanks to the work done by John McLaughlin and Geoff Norton we now support the lights, switches and sensors that are connected to the Wink hub.</p>
-
-<p><strong>The getting started guide and component page have been reorganized</strong><br>
-The getting started instructions have been split into separate pages per component and a general overview page. The goal is to have a page per component that describes:</p>
-
-<ul>
-<li>What it does</li>
-<li>How to set it up</li>
-<li>Which states it maintains</li>
-<li>Which services it provides</li>
-<li>Additional development tips</li>
-</ul>
-
-
-<p><strong>More reasonable errors</strong><br>
-Home Assistant should now throw better errors and offer solutions if you do not have the right version of Python 3, forgot to clone the git submodules or install the dependencies.</p>
-
-<p><strong>Streamlined first launch</strong><br>
-Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
-
 
   </article>
   <hr>
