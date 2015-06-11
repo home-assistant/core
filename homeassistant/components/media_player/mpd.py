@@ -33,9 +33,9 @@ import logging
 import socket
 
 try:
-    from mpd import MPDClient, ConnectionError
+    import mpd
 except ImportError:
-    MPDClient = None
+    mpd = None
 
 
 from homeassistant.const import (
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get('port', 6600)
     location = config.get('location', 'MPD')
 
-    if MPDClient is None:
+    if mpd is None:
         _LOGGER.exception(
             "Unable to import mpd2. "
             "Did you maybe not install the 'python-mpd2' package?")
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # pylint: disable=no-member
     try:
-        mpd_client = MPDClient()
+        mpd_client = mpd.MPDClient()
         mpd_client.connect(daemon, port)
         mpd_client.close()
         mpd_client.disconnect()
@@ -82,9 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         return False
 
-    mpd = []
-    mpd.append(MpdDevice(daemon, port, location))
-    add_devices(mpd)
+    add_devices([MpdDevice(daemon, port, location)])
 
 
 class MpdDevice(MediaPlayerDevice):
@@ -100,7 +98,7 @@ class MpdDevice(MediaPlayerDevice):
         self.status = None
         self.currentsong = None
 
-        self.client = MPDClient()
+        self.client = mpd.MPDClient()
         self.client.timeout = 10
         self.client.idletimeout = None
         self.update()
@@ -109,7 +107,7 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
-        except ConnectionError:
+        except mpd.ConnectionError:
             self.client.connect(self.server, self.port)
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
