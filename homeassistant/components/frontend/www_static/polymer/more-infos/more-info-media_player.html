@@ -167,7 +167,7 @@
     },
 
     computeHidePowerButton: function(isOff, supportsTurnOn, supportsTurnOff) {
-      return isOff && !supportsTurnOn || !isOff && supportsTurnOff;
+      return isOff ? !supportsTurnOn : !supportsTurnOff;
     },
 
     handleTogglePower: function() {
