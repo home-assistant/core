@@ -19,8 +19,20 @@ _LOGGER = logging.getLogger(__name__)
 
 YAML_CONFIG_FILE = 'configuration.yaml'
 CONF_CONFIG_FILE = 'home-assistant.conf'
+
+DEFAULT_CONFIG = [
+    # Tuples (attribute, default, auto detect property, description)
+    (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
+     'running'),
+    (CONF_LATITUDE, None, 'latitude', 'Location required to calculate the time'
+     ' the sun rises and sets'),
+    (CONF_LONGITUDE, None, 'longitude', None),
+    (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celcius, F for Fahrenheit'),
+    (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
+     'pedia.org/wiki/List_of_tz_database_time_zones'),
+]
 DEFAULT_COMPONENTS = [
-    'discovery', 'frontend', 'conversation', 'history', 'logbook']
+    'discovery', 'frontend', 'conversation', 'history', 'logbook', 'sun']
 
 
 def ensure_config_exists(config_dir, detect_location=True):
@@ -41,29 +53,33 @@ def create_default_config(config_dir, detect_location=True):
         Returns path to new config file if success, None if failed. """
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
+    info = {attr: default for attr, default, *_ in DEFAULT_CONFIG}
+
+    location_info = detect_location and util.detect_location_info()
+
+    if location_info:
+        if location_info.use_fahrenheit:
+            info[CONF_TEMPERATURE_UNIT] = 'F'
+
+        for attr, default, prop, _ in DEFAULT_CONFIG:
+            if prop is None:
+                continue
+            info[attr] = getattr(location_info, prop) or default
+
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
         with open(config_path, 'w') as config_file:
-            location_info = detect_location and util.detect_location_info()
+            config_file.write("homeassistant:\n")
 
-            if location_info:
-                temp_unit = 'F' if location_info.use_fahrenheit else 'C'
+            for attr, _, _, description in DEFAULT_CONFIG:
+                if info[attr] is None:
+                    continue
+                elif description:
+                    config_file.write("  # {}\n".format(description))
+                config_file.write("  {}: {}\n".format(attr, info[attr]))
 
-                auto_config = {
-                    CONF_NAME: 'Home',
-                    CONF_LATITUDE: location_info.latitude,
-                    CONF_LONGITUDE: location_info.longitude,
-                    CONF_TEMPERATURE_UNIT: temp_unit,
-                    CONF_TIME_ZONE: location_info.time_zone,
-                }
-
-                config_file.write("homeassistant:\n")
-
-                for key, value in auto_config.items():
-                    config_file.write("  {}: {}\n".format(key, value))
-
-                config_file.write("\n")
+            config_file.write("\n")
 
             for component in DEFAULT_COMPONENTS:
                 config_file.write("{}:\n\n".format(component))
@@ -103,15 +119,32 @@ def load_yaml_config_file(config_path):
     """ Parse a YAML configuration file. """
     import yaml
 
-    try:
-        with open(config_path) as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            conf_dict = yaml.load(conf_file) or {}
+    def parse(fname):
+        """ Actually parse the file.  """
+        try:
+            with open(fname) as conf_file:
+                # If configuration file is empty YAML returns None
+                # We convert that to an empty dict
+                conf_dict = yaml.load(conf_file) or {}
+        except yaml.YAMLError:
+            _LOGGER.exception('Error reading YAML configuration file %s',
+                              fname)
+            raise HomeAssistantError()
+        return conf_dict
 
-    except yaml.YAMLError:
-        _LOGGER.exception('Error reading YAML configuration file')
-        raise HomeAssistantError()
+    def yaml_include(loader, node):
+        """
+        Loads another YAML file and embeds it using the !include tag.
+
+        Example:
+            device_tracker: !include device_tracker.yaml
+        """
+        fname = os.path.join(os.path.dirname(loader.name), node.value)
+        return parse(fname)
+
+    yaml.add_constructor('!include', yaml_include)
+
+    conf_dict = parse(config_path)
 
     if not isinstance(conf_dict, dict):
         _LOGGER.error(

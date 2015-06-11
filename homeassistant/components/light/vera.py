@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     controller = veraApi.VeraController(base_url)
     devices = []
     try:
-        devices = controller.get_devices('Switch')
+        devices = controller.get_devices(['Switch', 'On/Off Switch'])
     except RequestException:
         # There was a network related error connecting to the vera controller
         _LOGGER.exception("Error communicating with Vera API")

@@ -1,13 +1,11 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="./partial-base.html">
 
-<link rel="import" href="../components/state-timeline.html">
+<link rel="import" href="../components/state-history-charts.html">
 
-<polymer-element name="partial-history" attributes="narrow togglePanel">
-<template>
+<dom-module id="partial-history">
   <style>
     .content {
       background-color: white;
@@ -17,33 +15,42 @@
       padding: 8px;
     }
   </style>
-  <partial-base narrow="{{narrow}}" togglePanel="{{togglePanel}}">
-    <span header-title>History</span>
+  <template>
+    <partial-base narrow="[[narrow]]">
+      <span header-title>History</span>
 
-    <span header-buttons>
-      <paper-icon-button icon="refresh"
-        on-click="{{handleRefreshClick}}"></paper-icon-button>
-    </span>
+      <paper-icon-button icon="refresh" header-buttons
+        on-click="handleRefreshClick"></paper-icon-button>
 
-    <div flex class="{{ {content: true, narrow: narrow, wide: !narrow} | tokenList }}">
-      <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingData}}"></state-timeline>
-    </div>
-  </partial-base>
-</template>
+      <div class$="[[computeContentClasses(narrow)]]">
+        <state-history-charts state-history="[[stateHistory]]"
+          is-loading-data="[[isLoadingData]]"></state-history-charts>
+      </div>
+    </partial-base>
+  </template>
+</dom-module>
 <script>
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
+(function() {
   var stateHistoryActions = window.hass.stateHistoryActions;
 
-  Polymer(Polymer.mixin({
-    stateHistory: null,
-    isLoadingData: false,
+  Polymer({
+    is: 'partial-history',
 
-    attached: function() {
-      this.listenToStores(true);
-    },
+    behaviors: [StoreListenerBehavior],
 
-    detached: function() {
-      this.stopListeningToStores();
+    properties: {
+      narrow: {
+        type: Boolean,
+      },
+
+      stateHistory: {
+        type: Object,
+      },
+
+      isLoadingData: {
+        type: Boolean,
+        value: false,
+      },
     },
 
     stateHistoryStoreChanged: function(stateHistoryStore) {
@@ -62,6 +69,10 @@
       this.isLoadingData = true;
       stateHistoryActions.fetchAll();
     },
-  }, storeListenerMixIn));
+
+    computeContentClasses: function(narrow) {
+      return 'flex content ' + (narrow ? 'narrow' : 'wide');
+    },
+  });
+})();
 </script>
-</polymer>
