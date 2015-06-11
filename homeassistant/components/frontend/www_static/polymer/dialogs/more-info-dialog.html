@@ -1,120 +1,152 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
-<link rel="import" href="ha-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<!-- <link rel="import" href="../bower_components/neon-animation/animations/slide-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/slide-down-animation.html">
+ -->
 <link rel="import" href="../cards/state-card-content.html">
-<link rel="import" href="../components/state-timeline.html">
+<link rel="import" href="../components/state-history-charts.html">
 <link rel="import" href="../more-infos/more-info-content.html">
 
-<polymer-element name="more-info-dialog">
-<template>
-  <ha-dialog id="dialog" on-core-overlay-open="{{dialogOpenChanged}}">
-    <div>
-      <state-card-content stateObj="{{stateObj}}" style='margin-bottom: 24px;'>
-      </state-card-content>
-      <template if="{{hasHistoryComponent}}">
-        <state-timeline stateHistory="{{stateHistory}}" isLoadingData="{{isLoadingHistoryData}}"></state-timeline>
-      </template>
-      <more-info-content
-        stateObj="{{stateObj}}"
-        dialogOpen="{{dialogOpen}}"></more-info-content>
-    </div>
-  </ha-dialog>
-</template>
+<dom-module id="more-info-dialog">
+  <style>
+    state-card-content {
+      margin-bottom: 24px;
+    }
+
+    @media all and (max-width: 450px) {
+      paper-dialog {
+        margin: 0;
+        width: 100%;
+        max-height: calc(100% - 64px);
+
+        position: fixed !important;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        overflow: scroll;
+      }
+    }
+  </style>
+  <template>
+    <!-- entry-animation='slide-up-animation' exit-animation='slide-down-animation' -->
+    <paper-dialog id="dialog" with-backdrop>
+      <h2><state-card-content state-obj="[[stateObj]]"></state-card-content></h2>
+      <div>
+        <template is='dom-if' if="[[hasHistoryComponent]]">
+          <state-history-charts state-history="[[stateHistory]]"
+            is-loading-data="[[isLoadingHistoryData]]"></state-history-charts>
+        </template>
+        <paper-dialog-scrollable>
+          <more-info-content state-obj="[[stateObj]]"
+            dialog-open="[[dialogOpen]]"></more-info-content>
+        </paper-dialog-scrollable>
+      </div>
+    </paper-dialog>
+  </template>
+</dom-module>
+
 <script>
-var storeListenerMixIn = window.hass.storeListenerMixIn;
-var stateStore = window.hass.stateStore;
-var stateHistoryStore = window.hass.stateHistoryStore;
-var stateHistoryActions = window.hass.stateHistoryActions;
+(function() {
+  var stateStore = window.hass.stateStore;
+  var stateHistoryStore = window.hass.stateHistoryStore;
+  var stateHistoryActions = window.hass.stateHistoryActions;
 
-Polymer(Polymer.mixin({
-  entityId: false,
-  stateObj: null,
-  stateHistory: null,
-  hasHistoryComponent: false,
-  dialogOpen: false,
-  isLoadingHistoryData: false,
+  Polymer({
+    is: 'more-info-dialog',
 
-  observe: {
-    'stateObj.attributes': 'reposition'
-  },
+    behaviors: [StoreListenerBehavior],
 
-  created: function() {
-    this.dialogOpenChanged = this.dialogOpenChanged.bind(this);
-  },
+    properties: {
+      entityId: {
+        type: String,
+      },
 
-  attached: function() {
-    this.listenToStores(true);
-  },
+      stateObj: {
+        type: Object,
+      },
 
-  detached: function() {
-    this.stopListeningToStores();
-  },
+      stateHistory: {
+        type: Object,
+      },
 
-  componentStoreChanged: function(componentStore) {
-    this.hasHistoryComponent = componentStore.isLoaded('history');
-  },
+      isLoadingHistoryData: {
+        type: Boolean,
+        value: false,
+      },
 
-  stateStoreChanged: function() {
-    var newState = this.entityId ? stateStore.get(this.entityId) : null;
+      hasHistoryComponent: {
+        type: Boolean,
+        value: false,
+      },
 
-    if (newState !== this.stateObj) {
-      this.stateObj = newState;
-    }
-  },
+      dialogOpen: {
+        type: Boolean,
+        value: false,
+      },
+    },
 
-  stateHistoryStoreChanged: function() {
-    var newHistory;
+    listeners: {
+      'iron-overlay-opened': 'onIronOverlayOpened',
+      'iron-overlay-closed': 'onIronOverlayClosed'
+    },
 
-    if (this.hasHistoryComponent && this.entityId) {
-      newHistory = stateHistoryStore.get(this.entityId);
-    } else {
-      newHistory = null;
-    }
-    this.isLoadingHistoryData = false;
-    if (newHistory !== this.stateHistory) {
-      this.stateHistory = newHistory;
-    }
-  },
+    componentStoreChanged: function(componentStore) {
+      this.hasHistoryComponent = componentStore.isLoaded('history');
+    },
 
-  dialogOpenChanged: function(ev) {
-    // we get CustomEvent, undefined and true/false from polymer…
-    if (typeof ev === 'object') {
-      this.dialogOpen = ev.detail;
-    }
-  },
+    stateStoreChanged: function() {
+      var newState = this.entityId ? stateStore.get(this.entityId) : null;
 
-  changeEntityId: function(entityId) {
-    this.entityId = entityId;
+      if (newState !== this.stateObj) {
+        this.stateObj = newState;
+      }
+    },
 
-    this.stateStoreChanged();
-    this.stateHistoryStoreChanged();
+    stateHistoryStoreChanged: function() {
+      var newHistory;
 
-    if (this.hasHistoryComponent && stateHistoryStore.isStale(entityId)) {
-      this.isLoadingHistoryData = true;
-      stateHistoryActions.fetch(entityId);
-    }
-  },
+      if (this.hasHistoryComponent && this.entityId) {
+        newHistory = [stateHistoryStore.get(this.entityId)];
+      } else {
+        newHistory = null;
+      }
 
-  /**
-   * Whenever the attributes change, the more info component can
-   * hide or show elements. We will reposition the dialog.
-   */
-  reposition: function(oldVal, newVal) {
-    // Only resize if already open
-    if(this.$.dialog.opened) {
-      this.job('resizeAfterLayoutChange', function() {
-        this.$.dialog.resizeHandler();
-      }.bind(this), 1000);
-    }
-  },
+      this.isLoadingHistoryData = false;
 
-  show: function(entityId) {
-    this.changeEntityId(entityId);
+      if (newHistory !== this.stateHistory) {
+        this.stateHistory = newHistory;
+      }
+    },
 
-    this.job('showDialogAfterRender', function() {
-      this.$.dialog.toggle();
-    }.bind(this));
-  },
-}, storeListenerMixIn));
+    onIronOverlayOpened: function() {
+      this.dialogOpen = true;
+    },
+
+    onIronOverlayClosed: function() {
+      this.dialogOpen = false;
+    },
+
+    changeEntityId: function(entityId) {
+      this.entityId = entityId;
+
+      this.stateStoreChanged();
+      this.stateHistoryStoreChanged();
+
+      if (this.hasHistoryComponent && stateHistoryStore.isStale(entityId)) {
+        this.isLoadingHistoryData = true;
+        stateHistoryActions.fetch(entityId);
+      }
+    },
+
+    show: function(entityId) {
+      this.changeEntityId(entityId);
+
+      this.debounce('showDialogAfterRender', function() {
+        this.$.dialog.toggle();
+      }.bind(this));
+    },
+  });
+})();
 </script>
-</polymer-element>

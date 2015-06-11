@@ -120,7 +120,7 @@ class NmapDeviceScanner(object):
                     else:
                         mac = _arp(host.ipv4)
                     if mac:
-                        device = Device(mac, name, host.ipv4, now)
+                        device = Device(mac.upper(), name, host.ipv4, now)
                         self.last_results.append(device)
             _LOGGER.info("nmap scan successful")
             return True

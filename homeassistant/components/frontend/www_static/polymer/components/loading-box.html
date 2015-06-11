@@ -1,25 +1,27 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 
-<polymer-element name="loading-box" attributes="text">
+<dom-module id="loading-box">
+  <style>
+    .text {
+      display: inline-block;
+      line-height: 28px;
+      vertical-align: top;
+      margin-left: 8px;
+    }
+  </style>
   <template>
-    <style>
-      .text {
-        display: inline-block;
-        line-height: 28px;
-        vertical-align: top;
-        margin-left: 8px;
-      }
-    </style>
     <div layout='horizontal'>
       <paper-spinner active="true"></paper-spinner>
-      <div class='text'>{{text}}…</div>
+      <div class='text'><content></content>…</div>
     </div>
   </template>
+</dom-module>
 
-  <script>
+<script>
+(function() {
   Polymer({
-    text: "Loading"
+    is: 'loading-box',
   });
-  </script>
-</polymer-element>
+})();
+</script>

@@ -1,34 +1,41 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
 
-<polymer-element name="more-info-default" attributes="stateObj">
-<template>
-  <core-style ref='ha-key-value-table'></core-style>
+<dom-module id="more-info-default">
   <style>
     .data-entry .value {
       max-width: 200px;
     }
   </style>
-
-  <div layout vertical>
-
-    <template repeat="{{key in stateObj.attributes | getKeys}}">
-      <div layout justified horizontal class='data-entry'>
-        <div class='key'>
-          {{key}}
+  <template>
+    <div class='layout vertical'>
+      <template is='dom-repeat' items="[[getAttributes(stateObj)]]" as="attribute">
+        <div class='data-entry layout justified horizontal'>
+          <div class='key'>[[attribute]]</div>
+          <div class='value'>[[getAttributeValue(stateObj, attribute)]]</div>
         </div>
-        <div class='value'>
-          {{stateObj.attributes[key]}}
-        </div>
-      </div>
-    </template>
-  </div>
-</template>
+      </template>
+    </div>
+  </template>
+</dom-module>
+
 <script>
+(function() {
   Polymer({
-    getKeys: function(obj) {
-      return Object.keys(obj || {});
-    }
+    is: 'more-info-default',
+
+    properties: {
+      stateObj: {
+        type: Object,
+      },
+    },
+
+    getAttributes: function(stateObj) {
+      return stateObj ? Object.keys(stateObj.attributes) : [];
+    },
+
+    getAttributeValue: function(stateObj, attribute) {
+      return stateObj.attributes[attribute];
+    },
   });
+})();
 </script>
-</polymer-element>

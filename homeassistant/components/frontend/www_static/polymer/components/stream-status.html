@@ -1,11 +1,11 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
 
-<link rel="import" href="../bower_components/core-icons/notification-icons.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
 
-<polymer-element name="stream-status">
-<template>
+<link rel="import" href="../bower_components/iron-icons/notification-icons.html">
+
+<dom-module id="stream-status">
   <style>
   :host {
     display: inline-block;
@@ -16,29 +16,31 @@
     vertical-align: middle;
   }
   </style>
-  <core-style ref='ha-paper-toggle'></core-style>
+  <template>
+    <iron-icon icon="warning" hidden$="{{!hasError}}"></iron-icon>
+    <paper-toggle-button id="toggle" on-change='toggleChanged' hidden$="{{hasError}}"></paper-toggle-button>
+  </template>
+</dom-module>
 
-  <core-icon icon="warning" hidden?="{{!hasError}}"></core-icon>
-  <paper-toggle-button id="toggle" on-change={{toggleChanged}} hidden?="{{hasError}}"></paper-toggle-button>
-</template>
 <script>
   var streamActions = window.hass.streamActions;
   var authStore = window.hass.authStore;
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
 
-  Polymer(Polymer.mixin({
-    isStreaming: false,
-    hasError: false,
+  Polymer({
+    is: 'stream-status',
 
-    icon: "swap-vert-circle",
-    color: 'red',
+    behaviors: [StoreListenerBehavior],
 
-    attached: function() {
-      this.listenToStores(true);
-    },
+    properties: {
+      isStreaming: {
+        type: Boolean,
+        value: false,
+      },
 
-    detached: function() {
-      this.stopListeningToStores();
+      hasError: {
+        type: Boolean,
+        value: false,
+      },
     },
 
     streamStoreChanged: function(streamStore) {
@@ -53,6 +55,5 @@
         streamActions.start(authStore.authToken);
       }
     },
-  }, storeListenerMixIn));
+  });
 </script>
-</polymer-element>

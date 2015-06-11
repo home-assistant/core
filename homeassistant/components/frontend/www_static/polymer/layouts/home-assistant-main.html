@@ -1,64 +1,54 @@
-<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/layout/layout.html'>
 
-<link rel="import" href="../bower_components/core-drawer-panel/core-drawer-panel.html">
-<link rel="import" href="../bower_components/core-header-panel/core-header-panel.html">
-<link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
-<link rel="import" href="../bower_components/core-menu/core-menu.html">
-<link rel="import" href="../bower_components/core-style/core-style.html">
-<link rel="import" href="../bower_components/core-icon/core-icon.html">
-<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel='import' href='../bower_components/paper-drawer-panel/paper-drawer-panel.html'>
+<link rel='import' href='../bower_components/paper-header-panel/paper-header-panel.html'>
+<link rel='import' href='../bower_components/paper-toolbar/paper-toolbar.html'>
+<link rel='import' href='../bower_components/paper-menu/paper-menu.html'>
+<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
+<link rel='import' href='../bower_components/paper-item/paper-item.html'>
+<link rel='import' href='../bower_components/paper-item/paper-icon-item.html'>
+<link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
 
-<link rel="import" href="../layouts/partial-states.html">
-<link rel="import" href="../layouts/partial-history.html">
-<link rel="import" href="../layouts/partial-logbook.html">
-<link rel="import" href="../layouts/partial-dev-fire-event.html">
-<link rel="import" href="../layouts/partial-dev-call-service.html">
-<link rel="import" href="../layouts/partial-dev-set-state.html">
+<link rel='import' href='../layouts/partial-states.html'>
+<link rel='import' href='../layouts/partial-logbook.html'>
+<link rel='import' href='../layouts/partial-history.html'>
+<link rel='import' href='../layouts/partial-dev-call-service.html'>
+<link rel='import' href='../layouts/partial-dev-fire-event.html'>
+<link rel='import' href='../layouts/partial-dev-set-state.html'>
 
-<link rel="import" href="../components/ha-notifications.html">
-<link rel="import" href="../components/ha-modals.html">
-<link rel="import" href="../components/stream-status.html">
+<link rel='import' href='../managers/notification-manager.html'>
+<link rel='import' href='../managers/modal-manager.html'>
 
-<polymer-element name="home-assistant-main">
-<template>
-  <core-style ref="ha-headers"></core-style>
+<link rel='import' href='../components/stream-status.html'>
 
+<dom-module id='home-assistant-main'>
   <style>
     .sidenav {
       background: #fafafa;
       box-shadow: 1px 0 1px rgba(0, 0, 0, 0.1);
-      color: #757575;
       overflow: hidden;
     }
 
-    core-toolbar {
-      font-weight: normal;
-      padding-left: 24px;
+    .sidenav paper-menu {
+      --paper-menu-color: var(--secondary-text-color);
+      --paper-menu-background-color: #fafafa;
     }
 
-    .sidenav-menu {
-      overflow: auto;
-      position: absolute;
-      top: 0px;
-      left: 0px;
-      right: 0px;
-      bottom: 0px;
+    paper-icon-item {
+      cursor: pointer;
     }
 
-    .sidenav-menu core-icon {
-      margin-right: 24px;
+    paper-icon-item.logout {
+      margin-top: 16px;
     }
 
-    .sidenav-menu > paper-item {
-      min-height: 53px;
+    .divider {
+      border-top: 1px solid #e0e0e0;
     }
 
     .text {
       padding: 16px;
-      border-top: 1px solid #e0e0e0; 
-    }
-
-    .label {
       font-size: 14px;
     }
 
@@ -67,192 +57,286 @@
     }
   </style>
 
-  <ha-notifications></ha-notifications>
-  <ha-modals></ha-modals>
+  <template>
+    <notification-manager></notification-manager>
+    <modal-manager></modal-manager>
 
-  <core-drawer-panel id="drawer" on-core-responsive-change="{{responsiveChanged}}">
-    <core-header-panel mode="scroll" drawer class='sidenav'>
-      <core-toolbar>
-        Home Assistant
-      </core-toolbar>
-      <core-menu id="menu" class="sidenav-menu"
-        selected="0" excludedLocalNames="div" on-core-select="{{menuSelect}}"
-        layout vertical>
-        <paper-item data-panel="states">
-          <core-icon icon="apps"></core-icon>
-          States
-        </paper-item>
+    <paper-drawer-panel id='drawer' narrow='{{narrow}}'>
+      <paper-header-panel mode='scroll' drawer class='sidenav fit'>
+        <paper-toolbar>
+          <!-- forces paper toolbar to style title appropriate -->
+          <paper-icon-button hidden></paper-icon-button>
+          <div class="title">Home Assistant</div>
+        </paper-toolbar>
 
-        <template repeat="{{activeFilters as filter}}">
-          <paper-item data-panel="states_{{filter}}">
-            <core-icon icon="{{filter | filterIcon}}"></core-icon>
-            {{filter | filterName}}
+        <paper-menu id='menu'
+          selectable='[data-panel]' attr-for-selected='data-panel'
+          on-iron-select='menuSelect' selected='[[selected]]'>
+          <paper-icon-item data-panel='states'>
+            <iron-icon item-icon icon='apps'></iron-icon> States
+          </paper-icon-item>
+
+          <template is='dom-repeat' items='{{activeFilters}}'>
+            <paper-icon-item data-panel$='[[filterType(item)]]'>
+              <iron-icon item-icon icon='[[filterIcon(item)]]'></iron-icon>
+              <span>[[filterName(item)]]</span>
+            </paper-icon-item>
+          </template>
+
+          <template is='dom-if' if='[[hasHistoryComponent]]'>
+            <paper-icon-item data-panel='history'>
+              <iron-icon item-icon icon='assessment'></iron-icon>
+              History
+            </paper-icon-item>
+          </template>
+
+          <template is='dom-if' if='[[hasLogbookComponent]]'>
+            <paper-icon-item data-panel='logbook'>
+              <iron-icon item-icon icon='list'></iron-icon>
+              Logbook
+            </paper-icon-item>
+          </template>
+
+          <paper-icon-item data-panel='logout' class='logout'>
+            <iron-icon item-icon icon='exit-to-app'></iron-icon>
+            Log Out
+          </paper-icon-item>
+
+          <paper-item class='divider horizontal layout justified'>
+            <div>Streaming updates</div>
+            <stream-status></stream-status>
           </paper-item>
-        </template>
 
-        <template if="{{hasHistoryComponent}}">
-          <paper-item data-panel="history">
-            <core-icon icon="assessment"></core-icon>
-            History
-          </paper-item>
-        </template>
+          <div class='text label divider'>Developer Tools</div>
+          <div class='dev-tools layout horizontal justified'>
+            <paper-icon-button
+              icon='settings-remote' data-panel$='[[selectedDevService]]'
+              on-click='handleDevClick'></paper-icon-button>
+            <paper-icon-button
+              icon='settings-ethernet' data-panel$='[[selectedDevState]]'
+              on-click='handleDevClick'></paper-icon-button>
+            <paper-icon-button
+              icon='settings-input-antenna' data-panel$='[[selectedDevEvent]]'
+              on-click='handleDevClick'></paper-icon-button>
+          </div>
+        </paper-menu>
+      </paper-header-panel>
 
-        <template if="{{hasLogbookComponent}}">
-          <paper-item data-panel="logbook">
-            <core-icon icon="list"></core-icon>
-            Logbook
-          </paper-item>
-        </template>
+      <template is='dom-if' if='[[!hideStates]]'>
+        <partial-states
+          main narrow='[[narrow]]'
+          filter='[[stateFilter]]'>
+        </partial-states>
+      </template>
 
-        <div flex></div>
+      <template is='dom-if' if='[[isSelectedLogbook]]'>
+        <partial-logbook main narrow='[[narrow]]'></partial-logbook>
+      </template>
+      <template is='dom-if' if='[[isSelectedHistory]]'>
+        <partial-history main narrow='[[narrow]]'></partial-history>
+      </template>
+      <template is='dom-if' if='[[isSelectedDevService]]'>
+        <partial-dev-call-service main narrow='[[narrow]]'></partial-dev-call-service>
+      </template>
+      <template is='dom-if' if='[[isSelectedDevEvent]]'>
+        <partial-dev-fire-event main narrow='[[narrow]]'></partial-dev-fire-event>
+      </template>
+      <template is='dom-if' if='[[isSelectedDevState]]'>
+        <partial-dev-set-state main narrow='[[narrow]]'></partial-dev-set-state>
+      </template>
+    </paper-drawer-panel>
 
-        <paper-item on-click="{{handleLogOutClick}}">
-          <core-icon icon="exit-to-app"></core-icon>
-          Log Out
-        </paper-item>
+  </template>
+</dom-module>
 
-        <div class='text' horizontal layout center>
-          <div flex>Streaming updates</div>
-          <stream-status></stream-status>
-        </div>
-
-        <div class='text label'>Developer Tools</div>
-        <div class='dev-tools' layout horizontal justified>
-          <paper-icon-button
-            icon="settings-remote" data-panel='call-service'
-            on-click="{{handleDevClick}}"></paper-icon-button>
-          <paper-icon-button
-            icon="settings-ethernet" data-panel='set-state'
-            on-click="{{handleDevClick}}"></paper-icon-button>
-          <paper-icon-button
-            icon="settings-input-antenna" data-panel='fire-event'
-            on-click="{{handleDevClick}}"></paper-icon-button>
-        </div>
-      </core-menu>
-    </core-header-panel>
-
-    <!--
-        This is the main partial, never remove it from the DOM but hide it
-        to speed up when people click on states.
-    -->
-    <partial-states hidden?="{{hideStates}}"
-      main narrow="{{narrow}}"
-      togglePanel="{{togglePanel}}"
-      filter="{{stateFilter}}">
-    </partial-states>
-
-    <template if="{{selected == 'history'}}">
-      <partial-history main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-history>
-    </template>
-    <template if="{{selected == 'logbook'}}">
-      <partial-logbook main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-logbook>
-    </template>
-    <template if="{{selected == 'fire-event'}}">
-      <partial-dev-fire-event main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-fire-event>
-    </template>
-    <template if="{{selected == 'set-state'}}">
-      <partial-dev-set-state main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-set-state>
-    </template>
-    <template if="{{selected == 'call-service'}}">
-      <partial-dev-call-service main narrow="{{narrow}}" togglePanel="{{togglePanel}}"></partial-dev-call-service>
-    </template>
-  </core-drawer-panel>
-
-</template>
 <script>
 (function() {
-var storeListenerMixIn = window.hass.storeListenerMixIn;
-var authActions = window.hass.authActions;
-var uiUtil = window.hass.uiUtil;
-var uiConstants = window.hass.uiConstants;
+  var authActions = window.hass.authActions;
 
-Polymer(Polymer.mixin({
-  selected: "states",
-  stateFilter: null,
-  narrow: false,
-  activeFilters: [],
-  hasHistoryComponent: false,
-  hasLogbookComponent: false,
+  var uiUtil = window.hass.uiUtil;
+  var uiConstants = window.hass.uiConstants;
 
-  isStreaming: false,
-  hasStreamError: false,
+  Polymer({
+    is: 'home-assistant-main',
 
-  hideStates: false,
+    behaviors: [StoreListenerBehavior],
 
-  attached: function() {
-    this.togglePanel = this.togglePanel.bind(this);
+    properties: {
+      selected: {
+        type: String,
+        value: 'states',
+      },
 
-    this.listenToStores(true);
-  },
+      stateFilter: {
+        type: String,
+        value: null,
+      },
 
-  detached: function() {
-    this.stopListeningToStores();
-  },
+      narrow: {
+        type: Boolean,
+      },
 
-  stateStoreChanged: function(stateStore) {
-    this.activeFilters = stateStore.domains.filter(function(domain) {
-      return domain in uiConstants.STATE_FILTERS;
-    }).toArray();
-  },
+      activeFilters: {
+        type: Array,
+        value: [],
+      },
 
-  componentStoreChanged: function(componentStore) {
-    this.hasHistoryComponent = componentStore.isLoaded('history');
-    this.hasLogbookComponent = componentStore.isLoaded('logbook');
-  },
+      hasHistoryComponent: {
+        type: Boolean,
+        value: false,
+      },
 
-  streamStoreChanged: function(streamStore) {
-    this.isStreaming = streamStore.isStreaming;
-    this.hasStreamError = streamStore.hasError;
-  },
+      hasLogbookComponent: {
+        type: Boolean,
+        value: false,
+      },
 
-  menuSelect: function(ev, detail, sender) {
-    if (detail.isSelected) {
-      this.selectPanel(detail.item);
-    }
-  },
+      isStreaming: {
+        type: Boolean,
+        value: false,
+      },
 
-  handleDevClick: function(ev, detail, sender) {
-    this.$.menu.selected = -1;
-    this.selectPanel(ev.target);
-  },
+      hasStreamError: {
+        type: Boolean,
+        value: false,
+      },
 
-  selectPanel: function(element) {
-    var newChoice = element.dataset.panel;
+      hideStates: {
+        type: Boolean,
+        value: false,
+      },
 
-    if(newChoice !== this.selected) {
-      this.togglePanel();
+      selectedHistory: {
+        type: String,
+        value: 'history',
+        readOnly: true,
+      },
+
+      isSelectedHistory: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedHistory)',
+      },
+
+      selectedLogbook: {
+        type: String,
+        value: 'logbook',
+        readOnly: true,
+      },
+
+      isSelectedLogbook: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedLogbook)',
+      },
+
+      selectedDevEvent: {
+        type: String,
+        value: 'devEvent',
+        readOnly: true,
+      },
+
+      isSelectedDevEvent: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedDevEvent)',
+      },
+
+      selectedDevState: {
+        type: String,
+        value: 'devState',
+        readOnly: true,
+      },
+
+      isSelectedDevState: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedDevState)',
+      },
+
+      selectedDevService: {
+        type: String,
+        value: 'devService',
+        readOnly: true,
+      },
+
+      isSelectedDevService: {
+        type: Boolean,
+        computed: 'computeIsSelected(selected, selectedDevService)',
+      },
+
+
+    },
+
+    listeners: {
+      'menu.core-select': 'menuSelect',
+      'open-menu': 'openDrawer',
+    },
+
+    stateStoreChanged: function(stateStore) {
+      this.activeFilters = stateStore.domains.filter(function(domain) {
+        return domain in uiConstants.STATE_FILTERS;
+      }).toArray();
+    },
+
+    componentStoreChanged: function(componentStore) {
+      this.hasHistoryComponent = componentStore.isLoaded('history');
+      this.hasLogbookComponent = componentStore.isLoaded('logbook');
+    },
+
+    menuSelect: function(ev, detail, sender) {
+      this.selectPanel(this.$.menu.selected);
+    },
+
+    handleDevClick: function(ev, detail, sender) {
+      // prevent it from highlighting first menu item
+      document.activeElement.blur();
+      this.selectPanel(ev.target.parentElement.dataset.panel);
+    },
+
+    selectPanel: function(newChoice) {
+      if (newChoice == 'logout') {
+        this.handleLogOut();
+        return;
+      } else if(newChoice == this.selected) {
+        return;
+      }
+
+      this.closeDrawer();
       this.selected = newChoice;
+
+      if (newChoice.substr(0, 7) === 'states_') {
+        this.hideStates = false;
+        this.stateFilter = newChoice.substr(7);
+      } else {
+        this.hideStates = newChoice !== 'states';
+        this.stateFilter = null;
+      }
+    },
+
+    openDrawer: function() {
+      this.$.drawer.openDrawer();
+    },
+
+    closeDrawer: function() {
+      this.$.drawer.closeDrawer();
+    },
+
+    handleLogOut: function() {
+      authActions.logOut();
+    },
+
+    computeIsSelected: function(selected, selectedType) {
+      return selected === selectedType;
+    },
+
+    filterIcon: function(filter) {
+      return uiUtil.domainIcon(filter);
+    },
+
+    filterName: function(filter) {
+      return uiConstants.STATE_FILTERS[filter];
+    },
+
+    filterType: function(filter) {
+      return 'states_' + filter;
     }
-
-    if (this.selected.substr(0, 7) === 'states_') {
-      this.hideStates = false;
-      this.stateFilter = this.selected.substr(7);
-    } else {
-      this.hideStates = this.selected !== 'states';
-      this.stateFilter = null;
-    }
-  },
-
-  responsiveChanged: function(ev, detail, sender) {
-    this.narrow = detail.narrow;
-  },
-
-  togglePanel: function() {
-    this.$.drawer.togglePanel();
-  },
-
-  handleLogOutClick: function() {
-    authActions.logOut();
-  },
-
-  filterIcon: function(filter) {
-    return uiUtil.domainIcon(filter);
-  },
-
-  filterName: function(filter) {
-    return uiConstants.STATE_FILTERS[filter];
-  },
-}, storeListenerMixIn));
+  });
 })();
-</script>  
-</polymer-element>
+</script>
