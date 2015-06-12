@@ -19,6 +19,7 @@ switch:
 """
 
 import logging
+import socket
 import time
 from datetime import timedelta
 from telnetlib import Telnet
@@ -59,6 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 NetioSwitch(client, i, config.get(i, DEVICE_DEFAULT_NAME)))
 
     add_devices(devices)
+    return True
 
 
 class NetioSwitch(ToggleEntity):
@@ -107,6 +109,7 @@ class NetioSwitch(ToggleEntity):
 
 
 class NetioDevice(object):
+    MAX_RETRIES = 2
 
     """ Simple class to handle Telnet communication with the Netio's """
 
@@ -115,7 +118,7 @@ class NetioDevice(object):
         self.host, self.port = host, port
         self.username, self.password = username, password
         self._states = []
-        self.retries = 2
+        self.retries = self.MAX_RETRIES
         self.telnet = None
         self.lock = Lock()
         self.connect()
@@ -127,8 +130,9 @@ class NetioDevice(object):
             time.sleep(1)
             self.get()
             self.get('login admin admin')
-        except Exception as E:
-            _LOGGER.error("%s: %s" % (self.host, E))
+        except socket.gaierror:
+            _LOGGER.error("Cannot connect to %s (%d)" %
+                          (self.host, self.retries))
 
     @property
     def states(self):
@@ -165,14 +169,15 @@ class NetioDevice(object):
                     _LOGGER.warn('command error: %r' % res)
                 return res.split()[1]
 
-        except Exception as E:
-            _LOGGER.error(E)
+        except Exception:
+            _LOGGER.error("Cannot get answer from %s (%d)" %
+                          (self.host, self.retries))
             if self.retries > 0:
                 self.retries -= 1
                 self.connect()
                 return self.get(command)
             else:
-                self.retries = 2
+                self.retries = self.MAX_RETRIES
                 return None
 
     def stop(self):
