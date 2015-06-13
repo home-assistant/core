@@ -6,10 +6,9 @@ from urllib.parse import urlparse
 
 from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
+    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
     ATTR_FLASH, FLASH_LONG, FLASH_SHORT)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -131,7 +130,7 @@ def request_configuration(host, hass, add_devices_callback):
     )
 
 
-class HueLight(ToggleEntity):
+class HueLight(Light):
     """ Represents a Hue light """
 
     def __init__(self, light_id, info, bridge, update_lights):
@@ -149,19 +148,17 @@ class HueLight(ToggleEntity):
     @property
     def name(self):
         """ Get the mame of the Hue light. """
-        return self.info.get('name', 'No name')
+        return self.info.get('name', DEVICE_DEFAULT_NAME)
 
     @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        attr = {}
+    def brightness(self):
+        """ Brightness of this light between 0..255. """
+        return self.info['state']['bri']
 
-        if self.is_on:
-            attr[ATTR_BRIGHTNESS] = self.info['state']['bri']
-            if 'xy' in self.info['state']:
-                attr[ATTR_XY_COLOR] = self.info['state']['xy']
-
-        return attr
+    @property
+    def color_xy(self):
+        """ XY color value. """
+        return self.info['state'].get('xy')
 
     @property
     def is_on(self):
