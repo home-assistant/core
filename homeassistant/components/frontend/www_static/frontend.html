@@ -9563,6 +9563,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
    *     iconset.applyIcon(iconNode, 'car');
    *
    * @element iron-iconset-svg
+   * @demo demo/index.html
    */
   Polymer({
 
@@ -9659,7 +9660,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
     /**
      * Create a map of child SVG elements by id.
      *
-     * @return {Object} Map of id's to SVG elements.
+     * @return {!Object} Map of id's to SVG elements.
      */
     _createIconMap: function() {
       // Objects chained to Object.prototype (`{}`) have members. Specifically,
@@ -10010,13 +10011,6 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 
 </style>
 
-
-<style is="custom-style">
-  :root {
-    --iron-icon-width: 24px;
-    --iron-icon-height: 24px;
-  }
-</style>
 
 <script>
 
@@ -10858,6 +10852,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
      * The `keys-pressed` event will fire when one of the key combinations set with the
      * `keys` property is pressed.
      *
+     * @demo demo/index.html
      * @polymerBehavior IronA11yKeysBehavior
      */
     Polymer.IronA11yKeysBehavior = {
@@ -10873,6 +10868,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
         },
 
         _boundKeyHandlers: {
+          type: Array,
           value: function() {
             return [];
           }
@@ -10881,6 +10877,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
         // We use this due to a limitation in IE10 where instances will have
         // own properties of everything on the "prototype".
         _imperativeKeyBindings: {
+          type: Object,
           value: function() {
             return {};
           }
@@ -11065,18 +11062,16 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 </style>
 <script>
 
-  /** @polymerBehavior */
-
+  /**
+   * @demo demo/index.html
+   * @polymerBehavior
+   */
   Polymer.IronControlState = {
 
     properties: {
 
       /**
        * If true, the element currently has focus.
-       *
-       * @attribute focused
-       * @type boolean
-       * @default false
        */
       focused: {
         type: Boolean,
@@ -11088,10 +11083,6 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 
       /**
        * If true, the user cannot interact with this element.
-       *
-       * @attribute disabled
-       * @type boolean
-       * @default false
        */
       disabled: {
         type: Boolean,
@@ -11103,17 +11094,20 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 
       _oldTabIndex: {
         type: Number
+      },
+
+      _boundFocusBlurHandler: {
+        type: Function,
+        value: function() {
+          return this._focusBlurHandler.bind(this);
+        }
       }
+
     },
 
     observers: [
       '_changedControlState(focused, disabled)'
     ],
-
-    listeners: {
-      focus: '_focusHandler',
-      blur: '_blurHandler'
-    },
 
     ready: function() {
       // TODO(sjmiles): ensure read-only property is valued so the compound
@@ -11121,14 +11115,23 @@ window.hass.uiUtil.formatDate = function(dateObj) {
       if (this.focused === undefined) {
         this._setFocused(false);
       }
+      this.addEventListener('focus', this._boundFocusBlurHandler, true);
+      this.addEventListener('blur', this._boundFocusBlurHandler, true);
     },
 
-    _focusHandler: function() {
-      this._setFocused(true);
-    },
-
-    _blurHandler: function() {
-      this._setFocused(false);
+    _focusBlurHandler: function(event) {
+      var target = event.path ? event.path[0] : event.target;
+      if (target === this) {
+        var focused = event.type === 'focus';
+        this._setFocused(focused);
+      } else if (!this.shadowRoot) {
+        event.stopPropagation();
+        this.fire(event.type, {sourceEvent: event}, {
+          node: this,
+          bubbles: event.bubbles,
+          cancelable: event.cancelable
+        });
+      }
     },
 
     _disabledChanged: function(disabled, old) {
@@ -11155,17 +11158,16 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 </script>
 <script>
 
-  /** @polymerBehavior Polymer.IronButtonState */
+  /**
+   * @demo demo/index.html
+   * @polymerBehavior
+   */
   Polymer.IronButtonStateImpl = {
 
     properties: {
 
       /**
        * If true, the user is currently holding down the button.
-       *
-       * @attribute pressed
-       * @type boolean
-       * @default false
        */
       pressed: {
         type: Boolean,
@@ -11178,10 +11180,6 @@ window.hass.uiUtil.formatDate = function(dateObj) {
       /**
        * If true, the button toggles the active state with each tap or press
        * of the spacebar.
-       *
-       * @attribute toggles
-       * @type boolean
-       * @default false
        */
       toggles: {
         type: Boolean,
@@ -11191,10 +11189,6 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 
       /**
        * If true, the button is a toggle and is currently in the active state.
-       *
-       * @attribute active
-       * @type boolean
-       * @default false
        */
       active: {
         type: Boolean,
@@ -11368,18 +11362,6 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 
 
 <style is="custom-style">
-  :root {
-    --paper-checkbox-unchecked-color: var(--primary-text-color);
-    --paper-checkbox-unchecked-ink-color: var(--primary-text-color);
-
-    --paper-checkbox-checked-color: var(--default-primary-color);
-    --paper-checkbox-checked-ink-color: var(--default-primary-color);
-
-    --paper-checkbox-label-color: var(--primary-text-color);
-  }
-</style>
-
-<style is="custom-style">
 
   :root {
 
@@ -11465,6 +11447,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
     }
   };
 
+  /** @polymerBehavior */
   Polymer.PaperButtonBehavior = [
     Polymer.IronButtonState,
     Polymer.IronControlState,
@@ -12404,10 +12387,14 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 
     /**
      * The function called by `<paper-input-container>` when the input value or validity changes.
-     * @param {Object} state All properties are optional.
-     * @param {Node} state.inputElement The input element.
-     * @param {String} state.value The input value.
-     * @param {Boolean} state.invalid True if the input value is invalid.
+     * @param {{
+     *   inputElement: (Node|undefined),
+     *   value: (string|undefined),
+     *   invalid: (boolean|undefined)
+     * }} state All properties are optional -
+     *     inputElement: The input element.
+     *     value: The input value.
+     *     invalid: True if the input value is invalid.
      */
     update: function(state) {
     }
@@ -12452,6 +12439,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
        * True if the last call to `validate` is invalid.
        */
       invalid: {
+        notify: true,
         reflectToAttribute: true,
         type: Boolean,
         value: false
@@ -12484,7 +12472,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
     },
 
     /**
-     * @return {Boolean} True if the validator `validator` exists.
+     * @return {boolean} True if the validator `validator` exists.
      */
     hasValidator: function() {
       return this._validator != null;
@@ -12492,7 +12480,7 @@ window.hass.uiUtil.formatDate = function(dateObj) {
 
     /**
      * @param {Object} values Passed to the validator's `validate()` function.
-     * @return {Boolean} True if `values` is valid.
+     * @return {boolean} True if `values` is valid.
      */
     validate: function(values) {
       var valid = this._validator && this._validator.validate(values);
@@ -12699,12 +12687,14 @@ is separate from validation, and `allowed-pattern` does not affect how the input
     /**
      * Returns true if `value` is valid. The validator provided in `validator` will be used first,
      * then any constraints.
-     * @return {Boolean} True if the value is valid.
+     * @return {boolean} True if the value is valid.
      */
     validate: function() {
       // Empty, non-required input is valid.
-      if (!this.required && this.value == '')
+      if (!this.required && this.value == '') {
+        this.invalid = false;
         return true;
+      }
 
       var valid;
       if (this.hasValidator()) {
@@ -13562,12 +13552,6 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
 
 
-<style is="custom-style">
-  :root {
-    --paper-icon-button-disabled-text: var(--disabled-text-color);
-  }
-</style>
-
 
 
 <script>
@@ -13704,17 +13688,6 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
 
 
-<style is="custom-style">
-  :root {
-    --paper-toggle-button-unchecked-bar-color: #000000;
-    --paper-toggle-button-unchecked-button-color: var(--paper-grey-50);
-    --paper-toggle-button-unchecked-ink-color: var(--primary-text-color);
-
-    --paper-toggle-button-checked-bar-color: var(--google-green-500);
-    --paper-toggle-button-checked-button-color: var(--google-green-500);
-    --paper-toggle-button-checked-ink-color: var(--google-green-500);
-  }
-</style>
 
 <script>
 (function() {
@@ -14550,7 +14523,9 @@ Fires `api-load` event when ready.
        * A placeholder string in addition to the label. If this is set, the label will always float.
        */
       placeholder: {
-        type: String
+        type: String,
+        // need to set a default so _computeAlwaysFloatLabel is run
+        value: ''
       },
 
       /**
@@ -14613,9 +14588,31 @@ Fires `api-load` event when ready.
     /**
      * Validates the input element and sets an error style if needed.
      */
-     validate: function () {
+     validate: function() {
        return this.inputElement.validate();
      },
+
+    /**
+     * Restores the cursor to its original position after updating the value.
+     * @param {string} newValue The value that should be saved.
+     */
+    updateValueAndPreserveCaret: function(newValue) {
+      // Not all elements might have selection, and even if they have the
+      // right properties, accessing them might throw an exception (like for
+      // <input type=number>)
+      try {
+        var start = this.inputElement.selectionStart;
+        this.value = newValue;
+
+        // The cursor automatically jumps to the end after re-setting the value,
+        // so restore it to its original position.
+        this.inputElement.selectionStart = start;
+        this.inputElement.selectionEnd = start;
+      } catch (e) {
+        // Just set the value and give up on the caret.
+        this.value = newValue;
+      }
+    },
 
     _computeAlwaysFloatLabel: function(alwaysFloatLabel, placeholder) {
       return placeholder || alwaysFloatLabel;
@@ -15330,7 +15327,7 @@ CSS properties               | Action
 </script>
 <script>
 
-/*
+/**
 Use `Polymer.IronOverlayBehavior` to implement an element that can be hidden or shown, and displays
 on top of other content. It includes an optional backdrop, and can be used to implement a variety
 of UI controls including dialogs and drop downs. Multiple overlays may be displayed at once.
@@ -15450,6 +15447,17 @@ context. You should place this element as a child of `<body>` whenever possible.
       }
 
     },
+
+/**
+ * Fired after the `iron-overlay` opens.
+ * @event iron-overlay-opened
+ */
+
+/**
+ * Fired after the `iron-overlay` closes.
+ * @event iron-overlay-closed {{canceled: boolean}} detail -
+ *     canceled: True if the overlay was canceled.
+ */
 
     listeners: {
       'click': '_onClick',
@@ -15732,21 +15740,11 @@ context. You should place this element as a child of `<body>` whenever possible.
   /** @polymerBehavior */
   Polymer.IronOverlayBehavior = [Polymer.IronFitBehavior, Polymer.IronResizableBehavior, Polymer.IronOverlayBehaviorImpl];
 
-/*
- * Fired after the `iron-overlay` opens.
- * @event iron-overlay-opened
- */
-
-/*
- * Fired after the `iron-overlay` closes.
- * @event iron-overlay-closed {{canceled: boolean}} detail -
- *     canceled: True if the overlay was canceled.
- */
 
 </script>
 <script>
 
-/*
+/**
 Use `Polymer.PaperDialogBehavior` and `paper-dialog-common.css` to implement a Material Design
 dialog.
 
@@ -15814,8 +15812,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         value: false
       },
 
+      /** @type {?Node} */
       _lastFocusedElement: {
-        type: Node
+        type: Object
       },
 
       _boundOnFocus: {
@@ -16299,8 +16298,8 @@ document.registerElement('color-picker', { prototype: colorPickerPrototype });
 
       fill: currentcolor;
 
-      width: var(--iron-icon-width);
-      height: var(--iron-icon-height);
+      width: var(--iron-icon-width, 24px);
+      height: var(--iron-icon-height, 24px);
     }
   </style>
 
@@ -16389,7 +16388,6 @@ document.registerElement('color-picker', { prototype: colorPickerPrototype });
   </script>
 
 </dom-module>
-
 <iron-iconset-svg name="icons" size="24">
 <svg><defs>
 <g id="3d-rotation"><path d="M7.52 21.48C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32zm.89-6.52c-.19 0-.37-.03-.52-.08-.16-.06-.29-.13-.4-.24-.11-.1-.2-.22-.26-.37-.06-.14-.09-.3-.09-.47h-1.3c0 .36.07.68.21.95.14.27.33.5.56.69.24.18.51.32.82.41.3.1.62.15.96.15.37 0 .72-.05 1.03-.15.32-.1.6-.25.83-.44s.42-.43.55-.72c.13-.29.2-.61.2-.97 0-.19-.02-.38-.07-.56-.05-.18-.12-.35-.23-.51-.1-.16-.24-.3-.4-.43-.17-.13-.37-.23-.61-.31.2-.09.37-.2.52-.33.15-.13.27-.27.37-.42.1-.15.17-.3.22-.46.05-.16.07-.32.07-.48 0-.36-.06-.68-.18-.96-.12-.28-.29-.51-.51-.69-.2-.19-.47-.33-.77-.43C9.1 8.05 8.76 8 8.39 8c-.36 0-.69.05-1 .16-.3.11-.57.26-.79.45-.21.19-.38.41-.51.67-.12.26-.18.54-.18.85h1.3c0-.17.03-.32.09-.45s.14-.25.25-.34c.11-.09.23-.17.38-.22.15-.05.3-.08.48-.08.4 0 .7.1.89.31.19.2.29.49.29.86 0 .18-.03.34-.08.49-.05.15-.14.27-.25.37-.11.1-.25.18-.41.24-.16.06-.36.09-.58.09H7.5v1.03h.77c.22 0 .42.02.6.07s.33.13.45.23c.12.11.22.24.29.4.07.16.1.35.1.57 0 .41-.12.72-.35.93-.23.23-.55.33-.95.33zm8.55-5.92c-.32-.33-.7-.59-1.14-.77-.43-.18-.92-.27-1.46-.27H12v8h2.3c.55 0 1.06-.09 1.51-.27.45-.18.84-.43 1.16-.76.32-.33.57-.73.74-1.19.17-.47.26-.99.26-1.57v-.4c0-.58-.09-1.1-.26-1.57-.18-.47-.43-.87-.75-1.2zm-.39 3.16c0 .42-.05.79-.14 1.13-.1.33-.24.62-.43.85-.19.23-.43.41-.71.53-.29.12-.62.18-.99.18h-.91V9.12h.97c.72 0 1.27.23 1.64.69.38.46.57 1.12.57 1.99v.4zM12 0l-.66.03 3.81 3.81 1.33-1.33c3.27 1.55 5.61 4.72 5.96 8.48h1.5C23.44 4.84 18.29 0 12 0z"></path></g>
@@ -17344,6 +17342,7 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
         this.wave.style.transform = 'scale3d(' + scale + ',' + scale + ',1)';
       },
 
+      /** @param {Event=} event */
       downAction: function(event) {
         var xCenter = this.containerMetrics.width / 2;
         var yCenter = this.containerMetrics.height / 2;
@@ -17388,6 +17387,7 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
         this.waveContainer.style.height = this.containerMetrics.size + 'px';
       },
 
+      /** @param {Event=} event */
       upAction: function(event) {
         if (!this.isMouseDown) {
           return;
@@ -17511,11 +17511,9 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
         var ownerRoot = Polymer.dom(this).getOwnerRoot();
         var target;
 
-        if (ownerRoot) {
+        if (this.parentNode.nodeType == 11) { // DOCUMENT_FRAGMENT_NODE
           target = ownerRoot.host;
-        }
-
-        if (!target) {
+        } else {
           target = this.parentNode;
         }
 
@@ -17529,8 +17527,8 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
       },
 
       attached: function() {
-        this._listen(this.target, 'up', this.upAction.bind(this));
-        this._listen(this.target, 'down', this.downAction.bind(this));
+        this.listen(this.target, 'up', 'upAction');
+        this.listen(this.target, 'down', 'downAction');
 
         if (!this.target.hasAttribute('noink')) {
           this.keyEventTarget = this.target;
@@ -17556,6 +17554,7 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
         }, 1);
       },
 
+      /** @param {Event=} event */
       downAction: function(event) {
         if (this.holdDown && this.ripples.length > 0) {
           return;
@@ -17570,6 +17569,7 @@ window.hass.uiUtil.domainIcon = function(domain, state) {
         }
       },
 
+      /** @param {Event=} event */
       upAction: function(event) {
         if (this.holdDown) {
           return;
@@ -17705,12 +17705,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   left: -15px;
   width: 48px;
   height: 48px;
-  color: var(--paper-checkbox-unchecked-ink-color);
+  color: var(--paper-checkbox-unchecked-ink-color, --primary-text-color);
   opacity: 0.6;
 }
 
 :host #ink[checked] {
-  color: var(--paper-checkbox-checked-ink-color);
+  color: var(--paper-checkbox-checked-ink-color, --default-primary-color);
 }
 
 :host #checkbox {
@@ -17718,7 +17718,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   box-sizing: border-box;
   height: 100%;
   border: solid 2px;
-  border-color: var(--paper-checkbox-unchecked-color);
+  border-color: var(--paper-checkbox-unchecked-color, --primary-text-color);
   border-radius: 2px;
   pointer-events: none;
   -webkit-transition: background-color 140ms, border-color 140ms;
@@ -17762,8 +17762,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 }
 
 :host #checkbox.checked {
-  background-color: var(--paper-checkbox-checked-color);
-  border-color: var(--paper-checkbox-checked-color);
+  background-color: var(--paper-checkbox-checked-color, --default-primary-color);
+  border-color: var(--paper-checkbox-checked-color, --default-primary-color);
 }
 
 :host #checkmark {
@@ -17790,7 +17790,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   padding-left: 8px;
   white-space: normal;
   pointer-events: none;
-  color: var(--paper-checkbox-label-color);
+  color: var(--paper-checkbox-label-color, --primary-text-color);
 }
 
 #checkboxLabel[hidden] {
@@ -17804,11 +17804,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 :host([disabled]) #checkbox {
   opacity: 0.5;
-  border-color: var(--paper-checkbox-unchecked-color);
+  border-color: var(--paper-checkbox-unchecked-color, --primary-text-color);
 }
 
 :host([disabled][checked]) #checkbox {
-  background-color: var(--paper-checkbox-unchecked-color);
+  background-color: var(--paper-checkbox-unchecked-color, --primary-text-color);
   opacity: 0.5;
 }
 
@@ -18139,7 +18139,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       background: var(--paper-input-container-focus-color, --default-primary-color);
     }
 
-    .is-highlighted .focused-line {
+    .underline.is-highlighted .focused-line {
       -webkit-transform: none;
       transform: none;
       -webkit-transition: -webkit-transform 0.25s;
@@ -18148,7 +18148,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       @apply(--paper-transition-easing);
     }
 
-    .is-invalid .focused-line {
+    .underline.is-invalid .focused-line {
       background: var(--paper-input-container-invalid-color, --google-red-500);
 
       -webkit-transform: none;
@@ -18335,10 +18335,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       _addons: {
-        type: Array,
-        value: function() {
-          return [];
-        }
+        type: Array
+        // do not set a default value here intentionally - it will be initialized lazily when a
+        // distributed child is attached, which may occur before configuration for this element
+        // in polyfill.
       },
 
       _inputHasContent: {
@@ -18368,7 +18368,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _boundOnInput: {
         type: Function,
         value: function() {
-          this._onInput.bind(this)
+          return this._onInput.bind(this);
         }
       },
 
@@ -18399,6 +18399,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     ready: function() {
+      if (!this._addons) {
+        this._addons = [];
+      }
       this.addEventListener('focus', this._boundOnFocus, true);
       this.addEventListener('blur', this._boundOnBlur, true);
       if (this.attrForValue) {
@@ -18413,8 +18416,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     _onAddonAttached: function(event) {
-      this._addons.push(event.target);
-      this._handleValue(this._inputElement);
+      if (!this._addons) {
+        this._addons = [];
+      }
+      var target = event.target;
+      if (this._addons.indexOf(target) === -1) {
+        this._addons.push(target);
+        if (this.isAttached) {
+          this._handleValue(this._inputElement);
+        }
+      }
     },
 
     _onFocus: function() {
@@ -19478,7 +19489,9 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
          */
         dragging: {
           type: Boolean,
-          value: false
+          value: false,
+          readOnly: true,
+          notify: true
         },
 
         /**
@@ -19534,6 +19547,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
           reflectToAttribute: true,
           type: Boolean,
           value: false,
+          readOnly: true,
           notify: true
         },
 
@@ -19542,7 +19556,9 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
          */
         peeking: {
           type: Boolean,
-          value: false
+          value: false,
+          readOnly: true,
+          notify: true
         },
 
         /**
@@ -19567,6 +19583,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
          */
         selected: {
           reflectToAttribute: true,
+          notify: true,
           type: String,
           value: null
         },
@@ -19693,7 +19710,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       },
 
       _responsiveChange: function(narrow) {
-        this.narrow = narrow;
+        this._setNarrow(narrow);
 
         if (this.narrow) {
           this.selected = this.defaultSelected;
@@ -19724,12 +19741,12 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
         this.width = this.$.drawer.offsetWidth;
         this._moveDrawer(this._translateXForDeltaX(this.rightDrawer ?
             -this.edgeSwipeSensitivity : this.edgeSwipeSensitivity));
-        this.peeking = true;
+        this._setPeeking(true);
       },
 
       _stopEdgePeek: function() {
         if (this.peeking) {
-          this.peeking = false;
+          this._setPeeking(false);
           this._moveDrawer(null);
         }
       },
@@ -19768,13 +19785,13 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
             x <= this.edgeSwipeSensitivity);
       },
 
-      _trackStart: function() {
+      _trackStart: function(event) {
         if (this._swipeAllowed()) {
           sharedPanel = this;
-          this.dragging = true;
+          this._setDragging(true);
 
           if (this._isMainSelected()) {
-            this.dragging = this.peeking || this._isEdgeTouch(event);
+            this._setDragging(this.peeking || this._isEdgeTouch(event));
           }
 
           if (this.dragging) {
@@ -19803,7 +19820,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
               // Ignore trackx until we move past the edge peek.
               return;
             }
-            this.peeking = false;
+            this._setPeeking(false);
           }
 
           this._moveDrawer(this._translateXForDeltaX(dx));
@@ -19814,7 +19831,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
         if (this.dragging) {
           var xDirection = e.detail.dx > 0;
 
-          this.dragging = false;
+          this._setDragging(false);
           this.transition = true;
           sharedPanel = null;
           this._moveDrawer(null);
@@ -19864,6 +19881,17 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
 
       /* Create a stack context, we will need it for the shadow*/
       z-index: 0;
+    }
+
+    :root {
+      /**
+       * Default paper header panel shadow
+       */
+      --paper-header-panel-shadow: {
+        height: 6px;
+        bottom: -6px;
+        box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.4);
+      };
     }
 
     #mainContainer {
@@ -19968,19 +19996,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
   </template>
 
 </dom-module>
-
-<style is="custom-style">
-  :root {
-    /**
-     * Default paper header panel shadow
-     */
-    --paper-header-panel-shadow: {
-      height: 6px;
-      bottom: -6px;
-      box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.4);
-    };
-  }
-</style>
 
 <script>
 
@@ -20197,7 +20212,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
             header.classList.remove(this.tallClass);
             this.async(function() {
               header.classList.remove('animate');
-            }, null, animateDuration);
+            }, animateDuration);
           } else {
             header.classList.toggle('animate', configs.tallMode[newMode]);
           }
@@ -20220,7 +20235,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
 
       _scroll: function(e) {
         this._keepScrollingState();
-        this.fire('content-scroll', {target: this.scroller}, this, false);
+        this.fire('content-scroll', {target: this.scroller}, {bubbles: false});
       },
 
       _getScrollerForMode: function(mode) {
@@ -20296,7 +20311,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
 
     #topBar {
       position: relative;
-      z-index: 1;
     }
 
     /* middle bar */
@@ -20305,7 +20319,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       top: 0;
       right: 0;
       left: 0;
-      z-index: 2;
     }
 
     :host(.tall) #middleBar,
@@ -20320,7 +20333,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       right: 0;
       bottom: 0;
       left: 0;
-      z-index: 1;
     }
 
     /*
@@ -20338,6 +20350,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       @apply(--paper-font-title);
       @apply(--layout-flex);
 
+      pointer-events: none;
       text-overflow: ellipsis;
       white-space: nowrap;
       overflow: hidden;
@@ -20357,12 +20370,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
      * Work in progress.
      */
     .toolbar-tools > ::content paper-icon-button[icon=menu] {
-      margin-left: -8px;
       margin-right: 24px;
-    }
-
-    .toolbar-tools > ::content paper-icon-button + paper-icon-button {
-      margin-right: -8px;
     }
 
     .toolbar-tools > ::content > .title,
@@ -20763,7 +20771,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
     }
 
     :host([disabled]) {
-      color: var(--paper-icon-button-disabled-text, #fff);
+      color: var(--paper-icon-button-disabled-text, --disabled-text-color);
       pointer-events: none;
       cursor: auto;
       @apply(--paper-icon-button-disabled);
@@ -20771,15 +20779,19 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
   </style>
   <template>
     <paper-ripple id="ink" class="circle" center=""></paper-ripple>
-    <iron-icon id="icon" src="[[src]]" icon="[[icon]]"></iron-icon>
+    <iron-icon id="icon" src="[[src]]" icon="[[icon]]" alt$="[[alt]]"></iron-icon>
   </template>
 </dom-module>
 <script>
   Polymer({
     is: 'paper-icon-button',
 
+    hostAttributes: {
+      role: 'button',
+      tabindex: '0'
+    },
+
     behaviors: [
-      Polymer.PaperButtonBehavior,
       Polymer.PaperInkyFocusBehavior
     ],
 
@@ -20799,6 +20811,23 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
        */
       icon: {
         type: String
+      },
+
+      /**
+       * Specifies the alternate text for the button, for accessibility.
+       */
+      alt: {
+        type: String,
+        observer: "_altChanged"
+      }
+    },
+
+    _altChanged: function(newValue, oldValue) {
+      var label = this.getAttribute('aria-label');
+
+      // Don't stomp over a user-set aria-label.
+      if (!label || oldValue == label) {
+        this.setAttribute('aria-label', newValue);
       }
     }
   });
@@ -21109,7 +21138,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
     _condenseHeader: function(y) {
       var reset = (y === null);
 
-      // adjust top bar in core-header so the top bar stays at the top
+      // adjust top bar in paper-header so the top bar stays at the top
       if (!this.scrollAwayTopbar && this.header.$ && this.header.$.topBar) {
         this._translateY(this.header.$.topBar.style,
             reset ? null : Math.min(y, this._headerMargin));
@@ -21137,6 +21166,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       setTransform(s, t);
     },
 
+    /** @param {Event=} event */
     _scroll: function(event) {
       if (!this.header) {
         return;
@@ -21163,7 +21193,7 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       this._y = y;
 
       if (event) {
-        this.fire('content-scroll', {target: this.scroller}, this, false);
+        this.fire('content-scroll', {target: this.scroller}, {cancelable: false});
       }
     }
 
@@ -21262,10 +21292,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
     properties: {
       /**
        * The URL of an image.
-       *
-       * @attribute src
-       * @type string
-       * @default ''
        */
       src: {
         observer: '_srcChanged',
@@ -21277,10 +21303,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
        * When true, the image is prevented from loading and any placeholder is
        * shown.  This may be useful when a binding to the src property is known to
        * be invalid, to prevent 404 requests.
-       *
-       * @attribute preventLoad
-       * @type boolean
-       * @default false
        */
       preventLoad: {
         type: Boolean,
@@ -21292,10 +21314,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
        * aspect ratio of the image is contained within the element and
        * letterboxed) or `cover` (image is cropped in order to fully cover the
        * bounds of the element), or `null` (default: image takes natural size).
-       *
-       * @attribute sizing
-       * @type string
-       * @default null
        */
       sizing: {
         type: String,
@@ -21305,10 +21323,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       /**
        * When a sizing option is uzed (`cover` or `contain`), this determines
        * how the image is aligned within the element bounds.
-       *
-       * @attribute position
-       * @type string
-       * @default 'center'
        */
       position: {
         type: String,
@@ -21318,10 +21332,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       /**
        * When `true`, any change to the `src` property will cause the `placeholder`
        * image to be shown until the
-       *
-       * @attribute preload
-       * @type boolean
-       * @default false
        */
       preload: {
         type: Boolean,
@@ -21331,10 +21341,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       /**
        * This image will be used as a background/placeholder until the src image has
        * loaded.  Use of a data-URI for placeholder is encouraged for instant rendering.
-       *
-       * @attribute placeholder
-       * @type string
-       * @default null
        */
       placeholder: {
         type: String,
@@ -21344,10 +21350,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       /**
        * When `preload` is true, setting `fade` to true will cause the image to
        * fade into place.
-       *
-       * @attribute fade
-       * @type boolean
-       * @default false
        */
       fade: {
         type: Boolean,
@@ -21356,10 +21358,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
 
       /**
        * Read-only value that is true when the image is loaded.
-       *
-       * @attribute preloaded
-       * @type boolean
-       * @default false
        */
       loaded: {
         notify: true,
@@ -21370,10 +21368,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       /**
        * Read-only value that tracks the loading state of the image when the `preload`
        * option is used.
-       *
-       * @attribute loading
-       * @type boolean
-       * @default false
        */
       loading: {
         notify: true,
@@ -21384,10 +21378,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
       /**
        * Can be used to set the width of image (e.g. via binding); size may also be
        * set via CSS.
-       *
-       * @attribute width
-       * @type number
-       * @default null
        */
       width: {
         observer: '_widthChanged',
@@ -21502,11 +21492,11 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
 
       this.style.backgroundPosition =
         placeholderStyle.backgroundPosition =
-        this.sizing ? this.position : null;
+        this.sizing ? this.position : '';
 
       this.style.backgroundRepeat =
         placeholderStyle.backgroundRepeat =
-        this.sizing ? 'no-repeat' : null;
+        this.sizing ? 'no-repeat' : '';
     },
 
     _loadBehaviorChanged: function() {
@@ -21869,27 +21859,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 }
 
 :host .toggle-bar {
-  background-color: var(--paper-toggle-button-unchecked-bar-color);
+  background-color: var(--paper-toggle-button-unchecked-bar-color, #000000);
 }
 
 :host .toggle-button {
-  background-color: var(--paper-toggle-button-unchecked-button-color);
+  background-color: var(--paper-toggle-button-unchecked-button-color, --paper-grey-50);
 }
 
 :host([checked]) .toggle-bar {
-  background-color: var(--paper-toggle-button-checked-bar-color);
+  background-color: var(--paper-toggle-button-checked-bar-color, --google-green-500);
 }
 
 :host([checked]) .toggle-button {
-  background-color: var(--paper-toggle-button-checked-button-color);
+  background-color: var(--paper-toggle-button-checked-button-color, --google-green-500);
 }
 
 :host .toggle-ink {
-  color: var(--paper-toggle-button-unchecked-ink-color);
+  color: var(--paper-toggle-button-unchecked-ink-color, --primary-text-color);
 }
 
 :host([checked]) .toggle-ink {
-  color: var(--paper-toggle-button-checked-ink-color);
+  color: var(--paper-toggle-button-checked-ink-color, --google-green-500);
 }
 
 /* ID selectors should not be overriden by users. */
@@ -22404,9 +22394,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     listeners: {
-      // listening for click instead of tap as a work around
-      // https://github.com/PolymerElements/iron-overlay-behavior/issues/14
-      'click': 'cardTapped',
+      'tap': 'cardTapped',
     },
 
     cardTapped: function() {
@@ -23210,7 +23198,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <label hidden$="[[!label]]">[[label]]</label>
 
-      <input is="iron-input" id="input" aria-labelledby$="[[_ariaLabelledBy]]" aria-describedby$="[[_ariaDescribedBy]]" disabled$="[[disabled]]" bind-value="{{value}}" invalid="{{invalid}}" prevent-invalid-input="[[preventInvalidInput]]" allowedpattern="[[allowedPattern]]" validator="[[validator]]" type$="[[type]]" pattern$="[[pattern]]" maxlength$="[[maxlength]]" required$="[[required]]" autocomplete$="[[autocomplete]]" autofocus$="[[autofocus]]" inputmode$="[[inputmode]]" minlength$="[[minlength]]" name$="[[name]]" placeholder$="[[placeholder]]" readonly$="[[readonly]]" size$="[[size]]">
+      <input is="iron-input" id="input" aria-labelledby$="[[_ariaLabelledBy]]" aria-describedby$="[[_ariaDescribedBy]]" disabled$="[[disabled]]" bind-value="{{value}}" invalid="{{invalid}}" prevent-invalid-input="[[preventInvalidInput]]" allowed-pattern="[[allowedPattern]]" validator="[[validator]]" type$="[[type]]" pattern$="[[pattern]]" maxlength$="[[maxlength]]" required$="[[required]]" autocomplete$="[[autocomplete]]" autofocus$="[[autofocus]]" inputmode$="[[inputmode]]" minlength$="[[minlength]]" name$="[[name]]" placeholder$="[[placeholder]]" readonly$="[[readonly]]" size$="[[size]]">
 
       <template is="dom-if" if="[[errorMessage]]">
         <paper-input-error>[[errorMessage]]</paper-input-error>
@@ -23468,11 +23456,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </dom-module><dom-module id="paper-textarea" assetpath="bower_components/paper-input/">
   <template>
 
-    <paper-input-container no-label-float$="[[noLabelFloat]]" auto-validate$="[[autoValidate]]" disabled$="[[disabled]]" invalid="[[invalid]]">
+    <paper-input-container no-label-float$="[[noLabelFloat]]" always-float-label="[[_computeAlwaysFloatLabel(alwaysFloatLabel,placeholder)]]" auto-validate$="[[autoValidate]]" disabled$="[[disabled]]" invalid="[[invalid]]">
 
       <label hidden$="[[!label]]">[[label]]</label>
 
-      <iron-autogrow-textarea id="input" class="paper-input-input" bind-value="{{value}}" required$="[[required]]" maxlength$="[[maxlength]]"></iron-autogrow-textarea>
+      <iron-autogrow-textarea id="input" class="paper-input-input" bind-value="{{value}}" autocomplete$="[[autocomplete]]" autofocus$="[[autofocus]]" inputmode$="[[inputmode]]" name$="[[name]]" placeholder$="[[placeholder]]" readonly$="[[readonly]]" required$="[[required]]" maxlength$="[[maxlength]]"></iron-autogrow-textarea>
 
       <template is="dom-if" if="[[errorMessage]]">
         <paper-input-error>[[errorMessage]]</paper-input-error>
@@ -24509,6 +24497,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       /**
        * The dialog element that implements `Polymer.PaperDialogBehavior` containing this element.
+       * @type {?Node}
        */
       dialogElement: {
         type: Object,
@@ -24984,6 +24973,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 </script>
 <dom-module id="paper-slider" assetpath="bower_components/paper-slider/">
+
   <style>
 /**
 @license
@@ -25103,7 +25093,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 }
 
 .transiting #sliderBar::shadow #activeProgress {
-  transition: -webkit-transform 0.08s ease;
+  -webkit-transition: -webkit-transform 0.08s ease;
   transition: transform 0.08s ease;
 }
 
@@ -25237,14 +25227,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 .disabled.ring > #sliderKnob > #sliderKnobInner {
   background-color: transparent;
 }
-</style>
-  <template>
-    <template is="dom-if" if="{{!disabled}}">
-    </template>
 
+paper-ripple {
+  color: var(--paper-slider-knob-color, --google-blue-700);
+}
+
+</style>
+
+  <template>
     <div id="sliderContainer" class$="[[_getClassNames(disabled, pin, snaps, immediateValue, min, expand, dragging, transiting, editable)]]">
+
       <div class="bar-container">
-        <paper-progress id="sliderBar" aria-hidden="true" min="[[min]]" max="[[max]]" value="[[immediateValue]]" secondary-progress="[[secondaryProgress]]" on-down="_bardown" on-up="_resetKnob" on-track="_onTrack"></paper-progress>
+        <paper-progress id="sliderBar" aria-hidden="true" min="[[min]]" max="[[max]]" step="[[step]]" value="[[immediateValue]]" secondary-progress="[[secondaryProgress]]" on-down="_bardown" on-up="_resetKnob" on-track="_onTrack">
+        </paper-progress>
       </div>
 
       <template is="dom-if" if="[[snaps]]">
@@ -25255,17 +25250,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </div>
       </template>
 
-      <div id="sliderKnob" on-down="_knobdown" on-up="_resetKnob" on-track="_onTrack" on-transitionend="_knobTransitionEnd" center-justified="" center="" horizontal="" layout="">
-
-        <div id="sliderKnobInner" value$="[[immediateValue]]"></div>
+      <div id="sliderKnob" class="center-justified center horizontal layout" on-down="_knobdown" on-up="_resetKnob" on-track="_onTrack" on-transitionend="_knobTransitionEnd">
+          <paper-ripple id="ink" class="circle" center=""></paper-ripple>
+          <div id="sliderKnobInner" value$="[[immediateValue]]"></div>
       </div>
     </div>
 
     <template is="dom-if" if="[[editable]]">
-      <paper-input id="input" class="slider-input" disabled$="[[disabled]]" on-change="_inputChange"></paper-input>
+      <paper-input id="input" class="slider-input" disabled$="[[disabled]]" on-change="_inputChange">
+      </paper-input>
     </template>
-
   </template>
+
 </dom-module>
 
 <script>
@@ -25295,11 +25291,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     behaviors: [
       Polymer.IronRangeBehavior,
-      Polymer.IronControlState
+      Polymer.IronA11yKeysBehavior,
+      Polymer.IronFormElementBehavior,
+      Polymer.PaperInkyFocusBehavior
     ],
 
     properties: {
-
       /**
        * If true, the slider thumb snaps to tick marks evenly spaced based
        * on the `step` property value.
@@ -25312,7 +25309,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       /**
        * If true, a pin with numeric value label is shown when the slider thumb
-       * is pressed.  Use for settings for which users need to know the exact
+       * is pressed. Use for settings for which users need to know the exact
        * value of the setting.
        */
       pin: {
@@ -25384,6 +25381,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       markers: {
+        type: Array,
         readOnly: true,
         value: []
       },
@@ -25397,8 +25395,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       '_immediateValueChanged(immediateValue)'
     ],
 
+    hostAttributes: {
+      role: 'slider',
+      tabindex: 0
+    },
+
+    keyBindings: {
+      'left down pagedown home': '_decrementKey',
+      'right up pageup end': '_incrementKey'
+    },
+
     ready: function() {
       // issue polymer/polymer#1305
+
       this.async(function() {
         this._updateKnob(this.value);
         this._updateInputValue();
@@ -25439,11 +25448,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     _immediateValueChanged: function() {
-      if (!this.dragging) {
+      if (this.dragging) {
+        this.fire('immediate-value-change');
+      } else {
         this.value = this.immediateValue;
       }
       this._updateInputValue();
-      this.fire('immediate-value-change');
     },
 
     _secondaryProgressChanged: function() {
@@ -25452,23 +25462,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     _updateInputValue: function() {
       if (this.editable) {
-        this.$$('#input').value = this.immediateValue;
+        this.$$('#input').value = this.immediateValue.toString();
       }
     },
 
     _expandKnob: function() {
+      this.$.ink.holdDown = false;
       this._setExpand(true);
     },
 
     _resetKnob: function() {
-      this._expandJob && this._expandJob.stop();
+      this.cancelDebouncer('expandKnob');
       this._setExpand(false);
+      this.$.ink.hidden = true;
     },
 
     _positionKnob: function(ratio) {
-      this._setImmediateValue(this._calcStep(this._calcKnobPosition(ratio)) || 0);
-      this._setRatio(this.snaps ? this._calcRatio(this.immediateValue) : ratio);
-      this.$.sliderKnob.style.left = this.ratio * 100 + '%';
+      this._setImmediateValue(this._calcStep(this._calcKnobPosition(ratio)));
+      this._setRatio(this._calcRatio(this.immediateValue));
+
+      this.$.sliderKnob.style.left = (this.ratio * 100) + '%';
     },
 
     _inputChange: function() {
@@ -25480,75 +25493,104 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       return (this.max - this.min) * ratio + this.min;
     },
 
-    _onTrack: function(e) {
+    _onTrack: function(event) {
       switch (event.detail.state) {
-        case 'end':
-          this._trackEnd(event);
+        case 'start':
+          this._trackStart(event);
           break;
         case 'track':
           this._trackX(event);
           break;
-        case 'start':
-          this._trackStart(event);
+        case 'end':
+          this._trackEnd();
           break;
       }
     },
 
-    _trackStart: function(e) {
+    _trackStart: function(event) {
       this._w = this.$.sliderBar.offsetWidth;
       this._x = this.ratio * this._w;
       this._startx = this._x || 0;
       this._minx = - this._startx;
       this._maxx = this._w - this._startx;
       this.$.sliderKnob.classList.add('dragging');
+
       this._setDragging(true);
-      e.preventDefault();
     },
 
     _trackX: function(e) {
       if (!this.dragging) {
         this._trackStart(e);
       }
-      var x = Math.min(this._maxx, Math.max(this._minx, e.detail.dx));
-      this._x = this._startx + x;
-      this._setImmediateValue(this._calcStep(
-          this._calcKnobPosition(this._x / this._w)) || 0);
-      var s =  this.$.sliderKnob.style;
-      s.transform = s.webkitTransform = 'translate3d(' + (this.snaps ?
-          (this._calcRatio(this.immediateValue) * this._w) - this._startx : x) + 'px, 0, 0)';
+
+      var dx = Math.min(this._maxx, Math.max(this._minx, e.detail.dx));
+      this._x = this._startx + dx;
+
+      var immediateValue = this._calcStep(this._calcKnobPosition(this._x / this._w));
+      this._setImmediateValue(immediateValue);
+
+      // update knob's position
+      var translateX = ((this._calcRatio(immediateValue) * this._w) - this._startx);
+      this.translate3d(translateX + 'px', 0, 0, this.$.sliderKnob);
     },
 
     _trackEnd: function() {
-      var s =  this.$.sliderKnob.style;
-      s.transform = s.webkitTransform = '';
+      var s = this.$.sliderKnob.style;
+
       this.$.sliderKnob.classList.remove('dragging');
       this._setDragging(false);
       this._resetKnob();
       this.value = this.immediateValue;
+
+      s.transform = s.webkitTransform = '';
+
       this.fire('change');
     },
 
-    _knobdown: function(e) {
-      e.preventDefault();
+    _knobdown: function(event) {
       this._expandKnob();
+
+      // cancel selection
+      event.detail.sourceEvent.preventDefault();
+
+      // set the focus manually because we will called prevent default
+      this.focus();
     },
 
-    _bardown: function(e) {
-      e.preventDefault();
-      this._setTransiting(true);
+    _bardown: function(event) {
+      this.$.ink.hidden = true;
+
+      event.preventDefault();
+
       this._w = this.$.sliderBar.offsetWidth;
       var rect = this.$.sliderBar.getBoundingClientRect();
-      var ratio = (e.detail.x - rect.left) / this._w;
+      var ratio = (event.detail.x - rect.left) / this._w;
+      var prevRatio = this.ratio;
+
+      this._setTransiting(true);
+
       this._positionKnob(ratio);
-      this._expandJob = this.debounce(this._expandJob, this._expandKnob, 60);
+
+      this.debounce('expandKnob', this._expandKnob, 60);
+
+      // if the ratio doesn't change, sliderKnob's animation won't start
+      // and `_knobTransitionEnd` won't be called
+      // Therefore, we need to manually update the `transiting` state
+
+      if (prevRatio === this.ratio) {
+        this._setTransiting(false);
+      }
 
       this.async(function() {
         this.fire('change');
       });
+
+      // cancel selection
+      event.detail.sourceEvent.preventDefault();
     },
 
-    _knobTransitionEnd: function(e) {
-      if (e.target === this.$.sliderKnob) {
+    _knobTransitionEnd: function(event) {
+      if (event.target === this.$.sliderKnob) {
         this._setTransiting(false);
       }
     },
@@ -25565,14 +25607,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     _getClassNames: function() {
       var classes = {};
 
-      classes['disabled'] = this.disabled;
-      classes['pin'] = this.pin;
-      classes['snaps'] = this.snaps;
-      classes['ring'] = this.immediateValue <= this.min;
-      classes['expand'] = this.expand;
-      classes['dragging'] = this.dragging;
-      classes['transiting'] = this.transiting;
-      classes['editable'] = this.editable;
+      classes.disabled = this.disabled;
+      classes.pin = this.pin;
+      classes.snaps = this.snaps;
+      classes.ring = this.immediateValue <= this.min;
+      classes.expand = this.expand;
+      classes.dragging = this.dragging;
+      classes.transiting = this.transiting;
+      classes.editable = this.editable;
 
       return Object.keys(classes).filter(
         function(className) {
@@ -25580,8 +25622,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }).join(' ');
     },
 
-    _incrementKey: function(ev, keys) {
-      if (keys.key === 'end') {
+    _incrementKey: function(event) {
+      if (event.detail.key === 'end') {
         this.value = this.max;
       } else {
         this.increment();
@@ -25589,8 +25631,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       this.fire('change');
     },
 
-    _decrementKey: function(ev, keys) {
-      if (keys.key === 'home') {
+    _decrementKey: function(event) {
+      if (event.detail.key === 'home') {
         this.value = this.min;
       } else {
         this.decrement();
