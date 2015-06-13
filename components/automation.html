@@ -128,8 +128,8 @@
 </span><span class='line'>  # Type of trigger and information for the trigger
 </span><span class='line'>  platform: state
 </span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: above_horizon
-</span><span class='line'>  state_to: below_horizon
+</span><span class='line'>  state_from: 'above_horizon'
+</span><span class='line'>  state_to: 'below_horizon'
 </span><span class='line'>
 </span><span class='line'>  # Action to be done when trigger activated
 </span><span class='line'>  execute_service: notify.notify
@@ -187,23 +187,30 @@
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Match when the sun sets
+</pre></td><td class='code'><pre><code class=''><span class='line'>  # Match when the sun sets
 </span><span class='line'>  platform: state
 </span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: above_horizon
-</span><span class='line'>  state_to: below_horizon
+</span><span class='line'>  state_from: 'above_horizon'
+</span><span class='line'>  state_to: 'below_horizon'
 </span><span class='line'>
 </span><span class='line'>  # Match when a person comes home
 </span><span class='line'>  platform: state
 </span><span class='line'>  state_entity_id: device_tracker.Paulus_OnePlus_One
-</span><span class='line'>  state_from: not_home
-</span><span class='line'>  state_to: home
+</span><span class='line'>  state_from: 'not_home'
+</span><span class='line'>  state_to: 'home'
 </span><span class='line'>
 </span><span class='line'>  # Match when a light turns on
 </span><span class='line'>  platform: state
 </span><span class='line'>  state_entity_id: light.Ceiling
-</span><span class='line'>  state_from: off
-</span><span class='line'>  state_to: on</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  state_from: 'off'
+</span><span class='line'>  state_to: 'on'</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note'>
+  Use quotes around your values for <code>state_from</code> and <code>state_to</code> to avoid the YAML parser interpreting some values as booleans.
+</p>
 
 
 <h2>Setting up the action</h2>
@@ -276,8 +283,8 @@
 </span><span class='line'>
 </span><span class='line'>  platform: state
 </span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: above_horizon
-</span><span class='line'>  state_to: below_horizon
+</span><span class='line'>  state_from: 'above_horizon'
+</span><span class='line'>  state_to: 'below_horizon'
 </span><span class='line'>
 </span><span class='line'>  execute_service: notify.notify
 </span><span class='line'>  service_data: {"message":"The sun has set"}
@@ -297,8 +304,8 @@
 </span><span class='line'>
 </span><span class='line'>  platform: state
 </span><span class='line'>  state_entity_id: device_tracker.Paulus_OnePlus
-</span><span class='line'>  state_from: not_home
-</span><span class='line'>  state_to: home
+</span><span class='line'>  state_from: 'not_home'
+</span><span class='line'>  state_to: 'home'
 </span><span class='line'>
 </span><span class='line'>  execute_service: homeassistant.turn_on
 </span><span class='line'>  service_entity_id: group.Study_Room</span></code></pre></td></tr></table></div></figure>
