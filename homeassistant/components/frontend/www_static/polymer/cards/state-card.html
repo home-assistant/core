@@ -38,9 +38,7 @@
     },
 
     listeners: {
-      // listening for click instead of tap as a work around
-      // https://github.com/PolymerElements/iron-overlay-behavior/issues/14
-      'click': 'cardTapped',
+      'tap': 'cardTapped',
     },
 
     cardTapped: function() {
