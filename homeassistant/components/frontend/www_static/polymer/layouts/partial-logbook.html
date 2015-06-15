@@ -1,17 +1,18 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/ha-logbook.html">
+<link rel="import" href="../components/loading-box.html">
 
 <dom-module id="partial-logbook">
   <style>
-    .content {
-      background-color: white;
-      padding: 8px;
-    }
+  .selected-date-container {
+    padding: 0 16px;
+  }
   </style>
   <template>
     <partial-base narrow="[[narrow]]">
@@ -20,7 +21,15 @@
       <paper-icon-button icon="refresh" header-buttons
         on-click="handleRefresh"></paper-icon-button>
 
-      <ha-logbook entries="[[entries]]"></ha-logbook>
+      <div>
+        <div class='selected-date-container'>
+          <paper-input label='Showing entries for' on-click='handleShowDatePicker'
+            value='[[computeDateCaption(selectedDate)]]'></paper-input>
+
+          <loading-box hidden$='[[!isLoading]]'>Loading logbook entries</loading-box>
+        </div>
+        <ha-logbook entries="[[entries]]" hidden$='[[isLoading]]'></ha-logbook>
+      </div>
     </partial-base>
   </template>
 </dom-module>
@@ -29,6 +38,12 @@
 (function() {
   var storeListenerMixIn = window.hass.storeListenerMixIn;
   var logbookActions = window.hass.logbookActions;
+  var logbookStore = window.hass.logbookStore;
+  var uiActions = window.hass.uiActions;
+
+  function date_to_str(date) {
+    return date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
+  }
 
   Polymer({
     is: 'partial-logbook',
@@ -41,22 +56,50 @@
         value: false,
       },
 
+      selectedDate: {
+        type: String,
+        value: null,
+        observer: 'fetchIfNeeded',
+      },
+
+      isLoading: {
+        type: Boolean,
+        value: true,
+      },
+
       entries: {
         type: Array,
-        value: [],
+        value: null,
       },
     },
 
-    logbookStoreChanged: function(logbookStore) {
-      if (logbookStore.isStale()) {
-        logbookActions.fetch();
-      }
+    logbookStoreChanged: function() {
+      this.isLoading = this.fetchIfNeeded();
+      var entries = logbookStore.all.toArray();
+      this.entries = entries.length > 0 ? entries : false;
+    },
 
-      this.entries = logbookStore.all.toArray();
+    computeDateCaption: function(selectedDate) {
+      return selectedDate || 'today';
+    },
+
+    fetchIfNeeded: function() {
+      if (logbookStore.shouldFetch(this.selectedDate)) {
+        this.isLoading = true;
+        logbookActions.fetch(this.selectedDate);
+        return true;
+      }
+      return false;
+    },
+
+    handleShowDatePicker: function() {
+      uiActions.showDatePicker(function(selectedDate) {
+        this.selectedDate = date_to_str(selectedDate);
+      }.bind(this), this.selectedDate);
     },
 
     handleRefresh: function() {
-      logbookActions.fetch();
+      logbookActions.fetch(this.selectedDate);
     },
   });
 })();
