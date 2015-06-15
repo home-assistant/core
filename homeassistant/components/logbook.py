@@ -4,12 +4,14 @@ homeassistant.components.logbook
 
 Parses events and generates a human log.
 """
+from datetime import timedelta
 from itertools import groupby
+import re
 
 from homeassistant import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_HOME, STATE_ON, STATE_OFF,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
 import homeassistant.util.dt as dt_util
 import homeassistant.components.recorder as recorder
 import homeassistant.components.sun as sun
@@ -17,12 +19,10 @@ import homeassistant.components.sun as sun
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
 
-URL_LOGBOOK = '/api/logbook'
+URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
 
-QUERY_EVENTS_AFTER = "SELECT * FROM events WHERE time_fired > ?"
 QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
-    ORDER BY time_fired
 """
 
 GROUP_BY_MINUTES = 15
@@ -37,11 +37,26 @@ def setup(hass, config):
 
 def _handle_get_logbook(handler, path_match, data):
     """ Return logbook entries. """
-    start_today = dt_util.now().replace(hour=0, minute=0, second=0)
+    date_str = path_match.group('date')
 
-    handler.write_json(humanify(
-        recorder.query_events(
-            QUERY_EVENTS_AFTER, (dt_util.as_utc(start_today),))))
+    if date_str:
+        start_date = dt_util.date_str_to_date(date_str)
+
+        if start_date is None:
+            handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
+            return
+
+        start_day = dt_util.start_of_local_day(start_date)
+    else:
+        start_day = dt_util.start_of_local_day()
+
+    end_day = start_day + timedelta(days=1)
+
+    events = recorder.query_events(
+        QUERY_EVENTS_BETWEEN,
+        (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
+
+    handler.write_json(humanify(events))
 
 
 class Entry(object):
