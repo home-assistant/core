@@ -19,7 +19,7 @@ import homeassistant.components.sun as sun
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
 
-URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{2}-\d{2})|)')
+URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
 
 QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
