@@ -1,5 +1,14 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
+<dom-module is='state-history-chart-timeline'>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <template></template>
+</dom-module>
+
 <script>
 (function() {
   Polymer({
@@ -16,10 +25,6 @@
         value: false,
         observer: 'dataChanged',
       },
-    },
-
-    created: function() {
-      this.style.display = 'block';
     },
 
     attached: function() {
@@ -45,7 +50,7 @@
       if (!stateHistory || stateHistory.length === 0) {
         return;
       }
-      // debugger;
+
       var chart = new google.visualization.Timeline(this);
       var dataTable = new google.visualization.DataTable();
 
@@ -58,15 +63,6 @@
         stateStr = stateStr.replace(/_/g, ' ');
         dataTable.addRow([entityDisplay, stateStr, start, end]);
       };
-
-      // people can pass in history of 1 entityId or a collection.
-      // var stateHistory;
-      // if (_.isArray(data[0])) {
-      //   stateHistory = data;
-      // } else {
-      //   stateHistory = [data];
-      //   isSingleDevice = true;
-      // }
 
       var numTimelines = 0;
       // stateHistory is a list of lists of sorted state objects
@@ -90,16 +86,16 @@
           }
         });
 
-        addRow(entityDisplay, prevState, prevLastChanged, new Date());
+        // end time is start time + 1 day
+        var endTime = new Date(stateInfo[0].lastChangedAsDate);
+        endTime.setDate(endTime.getDate()+1);
+
+        addRow(entityDisplay, prevState, prevLastChanged, endTime);
         numTimelines++;
       }.bind(this));
 
       chart.draw(dataTable, {
          height: 55 + numTimelines * 42,
-
-        // interactive properties require CSS, the JS api puts it on the document
-        // instead of inside our Shadow DOM.
-        enableInteractivity: false,
 
         timeline: {
           showRowLabels: stateHistory.length > 1
