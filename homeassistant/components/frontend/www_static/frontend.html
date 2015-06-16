@@ -23253,6 +23253,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         dataTable.addRow([entityDisplay, stateStr, start, end]);
       };
 
+      var startTime = new Date(stateHistory.map(function(stateInfo) {
+        return stateInfo[0].lastChangedAsDate;
+      }).reduce(function(prev, cur) {
+        return Math.min(prev, cur);
+      }, new Date()));
+
+      // end time is Math.min(curTime, start time + 1 day)
+      var endTime = new Date(startTime);
+      endTime.setDate(endTime.getDate()+1);
+      if (endTime > new Date()) {
+        endTime = new Date();
+      }
+
       var numTimelines = 0;
       // stateHistory is a list of lists of sorted state objects
       stateHistory.forEach(function(stateInfo) {
@@ -23274,10 +23287,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             prevLastChanged = state.lastChangedAsDate;
           }
         });
-
-        // end time is start time + 1 day
-        var endTime = new Date(stateInfo[0].lastChangedAsDate);
-        endTime.setDate(endTime.getDate()+1);
 
         addRow(entityDisplay, prevState, prevLastChanged, endTime);
         numTimelines++;
