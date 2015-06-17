@@ -67,3 +67,6 @@ hikvision>=0.4
 
 # console log coloring
 colorlog>=2.6.0
+
+# Forecast.io Bindings (sensor.forecast)
+python-forecastio>=1.3.3
