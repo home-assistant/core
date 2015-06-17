@@ -40,6 +40,7 @@ sensor:
     - type: 'process'
       arg: 'octave-cli'
     - type: 'last_boot'
+    - type: 'since_last_boot'
 
 Variables:
 
