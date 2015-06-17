@@ -41,8 +41,11 @@
       'tap': 'cardTapped',
     },
 
-    cardTapped: function() {
-      uiActions.showMoreInfoDialog(this.stateObj.entityId);
+    cardTapped: function(ev) {
+      ev.stopPropagation();
+      this.debounce('show-more-info-dialog', function() {
+        uiActions.showMoreInfoDialog(this.stateObj.entityId);
+      }.bind(this), 100);
     },
   });
 })();

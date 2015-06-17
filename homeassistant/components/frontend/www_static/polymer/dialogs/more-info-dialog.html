@@ -129,6 +129,10 @@
     },
 
     changeEntityId: function(entityId) {
+      if (entityId == this.entityId) {
+        return;
+      }
+
       this.entityId = entityId;
 
       this.stateStoreChanged();
