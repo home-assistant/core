@@ -31,12 +31,13 @@
     "paper-slider": "PolymerElements/paper-slider#^1.0.0",
     "paper-checkbox": "PolymerElements/paper-checkbox#^1.0.0",
     "paper-drawer-panel": "PolymerElements/paper-drawer-panel#^1.0.0",
-    "paper-scroll-header-panel": "polymerelements/paper-scroll-header-panel#~1.0",
+    "paper-scroll-header-panel": "polymerelements/paper-scroll-header-panel#^1.0.0",
     "google-apis": "GoogleWebComponents/google-apis#0.8-preview",
     "moment": "^2.10.3",
     "layout": "Polymer/layout",
     "color-picker-element": "~0.0.3",
-    "paper-styles": "polymerelements/paper-styles#~1.0"
+    "paper-styles": "polymerelements/paper-styles#^1.0.0",
+    "paper-date-picker": "vsimonian/paper-date-picker#master"
   },
   "resolutions": {
     "polymer": "^1.0.0",
