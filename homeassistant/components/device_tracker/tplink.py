@@ -69,7 +69,7 @@ class TplinkDeviceScanner(object):
         host = config[CONF_HOST]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
-        self.parse_macs = re.compile('[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}-'+
+        self.parse_macs = re.compile('[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}-' +
                                      '[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}')
 
         self.host = host
@@ -89,7 +89,7 @@ class TplinkDeviceScanner(object):
         return self.last_results
 
     def get_device_name(self, device):
-        """ The TP-Link firmware doesn't save the name of the wireless 
+        """ The TP-Link firmware doesn't save the name of the wireless
             device. """
 
         return None
