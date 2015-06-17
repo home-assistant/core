@@ -36,6 +36,7 @@
 
     window.hass.uiConstants = {
       ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
+      ACTION_SHOW_DATE_PICKER: 'ACTION_SHOW_DATE_PICKER',
 
       STATE_FILTERS: {
         'group': 'Groups',
@@ -49,6 +50,16 @@
         dispatcher.dispatch({
           actionType: window.hass.uiConstants.ACTION_SHOW_DIALOG_MORE_INFO,
           entityId: entityId,
+        });
+      },
+
+      showDatePicker: function(dateSelectedCallback, startDate) {
+        startDate = startDate || null;
+
+        dispatcher.dispatch({
+          actionType: window.hass.uiConstants.ACTION_SHOW_DATE_PICKER,
+          dateSelectedCallback: dateSelectedCallback,
+          startDate: startDate,
         });
       },
 
