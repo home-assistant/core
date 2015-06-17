@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Unable to import pyowm. "
             "Did you maybe not install the 'PyOWM' package?")
 
-        return None
+        return False
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
