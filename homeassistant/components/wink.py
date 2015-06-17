@@ -93,4 +93,4 @@ class WinkToggleDevice(ToggleEntity):
 
     def update(self):
         """ Update state of the light. """
-        self.wink.wait_till_desired_reached()
+        self.wink.updateState()

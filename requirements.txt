@@ -18,7 +18,7 @@ phue>=0.8
 ledcontroller>=1.0.7
 
 # Chromecast bindings (media_player.cast)
-pychromecast>=0.6.4
+pychromecast>=0.6.6
 
 # Keyboard (keyboard)
 pyuserinput>=0.1.9
@@ -38,7 +38,7 @@ python-nest>=2.3.1
 # Z-Wave (*.zwave)
 pydispatcher>=2.0.5
 
-# ISY994 bindings (*.isy994
+# ISY994 bindings (*.isy994)
 PyISY>=1.0.2
 
 # PSutil (sensor.systemmonitor)
@@ -61,6 +61,12 @@ blockchain>=1.1.2
 
 # MPD Bindings (media_player.mpd)
 python-mpd2>=0.5.4
+
+# Hikvision (switch.hikvisioncam)
+hikvision>=0.4
+
+# console log coloring
+colorlog>=2.6.0
 
 # JSON-RPC interface
 jsonrpc-requests>=0.1
