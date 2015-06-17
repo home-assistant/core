@@ -1,10 +1,14 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../bower_components/paper-date-picker/paper-date-picker-dialog.html">
+
 <link rel="import" href="../dialogs/more-info-dialog.html">
 
 <dom-module id="modal-manager">
   <template>
     <more-info-dialog id="moreInfoDialog"></more-info-dialog>
+    <paper-date-picker-dialog id="datePicker"
+      on-value-changed='datePickerValueChanged'></paper-date-picker-dialog>
   </template>
 </dom-module>
 
@@ -16,14 +20,31 @@
   Polymer({
     is: 'modal-manager',
 
+    properties: {
+      datePickerCallback: {
+        type: Function,
+        value: null,
+      },
+    },
+
     ready: function() {
       dispatcher.register(function(payload) {
         switch (payload.actionType) {
           case uiConstants.ACTION_SHOW_DIALOG_MORE_INFO:
             this.$.moreInfoDialog.show(payload.entityId);
             break;
+
+          case uiConstants.ACTION_SHOW_DATE_PICKER:
+            this.datePickerCallback = payload.dateSelectedCallback;
+            this.$.date = payload.date;
+            this.$.datePicker.toggle();
+            break;
         }
       }.bind(this));
+    },
+
+    datePickerValueChanged: function(ev) {
+      this.datePickerCallback(ev.target.value);
     },
   });
 })();

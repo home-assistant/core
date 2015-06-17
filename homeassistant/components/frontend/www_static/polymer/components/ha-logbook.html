@@ -10,8 +10,13 @@
     }
   </style>
   <template>
-    <template is='dom-repeat' items="[[entries]]">
-      <logbook-entry entry-obj="[[item]]"></logbook-entry>
+    <template is='dom-if' if='[[!entries]]'>
+      No logbook entries found.
+    </template>
+    <template is='dom-if' if='[[entries]]'>
+      <template is='dom-repeat' items="[[entries]]">
+        <logbook-entry entry-obj="[[item]]"></logbook-entry>
+      </template>
     </template>
   </template>
 </dom-module>

@@ -129,12 +129,16 @@
     },
 
     changeEntityId: function(entityId) {
+      if (entityId == this.entityId) {
+        return;
+      }
+
       this.entityId = entityId;
 
       this.stateStoreChanged();
       this.stateHistoryStoreChanged();
 
-      if (this.hasHistoryComponent && stateHistoryStore.isStale(entityId)) {
+      if (this.hasHistoryComponent && stateHistoryStore.shouldFetchEntity(entityId)) {
         this.isLoadingHistoryData = true;
         stateHistoryActions.fetch(entityId);
       }

@@ -14,7 +14,8 @@ import homeassistant as ha
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, CONF_PLATFORM)
+    STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, CONF_PLATFORM,
+    DEVICE_DEFAULT_NAME)
 import homeassistant.components.device_tracker as device_tracker
 
 from helpers import get_test_home_assistant
@@ -96,7 +97,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         # To ensure all the three expected lines are there, we sort the file
         with open(self.known_dev_path) as fil:
             self.assertEqual(
-                ['DEV1,unknown device,0,\n', 'DEV2,dev2,0,\n',
+                ['DEV1,{},0,\n'.format(DEVICE_DEFAULT_NAME), 'DEV2,dev2,0,\n',
                  'device,name,track,picture\n'],
                 sorted(fil))
 
