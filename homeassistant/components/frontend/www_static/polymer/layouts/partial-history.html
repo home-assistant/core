@@ -1,5 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 
 <link rel="import" href="./partial-base.html">
 
@@ -14,6 +15,14 @@
     .content.wide {
       padding: 8px;
     }
+
+    paper-input {
+      max-width: 200px;
+    }
+
+    .narrow paper-input {
+      margin-left: 8px;
+    }
   </style>
   <template>
     <partial-base narrow="[[narrow]]">
@@ -23,6 +32,9 @@
         on-click="handleRefreshClick"></paper-icon-button>
 
       <div class$="[[computeContentClasses(narrow)]]">
+        <paper-input label='Showing entries for' on-click='handleShowDatePicker'
+          value='[[computeDateCaption(selectedDate)]]'></paper-input>
+
         <state-history-charts state-history="[[stateHistory]]"
           is-loading-data="[[isLoadingData]]"></state-history-charts>
       </div>
@@ -32,6 +44,12 @@
 <script>
 (function() {
   var stateHistoryActions = window.hass.stateHistoryActions;
+  var stateHistoryStore = window.hass.stateHistoryStore;
+  var uiActions = window.hass.uiActions;
+
+  function date_to_str(date) {
+    return date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
+  }
 
   Polymer({
     is: 'partial-history',
@@ -51,23 +69,42 @@
         type: Boolean,
         value: false,
       },
+
+      selectedDate: {
+        type: String,
+        value: null,
+        observer: 'fetchIfNeeded',
+      },
     },
 
-    stateHistoryStoreChanged: function(stateHistoryStore) {
-      if (stateHistoryStore.isStale()) {
-        this.isLoadingData = true;
-        stateHistoryActions.fetchAll();
-      }
-      else {
-        this.isLoadingData = false;
-      }
+    stateHistoryStoreChanged: function() {
+      this.isLoadingData = this.fetchIfNeeded();
+      this.stateHistory = this.isLoadingData ?
+        [] : stateHistoryStore.all(this.selectedDate);
+    },
 
-      this.stateHistory = stateHistoryStore.all;
+    computeDateCaption: function(selectedDate) {
+      return selectedDate || 'today';
+    },
+
+    fetchIfNeeded: function() {
+      if (stateHistoryStore.shouldFetch(this.selectedDate)) {
+        this.isLoadingData = true;
+        stateHistoryActions.fetchAll(this.selectedDate);
+        return true;
+      }
+      return false;
     },
 
     handleRefreshClick: function() {
       this.isLoadingData = true;
-      stateHistoryActions.fetchAll();
+      stateHistoryActions.fetchAll(this.selectedDate);
+    },
+
+    handleShowDatePicker: function() {
+      uiActions.showDatePicker(function(selectedDate) {
+        this.selectedDate = date_to_str(selectedDate);
+      }.bind(this), this.selectedDate);
     },
 
     computeContentClasses: function(narrow) {

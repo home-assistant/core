@@ -16,7 +16,7 @@
       <paper-toggle-button class='self-center'
         checked="[[toggleChecked]]"
         on-change="toggleChanged"
-        on-click="toggleClicked">
+        on-tap="toggleTapped">
       </paper-toggle-button>
     </div>
 
@@ -45,6 +45,10 @@
     ready: function() {
       this.forceStateChange = this.forceStateChange.bind(this);
       this.forceStateChange();
+    },
+
+    toggleTapped: function(ev) {
+      ev.stopPropagation();
     },
 
     toggleChanged: function(ev) {
