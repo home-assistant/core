@@ -131,6 +131,7 @@ class SystemMonitorSensor(Entity):
     def unit_of_measurement(self):
         return self._unit_of_measurement
 
+    # pylint: disable=too-many-branches
     def update(self):
         if self.type == 'disk_use_percent':
             self._state = psutil.disk_usage(self.argument).percent
