@@ -108,8 +108,7 @@ class KodiDevice(MediaPlayerDevice):
         """ Returns the active player objects or None """
         try:
             return self._server.Player.GetActivePlayers()
-        except (OSError, ConnectionError):
-            # OSError may be raised for "No route to host"
+        except jsonrpc_requests.jsonrpc.TransportError:
             return None
 
     @property
