@@ -147,6 +147,10 @@ class KodiDevice(MediaPlayerDevice):
             self._app_properties = self._server.Application.GetProperties(
                 ['volume', 'muted']
             )
+        else:
+            self._properties = None
+            self._item = None
+            self._app_properties = None
 
     @property
     def volume_level(self):
