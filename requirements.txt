@@ -67,3 +67,6 @@ hikvision>=0.4
 
 # console log coloring
 colorlog>=2.6.0
+
+# JSON-RPC interface
+jsonrpc-requests>=0.1
