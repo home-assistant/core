@@ -8,7 +8,7 @@ It offers the following functionality through built-in components:
 
  * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), and [DD-WRT](http://www.dd-wrt.com/site/index))
  * Track and control [Philips Hue](http://meethue.com) lights, [WeMo](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/) switches, and [Tellstick](http://www.telldus.se/products/tellstick) devices and sensors
- * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast) and [Music Player Daemon](http://www.musicpd.org/)
+ * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast), [Music Player Daemon](http://www.musicpd.org/) and XBMC/Kodi (http://kodi.tv/)
  * Support for [ISY994](https://www.universal-devices.com/residential/isy994i-series/) (Insteon and X10 devices), [Z-Wave](http://www.z-wave.com/), [Nest Thermostats](https://nest.com/), and [Modbus](http://www.modbus.org/)
  * Track running system services and monitoring your system stats (Memory, disk usage, and more)
  * Control low-cost 433 MHz remote control wall-socket devices (https://github.com/r10r/rcswitch-pi) and other switches that can be turned on/off with shell commands
