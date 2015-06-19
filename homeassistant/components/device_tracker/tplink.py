@@ -88,6 +88,7 @@ class TplinkDeviceScanner(object):
 
         return self.last_results
 
+    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """ The TP-Link firmware doesn't save the name of the wireless
             device. """
@@ -110,10 +111,7 @@ class TplinkDeviceScanner(object):
             result = self.parse_macs.findall(page.text)
 
             if result:
-                self.last_results = []
-                for device_entry in result:
-                    self.last_results.append(device_entry)
-
+                self.last_results = [mac.replace("-", ":") for mac in result]
                 return True
 
             return False
