@@ -62,19 +62,17 @@ class FileNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """ Send a message to a file. """
 
-        file = open(self.filepath, 'a')
-        if os.stat(self.filepath).st_size == 0:
-            title = '{} notifications (Log started: {})\n{}\n'.format(
-                kwargs.get(ATTR_TITLE),
-                dt_util.strip_microseconds(dt_util.utcnow()),
-                '-'*80)
-            file.write(title)
+        with open(self.filepath, 'a') as file:
+            if os.stat(self.filepath).st_size == 0:
+                title = '{} notifications (Log started: {})\n{}\n'.format(
+                    kwargs.get(ATTR_TITLE),
+                    dt_util.strip_microseconds(dt_util.utcnow()),
+                    '-'*80)
+                file.write(title)
 
-        if self.add_timestamp == 1:
-            text = '{} {}\n'.format(dt_util.utcnow(), message)
-            file.write(text)
-        else:
-            text = '{}\n'.format(message)
-            file.write(text)
-
-        file.close()
+            if self.add_timestamp == 1:
+                text = '{} {}\n'.format(dt_util.utcnow(), message)
+                file.write(text)
+            else:
+                text = '{}\n'.format(message)
+                file.write(text)
