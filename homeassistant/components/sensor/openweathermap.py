@@ -12,7 +12,7 @@ following to your config/configuration.yaml
 sensor:
   platform: openweathermap
   api_key: YOUR_APP_KEY
-  monitored_variables:
+  monitored_conditions:
     - weather
     - temperature
     - wind_speed
@@ -30,13 +30,7 @@ To retrieve this value log into your account at http://openweathermap.org/
 
 monitored_conditions
 *Required
-An array specifying the variables to monitor.
-
-These are the variables for the monitored_conditions array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
+Conditions to monitor. See the configuration example above for a
 list of all available conditions to monitor.
 
 Details for the API : http://bugs.openweathermap.org/projects/api/wiki
