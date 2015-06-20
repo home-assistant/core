@@ -76,4 +76,3 @@ class FileNotificationService(BaseNotificationService):
             else:
                 text = '{}\n'.format(message)
                 file.write(text)
-
