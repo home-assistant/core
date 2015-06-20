@@ -12,24 +12,18 @@ following to your config/configuration.yaml
 sensor:
   platform: time_date
   display_options:
-    - type: 'time'
-    - type: 'date'
-    - type: 'date_time'
-    - type: 'time_date'
-    - type: 'time_utc'
-    - type: 'beat'
+    - 'time'
+    - 'date'
+    - 'date_time'
+    - 'time_date'
+    - 'time_utc'
+    - 'beat'
 
 Variables:
 
 display_options
 *Required
-An array specifying the variables to display.
-
-These are the variables for the display_options array.:
-
-type
-*Required
-The variable you wish to display, see the configuration example above for a
+The variable you wish to display. See the configuration example above for a
 list of all available variables.
 """
 import logging
@@ -57,10 +51,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for variable in config['display_options']:
-        if variable['type'] not in OPTION_TYPES:
-            _LOGGER.error('Option type: "%s" does not exist', variable['type'])
+        if variable not in OPTION_TYPES:
+            _LOGGER.error('Option type: "%s" does not exist', variable)
         else:
-            dev.append(TimeDateSensor(variable['type']))
+            dev.append(TimeDateSensor(variable))
 
     add_devices(dev)
 
