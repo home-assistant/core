@@ -71,6 +71,7 @@
         Adding platform support
       </a></li>
       <li><a href="/developers/api.html">API</a></li>
+      <li><a href="/developers/credits.html">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
@@ -115,32 +116,6 @@ Home Assistant currently supports the awesome <a href="https://www.pushbullet.co
 </pre></td><td class='code'><pre><code class=''><span class='line'>notify:
 </span><span class='line'>  platform: pushbullet
 </span><span class='line'>  api_key: YOUR_API_KEY</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Automation example</h3>
-
-<p>Notifications are great to be used within Home Automation. Below is a an example configuration that you can add to your <code>configuration.yaml</code> to be notified when the sun sets.</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>automation:
-</span><span class='line'>  alias: Sun set notification
-</span><span class='line'>
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: above_horizon
-</span><span class='line'>  state_to: below_horizon
-</span><span class='line'>
-</span><span class='line'>  execute_service: notify.notify
-</span><span class='line'>  service_data: {"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
 
 
 <p>For more automation examples, see the <a href="/components/automation.html">getting started with automation page</a>.</p>

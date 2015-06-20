@@ -71,6 +71,7 @@
         Adding platform support
       </a></li>
       <li><a href="/developers/api.html">API</a></li>
+      <li><a href="/developers/credits.html">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
@@ -104,7 +105,8 @@
   <hr class="divider">
   
 
-  <p>The system monitoring sensor platform to allow you to monitor disk usage, memory usage, CPU usage, and running processes. This platform has superseded the process component which is now considered deprecated.</p>
+  <p><img src='/images/supported_brands/utilities-system-monitor.png' class='brand pull-right' />
+The system monitoring sensor platform to allow you to monitor disk usage, memory usage, CPU usage, and running processes. This platform has superseded the process component which is now considered deprecated.</p>
 
 <p>To add this platform to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
@@ -116,7 +118,6 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">systemmonitor</span>
@@ -124,9 +125,98 @@
 </span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">disk_use_percent</span>
 </span><span class='line'>        <span class="l-Scalar-Plain">arg</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home</span>
 </span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">memory_free</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">process</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">arg</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodi</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">processor_use</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+<p>The table contains types and their argument to use in your <code>configuration.yaml</code> file.</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;"> Type (- type:)      </th>
+<th style="text-align:left;"> Argument (arg:)          </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;"> disk_use_percent    </td>
+<td style="text-align:left;"> Path, eg. &lsquo;/&rsquo;            </td>
+</tr>
+<tr>
+<td style="text-align:left;"> disk_use            </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> disk_free           </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> memory_use_percent  </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> memory_use          </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> memory_free         </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> swap_use_percent    </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> swap_use            </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> swap_free           </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> network_in          </td>
+<td style="text-align:left;"> Interface, eg. &lsquo;eth0&rsquo;    </td>
+</tr>
+<tr>
+<td style="text-align:left;"> network_out         </td>
+<td style="text-align:left;"> Interface, eg. &lsquo;eth0&rsquo;    </td>
+</tr>
+<tr>
+<td style="text-align:left;"> packets_in          </td>
+<td style="text-align:left;"> Interface, eg. &lsquo;eth0&rsquo;    </td>
+</tr>
+<tr>
+<td style="text-align:left;"> packets_out         </td>
+<td style="text-align:left;"> Interface, eg. &lsquo;eth0&rsquo;    </td>
+</tr>
+<tr>
+<td style="text-align:left;"> ipv4_address        </td>
+<td style="text-align:left;"> Interface, eg. &lsquo;eth0&rsquo;    </td>
+</tr>
+<tr>
+<td style="text-align:left;"> ipv6_address        </td>
+<td style="text-align:left;"> Interface, eg. &lsquo;eth0&rsquo;    </td>
+</tr>
+<tr>
+<td style="text-align:left;"> processor_use       </td>
+<td style="text-align:left;"> Interface, eg. &lsquo;eth0&rsquo;    </td>
+</tr>
+<tr>
+<td style="text-align:left;"> process             </td>
+<td style="text-align:left;"> Binary, eg. &lsquo;octave-cli&rsquo; </td>
+</tr>
+<tr>
+<td style="text-align:left;"> last_boot           </td>
+<td style="text-align:left;">                          </td>
+</tr>
+<tr>
+<td style="text-align:left;"> since_last_boot     </td>
+<td style="text-align:left;">                          </td>
+</tr>
+</tbody>
+</table>
 
 
 <p><a href="https://github.com/theolind">Theodor Lindquist</a> has contributed the System monitoring platform.</p>

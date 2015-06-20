@@ -71,6 +71,7 @@
         Adding platform support
       </a></li>
       <li><a href="/developers/api.html">API</a></li>
+      <li><a href="/developers/credits.html">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
@@ -106,16 +107,17 @@
 
   <p>One of the things most people want at some point in their home automation is to get notified when certain events occur. For this reason there is a <code>notify</code> component in Home Assistant.</p>
 
-<p>Home Assistant currently supports the awesome <a href="https://www.pushbullet.com/">PushBullet</a>, a free service to send information between your phones, browsers and friends.</p>
+<p>Home Assistant currently supports a wide range of services for notifications:</p>
 
-<p>To add PushBullet to your installation, add the following to your <code>configuration.yaml</code> file:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>notify:
-</span><span class='line'>  platform: pushbullet
-</span><span class='line'>  api_key: YOUR_API_KEY</span></code></pre></td></tr></table></div></figure>
+<ul>
+<li><a href="/components/notify.instapush.html">Instapush</a></li>
+<li><a href="/components/notify.nma.html">Notify My Android (NMA)</a></li>
+<li><a href="/components/notify.pushbullet.html">PushBullet</a></li>
+<li><a href="/components/notify.pushover.html">PushOver</a></li>
+<li><a href="/components/notify.smtp.html">E-Mail</a></li>
+<li><a href="/components/notify.syslog.html">Syslog</a></li>
+<li><a href="/components/notify.xmpp.html">Jabber (XMPP)</a></li>
+</ul>
 
 
 <h3>Automation example</h3>
