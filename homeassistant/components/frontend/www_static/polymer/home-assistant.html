@@ -21,9 +21,8 @@
     }
   </style>
 
-  <home-assistant-icons></home-assistant-icons>
-
   <template>
+    <home-assistant-icons></home-assistant-icons>
     <template is='dom-if' if='[[!loaded]]'>
       <login-form></login-form>
     </template>
@@ -37,10 +36,10 @@
 
 <script>
 (function() {
-
-  var storeListenerMixIn = window.hass.storeListenerMixIn,
-      uiActions = window.hass.uiActions,
-      preferenceStore = window.hass.preferenceStore;
+  var uiActions = window.hass.uiActions;
+  var authGetters = window.hass.authGetters;
+  var syncGetters = window.hass.syncGetters;
+  var uiPreferences = window.hass.uiPreferences;
 
   Polymer({
     is: 'home-assistant',
@@ -49,13 +48,22 @@
       auth: null,
     },
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
+      auth: {
+        type: String,
+      },
       loaded: {
         type: Boolean,
         value: false,
+        observer: 'loadedChanged',
+        bindNuclear: syncGetters.isDataLoaded,
       },
+    },
+
+    loadedChanged: function(newVal, oldVal) {
+      console.log("Loaded changed", newVal);
     },
 
     ready: function() {
@@ -65,13 +73,11 @@
       // if auth was given, tell the backend
       if(this.auth) {
         uiActions.validateAuth(this.auth, false);
-      } else if (preferenceStore.hasAuthToken) {
-        uiActions.validateAuth(preferenceStore.authToken, false);
+      } else if (uiPreferences.authToken) {
+        uiActions.validateAuth(uiPreferences.authToken, false);
       }
-    },
 
-    syncStoreChanged: function(syncStore) {
-      this.loaded = syncStore.initialLoadDone;
+      uiPreferences.startSync();
     },
 });
 
