@@ -7,6 +7,9 @@ omit =
     homeassistant/external/*
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/arduino.py
+    homeassistant/components/*/arduino.py
+
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
