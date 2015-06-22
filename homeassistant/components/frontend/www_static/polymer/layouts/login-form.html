@@ -86,27 +86,29 @@
 <script>
 (function() {
   var uiActions = window.hass.uiActions;
+  var authGetters = window.hass.authGetters;
 
   Polymer({
     is: 'login-form',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       isValidating: {
         type: Boolean,
-        value: false,
+        observer: 'isValidatingChanged',
+        bindNuclear: authGetters.isValidating,
       },
 
       isInvalid: {
         type: Boolean,
-        value: false,
+        bindNuclear: authGetters.isInvalidAttempt,
       },
 
       errorMessage: {
         type: String,
-        value: '',
-      }
+        bindNuclear: authGetters.attemptErrorMessage,
+      },
     },
 
     listeners: {
@@ -114,19 +116,12 @@
       'loginButton.click': 'validatePassword',
     },
 
-    attached: function() {
-      this.focusPassword();
-    },
+    // attached: function() {
+    //   this.focusPassword();
+    // },
 
-    authStoreChanged: function(authStore) {
-      this.isValidating = authStore.isValidating;
-
-      if (authStore.lastAttemptInvalid) {
-        this.errorMessage = authStore.lastAttemptMessage;
-        this.isInvalid = true;
-      }
-
-      if (!this.isValidating) {
+    isValidatingChanged: function(newVal) {
+      if (!newVal) {
         setTimeout(this.focusPassword.bind(this), 0);
       }
     },
