@@ -26,7 +26,7 @@
 
 <script>
 (function(){
-  var uiActions = window.hass.uiActions;
+  var moreInfoActions = window.hass.moreInfoActions;
 
   Polymer({
     is: 'state-card',
@@ -44,7 +44,7 @@
     cardTapped: function(ev) {
       ev.stopPropagation();
       this.debounce('show-more-info-dialog', function() {
-        uiActions.showMoreInfoDialog(this.stateObj.entityId);
+        moreInfoActions.selectEntity(this.stateObj.entityId);
       }.bind(this), 100);
     },
   });
