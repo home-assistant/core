@@ -1,21 +1,42 @@
 <script>
 
 (function() {
+  var NuclearObserver = function NuclearObserver(reactor) {
+    return {
 
-  var StoreListenerMixIn = window.hass.storeListenerMixIn;
+      attached: function() {
+        var component = this;
+        this.__unwatchFns = Object.keys(component.properties).reduce(
+          function(unwatchFns, key) {
+            if (!('bindNuclear' in component.properties[key])) {
+              return unwatchFns;
+            }
+            var getter = component.properties[key].bindNuclear;
 
-  window.StoreListenerBehavior = {
+            if (!getter) {
+              throw 'Undefined getter specified for key ' + key;
+            }
 
-    attached: function() {
-      StoreListenerMixIn.listenToStores(true, this);
-    },
+            // console.log(key, getter);
 
-    detached: function() {
-      StoreListenerMixIn.stopListeningToStores(this);
-    },
+            component[key] = reactor.evaluate(getter);
 
+            return unwatchFns.concat(reactor.observe(getter, function(val) {
+              // console.log('New value for', key, val);
+              component[key] = val;
+            }));
+        }, []);
+      },
+
+      detached: function() {
+        while (this.__unwatchFns.length) {
+          this.__unwatchFns.shift()();
+        }
+      },
+
+    };
   };
-
+  window.nuclearObserver = NuclearObserver(window.hass.reactor);
 })();
 
 </script>

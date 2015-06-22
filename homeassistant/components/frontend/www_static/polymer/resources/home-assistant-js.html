@@ -1,4 +1,5 @@
 <script src="../home-assistant-js/dist/homeassistant.min.js"></script>
+<link rel="import" href="./ha-preferences.html">
 
 <script>
   (function() {
@@ -10,63 +11,16 @@
       'sensor',
     ];
 
-    // Add some frontend specific helpers to the models
-    Object.defineProperties(window.hass.stateModel.prototype, {
-      // how to render the card for this state
-      cardType: {
-        get: function() {
-          console.warn('Deprecated method. Please use hass.uiUtil.stateCardType');
-          return window.hass.uiUtil.stateCardType(this);
-        }
-      },
-
-      // how to render the more info of this state
-      moreInfoType: {
-        get: function() {
-          console.warn('Deprecated method. Please use hass.uiUtil.stateMoreInfoType');
-          return window.hass.uiUtil.stateMoreInfoType(this);
-        }
-      },
-    });
-
-    var dispatcher = window.hass.dispatcher,
-        constants = window.hass.constants,
-        preferenceStore = window.hass.preferenceStore,
-        authActions = window.hass.authActions;
-
-    window.hass.uiConstants = {
-      ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
-      ACTION_SHOW_DATE_PICKER: 'ACTION_SHOW_DATE_PICKER',
-
-      STATE_FILTERS: {
-        'group': 'Groups',
-        'script': 'Scripts',
-        'scene': 'Scenes',
-      },
-    };
+    var reactor = window.hass.reactor;
+    var serviceGetters = window.hass.serviceGetters;
+    var authActions = window.hass.authActions;
+    var uiPreferences = window.hass.uiPreferences;
 
     window.hass.uiActions = {
-      showMoreInfoDialog: function(entityId) {
-        dispatcher.dispatch({
-          actionType: window.hass.uiConstants.ACTION_SHOW_DIALOG_MORE_INFO,
-          entityId: entityId,
-        });
-      },
-
-      showDatePicker: function(dateSelectedCallback, startDate) {
-        startDate = startDate || null;
-
-        dispatcher.dispatch({
-          actionType: window.hass.uiConstants.ACTION_SHOW_DATE_PICKER,
-          dateSelectedCallback: dateSelectedCallback,
-          startDate: startDate,
-        });
-      },
-
-      validateAuth: function(authToken, rememberLogin) {
+      validateAuth: function(authToken, rememberAuth) {
         authActions.validate(authToken, {
-          useStreaming: preferenceStore.useStreaming,
-          rememberLogin: rememberLogin,
+          useStreaming: uiPreferences.useStreaming,
+          rememberAuth: rememberAuth,
         });
       },
     };
@@ -76,7 +30,7 @@
       stateCardType: function(state) {
         if(DOMAINS_WITH_CARD.indexOf(state.domain) !== -1) {
           return state.domain;
-        } else if(state.canToggle) {
+        } else if(reactor.evaluate(serviceGetters.canToggle(state.entityId))) {
           return "toggle";
         } else {
           return "display";

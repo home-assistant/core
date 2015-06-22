@@ -39,12 +39,11 @@
       if (!this.isAttached) {
         return;
       }
-
       var root = Polymer.dom(this);
       var stateHistory = this.data;
 
-      while (root.lastChild) {
-        root.removeChild(root.lastChild);
+      while (root.node.lastChild) {
+        root.node.removeChild(root.node.lastChild);
       }
 
       if (!stateHistory || stateHistory.length === 0) {
@@ -64,11 +63,12 @@
         dataTable.addRow([entityDisplay, stateStr, start, end]);
       };
 
-      var startTime = new Date(stateHistory.map(function(stateInfo) {
-        return stateInfo[0].lastChangedAsDate;
-      }).reduce(function(prev, cur) {
-        return Math.min(prev, cur);
-      }, new Date()));
+      var startTime = new Date(
+        stateHistory.reduce(function(minTime, stateInfo) {
+          return Math.min(
+            minTime, stateInfo[0].lastChangedAsDate);
+        }, new Date())
+      );
 
       // end time is Math.min(curTime, start time + 1 day)
       var endTime = new Date(startTime);

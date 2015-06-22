@@ -20,7 +20,7 @@
   <template>
     <ul>
       <template is='dom-repeat' items='[[entities]]' as='entity'>
-        <li><a href='#' on-click='entitySelected'>[[entity]]</a></li>
+        <li><a href='#' on-click='entitySelected'>[[entity.entityId]]</a></li>
       </template>
     </ul>
   </template>
@@ -28,25 +28,30 @@
 
 <script>
 (function() {
+  var entityGetters = window.hass.entityGetters;
+
   Polymer({
     is: 'entity-list',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       entities: {
         type: Array,
-        value: [],
+        bindNuclear: [
+          entityGetters.entityMap,
+          function(map) {
+            return map.valueSeq().
+                    sortBy(function(entity) { return entity.entityId; })
+                    .toArray();
+          },
+        ],
       },
-    },
-
-    stateStoreChanged: function(stateStore) {
-      this.entities = stateStore.entityIDs.toArray();
     },
 
     entitySelected: function(ev) {
       ev.preventDefault();
-      this.fire('entity-selected', {entityId: ev.model.entity});
+      this.fire('entity-selected', {entityId: ev.model.entity.entityId});
     },
   });
 })();
