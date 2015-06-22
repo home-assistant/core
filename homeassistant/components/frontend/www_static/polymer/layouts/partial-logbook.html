@@ -28,7 +28,7 @@
       <div>
         <div class='selected-date-container'>
           <paper-input label='Showing entries for' on-click='handleShowDatePicker'
-            value='[[computeDateCaption(selectedDate)]]'></paper-input>
+            value='[[selectedDate]]'></paper-input>
 
           <loading-box hidden$='[[!isLoading]]'>Loading logbook entries</loading-box>
         </div>
@@ -40,19 +40,15 @@
 
 <script>
 (function() {
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var logbookGetters = window.hass.logbookGetters;
   var logbookActions = window.hass.logbookActions;
-  var logbookStore = window.hass.logbookStore;
   var uiActions = window.hass.uiActions;
-
-  function date_to_str(date) {
-    return date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
-  }
+  var dateToStr = window.hass.util.dateToStr;
 
   Polymer({
     is: 'partial-logbook',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       narrow: {
@@ -62,48 +58,46 @@
 
       selectedDate: {
         type: String,
-        value: null,
-        observer: 'fetchIfNeeded',
+        bindNuclear: logbookGetters.currentDate,
       },
 
       isLoading: {
         type: Boolean,
-        value: true,
+        bindNuclear: logbookGetters.isLoadingEntries,
+      },
+
+      isStale: {
+        type: Boolean,
+        bindNuclear: logbookGetters.isCurrentStale,
+        observer: 'isStaleChanged',
       },
 
       entries: {
         type: Array,
-        value: null,
+        bindNuclear: [
+          logbookGetters.currentEntries,
+          function(entries) { return entries.toArray(); },
+        ],
       },
     },
 
-    logbookStoreChanged: function() {
-      this.isLoading = this.fetchIfNeeded();
-      var entries = logbookStore.all.toArray();
-      this.entries = entries.length > 0 ? entries : false;
-    },
-
-    computeDateCaption: function(selectedDate) {
-      return selectedDate || 'today';
-    },
-
-    fetchIfNeeded: function() {
-      if (logbookStore.shouldFetch(this.selectedDate)) {
-        this.isLoading = true;
-        logbookActions.fetch(this.selectedDate);
-        return true;
+    isStaleChanged: function(newVal) {
+      if (newVal) {
+        // isLoading wouldn't update without debounce <_<
+        this.debounce('fetch-logbook-entries', function() {
+          logbookActions.fetchDate(this.selectedDate);
+        }, 0);
       }
-      return false;
     },
 
     handleShowDatePicker: function() {
-      uiActions.showDatePicker(function(selectedDate) {
-        this.selectedDate = date_to_str(selectedDate);
-      }.bind(this), this.selectedDate);
+      uiActions.showDatePicker(
+        logbookActions.changeCurrentDate,
+        this.selectedDate);
     },
 
     handleRefresh: function() {
-      logbookActions.fetch(this.selectedDate);
+      logbookActions.fetchDate(this.selectedDate);
     },
   });
 })();
