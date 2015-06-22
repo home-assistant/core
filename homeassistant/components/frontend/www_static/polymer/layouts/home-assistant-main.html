@@ -76,7 +76,7 @@
             <iron-icon item-icon icon='apps'></iron-icon> States
           </paper-icon-item>
 
-          <template is='dom-repeat' items='{{activeFilters}}'>
+          <template is='dom-repeat' items='{{possibleFilters}}'>
             <paper-icon-item data-panel$='[[filterType(item)]]'>
               <iron-icon item-icon icon='[[filterIcon(item)]]'></iron-icon>
               <span>[[filterName(item)]]</span>
@@ -110,25 +110,22 @@
           <div class='text label divider'>Developer Tools</div>
           <div class='dev-tools layout horizontal justified'>
             <paper-icon-button
-              icon='settings-remote' data-panel$='[[selectedDevService]]'
+              icon='settings-remote' data-panel='devService'
               on-click='handleDevClick'></paper-icon-button>
             <paper-icon-button
-              icon='settings-ethernet' data-panel$='[[selectedDevState]]'
+              icon='settings-ethernet' data-panel='devState'
               on-click='handleDevClick'></paper-icon-button>
             <paper-icon-button
-              icon='settings-input-antenna' data-panel$='[[selectedDevEvent]]'
+              icon='settings-input-antenna' data-panel='devEvent'
               on-click='handleDevClick'></paper-icon-button>
           </div>
         </paper-menu>
       </paper-header-panel>
 
-      <template is='dom-if' if='[[!hideStates]]'>
-        <partial-states
-          main narrow='[[narrow]]'
-          filter='[[stateFilter]]'>
+      <template is='dom-if' if='[[isSelectedStates]]'>
+        <partial-states main narrow='[[narrow]]'>
         </partial-states>
       </template>
-
       <template is='dom-if' if='[[isSelectedLogbook]]'>
         <partial-logbook main narrow='[[narrow]]'></partial-logbook>
       </template>
@@ -151,133 +148,91 @@
 
 <script>
 (function() {
+  var configGetters = window.hass.configGetters;
+  var entityGetters = window.hass.entityGetters;
+  var navigationGetters = window.hass.navigationGetters;
+
   var authActions = window.hass.authActions;
+  var navigationActions = window.hass.navigationActions;
 
   var uiUtil = window.hass.uiUtil;
-  var uiConstants = window.hass.uiConstants;
+  var entityDomainFilters = window.hass.util.entityDomainFilters;
 
   Polymer({
     is: 'home-assistant-main',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
-      selected: {
-        type: String,
-        value: 'states',
-      },
-
-      stateFilter: {
-        type: String,
-        value: null,
-      },
-
       narrow: {
         type: Boolean,
       },
 
-      activeFilters: {
+      selected: {
+        type: String,
+        bindNuclear: [
+          navigationGetters.activePane,
+          navigationGetters.activeFilter,
+          function(pane, filter) {
+            return filter ? pane + '/' + filter : pane;
+          },
+        ],
+        observer: 'selectedChanged',
+      },
+
+      possibleFilters: {
         type: Array,
         value: [],
+        bindNuclear: [
+          navigationGetters.possibleEntityDomainFilters,
+          function(domains) { return domains.toArray(); }
+        ],
       },
 
       hasHistoryComponent: {
         type: Boolean,
-        value: false,
+        bindNuclear: configGetters.isComponentLoaded('history'),
       },
 
       hasLogbookComponent: {
         type: Boolean,
-        value: false,
+        bindNuclear: configGetters.isComponentLoaded('logbook'),
       },
 
-      isStreaming: {
+      isSelectedStates: {
         type: Boolean,
-        value: false,
-      },
-
-      hasStreamError: {
-        type: Boolean,
-        value: false,
-      },
-
-      hideStates: {
-        type: Boolean,
-        value: false,
-      },
-
-      selectedHistory: {
-        type: String,
-        value: 'history',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('states'),
       },
 
       isSelectedHistory: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedHistory)',
-      },
-
-      selectedLogbook: {
-        type: String,
-        value: 'logbook',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('history'),
       },
 
       isSelectedLogbook: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedLogbook)',
-      },
-
-      selectedDevEvent: {
-        type: String,
-        value: 'devEvent',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('logbook'),
       },
 
       isSelectedDevEvent: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedDevEvent)',
-      },
-
-      selectedDevState: {
-        type: String,
-        value: 'devState',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('devEvent'),
       },
 
       isSelectedDevState: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedDevState)',
-      },
-
-      selectedDevService: {
-        type: String,
-        value: 'devService',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('devState'),
       },
 
       isSelectedDevService: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedDevService)',
+        bindNuclear: navigationGetters.isActivePane('devService'),
       },
-
-
     },
 
     listeners: {
       'menu.core-select': 'menuSelect',
       'open-menu': 'openDrawer',
-    },
-
-    stateStoreChanged: function(stateStore) {
-      this.activeFilters = stateStore.domains.filter(function(domain) {
-        return domain in uiConstants.STATE_FILTERS;
-      }).toArray();
-    },
-
-    componentStoreChanged: function(componentStore) {
-      this.hasHistoryComponent = componentStore.isLoaded('history');
-      this.hasLogbookComponent = componentStore.isLoaded('logbook');
     },
 
     menuSelect: function(ev, detail, sender) {
@@ -299,15 +254,9 @@
       }
 
       this.closeDrawer();
-      this.selected = newChoice;
 
-      if (newChoice.substr(0, 7) === 'states_') {
-        this.hideStates = false;
-        this.stateFilter = newChoice.substr(7);
-      } else {
-        this.hideStates = newChoice !== 'states';
-        this.stateFilter = null;
-      }
+      navigationActions.navigate.apply(
+        null, newChoice.split('/'));
     },
 
     openDrawer: function() {
@@ -322,21 +271,41 @@
       authActions.logOut();
     },
 
-    computeIsSelected: function(selected, selectedType) {
-      return selected === selectedType;
-    },
-
     filterIcon: function(filter) {
       return uiUtil.domainIcon(filter);
     },
 
     filterName: function(filter) {
-      return uiConstants.STATE_FILTERS[filter];
+      return entityDomainFilters[filter];
     },
 
     filterType: function(filter) {
-      return 'states_' + filter;
-    }
+      return 'states/' + filter;
+    },
+
+    hashChanged: function(ev) {
+      var parts = ev.newURL.split('#');
+      if (parts[1]) {
+        this.selectPanel(parts[1]);
+      }
+    },
+
+    selectedChanged: function(newVal) {
+      window.location.hash = newVal;
+    },
+
+    ready: function() {
+      this.hashChanged({newURL: window.location.toString()});
+    },
+
+    attached: function() {
+      this.hashChanged = this.hashChanged.bind(this);
+      window.addEventListener('hashchange', this.hashChanged);
+    },
+
+    detached: function() {
+      window.removeEventListener('hashchange', this.hashChanged);
+    },
   });
 })();
 </script>

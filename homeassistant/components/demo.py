@@ -102,8 +102,8 @@ def setup(hass, config):
                     {
                         "auto": True,
                         ATTR_ENTITY_ID: [
-                            "device_tracker.Paulus",
-                            "device_tracker.Anne_Therese"
+                            "device_tracker.paulus",
+                            "device_tracker.anne_therese"
                         ]
                     })
 

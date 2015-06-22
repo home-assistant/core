@@ -17,42 +17,37 @@
   }
   </style>
   <template>
-    <iron-icon icon="warning" hidden$="{{!hasError}}"></iron-icon>
-    <paper-toggle-button id="toggle" on-change='toggleChanged' hidden$="{{hasError}}"></paper-toggle-button>
+    <iron-icon icon="warning" hidden$="[[!hasError]]"></iron-icon>
+    <paper-toggle-button id="toggle" on-change='toggleChanged' checked$='[[isStreaming]]' hidden$="[[hasError]]"></paper-toggle-button>
   </template>
 </dom-module>
 
 <script>
+  var streamGetters = window.hass.streamGetters;
   var streamActions = window.hass.streamActions;
-  var authStore = window.hass.authStore;
 
   Polymer({
     is: 'stream-status',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       isStreaming: {
         type: Boolean,
-        value: false,
+        bindNuclear: streamGetters.isStreamingEvents,
       },
 
       hasError: {
         type: Boolean,
-        value: false,
+        bindNuclear: streamGetters.hasStreamingEventsError,
       },
     },
 
-    streamStoreChanged: function(streamStore) {
-      this.hasError = streamStore.hasError;
-      this.$.toggle.checked = this.isStreaming = streamStore.isStreaming;
-    },
-
-    toggleChanged: function(ev) {
+    toggleChanged: function() {
       if (this.isStreaming) {
         streamActions.stop();
       } else {
-        streamActions.start(authStore.authToken);
+        streamActions.start();
       }
     },
   });
