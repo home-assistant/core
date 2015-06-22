@@ -49,36 +49,51 @@
 
 <script>
 (function() {
-  var stateStore = window.hass.stateStore;
-  var stateHistoryStore = window.hass.stateHistoryStore;
-  var stateHistoryActions = window.hass.stateHistoryActions;
+
+  var configGetters = window.hass.configGetters;
+  var entityHistoryGetters = window.hass.entityHistoryGetters;
+
+  var entityHistoryActions = window.hass.entityHistoryActions;
+  var moreInfoGetters = window.hass.moreInfoGetters;
+  var moreInfoActions = window.hass.moreInfoActions;
 
   Polymer({
     is: 'more-info-dialog',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
-      entityId: {
-        type: String,
-      },
-
       stateObj: {
         type: Object,
+        bindNuclear: moreInfoGetters.currentEntity,
+        observer: 'fetchHistoryData',
       },
 
       stateHistory: {
         type: Object,
+        bindNuclear: [
+          moreInfoGetters.currentEntityHistory,
+          function(history) {
+            return history ? [history] : false;
+          },
+        ],
       },
 
       isLoadingHistoryData: {
         type: Boolean,
-        value: false,
+        bindNuclear: entityHistoryGetters.isLoadingEntityHistory,
       },
 
       hasHistoryComponent: {
         type: Boolean,
-        value: false,
+        bindNuclear: configGetters.isComponentLoaded('history'),
+        observer: 'fetchHistoryData',
+      },
+
+      shouldFetchHistory: {
+        type: Boolean,
+        bindNuclear: moreInfoGetters.isCurrentEntityHistoryStale,
+        observer: 'fetchHistoryData',
       },
 
       dialogOpen: {
@@ -92,31 +107,10 @@
       'iron-overlay-closed': 'onIronOverlayClosed'
     },
 
-    componentStoreChanged: function(componentStore) {
-      this.hasHistoryComponent = componentStore.isLoaded('history');
-    },
-
-    stateStoreChanged: function() {
-      var newState = this.entityId ? stateStore.get(this.entityId) : null;
-
-      if (newState !== this.stateObj) {
-        this.stateObj = newState;
-      }
-    },
-
-    stateHistoryStoreChanged: function() {
-      var newHistory;
-
-      if (this.hasHistoryComponent && this.entityId) {
-        newHistory = [stateHistoryStore.get(this.entityId)];
-      } else {
-        newHistory = null;
-      }
-
-      this.isLoadingHistoryData = false;
-
-      if (newHistory !== this.stateHistory) {
-        this.stateHistory = newHistory;
+    fetchHistoryData: function(newVal) {
+      if (this.stateObj && this.hasHistoryComponent &&
+          this.shouldFetchHistory) {
+        entityHistoryActions.fetchRecent(this.stateObj.entityId);
       }
     },
 
@@ -126,30 +120,13 @@
 
     onIronOverlayClosed: function() {
       this.dialogOpen = false;
+      moreInfoActions.deselectEntity();
     },
 
-    changeEntityId: function(entityId) {
-      if (entityId == this.entityId) {
-        return;
-      }
-
-      this.entityId = entityId;
-
-      this.stateStoreChanged();
-      this.stateHistoryStoreChanged();
-
-      if (this.hasHistoryComponent && stateHistoryStore.shouldFetchEntity(entityId)) {
-        this.isLoadingHistoryData = true;
-        stateHistoryActions.fetch(entityId);
-      }
-    },
-
-    show: function(entityId) {
-      this.changeEntityId(entityId);
-
+    show: function() {
       this.debounce('showDialogAfterRender', function() {
-        this.$.dialog.toggle();
-      }.bind(this));
+        this.$.dialog.open();
+      }.bind(this), 1);
     },
   });
 })();

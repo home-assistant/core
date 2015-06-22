@@ -1,0 +1,51 @@
+<script>
+(function() {
+  var reactor = window.hass.reactor;
+  var authGetters = window.hass.authGetters;
+  var streamGetters = window.hass.streamGetters;
+
+  var storage = 'localStorage' in window ? localStorage : {};
+
+  var observe = {
+    authToken: {
+      bindNuclear: [
+        authGetters.currentAuthToken,
+        authGetters.rememberAuth,
+        function(authToken, rememberAuth) {
+          return rememberAuth ? authToken : null;
+        },
+      ],
+      defaultValue: null,
+    },
+    useStreaming: {
+      bindNuclear: streamGetters.useStreaming,
+      defaultValue: true,
+    },
+  };
+
+  var uiPreferences = {};
+
+  Object.keys(observe).forEach(function(prop) {
+    if (!(prop in storage)) {
+      storage[prop] = observe[prop].defaultValue;
+    }
+
+    Object.defineProperty(uiPreferences, prop, {
+      get: function() { return JSON.parse(storage[prop]); }
+    });
+  });
+
+  uiPreferences.startSync = function startSync() {
+    Object.keys(observe).forEach(function(prop) {
+      var getter = observe[prop].bindNuclear;
+      var valueChanged = function valueChanged(value) {
+        storage[prop] = JSON.stringify(value);
+      };
+      reactor.observe(getter, valueChanged);
+      valueChanged(reactor.evaluate(getter));
+    });
+  };
+
+  window.hass.uiPreferences = uiPreferences;
+})();
+</script>

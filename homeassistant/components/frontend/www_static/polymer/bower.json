@@ -37,7 +37,8 @@
     "layout": "Polymer/layout",
     "color-picker-element": "~0.0.3",
     "paper-styles": "polymerelements/paper-styles#^1.0.0",
-    "paper-date-picker": "vsimonian/paper-date-picker#master"
+    "paper-date-picker": "vsimonian/paper-date-picker#master",
+    "lodash": "~3.9.3"
   },
   "resolutions": {
     "polymer": "^1.0.0",
