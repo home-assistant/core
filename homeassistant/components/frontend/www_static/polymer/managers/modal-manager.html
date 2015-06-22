@@ -14,33 +14,38 @@
 
 <script>
 (function() {
-  var uiConstants = window.hass.uiConstants,
-      dispatcher = window.hass.dispatcher;
+  var moreInfoGetters = window.hass.moreInfoGetters;
+  var uiActions = window.hass.uiActions;
 
   Polymer({
     is: 'modal-manager',
 
+    behaviors: [nuclearObserver],
+
     properties: {
+      moreInfoEntityId: {
+        type: String,
+        observer: 'moreInfoEntityIdChanged',
+        bindNuclear: moreInfoGetters.currentEntityId,
+      },
       datePickerCallback: {
         type: Function,
         value: null,
       },
     },
 
-    ready: function() {
-      dispatcher.register(function(payload) {
-        switch (payload.actionType) {
-          case uiConstants.ACTION_SHOW_DIALOG_MORE_INFO:
-            this.$.moreInfoDialog.show(payload.entityId);
-            break;
+    moreInfoEntityIdChanged: function(newVal) {
+      if (newVal) {
+        this.$.moreInfoDialog.show(newVal);
+      }
+    },
 
-          case uiConstants.ACTION_SHOW_DATE_PICKER:
-            this.datePickerCallback = payload.dateSelectedCallback;
-            this.$.date = payload.date;
-            this.$.datePicker.toggle();
-            break;
-        }
-      }.bind(this));
+    ready: function() {
+      uiActions.showDatePicker = function(dateSelectedCallback, startDate) {
+        this.datePickerCallback = dateSelectedCallback;
+        this.$.date = startDate;
+        this.$.datePicker.toggle();
+      }.bind(this);
     },
 
     datePickerValueChanged: function(ev) {
