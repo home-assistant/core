@@ -13661,9 +13661,21 @@ is separate from validation, and `allowed-pattern` does not affect how the input
    **/
   Polymer.IronResizableBehavior = {
     properties: {
+      /**
+       * The closest ancestor element that implements `IronResizableBehavior`.
+       */
       _parentResizable: {
         type: Object,
         observer: '_parentResizableChanged'
+      },
+
+      /**
+       * True if this element is currently notifying its descedant elements of
+       * resize.
+       */
+      _notifyingDescendant: {
+        type: Boolean,
+        value: false
       }
     },
 
@@ -13681,7 +13693,8 @@ is separate from validation, and `allowed-pattern` does not affect how the input
     attached: function() {
       this.fire('iron-request-resize-notifications', null, {
         node: this,
-        bubbles: true
+        bubbles: true,
+        cancelable: true
       });
 
       if (!this._parentResizable) {
@@ -13710,16 +13723,12 @@ is separate from validation, and `allowed-pattern` does not affect how the input
       }
 
       this._interestedResizables.forEach(function(resizable) {
-        // TODO(cdata): Currently behaviors cannot define "abstract" methods..
-        if (!this.resizerShouldNotify || this.resizerShouldNotify(resizable)) {
-          resizable.notifyResize();
+        if (this.resizerShouldNotify(resizable)) {
+          this._notifyDescendant(resizable);
         }
       }, this);
 
-      this.fire('iron-resize', null, {
-        node: this,
-        bubbles: false
-      });
+      this._fireResize();
     },
 
     /**
@@ -13739,16 +13748,40 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
       if (index > -1) {
         this._interestedResizables.splice(index, 1);
+        this.unlisten(target, 'iron-resize', '_onDescendantIronResize');
       }
     },
 
-    // TODO(cdata): Currently behaviors cannot define "abstract" methods.
-    // resizerShouldNotify: function(el) { return true; },
+    /**
+     * This method can be overridden to filter nested elements that should or
+     * should not be notified by the current element. Return true if an element
+     * should be notified, or false if it should not be notified.
+     *
+     * @param {HTMLElement} element A candidate descendant element that
+     * implements `IronResizableBehavior`.
+     * @return {boolean} True if the `element` should be notified of resize.
+     */
+    resizerShouldNotify: function(element) { return true; },
 
-    _parentResizableChanged: function(parentResizable) {
-      if (parentResizable) {
-        window.removeEventListener('resize', this._boundNotifyResize);
+    _onDescendantIronResize: function(event) {
+      if (this._notifyingDescendant) {
+        event.stopPropagation();
+        return;
       }
+
+      // NOTE(cdata): In ShadowDOM, event retargetting makes echoing of the
+      // otherwise non-bubbling event "just work." We do it manually here for
+      // the case where Polymer is not using shadow roots for whatever reason:
+      if (!Polymer.Settings.useShadow) {
+        this._fireResize();
+      }
+    },
+
+    _fireResize: function() {
+      this.fire('iron-resize', null, {
+        node: this,
+        bubbles: false
+      });
     },
 
     _onIronRequestResizeNotifications: function(event) {
@@ -13760,11 +13793,32 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
       if (this._interestedResizables.indexOf(target) === -1) {
         this._interestedResizables.push(target);
+        this.listen(target, 'iron-resize', '_onDescendantIronResize');
       }
 
       target.assignParentResizable(this);
+      this._notifyDescendant(target);
 
       event.stopPropagation();
+    },
+
+    _parentResizableChanged: function(parentResizable) {
+      if (parentResizable) {
+        window.removeEventListener('resize', this._boundNotifyResize);
+      }
+    },
+
+    _notifyDescendant: function(descendant) {
+      // NOTE(cdata): In IE10, attached is fired on children first, so it's
+      // important not to notify them if the parent is not attached yet (or
+      // else they will get redundantly notified when the parent attaches).
+      if (!this.isAttached) {
+        return;
+      }
+
+      this._notifyingDescendant = true;
+      descendant.notifyResize();
+      this._notifyingDescendant = false;
     }
   };
 </script>
@@ -15409,6 +15463,10 @@ CSS properties               | Action
       var target = window.getComputedStyle(this);
       var sizer = window.getComputedStyle(this.sizingTarget);
       this._fitInfo = {
+        inlineStyle: {
+          top: this.style.top || '',
+          left: this.style.left || ''
+        },
         positionedBy: {
           vertically: target.top !== 'auto' ? 'top' : (target.bottom !== 'auto' ?
             'bottom' : null),
@@ -15436,11 +15494,11 @@ CSS properties               | Action
     resetFit: function() {
       if (!this._fitInfo || !this._fitInfo.sizedBy.height) {
         this.sizingTarget.style.maxHeight = '';
-        this.style.top = '';
+        this.style.top = this._fitInfo ? this._fitInfo.inlineStyle.top : '';
       }
       if (!this._fitInfo || !this._fitInfo.sizedBy.width) {
         this.sizingTarget.style.maxWidth = '';
-        this.style.left = '';
+        this.style.left = this._fitInfo ? this._fitInfo.inlineStyle.left : '';
       }
       if (this._fitInfo) {
         this.style.position = this._fitInfo.positionedBy.css;
@@ -15661,7 +15719,8 @@ context. You should place this element as a child of `<body>` whenever possible.
       opened: {
         observer: '_openedChanged',
         type: Boolean,
-        value: false
+        value: false,
+        notify: true
       },
 
       /**
@@ -16071,7 +16130,7 @@ Custom property | Description | Default
 ### Accessibility
 
 This element has `role="dialog"` by default. Depending on the context, it may be more appropriate
-to override this attribute with `role="alertdialog"`. The header (a `<h2>` element) will
+to override this attribute with `role="alertdialog"`.
 
 If `modal` is set, the element will set `aria-modal` and prevent the focus from exiting the element.
 It will also ensure that focus remains in the dialog.
@@ -16192,15 +16251,17 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 
     _onDialogClick: function(event) {
       var target = event.target;
-      while (target !== this) {
-        if (target.hasAttribute('dialog-dismiss')) {
-          this._updateClosingReasonConfirmed(false);
-          this.close();
-          break;
-        } else if (target.hasAttribute('dialog-confirm')) {
-          this._updateClosingReasonConfirmed(true);
-          this.close();
-          break;
+      while (target && target !== this) {
+        if (target.hasAttribute) {
+          if (target.hasAttribute('dialog-dismiss')) {
+            this._updateClosingReasonConfirmed(false);
+            this.close();
+            break;
+          } else if (target.hasAttribute('dialog-confirm')) {
+            this._updateClosingReasonConfirmed(true);
+            this.close();
+            break;
+          }
         }
         target = target.parentNode;
       }
@@ -22306,7 +22367,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script>
 (function(){
   var configGetters = window.hass.configGetters;
-  var entityGetters = window.hass.entityGetters;
   var navigationGetters = window.hass.navigationGetters;
   var voiceGetters = window.hass.voiceGetters;
   var streamGetters = window.hass.streamGetters;
@@ -22315,7 +22375,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   var syncActions = window.hass.syncActions;
   var voiceActions = window.hass.voiceActions;
-  var uiConstants = window.hass.uiConstants;
 
   var entityDomainFilters = window.hass.util.entityDomainFilters;
 
@@ -22328,6 +22387,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       narrow: {
         type: Boolean,
         value: false,
+      },
+
+      filter: {
+        type: String,
+        bindNuclear: navigationGetters.activeFilter,
       },
 
       isFetching: {
@@ -24355,7 +24419,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 :host > ::content > .no-padding {
   padding: 0;
-};
+}
 
 :host > ::content > *:first-child {
   margin-top: 24px;
