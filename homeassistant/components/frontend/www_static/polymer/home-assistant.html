@@ -39,7 +39,7 @@
   var uiActions = window.hass.uiActions;
   var authGetters = window.hass.authGetters;
   var syncGetters = window.hass.syncGetters;
-  var uiPreferences = window.hass.uiPreferences;
+  var preferences = window.hass.localStoragePreferences;
 
   Polymer({
     is: 'home-assistant',
@@ -67,11 +67,11 @@
       // if auth was given, tell the backend
       if(this.auth) {
         uiActions.validateAuth(this.auth, false);
-      } else if (uiPreferences.authToken) {
-        uiActions.validateAuth(uiPreferences.authToken, true);
+      } else if (preferences.authToken) {
+        uiActions.validateAuth(preferences.authToken, true);
       }
 
-      uiPreferences.startSync();
+      preferences.startSync();
     },
 });
 
