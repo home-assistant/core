@@ -58,6 +58,7 @@
 
   var uiUtil = window.hass.uiUtil;
   var entityDomainFilters = window.hass.util.entityDomainFilters;
+  var urlSync = window.hass.urlSync;
 
   Polymer({
     is: 'home-assistant-main',
@@ -69,16 +70,10 @@
         type: Boolean,
       },
 
-      selected: {
+      activePage: {
         type: String,
-        bindNuclear: [
-          navigationGetters.activePane,
-          navigationGetters.activeFilter,
-          function(pane, filter) {
-            return filter ? pane + '/' + filter : pane;
-          },
-        ],
-        observer: 'selectedChanged',
+        bindNuclear: navigationGetters.activePage,
+        observer: 'activePageChanged',
       },
 
       isSelectedStates: {
@@ -120,34 +115,16 @@
       this.$.drawer.openDrawer();
     },
 
-    closeDrawer: function() {
+    activePageChanged: function() {
       this.$.drawer.closeDrawer();
     },
 
-    hashChanged: function(ev) {
-      var parts = ev.newURL.split('#');
-      if (parts[1]) {
-        navigationActions.navigate.apply(
-          null, parts[1].split('/'));
-      }
-    },
-
-    selectedChanged: function(newVal) {
-      this.closeDrawer();
-      window.location.hash = newVal;
-    },
-
-    ready: function() {
-      this.hashChanged({newURL: window.location.toString()});
-    },
-
     attached: function() {
-      this.hashChanged = this.hashChanged.bind(this);
-      window.addEventListener('hashchange', this.hashChanged);
+      urlSync.startSync();
     },
 
     detached: function() {
-      window.removeEventListener('hashchange', this.hashChanged);
+      urlSync.stopSync();
     },
   });
 })();
