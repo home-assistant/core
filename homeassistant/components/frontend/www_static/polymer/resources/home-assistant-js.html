@@ -18,7 +18,7 @@
     window.hass.uiActions = {
       validateAuth: function(authToken, rememberAuth) {
         authActions.validate(authToken, {
-          rememberAuth,
+          rememberAuth: rememberAuth,
           useStreaming: preferences.useStreaming,
         });
       },
