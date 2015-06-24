@@ -1,5 +1,4 @@
 <script src="../home-assistant-js/dist/homeassistant.min.js"></script>
-<link rel="import" href="./ha-preferences.html">
 
 <script>
   (function() {
@@ -14,13 +13,13 @@
     var reactor = window.hass.reactor;
     var serviceGetters = window.hass.serviceGetters;
     var authActions = window.hass.authActions;
-    var uiPreferences = window.hass.uiPreferences;
+    var preferences = window.hass.localStoragePreferences;
 
     window.hass.uiActions = {
       validateAuth: function(authToken, rememberAuth) {
         authActions.validate(authToken, {
-          useStreaming: uiPreferences.useStreaming,
-          rememberAuth: rememberAuth,
+          rememberAuth,
+          useStreaming: preferences.useStreaming,
         });
       },
     };
