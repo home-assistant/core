@@ -56,14 +56,8 @@
       },
       loaded: {
         type: Boolean,
-        value: false,
-        observer: 'loadedChanged',
         bindNuclear: syncGetters.isDataLoaded,
       },
-    },
-
-    loadedChanged: function(newVal, oldVal) {
-      console.log("Loaded changed", newVal);
     },
 
     ready: function() {
@@ -74,7 +68,7 @@
       if(this.auth) {
         uiActions.validateAuth(this.auth, false);
       } else if (uiPreferences.authToken) {
-        uiActions.validateAuth(uiPreferences.authToken, false);
+        uiActions.validateAuth(uiPreferences.authToken, true);
       }
 
       uiPreferences.startSync();
