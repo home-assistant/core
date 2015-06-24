@@ -2,13 +2,6 @@
 <link rel='import' href='../bower_components/layout/layout.html'>
 
 <link rel='import' href='../bower_components/paper-drawer-panel/paper-drawer-panel.html'>
-<link rel='import' href='../bower_components/paper-header-panel/paper-header-panel.html'>
-<link rel='import' href='../bower_components/paper-toolbar/paper-toolbar.html'>
-<link rel='import' href='../bower_components/paper-menu/paper-menu.html'>
-<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
-<link rel='import' href='../bower_components/paper-item/paper-item.html'>
-<link rel='import' href='../bower_components/paper-item/paper-icon-item.html'>
-<link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
 
 <link rel='import' href='../layouts/partial-states.html'>
 <link rel='import' href='../layouts/partial-logbook.html'>
@@ -20,107 +13,15 @@
 <link rel='import' href='../managers/notification-manager.html'>
 <link rel='import' href='../managers/modal-manager.html'>
 
-<link rel='import' href='../components/stream-status.html'>
+<link rel='import' href='../components/ha-sidebar.html'>
 
 <dom-module id='home-assistant-main'>
-  <style>
-    .sidenav {
-      background: #fafafa;
-      box-shadow: 1px 0 1px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-
-    .sidenav paper-menu {
-      --paper-menu-color: var(--secondary-text-color);
-      --paper-menu-background-color: #fafafa;
-    }
-
-    paper-icon-item {
-      cursor: pointer;
-    }
-
-    paper-icon-item.logout {
-      margin-top: 16px;
-    }
-
-    .divider {
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .text {
-      padding: 16px;
-      font-size: 14px;
-    }
-
-    .dev-tools {
-      padding: 0 8px;
-    }
-  </style>
-
   <template>
     <notification-manager></notification-manager>
     <modal-manager></modal-manager>
 
     <paper-drawer-panel id='drawer' narrow='{{narrow}}'>
-      <paper-header-panel mode='scroll' drawer class='sidenav fit'>
-        <paper-toolbar>
-          <!-- forces paper toolbar to style title appropriate -->
-          <paper-icon-button hidden></paper-icon-button>
-          <div class="title">Home Assistant</div>
-        </paper-toolbar>
-
-        <paper-menu id='menu'
-          selectable='[data-panel]' attr-for-selected='data-panel'
-          on-iron-select='menuSelect' selected='[[selected]]'>
-          <paper-icon-item data-panel='states'>
-            <iron-icon item-icon icon='apps'></iron-icon> States
-          </paper-icon-item>
-
-          <template is='dom-repeat' items='{{possibleFilters}}'>
-            <paper-icon-item data-panel$='[[filterType(item)]]'>
-              <iron-icon item-icon icon='[[filterIcon(item)]]'></iron-icon>
-              <span>[[filterName(item)]]</span>
-            </paper-icon-item>
-          </template>
-
-          <template is='dom-if' if='[[hasHistoryComponent]]'>
-            <paper-icon-item data-panel='history'>
-              <iron-icon item-icon icon='assessment'></iron-icon>
-              History
-            </paper-icon-item>
-          </template>
-
-          <template is='dom-if' if='[[hasLogbookComponent]]'>
-            <paper-icon-item data-panel='logbook'>
-              <iron-icon item-icon icon='list'></iron-icon>
-              Logbook
-            </paper-icon-item>
-          </template>
-
-          <paper-icon-item data-panel='logout' class='logout'>
-            <iron-icon item-icon icon='exit-to-app'></iron-icon>
-            Log Out
-          </paper-icon-item>
-
-          <paper-item class='divider horizontal layout justified'>
-            <div>Streaming updates</div>
-            <stream-status></stream-status>
-          </paper-item>
-
-          <div class='text label divider'>Developer Tools</div>
-          <div class='dev-tools layout horizontal justified'>
-            <paper-icon-button
-              icon='settings-remote' data-panel='devService'
-              on-click='handleDevClick'></paper-icon-button>
-            <paper-icon-button
-              icon='settings-ethernet' data-panel='devState'
-              on-click='handleDevClick'></paper-icon-button>
-            <paper-icon-button
-              icon='settings-input-antenna' data-panel='devEvent'
-              on-click='handleDevClick'></paper-icon-button>
-          </div>
-        </paper-menu>
-      </paper-header-panel>
+      <ha-sidebar drawer></ha-sidebar>
 
       <template is='dom-if' if='[[isSelectedStates]]'>
         <partial-states main narrow='[[narrow]]'>
@@ -180,25 +81,6 @@
         observer: 'selectedChanged',
       },
 
-      possibleFilters: {
-        type: Array,
-        value: [],
-        bindNuclear: [
-          navigationGetters.possibleEntityDomainFilters,
-          function(domains) { return domains.toArray(); }
-        ],
-      },
-
-      hasHistoryComponent: {
-        type: Boolean,
-        bindNuclear: configGetters.isComponentLoaded('history'),
-      },
-
-      hasLogbookComponent: {
-        type: Boolean,
-        bindNuclear: configGetters.isComponentLoaded('logbook'),
-      },
-
       isSelectedStates: {
         type: Boolean,
         bindNuclear: navigationGetters.isActivePane('states'),
@@ -231,32 +113,7 @@
     },
 
     listeners: {
-      'menu.core-select': 'menuSelect',
       'open-menu': 'openDrawer',
-    },
-
-    menuSelect: function(ev, detail, sender) {
-      this.selectPanel(this.$.menu.selected);
-    },
-
-    handleDevClick: function(ev, detail, sender) {
-      // prevent it from highlighting first menu item
-      document.activeElement.blur();
-      this.selectPanel(ev.target.parentElement.dataset.panel);
-    },
-
-    selectPanel: function(newChoice) {
-      if (newChoice == 'logout') {
-        this.handleLogOut();
-        return;
-      } else if(newChoice == this.selected) {
-        return;
-      }
-
-      this.closeDrawer();
-
-      navigationActions.navigate.apply(
-        null, newChoice.split('/'));
     },
 
     openDrawer: function() {
@@ -267,30 +124,16 @@
       this.$.drawer.closeDrawer();
     },
 
-    handleLogOut: function() {
-      authActions.logOut();
-    },
-
-    filterIcon: function(filter) {
-      return uiUtil.domainIcon(filter);
-    },
-
-    filterName: function(filter) {
-      return entityDomainFilters[filter];
-    },
-
-    filterType: function(filter) {
-      return 'states/' + filter;
-    },
-
     hashChanged: function(ev) {
       var parts = ev.newURL.split('#');
       if (parts[1]) {
-        this.selectPanel(parts[1]);
+        navigationActions.navigate.apply(
+          null, parts[1].split('/'));
       }
     },
 
     selectedChanged: function(newVal) {
+      this.closeDrawer();
       window.location.hash = newVal;
     },
 
