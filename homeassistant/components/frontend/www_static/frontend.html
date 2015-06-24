@@ -5811,9 +5811,9 @@ this._removeChildren();
     /* Shared Styles */
 
     /*
-    Unfortunately, we can't make use of these yet - sibling properties aren't
-    evaluated. See https://github.com/Polymer/polymer/issues/1399
-
+    Unfortunately, we can't use nested rules
+    See https://github.com/Polymer/polymer/issues/1399
+    */
     --paper-font-common-base: {
       font-family: 'Roboto', 'Noto', sans-serif;
       -webkit-font-smoothing: antialiased;
@@ -5833,7 +5833,6 @@ this._removeChildren();
       overflow: hidden;
       text-overflow: ellipsis;
     };
-    */
 
     /* Material Font Styles */
 
@@ -11706,6 +11705,10 @@ window.hass.uiUtil.formatDate = function(dateObj) {
       transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     };
 
+    --shadow-none: {
+      box-shadow: none;
+    };
+
     /* from http://codepen.io/shyndman/pen/c5394ddf2e8b2a5c9185904b57421cdb */
 
     --shadow-elevation-2dp: {
@@ -13674,216 +13677,6 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
 
 
-
-
-<script>
-
-  /**
-   * `Polymer.IronMenuBehavior` implements accessible menu behavior.
-   *
-   * @demo demo/index.html
-   * @polymerBehavior Polymer.IronMenuBehavior
-   */
-  Polymer.IronMenuBehaviorImpl = {
-
-    properties: {
-
-      /**
-       * Returns the currently focused item.
-       *
-       * @attribute focusedItem
-       * @type Object
-       */
-      focusedItem: {
-        observer: '_focusedItemChanged',
-        readOnly: true,
-        type: Object
-      },
-
-      /**
-       * The attribute to use on menu items to look up the item title. Typing the first
-       * letter of an item when the menu is open focuses that item. If unset, `textContent`
-       * will be used.
-       *
-       * @attribute attrForItemTitle
-       * @type String
-       */
-      attrForItemTitle: {
-        type: String
-      }
-    },
-
-    hostAttributes: {
-      'role': 'menu',
-      'tabindex': '0'
-    },
-
-    observers: [
-      '_updateMultiselectable(multi)'
-    ],
-
-    listeners: {
-      'focus': '_onFocus',
-      'keydown': '_onKeydown'
-    },
-
-    keyBindings: {
-      'up': '_onUpKey',
-      'down': '_onDownKey',
-      'esc': '_onEscKey',
-      'enter': '_onEnterKey',
-      'shift+tab:keydown': '_onShiftTabDown'
-    },
-
-    _updateMultiselectable: function(multi) {
-      if (multi) {
-        this.setAttribute('aria-multiselectable', 'true');
-      } else {
-        this.removeAttribute('aria-multiselectable');
-      }
-    },
-
-    _onShiftTabDown: function() {
-      var oldTabIndex;
-
-      Polymer.IronMenuBehaviorImpl._shiftTabPressed = true;
-
-      oldTabIndex = this.getAttribute('tabindex');
-
-      this.setAttribute('tabindex', '-1');
-
-      this.async(function() {
-        this.setAttribute('tabindex', oldTabIndex);
-        Polymer.IronMenuBehaviorImpl._shiftTabPressed = false;
-      // Note: polymer/polymer#1305
-      }, 1);
-    },
-
-    _applySelection: function(item, isSelected) {
-      if (isSelected) {
-        item.setAttribute('aria-selected', 'true');
-      } else {
-        item.removeAttribute('aria-selected');
-      }
-
-      Polymer.IronSelectableBehavior._applySelection.apply(this, arguments);
-    },
-
-    _focusedItemChanged: function(focusedItem, old) {
-      old && old.setAttribute('tabindex', '-1');
-      if (focusedItem) {
-        focusedItem.setAttribute('tabindex', '0');
-        focusedItem.focus();
-      }
-    },
-
-    select: function(value) {
-      if (this._defaultFocusAsync) {
-        this.cancelAsync(this._defaultFocusAsync);
-        this._defaultFocusAsync = null;
-      }
-      var item = this._valueToItem(value);
-      this._setFocusedItem(item);
-      Polymer.IronMultiSelectableBehaviorImpl.select.apply(this, arguments);
-    },
-
-    _onFocus: function(event) {
-      if (Polymer.IronMenuBehaviorImpl._shiftTabPressed) {
-        return;
-      }
-      // do not focus the menu itself
-      this.blur();
-      // clear the cached focus item
-      this._setFocusedItem(null);
-      this._defaultFocusAsync = this.async(function() {
-        // focus the selected item when the menu receives focus, or the first item
-        // if no item is selected
-        var selectedItem = this.multi ? (this.selectedItems && this.selectedItems[0]) : this.selectedItem;
-        if (selectedItem) {
-          this._setFocusedItem(selectedItem);
-        } else {
-          this._setFocusedItem(this.items[0]);
-        }
-      // async 100ms to wait for `select` to get called from `_itemActivate`
-      }, 100);
-    },
-
-    _onUpKey: function() {
-      // up and down arrows moves the focus
-      this._focusPrevious();
-    },
-
-    _onDownKey: function() {
-      this._focusNext();
-    },
-
-    _onEscKey: function() {
-      // esc blurs the control
-      this.focusedItem.blur();
-    },
-
-    _onEnterKey: function(event) {
-      // enter activates the item unless it is disabled
-      this._activateFocused(event.detail.keyboardEvent);
-    },
-
-    _onKeydown: function(event) {
-      if (this.keyboardEventMatchesKeys(event, 'up down esc enter')) {
-        return;
-      }
-
-      // all other keys focus the menu item starting with that character
-      this._focusWithKeyboardEvent(event);
-    },
-
-    _focusWithKeyboardEvent: function(event) {
-      for (var i = 0, item; item = this.items[i]; i++) {
-        var attr = this.attrForItemTitle || 'textContent';
-        var title = item[attr] || item.getAttribute(attr);
-        if (title && title.trim().charAt(0).toLowerCase() === String.fromCharCode(event.keyCode).toLowerCase()) {
-          this._setFocusedItem(item);
-          break;
-        }
-      }
-    },
-
-    _activateFocused: function(event) {
-      if (!this.focusedItem.hasAttribute('disabled')) {
-        this._activateHandler(event);
-      }
-    },
-
-    _focusPrevious: function() {
-      var length = this.items.length;
-      var index = (Number(this.indexOf(this.focusedItem)) - 1 + length) % length;
-      this._setFocusedItem(this.items[index]);
-    },
-
-    _focusNext: function() {
-      var index = (Number(this.indexOf(this.focusedItem)) + 1) % this.items.length;
-      this._setFocusedItem(this.items[index]);
-    }
-
-  };
-
-  Polymer.IronMenuBehaviorImpl._shiftTabPressed = false;
-
-  /** @polymerBehavior Polymer.IronMenuBehavior */
-  Polymer.IronMenuBehavior = [
-    Polymer.IronMultiSelectableBehavior,
-    Polymer.IronA11yKeysBehavior,
-    Polymer.IronMenuBehaviorImpl
-  ];
-
-</script>
-
-
-
-
-
-
-
-
 <script>
   /**
    * `IronResizableBehavior` is a behavior that can be used in Polymer elements to
@@ -14010,6 +13803,8 @@ is separate from validation, and `allowed-pattern` does not affect how the input
     }
   };
 </script>
+
+
 
 
 
@@ -14967,6 +14762,208 @@ typeof define=="function"&&typeof define.amd=="object"&&define.amd?(Yn._=Zn, def
 </script>
 
 
+
+
+<script>
+
+  /**
+   * `Polymer.IronMenuBehavior` implements accessible menu behavior.
+   *
+   * @demo demo/index.html
+   * @polymerBehavior Polymer.IronMenuBehavior
+   */
+  Polymer.IronMenuBehaviorImpl = {
+
+    properties: {
+
+      /**
+       * Returns the currently focused item.
+       *
+       * @attribute focusedItem
+       * @type Object
+       */
+      focusedItem: {
+        observer: '_focusedItemChanged',
+        readOnly: true,
+        type: Object
+      },
+
+      /**
+       * The attribute to use on menu items to look up the item title. Typing the first
+       * letter of an item when the menu is open focuses that item. If unset, `textContent`
+       * will be used.
+       *
+       * @attribute attrForItemTitle
+       * @type String
+       */
+      attrForItemTitle: {
+        type: String
+      }
+    },
+
+    hostAttributes: {
+      'role': 'menu',
+      'tabindex': '0'
+    },
+
+    observers: [
+      '_updateMultiselectable(multi)'
+    ],
+
+    listeners: {
+      'focus': '_onFocus',
+      'keydown': '_onKeydown'
+    },
+
+    keyBindings: {
+      'up': '_onUpKey',
+      'down': '_onDownKey',
+      'esc': '_onEscKey',
+      'enter': '_onEnterKey',
+      'shift+tab:keydown': '_onShiftTabDown'
+    },
+
+    _updateMultiselectable: function(multi) {
+      if (multi) {
+        this.setAttribute('aria-multiselectable', 'true');
+      } else {
+        this.removeAttribute('aria-multiselectable');
+      }
+    },
+
+    _onShiftTabDown: function() {
+      var oldTabIndex;
+
+      Polymer.IronMenuBehaviorImpl._shiftTabPressed = true;
+
+      oldTabIndex = this.getAttribute('tabindex');
+
+      this.setAttribute('tabindex', '-1');
+
+      this.async(function() {
+        this.setAttribute('tabindex', oldTabIndex);
+        Polymer.IronMenuBehaviorImpl._shiftTabPressed = false;
+      // Note: polymer/polymer#1305
+      }, 1);
+    },
+
+    _applySelection: function(item, isSelected) {
+      if (isSelected) {
+        item.setAttribute('aria-selected', 'true');
+      } else {
+        item.removeAttribute('aria-selected');
+      }
+
+      Polymer.IronSelectableBehavior._applySelection.apply(this, arguments);
+    },
+
+    _focusedItemChanged: function(focusedItem, old) {
+      old && old.setAttribute('tabindex', '-1');
+      if (focusedItem) {
+        focusedItem.setAttribute('tabindex', '0');
+        focusedItem.focus();
+      }
+    },
+
+    select: function(value) {
+      if (this._defaultFocusAsync) {
+        this.cancelAsync(this._defaultFocusAsync);
+        this._defaultFocusAsync = null;
+      }
+      var item = this._valueToItem(value);
+      this._setFocusedItem(item);
+      Polymer.IronMultiSelectableBehaviorImpl.select.apply(this, arguments);
+    },
+
+    _onFocus: function(event) {
+      if (Polymer.IronMenuBehaviorImpl._shiftTabPressed) {
+        return;
+      }
+      // do not focus the menu itself
+      this.blur();
+      // clear the cached focus item
+      this._setFocusedItem(null);
+      this._defaultFocusAsync = this.async(function() {
+        // focus the selected item when the menu receives focus, or the first item
+        // if no item is selected
+        var selectedItem = this.multi ? (this.selectedItems && this.selectedItems[0]) : this.selectedItem;
+        if (selectedItem) {
+          this._setFocusedItem(selectedItem);
+        } else {
+          this._setFocusedItem(this.items[0]);
+        }
+      // async 100ms to wait for `select` to get called from `_itemActivate`
+      }, 100);
+    },
+
+    _onUpKey: function() {
+      // up and down arrows moves the focus
+      this._focusPrevious();
+    },
+
+    _onDownKey: function() {
+      this._focusNext();
+    },
+
+    _onEscKey: function() {
+      // esc blurs the control
+      this.focusedItem.blur();
+    },
+
+    _onEnterKey: function(event) {
+      // enter activates the item unless it is disabled
+      this._activateFocused(event.detail.keyboardEvent);
+    },
+
+    _onKeydown: function(event) {
+      if (this.keyboardEventMatchesKeys(event, 'up down esc enter')) {
+        return;
+      }
+
+      // all other keys focus the menu item starting with that character
+      this._focusWithKeyboardEvent(event);
+    },
+
+    _focusWithKeyboardEvent: function(event) {
+      for (var i = 0, item; item = this.items[i]; i++) {
+        var attr = this.attrForItemTitle || 'textContent';
+        var title = item[attr] || item.getAttribute(attr);
+        if (title && title.trim().charAt(0).toLowerCase() === String.fromCharCode(event.keyCode).toLowerCase()) {
+          this._setFocusedItem(item);
+          break;
+        }
+      }
+    },
+
+    _activateFocused: function(event) {
+      if (!this.focusedItem.hasAttribute('disabled')) {
+        this._activateHandler(event);
+      }
+    },
+
+    _focusPrevious: function() {
+      var length = this.items.length;
+      var index = (Number(this.indexOf(this.focusedItem)) - 1 + length) % length;
+      this._setFocusedItem(this.items[index]);
+    },
+
+    _focusNext: function() {
+      var index = (Number(this.indexOf(this.focusedItem)) + 1) % this.items.length;
+      this._setFocusedItem(this.items[index]);
+    }
+
+  };
+
+  Polymer.IronMenuBehaviorImpl._shiftTabPressed = false;
+
+  /** @polymerBehavior Polymer.IronMenuBehavior */
+  Polymer.IronMenuBehavior = [
+    Polymer.IronMultiSelectableBehavior,
+    Polymer.IronA11yKeysBehavior,
+    Polymer.IronMenuBehaviorImpl
+  ];
+
+</script>
 
 
 
@@ -16620,6 +16617,12 @@ colorPickerPrototype.createdCallback = function(e) {
 document.registerElement('color-picker', { prototype: colorPickerPrototype });
 
 </script>
+
+
+
+
+
+
 <style is="custom-style">
   :root {
     --dark-primary-color: #0288D1;
@@ -20241,885 +20244,6 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
   }());
 
 </script>
-<dom-module id="paper-header-panel" assetpath="bower_components/paper-header-panel/">
-
-  <style>
-    :host {
-      @apply(--layout);
-      @apply(--layout-vertical);
-
-      display: block;
-      position: relative;
-      height: 100%;
-
-      /* Create a stack context, we will need it for the shadow*/
-      z-index: 0;
-    }
-
-    :root {
-      /**
-       * Default paper header panel shadow
-       */
-      --paper-header-panel-shadow: {
-        height: 6px;
-        bottom: -6px;
-        box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.4);
-      };
-    }
-
-    #mainContainer {
-      @apply(--layout-flex);
-
-      position: relative;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      flex-basis: 0.0001px;
-    }
-
-    /*
-     * mode: scroll
-     */
-    :host([mode=scroll]) #mainContainer {
-      @apply(--paper-header-panel-scroll-container);
-      overflow: visible;
-    }
-
-    :host([mode=scroll]) {
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /*
-     * mode: cover
-     */
-    :host([mode=cover]) #mainContainer {
-      @apply(--paper-header-panel-cover-container);
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-    }
-
-    /*
-     * mode: standard
-     */
-    :host([mode=standard]) #mainContainer {
-      @apply(--paper-header-panel-standard-container);
-    }
-
-    /*
-     * mode: waterfall
-     */
-    :host([mode=waterfall]) #mainContainer {
-      @apply(--paper-header-panel-waterfall-container);
-    }
-
-    /*
-     * mode: waterfall-tall
-     */
-    :host([mode=waterfall-tall]) #mainContainer {
-      @apply(--paper-header-panel-waterfall-tall-container);
-    }
-
-    :host ::content paper-toolbar,
-    :host ::content .paper-header {
-      position: relative;
-      overflow: visible !important;
-    }
-
-    :host ::content paper-toolbar:after,
-    :host ::content .paper-header:after {
-      @apply(--paper-header-panel-shadow);
-
-      -webkit-transition: opacity 0.5s, -webkit-transform 0.5s;
-      transition: opacity 0.5s, transform 0.5s;
-
-      opacity: 0;
-      content: "";
-
-      width: 100%;
-      position: absolute;
-      left: 0px;
-      right: 0px;
-      z-index: 1;
-
-      -webkit-transform: scale3d(1, 0, 1);
-      -webkit-transform-origin: 0% 0%;
-
-      transform: scale3d(1, 0, 1);
-      transform-origin: 0% 0%;
-    }
-
-    :host ::content paper-toolbar.has-shadow:after,
-    :host ::content .paper-header.has-shadow:after {
-      opacity: 1;
-      -webkit-transform: scale3d(1, 1, 1);
-      transform: scale3d(1, 1, 1);
-    }
-  </style>
-
-  <template>
-    <content id="headerContent" select="paper-toolbar, .paper-header"></content>
-    <div id="mainContainer" class$="[[_computeMainContainerClass(mode)]]">
-      <content id="mainContent" select="*"></content>
-    </div>
-  </template>
-
-</dom-module>
-
-<script>
-
-  (function() {
-
-    'use strict';
-
-    var SHADOW_WHEN_SCROLLING = 1;
-    var SHADOW_ALWAYS = 2;
-
-
-    var MODE_CONFIGS = {
-
-      outerScroll: {
-        scroll: true
-      },
-
-      shadowMode: {
-        standard: SHADOW_ALWAYS,
-        waterfall: SHADOW_WHEN_SCROLLING,
-        'waterfall-tall': SHADOW_WHEN_SCROLLING
-      },
-
-      tallMode: {
-        'waterfall-tall': true
-      }
-    };
-
-    Polymer({
-
-      is: 'paper-header-panel',
-
-      /**
-       * Fired when the content has been scrolled.  `event.detail.target` returns
-       * the scrollable element which you can use to access scroll info such as
-       * `scrollTop`.
-       *
-       *     <paper-header-panel on-content-scroll="{{scrollHandler}}">
-       *       ...
-       *     </paper-header-panel>
-       *
-       *
-       *     scrollHandler: function(event) {
-       *       var scroller = event.detail.target;
-       *       console.log(scroller.scrollTop);
-       *     }
-       *
-       * @event content-scroll
-       */
-
-      properties: {
-
-        /**
-         * Controls header and scrolling behavior. Options are
-         * `standard`, `seamed`, `waterfall`, `waterfall-tall`, `scroll` and
-         * `cover`. Default is `standard`.
-         *
-         * `standard`: The header is a step above the panel. The header will consume the
-         * panel at the point of entry, preventing it from passing through to the
-         * opposite side.
-         *
-         * `seamed`: The header is presented as seamed with the panel.
-         *
-         * `waterfall`: Similar to standard mode, but header is initially presented as
-         * seamed with panel, but then separates to form the step.
-         *
-         * `waterfall-tall`: The header is initially taller (`tall` class is added to
-         * the header).  As the user scrolls, the header separates (forming an edge)
-         * while condensing (`tall` class is removed from the header).
-         *
-         * `scroll`: The header keeps its seam with the panel, and is pushed off screen.
-         *
-         * `cover`: The panel covers the whole `paper-header-panel` including the
-         * header. This allows user to style the panel in such a way that the panel is
-         * partially covering the header.
-         *
-         *     <paper-header-panel mode="cover">
-         *       <paper-toolbar class="tall">
-         *         <core-icon-button icon="menu"></core-icon-button>
-         *       </paper-toolbar>
-         *       <div class="content"></div>
-         *     </paper-header-panel>
-         */
-        mode: {
-          type: String,
-          value: 'standard',
-          observer: '_modeChanged',
-          reflectToAttribute: true
-        },
-
-        /**
-         * If true, the drop-shadow is always shown no matter what mode is set to.
-         */
-        shadow: {
-          type: Boolean,
-          value: false
-        },
-
-        /**
-         * The class used in waterfall-tall mode.  Change this if the header
-         * accepts a different class for toggling height, e.g. "medium-tall"
-         */
-        tallClass: {
-          type: String,
-          value: 'tall'
-        },
-
-        /**
-         * If true, the scroller is at the top
-         */
-        atTop: {
-          type: Boolean,
-          value: true,
-          readOnly: true
-        }
-      },
-
-      observers: [
-        '_computeDropShadowHidden(atTop, mode, shadow)'
-      ],
-
-      ready: function() {
-        this.scrollHandler = this._scroll.bind(this);
-        this._addListener();
-
-        // Run `scroll` logic once to initialze class names, etc.
-        this._keepScrollingState();
-      },
-
-      detached: function() {
-        this._removeListener();
-      },
-
-      /**
-       * Returns the header element
-       *
-       * @property header
-       * @type Object
-       */
-      get header() {
-        return Polymer.dom(this.$.headerContent).getDistributedNodes()[0];
-      },
-
-      /**
-       * Returns the scrollable element.
-       *
-       * @property scroller
-       * @type Object
-       */
-      get scroller() {
-        return this._getScrollerForMode(this.mode);
-      },
-
-      /**
-       * Returns true if the scroller has a visible shadow.
-       *
-       * @property visibleShadow
-       * @type Boolean
-       */
-      get visibleShadow() {
-        return this.header.classList.contains('has-shadow');
-      },
-
-      _computeDropShadowHidden: function(atTop, mode, shadow) {
-
-        var shadowMode = MODE_CONFIGS.shadowMode[mode];
-
-        if (this.shadow) {
-          this.toggleClass('has-shadow', true, this.header);
-
-        } else if (shadowMode === SHADOW_ALWAYS) {
-          this.toggleClass('has-shadow', true, this.header);
-
-        } else if (shadowMode === SHADOW_WHEN_SCROLLING && !atTop) {
-          this.toggleClass('has-shadow', true, this.header);
-
-        } else {
-          this.toggleClass('has-shadow', false, this.header);
-
-        }
-      },
-
-      _computeMainContainerClass: function(mode) {
-        // TODO:  It will be useful to have a utility for classes
-        // e.g. Polymer.Utils.classes({ foo: true });
-
-        var classes = {};
-
-        classes['flex'] = mode !== 'cover';
-
-        return Object.keys(classes).filter(
-          function(className) {
-            return classes[className];
-          }).join(' ');
-      },
-
-      _addListener: function() {
-        this.scroller.addEventListener('scroll', this.scrollHandler, false);
-      },
-
-      _removeListener: function() {
-        this.scroller.removeEventListener('scroll', this.scrollHandler);
-      },
-
-      _modeChanged: function(newMode, oldMode) {
-        var configs = MODE_CONFIGS;
-        var header = this.header;
-        var animateDuration = 200;
-
-        if (header) {
-          // in tallMode it may add tallClass to the header; so do the cleanup
-          // when mode is changed from tallMode to not tallMode
-          if (configs.tallMode[oldMode] && !configs.tallMode[newMode]) {
-            header.classList.remove(this.tallClass);
-            this.async(function() {
-              header.classList.remove('animate');
-            }, animateDuration);
-          } else {
-            header.classList.toggle('animate', configs.tallMode[newMode]);
-          }
-        }
-        this._keepScrollingState();
-      },
-
-      _keepScrollingState: function () {
-        var main = this.scroller;
-        var header = this.header;
-
-        this._setAtTop(main.scrollTop === 0);
-
-        if (header && MODE_CONFIGS.tallMode[this.mode]) {
-          this.toggleClass(this.tallClass, this.atTop ||
-              header.classList.contains(this.tallClass) &&
-              main.scrollHeight < this.offsetHeight, header);
-        }
-      },
-
-      _scroll: function(e) {
-        this._keepScrollingState();
-        this.fire('content-scroll', {target: this.scroller}, {bubbles: false});
-      },
-
-      _getScrollerForMode: function(mode) {
-        return MODE_CONFIGS.outerScroll[mode] ?
-            this : this.$.mainContainer;
-      }
-
-    });
-
-  })();
-
-</script>
-<dom-module id="paper-toolbar" assetpath="bower_components/paper-toolbar/">
-
-  <style>
-    :host {
-      /* technical */
-      display: block;
-      position: relative;
-      box-sizing: border-box;
-      -moz-box-sizing: border-box;
-
-      /* size */
-      height: 64px;
-
-      background: var(--paper-toolbar-background, --default-primary-color);
-      color: var(--paper-toolbar-color, --text-primary-color);
-
-      @apply(--paper-toolbar);
-    }
-
-    :host(.animate) {
-      /* transition */
-      transition: height 0.18s ease-in;
-    }
-
-    :host(.medium-tall) {
-      height: 128px;
-    }
-
-    :host(.tall) {
-      height: 192px;
-    }
-
-    .toolbar-tools {
-      position: relative;
-      height: 64px;
-      padding: 0 16px;
-      pointer-events: none;
-    }
-
-    /*
-     * TODO: Where should media query breakpoints live so they can be shared between elements?
-     */
-
-    @media (max-width: 639px) {
-      :host {
-        height: 56px;
-      }
-
-      :host(.medium-tall) {
-        height: 112px;
-      }
-
-      :host(.tall) {
-        height: 168px;
-      }
-
-      .toolbar-tools {
-        height: 56px;
-      }
-    }
-
-    #topBar {
-      position: relative;
-    }
-
-    /* middle bar */
-    #middleBar {
-      position: absolute;
-      top: 0;
-      right: 0;
-      left: 0;
-    }
-
-    :host(.tall) #middleBar,
-    :host(.medium-tall) #middleBar {
-      -webkit-transform: translateY(100%);
-      transform: translateY(100%);
-    }
-
-    /* bottom bar */
-    #bottomBar {
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      left: 0;
-    }
-
-    /*
-     * make elements (e.g. buttons) respond to mouse/touch events
-     *
-     * `.toolbar-tools` disables touch events so multiple toolbars can stack and not
-     * absorb events. All children must have pointer events re-enabled to work as
-     * expected.
-     */
-    .toolbar-tools > ::content > *:not([disabled]) {
-      pointer-events: auto;
-    }
-
-    .toolbar-tools > ::content .title {
-      @apply(--paper-font-title);
-      @apply(--layout-flex);
-
-      pointer-events: none;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-
-      /*
-       * Polymer/polymer/issues/1525
-       * --paper-font-title defines a `font-weight`
-       * let's override its value, but we need `important!`
-       * because all mixins are resolved in rule's selector that has higher precedence
-       * than the current selector.
-       */
-      font-weight: 400 !important;
-    }
-
-    /**
-     * TODO: Refactor these selectors
-     * Work in progress.
-     */
-    .toolbar-tools > ::content paper-icon-button[icon=menu] {
-      margin-right: 24px;
-    }
-
-    .toolbar-tools > ::content > .title,
-    .toolbar-tools > ::content[select=".middle"] > .title,
-    .toolbar-tools > ::content[select=".bottom"] > .title {
-      margin-left: 56px;
-    }
-
-    .toolbar-tools > ::content > paper-icon-button + .title,
-    .toolbar-tools > ::content[select=".middle"] paper-icon-button + .title,
-    .toolbar-tools > ::content[select=".bottom"] paper-icon-button + .title {
-      margin-left: 0;
-    }
-  </style>
-
-  <template>
-
-    <div id="topBar" class$="[[_computeBarClassName(justify)]]">
-      <content select=":not(.middle):not(.bottom)"></content>
-    </div>
-
-    <div id="middleBar" class$="[[_computeBarClassName(middleJustify)]]">
-      <content select=".middle"></content>
-    </div>
-
-    <div id="bottomBar" class$="[[_computeBarClassName(bottomJustify)]]">
-      <content select=".bottom"></content>
-    </div>
-
-  </template>
-
-</dom-module>
-
-<script>
-
-  (function() {
-
-    'use strict';
-
-    function classNames(obj) {
-      var classNames = [];
-      for (var key in obj) {
-        if (obj.hasOwnProperty(key) && obj[key]) {
-          classNames.push(key);
-        }
-      }
-
-      return classNames.join(' ');
-    }
-
-    Polymer({
-
-      is: 'paper-toolbar',
-
-      hostAttributes: {
-        'role': 'toolbar'
-      },
-
-      properties: {
-
-        /**
-         * Controls how the items are aligned horizontally when they are placed
-         * at the bottom.
-         * Options are `start`, `center`, `end`, `justified` and `around`.
-         *
-         * @attribute bottomJustify
-         * @type string
-         * @default ''
-         */
-        bottomJustify: {
-          type: String,
-          value: ''
-        },
-
-        /**
-         * Controls how the items are aligned horizontally.
-         * Options are `start`, `center`, `end`, `justified` and `around`.
-         *
-         * @attribute justify
-         * @type string
-         * @default ''
-         */
-        justify: {
-          type: String,
-          value: ''
-        },
-
-        /**
-         * Controls how the items are aligned horizontally when they are placed
-         * in the middle.
-         * Options are `start`, `center`, `end`, `justified` and `around`.
-         *
-         * @attribute middleJustify
-         * @type string
-         * @default ''
-         */
-        middleJustify: {
-          type: String,
-          value: ''
-        }
-
-      },
-
-      attached: function() {
-        this._observer = this._observe(this);
-        this._updateAriaLabelledBy();
-      },
-
-      detached: function() {
-        if (this._observer) {
-          this._observer.disconnect();
-        }
-      },
-
-      _observe: function(node) {
-        var observer = new MutationObserver(function() {
-          this._updateAriaLabelledBy();
-        }.bind(this));
-        observer.observe(node, {
-          childList: true,
-          subtree: true
-        });
-        return observer;
-      },
-
-      _updateAriaLabelledBy: function() {
-        var labelledBy = [];
-        var contents = Polymer.dom(this.root).querySelectorAll('content');
-        for (var content, index = 0; content = contents[index]; index++) {
-          var nodes = Polymer.dom(content).getDistributedNodes();
-          for (var node, jndex = 0; node = nodes[jndex]; jndex++) {
-            if (node.classList && node.classList.contains('title')) {
-              if (node.id) {
-                labelledBy.push(node.id);
-              } else {
-                var id = 'paper-toolbar-label-' + Math.floor(Math.random() * 10000);
-                node.id = id;
-                labelledBy.push(id);
-              }
-            }
-          }
-        }
-        if (labelledBy.length > 0) {
-          this.setAttribute('aria-labelledby', labelledBy.join(' '));
-        }
-      },
-
-      _computeBarClassName: function(barJustify) {
-        var classObj = {
-          center: true,
-          horizontal: true,
-          layout: true,
-          'toolbar-tools': true
-        };
-
-        // If a blank string or any falsy value is given, no other class name is
-        // added.
-        if (barJustify) {
-          var justifyClassName = (barJustify === 'justified') ?
-              barJustify :
-              barJustify + '-justified';
-
-          classObj[justifyClassName] = true;
-        }
-
-        return classNames(classObj);
-      }
-
-    });
-
-  }());
-
-</script>
-<dom-module id="paper-menu" assetpath="bower_components/paper-menu/">
-
-  <style>
-
-    :host {
-      display: block;
-      padding: 8px 0;
-
-      background: var(--paper-menu-background-color, --primary-background-color);
-      color: var(--paper-menu-color, --primary-text-color);
-
-      @apply(--paper-menu);
-    }
-
-    /* need a wrapper element to make this higher specificity than the :host rule in paper-item */
-    .content > ::content > .iron-selected {
-      font-weight: bold;
-
-      @apply(--paper-menu-selected-item);
-    }
-
-    .content > ::content > [disabled] {
-      color: var(--paper-menu-disabled-color, --disabled-text-color);
-    }
-
-    .content > ::content > *:focus {
-      position: relative;
-      outline: 0;
-
-      @apply(--paper-menu-colored-focused-item);
-    }
-
-    .content > ::content > *:focus:after {
-      @apply(--layout-fit);
-      background: currentColor;
-      /* FIXME move to paper-styles for next widget */
-      opacity: 0.12;
-      content: '';
-
-      @apply(--paper-menu-colored-focused-item-after);
-    }
-
-    .content > ::content > *[colored]:focus:after {
-      opacity: 0.26;
-    }
-
-  </style>
-
-  <template>
-
-    <div class="content">
-      <content></content>
-    </div>
-
-  </template>
-
-</dom-module>
-
-<script>
-
-(function() {
-
-  Polymer({
-
-    is: 'paper-menu',
-
-    behaviors: [
-      Polymer.IronMenuBehavior
-    ]
-
-  });
-
-})();
-
-</script>
-<dom-module id="paper-item" assetpath="bower_components/paper-item/">
-
-  <style>
-/*
-    @license
-    Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-    Code distributed by Google as part of the polymer project is also
-    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-*/
-
-:host {
-  display: block;
-  min-height: var(--paper-item-min-height, 48px);
-  padding: 0px 16px;
-}
-
-:host > ::content > *:not(:first-child):not(:last-child) {
-  margin-right: 16px;
-}
-
-</style>
-
-  <style>
-
-    :host {
-      @apply(--layout-horizontal);
-      @apply(--layout-center);
-      @apply(--paper-font-subhead);
-
-      @apply(--paper-item);
-    }
-
-  </style>
-
-  <template>
-    <content></content>
-  </template>
-
-</dom-module>
-
-<script>
-
-(function() {
-
-  Polymer({
-
-    is: 'paper-item',
-
-    hostAttributes: {
-      role: 'listitem'
-    }
-
-  });
-
-})();
-
-</script>
-<dom-module id="paper-icon-item" assetpath="bower_components/paper-item/">
-
-  <style>
-/*
-    @license
-    Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-    Code distributed by Google as part of the polymer project is also
-    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-*/
-
-:host {
-  display: block;
-  min-height: var(--paper-item-min-height, 48px);
-  padding: 0px 16px;
-}
-
-:host > ::content > *:not(:first-child):not(:last-child) {
-  margin-right: 16px;
-}
-
-</style>
-
-  <style>
-
-    :host {
-      @apply(--layout-horizontal);
-      @apply(--layout-center);
-      @apply(--paper-font-subhead);
-
-      @apply(--paper-item);
-      @apply(--paper-icon-item);
-    }
-
-    .content-icon {
-      width: var(--paper-item-icon-width, 56px);
-    }
-
-  </style>
-
-  <template>
-    <div id="contentIcon" class="content-icon layout horizontal center">
-      <content select="[item-icon]"></content>
-    </div>
-    <content></content>
-  </template>
-
-</dom-module>
-
-<script>
-
-(function() {
-
-  Polymer({
-
-    is: 'paper-icon-item',
-
-    hostAttributes: {
-      'role': 'listitem'
-    }
-
-  });
-
-})();
-
-</script>
 <dom-module id="paper-icon-button" assetpath="bower_components/paper-icon-button/">
   <style>
 
@@ -21584,6 +20708,302 @@ iron-selector:not(.narrow-layout) #main ::content [paper-drawer-toggle] {
   }
 
 })();
+
+</script>
+<dom-module id="paper-toolbar" assetpath="bower_components/paper-toolbar/">
+
+  <style>
+    :host {
+      /* technical */
+      display: block;
+      position: relative;
+      box-sizing: border-box;
+      -moz-box-sizing: border-box;
+
+      /* size */
+      height: 64px;
+
+      background: var(--paper-toolbar-background, --default-primary-color);
+      color: var(--paper-toolbar-color, --text-primary-color);
+
+      @apply(--paper-toolbar);
+    }
+
+    :host(.animate) {
+      /* transition */
+      transition: height 0.18s ease-in;
+    }
+
+    :host(.medium-tall) {
+      height: 128px;
+    }
+
+    :host(.tall) {
+      height: 192px;
+    }
+
+    .toolbar-tools {
+      position: relative;
+      height: 64px;
+      padding: 0 16px;
+      pointer-events: none;
+    }
+
+    /*
+     * TODO: Where should media query breakpoints live so they can be shared between elements?
+     */
+
+    @media (max-width: 639px) {
+      :host {
+        height: 56px;
+      }
+
+      :host(.medium-tall) {
+        height: 112px;
+      }
+
+      :host(.tall) {
+        height: 168px;
+      }
+
+      .toolbar-tools {
+        height: 56px;
+      }
+    }
+
+    #topBar {
+      position: relative;
+    }
+
+    /* middle bar */
+    #middleBar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+    }
+
+    :host(.tall) #middleBar,
+    :host(.medium-tall) #middleBar {
+      -webkit-transform: translateY(100%);
+      transform: translateY(100%);
+    }
+
+    /* bottom bar */
+    #bottomBar {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+    /*
+     * make elements (e.g. buttons) respond to mouse/touch events
+     *
+     * `.toolbar-tools` disables touch events so multiple toolbars can stack and not
+     * absorb events. All children must have pointer events re-enabled to work as
+     * expected.
+     */
+    .toolbar-tools > ::content > *:not([disabled]) {
+      pointer-events: auto;
+    }
+
+    .toolbar-tools > ::content .title {
+      @apply(--paper-font-title);
+      @apply(--layout-flex);
+
+      pointer-events: none;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+
+      /*
+       * Polymer/polymer/issues/1525
+       * --paper-font-title defines a `font-weight`
+       * let's override its value, but we need `important!`
+       * because all mixins are resolved in rule's selector that has higher precedence
+       * than the current selector.
+       */
+      font-weight: 400 !important;
+    }
+
+    /**
+     * TODO: Refactor these selectors
+     * Work in progress.
+     */
+    .toolbar-tools > ::content paper-icon-button[icon=menu] {
+      margin-right: 24px;
+    }
+
+    .toolbar-tools > ::content > .title,
+    .toolbar-tools > ::content[select=".middle"] > .title,
+    .toolbar-tools > ::content[select=".bottom"] > .title {
+      margin-left: 56px;
+    }
+
+    .toolbar-tools > ::content > paper-icon-button + .title,
+    .toolbar-tools > ::content[select=".middle"] paper-icon-button + .title,
+    .toolbar-tools > ::content[select=".bottom"] paper-icon-button + .title {
+      margin-left: 0;
+    }
+  </style>
+
+  <template>
+
+    <div id="topBar" class$="[[_computeBarClassName(justify)]]">
+      <content select=":not(.middle):not(.bottom)"></content>
+    </div>
+
+    <div id="middleBar" class$="[[_computeBarClassName(middleJustify)]]">
+      <content select=".middle"></content>
+    </div>
+
+    <div id="bottomBar" class$="[[_computeBarClassName(bottomJustify)]]">
+      <content select=".bottom"></content>
+    </div>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  (function() {
+
+    'use strict';
+
+    function classNames(obj) {
+      var classNames = [];
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key) && obj[key]) {
+          classNames.push(key);
+        }
+      }
+
+      return classNames.join(' ');
+    }
+
+    Polymer({
+
+      is: 'paper-toolbar',
+
+      hostAttributes: {
+        'role': 'toolbar'
+      },
+
+      properties: {
+
+        /**
+         * Controls how the items are aligned horizontally when they are placed
+         * at the bottom.
+         * Options are `start`, `center`, `end`, `justified` and `around`.
+         *
+         * @attribute bottomJustify
+         * @type string
+         * @default ''
+         */
+        bottomJustify: {
+          type: String,
+          value: ''
+        },
+
+        /**
+         * Controls how the items are aligned horizontally.
+         * Options are `start`, `center`, `end`, `justified` and `around`.
+         *
+         * @attribute justify
+         * @type string
+         * @default ''
+         */
+        justify: {
+          type: String,
+          value: ''
+        },
+
+        /**
+         * Controls how the items are aligned horizontally when they are placed
+         * in the middle.
+         * Options are `start`, `center`, `end`, `justified` and `around`.
+         *
+         * @attribute middleJustify
+         * @type string
+         * @default ''
+         */
+        middleJustify: {
+          type: String,
+          value: ''
+        }
+
+      },
+
+      attached: function() {
+        this._observer = this._observe(this);
+        this._updateAriaLabelledBy();
+      },
+
+      detached: function() {
+        if (this._observer) {
+          this._observer.disconnect();
+        }
+      },
+
+      _observe: function(node) {
+        var observer = new MutationObserver(function() {
+          this._updateAriaLabelledBy();
+        }.bind(this));
+        observer.observe(node, {
+          childList: true,
+          subtree: true
+        });
+        return observer;
+      },
+
+      _updateAriaLabelledBy: function() {
+        var labelledBy = [];
+        var contents = Polymer.dom(this.root).querySelectorAll('content');
+        for (var content, index = 0; content = contents[index]; index++) {
+          var nodes = Polymer.dom(content).getDistributedNodes();
+          for (var node, jndex = 0; node = nodes[jndex]; jndex++) {
+            if (node.classList && node.classList.contains('title')) {
+              if (node.id) {
+                labelledBy.push(node.id);
+              } else {
+                var id = 'paper-toolbar-label-' + Math.floor(Math.random() * 10000);
+                node.id = id;
+                labelledBy.push(id);
+              }
+            }
+          }
+        }
+        if (labelledBy.length > 0) {
+          this.setAttribute('aria-labelledby', labelledBy.join(' '));
+        }
+      },
+
+      _computeBarClassName: function(barJustify) {
+        var classObj = {
+          center: true,
+          horizontal: true,
+          layout: true,
+          'toolbar-tools': true
+        };
+
+        // If a blank string or any falsy value is given, no other class name is
+        // added.
+        if (barJustify) {
+          var justifyClassName = (barJustify === 'justified') ?
+              barJustify :
+              barJustify + '-justified';
+
+          classObj[justifyClassName] = true;
+        }
+
+        return classNames(classObj);
+      }
+
+    });
+
+  }());
 
 </script>
 <dom-module id="partial-base" assetpath="layouts/">
@@ -24039,6 +23459,81 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     _ariaDescribedByChanged: function(ariaDescribedBy) {
       this.$.input.textarea.setAttribute('aria-describedby', ariaDescribedBy);
     }
+
+  });
+
+})();
+
+</script>
+<dom-module id="paper-menu" assetpath="bower_components/paper-menu/">
+
+  <style>
+
+    :host {
+      display: block;
+      padding: 8px 0;
+
+      background: var(--paper-menu-background-color, --primary-background-color);
+      color: var(--paper-menu-color, --primary-text-color);
+
+      @apply(--paper-menu);
+    }
+
+    /* need a wrapper element to make this higher specificity than the :host rule in paper-item */
+    .content > ::content > .iron-selected {
+      font-weight: bold;
+
+      @apply(--paper-menu-selected-item);
+    }
+
+    .content > ::content > [disabled] {
+      color: var(--paper-menu-disabled-color, --disabled-text-color);
+    }
+
+    .content > ::content > *:focus {
+      position: relative;
+      outline: 0;
+
+      @apply(--paper-menu-colored-focused-item);
+    }
+
+    .content > ::content > *:focus:after {
+      @apply(--layout-fit);
+      background: currentColor;
+      /* FIXME move to paper-styles for next widget */
+      opacity: 0.12;
+      content: '';
+
+      @apply(--paper-menu-colored-focused-item-after);
+    }
+
+    .content > ::content > *[colored]:focus:after {
+      opacity: 0.26;
+    }
+
+  </style>
+
+  <template>
+
+    <div class="content">
+      <content></content>
+    </div>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+(function() {
+
+  Polymer({
+
+    is: 'paper-menu',
+
+    behaviors: [
+      Polymer.IronMenuBehavior
+    ]
 
   });
 
@@ -28148,6 +27643,514 @@ paper-ripple {
   });
 })();
 </script>
+<dom-module id="paper-header-panel" assetpath="bower_components/paper-header-panel/">
+
+  <style>
+    :host {
+      @apply(--layout);
+      @apply(--layout-vertical);
+
+      display: block;
+      position: relative;
+      height: 100%;
+
+      /* Create a stack context, we will need it for the shadow*/
+      z-index: 0;
+    }
+
+    :root {
+      /**
+       * Default paper header panel shadow
+       */
+      --paper-header-panel-shadow: {
+        height: 6px;
+        bottom: -6px;
+        box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.4);
+      };
+    }
+
+    #mainContainer {
+      @apply(--layout-flex);
+
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      flex-basis: 0.0001px;
+    }
+
+    /*
+     * mode: scroll
+     */
+    :host([mode=scroll]) #mainContainer {
+      @apply(--paper-header-panel-scroll-container);
+      overflow: visible;
+    }
+
+    :host([mode=scroll]) {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /*
+     * mode: cover
+     */
+    :host([mode=cover]) #mainContainer {
+      @apply(--paper-header-panel-cover-container);
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+    /*
+     * mode: standard
+     */
+    :host([mode=standard]) #mainContainer {
+      @apply(--paper-header-panel-standard-container);
+    }
+
+    /*
+     * mode: waterfall
+     */
+    :host([mode=waterfall]) #mainContainer {
+      @apply(--paper-header-panel-waterfall-container);
+    }
+
+    /*
+     * mode: waterfall-tall
+     */
+    :host([mode=waterfall-tall]) #mainContainer {
+      @apply(--paper-header-panel-waterfall-tall-container);
+    }
+
+    :host ::content paper-toolbar,
+    :host ::content .paper-header {
+      position: relative;
+      overflow: visible !important;
+    }
+
+    :host ::content paper-toolbar:after,
+    :host ::content .paper-header:after {
+      @apply(--paper-header-panel-shadow);
+
+      -webkit-transition: opacity 0.5s, -webkit-transform 0.5s;
+      transition: opacity 0.5s, transform 0.5s;
+
+      opacity: 0;
+      content: "";
+
+      width: 100%;
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      z-index: 1;
+
+      -webkit-transform: scale3d(1, 0, 1);
+      -webkit-transform-origin: 0% 0%;
+
+      transform: scale3d(1, 0, 1);
+      transform-origin: 0% 0%;
+    }
+
+    :host ::content paper-toolbar.has-shadow:after,
+    :host ::content .paper-header.has-shadow:after {
+      opacity: 1;
+      -webkit-transform: scale3d(1, 1, 1);
+      transform: scale3d(1, 1, 1);
+    }
+  </style>
+
+  <template>
+    <content id="headerContent" select="paper-toolbar, .paper-header"></content>
+    <div id="mainContainer" class$="[[_computeMainContainerClass(mode)]]">
+      <content id="mainContent" select="*"></content>
+    </div>
+  </template>
+
+</dom-module>
+
+<script>
+
+  (function() {
+
+    'use strict';
+
+    var SHADOW_WHEN_SCROLLING = 1;
+    var SHADOW_ALWAYS = 2;
+
+
+    var MODE_CONFIGS = {
+
+      outerScroll: {
+        scroll: true
+      },
+
+      shadowMode: {
+        standard: SHADOW_ALWAYS,
+        waterfall: SHADOW_WHEN_SCROLLING,
+        'waterfall-tall': SHADOW_WHEN_SCROLLING
+      },
+
+      tallMode: {
+        'waterfall-tall': true
+      }
+    };
+
+    Polymer({
+
+      is: 'paper-header-panel',
+
+      /**
+       * Fired when the content has been scrolled.  `event.detail.target` returns
+       * the scrollable element which you can use to access scroll info such as
+       * `scrollTop`.
+       *
+       *     <paper-header-panel on-content-scroll="{{scrollHandler}}">
+       *       ...
+       *     </paper-header-panel>
+       *
+       *
+       *     scrollHandler: function(event) {
+       *       var scroller = event.detail.target;
+       *       console.log(scroller.scrollTop);
+       *     }
+       *
+       * @event content-scroll
+       */
+
+      properties: {
+
+        /**
+         * Controls header and scrolling behavior. Options are
+         * `standard`, `seamed`, `waterfall`, `waterfall-tall`, `scroll` and
+         * `cover`. Default is `standard`.
+         *
+         * `standard`: The header is a step above the panel. The header will consume the
+         * panel at the point of entry, preventing it from passing through to the
+         * opposite side.
+         *
+         * `seamed`: The header is presented as seamed with the panel.
+         *
+         * `waterfall`: Similar to standard mode, but header is initially presented as
+         * seamed with panel, but then separates to form the step.
+         *
+         * `waterfall-tall`: The header is initially taller (`tall` class is added to
+         * the header).  As the user scrolls, the header separates (forming an edge)
+         * while condensing (`tall` class is removed from the header).
+         *
+         * `scroll`: The header keeps its seam with the panel, and is pushed off screen.
+         *
+         * `cover`: The panel covers the whole `paper-header-panel` including the
+         * header. This allows user to style the panel in such a way that the panel is
+         * partially covering the header.
+         *
+         *     <paper-header-panel mode="cover">
+         *       <paper-toolbar class="tall">
+         *         <core-icon-button icon="menu"></core-icon-button>
+         *       </paper-toolbar>
+         *       <div class="content"></div>
+         *     </paper-header-panel>
+         */
+        mode: {
+          type: String,
+          value: 'standard',
+          observer: '_modeChanged',
+          reflectToAttribute: true
+        },
+
+        /**
+         * If true, the drop-shadow is always shown no matter what mode is set to.
+         */
+        shadow: {
+          type: Boolean,
+          value: false
+        },
+
+        /**
+         * The class used in waterfall-tall mode.  Change this if the header
+         * accepts a different class for toggling height, e.g. "medium-tall"
+         */
+        tallClass: {
+          type: String,
+          value: 'tall'
+        },
+
+        /**
+         * If true, the scroller is at the top
+         */
+        atTop: {
+          type: Boolean,
+          value: true,
+          readOnly: true
+        }
+      },
+
+      observers: [
+        '_computeDropShadowHidden(atTop, mode, shadow)'
+      ],
+
+      ready: function() {
+        this.scrollHandler = this._scroll.bind(this);
+        this._addListener();
+
+        // Run `scroll` logic once to initialze class names, etc.
+        this._keepScrollingState();
+      },
+
+      detached: function() {
+        this._removeListener();
+      },
+
+      /**
+       * Returns the header element
+       *
+       * @property header
+       * @type Object
+       */
+      get header() {
+        return Polymer.dom(this.$.headerContent).getDistributedNodes()[0];
+      },
+
+      /**
+       * Returns the scrollable element.
+       *
+       * @property scroller
+       * @type Object
+       */
+      get scroller() {
+        return this._getScrollerForMode(this.mode);
+      },
+
+      /**
+       * Returns true if the scroller has a visible shadow.
+       *
+       * @property visibleShadow
+       * @type Boolean
+       */
+      get visibleShadow() {
+        return this.header.classList.contains('has-shadow');
+      },
+
+      _computeDropShadowHidden: function(atTop, mode, shadow) {
+
+        var shadowMode = MODE_CONFIGS.shadowMode[mode];
+
+        if (this.shadow) {
+          this.toggleClass('has-shadow', true, this.header);
+
+        } else if (shadowMode === SHADOW_ALWAYS) {
+          this.toggleClass('has-shadow', true, this.header);
+
+        } else if (shadowMode === SHADOW_WHEN_SCROLLING && !atTop) {
+          this.toggleClass('has-shadow', true, this.header);
+
+        } else {
+          this.toggleClass('has-shadow', false, this.header);
+
+        }
+      },
+
+      _computeMainContainerClass: function(mode) {
+        // TODO:  It will be useful to have a utility for classes
+        // e.g. Polymer.Utils.classes({ foo: true });
+
+        var classes = {};
+
+        classes['flex'] = mode !== 'cover';
+
+        return Object.keys(classes).filter(
+          function(className) {
+            return classes[className];
+          }).join(' ');
+      },
+
+      _addListener: function() {
+        this.scroller.addEventListener('scroll', this.scrollHandler, false);
+      },
+
+      _removeListener: function() {
+        this.scroller.removeEventListener('scroll', this.scrollHandler);
+      },
+
+      _modeChanged: function(newMode, oldMode) {
+        var configs = MODE_CONFIGS;
+        var header = this.header;
+        var animateDuration = 200;
+
+        if (header) {
+          // in tallMode it may add tallClass to the header; so do the cleanup
+          // when mode is changed from tallMode to not tallMode
+          if (configs.tallMode[oldMode] && !configs.tallMode[newMode]) {
+            header.classList.remove(this.tallClass);
+            this.async(function() {
+              header.classList.remove('animate');
+            }, animateDuration);
+          } else {
+            header.classList.toggle('animate', configs.tallMode[newMode]);
+          }
+        }
+        this._keepScrollingState();
+      },
+
+      _keepScrollingState: function () {
+        var main = this.scroller;
+        var header = this.header;
+
+        this._setAtTop(main.scrollTop === 0);
+
+        if (header && MODE_CONFIGS.tallMode[this.mode]) {
+          this.toggleClass(this.tallClass, this.atTop ||
+              header.classList.contains(this.tallClass) &&
+              main.scrollHeight < this.offsetHeight, header);
+        }
+      },
+
+      _scroll: function(e) {
+        this._keepScrollingState();
+        this.fire('content-scroll', {target: this.scroller}, {bubbles: false});
+      },
+
+      _getScrollerForMode: function(mode) {
+        return MODE_CONFIGS.outerScroll[mode] ?
+            this : this.$.mainContainer;
+      }
+
+    });
+
+  })();
+
+</script>
+<dom-module id="paper-item" assetpath="bower_components/paper-item/">
+
+  <style>
+/*
+    @license
+    Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: block;
+  min-height: var(--paper-item-min-height, 48px);
+  padding: 0px 16px;
+}
+
+:host > ::content > *:not(:first-child):not(:last-child) {
+  margin-right: 16px;
+}
+
+</style>
+
+  <style>
+
+    :host {
+      @apply(--layout-horizontal);
+      @apply(--layout-center);
+      @apply(--paper-font-subhead);
+
+      @apply(--paper-item);
+    }
+
+  </style>
+
+  <template>
+    <content></content>
+  </template>
+
+</dom-module>
+
+<script>
+
+(function() {
+
+  Polymer({
+
+    is: 'paper-item',
+
+    hostAttributes: {
+      role: 'listitem'
+    }
+
+  });
+
+})();
+
+</script>
+<dom-module id="paper-icon-item" assetpath="bower_components/paper-item/">
+
+  <style>
+/*
+    @license
+    Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: block;
+  min-height: var(--paper-item-min-height, 48px);
+  padding: 0px 16px;
+}
+
+:host > ::content > *:not(:first-child):not(:last-child) {
+  margin-right: 16px;
+}
+
+</style>
+
+  <style>
+
+    :host {
+      @apply(--layout-horizontal);
+      @apply(--layout-center);
+      @apply(--paper-font-subhead);
+
+      @apply(--paper-item);
+      @apply(--paper-icon-item);
+    }
+
+    .content-icon {
+      width: var(--paper-item-icon-width, 56px);
+    }
+
+  </style>
+
+  <template>
+    <div id="contentIcon" class="content-icon layout horizontal center">
+      <content select="[item-icon]"></content>
+    </div>
+    <content></content>
+  </template>
+
+</dom-module>
+
+<script>
+
+(function() {
+
+  Polymer({
+
+    is: 'paper-icon-item',
+
+    hostAttributes: {
+      'role': 'listitem'
+    }
+
+  });
+
+})();
+
+</script>
 <iron-iconset-svg name="notification" size="24">
 <svg><defs>
 <g id="adb"><path d="M5 16c0 3.87 3.13 7 7 7s7-3.13 7-7v-4H5v4zM16.12 4.37l2.1-2.1-.82-.83-2.3 2.31C14.16 3.28 13.12 3 12 3s-2.16.28-3.09.75L6.6 1.44l-.82.83 2.1 2.1C6.14 5.64 5 7.68 5 10v1h14v-1c0-2.32-1.14-4.36-2.88-5.63zM9 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"></path></g>
@@ -28246,7 +28249,7 @@ paper-ripple {
     },
   });
 </script>
-<dom-module id="home-assistant-main" assetpath="layouts/">
+<dom-module id="ha-sidebar" assetpath="components/">
   <style>
     .sidenav {
       background: #fafafa;
@@ -28282,61 +28285,157 @@ paper-ripple {
   </style>
 
   <template>
+    <paper-header-panel mode="scroll" class="sidenav fit">
+      <paper-toolbar>
+        
+        <paper-icon-button hidden=""></paper-icon-button>
+        <div class="title">Home Assistant</div>
+      </paper-toolbar>
+
+      <paper-menu id="menu" selectable="[data-panel]" attr-for-selected="data-panel" on-iron-select="menuSelect" selected="[[selected]]">
+        <paper-icon-item data-panel="states">
+          <iron-icon item-icon="" icon="apps"></iron-icon> States
+        </paper-icon-item>
+
+        <template is="dom-repeat" items="{{possibleFilters}}">
+          <paper-icon-item data-panel$="[[filterType(item)]]">
+            <iron-icon item-icon="" icon="[[filterIcon(item)]]"></iron-icon>
+            <span>[[filterName(item)]]</span>
+          </paper-icon-item>
+        </template>
+
+        <template is="dom-if" if="[[hasHistoryComponent]]">
+          <paper-icon-item data-panel="history">
+            <iron-icon item-icon="" icon="assessment"></iron-icon>
+            History
+          </paper-icon-item>
+        </template>
+
+        <template is="dom-if" if="[[hasLogbookComponent]]">
+          <paper-icon-item data-panel="logbook">
+            <iron-icon item-icon="" icon="list"></iron-icon>
+            Logbook
+          </paper-icon-item>
+        </template>
+
+        <paper-icon-item data-panel="logout" class="logout">
+          <iron-icon item-icon="" icon="exit-to-app"></iron-icon>
+          Log Out
+        </paper-icon-item>
+
+        <paper-item class="divider horizontal layout justified">
+          <div>Streaming updates</div>
+          <stream-status></stream-status>
+        </paper-item>
+
+        <div class="text label divider">Developer Tools</div>
+        <div class="dev-tools layout horizontal justified">
+          <paper-icon-button icon="settings-remote" data-panel="devService" on-click="handleDevClick"></paper-icon-button>
+          <paper-icon-button icon="settings-ethernet" data-panel="devState" on-click="handleDevClick"></paper-icon-button>
+          <paper-icon-button icon="settings-input-antenna" data-panel="devEvent" on-click="handleDevClick"></paper-icon-button>
+        </div>
+      </paper-menu>
+    </paper-header-panel>
+
+  </template>
+</dom-module>
+
+<script>
+(function() {
+  var configGetters = window.hass.configGetters;
+  var entityGetters = window.hass.entityGetters;
+  var navigationGetters = window.hass.navigationGetters;
+
+  var authActions = window.hass.authActions;
+  var navigationActions = window.hass.navigationActions;
+
+  var uiUtil = window.hass.uiUtil;
+  var entityDomainFilters = window.hass.util.entityDomainFilters;
+
+  Polymer({
+    is: 'ha-sidebar',
+
+    behaviors: [nuclearObserver],
+
+    properties: {
+      selected: {
+        type: String,
+        bindNuclear: [
+          navigationGetters.activePane,
+          navigationGetters.activeFilter,
+          function(pane, filter) {
+            return filter ? pane + '/' + filter : pane;
+          },
+        ],
+      },
+
+      possibleFilters: {
+        type: Array,
+        value: [],
+        bindNuclear: [
+          navigationGetters.possibleEntityDomainFilters,
+          function(domains) { return domains.toArray(); }
+        ],
+      },
+
+      hasHistoryComponent: {
+        type: Boolean,
+        bindNuclear: configGetters.isComponentLoaded('history'),
+      },
+
+      hasLogbookComponent: {
+        type: Boolean,
+        bindNuclear: configGetters.isComponentLoaded('logbook'),
+      },
+    },
+
+    menuSelect: function(ev, detail, sender) {
+      this.selectPanel(this.$.menu.selected);
+    },
+
+    handleDevClick: function(ev, detail, sender) {
+      // prevent it from highlighting first menu item
+      document.activeElement.blur();
+      this.selectPanel(ev.target.parentElement.dataset.panel);
+    },
+
+    selectPanel: function(newChoice) {
+      if (newChoice == 'logout') {
+        this.handleLogOut();
+        return;
+      } else if(newChoice == this.selected) {
+        return;
+      }
+
+      navigationActions.navigate.apply(
+        null, newChoice.split('/'));
+    },
+
+    handleLogOut: function() {
+      authActions.logOut();
+    },
+
+    filterIcon: function(filter) {
+      return uiUtil.domainIcon(filter);
+    },
+
+    filterName: function(filter) {
+      return entityDomainFilters[filter];
+    },
+
+    filterType: function(filter) {
+      return 'states/' + filter;
+    },
+  });
+})();
+</script>
+<dom-module id="home-assistant-main" assetpath="layouts/">
+  <template>
     <notification-manager></notification-manager>
     <modal-manager></modal-manager>
 
     <paper-drawer-panel id="drawer" narrow="{{narrow}}">
-      <paper-header-panel mode="scroll" drawer="" class="sidenav fit">
-        <paper-toolbar>
-          
-          <paper-icon-button hidden=""></paper-icon-button>
-          <div class="title">Home Assistant</div>
-        </paper-toolbar>
-
-        <paper-menu id="menu" selectable="[data-panel]" attr-for-selected="data-panel" on-iron-select="menuSelect" selected="[[selected]]">
-          <paper-icon-item data-panel="states">
-            <iron-icon item-icon="" icon="apps"></iron-icon> States
-          </paper-icon-item>
-
-          <template is="dom-repeat" items="{{possibleFilters}}">
-            <paper-icon-item data-panel$="[[filterType(item)]]">
-              <iron-icon item-icon="" icon="[[filterIcon(item)]]"></iron-icon>
-              <span>[[filterName(item)]]</span>
-            </paper-icon-item>
-          </template>
-
-          <template is="dom-if" if="[[hasHistoryComponent]]">
-            <paper-icon-item data-panel="history">
-              <iron-icon item-icon="" icon="assessment"></iron-icon>
-              History
-            </paper-icon-item>
-          </template>
-
-          <template is="dom-if" if="[[hasLogbookComponent]]">
-            <paper-icon-item data-panel="logbook">
-              <iron-icon item-icon="" icon="list"></iron-icon>
-              Logbook
-            </paper-icon-item>
-          </template>
-
-          <paper-icon-item data-panel="logout" class="logout">
-            <iron-icon item-icon="" icon="exit-to-app"></iron-icon>
-            Log Out
-          </paper-icon-item>
-
-          <paper-item class="divider horizontal layout justified">
-            <div>Streaming updates</div>
-            <stream-status></stream-status>
-          </paper-item>
-
-          <div class="text label divider">Developer Tools</div>
-          <div class="dev-tools layout horizontal justified">
-            <paper-icon-button icon="settings-remote" data-panel="devService" on-click="handleDevClick"></paper-icon-button>
-            <paper-icon-button icon="settings-ethernet" data-panel="devState" on-click="handleDevClick"></paper-icon-button>
-            <paper-icon-button icon="settings-input-antenna" data-panel="devEvent" on-click="handleDevClick"></paper-icon-button>
-          </div>
-        </paper-menu>
-      </paper-header-panel>
+      <ha-sidebar drawer=""></ha-sidebar>
 
       <template is="dom-if" if="[[isSelectedStates]]">
         <partial-states main="" narrow="[[narrow]]">
@@ -28396,25 +28495,6 @@ paper-ripple {
         observer: 'selectedChanged',
       },
 
-      possibleFilters: {
-        type: Array,
-        value: [],
-        bindNuclear: [
-          navigationGetters.possibleEntityDomainFilters,
-          function(domains) { return domains.toArray(); }
-        ],
-      },
-
-      hasHistoryComponent: {
-        type: Boolean,
-        bindNuclear: configGetters.isComponentLoaded('history'),
-      },
-
-      hasLogbookComponent: {
-        type: Boolean,
-        bindNuclear: configGetters.isComponentLoaded('logbook'),
-      },
-
       isSelectedStates: {
         type: Boolean,
         bindNuclear: navigationGetters.isActivePane('states'),
@@ -28447,32 +28527,7 @@ paper-ripple {
     },
 
     listeners: {
-      'menu.core-select': 'menuSelect',
       'open-menu': 'openDrawer',
-    },
-
-    menuSelect: function(ev, detail, sender) {
-      this.selectPanel(this.$.menu.selected);
-    },
-
-    handleDevClick: function(ev, detail, sender) {
-      // prevent it from highlighting first menu item
-      document.activeElement.blur();
-      this.selectPanel(ev.target.parentElement.dataset.panel);
-    },
-
-    selectPanel: function(newChoice) {
-      if (newChoice == 'logout') {
-        this.handleLogOut();
-        return;
-      } else if(newChoice == this.selected) {
-        return;
-      }
-
-      this.closeDrawer();
-
-      navigationActions.navigate.apply(
-        null, newChoice.split('/'));
     },
 
     openDrawer: function() {
@@ -28483,30 +28538,16 @@ paper-ripple {
       this.$.drawer.closeDrawer();
     },
 
-    handleLogOut: function() {
-      authActions.logOut();
-    },
-
-    filterIcon: function(filter) {
-      return uiUtil.domainIcon(filter);
-    },
-
-    filterName: function(filter) {
-      return entityDomainFilters[filter];
-    },
-
-    filterType: function(filter) {
-      return 'states/' + filter;
-    },
-
     hashChanged: function(ev) {
       var parts = ev.newURL.split('#');
       if (parts[1]) {
-        this.selectPanel(parts[1]);
+        navigationActions.navigate.apply(
+          null, parts[1].split('/'));
       }
     },
 
     selectedChanged: function(newVal) {
+      this.closeDrawer();
       window.location.hash = newVal;
     },
 
@@ -28570,14 +28611,8 @@ paper-ripple {
       },
       loaded: {
         type: Boolean,
-        value: false,
-        observer: 'loadedChanged',
         bindNuclear: syncGetters.isDataLoaded,
       },
-    },
-
-    loadedChanged: function(newVal, oldVal) {
-      console.log("Loaded changed", newVal);
     },
 
     ready: function() {
@@ -28588,7 +28623,7 @@ paper-ripple {
       if(this.auth) {
         uiActions.validateAuth(this.auth, false);
       } else if (uiPreferences.authToken) {
-        uiActions.validateAuth(uiPreferences.authToken, false);
+        uiActions.validateAuth(uiPreferences.authToken, true);
       }
 
       uiPreferences.startSync();
