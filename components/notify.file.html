@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Device tracking - Home Assistant</title>
+    <title>File notification support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to setup device tracking within Home Assistant.">
+    <meta name="description" content="Instructions how to add file notifications to Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Device tracking">
+    <meta property="og:title" content="File notification support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/notify.file.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to setup device tracking within Home Assistant.">
+    <meta property="og:description" content="Instructions how to add file notifications to Home Assistant.">
     
     
     
@@ -99,40 +99,33 @@
   
   <header>
     <h1 class="title indent">
-      Device Tracking
+      File Notification Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers:</p>
+  <p><img src='/images/supported_brands/text-x-generic.png' class='brand pull-right' />
+The file platform allows you to store notifications from Home Assistant as a file.</p>
 
-<ul>
-<li><a href="/components/device_tracker.ddwrt.html">DD-WRT</a></li>
-<li><a href="/components/device_tracker.tomato.html">tomato</a></li>
-<li><a href="/components/device_tracker.netgear.html">netgear</a></li>
-<li><a href="/components/device_tracker.luci.html">luci (OpenWRT)</a></li>
-<li><a href="/components/device_tracker.tplink.html">TP-Link</a></li>
-</ul>
+<p>To enable file notifications in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
-
-<p>You can also decide to directly scan the network for devices by using the <a href="/components/device_tracker.nmap_scanner.html">nmap scanner</a>.</p>
-
-<p>To get started add the following lines to your <code>configuration.yaml</code> (example for Netgear):</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>device_tracker:
-</span><span class='line'>  platform: netgear
-</span><span class='line'>  host: 192.168.1.1
-</span><span class='line'>  username: admin
-</span><span class='line'>  password: MY_PASSWORD</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">file</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">filename</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">FILENAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">timestamp</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1 or 0</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>
+<p>Setting <code>timestamp</code> to 1 adds a timestamp to every entry.</p>
+
+<p>To use notifications, please see the <a href="/components/automation.html">getting started with automation page</a>.</p>
 
 
 </article>

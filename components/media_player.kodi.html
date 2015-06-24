@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Device tracking - Home Assistant</title>
+    <title>Kodi support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to setup device tracking within Home Assistant.">
+    <meta name="description" content="Instructions how to integrate Kodi into Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Device tracking">
+    <meta property="og:title" content="Kodi support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/media_player.kodi.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to setup device tracking within Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate Kodi into Home Assistant.">
     
     
     
@@ -99,40 +99,34 @@
   
   <header>
     <h1 class="title indent">
-      Device Tracking
+      Kodi Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers:</p>
+  <p><img src='/images/supported_brands/kodi.png' class='brand pull-right' />
+The kodi platform allows you to control a <a href="http://kodi.tv/">Kodi</a> multimedia system from Home Assistant.</p>
 
-<ul>
-<li><a href="/components/device_tracker.ddwrt.html">DD-WRT</a></li>
-<li><a href="/components/device_tracker.tomato.html">tomato</a></li>
-<li><a href="/components/device_tracker.netgear.html">netgear</a></li>
-<li><a href="/components/device_tracker.luci.html">luci (OpenWRT)</a></li>
-<li><a href="/components/device_tracker.tplink.html">TP-Link</a></li>
-</ul>
-
-
-<p>You can also decide to directly scan the network for devices by using the <a href="/components/device_tracker.nmap_scanner.html">nmap scanner</a>.</p>
-
-<p>To get started add the following lines to your <code>configuration.yaml</code> (example for Netgear):</p>
+<p>To add Kodi to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>device_tracker:
-</span><span class='line'>  platform: netgear
-</span><span class='line'>  host: 192.168.1.1
-</span><span class='line'>  username: admin
-</span><span class='line'>  password: MY_PASSWORD</span></code></pre></td></tr></table></div></figure>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
+</span><span class='line'>media_player:
+</span><span class='line'>  platform: kodi
+</span><span class='line'>  name: Kodi
+</span><span class='line'>  url: http://192.168.0.123/jsonrpc
+</span><span class='line'>  user: kodi
+</span><span class='line'>  password: my_secure_password</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>
+
 
 
 </article>

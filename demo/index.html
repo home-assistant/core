@@ -1,24 +1,34 @@
 <!doctype html>
 <html>
-<head>
-<title>Home Assistant</title>
-<meta name='mobile-web-app-capable' content='yes'>
-<link rel='shortcut icon' href='/images/favicon.ico' />
-<link rel='icon' type='image/png'      href='/images/favicon-192x192.png' sizes='192x192'>
-<meta name='viewport' content='width=device-width,       user-scalable=no, initial-scale=1.0,       minimum-scale=1.0, maximum-scale=1.0' />
-<meta name='theme-color' content='#03a9f4'>
-</head>
-<body fullbleed>
-<h3 id='init' align='center'>Initializing Home Assistant</h3>
-<script src='/demo/webcomponents.min.js'>
-</script>
-<link rel='import' href='/demo/frontend.html' />
-<home-assistant auth='password'></home-assistant>
-<script>
-  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
-  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-  s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <title>Home Assistant</title>
+
+    <link rel='manifest' href='/demo/manifest.json' />
+
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+    <meta name='mobile-web-app-capable' content='yes'>
+
+    <meta name='viewport' content='width=device-width,
+          user-scalable=no' />
+
+    <link rel='shortcut icon' href='/demo/favicon.ico' />
+    <link rel='icon' type='image/png'
+         href='/demo/favicon-192x192.png' sizes='192x192'>
+    <link rel='apple-touch-icon' sizes='180x180'
+         href='/demo/favicon-apple-180x180.png'>
+    <meta name='theme-color' content='#03a9f4'>
+  </head>
+  <body fullbleed>
+      <h3 id='init' align='center'>Initializing Home Assistant</h3>
+      <script src='/demo/webcomponents-lite.min.js'></script>
+      <link rel='import' href='/demo/frontend.html' />
+      <home-assistant auth='no_password_set'></home-assistant>
+      <script>
+        var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+      </script>
+  </body>
 </html>
