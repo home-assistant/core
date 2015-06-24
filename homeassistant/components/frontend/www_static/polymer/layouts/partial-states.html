@@ -81,7 +81,6 @@
 <script>
 (function(){
   var configGetters = window.hass.configGetters;
-  var entityGetters = window.hass.entityGetters;
   var navigationGetters = window.hass.navigationGetters;
   var voiceGetters = window.hass.voiceGetters;
   var streamGetters = window.hass.streamGetters;
@@ -90,7 +89,6 @@
 
   var syncActions = window.hass.syncActions;
   var voiceActions = window.hass.voiceActions;
-  var uiConstants = window.hass.uiConstants;
 
   var entityDomainFilters = window.hass.util.entityDomainFilters;
 
@@ -103,6 +101,11 @@
       narrow: {
         type: Boolean,
         value: false,
+      },
+
+      filter: {
+        type: String,
+        bindNuclear: navigationGetters.activeFilter,
       },
 
       isFetching: {
