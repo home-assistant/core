@@ -9,16 +9,6 @@
 <link rel='import' href='../bower_components/paper-item/paper-icon-item.html'>
 <link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
 
-<link rel='import' href='../layouts/partial-states.html'>
-<link rel='import' href='../layouts/partial-logbook.html'>
-<link rel='import' href='../layouts/partial-history.html'>
-<link rel='import' href='../layouts/partial-dev-call-service.html'>
-<link rel='import' href='../layouts/partial-dev-fire-event.html'>
-<link rel='import' href='../layouts/partial-dev-set-state.html'>
-
-<link rel='import' href='../managers/notification-manager.html'>
-<link rel='import' href='../managers/modal-manager.html'>
-
 <link rel='import' href='../components/stream-status.html'>
 
 <dom-module id='ha-sidebar'>
@@ -64,9 +54,9 @@
         <div class="title">Home Assistant</div>
       </paper-toolbar>
 
-      <paper-menu id='menu'
+      <paper-menu id='menu' on-iron-select='menuSelect'
         selectable='[data-panel]' attr-for-selected='data-panel'
-        on-iron-select='menuSelect' selected='[[selected]]'>
+        selected='[[selected]]'>
         <paper-icon-item data-panel='states'>
           <iron-icon item-icon icon='apps'></iron-icon> States
         </paper-icon-item>
@@ -123,7 +113,6 @@
 <script>
 (function() {
   var configGetters = window.hass.configGetters;
-  var entityGetters = window.hass.entityGetters;
   var navigationGetters = window.hass.navigationGetters;
 
   var authActions = window.hass.authActions;
@@ -140,13 +129,7 @@
     properties: {
       selected: {
         type: String,
-        bindNuclear: [
-          navigationGetters.activePane,
-          navigationGetters.activeFilter,
-          function(pane, filter) {
-            return filter ? pane + '/' + filter : pane;
-          },
-        ],
+        bindNuclear: navigationGetters.activePage,
       },
 
       possibleFilters: {
@@ -170,7 +153,7 @@
     },
 
     menuSelect: function(ev, detail, sender) {
-      this.selectPanel(this.$.menu.selected);
+      this.selectPanel(ev.target.selected);
     },
 
     handleDevClick: function(ev, detail, sender) {
@@ -180,15 +163,13 @@
     },
 
     selectPanel: function(newChoice) {
-      if (newChoice == 'logout') {
+      if(newChoice === this.selected) {
+        return;
+      } else if (newChoice == 'logout') {
         this.handleLogOut();
         return;
-      } else if(newChoice == this.selected) {
-        return;
       }
-
-      navigationActions.navigate.apply(
-        null, newChoice.split('/'));
+      navigationActions.navigate.apply(null, newChoice.split('/'));
     },
 
     handleLogOut: function() {

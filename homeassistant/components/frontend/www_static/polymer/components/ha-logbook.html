@@ -10,13 +10,11 @@
     }
   </style>
   <template>
-    <template is='dom-if' if='[[!entries]]'>
+    <template is='dom-if' if='[[noEntries(entries)]]'>
       No logbook entries found.
     </template>
-    <template is='dom-if' if='[[entries]]'>
-      <template is='dom-repeat' items="[[entries]]">
-        <logbook-entry entry-obj="[[item]]"></logbook-entry>
-      </template>
+    <template is='dom-repeat' items="[[entries]]">
+      <logbook-entry entry-obj="[[item]]"></logbook-entry>
     </template>
   </template>
 </dom-module>
@@ -32,6 +30,10 @@
         value: [],
       },
     },
+
+    noEntries: function(entries) {
+      return !entries.length;
+    }
   });
 })();
 </script>

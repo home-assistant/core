@@ -31,7 +31,7 @@
   </style>
   <template>
     <!-- entry-animation='slide-up-animation' exit-animation='slide-down-animation' -->
-    <paper-dialog id="dialog" with-backdrop>
+    <paper-dialog id="dialog" with-backdrop opened='{{dialogOpen}}'>
       <h2><state-card-content state-obj="[[stateObj]]"></state-card-content></h2>
       <div>
         <template is='dom-if' if="[[hasHistoryComponent]]">
@@ -66,7 +66,7 @@
       stateObj: {
         type: Object,
         bindNuclear: moreInfoGetters.currentEntity,
-        observer: 'fetchHistoryData',
+        observer: 'stateObjChanged',
       },
 
       stateHistory: {
@@ -99,34 +99,34 @@
       dialogOpen: {
         type: Boolean,
         value: false,
+        observer: 'dialogOpenChanged',
       },
     },
 
-    listeners: {
-      'iron-overlay-opened': 'onIronOverlayOpened',
-      'iron-overlay-closed': 'onIronOverlayClosed'
-    },
-
-    fetchHistoryData: function(newVal) {
+    fetchHistoryData: function() {
       if (this.stateObj && this.hasHistoryComponent &&
           this.shouldFetchHistory) {
         entityHistoryActions.fetchRecent(this.stateObj.entityId);
       }
     },
 
-    onIronOverlayOpened: function() {
-      this.dialogOpen = true;
+    stateObjChanged: function(newVal) {
+      if (!newVal) {
+        this.dialogOpen = false;
+        return;
+      }
+
+      this.fetchHistoryData();
+
+      window.requestAnimationFrame(function() {
+        this.dialogOpen = true;
+      }.bind(this));
     },
 
-    onIronOverlayClosed: function() {
-      this.dialogOpen = false;
-      moreInfoActions.deselectEntity();
-    },
-
-    show: function() {
-      this.debounce('showDialogAfterRender', function() {
-        this.$.dialog.open();
-      }.bind(this), 1);
+    dialogOpenChanged: function(newVal) {
+      if (!newVal) {
+        moreInfoActions.deselectEntity();
+      }
     },
   });
 })();
