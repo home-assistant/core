@@ -19,18 +19,17 @@ class RazberryController(object):
 		self.devices = []
 
 	def get_simple_devices_info(self):
-
 		simpleRequestUrl = self.BASE_URL + "/ZWaveAPI/Data/*"
 		j = requests.get(simpleRequestUrl).json()
 
-		self.categories = {'Binary Power Switch'}
+		#self.categories = {'Binary Power Switch'}
 
 		self.device_id_map = {}
 
 		devs = j.get('devices')
 		for dev in devs:
-			dev['categoryName'] = 'Binary Power Switch'
-			self.device_id_map[dev.get('id')] = dev
+			self.device_id_map[dev] = dev
+
 
 	#get list of connected devices, the categoryFilter param can be either a string or array of strings
 	def get_devices(self, categoryFilter=''):
@@ -42,25 +41,28 @@ class RazberryController(object):
 		j = requests.get(arequestUrl).json()
 
 		self.devices = []
-		items = j.get('devices')
+		devices = j.get('devices')
 
-		for item in items:
-			item['deviceInfo'] = self.device_id_map.get(item.get('id'))
-			self.devices.append(RazberrySwitch(item, self))
+		for keyDev in devices:
+			for keyInst in devices[keyDev].get('instances'):
+				#item['deviceInfo'] = self.device_id_map.get(item)
+				self.devices.append(RazberrySwitch(devices[keyDev], keyDev, keyInst, self))
 
 		return self.devices
 
 
 class RazberryDevice(object):
 
-	def __init__(self, aJSonObj, razberryController):
+	def __init__(self, aJSonObj, aDeviceId, aInstanceId, razberryController):
 		self.jsonState = aJSonObj
-		self.deviceId = self.jsonState.get('id')
+		self.deviceId = aDeviceId
+		self.instanceId = aInstanceId
 		self.razberryController = razberryController
+		self.value = True
 		self.name = ''
 		if self.jsonState.get('data'):
-			self.category = self.jsonState.get('data').get('deviceTypeString').value
-			self.name = self.jsonState.get('data').get('givenName').value
+			self.category = self.jsonState['data']['deviceTypeString']['value']
+			self.name = self.jsonState['data']['givenName']['value']
 		else:
 			self.category = ''
 
@@ -72,23 +74,18 @@ class RazberryDevice(object):
 
 
 	def set_value(self, value):
-		for item in self.jsonState.get('id'):
-			requestUrl = self.razberryController.BASE_URL + "/ZWaveAPI/Run/devices[" + self.deviceId "].instances[0].SwitchBinary.Set(" + value + ")"
-			r = requests.get(requestUrl)
-			item['value'] = value
+		requestUrl = self.razberryController.BASE_URL + "/ZWaveAPI/Run/devices[" + str(self.deviceId) + "].instances[" + str(self.instanceId) + "].SwitchBinary.Set(" + str(value) + ")"
+		r = requests.get(requestUrl)
+		self.value = r.text
 
 	def get_value(self):
-		for item in self.jsonState.get('id'):
-			return item.get('value')
-		return None
+		return self.value
 
-	def refresh_value(self):
-		for item in self.jsonState.get('id'):
-			requestUrl = self.razberryController.BASE_URL + "/ZWaveAPI/Run/devices[" + self.deviceId "].instances[0].data.level.value"
-			r = requests.get(requestUrl)
-			item['value'] = r.text
-			return item.get('value')
-		return None
+	def refresh_value(self):		
+		requestUrl = self.razberryController.BASE_URL + "/ZWaveAPI/Run/devices[" + str(self.deviceId) + "].instances[" + str(self.instanceId) + "].SwitchBinary.data.level.value"
+		r = requests.get(requestUrl)
+		self.value = r.text
+		return self.get_value()
 
 	@property
 	def razberry_device_id(self):
@@ -97,19 +94,19 @@ class RazberryDevice(object):
 
 class RazberrySwitch(RazberryDevice):
 
-	def __init__(self, aJSonObj, razberryController):
-		super().__init__(aJSonObj, razberryController)
+	def __init__(self, aJSonObj, aDeviceId, aInstanceId, razberryController):
+		super().__init__(aJSonObj, aDeviceId, aInstanceId, razberryController)
 
 	def switch_on(self):
-		self.set_value('Target', 255)
+		self.set_value(255)
 
 	def switch_off(self):
-		self.set_value('Target', 0)
+		self.set_value(0)
 
 	def is_switched_on(self):
 		self.refresh_value()
 		val = self.get_value()
-		if val == 'True':
+		if val == 'true':
 			return True
 		else:
 			return False

@@ -20,7 +20,6 @@ ATTR_TITLE_DEFAULT = "Home Assistant"
 
 # Text to notify user of
 ATTR_MESSAGE = "message"
-
 SERVICE_NOTIFY = "notify"
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +49,7 @@ def setup(hass, config):
     notify_service = notify_implementation.get_service(hass, config)
 
     if notify_service is None:
-        _LOGGER.error("Failed to initialize notification service %s",
-                      platform)
+        _LOGGER.error("Failed to initialize notification service %s", platform)
 
         return False
 
@@ -78,6 +76,17 @@ class BaseNotificationService(object):
     def send_message(self, message, **kwargs):
         """
         Send a message.
+        kwargs can contain ATTR_TITLE to specify a title.
+        """
+        raise NotImplementedError
+
+# pylint: disable=too-few-public-methods
+class BaseListenerService(object):
+    """ Provides an ABC for listener services. """
+    
+    def register_listener(self, message, **kwargs):
+        """
+        Send a listener.
         kwargs can contain ATTR_TITLE to specify a title.
         """
         raise NotImplementedError
