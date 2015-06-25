@@ -51,11 +51,7 @@ it should be set to "true" if you want this device excluded
 import logging
 import time
 from requests.exceptions import RequestException
-import homeassistant.util.dt as dt_util
-
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.razberry.razberry as razberryApi
 
@@ -87,11 +83,12 @@ def get_devices(hass, config):
 
     razberry_switches = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, {})
+        extra_data = device_data.get(int(device.deviceId), {})
         exclude = extra_data.get('exclude', False)
 
-        if exclude is not True:
-            razberry_switches.append(RazberrySwitch(device, extra_data))
+        if exclude is not True and int(device.instanceId) > 0:
+            if (not extra_data[int(device.instanceId)]) or (extra_data[int(device.instanceId)].get('exclude', False) is not True):
+                razberry_switches.append(RazberrySwitch(device, extra_data))
 
     return razberry_switches
 
@@ -107,17 +104,21 @@ class RazberrySwitch(ToggleEntity):
     def __init__(self, razberry_device, extra_data=None):
         self.razberry_device = razberry_device
         self.extra_data = extra_data
-        if self.extra_data and self.extra_data.get('name'):
-            self._name = self.extra_data.get('name')
+        if self.extra_data.get(int(self.razberry_device.instanceId)) and self.extra_data.get(int(self.razberry_device.instanceId)).get('name') :
+            self._name = self.extra_data.get(int(self.razberry_device.instanceId)).get('name')
         else:
-            self._name = self.razberry_device.name
+            if self.extra_data and self.extra_data.get('name'):
+                self._name = self.extra_data.get('name')
+            else:
+                self._name = self.razberry_device.name
+        
         self.is_on_status = False
         # for debouncing status check after command is sent
         self.last_command_send = 0
 
     @property
     def name(self):
-        """ Get the mame of the switch. """
+        """ Get the name of the switch. """
         return self._name
 
     @property
@@ -146,5 +147,5 @@ class RazberrySwitch(ToggleEntity):
     def update(self):
         # We need to debounce the status call after turning switch on or off
         # because the razberry has some lag in updating the device status
-        if (self.last_command_send + 5) < time.time():
+        if (self.last_command_send + 3) < time.time():
             self.is_on_status = self.razberry_device.is_switched_on()
