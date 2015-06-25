@@ -6,6 +6,8 @@
 
 <link rel="import" href="../components/state-history-charts.html">
 
+<link rel="import" href="../resources/pikaday-js.html">
+
 <dom-module id="partial-history">
   <style>
     .content {
@@ -32,7 +34,7 @@
         on-click="handleRefreshClick"></paper-icon-button>
 
       <div class$="[[computeContentClasses(narrow)]]">
-        <paper-input label='Showing entries for' on-click='handleShowDatePicker'
+        <paper-input label='Showing entries for' id='datePicker'
           value='[[selectedDate]]'></paper-input>
 
         <state-history-charts state-history="[[stateHistory]]"
@@ -90,10 +92,20 @@
       entityHistoryActions.fetchSelectedDate();
     },
 
-    handleShowDatePicker: function() {
-      uiActions.showDatePicker(
-        entityHistoryActions.changeCurrentDate,
-        this.selectedDate);
+    datepickerFocus: function() {
+      this.datePicker.adjustPosition();
+      this.datePicker.gotoDate(moment('2015-06-30').toDate());
+    },
+
+    attached: function() {
+      this.datePicker = new Pikaday({
+        field: this.$.datePicker.inputElement,
+        onSelect: entityHistoryActions.changeCurrentDate,
+      });
+    },
+
+    detached: function() {
+      this.datePicker.destroy();
     },
 
     computeContentClasses: function(narrow) {

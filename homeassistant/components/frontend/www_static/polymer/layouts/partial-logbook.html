@@ -8,6 +8,8 @@
 <link rel="import" href="../components/ha-logbook.html">
 <link rel="import" href="../components/loading-box.html">
 
+<link rel="import" href="../resources/pikaday-js.html">
+
 <dom-module id="partial-logbook">
   <style>
   .selected-date-container {
@@ -27,8 +29,8 @@
 
       <div>
         <div class='selected-date-container'>
-          <paper-input label='Showing entries for' on-click='handleShowDatePicker'
-            value='[[selectedDate]]'></paper-input>
+          <paper-input label='Showing entries for' id='datePicker'
+            value='[[selectedDate]]' on-focus='datepickerFocus'></paper-input>
 
           <loading-box hidden$='[[!isLoading]]'>Loading logbook entries</loading-box>
         </div>
@@ -79,6 +81,10 @@
           function(entries) { return entries.toArray(); },
         ],
       },
+
+      datePicker: {
+        type: Object,
+      },
     },
 
     isStaleChanged: function(newVal) {
@@ -90,14 +96,24 @@
       }
     },
 
-    handleShowDatePicker: function() {
-      uiActions.showDatePicker(
-        logbookActions.changeCurrentDate,
-        this.selectedDate);
-    },
-
     handleRefresh: function() {
       logbookActions.fetchDate(this.selectedDate);
+    },
+
+    datepickerFocus: function() {
+      this.datePicker.adjustPosition();
+      this.datePicker.gotoDate(moment('2015-06-30').toDate());
+    },
+
+    attached: function() {
+      this.datePicker = new Pikaday({
+        field: this.$.datePicker.inputElement,
+        onSelect: logbookActions.changeCurrentDate,
+      });
+    },
+
+    detached: function() {
+      this.datePicker.destroy();
     },
   });
 })();
