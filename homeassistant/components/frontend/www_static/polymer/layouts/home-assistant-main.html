@@ -11,14 +11,14 @@
 <link rel='import' href='../layouts/partial-dev-set-state.html'>
 
 <link rel='import' href='../managers/notification-manager.html'>
-<link rel='import' href='../managers/modal-manager.html'>
+<link rel="import" href="../dialogs/more-info-dialog.html">
 
 <link rel='import' href='../components/ha-sidebar.html'>
 
 <dom-module id='home-assistant-main'>
   <template>
     <notification-manager></notification-manager>
-    <modal-manager></modal-manager>
+    <more-info-dialog></more-info-dialog>
 
     <paper-drawer-panel id='drawer' narrow='{{narrow}}'>
       <ha-sidebar drawer></ha-sidebar>
