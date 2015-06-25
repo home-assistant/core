@@ -75,5 +75,4 @@ jsonrpc-requests>=0.1
 python-forecastio>=1.3.3
 
 # Firmata Bindings (*.arduino)
-PyMata>=2.07
-pyserial>=2.7
+PyMata>=2.07a
