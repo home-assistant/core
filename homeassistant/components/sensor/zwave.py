@@ -25,13 +25,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # if 1 in groups and (zwave.NETWORK.controller.node_id not in
     #                     groups[1].associations):
     #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
-
+    print("ZWave sensor type value:", value.command_class)
     if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value)])
 
     elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
         add_devices([ZWaveMultilevelSensor(value)])
 
+    elif value.command_class ==  zwave.COMMAND_CLASS_SENSOR_ALARM:
+        print("ZWave sensor type : alarm sensor")
+        add_devices([ZWaveAlarmSensor(value)])        
+
+    elif value.command_class == zwave.COMMAND_CLASS_SILENCE_ALARM:
+        print("ZWave sensor type : slience alarm")
+        add_devices([ZWaveAlarmSensor(value)])        
 
 class ZWaveSensor(Entity):
     """ Represents a Z-Wave sensor. """
@@ -129,3 +136,14 @@ class ZWaveMultilevelSensor(ZWaveSensor):
             return TEMP_FAHRENHEIT
         else:
             return unit
+
+
+class ZWaveAlarmSensor(ZWaveSensor):
+    """ Represents a alarm sensor Z-Wave sensor. """
+
+    @property
+    def state(self):
+        """ Returns the state of the sensor. """
+        #value = self._value.data
+        return STATE_ON if self._value.data else STATE_OFF
+        
