@@ -115,11 +115,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OpenWeatherMapSensor(Entity):
     """ Implements an OpenWeatherMap sensor. """
 
-    def __init__(self, weather_data, sensor_type, unit):
+    def __init__(self, weather_data, sensor_type, temp_unit):
         self.client_name = 'Weather'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.owa_client = weather_data
-        self._unit = unit
+        self.temp_unit = temp_unit
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -150,10 +150,10 @@ class OpenWeatherMapSensor(Entity):
         if self.type == 'weather':
             self._state = data.get_detailed_status()
         elif self.type == 'temperature':
-            if self._unit == TEMP_CELCIUS:
+            if self.temp_unit == TEMP_CELCIUS:
                 self._state = round(data.get_temperature('celsius')['temp'],
                                     1)
-            elif self._unit == TEMP_FAHRENHEIT:
+            elif self.temp_unit == TEMP_FAHRENHEIT:
                 self._state = round(data.get_temperature('fahrenheit')['temp'],
                                     1)
             else:
@@ -169,12 +169,14 @@ class OpenWeatherMapSensor(Entity):
         elif self.type == 'rain':
             if data.get_rain():
                 self._state = round(data.get_rain()['3h'], 0)
+                self._unit_of_measurement = 'mm'
             else:
                 self._state = 'not raining'
                 self._unit_of_measurement = ''
         elif self.type == 'snow':
             if data.get_snow():
                 self._state = round(data.get_snow(), 0)
+                self._unit_of_measurement = 'mm'
             else:
                 self._state = 'not snowing'
                 self._unit_of_measurement = ''
