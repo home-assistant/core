@@ -116,18 +116,12 @@
       'loginButton.click': 'validatePassword',
     },
 
-    // attached: function() {
-    //   this.focusPassword();
-    // },
-
     isValidatingChanged: function(newVal) {
       if (!newVal) {
-        setTimeout(this.focusPassword.bind(this), 0);
+        this.debounce('focus-password', function() {
+          this.$.passwordInput.focus();
+        }.bind(this), 1);
       }
-    },
-
-    focusPassword: function() {
-      this.$.passwordInput.focus();
     },
 
     passwordKeyDown: function(ev) {
