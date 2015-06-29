@@ -1,11 +1,11 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/state-cards.html">
+<link rel="import" href="../components/ha-voice-command-progress.html">
 
 <dom-module id="partial-states">
   <style>
@@ -58,9 +58,7 @@
       <div class='content-wrapper'>
         <div class='listening' hidden$="[[!showListenInterface]]"
           on-click="handleListenClick">
-          <iron-icon icon="av:hearing"></iron-icon> <span>{{finalTranscript}}</span>
-          <span class='interimTranscript'>[[interimTranscript]]</span>
-          <paper-spinner active$="[[isTransmitting]]" alt="Sending voice command to Home Assistant"></paper-spinner>
+          <ha-voice-command-progress></ha-voice-command-progress>
         </div>
 
         <state-cards states="[[states]]">
@@ -132,21 +130,6 @@
       isListening: {
         type: Boolean,
         bindNuclear: voiceGetters.isListening,
-      },
-
-      isTransmitting: {
-        type: Boolean,
-        bindNuclear: voiceGetters.isTransmitting,
-      },
-
-      interimTranscript: {
-        type: String,
-        bindNuclear: voiceGetters.extraInterimTranscript,
-      },
-
-      finalTranscript: {
-        type: String,
-        bindNuclear: voiceGetters.finalTranscript,
       },
 
       showListenInterface: {
