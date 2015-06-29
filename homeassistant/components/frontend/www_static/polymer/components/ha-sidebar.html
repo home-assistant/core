@@ -53,10 +53,8 @@
         <paper-icon-button hidden></paper-icon-button>
         <div class="title">Home Assistant</div>
       </paper-toolbar>
-
-      <paper-menu id='menu' on-iron-select='menuSelect'
-        selectable='[data-panel]' attr-for-selected='data-panel'
-        selected='[[selected]]'>
+      <paper-menu id='menu' selected='{{menuSelected}}'
+        selectable='[data-panel]' attr-for-selected='data-panel'>
         <paper-icon-item data-panel='states'>
           <iron-icon item-icon icon='apps'></iron-icon> States
         </paper-icon-item>
@@ -127,9 +125,15 @@
     behaviors: [nuclearObserver],
 
     properties: {
+      menuSelected: {
+        type: String,
+        observer: 'menuSelectedChanged',
+      },
+
       selected: {
         type: String,
         bindNuclear: navigationGetters.activePage,
+        observer: 'selectedChanged',
       },
 
       possibleFilters: {
@@ -152,8 +156,16 @@
       },
     },
 
-    menuSelect: function(ev, detail, sender) {
-      this.selectPanel(ev.target.selected);
+    menuSelectedChanged: function(newVal) {
+      if (this.selected !== newVal) {
+        this.selectPanel(newVal);
+      }
+    },
+
+    selectedChanged: function(newVal) {
+      if (this.menuSelected !== newVal) {
+        this.menuSelected = newVal;
+      }
     },
 
     handleDevClick: function(ev, detail, sender) {
