@@ -112,8 +112,18 @@
     },
 
     listeners: {
-      'passwordInput.keydown': 'passwordKeyDown',
+      'keydown': 'passwordKeyDown',
       'loginButton.click': 'validatePassword',
+    },
+
+    observers: [
+      'validatingChanged(isValidating, isInvalid)',
+    ],
+
+    validatingChanged: function(isValidating, isInvalid) {
+      if (!isValidating && !isInvalid) {
+        this.$.passwordInput.value = '';
+      }
     },
 
     isValidatingChanged: function(newVal) {
