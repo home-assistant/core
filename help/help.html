@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Intruder Alerts - Home Assistant</title>
+    <title>Help - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to receive intruder alerts from Home Assistant.">
+    <meta name="description" content="If you need help or have a question...">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Intruder Alerts">
+    <meta property="og:title" content="Help">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/simple_alarm.html/">
+    <meta property="og:url" content="https://home-assistant.io/help/help.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to receive intruder alerts from Home Assistant.">
+    <meta property="og:description" content="If you need help or have a question...">
     
     
     
@@ -99,29 +99,35 @@
   
   <header>
     <h1 class="title indent">
-      Intruder Alerts
+      Help
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>The component <code>simple_alarm</code> is capable of detecting intruders. It does so by checking if lights are being turned on while there is no one at home. When this happens it will turn the lights red, flash them for 30 seconds and send a message via <a href="/components/notify.html">the notifiy component</a>. It will also flash a specific light when a known person comes home.</p>
+  <p>There are various ways to get in touch with the Home Assistant community. It doesn&rsquo;t matter if you have a question, need help, want to request a feature, or just say &lsquo;Hi&rsquo;.</p>
 
-<p>This component depends on the components <a href="/components/device_tracker.html">device_tracker</a> and <a href="/components/light.html">light</a> being setup.</p>
+<h2>Communication channels</h2>
 
-<p>To set it up, add the following lines to your <code>configuration.yaml</code>:</p>
+<ul>
+<li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Mailing list</a></li>
+<li><a href="https://gitter.im/balloob/home-assistant">Real-time messaging</a></li>
+</ul>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>simple_alarm:
-</span><span class='line'>  # Which light/light group has to flash when a known device comes home
-</span><span class='line'>  known_light: light.Bowl
-</span><span class='line'>  # Which light/light group has to flash red when light turns on while no one home
-</span><span class='line'>  unknown_light: group.living_room</span></code></pre></td></tr></table></div></figure>
 
+<h2>Bugs, Feature requests, and alike</h2>
+
+<p>Have you found an issue in your Home Assistant installation? Please report it in one of the issue trackers. Reporting it here makes it easier to track than in the Mailing list and ensures that it get fixed.</p>
+
+<ul>
+<li><a href="https://github.com/balloob/home-assistant/issues">Issue tracker Home Assistant</a></li>
+<li><a href="https://github.com/balloob/home-assistant.io/issues">Issue tracker home-assistant.io</a> (Website and documentation)</li>
+</ul>
+
+
+<h2>Commerical vendors</h2>
+
+<p>If you are a commerical vendor and would like to get your product integrated in Home Assistant, please submit a <a href="https://github.com/balloob/home-assistant/pulls">Pull request</a> or get in touch with us.</p>
 
 
 </article>

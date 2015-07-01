@@ -9,7 +9,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>ISY-994 Controller - Home Assistant</title>
+    <title>ISY994 Controller - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Instructions how to setup the ISY994 controller within Home Assistant.">
@@ -18,7 +18,7 @@
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="ISY-994 Controller">
+    <meta property="og:title" content="ISY994 Controller">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/isy994.html/">
     <meta property="og:type" content="website">
@@ -75,7 +75,7 @@
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
-  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+  <li><a href="/help/help.html">Need help?</a></li>
 </ul>
 
   </nav>
@@ -99,7 +99,7 @@
   
   <header>
     <h1 class="title indent">
-      ISY-994 Controller
+      ISY994 Controller
     </h1>
   </header>
   <hr class="divider">
@@ -118,9 +118,9 @@ that is configured on the controller. Using the programs on the controller,
 custom switches and sensors can also be created.</p>
 
 <p>To integrate your ISY994 controller with Home Assistant, add the following
-section to your configuration.yaml file:</p>
+section to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -129,15 +129,18 @@ section to your configuration.yaml file:</p>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>isy994:
-</span><span class='line'>    # requried
-</span><span class='line'>    host: ISY_ADDRESS
-</span><span class='line'>    username: ISY_USERNAME
-</span><span class='line'>    password: ISY_PASSWORD
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">isy994</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="c1"># requried</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_ADDRESS</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_USERNAME</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_PASSWORD</span>
 </span><span class='line'>
-</span><span class='line'>    # optional
-</span><span class='line'>    sensor_string: SENSOR_STRING
-</span><span class='line'>    hidden_string: HIDDEN_STRING</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>    <span class="c1"># optional</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">sensor_string</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SENSOR_STRING</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">hidden_string</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">HIDDEN_STRING</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>The ISY_ADDRESS should be in full URL format. For example:

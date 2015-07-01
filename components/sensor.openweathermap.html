@@ -75,7 +75,7 @@
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
-  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Need help?</a></li>
+  <li><a href="/help/help.html">Need help?</a></li>
 </ul>
 
   </nav>
@@ -106,7 +106,7 @@
   
 
   <p><img src='/images/supported_brands/openweathermap.png' class='brand pull-right' />
-The openweathermap platform uses <a href="http://openweathermap.org/">OpenWeatherMap</a> as a source for meteorological data for your location.</p>
+The openweathermap platform uses <a href="http://openweathermap.org/">OpenWeatherMap</a> as an source for current meteorological data for your location. The <code>forecast</code> will show you the condition in 3 h.</p>
 
 <p>You need an API key which is free but requires a <a href="http://home.openweathermap.org/users/sign_up">registration</a>.</p>
 
@@ -125,19 +125,21 @@ The openweathermap platform uses <a href="http://openweathermap.org/">OpenWeathe
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
+<span class='line-number'>14</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">openweathermap</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_API_KEY</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">forecast</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0 or 1</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">monitored_conditions</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;weather&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;wind_speed&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;humidity&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;pressure&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;clouds&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;rain&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;snow&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">weather</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">temperature</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">wind_speed</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">humidity</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">pressure</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">clouds</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">rain</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">snow</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
