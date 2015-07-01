@@ -6279,7 +6279,7 @@ function(t,e){"use strict";function n(t,e){if(Array.isArray(t))return t;if(Symbo
 function(t,e,n){"use strict";function r(t){return t&&t.__esModule?t:{"default":t}}function i(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function u(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(t.__proto__=e)}function o(t,e){var n=e.pane,r=e.filter,i=void 0===r?null:r;return c.toImmutable({pane:n,filter:i})}function a(t){return _.getInitialState()}Object.defineProperty(e,"__esModule",{value:!0});var s=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),c=n(/*! nuclear-js */1),f=n(/*! ../action-types */27),l=r(f),h=function(t){function e(){i(this,e),null!=t&&t.apply(this,arguments)}return u(e,t),s(e,[{key:"getInitialState",value:function(){return c.toImmutable({pane:"states",filter:null})}},{key:"initialize",value:function(){this.on(l["default"].NAVIGATE,o),this.on(l["default"].LOG_OUT,a)}}]),e}(c.Store),_=new h;e["default"]=_,t.exports=e["default"]},/*!********************************************!*\
   !*** ./src/modules/navigation/url-sync.js ***!
   \********************************************/
-function(t,e,n){"use strict";function r(t){return t&&t.__esModule?t:{"default":t}}function i(){if("/"===location.pathname){var t=c["default"].evaluate(f.activePane),e=c["default"].evaluate(f.activeFilter),n=_["default"](t,e);history.replaceState({pane:t,filter:e},v,n)}else{var r=p["default"](location.pathname.substr(1)),t=r.pane,e=r.filter;l.navigate(t,e)}}function u(t){var e=t.state,n=e.pane,r=e.filter;l.navigate(n,r)}function o(){g&&(i(),y=c["default"].observe(f.activePage,function(t){var e=p["default"](t);(e.pane!==history.state.pane||e.filter!=history.state.filter)&&history.pushState(e,v,"/"+t)}),window.addEventListener("popstate",u))}function a(){g&&(y&&y(),window.removeEventListener("popstate",u))}Object.defineProperty(e,"__esModule",{value:!0}),e.startSync=o,e.stopSync=a;var s=n(/*! ../../flux */2),c=r(s),f=n(/*! ./getters */29),l=n(/*! ./actions */28),h=n(/*! ./pane-filter-to-page */30),_=r(h),d=n(/*! ./page-to-pane-filter */80),p=r(d),v="Home Assistant",y=void 0,g=history.pushState&&!1},/*!*********************************************!*\
+function(t,e,n){"use strict";function r(t){return t&&t.__esModule?t:{"default":t}}function i(){var t=void 0,e=void 0,n=void 0;if("/"===location.pathname)t=c["default"].evaluate(f.activePane),e=c["default"].evaluate(f.activeFilter),n=_["default"](t,e);else{var r=p["default"](location.pathname.substr(1));t=r.pane,e=r.filter,n=location.pathname,l.navigate(t,e)}history.replaceState({pane:t,filter:e},v,n)}function u(t){var e=t.state,n=e.pane,r=e.filter;l.navigate(n,r)}function o(){g&&(i(),y=c["default"].observe(f.activePage,function(t){var e=p["default"](t);(e.pane!==history.state.pane||e.filter!=history.state.filter)&&history.pushState(e,v,"/"+t)}),window.addEventListener("popstate",u))}function a(){g&&(y&&y(),window.removeEventListener("popstate",u))}Object.defineProperty(e,"__esModule",{value:!0}),e.startSync=o,e.stopSync=a;var s=n(/*! ../../flux */2),c=r(s),f=n(/*! ./getters */29),l=n(/*! ./actions */28),h=n(/*! ./pane-filter-to-page */30),_=r(h),d=n(/*! ./page-to-pane-filter */80),p=r(d),v="Home Assistant",y=void 0,g=history.pushState&&!1},/*!*********************************************!*\
   !*** ./src/modules/notification/actions.js ***!
   \*********************************************/
 function(t,e,n){"use strict";function r(t){return t&&t.__esModule?t:{"default":t}}function i(t){o["default"].dispatch(s["default"].NOTIFICATION_CREATED,{message:t})}Object.defineProperty(e,"__esModule",{value:!0}),e.createNotification=i;var u=n(/*! ../../flux */2),o=r(u),a=n(/*! ./action-types */31),s=r(a)},/*!*********************************************!*\
@@ -14750,6 +14750,7 @@ document.registerElement('color-picker', { prototype: colorPickerPrototype });
 
 
 
+
 <style is="custom-style">
   :root {
     --dark-primary-color: #0288D1;
@@ -17710,22 +17711,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     listeners: {
-      'passwordInput.keydown': 'passwordKeyDown',
+      'keydown': 'passwordKeyDown',
       'loginButton.click': 'validatePassword',
     },
 
-    // attached: function() {
-    //   this.focusPassword();
-    // },
+    observers: [
+      'validatingChanged(isValidating, isInvalid)',
+    ],
 
-    isValidatingChanged: function(newVal) {
-      if (!newVal) {
-        setTimeout(this.focusPassword.bind(this), 0);
+    validatingChanged: function(isValidating, isInvalid) {
+      if (!isValidating && !isInvalid) {
+        this.$.passwordInput.value = '';
       }
     },
 
-    focusPassword: function() {
-      this.$.passwordInput.focus();
+    isValidatingChanged: function(newVal) {
+      if (!newVal) {
+        this.debounce('focus-password', function() {
+          this.$.passwordInput.focus();
+        }.bind(this), 1);
+      }
     },
 
     passwordKeyDown: function(ev) {
@@ -20402,6 +20407,62 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 })();
 </script>
+<dom-module id="ha-voice-command-progress" assetpath="components/">
+  <style>
+    :host {
+      display: block;
+    }
+
+    iron-icon {
+      margin-right: 8px;
+    }
+
+    .interimTranscript {
+      color: darkgrey;
+    }
+
+    .listening paper-spinner {
+      float: right;
+    }
+  </style>
+
+  <template>
+    <iron-icon icon="av:hearing"></iron-icon>
+    <span>{{finalTranscript}}</span>
+    <span class="interimTranscript">[[interimTranscript]]</span>
+    <paper-spinner active$="[[isTransmitting]]" alt="Sending voice command to Home Assistant"></paper-spinner>
+  </template>
+
+</dom-module>
+
+<script>
+(function(){
+  var voiceGetters = window.hass.voiceGetters;
+
+  Polymer({
+    is: 'ha-voice-command-progress',
+
+    behaviors: [nuclearObserver],
+
+    properties: {
+      isTransmitting: {
+        type: Boolean,
+        bindNuclear: voiceGetters.isTransmitting,
+      },
+
+      interimTranscript: {
+        type: String,
+        bindNuclear: voiceGetters.extraInterimTranscript,
+      },
+
+      finalTranscript: {
+        type: String,
+        bindNuclear: voiceGetters.finalTranscript,
+      },
+    },
+  });
+})();
+</script>
 <dom-module id="partial-states" assetpath="layouts/">
   <style>
     .content-wrapper {
@@ -20445,9 +20506,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <div class="content-wrapper">
         <div class="listening" hidden$="[[!showListenInterface]]" on-click="handleListenClick">
-          <iron-icon icon="av:hearing"></iron-icon> <span>{{finalTranscript}}</span>
-          <span class="interimTranscript">[[interimTranscript]]</span>
-          <paper-spinner active$="[[isTransmitting]]" alt="Sending voice command to Home Assistant"></paper-spinner>
+          <ha-voice-command-progress></ha-voice-command-progress>
         </div>
 
         <state-cards states="[[states]]">
@@ -20519,21 +20578,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       isListening: {
         type: Boolean,
         bindNuclear: voiceGetters.isListening,
-      },
-
-      isTransmitting: {
-        type: Boolean,
-        bindNuclear: voiceGetters.isTransmitting,
-      },
-
-      interimTranscript: {
-        type: String,
-        bindNuclear: voiceGetters.extraInterimTranscript,
-      },
-
-      finalTranscript: {
-        type: String,
-        bindNuclear: voiceGetters.finalTranscript,
       },
 
       showListenInterface: {
@@ -25085,13 +25129,22 @@ paper-ripple {
       overflow: hidden;
     }
 
-    .sidenav paper-menu {
+    /*.sidenav paper-menu {
       --paper-menu-color: var(--secondary-text-color);
       --paper-menu-background-color: #fafafa;
+    }*/
+
+    div.menu {
+      color: var(--secondary-text-color);
+      background-color: #fafafa;
     }
 
     paper-icon-item {
       cursor: pointer;
+    }
+
+    paper-icon-item.selected {
+      font-weight: bold;
     }
 
     paper-icon-item.logout {
@@ -25120,33 +25173,33 @@ paper-ripple {
         <div class="title">Home Assistant</div>
       </paper-toolbar>
 
-      <paper-menu id="menu" on-iron-select="menuSelect" selectable="[data-panel]" attr-for-selected="data-panel" selected="[[selected]]">
-        <paper-icon-item data-panel="states">
+      <div class="menu">
+        <paper-icon-item on-click="menuClicked" data-panel="states">
           <iron-icon item-icon="" icon="apps"></iron-icon> States
         </paper-icon-item>
 
         <template is="dom-repeat" items="{{possibleFilters}}">
-          <paper-icon-item data-panel$="[[filterType(item)]]">
+          <paper-icon-item on-click="menuClicked" data-panel$="[[filterType(item)]]">
             <iron-icon item-icon="" icon="[[filterIcon(item)]]"></iron-icon>
             <span>[[filterName(item)]]</span>
           </paper-icon-item>
         </template>
 
         <template is="dom-if" if="[[hasHistoryComponent]]">
-          <paper-icon-item data-panel="history">
+          <paper-icon-item on-click="menuClicked" data-panel="history">
             <iron-icon item-icon="" icon="assessment"></iron-icon>
             History
           </paper-icon-item>
         </template>
 
         <template is="dom-if" if="[[hasLogbookComponent]]">
-          <paper-icon-item data-panel="logbook">
+          <paper-icon-item on-click="menuClicked" data-panel="logbook">
             <iron-icon item-icon="" icon="list"></iron-icon>
             Logbook
           </paper-icon-item>
         </template>
 
-        <paper-icon-item data-panel="logout" class="logout">
+        <paper-icon-item on-click="menuClicked" data-panel="logout" class="logout">
           <iron-icon item-icon="" icon="exit-to-app"></iron-icon>
           Log Out
         </paper-icon-item>
@@ -25162,7 +25215,8 @@ paper-ripple {
           <paper-icon-button icon="settings-ethernet" data-panel="devState" on-click="handleDevClick"></paper-icon-button>
           <paper-icon-button icon="settings-input-antenna" data-panel="devEvent" on-click="handleDevClick"></paper-icon-button>
         </div>
-      </paper-menu>
+      
+      </div>
     </paper-header-panel>
 
   </template>
@@ -25185,9 +25239,15 @@ paper-ripple {
     behaviors: [nuclearObserver],
 
     properties: {
+      menuSelected: {
+        type: String,
+        // observer: 'menuSelectedChanged',
+      },
+
       selected: {
         type: String,
         bindNuclear: navigationGetters.activePage,
+        observer: 'selectedChanged',
       },
 
       possibleFilters: {
@@ -25210,14 +25270,46 @@ paper-ripple {
       },
     },
 
-    menuSelect: function(ev, detail, sender) {
-      this.selectPanel(ev.target.selected);
+    // menuSelectedChanged: function(newVal) {
+    //   if (this.selected !== newVal) {
+    //     this.selectPanel(newVal);
+    //   }
+    // },
+
+    selectedChanged: function(newVal) {
+      // if (this.menuSelected !== newVal) {
+      //   this.menuSelected = newVal;
+      // }
+      var menuItems = this.querySelectorAll('.menu [data-panel]');
+
+      for (var i = 0; i < menuItems.length; i++) {
+        if(menuItems[i].dataset.panel === newVal) {
+          menuItems[i].classList.add('selected');
+        } else {
+          menuItems[i].classList.remove('selected');
+        }
+      }
     },
 
-    handleDevClick: function(ev, detail, sender) {
+    menuClicked: function(ev) {
+      var target = ev.target;
+      var checks = 5;
+
+      // find panel to select
+      while(checks && !target.dataset.panel) {
+        target = target.parentElement;
+        checks--;
+      }
+
+      if (checks) {
+        this.selectPanel(target.dataset.panel);
+      }
+    },
+
+    handleDevClick: function(ev) {
       // prevent it from highlighting first menu item
       document.activeElement.blur();
-      this.selectPanel(ev.target.parentElement.dataset.panel);
+      this.menuClicked(ev);
     },
 
     selectPanel: function(newChoice) {
@@ -25388,7 +25480,6 @@ paper-ripple {
 <script>
 (function() {
   var uiActions = window.hass.uiActions;
-  var authGetters = window.hass.authGetters;
   var syncGetters = window.hass.syncGetters;
   var preferences = window.hass.localStoragePreferences;
 
