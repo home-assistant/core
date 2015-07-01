@@ -14729,6 +14729,7 @@ document.registerElement('color-picker', { prototype: colorPickerPrototype });
 
 
 
+
 <style is="custom-style">
   :root {
     --dark-primary-color: #0288D1;
@@ -17689,8 +17690,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     listeners: {
-      'passwordInput.keydown': 'passwordKeyDown',
+      'keydown': 'passwordKeyDown',
       'loginButton.click': 'validatePassword',
+    },
+
+    observers: [
+      'validatingChanged(isValidating, isInvalid)',
+    ],
+
+    validatingChanged: function(isValidating, isInvalid) {
+      if (!isValidating && !isInvalid) {
+        this.$.passwordInput.value = '';
+      }
     },
 
     isValidatingChanged: function(newVal) {
@@ -25097,13 +25108,22 @@ paper-ripple {
       overflow: hidden;
     }
 
-    .sidenav paper-menu {
+    /*.sidenav paper-menu {
       --paper-menu-color: var(--secondary-text-color);
       --paper-menu-background-color: #fafafa;
+    }*/
+
+    div.menu {
+      color: var(--secondary-text-color);
+      background-color: #fafafa;
     }
 
     paper-icon-item {
       cursor: pointer;
+    }
+
+    paper-icon-item.selected {
+      font-weight: bold;
     }
 
     paper-icon-item.logout {
@@ -25131,33 +25151,34 @@ paper-ripple {
         <paper-icon-button hidden=""></paper-icon-button>
         <div class="title">Home Assistant</div>
       </paper-toolbar>
-      <paper-menu id="menu" selected="{{menuSelected}}" selectable="[data-panel]" attr-for-selected="data-panel">
-        <paper-icon-item data-panel="states">
+
+      <div class="menu">
+        <paper-icon-item on-click="menuClicked" data-panel="states">
           <iron-icon item-icon="" icon="apps"></iron-icon> States
         </paper-icon-item>
 
         <template is="dom-repeat" items="{{possibleFilters}}">
-          <paper-icon-item data-panel$="[[filterType(item)]]">
+          <paper-icon-item on-click="menuClicked" data-panel$="[[filterType(item)]]">
             <iron-icon item-icon="" icon="[[filterIcon(item)]]"></iron-icon>
             <span>[[filterName(item)]]</span>
           </paper-icon-item>
         </template>
 
         <template is="dom-if" if="[[hasHistoryComponent]]">
-          <paper-icon-item data-panel="history">
+          <paper-icon-item on-click="menuClicked" data-panel="history">
             <iron-icon item-icon="" icon="assessment"></iron-icon>
             History
           </paper-icon-item>
         </template>
 
         <template is="dom-if" if="[[hasLogbookComponent]]">
-          <paper-icon-item data-panel="logbook">
+          <paper-icon-item on-click="menuClicked" data-panel="logbook">
             <iron-icon item-icon="" icon="list"></iron-icon>
             Logbook
           </paper-icon-item>
         </template>
 
-        <paper-icon-item data-panel="logout" class="logout">
+        <paper-icon-item on-click="menuClicked" data-panel="logout" class="logout">
           <iron-icon item-icon="" icon="exit-to-app"></iron-icon>
           Log Out
         </paper-icon-item>
@@ -25173,7 +25194,8 @@ paper-ripple {
           <paper-icon-button icon="settings-ethernet" data-panel="devState" on-click="handleDevClick"></paper-icon-button>
           <paper-icon-button icon="settings-input-antenna" data-panel="devEvent" on-click="handleDevClick"></paper-icon-button>
         </div>
-      </paper-menu>
+      
+      </div>
     </paper-header-panel>
 
   </template>
@@ -25198,7 +25220,7 @@ paper-ripple {
     properties: {
       menuSelected: {
         type: String,
-        observer: 'menuSelectedChanged',
+        // observer: 'menuSelectedChanged',
       },
 
       selected: {
@@ -25227,22 +25249,46 @@ paper-ripple {
       },
     },
 
-    menuSelectedChanged: function(newVal) {
-      if (this.selected !== newVal) {
-        this.selectPanel(newVal);
-      }
-    },
+    // menuSelectedChanged: function(newVal) {
+    //   if (this.selected !== newVal) {
+    //     this.selectPanel(newVal);
+    //   }
+    // },
 
     selectedChanged: function(newVal) {
-      if (this.menuSelected !== newVal) {
-        this.menuSelected = newVal;
+      // if (this.menuSelected !== newVal) {
+      //   this.menuSelected = newVal;
+      // }
+      var menuItems = this.querySelectorAll('.menu [data-panel]');
+
+      for (var i = 0; i < menuItems.length; i++) {
+        if(menuItems[i].dataset.panel === newVal) {
+          menuItems[i].classList.add('selected');
+        } else {
+          menuItems[i].classList.remove('selected');
+        }
       }
     },
 
-    handleDevClick: function(ev, detail, sender) {
+    menuClicked: function(ev) {
+      var target = ev.target;
+      var checks = 5;
+
+      // find panel to select
+      while(checks && !target.dataset.panel) {
+        target = target.parentElement;
+        checks--;
+      }
+
+      if (checks) {
+        this.selectPanel(target.dataset.panel);
+      }
+    },
+
+    handleDevClick: function(ev) {
       // prevent it from highlighting first menu item
       document.activeElement.blur();
-      this.selectPanel(ev.target.parentElement.dataset.panel);
+      this.menuClicked(ev);
     },
 
     selectPanel: function(newChoice) {
