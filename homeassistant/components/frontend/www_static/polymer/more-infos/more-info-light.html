@@ -1,7 +1,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-slider/paper-slider.html'>
 
-<link rel='import' href='../bower_components/color-picker-element/dist/color-picker.html'>
+<link rel='import' href='../components/ha-color-picker.html'>
 
 <dom-module id='more-info-light'>
   <style>
@@ -41,7 +41,7 @@
         </paper-slider>
       </div>
 
-      <color-picker on-colorselected='colorPicked' width='350' height='200'>
+      <ha-color-picker on-colorselected='colorPicked' width='350' height='200'>
       </color-picker>
     </div>
   </template>
