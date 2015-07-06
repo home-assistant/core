@@ -73,7 +73,7 @@
         this.brightnessSliderValue = newVal.attributes.brightness;
       }
 
-      this.debounce('more-info-light-animation-finish', function() {
+      this.async(function() {
         this.fire('iron-resize');
       }.bind(this), 500);
     },

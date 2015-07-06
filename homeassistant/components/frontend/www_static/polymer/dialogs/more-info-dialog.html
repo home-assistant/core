@@ -118,9 +118,11 @@
 
       this.fetchHistoryData();
 
-      window.requestAnimationFrame(function() {
+      // allow dialog to render content before showing it so it is
+      // positioned correctly.
+      this.async(function() {
         this.dialogOpen = true;
-      }.bind(this));
+      }.bind(this), 10);
     },
 
     dialogOpenChanged: function(newVal) {
