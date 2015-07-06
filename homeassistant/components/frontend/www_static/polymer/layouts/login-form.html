@@ -13,6 +13,10 @@
 
 <dom-module id="login-form">
   <style>
+    :host {
+      white-space: nowrap;
+    }
+
     #passwordDecorator {
       display: block;
       height: 57px;
@@ -128,9 +132,7 @@
 
     isValidatingChanged: function(newVal) {
       if (!newVal) {
-        this.debounce('focus-password', function() {
-          this.$.passwordInput.focus();
-        }.bind(this), 1);
+        this.async(function() { this.$.passwordInput.focus(); }.bind(this), 10);
       }
     },
 
