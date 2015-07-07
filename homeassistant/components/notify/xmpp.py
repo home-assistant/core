@@ -47,6 +47,8 @@ from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
 
+REQUIREMENTS = ['sleekxmpp>=1.3.1']
+
 
 def get_service(hass, config):
     """ Get the Jabber (XMPP) notification service. """

@@ -68,7 +68,7 @@ hikvision>=0.4
 # console log coloring
 colorlog>=2.6.0
 
-# JSON-RPC interface
+# JSON-RPC interface (media_player.kodi)
 jsonrpc-requests>=0.1
 
 # Forecast.io Bindings (sensor.forecast)

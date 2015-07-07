@@ -49,6 +49,7 @@ except ImportError:
     jsonrpc_requests = None
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['jsonrpc-requests>=0.1']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
@@ -58,12 +59,10 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
 
+    global jsonrpc_requests    # pylint: disable=invalid-name
     if jsonrpc_requests is None:
-        _LOGGER.exception(
-            "Unable to import jsonrpc_requests. "
-            "Did you maybe not install the 'jsonrpc-requests' pip module?")
-
-        return False
+        import jsonrpc_requests as jsonrpc_requests_
+        jsonrpc_requests = jsonrpc_requests_
 
     add_devices([
         KodiDevice(
