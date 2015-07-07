@@ -50,21 +50,6 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("12:00:00 09-07-1986",
                          util.repr_helper(datetime(1986, 7, 9, 12, 0, 0)))
 
-    # pylint: disable=invalid-name
-    def test_color_RGB_to_xy(self):
-        """ Test color_RGB_to_xy. """
-        self.assertEqual((0, 0), util.color_RGB_to_xy(0, 0, 0))
-        self.assertEqual((0.3127159072215825, 0.3290014805066623),
-                         util.color_RGB_to_xy(255, 255, 255))
-
-        self.assertEqual((0.15001662234042554, 0.060006648936170214),
-                         util.color_RGB_to_xy(0, 0, 255))
-
-        self.assertEqual((0.3, 0.6), util.color_RGB_to_xy(0, 255, 0))
-
-        self.assertEqual((0.6400744994567747, 0.3299705106316933),
-                         util.color_RGB_to_xy(255, 0, 0))
-
     def test_convert(self):
         """ Test convert. """
         self.assertEqual(5, util.convert("5", int))
