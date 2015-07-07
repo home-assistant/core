@@ -56,6 +56,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 
 import homeassistant.util as util
+import homeassistant.util.color as color_util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group, discovery, wink, isy994
@@ -237,9 +238,9 @@ def setup(hass, config):
 
                     if len(rgb_color) == 3:
                         params[ATTR_XY_COLOR] = \
-                            util.color_RGB_to_xy(int(rgb_color[0]),
-                                                 int(rgb_color[1]),
-                                                 int(rgb_color[2]))
+                            color_util.color_RGB_to_xy(int(rgb_color[0]),
+                                                       int(rgb_color[1]),
+                                                       int(rgb_color[2]))
 
                 except (TypeError, ValueError):
                     # TypeError if rgb_color is not iterable
