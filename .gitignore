@@ -65,3 +65,7 @@ nosetests.xml
 .pydevproject
 
 .python-version
+
+# venv stuff
+pyvenv.cfg
+pip-selfcheck.json
