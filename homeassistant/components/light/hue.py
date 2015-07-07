@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
     ATTR_FLASH, FLASH_LONG, FLASH_SHORT)
 
+REQUIREMENTS = ['phue>=0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 

@@ -25,7 +25,7 @@ from datetime import timedelta
 try:
     import ephem
 except ImportError:
-    # Error will be raised during setup
+    # Will be fixed during setup
     ephem = None
 
 import homeassistant.util.dt as dt_util
@@ -33,6 +33,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.scheduler import ServiceEventListener
 
 DEPENDENCIES = []
+REQUIREMENTS = ['pyephem>=3.7']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
@@ -100,9 +101,10 @@ def setup(hass, config):
     """ Tracks the state of the sun. """
     logger = logging.getLogger(__name__)
 
+    global ephem  # pylint: disable=invalid-name
     if ephem is None:
-        logger.exception("Error while importing dependency ephem.")
-        return False
+        import ephem as ephem_
+        ephem = ephem_
 
     if None in (hass.config.latitude, hass.config.longitude):
         logger.error("Latitude or longitude not set in Home Assistant config")
