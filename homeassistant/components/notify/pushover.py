@@ -42,6 +42,7 @@ from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 
+REQUIREMENTS = ['python-pushover>=0.2']
 _LOGGER = logging.getLogger(__name__)
 
 

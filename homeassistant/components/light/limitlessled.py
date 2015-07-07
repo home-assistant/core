@@ -27,15 +27,12 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['ledcontroller>=1.0.7']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the LimitlessLED lights. """
-    try:
-        import ledcontroller
-    except ImportError:
-        _LOGGER.exception("Error while importing dependency ledcontroller.")
-        return
+    import ledcontroller
 
     led = ledcontroller.LedController(config['host'])
 
