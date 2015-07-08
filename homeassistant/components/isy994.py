@@ -22,7 +22,7 @@ from homeassistant.const import (
 # homeassistant constants
 DOMAIN = "isy994"
 DEPENDENCIES = []
-REQUIREMENTS = ['PyISY>=1.0.2']
+REQUIREMENTS = ['PyISY>=1.0.5']
 DISCOVER_LIGHTS = "isy994.lights"
 DISCOVER_SWITCHES = "isy994.switches"
 DISCOVER_SENSORS = "isy994.sensors"
