@@ -39,7 +39,7 @@ python-nest>=2.3.1
 pydispatcher>=2.0.5
 
 # ISY994 bindings (*.isy994)
-PyISY>=1.0.2
+PyISY>=1.0.5
 
 # PSutil (sensor.systemmonitor)
 psutil>=2.2.1
