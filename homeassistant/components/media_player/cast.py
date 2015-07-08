@@ -153,8 +153,7 @@ class CastDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """ Title of current playing media. """
-        title = self.media_status.title if self.media_status else None
-        return title if title else self.cast.app_display_name
+        return self.media_status.title if self.media_status else None
 
     @property
     def media_artist(self):

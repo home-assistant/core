@@ -89,10 +89,9 @@
 
     isStaleChanged: function(newVal) {
       if (newVal) {
-        // isLoading wouldn't update without debounce <_<
-        this.debounce('fetch-logbook-entries', function() {
-          logbookActions.fetchDate(this.selectedDate);
-        }, 0);
+        // isLoading wouldn't update without async <_<
+        this.async(
+          function() { logbookActions.fetchDate(this.selectedDate); }, 10);
       }
     },
 
