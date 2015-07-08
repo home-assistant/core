@@ -1,7 +1,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-slider/paper-slider.html'>
 
-<link rel='import' href='../bower_components/color-picker-element/dist/color-picker.html'>
+<link rel='import' href='../components/ha-color-picker.html'>
 
 <dom-module id='more-info-light'>
   <style>
@@ -13,7 +13,7 @@
       transition: max-height .5s ease-in;
     }
 
-    color-picker {
+    ha-color-picker {
       display: block;
       width: 350px;
       margin: 0 auto;
@@ -27,7 +27,7 @@
       max-height: 40px;
     }
 
-    .has-xy_color color-picker {
+    .has-xy_color ha-color-picker {
       max-height: 500px;
     }
   </style>
@@ -41,7 +41,7 @@
         </paper-slider>
       </div>
 
-      <color-picker on-colorselected='colorPicked' width='350' height='200'>
+      <ha-color-picker on-colorselected='colorPicked' width='350' height='200'>
       </color-picker>
     </div>
   </template>
@@ -73,7 +73,7 @@
         this.brightnessSliderValue = newVal.attributes.brightness;
       }
 
-      this.debounce('more-info-light-animation-finish', function() {
+      this.async(function() {
         this.fire('iron-resize');
       }.bind(this), 500);
     },

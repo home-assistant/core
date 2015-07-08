@@ -16,6 +16,10 @@
 
       cursor: pointer;
       overflow: hidden;
+
+      -ms-user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
     }
   </style>
 
@@ -43,9 +47,8 @@
 
     cardTapped: function(ev) {
       ev.stopPropagation();
-      this.debounce('show-more-info-dialog', function() {
-        moreInfoActions.selectEntity(this.stateObj.entityId);
-      }.bind(this), 100);
+      this.async(moreInfoActions.selectEntity.bind(
+        this, this.stateObj.entityId), 100);
     },
   });
 })();
