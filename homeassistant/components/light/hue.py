@@ -9,7 +9,8 @@ import homeassistant.util as util
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
-    ATTR_FLASH, FLASH_LONG, FLASH_SHORT)
+    ATTR_FLASH, FLASH_LONG, FLASH_SHORT, ATTR_EFFECT,
+    EFFECT_COLORLOOP)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -190,6 +191,13 @@ class HueLight(Light):
             command['alert'] = 'select'
         else:
             command['alert'] = 'none'
+
+        effect = kwargs.get(ATTR_EFFECT)
+
+        if effect == EFFECT_COLORLOOP:
+            command['effect'] = 'colorloop'
+        else:
+            command['effect'] = 'none'
 
         self.bridge.set_light(self.light_id, command)
 
