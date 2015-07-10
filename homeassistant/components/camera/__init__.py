@@ -176,6 +176,8 @@ def setup(hass, config):
         _proxy_camera_mjpeg_stream,
         require_auth=True)
 
+    return True
+
 
 class Camera(Entity):
     """ The base class for camera components """
