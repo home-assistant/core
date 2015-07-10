@@ -25,7 +25,6 @@ Upcoming features
 -Expanded documentation
 """
 import requests
-from requests.auth import HTTPBasicAuth
 import logging
 import time
 import re
@@ -34,6 +33,8 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
+    HTTP_HEADER_CONTENT_TYPE,
+    CONTENT_TYPE_MULTIPART
     )
 
 from homeassistant.helpers.entity_component import EntityComponent
@@ -65,6 +66,13 @@ REC_IMG_PREFIX = 'recording_image-'
 
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
+
+CAMERA_PROXY_URL = '/api/camera_proxy_stream/{0}'
+CAMERA_STILL_URL = '/api/camera_proxy/{0}'
+ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?time={1}'
+
+MULTIPART_BOUNDARY = '--jpegboundary'
+MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
 
 
 # pylint: disable=too-many-branches
@@ -121,49 +129,43 @@ def setup(hass, config):
         if entity_id in component.entities.keys():
             camera = component.entities[entity_id]
 
-        if camera:
+        if not camera:
+            self.handler.send_response(HTTP_NOT_FOUND)
+            self.handler.end_headers()
+            return
 
-            try:
-                camera.is_streaming = True
-                camera.update_ha_state()
+        try:
+            camera.is_streaming = True
+            camera.update_ha_state()
 
-                handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
-                handler.request.sendall(bytes(
-                    'Content-type: multipart/x-mixed-replace; \
-                        boundary=--jpgboundary\r\n\r\n', 'utf-8'))
+            handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
+            handler.request.sendall(bytes(
+                'Content-type: multipart/x-mixed-replace; \
+                    boundary=--jpgboundary\r\n\r\n', 'utf-8'))
+            handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
 
-                handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
+            # MJPEG_START_HEADER.format()
 
-                while True:
+            while True:
 
-                    if camera.username and camera.password:
-                        response = requests.get(
-                            camera.still_image_url,
-                            auth=HTTPBasicAuth(
-                                camera.username,
-                                camera.password))
-                    else:
-                        response = requests.get(camera.still_image_url)
+                img_bytes = camera.get_camera_image()
 
-                    headers_str = '\r\n'.join((
-                        'Content-length: {}'.format(len(response.content)),
-                        'Content-type: image/jpeg',
-                    )) + '\r\n\r\n'
+                headers_str = '\r\n'.join((
+                    'Content-length: {}'.format(len(img_bytes)),
+                    'Content-type: image/jpeg',
+                )) + '\r\n\r\n'
 
-                    handler.request.sendall(
-                        bytes(headers_str, 'utf-8') +
-                        response.content +
-                        bytes('\r\n', 'utf-8'))
+                handler.request.sendall(
+                    bytes(headers_str, 'utf-8') +
+                    img_bytes +
+                    bytes('\r\n', 'utf-8'))
 
-                    handler.request.sendall(
-                        bytes('--jpgboundary\r\n', 'utf-8'))
+                handler.request.sendall(
+                    bytes('--jpgboundary\r\n', 'utf-8'))
 
-            except (requests.RequestException, IOError):
-                camera.is_streaming = False
-                camera.update_ha_state()
-
-        else:
-            handler.send_response(HTTP_NOT_FOUND)
+        except (requests.RequestException, IOError):
+            camera.is_streaming = False
+            camera.update_ha_state()
 
         camera.is_streaming = False
 
@@ -209,32 +211,8 @@ class Camera(Entity):
 
     @property
     # pylint: disable=no-self-use
-    def base_url(self):
-        """ Return the configured base URL for the camera """
-        return None
-
-    @property
-    # pylint: disable=no-self-use
     def image_url(self):
         """ Return the still image segment of the URL """
-        return None
-
-    @property
-    # pylint: disable=no-self-use
-    def device_info(self):
-        """ Get the configuration object """
-        return None
-
-    @property
-    # pylint: disable=no-self-use
-    def username(self):
-        """ Get the configured username """
-        return None
-
-    @property
-    # pylint: disable=no-self-use
-    def password(self):
-        """ Get the configured password """
         return None
 
     @property
@@ -261,13 +239,13 @@ class Camera(Entity):
     def state_attributes(self):
         """ Returns optional state attributes. """
         attr = super().state_attributes
-        attr['model_name'] = self.device_info.get('model', 'generic')
-        attr['brand'] = self.device_info.get('brand', 'generic')
-        attr['still_image_url'] = '/api/camera_proxy/' + self.entity_id
-        attr[ATTR_ENTITY_PICTURE] = (
-            '/api/camera_proxy/' +
-            self.entity_id + '?time=' +
+        attr['model_name'] = self.model
+        attr['brand'] = self.brand
+        CAMERA_PROXY_URL.format(self.entity_id)
+        attr['still_image_url'] = CAMERA_STILL_URL.format(self.entity_id)
+        attr[ATTR_ENTITY_PICTURE] = ENTITY_IMAGE_URL.format(
+            self.entity_id,
             str(time.time()))
-        attr['stream_url'] = '/api/camera_proxy_stream/' + self.entity_id
+        attr['stream_url'] = CAMERA_PROXY_URL.format(self.entity_id)
 
         return attr

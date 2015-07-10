@@ -13,19 +13,19 @@
   }
    @media (max-width: 720px) {
       :host .camera-image {
-        max-width: calc(100%);
+        max-width: 100%;
         height: initial
       }
 
       :host .camera-page {
-        max-width: calc(100%);
-        max-height: calc(100%);
+        max-width: 100%;
+        max-height: 100%;
       }
     }
 
     @media (max-width: 620px) {
       :host .camera-image {
-        max-width: calc(100%);
+        max-width: 100%;
         height: initial
       }
     }
@@ -38,9 +38,9 @@
   </style>
 
   <template>
-    <div class$='[[computeClassNames(stateObj)]]'>
-      <div id="camera_container" class="camera-container camera-page">        
-        <img src="{{camera_image_url}}" id="camera_image" class="camera-image" />
+    <div class='camera'>
+      <div id="camera_container" class="camera-container camera-page">
+        <img src="[[computeCameraImageUrl(dialogOpen)]]" id="camera_image" class="camera-image" />
       </div>
     </div>
   </template>
@@ -58,46 +58,20 @@
 
     properties: {
       stateObj: {
-        type: Object,
-        observer: 'stateObjChanged',
+        type: Object
       },
       dialogOpen: {
-        type: Object,
-        observer: 'dialogOpenChanged',
+        type: Boolean,
       },
       camera_image_url: {
         type: String,
       }
     },
 
-    stateObjChanged: function(newVal, oldVal) {
-      if (newVal) {
-        
-      }
-
-    },
-
-    computeClassNames: function(stateObj) {
-      return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
-    },
-
-    dialogOpenChanged: function(newVal, oldVal) {      
-      if (newVal) {
-        this.startImageStream();
-      }
-      else {
-        this.stopImageStream();
-      }
-    },
-
-    startImageStream: function() {      
-      this.camera_image_url = this.stateObj.attributes['stream_url'];
-      this.isStreaming = true;
-    },
-
-    stopImageStream: function() {      
-      this.camera_image_url = this.stateObj.attributes['still_image_url'] + '?t=' + Date.now();
-      this.isStreaming = false;
+    computeCameraImageUrl: function(dialogOpen) {
+      return dialogOpen ?
+        this.stateObj.attributes['stream_url'] :
+        this.stateObj.attributes['still_image_url'];
     },
 
   });
