@@ -10,6 +10,9 @@
     }
   </style>
   <template>
+    <template is='dom-if' if='[[noEntries(entries)]]'>
+      No logbook entries found.
+    </template>
     <template is='dom-repeat' items="[[entries]]">
       <logbook-entry entry-obj="[[item]]"></logbook-entry>
     </template>
@@ -27,6 +30,10 @@
         value: [],
       },
     },
+
+    noEntries: function(entries) {
+      return !entries.length;
+    }
   });
 })();
 </script>

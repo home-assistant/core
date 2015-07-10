@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Unable to import blockchain. "
             "Did you maybe not install the 'blockchain' package?")
 
-        return None
+        return False
 
     wallet_id = config.get('wallet', None)
     password = config.get('password', None)

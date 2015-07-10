@@ -93,17 +93,17 @@ def setup(hass, config):
     # Setup fake device tracker
     hass.states.set("device_tracker.paulus", "home",
                     {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/schoutsen/picture"})
+                     "http://graph.facebook.com/297400035/picture"})
     hass.states.set("device_tracker.anne_therese", "not_home",
                     {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/anne.t.frederiksen/picture"})
+                     "http://graph.facebook.com/621994601/picture"})
 
     hass.states.set("group.all_devices", "home",
                     {
                         "auto": True,
                         ATTR_ENTITY_ID: [
-                            "device_tracker.Paulus",
-                            "device_tracker.Anne_Therese"
+                            "device_tracker.paulus",
+                            "device_tracker.anne_therese"
                         ]
                     })
 

@@ -23,28 +23,36 @@
 
 <script>
 (function() {
-  var stateStore = window.hass.stateStore;
+  var entityGetters = window.hass.entityGetters;
+  var moreInfoGetters = window.hass.moreInfoGetters;
 
   Polymer({
     is: 'more-info-group',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       stateObj: {
         type: Object,
-        observer: 'updateStates',
       },
 
       states: {
         type: Array,
-        value: [],
+        bindNuclear: [
+          moreInfoGetters.currentEntity,
+          entityGetters.entityMap,
+          function(currentEntity, entities) {
+            // weird bug??
+            if (!currentEntity) {
+              return;
+            }
+            return currentEntity.attributes.entity_id.map(
+              entities.get.bind(entities));
+          },
+        ],
       },
     },
 
-    stateStoreChanged: function() {
-      this.updateStates();
-    },
 
     updateStates: function() {
       this.states = this.stateObj && this.stateObj.attributes.entity_id ?

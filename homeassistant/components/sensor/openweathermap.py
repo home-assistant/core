@@ -1,7 +1,6 @@
 """
 homeassistant.components.sensor.openweathermap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 OpenWeatherMap (OWM) service.
 
 Configuration:
@@ -12,7 +11,8 @@ following to your config/configuration.yaml
 sensor:
   platform: openweathermap
   api_key: YOUR_APP_KEY
-  monitored_variables:
+  forecast: 0 or 1
+  monitored_conditions:
     - weather
     - temperature
     - wind_speed
@@ -28,15 +28,13 @@ api_key
 *Required
 To retrieve this value log into your account at http://openweathermap.org/
 
+forecast
+*Optional
+Enables the forecast. The default is to display the current conditions.
+
 monitored_conditions
-*Required
-An array specifying the variables to monitor.
-
-These are the variables for the monitored_conditions array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
+*Optional
+Conditions to monitor. See the configuration example above for a
 list of all available conditions to monitor.
 
 Details for the API : http://bugs.openweathermap.org/projects/api/wiki
@@ -81,10 +79,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Unable to import pyowm. "
             "Did you maybe not install the 'PyOWM' package?")
 
-        return None
+        return False
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
+    forecast = config.get('forecast', 0)
     owm = OWM(config.get(CONF_API_KEY, None))
 
     if not owm:
@@ -93,13 +92,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Please check your settings for OpenWeatherMap.")
         return None
 
-    data = WeatherData(owm, hass.config.latitude, hass.config.longitude)
+    data = WeatherData(owm, forecast, hass.config.latitude,
+                       hass.config.longitude)
     dev = []
-    for variable in config['monitored_conditions']:
-        if variable not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable)
-        else:
-            dev.append(OpenWeatherMapSensor(data, variable, unit))
+    try:
+        for variable in config['monitored_conditions']:
+            if variable not in SENSOR_TYPES:
+                _LOGGER.error('Sensor type: "%s" does not exist', variable)
+            else:
+                dev.append(OpenWeatherMapSensor(data, variable, unit))
+    except KeyError:
+        pass
+
+    if forecast == 1:
+        SENSOR_TYPES['forecast'] = ['Forecast', '']
+        dev.append(OpenWeatherMapSensor(data, 'forecast', unit))
 
     add_devices(dev)
 
@@ -108,11 +115,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OpenWeatherMapSensor(Entity):
     """ Implements an OpenWeatherMap sensor. """
 
-    def __init__(self, weather_data, sensor_type, unit):
-        self.client_name = 'Weather - '
+    def __init__(self, weather_data, sensor_type, temp_unit):
+        self.client_name = 'Weather'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.owa_client = weather_data
-        self._unit = unit
+        self.temp_unit = temp_unit
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -120,7 +127,7 @@ class OpenWeatherMapSensor(Entity):
 
     @property
     def name(self):
-        return self.client_name + ' ' + self._name
+        return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
@@ -138,14 +145,15 @@ class OpenWeatherMapSensor(Entity):
 
         self.owa_client.update()
         data = self.owa_client.data
+        fc_data = self.owa_client.fc_data
 
         if self.type == 'weather':
             self._state = data.get_detailed_status()
         elif self.type == 'temperature':
-            if self._unit == TEMP_CELCIUS:
+            if self.temp_unit == TEMP_CELCIUS:
                 self._state = round(data.get_temperature('celsius')['temp'],
                                     1)
-            elif self._unit == TEMP_FAHRENHEIT:
+            elif self.temp_unit == TEMP_FAHRENHEIT:
                 self._state = round(data.get_temperature('fahrenheit')['temp'],
                                     1)
             else:
@@ -161,29 +169,39 @@ class OpenWeatherMapSensor(Entity):
         elif self.type == 'rain':
             if data.get_rain():
                 self._state = round(data.get_rain()['3h'], 0)
+                self._unit_of_measurement = 'mm'
             else:
                 self._state = 'not raining'
                 self._unit_of_measurement = ''
         elif self.type == 'snow':
             if data.get_snow():
                 self._state = round(data.get_snow(), 0)
+                self._unit_of_measurement = 'mm'
             else:
                 self._state = 'not snowing'
                 self._unit_of_measurement = ''
+        elif self.type == 'forecast':
+            self._state = fc_data.get_weathers()[0].get_status()
 
 
 class WeatherData(object):
     """ Gets the latest data from OpenWeatherMap. """
 
-    def __init__(self, owm, latitude, longitude):
+    def __init__(self, owm, forecast, latitude, longitude):
         self.owm = owm
+        self.forecast = forecast
         self.latitude = latitude
         self.longitude = longitude
         self.data = None
+        self.fc_data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from OpenWeatherMap. """
-
         obs = self.owm.weather_at_coords(self.latitude, self.longitude)
         self.data = obs.get_weather()
+
+        if self.forecast == 1:
+            obs = self.owm.three_hours_forecast_at_coords(self.latitude,
+                                                          self.longitude)
+            self.fc_data = obs.get_forecast()

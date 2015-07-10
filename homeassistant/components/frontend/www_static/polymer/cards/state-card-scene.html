@@ -5,10 +5,10 @@
 
 <dom-module id="state-card-scene">
   <template>
-    <template is='dom-if' if=[[allowToggle]]>
+    <template is='dom-if' if='[[allowToggle]]'>
       <state-card-toggle state-obj="[[stateObj]]"></state-card-toggle>
     </template>
-    <template is='dom-if' if=[[!allowToggle]]>
+    <template is='dom-if' if='[[!allowToggle]]'>
       <state-card-display state-obj="[[stateObj]]"></state-card-display>
     </template>
   </template>

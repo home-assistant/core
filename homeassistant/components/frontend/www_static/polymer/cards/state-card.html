@@ -15,6 +15,11 @@
       width: 100%;
 
       cursor: pointer;
+      overflow: hidden;
+
+      -ms-user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
     }
   </style>
 
@@ -25,7 +30,7 @@
 
 <script>
 (function(){
-  var uiActions = window.hass.uiActions;
+  var moreInfoActions = window.hass.moreInfoActions;
 
   Polymer({
     is: 'state-card',
@@ -40,8 +45,10 @@
       'tap': 'cardTapped',
     },
 
-    cardTapped: function() {
-      uiActions.showMoreInfoDialog(this.stateObj.entityId);
+    cardTapped: function(ev) {
+      ev.stopPropagation();
+      this.async(moreInfoActions.selectEntity.bind(
+        this, this.stateObj.entityId), 100);
     },
   });
 })();
