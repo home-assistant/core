@@ -156,14 +156,17 @@ class GenericCamera(Camera):
 
     @property
     def base_url(self):
+        """ Return the URL of the IP Camera """
         return self._base_url
 
     @property
     def username(self):
+        """ Return the configured username """
         return self._username
 
     @property
     def password(self):
+        """ Return the configured password """
         return self._password
 
     @property
