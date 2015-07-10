@@ -18,7 +18,7 @@ phue>=0.8
 ledcontroller>=1.0.7
 
 # Chromecast bindings (media_player.cast)
-pychromecast>=0.6.7
+pychromecast>=0.6.9
 
 # Keyboard (keyboard)
 pyuserinput>=0.1.9
