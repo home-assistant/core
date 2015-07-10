@@ -2,13 +2,6 @@
 <link rel='import' href='../bower_components/layout/layout.html'>
 
 <link rel='import' href='../bower_components/paper-drawer-panel/paper-drawer-panel.html'>
-<link rel='import' href='../bower_components/paper-header-panel/paper-header-panel.html'>
-<link rel='import' href='../bower_components/paper-toolbar/paper-toolbar.html'>
-<link rel='import' href='../bower_components/paper-menu/paper-menu.html'>
-<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
-<link rel='import' href='../bower_components/paper-item/paper-item.html'>
-<link rel='import' href='../bower_components/paper-item/paper-icon-item.html'>
-<link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
 
 <link rel='import' href='../layouts/partial-states.html'>
 <link rel='import' href='../layouts/partial-logbook.html'>
@@ -18,115 +11,22 @@
 <link rel='import' href='../layouts/partial-dev-set-state.html'>
 
 <link rel='import' href='../managers/notification-manager.html'>
-<link rel='import' href='../managers/modal-manager.html'>
+<link rel="import" href="../dialogs/more-info-dialog.html">
 
-<link rel='import' href='../components/stream-status.html'>
+<link rel='import' href='../components/ha-sidebar.html'>
 
 <dom-module id='home-assistant-main'>
-  <style>
-    .sidenav {
-      background: #fafafa;
-      box-shadow: 1px 0 1px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-
-    .sidenav paper-menu {
-      --paper-menu-color: var(--secondary-text-color);
-      --paper-menu-background-color: #fafafa;
-    }
-
-    paper-icon-item {
-      cursor: pointer;
-    }
-
-    .divider {
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .text {
-      padding: 16px;
-      font-size: 14px;
-    }
-
-    .dev-tools {
-      padding: 0 8px;
-    }
-  </style>
-
   <template>
     <notification-manager></notification-manager>
-    <modal-manager></modal-manager>
+    <more-info-dialog></more-info-dialog>
 
     <paper-drawer-panel id='drawer' narrow='{{narrow}}'>
-      <paper-header-panel mode='scroll' drawer class='sidenav fit'>
-        <paper-toolbar>
-          <!-- forces paper toolbar to style title appropriate -->
-          <paper-icon-button hidden></paper-icon-button>
-          <div title>Home Assistant</div>
-        </paper-toolbar>
+      <ha-sidebar drawer></ha-sidebar>
 
-        <paper-menu id='menu' class='layout vertical fit'
-          selectable='[data-panel]' attr-for-selected='data-panel'
-          on-iron-select='menuSelect' selected='[[selected]]'>
-          <paper-icon-item data-panel='states'>
-            <iron-icon item-icon icon='apps'></iron-icon> States
-          </paper-icon-item>
-
-          <template is='dom-repeat' items='{{activeFilters}}'>
-            <paper-icon-item data-panel$='[[filterType(item)]]'>
-              <iron-icon item-icon icon='[[filterIcon(item)]]'></iron-icon>
-              <span>[[filterName(item)]]</span>
-            </paper-icon-item>
-          </template>
-
-          <template is='dom-if' if='[[hasHistoryComponent]]'>
-            <paper-icon-item data-panel='history'>
-              <iron-icon item-icon icon='assessment'></iron-icon>
-              History
-            </paper-icon-item>
-          </template>
-
-          <template is='dom-if' if='[[hasLogbookComponent]]'>
-            <paper-icon-item data-panel='logbook'>
-              <iron-icon item-icon icon='list'></iron-icon>
-              Logbook
-            </paper-icon-item>
-          </template>
-
-          <div class='flex'></div>
-
-          <paper-icon-item data-panel='logout'>
-            <iron-icon item-icon icon='exit-to-app'></iron-icon>
-            Log Out
-          </paper-icon-item>
-
-          <paper-item class='divider horizontal layout justified'>
-            <div>Streaming updates</div>
-            <stream-status></stream-status>
-          </paper-item>
-
-          <div class='text label divider'>Developer Tools</div>
-          <div class='dev-tools layout horizontal justified'>
-            <paper-icon-button
-              icon='settings-remote' data-panel$='[[selectedDevService]]'
-              on-click='handleDevClick'></paper-icon-button>
-            <paper-icon-button
-              icon='settings-ethernet' data-panel$='[[selectedDevState]]'
-              on-click='handleDevClick'></paper-icon-button>
-            <paper-icon-button
-              icon='settings-input-antenna' data-panel$='[[selectedDevEvent]]'
-              on-click='handleDevClick'></paper-icon-button>
-          </div>
-        </paper-menu>
-      </paper-header-panel>
-
-      <template is='dom-if' if='[[!hideStates]]'>
-        <partial-states
-          main narrow='[[narrow]]'
-          filter='[[stateFilter]]'>
+      <template is='dom-if' if='[[isSelectedStates]]'>
+        <partial-states main narrow='[[narrow]]'>
         </partial-states>
       </template>
-
       <template is='dom-if' if='[[isSelectedLogbook]]'>
         <partial-logbook main narrow='[[narrow]]'></partial-logbook>
       </template>
@@ -149,192 +49,83 @@
 
 <script>
 (function() {
+  var configGetters = window.hass.configGetters;
+  var entityGetters = window.hass.entityGetters;
+  var navigationGetters = window.hass.navigationGetters;
+
   var authActions = window.hass.authActions;
+  var navigationActions = window.hass.navigationActions;
 
   var uiUtil = window.hass.uiUtil;
-  var uiConstants = window.hass.uiConstants;
+  var entityDomainFilters = window.hass.util.entityDomainFilters;
+  var urlSync = window.hass.urlSync;
 
   Polymer({
     is: 'home-assistant-main',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
-      selected: {
-        type: String,
-        value: 'states',
-      },
-
-      stateFilter: {
-        type: String,
-        value: null,
-      },
-
       narrow: {
         type: Boolean,
       },
 
-      activeFilters: {
-        type: Array,
-        value: [],
-      },
-
-      hasHistoryComponent: {
-        type: Boolean,
-        value: false,
-      },
-
-      hasLogbookComponent: {
-        type: Boolean,
-        value: false,
-      },
-
-      isStreaming: {
-        type: Boolean,
-        value: false,
-      },
-
-      hasStreamError: {
-        type: Boolean,
-        value: false,
-      },
-
-      hideStates: {
-        type: Boolean,
-        value: false,
-      },
-
-      selectedHistory: {
+      activePage: {
         type: String,
-        value: 'history',
-        readOnly: true,
+        bindNuclear: navigationGetters.activePage,
+        observer: 'activePageChanged',
+      },
+
+      isSelectedStates: {
+        type: Boolean,
+        bindNuclear: navigationGetters.isActivePane('states'),
       },
 
       isSelectedHistory: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedHistory)',
-      },
-
-      selectedLogbook: {
-        type: String,
-        value: 'logbook',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('history'),
       },
 
       isSelectedLogbook: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedLogbook)',
-      },
-
-      selectedDevEvent: {
-        type: String,
-        value: 'devEvent',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('logbook'),
       },
 
       isSelectedDevEvent: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedDevEvent)',
-      },
-
-      selectedDevState: {
-        type: String,
-        value: 'devState',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('devEvent'),
       },
 
       isSelectedDevState: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedDevState)',
-      },
-
-      selectedDevService: {
-        type: String,
-        value: 'devService',
-        readOnly: true,
+        bindNuclear: navigationGetters.isActivePane('devState'),
       },
 
       isSelectedDevService: {
         type: Boolean,
-        computed: 'computeIsSelected(selected, selectedDevService)',
+        bindNuclear: navigationGetters.isActivePane('devService'),
       },
-
-
     },
 
     listeners: {
-      'menu.core-select': 'menuSelect',
       'open-menu': 'openDrawer',
-    },
-
-    stateStoreChanged: function(stateStore) {
-      this.activeFilters = stateStore.domains.filter(function(domain) {
-        return domain in uiConstants.STATE_FILTERS;
-      }).toArray();
-    },
-
-    componentStoreChanged: function(componentStore) {
-      this.hasHistoryComponent = componentStore.isLoaded('history');
-      this.hasLogbookComponent = componentStore.isLoaded('logbook');
-    },
-
-    menuSelect: function(ev, detail, sender) {
-      this.selectPanel(this.$.menu.selected);
-    },
-
-    handleDevClick: function(ev, detail, sender) {
-      // prevent it from highlighting first menu item
-      document.activeElement.blur();
-      this.selectPanel(ev.target.parentElement.dataset.panel);
-    },
-
-    selectPanel: function(newChoice) {
-      if (newChoice == 'logout') {
-        this.handleLogOut();
-        return;
-      } else if(newChoice == this.selected) {
-        return;
-      }
-
-      this.closeDrawer();
-      this.selected = newChoice;
-
-      if (newChoice.substr(0, 7) === 'states_') {
-        this.hideStates = false;
-        this.stateFilter = newChoice.substr(7);
-      } else {
-        this.hideStates = newChoice !== 'states';
-        this.stateFilter = null;
-      }
     },
 
     openDrawer: function() {
       this.$.drawer.openDrawer();
     },
 
-    closeDrawer: function() {
+    activePageChanged: function() {
       this.$.drawer.closeDrawer();
     },
 
-    handleLogOut: function() {
-      authActions.logOut();
+    attached: function() {
+      urlSync.startSync();
     },
 
-    computeIsSelected: function(selected, selectedType) {
-      return selected === selectedType;
+    detached: function() {
+      urlSync.stopSync();
     },
-
-    filterIcon: function(filter) {
-      return uiUtil.domainIcon(filter);
-    },
-
-    filterName: function(filter) {
-      return uiConstants.STATE_FILTERS[filter];
-    },
-
-    filterType: function(filter) {
-      return 'states_' + filter;
-    }
   });
 })();
 </script>

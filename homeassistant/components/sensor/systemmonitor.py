@@ -21,9 +21,26 @@ sensor:
     - type: 'memory_use_percent'
     - type: 'memory_use'
     - type: 'memory_free'
+    - type: 'swap_use_percent'
+    - type: 'swap_use'
+    - type: 'swap_free'
+    - type: 'network_in'
+      arg: 'eth0'
+    - type: 'network_out'
+      arg: 'eth0'
+    - type: 'packets_in'
+      arg: 'eth0'
+    - type: 'packets_out'
+      arg: 'eth0'
+    - type: 'ipv4_address'
+      arg: 'eth0'
+    - type: 'ipv6_address'
+      arg: 'eth0'
     - type: 'processor_use'
     - type: 'process'
       arg: 'octave-cli'
+    - type: 'last_boot'
+    - type: 'since_last_boot'
 
 Variables:
 
@@ -42,12 +59,12 @@ arg
 *Optional
 Additional details for the type, eg. path, binary name, etc.
 """
+import logging
+import psutil
 
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
-import psutil
-import logging
-
 
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
@@ -58,6 +75,17 @@ SENSOR_TYPES = {
     'memory_free': ['RAM Free', 'MiB'],
     'processor_use': ['CPU Use', '%'],
     'process': ['Process', ''],
+    'swap_use_percent': ['Swap Use', '%'],
+    'swap_use': ['Swap Use', 'GiB'],
+    'swap_free': ['Swap Free', 'GiB'],
+    'network_out': ['Sent', 'MiB'],
+    'network_in': ['Recieved', 'MiB'],
+    'packets_out': ['Packets sent', ''],
+    'packets_in': ['Packets recieved', ''],
+    'ipv4_address': ['IPv4 address', ''],
+    'ipv6_address': ['IPv6 address', ''],
+    'last_boot': ['Last Boot', ''],
+    'since_last_boot': ['Since Last Boot', '']
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,6 +131,7 @@ class SystemMonitorSensor(Entity):
     def unit_of_measurement(self):
         return self._unit_of_measurement
 
+    # pylint: disable=too-many-branches
     def update(self):
         if self.type == 'disk_use_percent':
             self._state = psutil.disk_usage(self.argument).percent
@@ -120,6 +149,12 @@ class SystemMonitorSensor(Entity):
                                 1024**2, 1)
         elif self.type == 'memory_free':
             self._state = round(psutil.virtual_memory().available / 1024**2, 1)
+        elif self.type == 'swap_use_percent':
+            self._state = psutil.swap_memory().percent
+        elif self.type == 'swap_use':
+            self._state = round(psutil.swap_memory().used / 1024**3, 1)
+        elif self.type == 'swap_free':
+            self._state = round(psutil.swap_memory().free / 1024**3, 1)
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':
@@ -127,3 +162,24 @@ class SystemMonitorSensor(Entity):
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
+        elif self.type == 'network_out':
+            self._state = round(psutil.net_io_counters(pernic=True)
+                                [self.argument][0] / 1024**2, 1)
+        elif self.type == 'network_in':
+            self._state = round(psutil.net_io_counters(pernic=True)
+                                [self.argument][1] / 1024**2, 1)
+        elif self.type == 'packets_out':
+            self._state = psutil.net_io_counters(pernic=True)[self.argument][2]
+        elif self.type == 'packets_in':
+            self._state = psutil.net_io_counters(pernic=True)[self.argument][3]
+        elif self.type == 'ipv4_address':
+            self._state = psutil.net_if_addrs()[self.argument][0][1]
+        elif self.type == 'ipv6_address':
+            self._state = psutil.net_if_addrs()[self.argument][1][1]
+        elif self.type == 'last_boot':
+            self._state = dt_util.datetime_to_date_str(
+                dt_util.as_local(
+                    dt_util.utc_from_timestamp(psutil.boot_time())))
+        elif self.type == 'since_last_boot':
+            self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
+                psutil.boot_time())

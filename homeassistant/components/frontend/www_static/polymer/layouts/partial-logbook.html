@@ -1,17 +1,24 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/ha-logbook.html">
+<link rel="import" href="../components/loading-box.html">
+
+<link rel="import" href="../resources/pikaday-js.html">
 
 <dom-module id="partial-logbook">
   <style>
-    .content {
-      background-color: white;
-      padding: 8px;
-    }
+  .selected-date-container {
+    padding: 0 16px;
+  }
+
+  paper-input {
+    max-width: 200px;
+  }
   </style>
   <template>
     <partial-base narrow="[[narrow]]">
@@ -20,20 +27,30 @@
       <paper-icon-button icon="refresh" header-buttons
         on-click="handleRefresh"></paper-icon-button>
 
-      <ha-logbook entries="[[entries]]"></ha-logbook>
+      <div>
+        <div class='selected-date-container'>
+          <paper-input label='Showing entries for' id='datePicker'
+            value='[[selectedDate]]' on-focus='datepickerFocus'></paper-input>
+
+          <loading-box hidden$='[[!isLoading]]'>Loading logbook entries</loading-box>
+        </div>
+        <ha-logbook entries="[[entries]]" hidden$='[[isLoading]]'></ha-logbook>
+      </div>
     </partial-base>
   </template>
 </dom-module>
 
 <script>
 (function() {
-  var storeListenerMixIn = window.hass.storeListenerMixIn;
+  var logbookGetters = window.hass.logbookGetters;
   var logbookActions = window.hass.logbookActions;
+  var uiActions = window.hass.uiActions;
+  var dateToStr = window.hass.util.dateToStr;
 
   Polymer({
     is: 'partial-logbook',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       narrow: {
@@ -41,22 +58,61 @@
         value: false,
       },
 
+      selectedDate: {
+        type: String,
+        bindNuclear: logbookGetters.currentDate,
+      },
+
+      isLoading: {
+        type: Boolean,
+        bindNuclear: logbookGetters.isLoadingEntries,
+      },
+
+      isStale: {
+        type: Boolean,
+        bindNuclear: logbookGetters.isCurrentStale,
+        observer: 'isStaleChanged',
+      },
+
       entries: {
         type: Array,
-        value: [],
+        bindNuclear: [
+          logbookGetters.currentEntries,
+          function(entries) { return entries.toArray(); },
+        ],
+      },
+
+      datePicker: {
+        type: Object,
       },
     },
 
-    logbookStoreChanged: function(logbookStore) {
-      if (logbookStore.isStale()) {
-        logbookActions.fetch();
+    isStaleChanged: function(newVal) {
+      if (newVal) {
+        // isLoading wouldn't update without async <_<
+        this.async(
+          function() { logbookActions.fetchDate(this.selectedDate); }, 10);
       }
-
-      this.entries = logbookStore.all.toArray();
     },
 
     handleRefresh: function() {
-      logbookActions.fetch();
+      logbookActions.fetchDate(this.selectedDate);
+    },
+
+    datepickerFocus: function() {
+      this.datePicker.adjustPosition();
+      this.datePicker.gotoDate(moment('2015-06-30').toDate());
+    },
+
+    attached: function() {
+      this.datePicker = new Pikaday({
+        field: this.$.datePicker.inputElement,
+        onSelect: logbookActions.changeCurrentDate,
+      });
+    },
+
+    detached: function() {
+      this.datePicker.destroy();
     },
   });
 })();

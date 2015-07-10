@@ -1,11 +1,11 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="./partial-base.html">
 
 <link rel="import" href="../components/state-cards.html">
+<link rel="import" href="../components/ha-voice-command-progress.html">
 
 <dom-module id="partial-states">
   <style>
@@ -41,21 +41,24 @@
 
   <template>
     <partial-base narrow="[[narrow]]">
-      <span header-title>{{headerTitle}}</span>
+      <span header-title>[[computeHeaderTitle(filter)]]</span>
 
       <span header-buttons>
-        <paper-icon-button icon="refresh" class$="[[computeRefreshButtonClass(isFetching)]]"
-          on-click="handleRefresh" hidden$="[[isStreaming]]"></paper-icon-button>
-        <paper-icon-button icon="[[listenButtonIcon]]" hidden$={{!canListen}}
+        <paper-icon-button
+          icon="refresh"
+          class$="[[computeRefreshButtonClass(isFetching)]]"
+          on-click="handleRefresh" hidden$="[[isStreaming]]"
+        ></paper-icon-button>
+        <paper-icon-button
+          icon="[[computeListenButtonIcon(isListening)]]"
+          hidden$='[[!canListen]]'
           on-click="handleListenClick"></paper-icon-button>
       </span>
 
       <div class='content-wrapper'>
         <div class='listening' hidden$="[[!showListenInterface]]"
           on-click="handleListenClick">
-          <iron-icon icon="av:hearing"></iron-icon> <span>{{finalTranscript}}</span>
-          <span class='interimTranscript'>[[interimTranscript]]</span>
-          <paper-spinner active$="[[isTransmitting]]" alt="Sending voice command to Home Assistant"></paper-spinner>
+          <ha-voice-command-progress></ha-voice-command-progress>
         </div>
 
         <state-cards states="[[states]]">
@@ -75,28 +78,24 @@
 
 <script>
 (function(){
+  var configGetters = window.hass.configGetters;
+  var navigationGetters = window.hass.navigationGetters;
+  var voiceGetters = window.hass.voiceGetters;
+  var streamGetters = window.hass.streamGetters;
+  var serviceGetters = window.hass.serviceGetters;
+  var syncGetters = window.hass.syncGetters;
+
   var syncActions = window.hass.syncActions;
   var voiceActions = window.hass.voiceActions;
-  var stateStore = window.hass.stateStore;
-  var uiConstants = window.hass.uiConstants;
+
+  var entityDomainFilters = window.hass.util.entityDomainFilters;
 
   Polymer({
     is: 'partial-states',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
-      /**
-       * Title to show in the header
-       */
-      headerTitle: {
-        type: String,
-        value: 'States',
-      },
-
-      /**
-       * If header is to be shown in narrow mode.
-       */
       narrow: {
         type: Boolean,
         value: false,
@@ -104,110 +103,56 @@
 
       filter: {
         type: String,
-        value: null,
-        observer: 'filterChanged',
-      },
-
-      voiceSupported: {
-        type: Boolean,
-        value: voiceActions.isSupported(),
+        bindNuclear: navigationGetters.activeFilter,
       },
 
       isFetching: {
         type: Boolean,
-        value: false,
+        bindNuclear: syncGetters.isFetching,
       },
 
       isStreaming: {
         type: Boolean,
-        value: false,
+        bindNuclear: streamGetters.isStreamingEvents,
       },
 
       canListen: {
         type: Boolean,
-        value: false,
+        bindNuclear: [
+          voiceGetters.isVoiceSupported,
+          configGetters.isComponentLoaded('conversation'),
+          function(isVoiceSupported, componentLoaded) {
+            return isVoiceSupported && componentLoaded;
+          }
+        ]
       },
 
       isListening: {
         type: Boolean,
-        value: false,
-      },
-
-      isTransmitting: {
-        type: Boolean,
-        value: false,
-      },
-
-      interimTranscript: {
-        type: String,
-        value: '',
-      },
-
-      finalTranscript: {
-        type: String,
-        value: '',
-      },
-
-      listenButtonIcon: {
-        type: String,
-        computed: 'computeListenButtonIcon(isListening)'
+        bindNuclear: voiceGetters.isListening,
       },
 
       showListenInterface: {
         type: Boolean,
-        computed: 'computeShowListenInterface(isListening,isTransmitting)'
-      }
-    },
+        bindNuclear: [
+          voiceGetters.isListening,
+          voiceGetters.isTransmitting,
+          function(isListening, isTransmitting) {
+            return isListening || isTransmitting;
+          },
+        ],
+      },
 
-    componentStoreChanged: function(componentStore) {
-      this.canListen = this.voiceSupported &&
-                       componentStore.isLoaded('conversation');
-    },
-
-    stateStoreChanged: function() {
-      this.refreshStates();
-    },
-
-    syncStoreChanged: function(syncStore) {
-      this.isFetching = syncStore.isFetching;
-    },
-
-    streamStoreChanged: function(streamStore) {
-      this.isStreaming = streamStore.isStreaming;
-    },
-
-    voiceStoreChanged: function(voiceStore) {
-      this.isListening = voiceStore.isListening;
-      this.isTransmitting = voiceStore.isTransmitting;
-      this.finalTranscript = voiceStore.finalTranscript;
-      this.interimTranscript = voiceStore.interimTranscript.slice(
-                                 this.finalTranscript.length);
-    },
-
-    filterChanged: function() {
-      this.refreshStates();
-
-      this.headerTitle = uiConstants.STATE_FILTERS[this.filter] || 'States';
-    },
-
-    refreshStates: function() {
-      var states;
-
-      if (this.filter) {
-        var filter = this.filter;
-        states = stateStore.all.filter(function(state) {
-          return state.domain === filter;
-        });
-
-      } else {
-        // all but the STATE_FILTER keys
-        states = stateStore.all.filter(function(state) {
-          return !(state.domain in uiConstants.STATE_FILTERS);
-        });
-      }
-
-      this.states = states.toArray().filter(
-              function (el) {return !el.attributes.hidden;});
+      states: {
+        type: Array,
+        bindNuclear: [
+          navigationGetters.filteredStates,
+          // are here so a change to services causes a re-render.
+          // we need this to decide if we show toggles for states.
+          serviceGetters.entityMap,
+          function(states) { return states.toArray(); },
+        ],
+      },
     },
 
     handleRefresh: function() {
@@ -222,12 +167,12 @@
       }
     },
 
-    computeListenButtonIcon: function(isListening) {
-      return isListening ? 'av:mic-off' : 'av:mic';
+    computeHeaderTitle: function(filter) {
+      return filter ? entityDomainFilters[filter] : 'States';
     },
 
-    computeShowListenInterface: function(isListening,isTransmitting) {
-      return isListening || isTransmitting;
+    computeListenButtonIcon: function(isListening) {
+      return isListening ? 'av:mic-off' : 'av:mic';
     },
 
     computeRefreshButtonClass: function(isFetching) {

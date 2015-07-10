@@ -13,6 +13,10 @@
 
 <dom-module id="login-form">
   <style>
+    :host {
+      white-space: nowrap;
+    }
+
     #passwordDecorator {
       display: block;
       height: 57px;
@@ -86,53 +90,50 @@
 <script>
 (function() {
   var uiActions = window.hass.uiActions;
+  var authGetters = window.hass.authGetters;
 
   Polymer({
     is: 'login-form',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       isValidating: {
         type: Boolean,
-        value: false,
+        observer: 'isValidatingChanged',
+        bindNuclear: authGetters.isValidating,
       },
 
       isInvalid: {
         type: Boolean,
-        value: false,
+        bindNuclear: authGetters.isInvalidAttempt,
       },
 
       errorMessage: {
         type: String,
-        value: '',
-      }
+        bindNuclear: authGetters.attemptErrorMessage,
+      },
     },
 
     listeners: {
-      'passwordInput.keydown': 'passwordKeyDown',
+      'keydown': 'passwordKeyDown',
       'loginButton.click': 'validatePassword',
     },
 
-    attached: function() {
-      this.focusPassword();
-    },
+    observers: [
+      'validatingChanged(isValidating, isInvalid)',
+    ],
 
-    authStoreChanged: function(authStore) {
-      this.isValidating = authStore.isValidating;
-
-      if (authStore.lastAttemptInvalid) {
-        this.errorMessage = authStore.lastAttemptMessage;
-        this.isInvalid = true;
-      }
-
-      if (!this.isValidating) {
-        setTimeout(this.focusPassword.bind(this), 0);
+    validatingChanged: function(isValidating, isInvalid) {
+      if (!isValidating && !isInvalid) {
+        this.$.passwordInput.value = '';
       }
     },
 
-    focusPassword: function() {
-      this.$.passwordInput.focus();
+    isValidatingChanged: function(newVal) {
+      if (!newVal) {
+        this.async(function() { this.$.passwordInput.focus(); }.bind(this), 10);
+      }
     },
 
     passwordKeyDown: function(ev) {

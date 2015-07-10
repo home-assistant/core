@@ -54,14 +54,14 @@
 
 <script>
   (function() {
-    var uiActions = window.hass.uiActions;
+    var moreInfoActions = window.hass.moreInfoActions;
 
     Polymer({
       is: 'logbook-entry',
 
       entityClicked: function(ev) {
         ev.preventDefault();
-        uiActions.showMoreInfoDialog(this.entryObj.entityId);
+        moreInfoActions.selectEntity(this.entryObj.entityId);
       }
     });
 

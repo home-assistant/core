@@ -31,7 +31,7 @@
   </style>
   <template>
     <!-- entry-animation='slide-up-animation' exit-animation='slide-down-animation' -->
-    <paper-dialog id="dialog" with-backdrop>
+    <paper-dialog id="dialog" with-backdrop opened='{{dialogOpen}}'>
       <h2><state-card-content state-obj="[[stateObj]]"></state-card-content></h2>
       <div>
         <template is='dom-if' if="[[showHistoryComponent]]">
@@ -49,9 +49,13 @@
 
 <script>
 (function() {
-  var stateStore = window.hass.stateStore;
-  var stateHistoryStore = window.hass.stateHistoryStore;
-  var stateHistoryActions = window.hass.stateHistoryActions;
+
+  var configGetters = window.hass.configGetters;
+  var entityHistoryGetters = window.hass.entityHistoryGetters;
+
+  var entityHistoryActions = window.hass.entityHistoryActions;
+  var moreInfoGetters = window.hass.moreInfoGetters;
+  var moreInfoActions = window.hass.moreInfoActions;
 
   // if you don't want the history component to show add the domain to this array
   var DOMAINS_WITH_NO_HISTORY = ['camera'];
@@ -59,29 +63,40 @@
   Polymer({
     is: 'more-info-dialog',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
-      entityId: {
-        type: String,
-      },
-
       stateObj: {
         type: Object,
+        bindNuclear: moreInfoGetters.currentEntity,
+        observer: 'stateObjChanged',
       },
 
       stateHistory: {
         type: Object,
+        bindNuclear: [
+          moreInfoGetters.currentEntityHistory,
+          function(history) {
+            return history ? [history] : false;
+          },
+        ],
       },
 
       isLoadingHistoryData: {
         type: Boolean,
-        value: false,
+        bindNuclear: entityHistoryGetters.isLoadingEntityHistory,
       },
 
       hasHistoryComponent: {
         type: Boolean,
-        value: false,
+        bindNuclear: configGetters.isComponentLoaded('history'),
+        observer: 'fetchHistoryData',
+      },
+
+      shouldFetchHistory: {
+        type: Boolean,
+        bindNuclear: moreInfoGetters.isCurrentEntityHistoryStale,
+        observer: 'fetchHistoryData',
       },
 
       showHistoryComponent: {
@@ -92,23 +107,14 @@
       dialogOpen: {
         type: Boolean,
         value: false,
+        observer: 'dialogOpenChanged',
       },
     },
 
-    listeners: {
-      'iron-overlay-opened': 'onIronOverlayOpened',
-      'iron-overlay-closed': 'onIronOverlayClosed'
-    },
-
-    componentStoreChanged: function(componentStore) {
-      this.hasHistoryComponent = componentStore.isLoaded('history');
-    },
-
-    stateStoreChanged: function() {
-      var newState = this.entityId ? stateStore.get(this.entityId) : null;
-
-      if (newState !== this.stateObj) {
-        this.stateObj = newState;
+    fetchHistoryData: function() {
+      if (this.stateObj && this.hasHistoryComponent &&
+          this.shouldFetchHistory) {
+        entityHistoryActions.fetchRecent(this.stateObj.entityId);
       }
       if(this.stateObj) {
         if(DOMAINS_WITH_NO_HISTORY.indexOf(this.stateObj.domain) !== -1) {
@@ -120,48 +126,25 @@
       }
     },
 
-    stateHistoryStoreChanged: function() {
-      var newHistory;
-
-      if (this.hasHistoryComponent && this.entityId) {
-        newHistory = [stateHistoryStore.get(this.entityId)];
-      } else {
-        newHistory = null;
+    stateObjChanged: function(newVal) {
+      if (!newVal) {
+        this.dialogOpen = false;
+        return;
       }
 
-      this.isLoadingHistoryData = false;
+      this.fetchHistoryData();
 
-      if (newHistory !== this.stateHistory) {
-        this.stateHistory = newHistory;
+      // allow dialog to render content before showing it so it is
+      // positioned correctly.
+      this.async(function() {
+        this.dialogOpen = true;
+      }.bind(this), 10);
+    },
+
+    dialogOpenChanged: function(newVal) {
+      if (!newVal) {
+        moreInfoActions.deselectEntity();
       }
-    },
-
-    onIronOverlayOpened: function() {
-      this.dialogOpen = true;
-    },
-
-    onIronOverlayClosed: function() {
-      this.dialogOpen = false;
-    },
-
-    changeEntityId: function(entityId) {
-      this.entityId = entityId;
-
-      this.stateStoreChanged();
-      this.stateHistoryStoreChanged();
-
-      if (this.hasHistoryComponent && stateHistoryStore.isStale(entityId)) {
-        this.isLoadingHistoryData = true;
-        stateHistoryActions.fetch(entityId);
-      }
-    },
-
-    show: function(entityId) {
-      this.changeEntityId(entityId);
-
-      this.debounce('showDialogAfterRender', function() {
-        this.$.dialog.toggle();
-      }.bind(this));
     },
   });
 })();
