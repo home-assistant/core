@@ -108,7 +108,7 @@
       var newState = this.entityId ? stateStore.get(this.entityId) : null;
 
       if (newState !== this.stateObj) {
-        this.stateObj = newState;        
+        this.stateObj = newState;
       }
       if(this.stateObj) {
         if(DOMAINS_WITH_NO_HISTORY.indexOf(this.stateObj.domain) !== -1) {
@@ -136,11 +136,11 @@
       }
     },
 
-    onIronOverlayOpened: function() {      
+    onIronOverlayOpened: function() {
       this.dialogOpen = true;
     },
 
-    onIronOverlayClosed: function() {      
+    onIronOverlayClosed: function() {
       this.dialogOpen = false;
     },
 
@@ -160,7 +160,7 @@
       this.changeEntityId(entityId);
 
       this.debounce('showDialogAfterRender', function() {
-        this.$.dialog.toggle();        
+        this.$.dialog.toggle();
       }.bind(this));
     },
   });
