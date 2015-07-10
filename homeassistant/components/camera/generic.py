@@ -76,6 +76,7 @@ the password for accessing your camera
 
 """
 import logging
+from requests.auth import HTTPBasicAuth
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN
@@ -125,9 +126,14 @@ class GenericCamera(Camera):
 
     def get_camera_image(self):
         """ Return a still image reponse from the camera """
-        response = requests.get(
-            self.still_image_url,
-            auth=(self._username, self._password))
+        if self.username and self.password:
+            response = requests.get(
+                self.still_image_url,
+                auth=HTTPBasicAuth(
+                    self.username,
+                    self.password))
+        else:
+            response = requests.get(self.still_image_url)
 
         return response.content
 
