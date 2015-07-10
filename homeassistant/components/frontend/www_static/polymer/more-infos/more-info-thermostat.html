@@ -41,7 +41,7 @@
 
 <script>
 (function() {
-  var constants = window.hass.constants;
+  var temperatureUnits = window.hass.util.temperatureUnits;
   var serviceActions = window.hass.serviceActions;
   var uiUtil = window.hass.uiUtil;
   var ATTRIBUTE_CLASSES = ['away_mode'];
@@ -76,7 +76,8 @@
       this.targetTemperatureSliderValue = this.stateObj.state;
       this.awayToggleChecked = this.stateObj.attributes.away_mode == 'on';
 
-      if (this.stateObj.attributes.unit_of_measurement === constants.UNIT_TEMP_F) {
+      if (this.stateObj.attributes.unit_of_measurement ===
+          temperatureUnits.UNIT_TEMP_F) {
         this.tempMin = 45;
         this.tempMax = 95;
       } else {

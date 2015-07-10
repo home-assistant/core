@@ -52,13 +52,14 @@
 
 <script>
 (function() {
+  var streamGetters = window.hass.streamGetters;
   var syncActions = window.hass.syncActions;
   var serviceActions = window.hass.serviceActions;
 
   Polymer({
     is: 'more-info-configurator',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       stateObj: {
@@ -72,7 +73,7 @@
 
       isStreaming: {
         type: Boolean,
-        value: false,
+        bindNuclear: streamGetters.isStreamingEvents,
       },
 
       isConfigurable: {
@@ -97,10 +98,6 @@
 
     computeSubmitCaption: function(stateObj) {
       return stateObj.attributes.submit_caption || 'Set configuration';
-    },
-
-    streamStoreChanged: function(streamStore) {
-      this.isStreaming = streamStore.isStreaming;
     },
 
     submitClicked: function() {

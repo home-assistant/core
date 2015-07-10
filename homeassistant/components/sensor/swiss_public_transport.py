@@ -122,7 +122,7 @@ class PublicTransportData(object):
 
         try:
             return [
-                dt_util.datetime_to_short_time_str(
+                dt_util.datetime_to_time_str(
                     dt_util.as_local(dt_util.utc_from_timestamp(
                         item['from']['departureTimestamp']))
                 )

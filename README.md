@@ -1,4 +1,4 @@
-# Home Assistant [![Build Status](https://travis-ci.org/balloob/home-assistant.svg?branch=master)](https://travis-ci.org/balloob/home-assistant) [![Coverage Status](https://img.shields.io/coveralls/balloob/home-assistant.svg)](https://coveralls.io/r/balloob/home-assistant?branch=master)
+# Home Assistant [![Build Status](https://travis-ci.org/balloob/home-assistant.svg?branch=master)](https://travis-ci.org/balloob/home-assistant) [![Coverage Status](https://img.shields.io/coveralls/balloob/home-assistant.svg)](https://coveralls.io/r/balloob/home-assistant?branch=master) [![Join the chat at https://gitter.im/balloob/home-assistant](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/balloob/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This is the source code for Home Assistant. For installation instructions, tutorials and the docs, please see [the website](https://home-assistant.io). For a functioning demo frontend of Home Assistant, [click here](https://home-assistant.io/demo/).
 
@@ -8,7 +8,7 @@ It offers the following functionality through built-in components:
 
  * Track if devices are home by monitoring connected devices to a wireless router (supporting [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), and [DD-WRT](http://www.dd-wrt.com/site/index))
  * Track and control [Philips Hue](http://meethue.com) lights, [WeMo](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/) switches, and [Tellstick](http://www.telldus.se/products/tellstick) devices and sensors
- * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast) and [Music Player Daemon](http://www.musicpd.org/)
+ * Track and control [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast), [Music Player Daemon](http://www.musicpd.org/) and XBMC/Kodi (http://kodi.tv/)
  * Support for [ISY994](https://www.universal-devices.com/residential/isy994i-series/) (Insteon and X10 devices), [Z-Wave](http://www.z-wave.com/), [Nest Thermostats](https://nest.com/), and [Modbus](http://www.modbus.org/)
  * Track running system services and monitoring your system stats (Memory, disk usage, and more)
  * Control low-cost 433 MHz remote control wall-socket devices (https://github.com/r10r/rcswitch-pi) and other switches that can be turned on/off with shell commands
