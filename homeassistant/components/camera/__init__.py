@@ -33,8 +33,6 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
-    HTTP_HEADER_CONTENT_TYPE,
-    CONTENT_TYPE_MULTIPART
     )
 
 from homeassistant.helpers.entity_component import EntityComponent
@@ -130,8 +128,8 @@ def setup(hass, config):
             camera = component.entities[entity_id]
 
         if not camera:
-            self.handler.send_response(HTTP_NOT_FOUND)
-            self.handler.end_headers()
+            handler.send_response(HTTP_NOT_FOUND)
+            handler.end_headers()
             return
 
         try:
