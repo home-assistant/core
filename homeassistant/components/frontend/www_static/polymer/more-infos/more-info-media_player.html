@@ -8,8 +8,7 @@
       text-transform: capitalize;
     }
 
-    /* Accent the power button because the user should use that first */
-    paper-icon-button[focus] {
+    paper-icon-button[highlight] {
       color: var(--accent-color);
     }
 
@@ -21,7 +20,7 @@
       transition: max-height .5s ease-in;
     }
 
-    .has-media_volume .volume {
+    .has-volume_level .volume {
       max-height: 40px;
     }
   </style>
@@ -29,25 +28,26 @@
     <div class$='[[computeClassNames(stateObj)]]'>
       <div class='layout horizontal'>
         <div class='flex'>
-          <paper-icon-button icon='power-settings-new' focus$='[[isIdle]]'
-                             on-tap='handleTogglePower'></paper-icon-button>
+          <paper-icon-button icon='power-settings-new' highlight$='[[isOff]]'
+            on-tap='handleTogglePower'
+            hidden$='[[computeHidePowerButton(isOff, supportsTurnOn, supportsTurnOff)]]'></paper-icon-button>
         </div>
         <div>
-          <template is='dom-if' if='[[!isIdle]]'>
-            <paper-icon-button icon='av:skip-previous'
-                               on-tap='handlePrevious'></paper-icon-button>
-            <paper-icon-button icon='[[computePlayPauseIcon(stateObj)]]' focus$
-                               on-tap='handlePlayPause'></paper-icon-button>
-            <paper-icon-button icon='av:skip-next'
-                               on-tap='handleNext'></paper-icon-button>
+          <template is='dom-if' if='[[!isOff]]'>
+            <paper-icon-button icon='av:skip-previous' on-tap='handlePrevious'
+              hidden$='[[!supportsPreviousTrack]]'></paper-icon-button>
+            <paper-icon-button icon='[[computePlaybackControlIcon(stateObj)]]'
+              on-tap='handlePlaybackControl' highlight></paper-icon-button>
+            <paper-icon-button icon='av:skip-next' on-tap='handleNext'
+              hidden$='[[!supportsNextTrack]]'></paper-icon-button>
           </template>
         </div>
       </div>
-      <div class='volume center horizontal layout'>
+      <div class='volume center horizontal layout' hidden$='[[!supportsVolumeSet]]'>
         <paper-icon-button on-tap="handleVolumeTap"
           icon="[[computeMuteVolumeIcon(isMuted)]]"></paper-icon-button>
-        <paper-slider hidden='[[isMuted]]'
-          min='0' max='100' value='{{volumeSliderValue}}'
+        <paper-slider disabled$='[[isMuted]]'
+          min='0' max='100' value='[[volumeSliderValue]]'
           on-change='volumeSliderChanged' class='flex'>
         </paper-slider>
       </div>
@@ -59,7 +59,7 @@
 (function() {
   var serviceActions = window.hass.serviceActions;
   var uiUtil = window.hass.uiUtil;
-  var ATTRIBUTE_CLASSES = ['media_volume'];
+  var ATTRIBUTE_CLASSES = ['volume_level'];
 
   Polymer({
     is: 'more-info-media_player',
@@ -70,9 +70,14 @@
         observer: 'stateObjChanged',
       },
 
-      isIdle: {
+      isOff: {
         type: Boolean,
-        computed: 'computeIsIdle(stateObj)',
+        value: false,
+      },
+
+      isPlaying: {
+        type: Boolean,
+        value: false,
       },
 
       isMuted: {
@@ -83,53 +88,98 @@
       volumeSliderValue: {
         type: Number,
         value: 0,
-      }
+      },
+
+      supportsPause: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsVolumeSet: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsVolumeMute: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsPreviousTrack: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsNextTrack: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsTurnOn: {
+        type: Boolean,
+        value: false,
+      },
+
+      supportsTurnOff: {
+        type: Boolean,
+        value: false,
+      },
+
     },
 
-    stateObjChanged: function(newVal, oldVal) {
+    stateObjChanged: function(newVal) {
       if (newVal) {
-        this.volumeSliderValue = newVal.attributes.media_volume * 100;
-        this.isMuted = newVal.attributes.media_is_volume_muted;
+        this.isOff = newVal.state == 'off';
+        this.isPlaying = newVal.state == 'playing';
+        this.volumeSliderValue = newVal.attributes.volume_level * 100;
+        this.isMuted = newVal.attributes.is_volume_muted;
+        this.supportsPause = (newVal.attributes.supported_media_commands & 1) !== 0;
+        this.supportsVolumeSet = (newVal.attributes.supported_media_commands & 4) !== 0;
+        this.supportsVolumeMute = (newVal.attributes.supported_media_commands & 8) !== 0;
+        this.supportsPreviousTrack = (newVal.attributes.supported_media_commands & 16) !== 0;
+        this.supportsNextTrack = (newVal.attributes.supported_media_commands & 32) !== 0;
+        this.supportsTurnOn = (newVal.attributes.supported_media_commands & 128) !== 0;
+        this.supportsTurnOff = (newVal.attributes.supported_media_commands & 256) !== 0;
       }
 
-      this.debounce('more-info-volume-animation-finish', function() {
-       this.fire('iron-resize');
-      }.bind(this), 500);
+      this.async(function() { this.fire('iron-resize'); }.bind(this), 500);
     },
 
     computeClassNames: function(stateObj) {
       return uiUtil.attributeClassNames(stateObj, ATTRIBUTE_CLASSES);
     },
 
-    computeMediaState: function(stateObj) {
-      return stateObj.state == 'idle' ? 'idle' : stateObj.attributes.media_state;
-    },
-
-    computeIsIdle: function(stateObj) {
-      return stateObj.state == 'idle';
-    },
-
-    computePowerButtonCaption: function(isIdle) {
-      return isIdle ? 'Turn on' : 'Turn off';
+    computeIsOff: function(stateObj) {
+      return stateObj.state == 'off';
     },
 
     computeMuteVolumeIcon: function(isMuted) {
       return isMuted ? 'av:volume-off' : 'av:volume-up';
     },
 
-    computePlayPauseIcon: function(stateObj) {
-      return stateObj.attributes.media_state == 'playing' ? 'av:pause' : 'av:play-arrow';
+    computePlaybackControlIcon: function(stateObj) {
+      if (this.isPlaying) {
+        return this.supportsPause ? 'av:pause' : 'av:stop';
+      }
+      return 'av:play-arrow';
+    },
+
+    computeHidePowerButton: function(isOff, supportsTurnOn, supportsTurnOff) {
+      return isOff ? !supportsTurnOn : !supportsTurnOff;
     },
 
     handleTogglePower: function() {
-      this.callService(this.isIdle ? 'turn_on' : 'turn_off');
+      this.callService(this.isOff ? 'turn_on' : 'turn_off');
     },
 
     handlePrevious: function() {
-      this.callService('media_prev_track');
+      this.callService('media_previous_track');
     },
 
-    handlePlayPause: function() {
+    handlePlaybackControl: function() {
+      if (this.isPlaying && !this.supportsPause) {
+        alert('This case is not supported yet');
+      }
       this.callService('media_play_pause');
     },
 
@@ -138,14 +188,16 @@
     },
 
     handleVolumeTap: function() {
-      this.callService('volume_mute', { mute: !this.isMuted });
+      if (!this.supportsVolumeMute) {
+        return;
+      }
+      this.callService('volume_mute', { is_volume_muted: !this.isMuted });
     },
 
     volumeSliderChanged: function(ev) {
       var volPercentage = parseFloat(ev.target.value);
       var vol = volPercentage > 0 ? volPercentage / 100 : 0;
-
-      this.callService('volume_set', { volume: vol });
+      this.callService('volume_set', { volume_level: vol });
     },
 
     callService: function(service, data) {

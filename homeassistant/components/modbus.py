@@ -97,5 +97,5 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 
-    # Tells the bootstrapper that the component was succesfully initialized
+    # Tells the bootstrapper that the component was successfully initialized
     return True

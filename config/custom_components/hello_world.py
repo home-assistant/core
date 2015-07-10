@@ -3,6 +3,14 @@ custom_components.hello_world
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implements the bare minimum that a component should implement.
+
+Configuration:
+
+To use the hello_word component you will need to add the following to your
+config/configuration.yaml
+
+hello_world:
+
 """
 
 # The domain of your component. Should be equal to the name of your component

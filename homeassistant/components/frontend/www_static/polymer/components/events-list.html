@@ -31,20 +31,25 @@
 
 <script>
 (function() {
+  var eventGetters = window.hass.eventGetters;
+
   Polymer({
     is: 'events-list',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       events: {
         type: Array,
-        value: [],
+        bindNuclear: [
+          eventGetters.entityMap,
+          function(map) {
+            return map.valueSeq()
+                    .sortBy(function(event) { return event.event; })
+                    .toArray();
+          }
+        ],
       },
-    },
-
-    eventStoreChanged: function(eventStore) {
-      this.events = eventStore.all.toArray();
     },
 
     eventSelected: function(ev) {

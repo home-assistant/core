@@ -16,29 +16,35 @@
     text-align: center;
     padding: 8px;
   }
+
+  .loading {
+    height: 0px;
+    overflow: hidden;
+  }
   </style>
   <template>
     <google-legacy-loader on-api-load="googleApiLoaded"></google-legacy-loader>
 
     <div hidden$="{{!isLoading}}" class='loading-container'>
-      <loading-box>Loading history data</loading-box>
+      <loading-box>Updating history data</loading-box>
     </div>
 
-    <template is='dom-if' if='[[!isLoading]]'>
-      <template is='dom-if' if='[[groupedStateHistory.timeline]]'>
-        <state-history-chart-timeline data='[[groupedStateHistory.timeline]]'
-                                      is-single-device='[[isSingleDevice]]'>
-        </state-history-chart-timeline>
+    <div class$='[[computeContentClasses(isLoading)]]'>
+      <template is='dom-if' if='[[computeIsEmpty(stateHistory)]]'>
+        No state history found.
       </template>
 
-      <template is='dom-if' if='[[groupedStateHistory.line]]'>
-        <template is='dom-repeat' items='[[groupedStateHistory.line]]'>
-          <state-history-chart-line unit='[[extractUnit(item)]]'
-            data='[[extractData(item)]]' is-single-device='[[isSingleDevice]]'>
-          </state-history-chart-line>
-        </template>
+      <state-history-chart-timeline
+        data='[[groupedStateHistory.timeline]]'
+        is-single-device='[[isSingleDevice]]'>
+      </state-history-chart-timeline>
+
+      <template is='dom-repeat' items='[[groupedStateHistory.line]]'>
+        <state-history-chart-line unit='[[extractUnit(item)]]'
+          data='[[extractData(item)]]' is-single-device='[[isSingleDevice]]'>
+        </state-history-chart-line>
       </template>
-    </template>
+    </div>
   </template>
 </dom-module>
 
@@ -69,7 +75,7 @@
 
       groupedStateHistory: {
         type: Object,
-        computed: 'computeGroupedStateHistory(stateHistory)',
+        computed: 'computeGroupedStateHistory(isLoading, stateHistory)',
       },
 
       isSingleDevice: {
@@ -79,36 +85,35 @@
     },
 
     computeIsSingleDevice: function(stateHistory) {
-      return stateHistory && stateHistory.length == 1;
+      return stateHistory && stateHistory.size == 1;
     },
 
-    computeGroupedStateHistory: function(stateHistory) {
+    computeGroupedStateHistory: function(isLoading, stateHistory) {
+      if (isLoading || !stateHistory) {
+        return {line: [], timeline: []};
+      }
+
       var lineChartDevices = {};
       var timelineDevices = [];
 
-      if (!stateHistory) {
-        return {line: unitStates, timeline: timelineDevices};
-      }
-
       stateHistory.forEach(function(stateInfo) {
-        if (!stateInfo || stateInfo.length === 0) {
+        if (!stateInfo || stateInfo.size === 0) {
           return;
         }
 
-        var unit;
+        var stateWithUnit = stateInfo.find(function(state) {
+          return 'unit_of_measurement' in state.attributes;
+        });
 
-        for (var i = 0; i < stateInfo.length && !unit; i++) {
-          unit = stateInfo[i].attributes.unit_of_measurement;
-        }
+        var unit = stateWithUnit ?
+          stateWithUnit.attributes.unit_of_measurement : false;
 
-        if (unit) {
-          if (!(unit in lineChartDevices)) {
-            lineChartDevices[unit] = [stateInfo];
-          } else {
-            lineChartDevices[unit].push(stateInfo);
-          }
+        if (!unit) {
+          timelineDevices.push(stateInfo.toArray());
+        } else if(unit in lineChartDevices) {
+          lineChartDevices[unit].push(stateInfo.toArray());
         } else {
-          timelineDevices.push(stateInfo);
+          lineChartDevices[unit] = [stateInfo.toArray()];
         }
       });
 
@@ -129,8 +134,16 @@
       });
     },
 
+    computeContentClasses: function(isLoading) {
+      return isLoading ? 'loading' : '';
+    },
+
     computeIsLoading: function(isLoadingData, apiLoaded) {
       return isLoadingData || !apiLoaded;
+    },
+
+    computeIsEmpty: function(stateHistory) {
+      return stateHistory && stateHistory.size === 0;
     },
 
     extractUnit: function(arr) {

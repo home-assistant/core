@@ -6,9 +6,7 @@ Support for WeMo switches.
 """
 import logging
 
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components.switch import (
-    ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
+from homeassistant.components.switch import SwitchDevice
 
 
 # pylint: disable=unused-argument
@@ -43,10 +41,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
          if isinstance(switch, pywemo.Switch)])
 
 
-class WemoSwitch(ToggleEntity):
+class WemoSwitch(SwitchDevice):
     """ Represents a WeMo switch within Home Assistant. """
     def __init__(self, wemo):
         self.wemo = wemo
+        self.insight_params = None
 
     @property
     def unique_id(self):
@@ -59,15 +58,16 @@ class WemoSwitch(ToggleEntity):
         return self.wemo.name
 
     @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        if self.wemo.model.startswith('Belkin Insight'):
-            cur_info = self.wemo.insight_params
+    def current_power_mwh(self):
+        """ Current power usage in mwh. """
+        if self.insight_params:
+            return self.insight_params['currentpower']
 
-            return {
-                ATTR_CURRENT_POWER_MWH: cur_info['currentpower'],
-                ATTR_TODAY_MWH: cur_info['todaymw']
-            }
+    @property
+    def today_power_mw(self):
+        """ Today total power usage in mw. """
+        if self.insight_params:
+            return self.insight_params['todaymw']
 
     @property
     def is_on(self):
@@ -85,3 +85,5 @@ class WemoSwitch(ToggleEntity):
     def update(self):
         """ Update WeMo state. """
         self.wemo.get_state(True)
+        if self.wemo.model.startswith('Belkin Insight'):
+            self.insight_params = self.wemo.insight_params
