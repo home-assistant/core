@@ -6513,9 +6513,6 @@ function(t,e,r){function n(t){return null==t?!1:i(t)?f.test(s.call(t)):u(t)&&o.t
     var DOMAINS_WITH_MORE_INFO = [
       'light', 'group', 'sun', 'configurator', 'thermostat', 'script', 'media_player', 'camera'
     ];
-    var DOMAINS_HIDE_MORE_INFO = [
-      'sensor',
-    ];
 
     var reactor = window.hass.reactor;
     var serviceGetters = window.hass.serviceGetters;
@@ -6544,9 +6541,7 @@ function(t,e,r){function n(t){return null==t?!1:i(t)?f.test(s.call(t)):u(t)&&o.t
       },
 
       stateMoreInfoType: function(state) {
-        if(DOMAINS_HIDE_MORE_INFO.indexOf(state.domain) !== -1) {
-          return false;
-        } else if(DOMAINS_WITH_MORE_INFO.indexOf(state.domain) !== -1) {
+        if(DOMAINS_WITH_MORE_INFO.indexOf(state.domain) !== -1) {
           return state.domain;
         } else {
           return 'default';
@@ -22957,7 +22952,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
   <template>
     <div class="layout vertical">
-      <template is="dom-repeat" items="[[getAttributes(stateObj)]]" as="attribute">
+      <template is="dom-repeat" items="[[computeDisplayAttributes(stateObj)]]" as="attribute">
         <div class="data-entry layout justified horizontal">
           <div class="key">[[attribute]]</div>
           <div class="value">[[getAttributeValue(stateObj, attribute)]]</div>
@@ -22969,6 +22964,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <script>
 (function() {
+  var FILTER_KEYS = ['entity_picture', 'friendly_name', 'unit_of_measurement'];
+
   Polymer({
     is: 'more-info-default',
 
@@ -22978,8 +22975,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
     },
 
-    getAttributes: function(stateObj) {
-      return stateObj ? Object.keys(stateObj.attributes) : [];
+    computeDisplayAttributes: function(stateObj) {
+      if (!stateObj) {
+        return [];
+      }
+
+      return Object.keys(stateObj.attributes).filter(function(key) {
+        return FILTER_KEYS.indexOf(key) === -1;
+      });
     },
 
     getAttributeValue: function(stateObj, attribute) {
@@ -24744,14 +24747,15 @@ paper-ripple {
 
     stateObjChanged: function(newVal, oldVal) {
       var root = Polymer.dom(this);
-      var newMoreInfoType;
 
-      if (!newVal || !(newMoreInfoType = uiUtil.stateMoreInfoType(newVal))) {
+      if (!newVal) {
         if (root.lastChild) {
           root.removeChild(root.lastChild);
         }
         return;
       }
+
+      var newMoreInfoType = uiUtil.stateMoreInfoType(newVal);
 
       if (!oldVal || uiUtil.stateMoreInfoType(oldVal) != newMoreInfoType) {
 
