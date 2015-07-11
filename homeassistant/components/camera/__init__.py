@@ -5,24 +5,23 @@ homeassistant.components.camera
 Component to interface with various cameras.
 
 The following features are supported:
--Recording
--Snapshot
--Motion Detection Recording(for supported cameras)
--Automatic Configuration(for supported cameras)
--Creation of child entities for supported functions
--Collating motion event images passed via FTP into time based events
--Returning recorded camera images and streams
--Proxying image requests via HA for external access
--Converting a still image url into a live video stream
--A service for calling camera functions
+ - Returning recorded camera images and streams
+ - Proxying image requests via HA for external access
+ - Converting a still image url into a live video stream
 
 Upcoming features
--Camera movement(panning)
--Zoom
--Light/Nightvision toggling
--Support for more devices
--A demo entity
--Expanded documentation
+ - Recording
+ - Snapshot
+ - Motion Detection Recording(for supported cameras)
+ - Automatic Configuration(for supported cameras)
+ - Creation of child entities for supported functions
+ - Collating motion event images passed via FTP into time based events
+ - A service for calling camera functions
+ - Camera movement(panning)
+ - Zoom
+ - Light/Nightvision toggling
+ - Support for more devices
+ - Expanded documentation
 """
 import requests
 import logging
@@ -103,7 +102,7 @@ def setup(hass, config):
             camera = component.entities[entity_id]
 
         if camera:
-            response = camera.get_camera_image()
+            response = camera.camera_image()
             handler.wfile.write(response)
         else:
             handler.send_response(HTTP_NOT_FOUND)
@@ -146,7 +145,7 @@ def setup(hass, config):
 
             while True:
 
-                img_bytes = camera.get_camera_image()
+                img_bytes = camera.camera_image()
 
                 headers_str = '\r\n'.join((
                     'Content-length: {}'.format(len(img_bytes)),
@@ -180,22 +179,14 @@ def setup(hass, config):
 class Camera(Entity):
     """ The base class for camera components """
 
+    def __init__(self):
+        self.is_streaming = False
+
     @property
     # pylint: disable=no-self-use
     def is_recording(self):
         """ Returns true if the device is recording """
         return False
-
-    @property
-    # pylint: disable=no-self-use
-    def is_streaming(self):
-        """ Returns true if the device is streaming """
-        return False
-
-    @is_streaming.setter
-    def is_streaming(self, value):
-        """ Set this to true when streaming begins """
-        pass
 
     @property
     # pylint: disable=no-self-use
@@ -209,19 +200,7 @@ class Camera(Entity):
         """ Returns string of camera model """
         return None
 
-    @property
-    # pylint: disable=no-self-use
-    def image_url(self):
-        """ Return the still image segment of the URL """
-        return None
-
-    @property
-    # pylint: disable=no-self-use
-    def still_image_url(self):
-        """ Get the URL of a camera still image """
-        return None
-
-    def get_camera_image(self):
+    def camera_image(self):
         """ Return bytes of camera image """
         raise NotImplementedError()
 
@@ -238,14 +217,11 @@ class Camera(Entity):
     @property
     def state_attributes(self):
         """ Returns optional state attributes. """
-        attr = super().state_attributes
-        attr['model_name'] = self.model
-        attr['brand'] = self.brand
-        CAMERA_PROXY_URL.format(self.entity_id)
-        attr['still_image_url'] = CAMERA_STILL_URL.format(self.entity_id)
-        attr[ATTR_ENTITY_PICTURE] = ENTITY_IMAGE_URL.format(
-            self.entity_id,
-            str(time.time()))
-        attr['stream_url'] = CAMERA_PROXY_URL.format(self.entity_id)
-
-        return attr
+        return {
+            'model_name': self.model,
+            'brand': self.brand,
+            'still_image_url': CAMERA_STILL_URL.format(self.entity_id),
+            ATTR_ENTITY_PICTURE: ENTITY_IMAGE_URL.format(
+                self.entity_id, str(time.time())),
+            'stream_url': CAMERA_PROXY_URL.format(self.entity_id)
+        }
