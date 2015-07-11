@@ -4,58 +4,22 @@
   (function() {
     var DOMAINS_WITH_CARD = ['thermostat', 'configurator', 'scene', 'media_player'];
     var DOMAINS_WITH_MORE_INFO = [
-      'light', 'group', 'sun', 'configurator', 'thermostat', 'script', 'media_player'
+      'light', 'group', 'sun', 'configurator', 'thermostat', 'script', 'media_player', 'camera'
     ];
     var DOMAINS_HIDE_MORE_INFO = [
       'sensor',
     ];
 
-    // Add some frontend specific helpers to the models
-    Object.defineProperties(window.hass.stateModel.prototype, {
-      // how to render the card for this state
-      cardType: {
-        get: function() {
-          console.warn('Deprecated method. Please use hass.uiUtil.stateCardType');
-          return window.hass.uiUtil.stateCardType(this);
-        }
-      },
-
-      // how to render the more info of this state
-      moreInfoType: {
-        get: function() {
-          console.warn('Deprecated method. Please use hass.uiUtil.stateMoreInfoType');
-          return window.hass.uiUtil.stateMoreInfoType(this);
-        }
-      },
-    });
-
-    var dispatcher = window.hass.dispatcher,
-        constants = window.hass.constants,
-        preferenceStore = window.hass.preferenceStore,
-        authActions = window.hass.authActions;
-
-    window.hass.uiConstants = {
-      ACTION_SHOW_DIALOG_MORE_INFO: 'ACTION_SHOW_DIALOG_MORE_INFO',
-
-      STATE_FILTERS: {
-        'group': 'Groups',
-        'script': 'Scripts',
-        'scene': 'Scenes',
-      },
-    };
+    var reactor = window.hass.reactor;
+    var serviceGetters = window.hass.serviceGetters;
+    var authActions = window.hass.authActions;
+    var preferences = window.hass.localStoragePreferences;
 
     window.hass.uiActions = {
-      showMoreInfoDialog: function(entityId) {
-        dispatcher.dispatch({
-          actionType: window.hass.uiConstants.ACTION_SHOW_DIALOG_MORE_INFO,
-          entityId: entityId,
-        });
-      },
-
-      validateAuth: function(authToken, rememberLogin) {
+      validateAuth: function(authToken, rememberAuth) {
         authActions.validate(authToken, {
-          useStreaming: preferenceStore.useStreaming,
-          rememberLogin: rememberLogin,
+          rememberAuth: rememberAuth,
+          useStreaming: preferences.useStreaming,
         });
       },
     };
@@ -65,7 +29,7 @@
       stateCardType: function(state) {
         if(DOMAINS_WITH_CARD.indexOf(state.domain) !== -1) {
           return state.domain;
-        } else if(state.canToggle) {
+        } else if(reactor.evaluate(serviceGetters.canToggle(state.entityId))) {
           return "toggle";
         } else {
           return "display";
