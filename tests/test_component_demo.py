@@ -9,12 +9,15 @@ import unittest
 import homeassistant as ha
 import homeassistant.components.demo as demo
 
+from helpers import mock_http_component
+
 
 class TestDemo(unittest.TestCase):
     """ Test the demo module. """
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
+        mock_http_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
