@@ -110,8 +110,7 @@ def setup(hass, config):
     hass.http.register_path(
         'GET',
         re.compile(r'/api/camera_proxy/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-        _proxy_camera_image,
-        require_auth=True)
+        _proxy_camera_image)
 
     # pylint: disable=unused-argument
     def _proxy_camera_mjpeg_stream(handler, path_match, data):
@@ -170,8 +169,7 @@ def setup(hass, config):
         'GET',
         re.compile(
             r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-        _proxy_camera_mjpeg_stream,
-        require_auth=True)
+        _proxy_camera_mjpeg_stream)
 
     return True
 
@@ -217,11 +215,15 @@ class Camera(Entity):
     @property
     def state_attributes(self):
         """ Returns optional state attributes. """
-        return {
-            'model_name': self.model,
-            'brand': self.brand,
-            'still_image_url': CAMERA_STILL_URL.format(self.entity_id),
+        attr = {
             ATTR_ENTITY_PICTURE: ENTITY_IMAGE_URL.format(
-                self.entity_id, str(time.time())),
-            'stream_url': CAMERA_PROXY_URL.format(self.entity_id)
+                self.entity_id, time.time()),
         }
+
+        if self.model:
+            attr['model_name'] = self.model
+
+        if self.brand:
+            attr['brand'] = self.brand
+
+        return attr

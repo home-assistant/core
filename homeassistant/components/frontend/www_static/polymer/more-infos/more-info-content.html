@@ -48,14 +48,15 @@
 
     stateObjChanged: function(newVal, oldVal) {
       var root = Polymer.dom(this);
-      var newMoreInfoType;
 
-      if (!newVal || !(newMoreInfoType = uiUtil.stateMoreInfoType(newVal))) {
+      if (!newVal) {
         if (root.lastChild) {
           root.removeChild(root.lastChild);
         }
         return;
       }
+
+      var newMoreInfoType = uiUtil.stateMoreInfoType(newVal);
 
       if (!oldVal || uiUtil.stateMoreInfoType(oldVal) != newMoreInfoType) {
 
