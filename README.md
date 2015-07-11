@@ -39,8 +39,8 @@ Running Home Assistant requires that [Python](https://www.python.org/) 3.4 and t
 
 ```python
 git clone --recursive https://github.com/balloob/home-assistant.git
+python3 -m venv home-assistant
 cd home-assistant
-python3 -m pip install --user -r requirements.txt
 python3 -m homeassistant --open-ui
 ```
 

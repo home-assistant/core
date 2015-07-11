@@ -48,7 +48,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC)
 
 _LOGGER = logging.getLogger(__name__)
-
+REQUIREMENTS = ['python-mpd2>=0.5.4']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
@@ -62,12 +62,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get('port', 6600)
     location = config.get('location', 'MPD')
 
+    global mpd  # pylint: disable=invalid-name
     if mpd is None:
-        _LOGGER.exception(
-            "Unable to import mpd2. "
-            "Did you maybe not install the 'python-mpd2' package?")
-
-        return False
+        import mpd as mpd_
+        mpd = mpd_
 
     # pylint: disable=no-member
     try:

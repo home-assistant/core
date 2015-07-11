@@ -14,8 +14,9 @@ import logging
 from collections import defaultdict
 
 import homeassistant
-import homeassistant.util as util
 import homeassistant.util.dt as date_util
+import homeassistant.util.package as pkg_util
+import homeassistant.util.location as loc_util
 import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.components as core_components
@@ -60,6 +61,17 @@ def setup_component(hass, domain, config=None):
     return True
 
 
+def _handle_requirements(component, name):
+    """ Installs requirements for component. """
+    if hasattr(component, 'REQUIREMENTS'):
+        for req in component.REQUIREMENTS:
+            if not pkg_util.install_package(req):
+                _LOGGER.error('Not initializing %s because could not install '
+                              'dependency %s', name, req)
+                return False
+    return True
+
+
 def _setup_component(hass, domain, config):
     """ Setup a component for Home Assistant. """
     component = loader.get_component(domain)
@@ -72,6 +84,9 @@ def _setup_component(hass, domain, config):
             'Not initializing %s because not all dependencies loaded: %s',
             domain, ", ".join(missing_deps))
 
+        return False
+
+    if not _handle_requirements(component, domain):
         return False
 
     try:
@@ -109,18 +124,22 @@ def prepare_setup_platform(hass, config, domain, platform_name):
     if platform is None:
         return None
 
-    # Already loaded or no dependencies
-    elif (platform_path in hass.config.components or
-          not hasattr(platform, 'DEPENDENCIES')):
+    # Already loaded
+    elif platform_path in hass.config.components:
         return platform
 
     # Load dependencies
-    for component in platform.DEPENDENCIES:
-        if not setup_component(hass, component, config):
-            _LOGGER.error(
-                'Unable to prepare setup for platform %s because dependency '
-                '%s could not be initialized', platform_path, component)
-            return None
+    if hasattr(platform, 'DEPENDENCIES'):
+        for component in platform.DEPENDENCIES:
+            if not setup_component(hass, component, config):
+                _LOGGER.error(
+                    'Unable to prepare setup for platform %s because '
+                    'dependency %s could not be initialized', platform_path,
+                    component)
+                return None
+
+    if not _handle_requirements(platform, platform_path):
+        return None
 
     return platform
 
@@ -276,7 +295,7 @@ def process_ha_core_config(hass, config):
 
     _LOGGER.info('Auto detecting location and temperature unit')
 
-    info = util.detect_location_info()
+    info = loc_util.detect_location_info()
 
     if info is None:
         _LOGGER.error('Could not detect location information')
