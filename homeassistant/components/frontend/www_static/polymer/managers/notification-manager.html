@@ -15,33 +15,26 @@
 
 <script>
 (function() {
+  var notificationGetters = window.hass.notificationGetters;
+
   Polymer({
     is: 'notification-manager',
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
       text: {
         type: String,
-        value: '',
-      },
-
-      lastId: {
-        type: Number,
+        bindNuclear: notificationGetters.lastNotificationMessage,
+        observer: 'showNotification',
       },
     },
 
-    notificationStoreChanged: function(notificationStore) {
-      if (notificationStore.hasNewNotifications(this.lastId)) {
-        var notification = notificationStore.lastNotification;
-
-        this.lastId = notification.id;
-        this.text = notification.message;
-
+    showNotification: function(newText) {
+      if (newText) {
         this.$.toast.show();
       }
-    },
-
+    }
   });
 })();
 </script>

@@ -10,7 +10,7 @@ import unittest.mock as mock
 import os
 
 from homeassistant import DOMAIN, HomeAssistantError
-import homeassistant.util as util
+import homeassistant.util.location as location_util
 import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
@@ -31,7 +31,7 @@ def create_file(path):
 
 def mock_detect_location_info():
     """ Mock implementation of util.detect_location_info. """
-    return util.LocationInfo(
+    return location_util.LocationInfo(
         ip='1.1.1.1',
         country_code='US',
         country_name='United States',
@@ -151,7 +151,7 @@ class TestConfig(unittest.TestCase):
 
     def test_create_default_config_detect_location(self):
         """ Test that detect location sets the correct config keys. """
-        with mock.patch('homeassistant.util.detect_location_info',
+        with mock.patch('homeassistant.util.location.detect_location_info',
                         mock_detect_location_info):
             config_util.ensure_config_exists(CONFIG_DIR)
 

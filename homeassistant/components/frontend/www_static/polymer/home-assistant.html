@@ -21,9 +21,8 @@
     }
   </style>
 
-  <home-assistant-icons></home-assistant-icons>
-
   <template>
+    <home-assistant-icons></home-assistant-icons>
     <template is='dom-if' if='[[!loaded]]'>
       <login-form></login-form>
     </template>
@@ -37,10 +36,9 @@
 
 <script>
 (function() {
-
-  var storeListenerMixIn = window.hass.storeListenerMixIn,
-      uiActions = window.hass.uiActions,
-      preferenceStore = window.hass.preferenceStore;
+  var uiActions = window.hass.uiActions;
+  var syncGetters = window.hass.syncGetters;
+  var preferences = window.hass.localStoragePreferences;
 
   Polymer({
     is: 'home-assistant',
@@ -49,12 +47,15 @@
       auth: null,
     },
 
-    behaviors: [StoreListenerBehavior],
+    behaviors: [nuclearObserver],
 
     properties: {
+      auth: {
+        type: String,
+      },
       loaded: {
         type: Boolean,
-        value: false,
+        bindNuclear: syncGetters.isDataLoaded,
       },
     },
 
@@ -65,13 +66,11 @@
       // if auth was given, tell the backend
       if(this.auth) {
         uiActions.validateAuth(this.auth, false);
-      } else if (preferenceStore.hasAuthToken) {
-        uiActions.validateAuth(preferenceStore.authToken, false);
+      } else if (preferences.authToken) {
+        uiActions.validateAuth(preferences.authToken, true);
       }
-    },
 
-    syncStoreChanged: function(syncStore) {
-      this.loaded = syncStore.initialLoadDone;
+      preferences.startSync();
     },
 });
 

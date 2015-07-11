@@ -11,11 +11,10 @@ import unittest
 
 import homeassistant as ha
 import homeassistant.util.dt as dt_util
-from homeassistant.components import history, recorder, http
+from homeassistant.components import history, recorder
 
-from helpers import get_test_home_assistant, mock_state_change_event
-
-SERVER_PORT = 8126
+from helpers import (
+    mock_http_component, mock_state_change_event, get_test_home_assistant)
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -42,8 +41,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_setup(self):
         """ Test setup method of history. """
-        http.setup(self.hass, {
-            http.DOMAIN: {http.CONF_SERVER_PORT: SERVER_PORT}})
+        mock_http_component(self.hass)
         self.assertTrue(history.setup(self.hass, {}))
 
     def test_last_5_states(self):

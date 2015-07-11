@@ -1,0 +1,80 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+
+
+<dom-module id='more-info-camera'>
+
+  <style>
+
+  :host .camera-image {
+    width:640px;
+    height:480px;
+  }
+   @media (max-width: 720px) {
+      :host .camera-image {
+        max-width: 100%;
+        height: initial
+      }
+
+      :host .camera-page {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    }
+
+    @media (max-width: 620px) {
+      :host .camera-image {
+        max-width: 100%;
+        height: initial
+      }
+    }
+
+    :host .camera-page {
+      width:640px;
+      height:520px;
+    }
+
+  </style>
+
+  <template>
+    <div class='camera'>
+      <div id="camera_container" class="camera-container camera-page">
+        <img src="[[computeCameraImageUrl(dialogOpen)]]" id="camera_image" class="camera-image" />
+      </div>
+    </div>
+  </template>
+
+</dom-module>
+
+<script>
+(function() {
+  var serviceActions = window.hass.serviceActions;
+  var uiUtil = window.hass.uiUtil;
+  var ATTRIBUTE_CLASSES = ['camera'];
+
+  Polymer({
+    is: 'more-info-camera',
+
+    properties: {
+      stateObj: {
+        type: Object
+      },
+      dialogOpen: {
+        type: Boolean,
+      },
+      camera_image_url: {
+        type: String,
+      }
+    },
+
+    computeCameraImageUrl: function(dialogOpen) {
+      return dialogOpen ?
+        this.stateObj.attributes['stream_url'] :
+        this.stateObj.attributes['still_image_url'];
+    },
+
+  });
+})();
+</script>
+</polymer-element>
