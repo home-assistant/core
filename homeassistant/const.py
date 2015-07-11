@@ -146,3 +146,4 @@ HTTP_HEADER_CACHE_CONTROL = "Cache-Control"
 HTTP_HEADER_EXPIRES = "Expires"
 
 CONTENT_TYPE_JSON = "application/json"
+CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
