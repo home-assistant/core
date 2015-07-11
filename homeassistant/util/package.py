@@ -11,8 +11,7 @@ def install_package(package, upgrade=False, user=INSTALL_USER):
     """Install a package on PyPi. Accepts pip compatible package strings.
     Return boolean if install successfull."""
     # Not using 'import pip; pip.main([])' because it breaks the logger
-    args = ['python3', '-m', 'pip', 'install', '--disable-pip-version-check',
-            '--quiet', package]
+    args = ['python3', '-m', 'pip', 'install', '--quiet', package]
     if upgrade:
         args.append('--upgrade')
     if user:
