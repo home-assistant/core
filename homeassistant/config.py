@@ -11,7 +11,7 @@ from homeassistant import HomeAssistantError
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
-import homeassistant.util as util
+import homeassistant.util.location as loc_util
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def create_default_config(config_dir, detect_location=True):
 
     info = {attr: default for attr, default, *_ in DEFAULT_CONFIG}
 
-    location_info = detect_location and util.detect_location_info()
+    location_info = detect_location and loc_util.detect_location_info()
 
     if location_info:
         if location_info.use_fahrenheit:

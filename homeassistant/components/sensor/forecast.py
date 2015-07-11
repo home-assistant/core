@@ -50,7 +50,10 @@ Details for the API : https://developer.forecast.io/docs/v2
 import logging
 from datetime import timedelta
 
-import forecastio
+try:
+    import forecastio
+except ImportError:
+    forecastio = None
 
 from homeassistant.util import Throttle
 from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT)
@@ -78,6 +81,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Forecast.io sensor. """
+
+    global forecastio  # pylint: disable=invalid-name
+    if forecastio is None:
+        import forecastio as forecastio_
+        forecastio = forecastio_
 
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
