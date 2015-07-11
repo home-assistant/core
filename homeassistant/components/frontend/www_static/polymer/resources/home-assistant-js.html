@@ -6,9 +6,6 @@
     var DOMAINS_WITH_MORE_INFO = [
       'light', 'group', 'sun', 'configurator', 'thermostat', 'script', 'media_player', 'camera'
     ];
-    var DOMAINS_HIDE_MORE_INFO = [
-      'sensor',
-    ];
 
     var reactor = window.hass.reactor;
     var serviceGetters = window.hass.serviceGetters;
@@ -37,9 +34,7 @@
       },
 
       stateMoreInfoType: function(state) {
-        if(DOMAINS_HIDE_MORE_INFO.indexOf(state.domain) !== -1) {
-          return false;
-        } else if(DOMAINS_WITH_MORE_INFO.indexOf(state.domain) !== -1) {
+        if(DOMAINS_WITH_MORE_INFO.indexOf(state.domain) !== -1) {
           return state.domain;
         } else {
           return 'default';

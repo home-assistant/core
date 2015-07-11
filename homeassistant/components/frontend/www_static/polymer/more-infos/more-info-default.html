@@ -8,7 +8,7 @@
   </style>
   <template>
     <div class='layout vertical'>
-      <template is='dom-repeat' items="[[getAttributes(stateObj)]]" as="attribute">
+      <template is='dom-repeat' items="[[computeDisplayAttributes(stateObj)]]" as="attribute">
         <div class='data-entry layout justified horizontal'>
           <div class='key'>[[attribute]]</div>
           <div class='value'>[[getAttributeValue(stateObj, attribute)]]</div>
@@ -20,6 +20,8 @@
 
 <script>
 (function() {
+  var FILTER_KEYS = ['entity_picture', 'friendly_name', 'unit_of_measurement'];
+
   Polymer({
     is: 'more-info-default',
 
@@ -29,8 +31,14 @@
       },
     },
 
-    getAttributes: function(stateObj) {
-      return stateObj ? Object.keys(stateObj.attributes) : [];
+    computeDisplayAttributes: function(stateObj) {
+      if (!stateObj) {
+        return [];
+      }
+
+      return Object.keys(stateObj.attributes).filter(function(key) {
+        return FILTER_KEYS.indexOf(key) === -1;
+      });
     },
 
     getAttributeValue: function(stateObj, attribute) {
