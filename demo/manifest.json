@@ -1,7 +1,7 @@
 {
   "name": "Home Assistant",
   "short_name": "Assistant",
-  "start_url": "/",
+  "start_url": "/demo/",
   "display": "standalone",
   "icons": [
     {

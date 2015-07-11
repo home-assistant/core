@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Switches - Home Assistant</title>
+    <title>Efergy support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to setup your switches with Home Assistant.">
+    <meta name="description" content="Instructions how to integrate Efergy devices within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Switches">
+    <meta property="og:title" content="Efergy support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/switch.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/sensor.efergy.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to setup your switches with Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate Efergy devices within Home Assistant.">
     
     
     
@@ -99,33 +99,38 @@
   
   <header>
     <h1 class="title indent">
-      Switches
+      Efergy Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Keeps track which switches are in the network, their state and allows you to control them.</p>
+  <p><img src='/images/supported_brands/efergy.png' class='brand pull-right' />
+Integrate your <a href="https://efergy.com">Efergy</a> meter information into Home Assistant. To get an app token, log in to your efergy account, go to the Settings page, click on App tokens, and click &ldquo;Add token&rdquo;.</p>
 
-<ul>
-<li>Maintains a state per switch and a combined state <code>all_switches</code>.</li>
-<li>Registers services <code>switch/turn_on</code> and <code>switch/turn_off</code> to control switches.</li>
-</ul>
-
-
-<p>Optional service data:</p>
-
-<ul>
-<li><code>entity_id</code> - only act on specific switch. Else targets all.</li>
-</ul>
-
-
-<p>Supported platforms:</p>
-
-<ul>
-<li><code>wemo</code> for Belkin WeMo switches</li>
-<li><code>tellstick</code> for Tellstick switches</li>
-</ul>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">efergy</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">app_token</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">APP_TOKEN</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">utc_offset</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">UTC_OFFSET</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">instant_readings</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">budget</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cost</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">period</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">day</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">currency</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">$</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 

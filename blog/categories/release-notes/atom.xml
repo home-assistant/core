@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-07-06T20:51:19-07:00</updated>
+  <updated>2015-07-11T02:00:29-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,131 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported]]></title>
+    <link href="https://home-assistant.io/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/"/>
+    <updated>2015-07-11T01:37:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support</id>
+    <content type="html"><![CDATA[<p>Another month has passed and some great new features have landed in Home Assistant. This month release has been made possible by <a href="https://github.com/balloob">balloob</a>, <a href="https://github.com/ettisan">ettisan</a>, <a href="https://github.com/fabaff">fabaff</a>, <a href="https://github.com/gyran">gyran</a>, <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/michaelarnauts">michaelarnauts</a>, <a href="https://github.com/miniconfig">miniconfig</a> and <a href="https://github.com/rmkraus">rmkraus</a>.</p>
+
+<p>This release includes some architectural changes by me. The first is that the frontend is now based on a <a href="http://optimizely.github.io/nuclear-js/">NuclearJS</a> JavaScript backend. This has greatly helped to organize and optimize the frontend code. Another change is that Home Assistant will now install dependencies on-demand instead of installing dependencies for all supported devices.</p>
+
+<p><strong>IP Camera Support</strong><br>
+James has worked very hard to add support for IP cameras to Home Assistant which is included in this release. The initial release focusses on providing generic IP camera support. This means that any webcam that can exposes a JPEG image via a url can be integrated.</p>
+
+<p>Home Assistant will route the requests to your camera via the server allowing you to expose IP camera&rsquo;s inside your network via the Home Assistant app.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+camera:
+  platform: generic
+  name: my sample camera
+  username: MY_USERNAME
+  password: MY_PASSWORD
+  still_image_url: http://194.218.96.92/jpg/image.jpg
+</code></pre>
+
+<p class='note'>
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
+</p>
+
+
+
+
+<!--more-->
+
+
+<p><strong>Arduino</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/arduino.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Fabian has contributed support for interfacing with Arduinos. This makes it possible to connect your Arduino via USB and expose pins as sensor data and write to pins via switches. Have a look at <a href="/components/arduino.markdown">the docs</a> for an extensive guide to get started.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+switch:
+  platform: arduino
+  pins:
+    11:
+      name: Fan Office
+      type: digital
+    12:
+      name: Light Desk
+      type: digital
+
+sensor:
+  platform: arduino
+  pins:
+    1:
+      name: Door switch
+      type: analog
+    0:
+      name: Brightness
+      type: analog
+</code></pre>
+
+<p><strong>Kodi (XBMC)</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/kodi.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Ettisan has contributed a Kodi (XBMC) platform for the media player component. This allows you to track all the media that you are playing and allow you to control it.</p>
+
+<pre><code># Example configuration.yaml entry
+media_player:
+  platform: kodi
+  name: Kodi
+  url: http://192.168.0.123/jsonrpc
+  user: kodi
+  password: my_secure_password
+</code></pre>
+
+<p><strong>TP-Link</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/tp-link.png' style='border:none; box-shadow: none; float: right;' width='150' />
+Michael has added TP-Link support to the device tracker. This allows you to now detect presence if you have a TP-Link router.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+device_tracker:
+  platform: tplink
+  host: YOUR_ROUTER_IP
+  username: YOUR_ADMIN_USERNAME
+  password: YOUR_ADMIN_PASSWORD
+</code></pre>
+
+<p><strong>Efergy energy monitor</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/efergy.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Miniconfig has contributed support for the <a href="https://efergy.com">Efergy energy meters</a>. To get an app token, log in to your efergy account, go to the Settings page, click on App tokens, and click &ldquo;Add token&rdquo;.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+sensor:
+  platform: efergy
+  app_token: APP_TOKEN
+  utc_offset: UTC_OFFSET
+  monitored_variables:
+    - type: instant_readings
+    - type: budget
+    - type: cost
+      period: day
+      currency: $
+</code></pre>
+
+<p><strong>Forecast.io</strong><br>
+Fabiann has added support for <a href="https://forecast.io/">Forecast.io</a> to get weather forecasts for Home Assistant. You need an API key which is free but requires a <a href="https://developer.forecast.io/register">registration</a>. To add Forecast.io to your installation, add the following to your <code>configuration.yaml</code> file:</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+sensor:
+  platform: forecast
+  api_key: YOUR_APP_KEY
+  monitored_conditions:
+    - summary
+    - precip_type
+    - precip_intensity
+    - temperature
+    - dew_point
+    - wind_speed
+    - wind_bearing
+    - cloud_cover
+    - humidity
+    - pressure
+    - visibility
+    - ozone
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Release notes for June 10, 2015]]></title>
@@ -478,52 +603,6 @@ notify:
     api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
     # Get this by logging into your account on https://pushover.net
     user_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-</code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for March 11, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/03/11/release-notes/"/>
-    <updated>2015-03-11T18:36:00-08:00</updated>
-    <id>https://home-assistant.io/blog/2015/03/11/release-notes</id>
-    <content type="html"><![CDATA[<p>It has only been a little over a week since Theodor introduced YAML support for Home Assistant but so much has already happened that it is time for a summary of recent changes. Before mentioning the highlights I want to thank <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/jamespcole">jamespcole</a> and <a href="https://github.com/theolind">theolind</a> for numerous bug fixes, enhancements and new contributions. Thanks!</p>
-
-<p><strong>Monitor local resources.</strong><br>
-Theodor has contributed a new sensor platform to allow you to monitor disk usage, memory usage, CPU usage and running processes. This platform has superseded the process component which is now considered deprecated.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  - platform: systemmonitor
-    resources:
-      - type: disk_use_percent
-        arg: /home
-      - type: memory_free
-      - type: process
-        arg: kodi
-</code></pre>
-
-<p><strong>Experimental Z-Wave support</strong><br>
-There is now experimental support for connecting Z-Wave networks using a Z-Wave USB stick. Right now it only integrates Z-Wave sensors into Home Assistant. Our goal is to get this tested by more people before adding support for other Z-Wave devices.</p>
-
-<p>The new component is built on top of <a href="https://code.google.com/p/python-openzwave/">python-openzwave</a>. This package is currently not distributed on PyPi so we&rsquo;ve added a script <code>scripts/build_python_openzwave</code> to install it on your machine. Alternatively you can use the Docker image which is ready to go.</p>
-
-<p>The development was done using an AEON Z-Wave USB stick and an AEON Z-Wave MultiSensor.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-zwave:
-  usb_path: /dev/ttyUSB0
-</code></pre>
-
-<p><strong>Voice control</strong><br>
-An initial version of voice control for Home Assistant has landed. The current implementation consists of two parts.</p>
-
-<p>The first part is a component called <code>conversation</code> that exposes the service <code>conversation/process</code>. This service is capable of processing text and translating them into commands for devices. For now it will only support commands in the format of <code>Turn &lt;Friendly Name&gt; &lt;on/off&gt;</code>.</p>
-
-<p>The second part is an upgrade to the frontend to use the speech-to-text in Chrome to allow users to speak commands. If you&rsquo;re using Chrome, you can test this out in <a href="/demo/">the demo</a>.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-conversation:
 </code></pre>
 ]]></content>
   </entry>
