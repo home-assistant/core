@@ -27,8 +27,10 @@ every initialization the pins are set to off/low.
 """
 import logging
 
-from PyMata.pymata import PyMata
-import serial
+try:
+    from PyMata.pymata import PyMata
+except ImportError:
+    PyMata = None
 
 from homeassistant.helpers import validate_config
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
@@ -36,6 +38,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
 
 DOMAIN = "arduino"
 DEPENDENCIES = []
+REQUIREMENTS = ['PyMata==2.07a']
 BOARD = None
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,12 +46,18 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Setup the Arduino component. """
 
+    global PyMata  # pylint: disable=invalid-name
+    if PyMata is None:
+        from PyMata.pymata import PyMata as PyMata_
+        PyMata = PyMata_
+
+    import serial
+
     if not validate_config(config,
                            {DOMAIN: ['port']},
                            _LOGGER):
         return False
 
-    # pylint: disable=global-statement
     global BOARD
     try:
         BOARD = ArduinoBoard(config[DOMAIN]['port'])

@@ -6,6 +6,8 @@ import logging
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
+REQUIREMENTS = ['python-nest>=2.3.1']
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
