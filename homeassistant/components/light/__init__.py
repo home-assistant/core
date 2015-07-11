@@ -89,6 +89,10 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
+# Apply an effect to the light, can be EFFECT_COLORLOOP
+ATTR_EFFECT = "effect"
+EFFECT_COLORLOOP = "colorloop"
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Maps discovered services to their platforms
@@ -115,7 +119,8 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, profile=None, flash=None):
+            rgb_color=None, xy_color=None, profile=None, flash=None,
+            effect=None):
     """ Turns all or specified light on. """
     data = {
         key: value for key, value in [
@@ -126,6 +131,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_FLASH, flash),
+            (ATTR_EFFECT, effect),
         ] if value is not None
     }
 
@@ -253,6 +259,10 @@ def setup(hass, config):
 
                 elif dat[ATTR_FLASH] == FLASH_LONG:
                     params[ATTR_FLASH] = FLASH_LONG
+
+            if ATTR_EFFECT in dat:
+                if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                    params[ATTR_EFFECT] = EFFECT_COLORLOOP
 
             for light in target_lights:
                 light.turn_on(**params)

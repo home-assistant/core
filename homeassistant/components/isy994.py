@@ -29,6 +29,7 @@ DISCOVER_SENSORS = "isy994.sensors"
 ISY = None
 SENSOR_STRING = 'Sensor'
 HIDDEN_STRING = '{HIDE ME}'
+CONF_TLS_VER = 'tls'
 
 # setup logger
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +44,6 @@ def setup(hass, config):
         import PyISY
     except ImportError:
         _LOGGER.error("Error while importing dependency PyISY.")
-
         return False
 
     # pylint: disable=global-statement
@@ -75,10 +75,12 @@ def setup(hass, config):
     global HIDDEN_STRING
     SENSOR_STRING = str(config[DOMAIN].get('sensor_string', SENSOR_STRING))
     HIDDEN_STRING = str(config[DOMAIN].get('hidden_string', HIDDEN_STRING))
+    tls_version = config[DOMAIN].get(CONF_TLS_VER, None)
 
     # connect to ISY controller
     global ISY
-    ISY = PyISY.ISY(addr, port, user, password, use_https=https, log=_LOGGER)
+    ISY = PyISY.ISY(addr, port, user, password, use_https=https,
+                    tls_ver=tls_version, log=_LOGGER)
     if not ISY.connected:
         return False
 
