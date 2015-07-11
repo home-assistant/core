@@ -44,6 +44,7 @@ omit =
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
@@ -52,6 +53,7 @@ omit =
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/nest.py
 
