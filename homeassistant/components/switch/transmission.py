@@ -54,6 +54,7 @@ from transmissionrpc.error import TransmissionError
 import logging
 
 _LOGGING = logging.getLogger(__name__)
+REQUIREMENTS = ['transmissionrpc>=0.11']
 
 
 # pylint: disable=unused-argument

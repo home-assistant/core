@@ -4,15 +4,9 @@ from __future__ import print_function
 import sys
 import os
 import argparse
-import importlib
+import subprocess
 
-
-# Home Assistant dependencies, mapped module -> package name
-DEPENDENCIES = {
-    'requests': 'requests',
-    'yaml': 'pyyaml',
-    'pytz': 'pytz',
-}
+DEPENDENCIES = ['requests>=2.0', 'pyyaml>=3.11', 'pytz>=2015.2']
 
 
 def validate_python():
@@ -24,21 +18,29 @@ def validate_python():
         sys.exit()
 
 
+# Copy of homeassistant.util.package because we can't import yet
+def install_package(package):
+    """Install a package on PyPi. Accepts pip compatible package strings.
+    Return boolean if install successfull."""
+    args = ['python3', '-m', 'pip', 'install', '--quiet', package]
+    if sys.base_prefix == sys.prefix:
+        args.append('--user')
+    return not subprocess.call(args)
+
+
 def validate_dependencies():
     """ Validate all dependencies that HA uses. """
+    print("Validating dependencies...")
     import_fail = False
 
-    for module, name in DEPENDENCIES.items():
-        try:
-            importlib.import_module(module)
-        except ImportError:
+    for requirement in DEPENDENCIES:
+        if not install_package(requirement):
             import_fail = True
-            print(
-                'Fatal Error: Unable to find dependency {}'.format(name))
+            print('Fatal Error: Unable to install dependency', requirement)
 
     if import_fail:
         print(("Install dependencies by running: "
-               "pip3 install -r requirements.txt"))
+               "python3 -m pip install -r requirements.txt"))
         sys.exit()
 
 

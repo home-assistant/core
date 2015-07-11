@@ -20,13 +20,21 @@ INDEX_PATH = os.path.join(os.path.dirname(__file__), 'index.html.template')
 _LOGGER = logging.getLogger(__name__)
 
 
+FRONTEND_URLS = [
+    URL_ROOT, '/logbook', '/history', '/devService', '/devState', '/devEvent']
+STATES_URL = re.compile(r'/states(/([a-zA-Z\._\-0-9/]+)|)')
+
+
 def setup(hass, config):
     """ Setup serving the frontend. """
     if 'http' not in hass.config.components:
         _LOGGER.error('Dependency http is not loaded')
         return False
 
-    hass.http.register_path('GET', URL_ROOT, _handle_get_root, False)
+    for url in FRONTEND_URLS:
+        hass.http.register_path('GET', url, _handle_get_root, False)
+
+    hass.http.register_path('GET', STATES_URL, _handle_get_root, False)
 
     # Static files
     hass.http.register_path(

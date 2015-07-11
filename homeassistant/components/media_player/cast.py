@@ -10,7 +10,6 @@ import logging
 
 try:
     import pychromecast
-    import pychromecast.controllers.youtube as youtube
 except ImportError:
     pychromecast = None
 
@@ -25,30 +24,41 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
+REQUIREMENTS = ['pychromecast>=0.6.9']
+CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
+KNOWN_HOSTS = []
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the cast platform. """
+    global pychromecast  # pylint: disable=invalid-name
+    if pychromecast is None:
+        import pychromecast as pychromecast_
+        pychromecast = pychromecast_
+
     logger = logging.getLogger(__name__)
 
-    if pychromecast is None:
-        logger.error((
-            "Failed to import pychromecast. Did you maybe not install the "
-            "'pychromecast' dependency?"))
+    # import CEC IGNORE attributes
+    ignore_cec = config.get(CONF_IGNORE_CEC, [])
+    if isinstance(ignore_cec, list):
+        pychromecast.IGNORE_CEC += ignore_cec
+    else:
+        logger.error('Chromecast conig, %s must be a list.', CONF_IGNORE_CEC)
 
-        return False
+    hosts = []
 
-    if discovery_info:
+    if discovery_info and discovery_info[0] not in KNOWN_HOSTS:
         hosts = [discovery_info[0]]
 
     else:
         hosts = (host_port[0] for host_port
-                 in pychromecast.discover_chromecasts())
+                 in pychromecast.discover_chromecasts()
+                 if host_port[0] not in KNOWN_HOSTS)
 
     casts = []
 
@@ -57,6 +67,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             casts.append(CastDevice(host))
         except pychromecast.ChromecastConnectionError:
             pass
+        else:
+            KNOWN_HOSTS.append(host)
 
     add_devices(casts)
 
@@ -67,6 +79,7 @@ class CastDevice(MediaPlayerDevice):
     # pylint: disable=too-many-public-methods
 
     def __init__(self, host):
+        import pychromecast.controllers.youtube as youtube
         self.cast = pychromecast.Chromecast(host)
         self.youtube = youtube.YouTubeController()
         self.cast.register_handler(self.youtube)

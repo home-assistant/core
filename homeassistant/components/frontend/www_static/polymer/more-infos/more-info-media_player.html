@@ -127,7 +127,7 @@
 
     },
 
-    stateObjChanged: function(newVal, oldVal) {
+    stateObjChanged: function(newVal) {
       if (newVal) {
         this.isOff = newVal.state == 'off';
         this.isPlaying = newVal.state == 'playing';
@@ -142,9 +142,7 @@
         this.supportsTurnOff = (newVal.attributes.supported_media_commands & 256) !== 0;
       }
 
-      this.debounce('more-info-volume-animation-finish', function() {
-       this.fire('iron-resize');
-      }.bind(this), 500);
+      this.async(function() { this.fire('iron-resize'); }.bind(this), 500);
     },
 
     computeClassNames: function(stateObj) {
