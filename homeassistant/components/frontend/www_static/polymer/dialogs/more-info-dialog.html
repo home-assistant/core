@@ -34,7 +34,7 @@
     <paper-dialog id="dialog" with-backdrop opened='{{dialogOpen}}'>
       <h2><state-card-content state-obj="[[stateObj]]"></state-card-content></h2>
       <div>
-        <template is='dom-if' if="[[hasHistoryComponent]]">
+        <template is='dom-if' if="[[showHistoryComponent]]">
           <state-history-charts state-history="[[stateHistory]]"
             is-loading-data="[[isLoadingHistoryData]]"></state-history-charts>
         </template>
@@ -56,6 +56,9 @@
   var entityHistoryActions = window.hass.entityHistoryActions;
   var moreInfoGetters = window.hass.moreInfoGetters;
   var moreInfoActions = window.hass.moreInfoActions;
+
+  // if you don't want the history component to show add the domain to this array
+  var DOMAINS_WITH_NO_HISTORY = ['camera'];
 
   Polymer({
     is: 'more-info-dialog',
@@ -96,6 +99,11 @@
         observer: 'fetchHistoryData',
       },
 
+      showHistoryComponent: {
+        type: Boolean,
+        value: false,
+      },
+
       dialogOpen: {
         type: Boolean,
         value: false,
@@ -107,6 +115,14 @@
       if (this.stateObj && this.hasHistoryComponent &&
           this.shouldFetchHistory) {
         entityHistoryActions.fetchRecent(this.stateObj.entityId);
+      }
+      if(this.stateObj) {
+        if(DOMAINS_WITH_NO_HISTORY.indexOf(this.stateObj.domain) !== -1) {
+          this.showHistoryComponent = false;
+        }
+        else {
+          this.showHistoryComponent = this.hasHistoryComponent;
+        }
       }
     },
 
