@@ -22,8 +22,7 @@ def validate_python():
 def install_package(package):
     """Install a package on PyPi. Accepts pip compatible package strings.
     Return boolean if install successfull."""
-    args = ['python3', '-m', 'pip', 'install', '--disable-pip-version-check',
-            '--quiet', package]
+    args = ['python3', '-m', 'pip', 'install', '--quiet', package]
     if sys.base_prefix == sys.prefix:
         args.append('--user')
     return not subprocess.call(args)
@@ -31,6 +30,7 @@ def install_package(package):
 
 def validate_dependencies():
     """ Validate all dependencies that HA uses. """
+    print("Validating dependencies...")
     import_fail = False
 
     for requirement in DEPENDENCIES:
