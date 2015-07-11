@@ -9,7 +9,7 @@ import unittest
 import os
 
 import homeassistant.loader as loader
-import homeassistant.util as util
+import homeassistant.util.color as color_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -154,7 +154,7 @@ class TestLight(unittest.TestCase):
 
         method, data = dev2.last_call('turn_on')
         self.assertEqual(
-            {light.ATTR_XY_COLOR: util.color_RGB_to_xy(255, 255, 255)},
+            {light.ATTR_XY_COLOR: color_util.color_RGB_to_xy(255, 255, 255)},
             data)
 
         method, data = dev3.last_call('turn_on')

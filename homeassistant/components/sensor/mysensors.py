@@ -39,6 +39,7 @@ ATTR_NODE_ID = "node_id"
 ATTR_CHILD_ID = "child_id"
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['pyserial>=2.7']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

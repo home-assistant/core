@@ -16,8 +16,6 @@ import random
 import string
 from functools import wraps
 
-import requests
-
 # DEPRECATED AS OF 4/27/2015 - moved to homeassistant.util.dt package
 # pylint: disable=unused-import
 from .dt import (  # noqa
@@ -62,46 +60,6 @@ def repr_helper(inp):
         return datetime_to_local_str(inp)
     else:
         return str(inp)
-
-
-# Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
-# License: Code is given as is. Use at your own risk and discretion.
-# pylint: disable=invalid-name
-def color_RGB_to_xy(R, G, B):
-    """ Convert from RGB color to XY color. """
-    if R + G + B == 0:
-        return 0, 0
-
-    var_R = (R / 255.)
-    var_G = (G / 255.)
-    var_B = (B / 255.)
-
-    if var_R > 0.04045:
-        var_R = ((var_R + 0.055) / 1.055) ** 2.4
-    else:
-        var_R /= 12.92
-
-    if var_G > 0.04045:
-        var_G = ((var_G + 0.055) / 1.055) ** 2.4
-    else:
-        var_G /= 12.92
-
-    if var_B > 0.04045:
-        var_B = ((var_B + 0.055) / 1.055) ** 2.4
-    else:
-        var_B /= 12.92
-
-    var_R *= 100
-    var_G *= 100
-    var_B *= 100
-
-    # Observer. = 2 deg, Illuminant = D65
-    X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805
-    Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-    Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505
-
-    # Convert XYZ to xy, see CIE 1931 color space on wikipedia
-    return X / (X + Y + Z), Y / (X + Y + Z)
 
 
 def convert(value, to_type, default=None):
@@ -152,32 +110,6 @@ def get_random_string(length=10):
     source_chars = string.ascii_letters + string.digits
 
     return ''.join(generator.choice(source_chars) for _ in range(length))
-
-
-LocationInfo = collections.namedtuple(
-    "LocationInfo",
-    ['ip', 'country_code', 'country_name', 'region_code', 'region_name',
-     'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
-     'use_fahrenheit'])
-
-
-def detect_location_info():
-    """ Detect location information. """
-    try:
-        raw_info = requests.get(
-            'https://freegeoip.net/json/', timeout=5).json()
-    except requests.RequestException:
-        return
-
-    data = {key: raw_info.get(key) for key in LocationInfo._fields}
-
-    # From Wikipedia: Fahrenheit is used in the Bahamas, Belize,
-    # the Cayman Islands, Palau, and the United States and associated
-    # territories of American Samoa and the U.S. Virgin Islands
-    data['use_fahrenheit'] = data['country_code'] in (
-        'BS', 'BZ', 'KY', 'PW', 'US', 'AS', 'VI')
-
-    return LocationInfo(**data)
 
 
 class OrderedEnum(enum.Enum):
