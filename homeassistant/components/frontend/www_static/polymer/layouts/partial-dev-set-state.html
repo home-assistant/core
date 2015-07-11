@@ -50,8 +50,9 @@
 
 <script>
 (function() {
-  var stateStore = window.hass.stateStore;
-  var stateActions = window.hass.stateActions;
+  var reactor = window.hass.reactor;
+  var entityGetters = window.hass.entityGetters;
+  var entityActions = window.hass.entityActions;
 
   Polymer({
     is: 'partial-dev-set-state',
@@ -83,7 +84,7 @@
     },
 
     entitySelected: function(ev) {
-      var state = stateStore.get(ev.detail.entityId);
+      var state = reactor.evaluate(entityGetters.byId(ev.detail.entityId));
 
       this.entityId = state.entityId;
       this.state = state.state;
@@ -99,7 +100,11 @@
         return;
       }
 
-      stateActions.set(this.entityId, this.state, attr);
+      entityActions.save({
+        entityId: this.entityId,
+        state: this.state,
+        attributes: attr,
+      });
     },
 
     computeFormClasses: function(narrow) {
