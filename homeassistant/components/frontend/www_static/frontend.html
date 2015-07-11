@@ -6312,7 +6312,7 @@ function(t,e){function r(t){return!!t&&"object"==typeof t}t.exports=r},/*!******
 function(t,e){function r(t){var e=typeof t;return!!t&&("object"==e||"function"==e)}t.exports=r},/*!**********************!*\
   !*** ./src/index.js ***!
   \**********************/
-function(t,e,r){"use strict";function n(t){if(t&&t.__esModule)return t;var e={};if(null!=t)for(var r in t)Object.prototype.hasOwnProperty.call(t,r)&&(e[r]=t[r]);return e["default"]=t,e}function i(t){return t&&t.__esModule?t:{"default":t}}Object.defineProperty(e,"__esModule",{value:!0});var u=r(/*! ./modules/auth */12),o=r(/*! ./modules/config */15),a=r(/*! ./modules/entity */5),s=r(/*! ./modules/entity-history */23),c=r(/*! ./modules/event */16),f=r(/*! ./modules/logbook */64),l=r(/*! ./modules/more-info */71),h=r(/*! ./modules/navigation */73),_=r(/*! ./modules/notification */17),d=r(/*! ./flux */2),v=i(d),p=r(/*! ./modules/preferences */80),y=r(/*! ./modules/service */10),g=r(/*! ./modules/stream */18),m=r(/*! ./modules/sync */20),b=r(/*! ./util */8),O=n(b),S=r(/*! ./modules/voice */95);e["default"]={authActions:u.actions,authGetters:u.getters,configActions:o.actions,configGetters:o.getters,entityActions:a.actions,entityGetters:a.getters,entityHistoryActions:s.actions,entityHistoryGetters:s.getters,eventActions:c.actions,eventGetters:c.getters,logbookActions:f.actions,logbookGetters:f.getters,localStoragePreferences:p.localStoragePreferences,moreInfoActions:l.actions,moreInfoGetters:l.getters,navigationActions:h.actions,navigationGetters:h.getters,notificationActions:_.actions,notificationGetters:_.getters,reactor:v["default"],serviceActions:y.actions,serviceGetters:y.getters,streamActions:g.actions,streamGetters:g.getters,syncActions:m.actions,syncGetters:m.getters,urlSync:h.urlSync,util:O,voiceActions:S.actions,voiceGetters:S.getters},t.exports=e["default"]},/*!*************************************!*\
+function(t,e,r){"use strict";function n(t){if(t&&t.__esModule)return t;var e={};if(null!=t)for(var r in t)Object.prototype.hasOwnProperty.call(t,r)&&(e[r]=t[r]);return e["default"]=t,e}function i(t){return t&&t.__esModule?t:{"default":t}}Object.defineProperty(e,"__esModule",{value:!0});var u=r(/*! ./modules/auth */12),o=r(/*! ./modules/config */15),a=r(/*! ./modules/entity */5),s=r(/*! ./modules/entity-history */23),c=r(/*! ./modules/event */16),f=r(/*! ./modules/logbook */64),l=r(/*! ./modules/more-info */71),h=r(/*! ./modules/navigation */73),_=r(/*! ./modules/notification */17),d=r(/*! ./flux */2),v=i(d),p=r(/*! ./modules/preferences */80),y=r(/*! ./modules/service */10),g=r(/*! ./modules/stream */18),m=r(/*! ./modules/sync */20),b=r(/*! ./util */8),O=n(b),S=r(/*! ./modules/voice */95);e["default"]={authActions:u.actions,authGetters:u.getters,configActions:o.actions,configGetters:o.getters,entityActions:a.actions,entityGetters:a.getters,entityHistoryActions:s.actions,entityHistoryGetters:s.getters,eventActions:c.actions,eventGetters:c.getters,logbookActions:f.actions,logbookGetters:f.getters,localStoragePreferences:p.localStoragePreferences,moreInfoActions:l.actions,moreInfoGetters:l.getters,navigationActions:h.actions,navigationGetters:h.getters,notificationActions:_.actions,notificationGetters:_.getters,reactor:v["default"],serviceActions:y.actions,serviceGetters:y.getters,streamActions:g.actions,streamGetters:g.getters,syncActions:m.actions,syncGetters:m.getters,urlSync:h.urlSync,util:O,voiceActions:S.actions,voiceGetters:S.getters,demo:!1},t.exports=e["default"]},/*!*************************************!*\
   !*** ./src/modules/auth/actions.js ***!
   \*************************************/
 function(t,e,r){"use strict";function n(t){return t&&t.__esModule?t:{"default":t}}function i(t){var e=arguments.length<=1||void 0===arguments[1]?{}:arguments[1],r=e.useStreaming,n=void 0===r?a["default"].evaluate(f.getters.isSupported):r,i=e.rememberAuth,u=void 0===i?!1:i,o=e.host,s=void 0===o?"":o;a["default"].dispatch(c["default"].VALIDATING_AUTH_TOKEN,{authToken:t,host:s}),l.actions.fetchAll().then(function(){a["default"].dispatch(c["default"].VALID_AUTH_TOKEN,{authToken:t,host:s,rememberAuth:u}),n?f.actions.start({syncOnInitialConnect:!1}):l.actions.start({skipInitialSync:!0})},function(){var t=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],e=t.message,r=void 0===e?h:e;a["default"].dispatch(c["default"].INVALID_AUTH_TOKEN,{errorMessage:r})})}function u(){a["default"].dispatch(c["default"].LOG_OUT,{})}Object.defineProperty(e,"__esModule",{value:!0}),e.validate=i,e.logOut=u;var o=r(/*! ../../flux */2),a=n(o),s=r(/*! ./action-types */11),c=n(s),f=r(/*! ../stream */18),l=r(/*! ../sync */20),h="Unexpected result from API"},/*!*************************************!*\
@@ -24658,76 +24658,51 @@ paper-ripple {
 })();
 </script>
 <dom-module id="more-info-camera" assetpath="more-infos/">
-
   <style>
-
-  :host .camera-image {
-    width:640px;
-    height:480px;
-  }
-   @media (max-width: 720px) {
-      :host .camera-image {
-        max-width: 100%;
-        height: initial
-      }
-
-      :host .camera-page {
-        max-width: 100%;
-        max-height: 100%;
-      }
+    :host {
+      max-width:640px;
     }
 
-    @media (max-width: 620px) {
-      :host .camera-image {
-        max-width: 100%;
-        height: initial
-      }
+    .camera-image {
+      width: 100%;
     }
-
-    :host .camera-page {
-      width:640px;
-      height:520px;
-    }
-
   </style>
 
   <template>
-    <div class="camera">
-      <div id="camera_container" class="camera-container camera-page">
-        <img src="[[computeCameraImageUrl(dialogOpen)]]" id="camera_image" class="camera-image">
-      </div>
-    </div>
+    <img class="camera-image" src="[[computeCameraImageUrl(dialogOpen)]]" on-load="imageLoaded">
   </template>
-
 </dom-module>
 
 <script>
 (function() {
-  var serviceActions = window.hass.serviceActions;
-  var uiUtil = window.hass.uiUtil;
-  var ATTRIBUTE_CLASSES = ['camera'];
+  var demo = hass.demo;
 
   Polymer({
     is: 'more-info-camera',
 
     properties: {
       stateObj: {
-        type: Object
+        type: Object,
       },
       dialogOpen: {
         type: Boolean,
       },
-      camera_image_url: {
-        type: String,
-      }
+    },
+
+    imageLoaded: function() {
+      this.fire('iron-resize');
     },
 
     computeCameraImageUrl: function(dialogOpen) {
-      return dialogOpen ?
-        this.stateObj.attributes['stream_url'] :
-        this.stateObj.attributes['still_image_url'];
+      if (demo) {
+        return 'http://194.218.96.92/jpg/image.jpg';
+      } else if (dialogOpen) {
+        return '/api/camera_proxy_stream/' + this.stateObj.entityId;
+      } else {
+        // Return an empty image if dialog is not open
+        return 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+      }
     },
-
   });
 })();
 </script>
