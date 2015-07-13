@@ -10,9 +10,6 @@
 [submodule "homeassistant/external/noop"]
 	path = homeassistant/external/noop
 	url = https://github.com/balloob/noop.git
-[submodule "homeassistant/components/frontend/www_static/polymer/home-assistant-js"]
-	path = homeassistant/components/frontend/www_static/polymer/home-assistant-js
-	url = https://github.com/balloob/home-assistant-js.git
 [submodule "homeassistant/external/vera"]
 	path = homeassistant/external/vera
 	url = https://github.com/jamespcole/home-assistant-vera-api.git
@@ -22,3 +19,6 @@
 [submodule "homeassistant/external/pymysensors"]
 	path = homeassistant/external/pymysensors
 	url = https://github.com/theolind/pymysensors
+[submodule "homeassistant/components/frontend/www_static/home-assistant-polymer"]
+	path = homeassistant/components/frontend/www_static/home-assistant-polymer
+	url = https://github.com/balloob/home-assistant-polymer.git

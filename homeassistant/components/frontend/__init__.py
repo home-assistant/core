@@ -55,7 +55,7 @@ def _handle_get_root(handler, path_match, data):
     handler.end_headers()
 
     if handler.server.development:
-        app_url = "polymer/home-assistant.html"
+        app_url = "home-assistant-polymer/src/home-assistant.html"
     else:
         app_url = "frontend-{}.html".format(version.VERSION)
 
