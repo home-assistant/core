@@ -95,6 +95,7 @@ class HomeAssistant(object):
         request_shutdown = threading.Event()
 
         def set_request_shutdown(*args, **kwargs):
+            """ request HA shutdown """
             request_shutdown.set()
 
         # create shutdown listeners

@@ -42,7 +42,8 @@ def setup(hass, config):
     repo_branch = config['updater'].get(CONF_REPO_BRANCH, 'master')
 
     # create component entity
-    Updater(hass, repo_name, repo_branch, pid_file, log_file, _LOGGER)
+    Updater(hass, _LOGGER, repo_name=repo_name, repo_branch=repo_branch,
+            pid_file=pid_file, log_file=log_file)
 
     return True
 
@@ -54,8 +55,7 @@ class Updater(Entity):
     entity_id = 'updater.updater'
     name = 'Updater'
 
-    def __init__(self, hass, repo_name, repo_branch, pid_file, log_file,
-                 logger):
+    def __init__(self, hass, logger, **kwargs):
         try:
             from git import Repo
         except ImportError:
@@ -67,19 +67,16 @@ class Updater(Entity):
         self.hass = hass
         self._logger = logger
 
-        self.repo_name = repo_name
-        self.branch = repo_branch
-        self.pid_file = pid_file
-        self.log_file = log_file
+        self.config = kwargs
 
         hass.track_time_change(self.update, hour=0, minute=0, second=0)
         self.hass.services.register(DOMAIN, 'update', self.run_update)
 
-        self.newest_sha = None
-        self.newest_msg = None
-        self.newest_date = None
-        self.newest_url = None
-        self.current_sha = None
+        self.versions = {'newest_sha': None,
+                         'newest_msg': None,
+                         'newest_date': None,
+                         'newest_url': None,
+                         'current_sha': None}
 
         self.update()
 
@@ -87,24 +84,26 @@ class Updater(Entity):
         ''' Update the state of the entity '''
         _LOGGER.info('Looking for updates.')
         # pull data from github
-        github_resp = requests.get(GH_API_CALL.format(repo=self.repo_name,
-                                                      branch=self.branch))
+        github_resp = requests.get(
+            GH_API_CALL.format(repo=self.config['repo_name'],
+                               branch=self.config['branch']))
         github_data = github_resp.json()
         if github_resp.headers['status'] == '200 OK':
-            self.newest_sha = github_data[0]['sha']
-            self.newest_msg = github_data[0]['commit']['message']
-            self.newest_date = github_data[0]['commit']['author']['date']
-            self.newest_url = github_data[0]['html_url']
+            self.versions['newest_sha'] = github_data[0]['sha']
+            self.versions['newest_msg'] = github_data[0]['commit']['message']
+            self.versions['newest_date'] = \
+                github_data[0]['commit']['author']['date']
+            self.versions['newest_url'] = github_data[0]['html_url']
 
         # find local copy info
         if self._repo_class is not None:
             repo = self._repo_class(HA_SOURCE_DIR)
             if repo.bare:
-                self.current_sha = None
+                self.versions['current_sha'] = None
             else:
-                self.current_sha = repo.head.commit.hexsha
+                self.versions['current_sha'] = repo.head.commit.hexsha
         else:
-            self.current_sha = None
+            self.versions['current_sha'] = None
 
         # update with HA
         self.update_ha_state()
@@ -112,7 +111,8 @@ class Updater(Entity):
     @property
     def hidden(self):
         ''' only show the entity when an update is available '''
-        return not self.newest_sha and self.current_sha == self.newest_sha
+        return not self.versions['newest_sha'] and \
+            self.versions['current_sha'] == self.versions['newest_sha']
 
     @property
     def state(self):
@@ -122,9 +122,12 @@ class Updater(Entity):
     @property
     def state_attributes(self):
         ''' current entity state attributes '''
-        return {'hidden': self.hidden, 'local_sha': self.current_sha,
-                'remote_sha': self.newest_sha, 'message': self.newest_msg,
-                'date': self.newest_date, 'link': self.newest_url}
+        return {'hidden': self.hidden,
+                'local_sha': self.versions['current_sha'],
+                'remote_sha': self.versions['newest_sha'],
+                'message': self.versions['newest_msg'],
+                'date': self.versions['newest_date'],
+                'link': self.versions['newest_url']}
 
     def run_update(self, *args, **kwargs):
         ''' run the updater '''
@@ -132,9 +135,9 @@ class Updater(Entity):
         mypid = str(os.getpid())
         cmd = [upscript, HA_SOURCE_DIR, mypid]
 
-        if self.log_file is not None:
-            cmd.append(self.log_file)
-            if self.pid_file is not None:
-                cmd.append(self.pid_file)
+        if self.config['log_file'] is not None:
+            cmd.append(self.config['log_file'])
+            if self.config['pid_file'] is not None:
+                cmd.append(self.config['pid_file'])
 
         subprocess.call(cmd)
