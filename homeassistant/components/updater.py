@@ -42,7 +42,7 @@ def setup(hass, config):
     repo_branch = config['updater'].get(CONF_REPO_BRANCH, 'master')
 
     # create component entity
-    Updater(hass, _LOGGER, repo_name=repo_name, repo_branch=repo_branch,
+    Updater(hass, _LOGGER, repo_name=repo_name, branch=repo_branch,
             pid_file=pid_file, log_file=log_file)
 
     return True
