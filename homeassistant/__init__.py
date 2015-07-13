@@ -101,7 +101,11 @@ class HomeAssistant(object):
         # create shutdown listeners
         self.services.register(DOMAIN, SERVICE_HOMEASSISTANT_STOP,
                                set_request_shutdown)
-        signal.signal(signal.SIGQUIT, set_request_shutdown)
+        try:
+            signal.signal(signal.SIGQUIT, set_request_shutdown)
+        except ValueError:
+            _LOGGER.warning("HA could not bind to SIGQUIT. Are you running in"
+                            " a thread or on Windows?")
 
         while not request_shutdown.isSet():
             try:
