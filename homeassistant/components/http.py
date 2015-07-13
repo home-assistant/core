@@ -198,8 +198,13 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         self.serve_forever()
 
+    def shutdown(self, *args, **kwargs):
+        """ Shuts the web server down """
+        super().shutdown(*args, **kwargs)
+        self.socket.close()
+
     def register_path(self, method, url, callback, require_auth=True):
-        """ Regitsters a path wit the server. """
+        """ Regitsters a path with the server. """
         self.paths.append((method, url, callback, require_auth))
 
 

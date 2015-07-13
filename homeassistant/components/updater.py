@@ -8,18 +8,23 @@ Indicates when a new update for HA is available
 import logging
 import os
 import requests
+import subprocess
 
 # homeassistant imports
 import homeassistant
-from homeassistant import bootstrap
+from homeassistant.helpers.entity import Entity
 
 # homeassistant constants
 DOMAIN = "updater"
 DEPENDENCIES = []
 REQUIREMENTS = ['requests>=2.0', 'gitpython>=1.0.1']
 CONF_PID_FILE = "pid_file"
+CONF_LOG_FILE = "log_file"
+CONF_REPO_NAME = "repo_name"
+CONF_REPO_BRANCH = "repo_branch"
 HA_SOURCE_DIR = os.path.abspath(os.path.join(homeassistant.__file__,
                                              '..', '..'))
+GH_API_CALL = 'https://api.github.com/repos/{repo}/commits?sha={branch}'
 SCAN_INTERVAL = 60 * 60 * 12
 
 # setup logger
@@ -31,20 +36,26 @@ def setup(hass, config):
     Setup updater component.
     """
     # get optional configuration
-    pid_file = config.get(CONF_PID_FILE, None)
+    pid_file = config['updater'].get(CONF_PID_FILE, None)
+    log_file = config['updater'].get(CONF_LOG_FILE, None)
+    repo_name = config['updater'].get(CONF_REPO_NAME, 'balloob/home-assistant')
+    repo_branch = config['updater'].get(CONF_REPO_BRANCH, 'master')
 
     # create component entity
-    Updater(hass, pid_file, _LOGGER)
+    Updater(hass, repo_name, repo_branch, pid_file, log_file, _LOGGER)
 
     return True
 
 
-class Updater(object):
+class Updater(Entity):
+    """ Updater entity class """
 
     hass = None
     entity_id = 'updater.updater'
+    name = 'Updater'
 
-    def __init__(self, hass, pid_file, logger):
+    def __init__(self, hass, repo_name, repo_branch, pid_file, log_file,
+                 logger):
         try:
             from git import Repo
         except ImportError:
@@ -54,26 +65,36 @@ class Updater(object):
             self._repo_class = Repo
 
         self.hass = hass
-        self.pid_file = pid_file
         self._logger = logger
 
+        self.repo_name = repo_name
+        self.branch = repo_branch
+        self.pid_file = pid_file
+        self.log_file = log_file
+
         hass.track_time_change(self.update, hour=0, minute=0, second=0)
+        self.hass.services.register(DOMAIN, 'update', self.run_update)
+
         self.newest_sha = None
         self.newest_msg = None
         self.newest_date = None
+        self.newest_url = None
         self.current_sha = None
 
         self.update()
 
     def update(self, *args, **kwargs):
+        ''' Update the state of the entity '''
         _LOGGER.info('Looking for updates.')
         # pull data from github
-        github_resp = requests.get('https://api.github.com/repos/balloob/'
-                                   + 'home-assistant/commits?sha=master')
+        github_resp = requests.get(GH_API_CALL.format(repo=self.repo_name,
+                                                      branch=self.branch))
         github_data = github_resp.json()
-        self.newest_sha = github_data[0]['sha']
-        self.newest_msg = github_data[0]['commit']['message']
-        self.newest_date = github_data[0]['commit']['author']['date']
+        if github_resp.headers['status'] == '200 OK':
+            self.newest_sha = github_data[0]['sha']
+            self.newest_msg = github_data[0]['commit']['message']
+            self.newest_date = github_data[0]['commit']['author']['date']
+            self.newest_url = github_data[0]['html_url']
 
         # find local copy info
         if self._repo_class is not None:
@@ -90,17 +111,30 @@ class Updater(object):
 
     @property
     def hidden(self):
-        return self.current_sha == self.newest_sha
+        ''' only show the entity when an update is available '''
+        return not self.newest_sha and self.current_sha == self.newest_sha
 
     @property
     def state(self):
-        return False
+        ''' Is an update available? '''
+        return not self.hidden
 
     @property
-    def attributes(self):
-        return {'hidden': self.hidden, 'Local SHA': self.current_sha,
-                'Remote SHA': self.newest_sha,
-                'Message': '{}\n{}'.format(self.newest_date, self.newest_msg)}
+    def state_attributes(self):
+        ''' current entity state attributes '''
+        return {'hidden': self.hidden, 'local_sha': self.current_sha,
+                'remote_sha': self.newest_sha, 'message': self.newest_msg,
+                'date': self.newest_date, 'link': self.newest_url}
 
-    def update_ha_state(self):
-        self.hass.states.set(self.entity_id, self.state, self.attributes)
+    def run_update(self, *args, **kwargs):
+        ''' run the updater '''
+        upscript = os.path.join(HA_SOURCE_DIR, 'scripts', 'update')
+        mypid = str(os.getpid())
+        cmd = [upscript, HA_SOURCE_DIR, mypid]
+
+        if self.log_file is not None:
+            cmd.append(self.log_file)
+            if self.pid_file is not None:
+                cmd.append(self.pid_file)
+
+        subprocess.call(cmd)
