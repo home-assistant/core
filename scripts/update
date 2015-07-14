@@ -1,8 +1,63 @@
-# If current pwd is scripts, go 1 up.
-if [ ${PWD##*/} == "scripts" ]; then
-    cd ..
+#! /bin/bash
+
+# update [HA_SRC_DIR [PID [LOG_FILE [PID_FILE]]]]
+# HA_SRC_DIR - The directory where the Home Assistant source lives
+# PID - The Process ID of Home Assistant if it is currently running. If this
+#       is supplied, Home Assistant will be shutdown before updating and then
+#       restarted after the update has been applied.
+# LOG_FILE - A file where the information usually printed to the screen should
+#           be placed. If this is supplied, Home Assistant will be started in
+#           the background.
+# PID_FILE - A file that should store Home Assistant's process ID. This is
+#            usually used by the OS for daemon management.
+
+# extract inputs
+HA_SRC_DIR=$1
+PID=$2
+LOG_FILE=$3
+PID_FILE=$4
+
+# move to source directory
+echo 'Move to Source Directory'
+if [ ! -z "$HA_SRC_DIR" ]; then
+    cd $HA_SRC_DIR
+else
+  # If current pwd is scripts, go 1 up.
+  if [ ${PWD##*/} == "scripts" ]; then
+      cd ..
+  fi
 fi
 
+# shutdown HA
+if [ ! -z "$PID" ]; then
+    echo 'Request HA Shutdown'
+    kill -3 $PID
+
+    # wait for shutdown
+    while [ $(kill -0 $PID 2>&1 | wc -l | tr -d '[[:space:]]') -gt 0 ]; do
+        echo 'Waiting for Shutdown'
+        sleep 1
+    done
+fi
+
+# activate virtual environment
+echo "Activate Python Virtual Environment"
+source bin/activate
+
+# update from GitHub
+echo "Update HA"
 git pull --recurse-submodules=yes
 git submodule update --init --recursive
-python3 -m pip install -r requirements.txt
+
+# run HA
+if [ ! -z "$PID" ]; then
+    echo "Starting HA"
+    if [ -z "$LOG_FILE" ]; then
+        python -m homeassistant
+    else
+        python -m homeassistant >> $LOG_FILE 2>&1 &
+        if [ ! -z "PID_FILE" ]; then
+            echo $! &> $PID_FILE
+        fi
+    fi
+fi
