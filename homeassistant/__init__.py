@@ -104,7 +104,7 @@ class HomeAssistant(object):
             signal.signal(signal.SIGQUIT, set_request_shutdown)
         except ValueError:
             _LOGGER.warning("HA could not bind to SIGQUIT. Are you running in"
-                            " a thread or on Windows?"
+                            + " a thread or on Windows?")
 
         while not request_shutdown.isSet():
             try:
