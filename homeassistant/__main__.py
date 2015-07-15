@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 import subprocess
+from contextlib import redirect_stdout
 
 DEPENDENCIES = ['requests>=2.0', 'pyyaml>=3.11', 'pytz>=2015.2']
 
@@ -109,8 +110,69 @@ def get_arguments():
         '--open-ui',
         action='store_true',
         help='Open the webinterface in a browser')
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help="Enable verbose logging.")
+    parser.add_argument(
+        '--pid-file',
+        metavar='path_to_pid_file',
+        default=None,
+        help='Path to PID file useful for running as daemon')
+    parser.add_argument(
+        '--daemon',
+        action='store_true',
+        help='Run Home Assistant as daemon')
 
     return parser.parse_args()
+
+
+def _daemonize():
+    """ Move current process to daemon process """
+    # create first fork
+    pid = os.fork()
+    if pid > 0:
+        sys.exit(0)
+
+    # decouple fork
+    os.setsid()
+    os.umask(0)
+
+    # create second fork
+    pid = os.fork()
+    if pid > 0:
+        sys.exit(0)
+
+
+def setup_daemon(pid_file, run_as_daemon):
+    """ Setup the HA process as a daemon if requested """
+    # check pid file
+    if pid_file:
+        try:
+            pid = int(open(pid_file, 'r').readline())
+        except IOError:
+            pass
+        else:
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                pass
+            else:
+                print('Fatal Error: HomeAssistant is already running.')
+                sys.exit(1)
+
+    # fork process
+    if run_as_daemon:
+        _daemonize()
+
+    # store pid
+    if pid_file:
+        # write pid file
+        pid = os.getpid()
+        try:
+            open(pid_file, 'w').write(str(pid))
+        except IOError:
+            pass
 
 
 def main():
@@ -127,16 +189,19 @@ def main():
     config_dir = os.path.join(os.getcwd(), args.config)
     config_path = ensure_config_path(config_dir)
 
+    setup_daemon(args.pid_file, args.daemon)
+
     if args.demo_mode:
         from homeassistant.components import http, demo
 
         # Demo mode only requires http and demo components.
-        hass = bootstrap.from_config_dict({
-            http.DOMAIN: {},
-            demo.DOMAIN: {}
-        })
+        hass = bootstrap.from_config_dict(
+            {http.DOMAIN: {}, demo.DOMAIN: {}},
+            args=args)
     else:
-        hass = bootstrap.from_config_file(config_path)
+        hass = bootstrap.from_config_file(config_path, args=args)
+
+    hass.arguments = args
 
     if args.open_ui:
         from homeassistant.const import EVENT_HOMEASSISTANT_START

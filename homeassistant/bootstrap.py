@@ -145,7 +145,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 
 # pylint: disable=too-many-branches, too-many-statements
-def from_config_dict(config, hass=None):
+def from_config_dict(config, hass=None, args=None):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -156,7 +156,8 @@ def from_config_dict(config, hass=None):
 
     process_ha_core_config(hass, config.get(homeassistant.DOMAIN, {}))
 
-    enable_logging(hass)
+    enable_logging(hass, args.verbose if args else False,
+                   args.daemon if args else False)
 
     _ensure_loader_prepared(hass)
 
@@ -185,7 +186,7 @@ def from_config_dict(config, hass=None):
     return hass
 
 
-def from_config_file(config_path, hass=None):
+def from_config_file(config_path, hass=None, args=None):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -199,30 +200,32 @@ def from_config_file(config_path, hass=None):
 
     config_dict = config_util.load_config_file(config_path)
 
-    return from_config_dict(config_dict, hass)
+    return from_config_dict(config_dict, hass, args)
 
 
-def enable_logging(hass):
+def enable_logging(hass, verbose=False, daemon=False):
     """ Setup the logging for home assistant. """
-    logging.basicConfig(level=logging.INFO)
-    fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-           "[%(name)s] %(message)s%(reset)s")
-    try:
-        from colorlog import ColoredFormatter
-        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            fmt,
-            datefmt='%y-%m-%d %H:%M:%S',
-            reset=True,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red',
-            }
-        ))
-    except ImportError:
-        _LOGGER.warn("Colorlog package not found, console coloring disabled")
+    if not daemon:
+        logging.basicConfig(level=logging.INFO)
+        fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
+               "[%(name)s] %(message)s%(reset)s")
+        try:
+            from colorlog import ColoredFormatter
+            logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+                fmt,
+                datefmt='%y-%m-%d %H:%M:%S',
+                reset=True,
+                log_colors={
+                    'DEBUG': 'cyan',
+                    'INFO': 'green',
+                    'WARNING': 'yellow',
+                    'ERROR': 'red',
+                    'CRITICAL': 'red',
+                }
+            ))
+        except ImportError:
+            _LOGGER.warn("Colorlog package not found, "
+                         + "console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path('home-assistant.log')
@@ -236,7 +239,7 @@ def enable_logging(hass):
         err_handler = logging.FileHandler(
             err_log_path, mode='w', delay=True)
 
-        err_handler.setLevel(logging.WARNING)
+        err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',
                               datefmt='%y-%m-%d %H:%M:%S'))

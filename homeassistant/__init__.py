@@ -46,6 +46,8 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistant(object):
     """ Core class to route all communication to right components. """
 
+    arguments = None
+
     def __init__(self):
         self.pool = pool = create_worker_pool()
         self.bus = EventBus(pool)
