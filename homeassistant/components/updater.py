@@ -83,6 +83,7 @@ class Updater(Entity):
 
     def __init__(self, hass, current_sha, repo_name, branch, pid_file,
                  log_file):
+        # pylint: disable=too-many-arguments
         self.hass = hass
         self.config = {'repo_name': repo_name, 'branch': branch,
                        'pid_file': pid_file, 'log_file': log_file}
