@@ -128,6 +128,11 @@ def get_arguments():
 
 def _daemonize():
     """ Move current process to daemon process """
+    if os.name == "nt":
+        print('Fatal Error: Windows cannot run Home Assistant '
+              + 'as a daemon.')
+        sys.exit(1)
+
     # create first fork
     pid = os.fork()
     if pid > 0:
