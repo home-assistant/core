@@ -156,8 +156,13 @@ def from_config_dict(config, hass=None, args=None):
 
     process_ha_core_config(hass, config.get(homeassistant.DOMAIN, {}))
 
-    enable_logging(hass, args.verbose if args else False,
-                   args.daemon if args else False)
+    if args is not None:
+        verbose = args.verbose
+        daemon = args.daemon
+    else:
+        verbose = False
+        daemon = False
+    enable_logging(hass, verbose, daemon)
 
     _ensure_loader_prepared(hass)
 
@@ -243,7 +248,9 @@ def enable_logging(hass, verbose=False, daemon=False):
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',
                               datefmt='%y-%m-%d %H:%M:%S'))
-        logging.getLogger('').addHandler(err_handler)
+        logger = logging.getLogger('')
+        logger.addHandler(err_handler)
+        logger.setLevel(logging.DEBUG)  # this sets the minimum log level
 
     else:
         _LOGGER.error(
