@@ -121,9 +121,11 @@ Installing and running Home Assistant on your local machine is easy. Make sure y
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
+<span class='line-number'>5</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>git clone --recursive https://github.com/balloob/home-assistant.git
 </span><span class='line'>python3 -m venv home-assistant
 </span><span class='line'><span class="nb">cd </span>home-assistant
+</span><span class='line'><span class="nb">source </span>bin/activate
 </span><span class='line'>python3 -m homeassistant --open-ui
 </span></code></pre></td></tr></table></div></figure>
 </p>
@@ -132,7 +134,7 @@ Installing and running Home Assistant on your local machine is easy. Make sure y
 <li>Download Home Assistant</li>
 <li>Setup an isolated environment</li>
 <li>Navigate to downloaded files</li>
-<li>Install the dependencies</li>
+<li>Activate the isolated environment (on Windows, run <code>Scripts/activate.bat</code>)</li>
 <li>Launch Home Assistant and serve web interface on <a href='http://localhost:8123'>http://localhost:8123</a></li>
 </ol>
 <p>If you run into any issues, please see the <a href='/getting-started/troubleshooting.html'>troubleshooting page</a>.</p>
