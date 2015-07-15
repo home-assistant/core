@@ -5,7 +5,6 @@ import sys
 import os
 import argparse
 import subprocess
-from contextlib import redirect_stdout
 
 DEPENDENCIES = ['requests>=2.0', 'pyyaml>=3.11', 'pytz>=2015.2']
 
