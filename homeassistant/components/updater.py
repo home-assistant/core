@@ -35,10 +35,10 @@ def setup(hass, config):
     Setup updater component.
     """
     # get optional configuration
-    pid_file = config['updater'].get(CONF_PID_FILE, None)
-    log_file = config['updater'].get(CONF_LOG_FILE, None)
-    repo_name = config['updater'].get(CONF_REPO_NAME, 'balloob/home-assistant')
-    repo_branch = config['updater'].get(CONF_REPO_BRANCH, 'master')
+    pid_file = config[DOMAIN].get(CONF_PID_FILE, None)
+    log_file = config[DOMAIN].get(CONF_LOG_FILE, None)
+    repo_name = config[DOMAIN].get(CONF_REPO_NAME, 'balloob/home-assistant')
+    repo_branch = config[DOMAIN].get(CONF_REPO_BRANCH, 'master')
 
     # create updater service
     def run_update(service_call):
@@ -60,7 +60,7 @@ def setup(hass, config):
         from git import Repo
     except ImportError:
         _LOGGER.error('Missing package gitpython')
-        current_sha = None
+        return False
     else:
         repo = Repo(HA_SOURCE_DIR)
         if repo.bare:
@@ -79,7 +79,7 @@ class Updater(Entity):
 
     hass = None
     entity_id = 'updater.updater'
-    name = 'Updater'
+    name = 'updater'
 
     def __init__(self, hass, current_sha, repo_name, branch, pid_file,
                  log_file):
@@ -116,22 +116,27 @@ class Updater(Entity):
             self.versions['newest_date'] = \
                 github_data[0]['commit']['author']['date']
             self.versions['newest_url'] = github_data[0]['html_url']
+
+            # update with HA
+            self.update_ha_state()
         else:
             _LOGGER.warning('Error communicating with GitHub')
-
-        # update with HA
-        self.update_ha_state()
 
     @property
     def hidden(self):
         ''' only show the entity when an update is available '''
-        return not self.versions['newest_sha'] and \
-            self.versions['current_sha'] == self.versions['newest_sha']
+        return self._state_raw
 
     @property
     def state(self):
         ''' Is an update available? '''
-        return 'up_to_date' if self.hidden else 'update_available'
+        return 'up_to_date' if self._state_raw else 'update_available'
+
+    @property
+    def _state_raw(self):
+        ''' The raw (True/False) format of the state. True is up-to-date '''
+        return self.versions['newest_sha'] and \
+            self.versions['current_sha'] == self.versions['newest_sha']
 
     @property
     def state_attributes(self):

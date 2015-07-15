@@ -145,7 +145,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 
 # pylint: disable=too-many-branches, too-many-statements
-def from_config_dict(config, hass=None, args=None):
+def from_config_dict(config, hass=None, verbose=False, daemon=False):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -156,12 +156,6 @@ def from_config_dict(config, hass=None, args=None):
 
     process_ha_core_config(hass, config.get(homeassistant.DOMAIN, {}))
 
-    if args is not None:
-        verbose = args.verbose
-        daemon = args.daemon
-    else:
-        verbose = False
-        daemon = False
     enable_logging(hass, verbose, daemon)
 
     _ensure_loader_prepared(hass)
@@ -191,7 +185,7 @@ def from_config_dict(config, hass=None, args=None):
     return hass
 
 
-def from_config_file(config_path, hass=None, args=None):
+def from_config_file(config_path, hass=None, verbose=False, daemon=False):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -205,7 +199,7 @@ def from_config_file(config_path, hass=None, args=None):
 
     config_dict = config_util.load_config_file(config_path)
 
-    return from_config_dict(config_dict, hass, args)
+    return from_config_dict(config_dict, hass, verbose, daemon)
 
 
 def enable_logging(hass, verbose=False, daemon=False):

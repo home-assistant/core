@@ -126,7 +126,7 @@ def get_arguments():
     return parser.parse_args()
 
 
-def _daemonize():
+def daemonize():
     """ Move current process to daemon process """
     if os.name == "nt":
         print('Fatal Error: Windows cannot run Home Assistant '
@@ -148,8 +148,8 @@ def _daemonize():
         sys.exit(0)
 
 
-def setup_daemon(pid_file, run_as_daemon):
-    """ Setup the HA process as a daemon if requested """
+def check_pid(pid_file):
+    """ Check that HA is not already running """
     # check pid file
     if pid_file:
         try:
@@ -165,10 +165,9 @@ def setup_daemon(pid_file, run_as_daemon):
                 print('Fatal Error: HomeAssistant is already running.')
                 sys.exit(1)
 
-    # fork process
-    if run_as_daemon:
-        _daemonize()
 
+def write_pid(pid_file):
+    """ Create PID File """
     # store pid
     if pid_file:
         # write pid file
@@ -193,7 +192,11 @@ def main():
     config_dir = os.path.join(os.getcwd(), args.config)
     config_path = ensure_config_path(config_dir)
 
-    setup_daemon(args.pid_file, args.daemon)
+    # daemon functions
+    check_pid(args.pid_file)
+    if args.daemon:
+        daemonize()
+    write_pid(args.pid_file)
 
     if args.demo_mode:
         from homeassistant.components import http, demo
@@ -201,11 +204,13 @@ def main():
         # Demo mode only requires http and demo components.
         hass = bootstrap.from_config_dict(
             {http.DOMAIN: {}, demo.DOMAIN: {}},
-            args=args)
+            daemon=args.daemon, verbose=args.verbose)
     else:
-        hass = bootstrap.from_config_file(config_path, args=args)
+        hass = bootstrap.from_config_file(
+            config_path, daemon=args.daemon, verbose=args.verbose)
 
-    hass.arguments = args
+    hass.arguments = {'daemon': args.daemon, 'verbose': args.verbose,
+                      'pid_file': args.pid_file}
 
     if args.open_ui:
         from homeassistant.const import EVENT_HOMEASSISTANT_START
