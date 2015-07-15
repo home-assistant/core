@@ -105,11 +105,24 @@
   <hr class="divider">
   
 
-  <p>Home Assistant uses <a href="https://www.polymer-project.org/">Polymer</a> for the frontend. Polymer allows building encapsulated and interoperable custom elements that extend HTML itself.</p>
+  <p>Home Assistant uses <a href="https://www.polymer-project.org/">Polymer</a> for the UI and <a href="http://optimizely.github.io/nuclear-js/">NuclearJS</a> for all data management.</p>
+
+<ul>
+<li>Polymer allows building encapsulated custom HTML elements.<br/>
+<a href="https://github.com/balloob/home-assistant-polymer">Home-Assistant-Polymer source code on GitHub.</a></li>
+<li>NuclearJS is a reactive flux built with ImmutableJS data structures.<br/>
+<a href="https://github.com/balloob/home-assistant-js">Home-Assistant-JS source code on GitHub.</a></li>
+</ul>
+
+
+<p class='note warning'>
+Do not use development mode in production. Home Assistant uses aggressive caching to improve the mobile experience. This is disabled during development so that you do not have to restart the server in between changes.
+</p>
+
 
 <h1><a class='title-link' name='turning-on-development-mode' href='#turning-on-development-mode'></a> Turning on development mode</h1>
 
-<p>Home Assistant will by default serve the compiled version of the frontend. To change it so that the components are served separately, update your <code>configuration.yaml</code> to have these lines:</p>
+<p>Home Assistant will by default serve the compiled version of the frontend. To change it so that each component and JavaScript are served separately, update your <code>configuration.yaml</code> to have these lines:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -117,61 +130,90 @@
 </span><span class='line'>  development: 1</span></code></pre></td></tr></table></div></figure>
 
 
-<p>After turning on development mode, you will have to install the web components that the frontend depends on. You can do this by running the <code>build_frontend</code> script.</p>
+<p>After turning on development mode, you will have to install the web components that the frontend depends on. Firing off a build of the frontend by running <code>scripts/build_frontend</code> will ensure all dependencies are installed.</p>
 
-<p class='note warning'>
-Do not use development mode in production. Home Assistant uses aggressive caching to improve the mobile experience. This is disabled during development so that you do not have to restart the server in between changes.
-</p>
+<p>Once this is done, you can start editting the webcomponents in the folder <code>homeassistant/components/frontend/www_static/home-assistant-polymer/src</code>. To see the changes you&rsquo;ve made, simply refresh your browser.</p>
 
+<h2><a class='title-link' name='enabling-javascript-backend-development' href='#enabling-javascript-backend-development'></a> Enabling JavaScript backend development</h2>
 
-<h1><a class='title-link' name='building-the-frontend' href='#building-the-frontend'></a> Building the frontend</h1>
-
-<p>To build the frontend you need to install node and the npm packages bower and vulcanize.</p>
+<p>Polymer is only providing a UI toolkit for Home Assistant. All data management and interaction with the server is done by <code>home-assistant-js</code> leveraging NuclearJS. To enable JavaScript development:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>npm install -g bower vulcanize
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd </span>homeassistant/components/frontend/www_static/home-assistant-polymer/
+</span><span class='line'>npm run setup_js_dev
+</span><span class='line'>npm run js_dev
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>After that you can run <a href="https://github.com/balloob/home-assistant/blob/master/build_frontend"><code>./build_frontend</code></a> from the project directory. This will take all the used web components and &lsquo;vulcanize&rsquo; it into a single file to be served by Home Assistant. The script also updates <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/frontend.py"><code>homeassistant/components/http/frontend.py</code></a> with an MD5 hash of the frontend.</p>
+<p><code>npm run js_dev</code> will start the process that will ensure that your latest changes to the JavaScript files will be loaded when you refresh the page. This command has to be always running while working on home-assistant-js.</p>
 
-<h1><a class='title-link' name='adding-state-cards' href='#adding-state-cards'></a> Adding state cards</h1>
+<h1><a class='title-link' name='building-the-polymer-frontend' href='#building-the-polymer-frontend'></a> Building the Polymer frontend</h1>
 
-<p>The main interface of Home Assistant is a list of current states in the State Machine. It will filter out the group states and offers options to filter by groups on the top.</p>
-
-<p>Currently there are two supported card types:</p>
+<p>Building a new version of the frontend is as simple as running <code>scripts/build_frontend</code>. This fires off the following commands:</p>
 
 <ul>
-<li>Display: shows the state on the card</li>
-<li>Toggle: allows the user to toggle a device on/off from the card</li>
+<li><strong>home-assistant-polymer</strong>: Install NPM dependencies.</li>
+<li><strong>home-assistant-polymer</strong>: start frontend build.
+
+<ul>
+<li>Compile all used JavaScript to <code>_app_compiled.js</code>.</li>
+<li>Install Bower dependencies.</li>
+<li>Vulcanize all Webcomponents to <code>frontend.vulcan.html</code>.</li>
+<li>Minify <code>frontend.vulcan.html</code> and save it as <code>frontend.html</code>.</li>
+</ul>
+</li>
+<li>Copy the webcomponents polyfill <code>webcomponents-lite.min.js</code> from <strong>home-assistant-polymer</strong> to <code>components/frontend/www_static/webcomponents-lite.min.js</code>.</li>
+<li>Copy the final frontend build <code>frontend.html</code> from <strong>home-assistant-polymer</strong> to <code>components/frontend/www_static/frontend.html</code>.</li>
+<li>Generate MD5 hash of <code>frontend.html</code> to signal caches to redownload the UI.</li>
 </ul>
 
 
-<p>To add your own card type, follow the following steps:</p>
+<p class='img'>
+<img src='/images/frontend/polymer-build-architecture.png' alt='Polymer build architecture diagram' />
+</p>
+
+
+<h1><a class='title-link' name='adding-state-cards' href='#adding-state-cards'></a> Adding state cards</h1>
+
+<p>The main interface of Home Assistant is a list of the current entities and their states. For each entity in the system, a state card will be rendered. State cards will show a state badge, the name of the entity, when the state has last changed and the current state or a control to interact with it.</p>
+
+<p><img src='/images/frontend/frontend-cards.png' /></p>
+
+<p>Some domains will be filtered out of the main view and are available through separate menu options. Examples are <code>group</code>, <code>script</code>, <code>scene</code>.</p>
+
+<p>The different card types can be found <a href="https://github.com/balloob/home-assistant-polymer/tree/master/src/cards">here</a>.</p>
+
+<p>Adding a custom card type can be done with a few simple steps. For this example we will add a new state card for the domain <code>camera</code>:<br/>
+<em>(All files in this example link to their source-code)</em></p>
 
 <ol>
-<li>Adjust the cardType property of the State class in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/home-assistant-api.html">home-assistant-api.html</a> to return your new card type when appropriate.</li>
-<li>Create a new component following the naming convention state-card-CARDTYPE.html in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/cards/">/cards/</a>.</li>
-<li>Import your new component in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/cards/state-card-content.html">/cards/state-card-content.html</a>.</li>
+<li>Add <code>'camera'</code> to the array <code>DOMAINS_WITH_CARD</code> in the file <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/util/state-card-type.js#L3-L4"><code>/util/state-card-type.js</code></a>.</li>
+<li>Create the files <code>state-card-camera.html</code> and <code>state-card-camera.js</code> in the folder <a href="https://github.com/balloob/home-assistant-polymer/tree/master/src/cards"><code>/cards/</code></a>.</li>
+<li>Add <code>require('./state-card-camera')</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/cards/state-card-content.js"><code>state-card-content.js</code></a>.</li>
+<li>Add <code>&lt;link rel="import" href="state-card-camera.html"&gt;</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/cards/state-card-content.html"><code>state-card-content.html</code></a>.</li>
 </ol>
 
 
 <h1><a class='title-link' name='more-info-screens-for-custom-types' href='#more-info-screens-for-custom-types'></a> More info screens for custom types</h1>
 
-<p>When you click on a card, the more info dialog will open for that card. This will allow you to see more information and more options to control that entity.</p>
+<p>Whenever the user taps or clicks on one of the cards, a more info dialog will show. The header of this dialog will be the state card, followed by the history of this entity for the last 24 hours. Below this the more info component is rendered for that entity. The more info component can show more information or allow more ways of control.</p>
 
-<p class='img' style='max-width: 300px; margin-left: auto; margin-right: auto;'>
-  <img src='/images/screenshots/more-info-dialog-light.png'>
-  The more info dialog for a light allows us to control the color and the brightness.
+<p class='img' style='max-width: 400px; margin-left: auto; margin-right: auto;'>
+  <img src='/images/frontend/frontend-more-info-light.png'>
+  The more info dialog for a light allows the user to control the color and the brightness.
 </p>
 
 
-<p>To add your own more info dialog, follow the following steps:</p>
+<p>The instructions to add a more info dialog are very similar to adding a new card type. This example will add a new more info component for the domain <code>camera</code>:<br/>
+<em>(All files in this example link to their source-code)</em></p>
 
 <ol>
-<li>Adjust the moreInfoType property of the State class in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/home-assistant-api.html">home-assistant-api.html</a> to return your new more info type when appropriate.</li>
-<li>Create a new component following the naming convention more-info-CARDTYPE.html in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/more-infos/">/more-infos/</a>.</li>
-<li>Import your new component in <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/http/www_static/polymer/more-infos/more-info-content.html">/more-infos/more-info-content.html</a>.</li>
+<li>Add <code>'camera'</code> to the array <code>DOMAINS_WITH_MORE_INFO</code> in the file <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/util/state-more-info-type.js#L1"><code>util/state-more-info-type.js</code></a>.</li>
+<li>Create the files <code>more-info-camera.html</code> and <code>more-info-camera.js</code> in the folder <a href="https://github.com/balloob/home-assistant-polymer/tree/master/src/more-infos"><code>/more-infos</code></a>.</li>
+<li>Add <code>require('./more-info-camera')</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/more-infos/more-info-content.js"><code>more-info-content.js</code></a></li>
+<li>Add <code>&lt;link rel="import" href="more-info-camera.html"&gt;</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/more-infos/more-info-content.html"><code>more-info-content.html</code></a></li>
 </ol>
 
 
