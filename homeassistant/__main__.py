@@ -7,6 +7,8 @@ import argparse
 import subprocess
 
 DEPENDENCIES = ['requests>=2.0', 'pyyaml>=3.11', 'pytz>=2015.2']
+IS_VIRTUAL = (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
+              hasattr(sys, 'real_prefix'))
 
 
 def validate_python():
@@ -22,10 +24,13 @@ def validate_python():
 def install_package(package):
     """Install a package on PyPi. Accepts pip compatible package strings.
     Return boolean if install successfull."""
-    args = ['python3', '-m', 'pip', 'install', '--quiet', package]
-    if sys.base_prefix == sys.prefix:
+    args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
+    if not IS_VIRTUAL:
         args.append('--user')
-    return not subprocess.call(args)
+    try:
+        return 0 == subprocess.call(args)
+    except subprocess.SubprocessError:
+        return False
 
 
 def validate_dependencies():
