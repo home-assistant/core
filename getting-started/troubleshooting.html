@@ -107,13 +107,45 @@
 
   <p>It can happen that you run into trouble while installing Home Assistant. This page is here to help you figure out the most common problems.</p>
 
+<h1>python3: command not found</h1>
+
 <p>Check if Python 3.4 is installed by running <code>python3 --version</code>. If it is not installed, <a href="https://www.python.org/getit/">download it here</a>.</p>
+
+<h1>No module named pip</h1>
 
 <p>Pip should come bundled with the latest Python 3 but is ommitted by some distributions. If you are unable to run <code>python3 -m pip --version</code> you can install pip by <a href="https://bootstrap.pypa.io/get-pip.py">downloading the installer</a> and run it with Python 3: <code>python3 get-pip.py</code>.</p>
 
+<h1>git: command not found</h1>
+
 <p>Check if Git is installed by running <code>git --version</code>. If you are unable to run this command you can install it by following <a href="http://git-scm.com/downloads">these instructions</a>.</p>
 
+<h1>Home Assistant Failing to Launch</h1>
+
 <p>When you are on Linux, it can happen that the requirements fail to install. If this is the case you can fix this by installing the Python 3 development package. For Debian/Ubuntu this can be done by running <code>apt-get install python3-dev</code>.</p>
+
+<h1>Ubuntu 14.04: &hellip; returned non-zero exit status</h1>
+
+<p>There is a known issue with installing on Ubuntu 14.04 and possibly many other newer Debian based distributions. The venv Python 3.4 package that has been bundled in the apt-get repository are known to be broken. This has been documented <a href="https://bugs.launchpad.net/ubuntu/+source/python3.4/+bug/1290847">in this bug report</a>. If you are encountering an error that looks like the following while creating the virtual environment, you are experiencing this bug.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>Error: Command <span class="s1">&#39;[&#39;</span>home-assistant/bin/python3.4<span class="s1">&#39;, &#39;</span>-Im<span class="s1">&#39;, &#39;</span>ensurepip<span class="s1">&#39;, &#39;</span>--upgrade<span class="s1">&#39;, &#39;</span>--default-pip<span class="s1">&#39;]&#39;</span> returned non-zero <span class="nb">exit </span>status
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This error can be fixed permanently by running the following commands.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd</span> ~/Downloads
+</span><span class='line'>wget https://gist.githubusercontent.com/rmkraus/c3972492a9de875203c6/raw/46629b63857537deedc85ec4a11cd8284816e2a0/install_ensurepip.py
+</span><span class='line'>sudo python3 install_ensurepip.py
+</span><span class='line'>rm install_ensurepip.py
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After these commands have been successfully executed, the venv package will be fixed system-wide.</p>
 
 
 </article>
