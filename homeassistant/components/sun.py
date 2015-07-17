@@ -32,6 +32,8 @@ REQUIREMENTS = ['astral>=0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
+CONF_ELEVATION = 'elevation'
+
 STATE_ABOVE_HORIZON = "above_horizon"
 STATE_BELOW_HORIZON = "below_horizon"
 
@@ -116,7 +118,21 @@ def setup(hass, config):
         _LOGGER.error('Invalid configuration received: %s', ", ".join(errors))
         return False
 
-    sun = Sun(hass, latitude, longitude)
+    platform_config = config.get(DOMAIN, {})
+
+    elevation = platform_config.get(CONF_ELEVATION)
+
+    from astral import Location, GoogleGeocoder
+
+    location = Location(('', '', latitude, longitude, hass.config.time_zone,
+                         elevation or 0))
+
+    if elevation is None:
+        google = GoogleGeocoder()
+        google._get_elevation(location)  # pylint: disable=protected-access
+        _LOGGER.info('Retrieved elevation from Google: %s', location.elevation)
+
+    sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
 
     return True
@@ -127,13 +143,9 @@ class Sun(Entity):
 
     entity_id = ENTITY_ID
 
-    def __init__(self, hass, latitude, longitude):
-        from astral import Astral
-
+    def __init__(self, hass, location):
         self.hass = hass
-        self.latitude = latitude
-        self.longitude = longitude
-        self.astral = Astral()
+        self.location = location
         self._state = self.next_rising = self.next_setting = None
 
     @property
@@ -168,18 +180,16 @@ class Sun(Entity):
         """ Calculate sun state at a point in UTC time. """
         mod = -1
         while True:
-            next_rising_dt = self.astral.sunrise_utc(
-                utc_point_in_time +
-                timedelta(days=mod), self.latitude, self.longitude)
+            next_rising_dt = self.location.sunrise(
+                utc_point_in_time + timedelta(days=mod), local=False)
             if next_rising_dt > utc_point_in_time:
                 break
             mod += 1
 
         mod = -1
         while True:
-            next_setting_dt = (self.astral.sunset_utc(
-                utc_point_in_time +
-                timedelta(days=mod), self.latitude, self.longitude))
+            next_setting_dt = (self.location.sunset(
+                utc_point_in_time + timedelta(days=mod), local=False))
             if next_setting_dt > utc_point_in_time:
                 break
             mod += 1
