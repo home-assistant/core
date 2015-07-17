@@ -8,7 +8,7 @@ Tests Sun component.
 import unittest
 from datetime import timedelta
 
-import ephem
+from astral import Astral
 
 import homeassistant as ha
 import homeassistant.util.dt as dt_util
@@ -34,29 +34,35 @@ class TestSun(unittest.TestCase):
 
     def test_setting_rising(self):
         """ Test retrieving sun setting and rising. """
+        latitude = 32.87336
+        longitude = 117.22743
+
         # Compare it with the real data
-        self.hass.config.latitude = '32.87336'
-        self.hass.config.longitude = '117.22743'
+        self.hass.config.latitude = latitude
+        self.hass.config.longitude = longitude
         sun.setup(self.hass, None)
 
-        observer = ephem.Observer()
-        observer.lat = '32.87336'  # pylint: disable=assigning-non-slot
-        observer.long = '117.22743'  # pylint: disable=assigning-non-slot
-
+        astral = Astral()
         utc_now = dt_util.utcnow()
-        body_sun = ephem.Sun()  # pylint: disable=no-member
-        next_rising_dt = observer.next_rising(
-            body_sun, start=utc_now).datetime().replace(tzinfo=dt_util.UTC)
-        next_setting_dt = observer.next_setting(
-            body_sun, start=utc_now).datetime().replace(tzinfo=dt_util.UTC)
 
-        # Home Assistant strips out microseconds
-        # strip it out of the datetime objects
-        next_rising_dt = dt_util.strip_microseconds(next_rising_dt)
-        next_setting_dt = dt_util.strip_microseconds(next_setting_dt)
+        mod = -1
+        while True:
+            next_rising = (astral.sunrise_utc(utc_now +
+                           timedelta(days=mod), latitude, longitude))
+            if next_rising > utc_now:
+                break
+            mod += 1
 
-        self.assertEqual(next_rising_dt, sun.next_rising_utc(self.hass))
-        self.assertEqual(next_setting_dt, sun.next_setting_utc(self.hass))
+        mod = -1
+        while True:
+            next_setting = (astral.sunset_utc(utc_now +
+                            timedelta(days=mod), latitude, longitude))
+            if next_setting > utc_now:
+                break
+            mod += 1
+
+        self.assertEqual(next_rising, sun.next_rising_utc(self.hass))
+        self.assertEqual(next_setting, sun.next_setting_utc(self.hass))
 
         # Point it at a state without the proper attributes
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON)

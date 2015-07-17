@@ -9,7 +9,7 @@ pytz>=2015.2
 zeroconf>=0.16.0
 
 # Sun (sun)
-pyephem>=3.7
+astral>=0.8.1
 
 # Philips Hue library (lights.hue)
 phue>=0.8
