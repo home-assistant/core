@@ -40,7 +40,7 @@ class TestSun(unittest.TestCase):
         # Compare it with the real data
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sun.setup(self.hass, None)
+        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         astral = Astral()
         utc_now = dt_util.utcnow()
@@ -77,7 +77,7 @@ class TestSun(unittest.TestCase):
         """ Test if the state changes at next setting/rising. """
         self.hass.config.latitude = '32.87336'
         self.hass.config.longitude = '117.22743'
-        sun.setup(self.hass, None)
+        sun.setup(self.hass, {})
 
         if sun.is_on(self.hass):
             test_state = sun.STATE_BELOW_HORIZON
