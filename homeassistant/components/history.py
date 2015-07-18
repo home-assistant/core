@@ -147,8 +147,6 @@ def _api_history_period(handler, path_match, data):
 
     end_time = start_time + one_day
 
-    print("Fetchign", start_time, end_time)
-
     entity_id = data.get('filter_entity_id')
 
     handler.write_json(

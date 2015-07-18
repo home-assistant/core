@@ -9,6 +9,7 @@ of entities and react to changes.
 import os
 import time
 import logging
+import signal
 import threading
 import enum
 import re
@@ -44,6 +45,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class HomeAssistant(object):
     """ Core class to route all communication to right components. """
+
+    arguments = None
 
     def __init__(self):
         self.pool = pool = create_worker_pool()
@@ -93,8 +96,17 @@ class HomeAssistant(object):
             will block until called. """
         request_shutdown = threading.Event()
 
+        def set_request_shutdown(*args, **kwargs):
+            """ Formally request a shutdown """
+            request_shutdown.set()
+
         self.services.register(DOMAIN, SERVICE_HOMEASSISTANT_STOP,
                                lambda service: request_shutdown.set())
+        try:
+            signal.signal(signal.SIGQUIT, set_request_shutdown)
+        except ValueError:
+            _LOGGER.warning("HA could not bind to SIGQUIT. Are you running in"
+                            + " a thread or on Windows?")
 
         while not request_shutdown.isSet():
             try:
