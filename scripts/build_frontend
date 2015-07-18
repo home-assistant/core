@@ -1,5 +1,4 @@
 # Builds the frontend for production
-# Call 'build_frontend demo' to build a demo frontend.
 
 # If current pwd is scripts, go 1 up.
 if [ ${PWD##*/} == "scripts" ]; then
