@@ -149,6 +149,8 @@ Do not use development mode in production. Home Assistant uses aggressive cachin
 
 <p><code>npm run js_dev</code> will start the process that will ensure that your latest changes to the JavaScript files will be loaded when you refresh the page. This command has to be always running while working on home-assistant-js.</p>
 
+<p>After your changes have been accepted into the <code>home-assistant-js</code> repository, we&rsquo;ll have to update Home Assistant Polymer to use the latest version. This can be done by updating <code>package.json</code>. Look for the line that contains <code>home-assistant-js</code> and update the SHA to the SHA of your commit.</p>
+
 <h1><a class='title-link' name='building-the-polymer-frontend' href='#building-the-polymer-frontend'></a> Building the Polymer frontend</h1>
 
 <p>Building a new version of the frontend is as simple as running <code>scripts/build_frontend</code>. This fires off the following commands:</p>
