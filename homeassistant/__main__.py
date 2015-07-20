@@ -21,6 +21,16 @@ def validate_python():
         sys.exit()
 
 
+def ensure_pip():
+    """ Validate pip is installed so we can install packages on demand. """
+    if importlib.find_loader('pip') is None:
+        print("Your Python installation did not bundle 'pip'")
+        print("Home Assistant requires 'pip' to be installed.")
+        print("Please install pip: "
+              "https://pip.pypa.io/en/latest/installing.html")
+        sys.exit()
+
+
 # Copy of homeassistant.util.package because we can't import yet
 def install_package(package):
     """Install a package on PyPi. Accepts pip compatible package strings.
@@ -36,6 +46,8 @@ def install_package(package):
 
 def validate_dependencies():
     """ Validate all dependencies that HA uses. """
+    ensure_pip()
+
     print("Validating dependencies...")
     import_fail = False
 
