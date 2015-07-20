@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 import subprocess
+import importlib
 
 DEPENDENCIES = ['requests>=2.0', 'pyyaml>=3.11', 'pytz>=2015.2']
 IS_VIRTUAL = (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
@@ -123,6 +124,9 @@ def main():
     validate_python()
     validate_dependencies()
 
+    # Windows needs this to pick up new modules
+    importlib.invalidate_caches()
+
     bootstrap = ensure_path_and_load_bootstrap()
 
     validate_git_submodules()
@@ -133,11 +137,10 @@ def main():
     config_path = ensure_config_path(config_dir)
 
     if args.demo_mode:
-        from homeassistant.components import http, demo
+        from homeassistant.components import frontend, demo
 
-        # Demo mode only requires http and demo components.
         hass = bootstrap.from_config_dict({
-            http.DOMAIN: {},
+            frontend.DOMAIN: {},
             demo.DOMAIN: {}
         })
     else:
