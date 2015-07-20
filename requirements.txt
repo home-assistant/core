@@ -82,3 +82,6 @@ pynetgear>=0.1
 
 # Netdisco (discovery)
 netdisco>=0.1
+
+# Wemo (switch.wemo)
+pywemo>=0.1
