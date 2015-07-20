@@ -29,7 +29,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
-    discovery.services.BELKIN_WEMO: 'wemo',
+    discovery.SERVICE_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
 }
