@@ -22,20 +22,17 @@ The sun event need to have the type 'sun', which service to call, which event
 import logging
 from datetime import timedelta
 
-try:
-    import ephem
-except ImportError:
-    # Will be fixed during setup
-    ephem = None
-
+import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.scheduler import ServiceEventListener
 
 DEPENDENCIES = []
-REQUIREMENTS = ['pyephem>=3.7']
+REQUIREMENTS = ['astral>=0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
+
+CONF_ELEVATION = 'elevation'
 
 STATE_ABOVE_HORIZON = "above_horizon"
 STATE_BELOW_HORIZON = "below_horizon"
@@ -99,24 +96,43 @@ def next_rising_utc(hass, entity_id=None):
 
 def setup(hass, config):
     """ Tracks the state of the sun. """
-    logger = logging.getLogger(__name__)
-
-    global ephem  # pylint: disable=invalid-name
-    if ephem is None:
-        import ephem as ephem_
-        ephem = ephem_
-
     if None in (hass.config.latitude, hass.config.longitude):
-        logger.error("Latitude or longitude not set in Home Assistant config")
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    try:
-        sun = Sun(hass, str(hass.config.latitude), str(hass.config.longitude))
-    except ValueError:
-        # Raised when invalid latitude or longitude is given to Observer
-        logger.exception("Invalid value for latitude or longitude")
+    latitude = util.convert(hass.config.latitude, float)
+    longitude = util.convert(hass.config.longitude, float)
+    errors = []
+
+    if latitude is None:
+        errors.append('Latitude needs to be a decimal value')
+    elif -90 > latitude < 90:
+        errors.append('Latitude needs to be -90 .. 90')
+
+    if longitude is None:
+        errors.append('Longitude needs to be a decimal value')
+    elif -180 > longitude < 180:
+        errors.append('Longitude needs to be -180 .. 180')
+
+    if errors:
+        _LOGGER.error('Invalid configuration received: %s', ", ".join(errors))
         return False
 
+    platform_config = config.get(DOMAIN, {})
+
+    elevation = platform_config.get(CONF_ELEVATION)
+
+    from astral import Location, GoogleGeocoder
+
+    location = Location(('', '', latitude, longitude, hass.config.time_zone,
+                         elevation or 0))
+
+    if elevation is None:
+        google = GoogleGeocoder()
+        google._get_elevation(location)  # pylint: disable=protected-access
+        _LOGGER.info('Retrieved elevation from Google: %s', location.elevation)
+
+    sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
 
     return True
@@ -127,14 +143,9 @@ class Sun(Entity):
 
     entity_id = ENTITY_ID
 
-    def __init__(self, hass, latitude, longitude):
+    def __init__(self, hass, location):
         self.hass = hass
-        self.observer = ephem.Observer()
-        # pylint: disable=assigning-non-slot
-        self.observer.lat = latitude
-        # pylint: disable=assigning-non-slot
-        self.observer.long = longitude
-
+        self.location = location
         self._state = self.next_rising = self.next_setting = None
 
     @property
@@ -167,17 +178,24 @@ class Sun(Entity):
 
     def update_as_of(self, utc_point_in_time):
         """ Calculate sun state at a point in UTC time. """
-        sun = ephem.Sun()  # pylint: disable=no-member
+        mod = -1
+        while True:
+            next_rising_dt = self.location.sunrise(
+                utc_point_in_time + timedelta(days=mod), local=False)
+            if next_rising_dt > utc_point_in_time:
+                break
+            mod += 1
 
-        # pylint: disable=assigning-non-slot
-        self.observer.date = ephem.date(utc_point_in_time)
+        mod = -1
+        while True:
+            next_setting_dt = (self.location.sunset(
+                utc_point_in_time + timedelta(days=mod), local=False))
+            if next_setting_dt > utc_point_in_time:
+                break
+            mod += 1
 
-        self.next_rising = self.observer.next_rising(
-            sun,
-            start=utc_point_in_time).datetime().replace(tzinfo=dt_util.UTC)
-        self.next_setting = self.observer.next_setting(
-            sun,
-            start=utc_point_in_time).datetime().replace(tzinfo=dt_util.UTC)
+        self.next_rising = next_rising_dt
+        self.next_setting = next_setting_dt
 
     def point_in_time_listener(self, now):
         """ Called when the state of the sun has changed. """
