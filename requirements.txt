@@ -79,3 +79,6 @@ PyMata==2.07a
 
 # Mysensors
 https://github.com/theolind/pymysensors/archive/master.zip#egg=pymysensors-0.1
+
+# Netgear (device_tracker.netgear)
+pynetgear>=0.1
