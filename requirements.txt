@@ -5,9 +5,6 @@ pytz>=2015.2
 
 # Optional, needed for specific components
 
-# Discovery platform (discovery)
-zeroconf>=0.16.0
-
 # Sun (sun)
 astral>=0.8.1
 
@@ -82,3 +79,6 @@ https://github.com/theolind/pymysensors/archive/master.zip#egg=pymysensors-0.1
 
 # Netgear (device_tracker.netgear)
 pynetgear>=0.1
+
+# Netdisco (discovery)
+netdisco>=0.1
