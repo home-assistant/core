@@ -7,7 +7,7 @@ Support for Edimax switches.
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -23,14 +23,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         return
 
+    host = config.get(CONF_HOST)
+    auth=(config.get(CONF_USERNAME, 'admin'),
+          config.get(CONF_PASSWORD, '1234'))
 
-    add_devices_callback([
-        SmartPlugSwitch(SmartPlug(
-            host = config.get('host'),
-            auth=(
-                config.get('user', 'admin'),
-                config.get('password', '1234'))))
-    ])
+    if not host:
+        logging.getLogger(__name__).error('Missing config variable %s', CONF_HOST)
+        return False
+
+
+    add_devices_callback([SmartPlugSwitch(SmartPlug(host, auth))])
 
 
 class SmartPlugSwitch(SwitchDevice):
@@ -39,9 +41,15 @@ class SmartPlugSwitch(SwitchDevice):
         self.smartplug = smartplug
 
     @property
+    def name(self):
+        """ Returns the name of the Smart Plug, if any. """
+        #TODO: dynamically get name from device using requests
+        return 'Edimax Smart Plug'
+
+    @property
     def is_on(self):
         """ True if switch is on. """
-        return self.smartplug.get_state()
+        return self.smartplug.state == 'ON'
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
