@@ -51,6 +51,15 @@ def setup(hass, config):
     group.setup_group(hass, 'living room', [lights[0], lights[1], switches[0]])
     group.setup_group(hass, 'bedroom', [lights[2], switches[1]])
 
+    # Setup IP Camera
+    bootstrap.setup_component(
+        hass, 'camera',
+        {'camera': {
+            'platform': 'generic',
+            'name': 'IP Camera',
+            'still_image_url': 'http://194.218.96.92/jpg/image.jpg',
+        }})
+
     # Setup scripts
     bootstrap.setup_component(
         hass, 'script',
@@ -102,8 +111,8 @@ def setup(hass, config):
                     {
                         "auto": True,
                         ATTR_ENTITY_ID: [
-                            "device_tracker.Paulus",
-                            "device_tracker.Anne_Therese"
+                            "device_tracker.paulus",
+                            "device_tracker.anne_therese"
                         ]
                     })
 

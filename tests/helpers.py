@@ -90,6 +90,18 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
+def mock_http_component(hass):
+    hass.http = MockHTTP()
+    hass.config.components.append('http')
+
+
+class MockHTTP(object):
+    """ Mocks the HTTP module. """
+
+    def register_path(self, method, url, callback, require_auth=True):
+        pass
+
+
 class MockModule(object):
     """ Provides a fake module. """
 

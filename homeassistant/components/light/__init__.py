@@ -56,6 +56,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 
 import homeassistant.util as util
+import homeassistant.util.color as color_util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group, discovery, wink, isy994
@@ -88,6 +89,10 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
+# Apply an effect to the light, can be EFFECT_COLORLOOP
+ATTR_EFFECT = "effect"
+EFFECT_COLORLOOP = "colorloop"
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Maps discovered services to their platforms
@@ -114,7 +119,8 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, profile=None, flash=None):
+            rgb_color=None, xy_color=None, profile=None, flash=None,
+            effect=None):
     """ Turns all or specified light on. """
     data = {
         key: value for key, value in [
@@ -125,6 +131,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_FLASH, flash),
+            (ATTR_EFFECT, effect),
         ] if value is not None
     }
 
@@ -237,9 +244,9 @@ def setup(hass, config):
 
                     if len(rgb_color) == 3:
                         params[ATTR_XY_COLOR] = \
-                            util.color_RGB_to_xy(int(rgb_color[0]),
-                                                 int(rgb_color[1]),
-                                                 int(rgb_color[2]))
+                            color_util.color_RGB_to_xy(int(rgb_color[0]),
+                                                       int(rgb_color[1]),
+                                                       int(rgb_color[2]))
 
                 except (TypeError, ValueError):
                     # TypeError if rgb_color is not iterable
@@ -252,6 +259,10 @@ def setup(hass, config):
 
                 elif dat[ATTR_FLASH] == FLASH_LONG:
                     params[ATTR_FLASH] = FLASH_LONG
+
+            if ATTR_EFFECT in dat:
+                if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                    params[ATTR_EFFECT] = EFFECT_COLORLOOP
 
             for light in target_lights:
                 light.turn_on(**params)
