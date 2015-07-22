@@ -22,6 +22,7 @@ from homeassistant.const import (
 
 DOMAIN = "discovery"
 DEPENDENCIES = []
+REQUIREMENTS = ['zeroconf>=0.16.0']
 
 SCAN_INTERVAL = 300  # seconds
 

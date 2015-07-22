@@ -53,8 +53,10 @@ import os
 import csv
 
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity import ToggleEntity
 
 import homeassistant.util as util
+import homeassistant.util.color as color_util
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group, discovery, wink, isy994
@@ -87,6 +89,10 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
+# Apply an effect to the light, can be EFFECT_COLORLOOP
+ATTR_EFFECT = "effect"
+EFFECT_COLORLOOP = "colorloop"
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Maps discovered services to their platforms
@@ -94,6 +100,11 @@ DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.services.PHILIPS_HUE: 'hue',
+}
+
+PROP_TO_ATTR = {
+    'brightness': ATTR_BRIGHTNESS,
+    'color_xy': ATTR_XY_COLOR,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +119,8 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, profile=None, flash=None):
+            rgb_color=None, xy_color=None, profile=None, flash=None,
+            effect=None):
     """ Turns all or specified light on. """
     data = {
         key: value for key, value in [
@@ -119,6 +131,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_FLASH, flash),
+            (ATTR_EFFECT, effect),
         ] if value is not None
     }
 
@@ -231,9 +244,9 @@ def setup(hass, config):
 
                     if len(rgb_color) == 3:
                         params[ATTR_XY_COLOR] = \
-                            util.color_RGB_to_xy(int(rgb_color[0]),
-                                                 int(rgb_color[1]),
-                                                 int(rgb_color[2]))
+                            color_util.color_RGB_to_xy(int(rgb_color[0]),
+                                                       int(rgb_color[1]),
+                                                       int(rgb_color[2]))
 
                 except (TypeError, ValueError):
                     # TypeError if rgb_color is not iterable
@@ -247,11 +260,16 @@ def setup(hass, config):
                 elif dat[ATTR_FLASH] == FLASH_LONG:
                     params[ATTR_FLASH] = FLASH_LONG
 
+            if ATTR_EFFECT in dat:
+                if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                    params[ATTR_EFFECT] = EFFECT_COLORLOOP
+
             for light in target_lights:
                 light.turn_on(**params)
 
         for light in target_lights:
-            light.update_ha_state(True)
+            if light.should_poll:
+                light.update_ha_state(True)
 
     # Listen for light on and light off service calls
     hass.services.register(DOMAIN, SERVICE_TURN_ON,
@@ -261,3 +279,41 @@ def setup(hass, config):
                            handle_light_service)
 
     return True
+
+
+class Light(ToggleEntity):
+    """ Represents a light within Home Assistant. """
+    # pylint: disable=no-self-use
+
+    @property
+    def brightness(self):
+        """ Brightness of this light between 0..255. """
+        return None
+
+    @property
+    def color_xy(self):
+        """ XY color value [float, float]. """
+        return None
+
+    @property
+    def device_state_attributes(self):
+        """ Returns device specific state attributes. """
+        return None
+
+    @property
+    def state_attributes(self):
+        """ Returns optional state attributes. """
+        data = {}
+
+        if self.is_on:
+            for prop, attr in PROP_TO_ATTR.items():
+                value = getattr(self, prop)
+                if value:
+                    data[attr] = value
+
+        device_attr = self.device_state_attributes
+
+        if device_attr is not None:
+            data.update(device_attr)
+
+        return data
