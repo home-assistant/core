@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, TEMP_CELCIUS)
 
 DOMAIN = "thermostat"
 DEPENDENCIES = []
@@ -24,6 +24,8 @@ SERVICE_SET_TEMPERATURE = "set_temperature"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
+ATTR_MAX_TEMP = "max_temp"
+ATTR_MIN_TEMP = "min_temp"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,6 +132,22 @@ class ThermostatDevice(Entity):
 
         if device_attr is not None:
             data.update(device_attr)
+
+        if hasattr(self, ATTR_MIN_TEMP):
+            min_temp = self.hass.config.temperature(
+                getattr(self, ATTR_MIN_TEMP), self.unit_of_measurement)[0]
+        else:
+            min_temp = self.hass.config.temperature(
+                7, TEMP_CELCIUS)[0]
+        data[ATTR_MIN_TEMP] = min_temp
+
+        if hasattr(self, ATTR_MAX_TEMP):
+            max_temp = self.hass.config.temperature(
+                getattr(self, ATTR_MAX_TEMP), self.unit_of_measurement)[0]
+        else:
+            max_temp = self.hass.config.temperature(
+                35, TEMP_CELCIUS)[0]
+        data[ATTR_MAX_TEMP] = max_temp
 
         return data
 
