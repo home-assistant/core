@@ -62,6 +62,7 @@ import logging
 import datetime
 import homeassistant.components as core
 
+import homeassistant.util as util
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS, STATE_ON, STATE_OFF
 
@@ -100,8 +101,8 @@ class HeatControl(ThermostatDevice):
                     datetime.datetime.strptime(time_end, '%H%M'))
                 self.time_temp.append((start_time, end_time, float(temp)))
 
-        self.min_temp = float(config.get("min_temp"))
-        self.max_temp = float(config.get("max_temp"))
+        self._min_temp = util.convert(config.get("min_temp"), float, 0)
+        self._max_temp = util.convert(config.get("max_temp"), float, 100)
 
         self._manual_sat_temp = None
         self._away = False
@@ -196,3 +197,13 @@ class HeatControl(ThermostatDevice):
     def turn_away_mode_off(self):
         """ Turns away mode off. """
         self._away = False
+
+    @property
+    def min_temp(self):
+        """ Return minimum temperature. """
+        return self._min_temp
+
+    @property
+    def max_temp(self):
+        """ Return maxmum temperature. """
+        return self._max_temp

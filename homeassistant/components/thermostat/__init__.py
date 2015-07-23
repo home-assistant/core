@@ -133,21 +133,8 @@ class ThermostatDevice(Entity):
         if device_attr is not None:
             data.update(device_attr)
 
-        if hasattr(self, ATTR_MIN_TEMP):
-            min_temp = self.hass.config.temperature(
-                getattr(self, ATTR_MIN_TEMP), self.unit_of_measurement)[0]
-        else:
-            min_temp = self.hass.config.temperature(
-                7, TEMP_CELCIUS)[0]
-        data[ATTR_MIN_TEMP] = min_temp
-
-        if hasattr(self, ATTR_MAX_TEMP):
-            max_temp = self.hass.config.temperature(
-                getattr(self, ATTR_MAX_TEMP), self.unit_of_measurement)[0]
-        else:
-            max_temp = self.hass.config.temperature(
-                35, TEMP_CELCIUS)[0]
-        data[ATTR_MAX_TEMP] = max_temp
+        data[ATTR_MIN_TEMP] = self.min_temp
+        data[ATTR_MAX_TEMP] = self.max_temp
 
         return data
 
@@ -180,3 +167,13 @@ class ThermostatDevice(Entity):
     def turn_away_mode_off(self):
         """ Turns away mode off. """
         pass
+
+    @property
+    def min_temp(self):
+        """ Return minimum temperature. """
+        return self.hass.config.temperature(7, TEMP_CELCIUS)[0]
+
+    @property
+    def max_temp(self):
+        """ Return maxmum temperature. """
+        return self.hass.config.temperature(35, TEMP_CELCIUS)[0]
