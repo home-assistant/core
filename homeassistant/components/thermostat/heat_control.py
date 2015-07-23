@@ -90,16 +90,18 @@ class HeatControl(ThermostatDevice):
         self.target_sensor_entity_id = config.get("target_sensor")
 
         self.time_temp = []
-        for time_temp in list(config.get("time_temp").split(",")):
-            time, temp = time_temp.split(':')
-            time_start, time_end = time.split('-')
-            start_time = datetime.datetime.time(datetime.datetime.
-                                                strptime(time_start, '%H%M'))
-            end_time = datetime.datetime.time(datetime.datetime.
-                                              strptime(time_end, '%H%M'))
-            self.time_temp.append((start_time, end_time, float(temp)))
+        if config.get("time_temp"):
+            for time_temp in list(config.get("time_temp").split(",")):
+                time, temp = time_temp.split(':')
+                time_start, time_end = time.split('-')
+                start_time = datetime.datetime.time(
+                    datetime.datetime.strptime(time_start, '%H%M'))
+                end_time = datetime.datetime.time(
+                    datetime.datetime.strptime(time_end, '%H%M'))
+                self.time_temp.append((start_time, end_time, float(temp)))
 
         self.min_temp = float(config.get("min_temp"))
+        self.max_temp = float(config.get("max_temp"))
 
         self._manual_sat_temp = None
         self._away = False
@@ -178,7 +180,7 @@ class HeatControl(ThermostatDevice):
         if not self._heater_manual_changed:
             pass
         else:
-            self.set_temperature(100)
+            self.set_temperature(self.max_temp)
 
         self._heater_manual_changed = True
 
