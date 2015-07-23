@@ -4,20 +4,14 @@ homeassistant.components.sensor.rfxtrx
 Shows sensor values from rfxtrx sensors.
 
 Possible config keys:
+device="path to rfxtrx device"
 
-path to rfxtrx device
-device=/dev/serial/by-id/usb-rfxtrx_RFXtrx433_A1Y0NJGR-if00-port0
+Example:
 
-id of the sensor: Name the sensor with ID
-135=Outside
+sensor 2: 
+ platform: rfxtrx
+ device :  /dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0
 
-only_named: Only show the named sensors
-only_named=1
-
-datatype_mask: mask to determine which sensor values to show based on
-
-datatype_mask=1   # only show temperature
-datatype_mask=127 # show all sensor values
 """
 import logging
 from collections import OrderedDict
