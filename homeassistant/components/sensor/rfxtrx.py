@@ -8,7 +8,7 @@ device="path to rfxtrx device"
 
 Example:
 
-sensor 2: 
+sensor 2:
  platform: rfxtrx
  device :  /dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0
 
