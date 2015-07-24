@@ -43,6 +43,7 @@ from homeassistant.components.device_tracker import DOMAIN
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['pynetgear>=0.1']
 
 
 def get_scanner(hass, config):
@@ -64,21 +65,9 @@ class NetgearDeviceScanner(object):
     """ This class queries a Netgear wireless router using the SOAP-API. """
 
     def __init__(self, host, username, password):
+        import pynetgear
+
         self.last_results = []
-
-        try:
-            # Pylint does not play nice if not every folders has an __init__.py
-            # pylint: disable=no-name-in-module, import-error
-            import homeassistant.external.pynetgear.pynetgear as pynetgear
-        except ImportError:
-            _LOGGER.exception(
-                ("Failed to import pynetgear. "
-                 "Did you maybe not run `git submodule init` "
-                 "and `git submodule update`?"))
-
-            self.success_init = False
-
-            return
 
         self._api = pynetgear.Netgear(host, username, password)
         self.lock = threading.Lock()
