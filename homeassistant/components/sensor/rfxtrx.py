@@ -25,36 +25,26 @@ REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip'
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELCIUS),
     ('Humidity', '%'),
-    ('Forecast', ''),
     ('Barometer', ''),
     ('Wind direction', ''),
-    ('Humidity status', ''),
-    ('Humidity status numeric', ''),
-    ('Forecast numeric', ''),
-    ('Rain rate', ''),
-    ('Rain total', ''),
-    ('Wind average speed', ''),
-    ('Wind gust', ''),
-    ('Chill', ''),
-    ('Battery numeric', '%'),
-    ('Rssi numeric', '')])
+    ('Rain rate', '')])
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the rfxtrx platform. """
     logger = logging.getLogger(__name__)
 
-    devices = {}    # keep track of devices added to HA
+    sensors = {}    # keep track of sensors added to HA
 
     def sensor_update(event):
-        """ Callback for sensor updates from the MySensors gateway. """
-        if event.device.id_string in devices:
-            devices[event.device.id_string].event = event
+        """ Callback for sensor updates from the RFXtrx gateway. """
+        if event.device.id_string in sensors:
+            sensors[event.device.id_string].event = event
         else:
-            logger.info("adding new devices: %s", event.device.type_string)
-            new_device = RfxtrxSensor(event)
-            devices[event.device.id_string] = new_device
-            add_devices([new_device])
+            logger.info("adding new sensor: %s", event.device.type_string)
+            new_sensor = RfxtrxSensor(event)
+            sensors[event.device.id_string] = new_sensor
+            add_devices([new_sensor])
     try:
         import RFXtrx as rfxtrx
     except ImportError:
@@ -62,12 +52,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Failed to import rfxtrx")
         return False
 
-    device = config.get("device", True)
+    device = config.get("device", "")
     rfxtrx.Core(device, sensor_update)
 
 
 class RfxtrxSensor(Entity):
-    """ Represents a Vera Sensor. """
+    """ Represents a Rfxtrx Sensor. """
 
     def __init__(self, event):
         self.event = event
