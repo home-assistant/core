@@ -6,9 +6,6 @@ Connects to a Wink hub and loads relevant components to control its devices.
 """
 import logging
 
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.wink.pywink as pywink
-
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
@@ -19,6 +16,8 @@ from homeassistant.const import (
 
 DOMAIN = "wink"
 DEPENDENCIES = []
+REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/master.zip'
+                '#pywink>=0.1']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -32,6 +31,7 @@ def setup(hass, config):
     if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, logger):
         return False
 
+    import pywink
     pywink.set_bearer_token(config[DOMAIN][CONF_ACCESS_TOKEN])
 
     # Load components for the devices in the Wink that we support
