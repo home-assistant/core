@@ -24,7 +24,7 @@ SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DISCOVERY_PLATFORMS = {
-    discovery.services.GOOGLE_CAST: 'cast',
+    discovery.SERVICE_CAST: 'cast',
 }
 
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
