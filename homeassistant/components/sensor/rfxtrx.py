@@ -16,8 +16,7 @@ sensor 2:
 import logging
 from collections import OrderedDict
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, TEMP_CELCIUS)
+from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip'
@@ -37,7 +36,7 @@ DATA_TYPES = OrderedDict([
     ('Wind average speed', ''),
     ('Wind gust', ''),
     ('Chill', ''),
-    ('Battery numeric', ATTR_BATTERY_LEVEL),
+    ('Battery numeric', '%'),
     ('Rssi numeric', '')])
 
 
@@ -102,11 +101,7 @@ class RfxtrxSensor(Entity):
 
     @property
     def state_attributes(self):
-        attr = super().state_attributes
-        for data_type in DATA_TYPES:
-            if data_type in self.event.values:
-                attr[data_type] = self.event.values[data_type]
-        return attr
+        return self.event.values
 
     @property
     def unit_of_measurement(self):
