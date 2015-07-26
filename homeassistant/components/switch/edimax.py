@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class SmartPlugSwitch(SwitchDevice):
-    """ Represents a Edimax Smart Plug switch within Home Assistant. """
+    """ Represents an Edimax Smart Plug switch within Home Assistant. """
     def __init__(self, smartplug):
         self.smartplug = smartplug
 
