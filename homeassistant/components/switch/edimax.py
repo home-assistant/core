@@ -9,6 +9,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Edimax Smart Plugs. """
@@ -24,13 +25,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return
 
     host = config.get(CONF_HOST)
-    auth=(config.get(CONF_USERNAME, 'admin'),
-          config.get(CONF_PASSWORD, '1234'))
+    auth = (config.get(CONF_USERNAME, 'admin'),
+            config.get(CONF_PASSWORD, '1234'))
 
     if not host:
-        logging.getLogger(__name__).error('Missing config variable %s', CONF_HOST)
+        logging.getLogger(__name__).error(
+            'Missing config variable %s', CONF_HOST)
         return False
-
 
     add_devices_callback([SmartPlugSwitch(SmartPlug(host, auth))])
 
@@ -45,6 +46,22 @@ class SmartPlugSwitch(SwitchDevice):
         """ Returns the name of the Smart Plug, if any. """
         #TODO: dynamically get name from device using requests
         return 'Edimax Smart Plug'
+
+    @property
+    def current_power_mwh(self):
+        """ Current power usage in mwh. """
+        try:
+            return float(self.smartplug.now_power) / 1000000.0
+        except ValueError:
+            return None
+
+    @property
+    def today_power_mw(self):
+        """ Today total power usage in mw. """
+        try:
+            return float(self.smartplug.now_energy_day) / 1000.0
+        except ValueError:
+            return None
 
     @property
     def is_on(self):
