@@ -119,7 +119,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config=None):
     """ Sets up the HTTP API and debug interface. """
-
     if config is None or DOMAIN not in config:
         config = {DOMAIN: {}}
 
@@ -139,9 +138,14 @@ def setup(hass, config=None):
 
     sessions_enabled = config[DOMAIN].get(CONF_SESSIONS_ENABLED, True)
 
-    server = HomeAssistantHTTPServer(
-        (server_host, server_port), RequestHandler, hass, api_password,
-        development, no_password_set, sessions_enabled)
+    try:
+        server = HomeAssistantHTTPServer(
+            (server_host, server_port), RequestHandler, hass, api_password,
+            development, no_password_set, sessions_enabled)
+    except OSError:
+        # Happens if address already in use
+        _LOGGER.exception("Error setting up HTTP server")
+        return False
 
     hass.bus.listen_once(
         ha.EVENT_HOMEASSISTANT_START,
