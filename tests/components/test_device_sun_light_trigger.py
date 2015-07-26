@@ -14,7 +14,7 @@ from homeassistant.components import (
     device_tracker, light, sun, device_sun_light_trigger)
 
 
-from helpers import (
+from common import (
     get_test_home_assistant, ensure_sun_risen, ensure_sun_set,
     trigger_device_tracker_scan)
 

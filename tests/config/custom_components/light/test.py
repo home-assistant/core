@@ -7,7 +7,7 @@ Provides a mock switch platform.
 Call init before using it in your tests to ensure clean test data.
 """
 from homeassistant.const import STATE_ON, STATE_OFF
-from tests.helpers import MockToggleDevice
+from tests.common import MockToggleDevice
 
 
 DEVICES = []

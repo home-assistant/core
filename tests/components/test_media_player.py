@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, ATTR_ENTITY_ID)
 import homeassistant.components.media_player as media_player
-from helpers import mock_service
+from common import mock_service
 
 
 def setUpModule():   # pylint: disable=invalid-name

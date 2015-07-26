@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
 
-from helpers import get_test_config_dir
+from common import get_test_config_dir
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)

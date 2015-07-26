@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF)
 import homeassistant.components.light as light
 
-from helpers import mock_service, get_test_home_assistant
+from common import mock_service, get_test_home_assistant
 
 
 class TestLight(unittest.TestCase):

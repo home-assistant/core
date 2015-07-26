@@ -7,7 +7,7 @@ Tests component helpers.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
-from helpers import get_test_home_assistant
+from common import get_test_home_assistant
 
 import homeassistant as ha
 import homeassistant.loader as loader
