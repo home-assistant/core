@@ -21,6 +21,7 @@ The sun event need to have the type 'sun', which service to call, which event
 """
 import logging
 from datetime import timedelta
+import urllib
 
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -129,8 +130,13 @@ def setup(hass, config):
 
     if elevation is None:
         google = GoogleGeocoder()
-        google._get_elevation(location)  # pylint: disable=protected-access
-        _LOGGER.info('Retrieved elevation from Google: %s', location.elevation)
+        try:
+            google._get_elevation(location)  # pylint: disable=protected-access
+            _LOGGER.info(
+                'Retrieved elevation from Google: %s', location.elevation)
+        except urllib.error.URLError:
+            # If no internet connection available etc.
+            pass
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
