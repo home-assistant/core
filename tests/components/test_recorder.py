@@ -11,7 +11,7 @@ import os
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
 
-from helpers import get_test_home_assistant
+from common import get_test_home_assistant
 
 
 class TestRecorder(unittest.TestCase):
