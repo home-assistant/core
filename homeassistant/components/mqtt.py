@@ -24,9 +24,11 @@ For sending test messages:
 $ mosquitto_pub -h 127.0.0.1 -t home-assistant/switch/1/on -m "Switch is ON"
 For reading the messages:
 $ mosquitto_sub -h 127.0.0.1 -v -t "home-assistant/#"
+{"aaaaa":"1111"}
 """
 import logging
 
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import validate_config
 from homeassistant.components.protocol import DOMAIN
 from homeassistant.const import (
@@ -38,8 +40,7 @@ DOMAIN = "mqtt"
 DEPENDENCIES = []
 MQTT_CLIENT = None
 MQTT_SEND = 'mqtt_send'
-MQTT_RECEIVED = 'mqtt_received'
-
+EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
 
 def setup(hass, config):
     """ Get the MQTT protocol service. """
@@ -57,12 +58,13 @@ def setup(hass, config):
         import paho.mqtt.client as mqtt
 
     except ImportError:
-        _LOGGER.error("Error while importing dependency paho-mqtt.")
+        _LOGGER.exception("Error while importing dependency paho-mqtt.")
 
         return False
 
     global MQTT_CLIENT
-    MQTT_CLIENT = MQTT(config[DOMAIN]['broker'],
+    MQTT_CLIENT = MQTT(hass,
+                       config[DOMAIN]['broker'],
                        config[DOMAIN]['port'],
                        config[DOMAIN]['topic'],
                        config[DOMAIN]['keepalive'],
@@ -78,8 +80,10 @@ def setup(hass, config):
             MQTT_CLIENT.run()
 
         except ConnectionRefusedError:
-            _LOGGER.error("Can't connect to the broker. "
+            _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker itself.")
+            return False
+
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mqtt)
 
@@ -89,14 +93,12 @@ def setup(hass, config):
         complete_topic = 'home-assistant/{}'.format(str(subtopic))
         MQTT_CLIENT.publish(complete_topic, str(call))
 
-    def received_mqtt(call):
-        """ Action when an MQTT message arrives. """
-        pass
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
     hass.services.register(DOMAIN, MQTT_SEND, send_message)
-    hass.services.register(DOMAIN, MQTT_RECEIVED, received_mqtt)
+    hass.services.register(DOMAIN, EVENT_MQTT_MESSAGE_RECEIVED)
+
 
     return True
 
@@ -105,10 +107,11 @@ def setup(hass, config):
 # http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.python.git/tree/examples/sub-class.py
 class MQTT(object):
     """ Implements messaging service for MQTT. """
-    def __init__(self, broker, port, topic, keepalive, clientid=None):
+    def __init__(self, hass, broker, port, topic, keepalive, clientid=None):
 
         import paho.mqtt.client as mqtt
 
+        self.hass = hass
         self._broker = broker
         self._port = port
         self._topic = topic
@@ -121,7 +124,7 @@ class MQTT(object):
         self._mqttc.on_publish = self.mqtt_on_publish
         self._mqttc.on_subscribe = self.mqtt_on_subscribe
 
-    def mqtt_on_connect(self, mqttc, obj, flags):
+    def mqtt_on_connect(self, mqttc, obj, flags, rc):
         """ Connect callback """
         _LOGGER.info('Connected to broker %s', self._broker)
 
@@ -138,6 +141,12 @@ class MQTT(object):
         """ Message callback """
         self.msg = '{} {} {}'.format(msg.topic, str(msg.qos), str(msg.payload))
         print(self.msg)
+        self.hass.event.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
+            'topic': msg.topic,
+            'subtopic': 'test',
+            'qos': str(msg.qos),
+            'payload': str(msg.payload),
+        })
 
     def subscribe(self, topic):
         """ Subscribe to a topic. """
