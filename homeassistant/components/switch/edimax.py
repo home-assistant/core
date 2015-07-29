@@ -15,12 +15,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Edimax Smart Plugs. """
     try:
         # pylint: disable=no-name-in-module, import-error
-        from homeassistant.external.pyedimax.smartplug import SmartPlug
+        from pyedimax.smartplug import SmartPlug
     except ImportError:
         logging.getLogger(__name__).exception((
-            "Failed to import pyedimax. "
-            "Did you maybe not run `git submodule init` "
-            "and `git submodule update`?"))
+            "Failed to import pyedimax. "))
 
         return
 

@@ -79,3 +79,6 @@ PyMata==2.07a
 
 # Mysensors serial gateway
 pyserial>=2.7
+
+# PyEdimax
+git+https://github.com/rkabadi/pyedimax.git
