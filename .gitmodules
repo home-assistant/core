@@ -22,6 +22,3 @@
 [submodule "homeassistant/external/pymysensors"]
 	path = homeassistant/external/pymysensors
 	url = https://github.com/theolind/pymysensors
-[submodule "homeassistant/external/pyedimax"]
-	path = homeassistant/external/pyedimax
-	url = https://github.com/rkabadi/pyedimax
