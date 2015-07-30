@@ -5,8 +5,11 @@ import sys
 import os
 import argparse
 import subprocess
+import importlib
 
 DEPENDENCIES = ['requests>=2.0', 'pyyaml>=3.11', 'pytz>=2015.2']
+IS_VIRTUAL = (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
+              hasattr(sys, 'real_prefix'))
 
 
 def validate_python():
@@ -18,18 +21,33 @@ def validate_python():
         sys.exit()
 
 
+def ensure_pip():
+    """ Validate pip is installed so we can install packages on demand. """
+    if importlib.find_loader('pip') is None:
+        print("Your Python installation did not bundle 'pip'")
+        print("Home Assistant requires 'pip' to be installed.")
+        print("Please install pip: "
+              "https://pip.pypa.io/en/latest/installing.html")
+        sys.exit()
+
+
 # Copy of homeassistant.util.package because we can't import yet
 def install_package(package):
     """Install a package on PyPi. Accepts pip compatible package strings.
     Return boolean if install successfull."""
-    args = ['python3', '-m', 'pip', 'install', '--quiet', package]
-    if sys.base_prefix == sys.prefix:
+    args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
+    if not IS_VIRTUAL:
         args.append('--user')
-    return not subprocess.call(args)
+    try:
+        return 0 == subprocess.call(args)
+    except subprocess.SubprocessError:
+        return False
 
 
 def validate_dependencies():
     """ Validate all dependencies that HA uses. """
+    ensure_pip()
+
     print("Validating dependencies...")
     import_fail = False
 
@@ -118,6 +136,9 @@ def main():
     validate_python()
     validate_dependencies()
 
+    # Windows needs this to pick up new modules
+    importlib.invalidate_caches()
+
     bootstrap = ensure_path_and_load_bootstrap()
 
     validate_git_submodules()
@@ -128,11 +149,10 @@ def main():
     config_path = ensure_config_path(config_dir)
 
     if args.demo_mode:
-        from homeassistant.components import http, demo
+        from homeassistant.components import frontend, demo
 
-        # Demo mode only requires http and demo components.
         hass = bootstrap.from_config_dict({
-            http.DOMAIN: {},
+            frontend.DOMAIN: {},
             demo.DOMAIN: {}
         })
     else:

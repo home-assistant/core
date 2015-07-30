@@ -67,7 +67,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
             light.DOMAIN: {CONF_PLATFORM: 'test'}
         })
 
-        sun.setup(self.hass, {})
+        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
