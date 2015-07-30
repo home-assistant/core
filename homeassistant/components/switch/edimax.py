@@ -6,9 +6,17 @@ Support for Edimax switches.
 """
 import logging
 
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers import validate_config
+from homeassistant.components.switch import SwitchDevice, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 
+# constants
+DEFAULT_USERNAME = 'admin'
+DEFAULT_PASSWORD = '1234'
+DEVICE_DEFAULT_NAME = 'Edimax Smart Plug'
+
+# setup logger
+_LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -17,33 +25,34 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         # pylint: disable=no-name-in-module, import-error
         from pyedimax.smartplug import SmartPlug
     except ImportError:
-        logging.getLogger(__name__).exception((
-            "Failed to import pyedimax. "))
-
-        return
-
-    host = config.get(CONF_HOST)
-    auth = (config.get(CONF_USERNAME, 'admin'),
-            config.get(CONF_PASSWORD, '1234'))
-
-    if not host:
-        logging.getLogger(__name__).error(
-            'Missing config variable %s', CONF_HOST)
+        _LOGGER.error('Failed to import pyedimax')
         return False
 
-    add_devices_callback([SmartPlugSwitch(SmartPlug(host, auth))])
+    # pylint: disable=global-statement
+    # check for required values in configuration file
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: [CONF_HOST]},
+                           _LOGGER):
+        return False
+
+    host = config.get(CONF_HOST)
+    auth = (config.get(CONF_USERNAME, DEFAULT_USERNAME),
+            config.get(CONF_PASSWORD, DEFAULT_PASSWORD))
+    name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
+
+    add_devices_callback([SmartPlugSwitch(SmartPlug(host, auth), name)])
 
 
 class SmartPlugSwitch(SwitchDevice):
     """ Represents an Edimax Smart Plug switch within Home Assistant. """
-    def __init__(self, smartplug):
+    def __init__(self, smartplug, name):
         self.smartplug = smartplug
+        self._name = name
 
     @property
     def name(self):
         """ Returns the name of the Smart Plug, if any. """
-        #TODO: dynamically get name from device using requests
-        return 'Edimax Smart Plug'
+        return self._name
 
     @property
     def current_power_mwh(self):
