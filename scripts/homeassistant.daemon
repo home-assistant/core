@@ -12,7 +12,7 @@
 # Created with: https://gist.github.com/naholyr/4275302#file-new-service-sh
 #
 # Installation:
-#  1) Populate RUNAS and RUNDIR folders
+#  1) Populate RUNAS and RUNDIR variables
 #  2) Create Log  --  sudo touch /var/log/homeassistant.log
 #  3) Set Log Ownership  --  sudo chown USER:GROUP /var/log/homeassistant.log
 #  4) Create PID File  --  sudo touch /var/run/homeassistant.pid
@@ -29,7 +29,7 @@
 # If you are not, the SCRIPT variable must be modified to point to the correct
 # Python environment.
 
-SCRIPT="./bin/python -m homeassistant"
+SCRIPT="source bin/activate; ./bin/python -m homeassistant"
 RUNAS=<USER TO RUN SERVER AS>
 RUNDIR=<LOCATION OF home-assistant DIR>
 PIDFILE=/var/run/homeassistant.pid
