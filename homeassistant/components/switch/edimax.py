@@ -8,7 +8,8 @@ import logging
 
 from homeassistant.helpers import validate_config
 from homeassistant.components.switch import SwitchDevice, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD,\
+    CONF_NAME
 
 # constants
 DEFAULT_USERNAME = 'admin'
@@ -17,6 +18,7 @@ DEVICE_DEFAULT_NAME = 'Edimax Smart Plug'
 
 # setup logger
 _LOGGER = logging.getLogger(__name__)
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
