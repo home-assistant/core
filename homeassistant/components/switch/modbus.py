@@ -69,6 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ModbusSwitch(ToggleEntity):
+    # pylint: disable=too-many-arguments
     """ Represents a Modbus switch. """
 
     def __init__(self, name, slave, register, bit, coil=False):
@@ -108,11 +109,12 @@ class ModbusSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Set switch on. """
+        if self.register_value is None:
+            self.update()
+
         if self._coil:
             modbus.NETWORK.write_coil(self.register, True)
         else:
-            if self.register_value is None:
-                self.update()
             val = self.register_value | (0x0001 << self.bit)
             modbus.NETWORK.write_register(unit=self.slave,
                                           address=self.register,
@@ -120,11 +122,12 @@ class ModbusSwitch(ToggleEntity):
 
     def turn_off(self, **kwargs):
         """ Set switch off. """
+        if self.register_value is None:
+            self.update()
+
         if self._coil:
             modbus.NETWORK.write_coil(self.register, False)
         else:
-            if self.register_value is None:
-                self.update()
             val = self.register_value & ~(0x0001 << self.bit)
             modbus.NETWORK.write_register(unit=self.slave,
                                           address=self.register,
