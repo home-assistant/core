@@ -79,3 +79,6 @@ PyMata==2.07a
 
 # Mysensors serial gateway
 pyserial>=2.7
+
+# Temper sensors
+https://github.com/rkabadi/temper-python/archive/master.zip
