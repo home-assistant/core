@@ -7,6 +7,7 @@ Support for getting temperature from TEMPer devices
 
 import logging
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,15 +23,23 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return False
 
     temp_unit = hass.config.temperature_unit
+    name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
     temper_devices = TemperHandler().get_devices()
-    add_devices_callback([TemperSensor(dev, temp_unit) for dev in temper_devices])
+    add_devices_callback([TemperSensor(dev, temp_unit, name + '_' + str(idx))
+                          for idx, dev in enumerate(temper_devices)])
 
 
 class TemperSensor(Entity):
-    def __init__(self, temper_device, temp_unit):
+    def __init__(self, temper_device, temp_unit, name):
         self.temper_device = temper_device
         self.temp_unit = temp_unit
         self.current_value = None
+        self._name = name
+
+    @property
+    def name(self):
+        """ Returns the name of the temperature sensor. """
+        return self._name
 
     @property
     def state(self):
@@ -47,4 +56,5 @@ class TemperSensor(Entity):
         try:
             self.current_value = self.temper_device.get_temperature()
         except Exception:
-            _LOGGER.error('Failed to get temperature due to insufficient permissions')
+            _LOGGER.error('Failed to get temperature due to insufficient '
+                          'permissions. Try running with "sudo"')
