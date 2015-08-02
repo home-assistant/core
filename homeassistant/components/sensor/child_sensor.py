@@ -26,6 +26,7 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED)
 
 ...
+
 // put this is the component class or setup_platform function
 
 data = {}
