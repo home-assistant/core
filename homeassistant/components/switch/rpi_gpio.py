@@ -30,14 +30,14 @@ from homeassistant.const import (DEVICE_DEFAULT_NAME,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
+REQUIREMENTS = ['RPi.GPIO>=0.5.11']
 _LOGGER = logging.getLogger(__name__)
-DEMO = True
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Raspberry PI GPIO switches. """
-    if not DEMO and GPIO is None:
+    if GPIO is None:
         _LOGGER.error('RPi.GPIO not available. rpi_gpio switches ignored.')
         return
 
@@ -68,8 +68,7 @@ class RPiGPIOSwitch(ToggleEntity):
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = False
         self._gpio = gpio
-        if not DEMO:
-            GPIO.setup(gpio, GPIO.OUT)
+        GPIO.setup(gpio, GPIO.OUT)
 
     @property
     def name(self):
@@ -102,8 +101,7 @@ class RPiGPIOSwitch(ToggleEntity):
         """ Execute the actual commands """
         _LOGGER.info('Setting GPIO %s to %s', self._gpio, new_state)
         try:
-            if not DEMO:
-                GPIO.output(self._gpio, 1 if new_state else 0)
+            GPIO.output(self._gpio, 1 if new_state else 0)
         except:
             _LOGGER.error('GPIO "%s" output failed', self._gpio)
             return False
