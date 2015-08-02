@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 DOMAIN = 'controller'
 DEPENDENCIES = ['sensor', 'switch', 'light']
 DISCOVERY_PLATFORMS = {}
-SCAN_INTERVAL = 5
+SCAN_INTERVAL = 30
 
 def setup(hass, config):
     """ Track states and offer events for sensors. """

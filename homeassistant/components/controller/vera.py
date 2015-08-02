@@ -3,7 +3,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import (
 	DISCOVER_CHILD_SWITCHES)
 from homeassistant.components.light import (
-	DISCOVER_CHILD_LIGHTS)
+	DISCOVER_CHILD_LIGHTS, ATTR_BRIGHTNESS)
 from homeassistant.components.controller import (
 	DOMAIN)
 
@@ -51,10 +51,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 	def set_value_service(service):
 		device_id = service.data.get('extra_data').get('vera_device_id')
 		variable = service.data.get('extra_data').get('vera_variable')
-		state = service.data.get('state')
+
+		service.data
 		val = 0
-		if state == STATE_ON:
-			val = 1
+		if service.data.get('action') == 'dim':
+			brightness = int(service.data.get(ATTR_BRIGHTNESS))
+			val = round((brightness / 255) * 100)
+		else:
+			state = service.data.get('state')
+			if state == STATE_ON:
+				val = 1
 
 		vera_controller.vera_api.set_value(device_id, variable, val)
 
@@ -140,6 +146,11 @@ class VeraControllerDevice(Entity):
 		if self.is_switchable:
 			attr['status'] = 'True' if str(self._device_data.get('status')) == '1' else 'False'
 
+		if self.is_dimmable:
+			attr['status'] = 'True' if str(self._device_data.get('status')) == '1' else 'False'
+			attr['level'] = self._device_data.get('level')
+			attr[ATTR_BRIGHTNESS] = self.get_brightness()
+
 		attr['hidden'] = True
 
 		return attr
@@ -207,6 +218,14 @@ class VeraControllerDevice(Entity):
 	def is_switchable(self):
 		""" Returns true if the device supports switching """
 		if self.category_name == "On/Off Switch" or self.category_name == "Switch":
+			return True
+		else:
+			return False
+
+	@property
+	def is_dimmable(self):
+		""" Returns true if the device supports dimming """
+		if self.category_name == "Dimmable Switch":
 			return True
 		else:
 			return False
@@ -294,16 +313,19 @@ class VeraControllerDevice(Entity):
 			data = {}
 			data['name'] = self._config.get('switch', {}).get('name', self._name)
 			data['parent_entity_id'] = self.entity_id
-			data['watched_variable'] = 'status'
+
 			data['parent_domain'] = DOMAIN
 			data['parent_service'] = SERVICE_SET_VAL
-			data['parent_action'] = 'set_value'
+
+			data['parent_action'] = 'switch'
+			data['watched_variable'] = 'status'
+			data['extra_data'] = {
+					'vera_device_id': self._device_data.get('id'),
+					'vera_variable': 'Target'
+				}
+
 			data['state_attributes'] = self.get_common_state_attrs()
 			data['state_attributes'][ATTR_HIDDEN] = self.is_child_hidden('switch')
-			data['extra_data'] = {
-						'vera_device_id': self._device_data.get('id'),
-						'vera_variable': 'Target'
-					}
 			data['initial_state'] = 'True' if str(self._device_data.get('status')) == '1' else 'False'
 
 			child_type = DISCOVER_CHILD_SWITCHES
@@ -313,6 +335,39 @@ class VeraControllerDevice(Entity):
 			self._hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
 				{ATTR_SERVICE: child_type,
 					ATTR_DISCOVERED: data})
+
+		if self.is_dimmable and not self.should_exclude_child('switch'):
+			data = {}
+			data['name'] = self._config.get('switch', {}).get('name', self._name)
+			data['parent_entity_id'] = self.entity_id
+
+			data['parent_domain'] = DOMAIN
+			data['parent_service'] = SERVICE_SET_VAL
+			data['parent_action'] = 'dim'
+			data['light_type'] = 'dimmer'
+			data['state_attributes'] = self.get_common_state_attrs()
+			data['state_attributes'][ATTR_HIDDEN] = self.is_child_hidden('switch')
+			data['state_attributes']['level'] = self._device_data.get('level')
+
+			brightness = self.get_brightness()
+			data['state_attributes'][ATTR_BRIGHTNESS] = brightness
+			data['watched_variable'] = ATTR_BRIGHTNESS
+			data['extra_data'] = {
+					'vera_device_id': self._device_data.get('id'),
+					'vera_variable': 'LoadLevelTarget'
+				}
+
+			data['initial_state'] = 'True' if str(self._device_data.get('status')) == '1' else 'False'
+			data['initial_brightness'] = brightness
+
+			child_type = DISCOVER_CHILD_SWITCHES
+			if self._config.get('switch', {}).get('is_light', True):
+				child_type = DISCOVER_CHILD_LIGHTS
+
+			self._hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
+				{ATTR_SERVICE: child_type,
+					ATTR_DISCOVERED: data})
+
 
 	def get_common_state_attrs(self):
 		attrs = {}
@@ -324,3 +379,11 @@ class VeraControllerDevice(Entity):
 
 	def is_child_hidden(self, type_name):
 		return self._config.get(type_name, {}).get('hidden', False)
+
+	def get_brightness(self):
+		percent = int(self._device_data.get('level', 100))
+		brightness = 0
+		if percent > 0:
+			brightness = round(percent * 2.55)
+
+		return int(brightness)

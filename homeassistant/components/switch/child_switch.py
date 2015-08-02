@@ -68,10 +68,9 @@ class ChildSwitch(ToggleEntity):
         return attr
 
     def track_state(self, entity_id, old_state, new_state):
-        if self._state != new_state:
-            val = new_state.attributes.get(self._watched_variable)
-            self._state = self.parse_watched_variable(val)
-            self.update_ha_state()
+        val = new_state.attributes.get(self._watched_variable)
+        self._state = self.parse_watched_variable(val)
+        self.update_ha_state()
 
     def parse_watched_variable(self, val):
         """ Convert the raw state value into a switch state """
@@ -89,11 +88,13 @@ class ChildSwitch(ToggleEntity):
         """ Turn the entity on. """
         self._state = STATE_ON
         self.call_parent_service()
+        self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the entity off. """
         self._state = STATE_OFF
         self.call_parent_service()
+        self.update_ha_state()
 
     def call_parent_service(self):
         """ Calls the specified service to send state """
