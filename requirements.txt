@@ -102,4 +102,4 @@ https://github.com/rkabadi/temper-python/archive/master.zip
 https://github.com/rkabadi/pyedimax/archive/master.zip
 
 # RPI-GPIO platform
-RPi.GPIO>=0.5.11
+RPi.GPIO >=0.5.11
