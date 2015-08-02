@@ -27,11 +27,14 @@ ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
+DISCOVER_CHILD_SWITCHES = 'switch.child_switches'
+
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     discovery.SERVICE_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
+    DISCOVER_CHILD_SWITCHES: 'child_switch'
 }
 
 PROP_TO_ATTR = {

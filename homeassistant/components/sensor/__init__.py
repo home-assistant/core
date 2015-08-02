@@ -14,11 +14,14 @@ SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+DISCOVER_CHILD_SENSORS = 'sensor.child_sensors'
+
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_SENSORS: 'wink',
     zwave.DISCOVER_SENSORS: 'zwave',
-    isy994.DISCOVER_SENSORS: 'isy994'
+    isy994.DISCOVER_SENSORS: 'isy994',
+    DISCOVER_CHILD_SENSORS: 'child_sensor'
 }
 
 
