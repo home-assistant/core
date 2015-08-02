@@ -7,6 +7,8 @@ omit =
     homeassistant/external/*
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/switch/rpi_gpio.py
+
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
