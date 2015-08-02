@@ -6,7 +6,7 @@ homeassistant.components.switch.child_switch
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
-    STATE_ON, STATE_OFF,ATTR_ENTITY_ID)
+    STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
 
 import logging
 
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ChildSwitch(ToggleEntity):
     """ A Child switch """
-
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, config, discovery_info=None):
         self._name = discovery_info.get('name')
         self._parent_entity_id = discovery_info.get('parent_entity_id')
@@ -68,6 +68,8 @@ class ChildSwitch(ToggleEntity):
         return attr
 
     def track_state(self, entity_id, old_state, new_state):
+        """ This is the handler called by the state change event
+            when the parent device state changes """
         val = new_state.attributes.get(self._watched_variable)
         self._state = self.parse_watched_variable(val)
         self.update_ha_state()
