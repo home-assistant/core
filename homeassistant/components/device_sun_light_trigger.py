@@ -8,6 +8,7 @@ the state of the sun and devices.
 import logging
 from datetime import timedelta
 
+from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from . import light, sun, device_tracker, group
@@ -91,9 +92,9 @@ def setup(hass, config):
 
         if start_point:
             for index, light_id in enumerate(light_ids):
-                hass.track_point_in_time(turn_on(light_id),
-                                         (start_point +
-                                          index * LIGHT_TRANSITION_TIME))
+                track_point_in_time(
+                    hass, turn_on(light_id),
+                    (start_point + index * LIGHT_TRANSITION_TIME))
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
