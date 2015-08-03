@@ -7,6 +7,7 @@ Provides helpers for components that manage entities.
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.helpers import (
     generate_entity_id, config_per_platform, extract_entity_ids)
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.components import group, discovery
 from homeassistant.const import ATTR_ENTITY_ID
 
@@ -115,8 +116,8 @@ class EntityComponent(object):
 
         self.is_polling = True
 
-        self.hass.track_time_change(
-            self._update_entity_states,
+        track_utc_time_change(
+            self.hass, self._update_entity_states,
             second=range(0, 60, self.scan_interval))
 
     def _setup_platform(self, platform_type, platform_config,
