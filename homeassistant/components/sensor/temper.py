@@ -30,6 +30,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TemperSensor(Entity):
+    """ Represents an Temper temperature sensor  within Home Assistant. """
     def __init__(self, temper_device, temp_unit, name):
         self.temper_device = temper_device
         self.temp_unit = temp_unit
@@ -55,6 +56,6 @@ class TemperSensor(Entity):
         """ Retrieve latest state. """
         try:
             self.current_value = self.temper_device.get_temperature()
-        except Exception:
+        except IOError:
             _LOGGER.error('Failed to get temperature due to insufficient '
                           'permissions. Try running with "sudo"')
