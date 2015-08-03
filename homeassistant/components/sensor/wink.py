@@ -1,15 +1,14 @@
 """ Support for Wink sensors. """
 import logging
 
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.wink.pywink as pywink
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_OPEN, STATE_CLOSED
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
+    import pywink
+
     if discovery_info is None:
         token = config.get(CONF_ACCESS_TOKEN)
 
