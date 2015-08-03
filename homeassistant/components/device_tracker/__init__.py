@@ -15,6 +15,7 @@ from homeassistant.helpers import validate_config
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME,
     CONF_PLATFORM, DEVICE_DEFAULT_NAME)
@@ -134,7 +135,7 @@ class DeviceTracker(object):
         seconds = range(0, 60, seconds)
 
         _LOGGER.info("Device tracker interval second=%s", seconds)
-        hass.track_utc_time_change(update_device_state, second=seconds)
+        track_utc_time_change(hass, update_device_state, second=seconds)
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,
