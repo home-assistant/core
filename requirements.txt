@@ -91,3 +91,6 @@ pywemo>=0.1
 
 # Wink (*.wink)
 https://github.com/balloob/python-wink/archive/master.zip#pywink>=0.1
+
+# Temper sensors
+https://github.com/rkabadi/temper-python/archive/master.zip
