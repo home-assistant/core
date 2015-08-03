@@ -1,7 +1,6 @@
 """
 homeassistant.components.sensor.forecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Forecast.io service.
 
 Configuration:
@@ -121,10 +120,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class ForeCastSensor(Entity):
-    """ Implements an OpenWeatherMap sensor. """
+    """ Implements an Forecast.io sensor. """
 
     def __init__(self, weather_data, sensor_type, unit):
-        self.client_name = 'Forecast'
+        self.client_name = 'Weather'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_client = weather_data
         self._unit = unit
@@ -135,7 +134,7 @@ class ForeCastSensor(Entity):
 
     @property
     def name(self):
-        return '{} - {}'.format(self.client_name, self._name)
+        return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
@@ -157,10 +156,6 @@ class ForeCastSensor(Entity):
         try:
             if self.type == 'summary':
                 self._state = data.summary
-            # elif self.type == 'sunrise_time':
-            #     self._state = data.sunriseTime
-            # elif self.type == 'sunset_time':
-            #     self._state = data.sunsetTime
             elif self.type == 'precip_intensity':
                 if data.precipIntensity == 0:
                     self._state = 'None'
