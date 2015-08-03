@@ -48,11 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(switches)
 
     def cleanup_gpio(event):
-        """ Stop the Arduino service. """
         GPIO.cleanup()
 
     def prepare_gpio(event):
-        """ Start the Arduino service. """
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
