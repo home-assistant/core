@@ -83,33 +83,30 @@ def _setup_component(hass, domain, config):
         _LOGGER.error(
             'Not initializing %s because not all dependencies loaded: %s',
             domain, ", ".join(missing_deps))
-
         return False
 
     if not _handle_requirements(component, domain):
         return False
 
     try:
-        if component.setup(hass, config):
-            hass.config.components.append(component.DOMAIN)
-
-            # Assumption: if a component does not depend on groups
-            # it communicates with devices
-            if group.DOMAIN not in component.DEPENDENCIES:
-                hass.pool.add_worker()
-
-            hass.bus.fire(
-                EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
-
-            return True
-
-        else:
+        if not component.setup(hass, config):
             _LOGGER.error('component %s failed to initialize', domain)
-
+            return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception('Error during setup of component %s', domain)
+        return False
 
-    return False
+    hass.config.components.append(component.DOMAIN)
+
+    # Assumption: if a component does not depend on groups
+    # it communicates with devices
+    if group.DOMAIN not in component.DEPENDENCIES:
+        hass.pool.add_worker()
+
+    hass.bus.fire(
+        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+
+    return True
 
 
 def prepare_setup_platform(hass, config, domain, platform_name):
