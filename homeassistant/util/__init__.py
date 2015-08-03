@@ -94,13 +94,12 @@ def get_local_ip():
 
         # Use Google Public DNS server to determine own IP
         sock.connect(('8.8.8.8', 80))
-        ip_addr = sock.getsockname()[0]
-        sock.close()
 
-        return ip_addr
-
+        return sock.getsockname()[0]
     except socket.error:
         return socket.gethostbyname(socket.gethostname())
+    finally:
+        sock.close()
 
 
 # Taken from http://stackoverflow.com/a/23728630

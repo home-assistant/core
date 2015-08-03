@@ -33,7 +33,7 @@ TIMER_INTERVAL = 1  # seconds
 SERVICE_CALL_LIMIT = 10  # seconds
 
 # Define number of MINIMUM worker threads.
-# During bootstrap of HA (see bootstrap.from_config_dict()) worker threads
+# During bootstrap of HA (see bootstrap._setup_component()) worker threads
 # will be added for each component that polls devices.
 MIN_WORKER_THREAD = 2
 
@@ -42,7 +42,7 @@ ENTITY_ID_PATTERN = re.compile(r"^(?P<domain>\w+)\.(?P<entity>\w+)$")
 
 _LOGGER = logging.getLogger(__name__)
 
-# Temporary addition to proxy deprecated methods
+# Temporary to support deprecated methods
 _MockHA = namedtuple("MockHomeAssistant", ['bus'])
 
 
@@ -62,7 +62,6 @@ class HomeAssistant(object):
             "Starting Home Assistant (%d threads)", self.pool.worker_count)
 
         create_timer(self)
-
         self.bus.fire(EVENT_HOMEASSISTANT_START)
 
     def block_till_stopped(self):
@@ -70,13 +69,16 @@ class HomeAssistant(object):
             will block until called. """
         request_shutdown = threading.Event()
 
-        self.services.register(DOMAIN, SERVICE_HOMEASSISTANT_STOP,
-                               lambda service: request_shutdown.set())
+        def stop_homeassistant(service):
+            """ Stops Home Assistant. """
+            request_shutdown.set()
+
+        self.services.register(
+            DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
 
         while not request_shutdown.isSet():
             try:
                 time.sleep(1)
-
             except KeyboardInterrupt:
                 break
 

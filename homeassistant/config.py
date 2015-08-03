@@ -120,17 +120,16 @@ def load_yaml_config_file(config_path):
     import yaml
 
     def parse(fname):
-        """ Actually parse the file.  """
+        """ Parse a YAML file.  """
         try:
             with open(fname) as conf_file:
                 # If configuration file is empty YAML returns None
                 # We convert that to an empty dict
-                conf_dict = yaml.load(conf_file) or {}
+                return yaml.load(conf_file) or {}
         except yaml.YAMLError:
-            _LOGGER.exception('Error reading YAML configuration file %s',
-                              fname)
-            raise HomeAssistantError()
-        return conf_dict
+            error = 'Error reading YAML configuration file {}'.format(fname)
+            _LOGGER.exception(error)
+            raise HomeAssistantError(error)
 
     def yaml_include(loader, node):
         """
