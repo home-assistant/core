@@ -187,10 +187,12 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
             _LOGGER.info("running http in development mode")
 
     def start(self):
-        """ Starts the server. """
-        self.hass.bus.listen_once(
-            ha.EVENT_HOMEASSISTANT_STOP,
-            lambda event: self.shutdown())
+        """ Starts the HTTP server. """
+        def stop_http(event):
+            """ Stops the HTTP server. """
+            self.shutdown()
+
+        self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
         _LOGGER.info(
             "Starting web interface at http://%s:%d", *self.server_address)
@@ -203,7 +205,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.serve_forever()
 
     def register_path(self, method, url, callback, require_auth=True):
-        """ Regitsters a path wit the server. """
+        """ Registers a path wit the server. """
         self.paths.append((method, url, callback, require_auth))
 
 
