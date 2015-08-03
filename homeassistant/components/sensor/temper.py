@@ -11,6 +11,7 @@ from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/master.zip']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
