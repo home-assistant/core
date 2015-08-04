@@ -96,7 +96,7 @@ class HomeAssistant(object):
         self.pool.stop()
 
     def track_point_in_time(self, action, point_in_time):
-        """Deprecated method to track point in time."""
+        """Deprecated method as of 8/4/2015 to track point in time."""
         _LOGGER.warning(
             'hass.track_point_in_time is deprecated. '
             'Please use homeassistant.helpers.event.track_point_in_time')
@@ -104,7 +104,7 @@ class HomeAssistant(object):
         helper.track_point_in_time(self, action, point_in_time)
 
     def track_point_in_utc_time(self, action, point_in_time):
-        """Deprecated method to track point in UTC time."""
+        """Deprecated method as of 8/4/2015 to track point in UTC time."""
         _LOGGER.warning(
             'hass.track_point_in_utc_time is deprecated. '
             'Please use homeassistant.helpers.event.track_point_in_utc_time')
@@ -114,7 +114,7 @@ class HomeAssistant(object):
     def track_utc_time_change(self, action,
                               year=None, month=None, day=None,
                               hour=None, minute=None, second=None):
-        """Deprecated method to track UTC time change."""
+        """Deprecated method as of 8/4/2015 to track UTC time change."""
         # pylint: disable=too-many-arguments
         _LOGGER.warning(
             'hass.track_utc_time_change is deprecated. '
@@ -126,7 +126,7 @@ class HomeAssistant(object):
     def track_time_change(self, action,
                           year=None, month=None, day=None,
                           hour=None, minute=None, second=None, utc=False):
-        """Deprecated method to track time change."""
+        """Deprecated method as of 8/4/2015 to track time change."""
         # pylint: disable=too-many-arguments
         _LOGGER.warning(
             'hass.track_time_change is deprecated. '
@@ -183,7 +183,7 @@ class Event(object):
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
-        self.time_fired = util.strip_microseconds(
+        self.time_fired = date_util.strip_microseconds(
             time_fired or date_util.utcnow())
 
     def as_dict(self):
@@ -502,7 +502,7 @@ class StateMachine(object):
 
     def track_change(self, entity_ids, action, from_state=None, to_state=None):
         """
-        DEPRECATED
+        DEPRECATED AS OF 8/4/2015
         """
         _LOGGER.warning(
             'hass.states.track_change is deprecated. '

@@ -63,12 +63,15 @@ def setup_component(hass, domain, config=None):
 
 def _handle_requirements(component, name):
     """ Installs requirements for component. """
-    if hasattr(component, 'REQUIREMENTS'):
-        for req in component.REQUIREMENTS:
-            if not pkg_util.install_package(req):
-                _LOGGER.error('Not initializing %s because could not install '
-                              'dependency %s', name, req)
-                return False
+    if not hasattr(component, 'REQUIREMENTS'):
+        return True
+
+    for req in component.REQUIREMENTS:
+        if not pkg_util.install_package(req):
+            _LOGGER.error('Not initializing %s because could not install '
+                          'dependency %s', name, req)
+            return False
+
     return True
 
 
