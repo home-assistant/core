@@ -205,8 +205,8 @@ def setup(hass, config):
             for light in target_lights:
                 light.turn_off(**params)
 
-            if light.should_poll:
-                for light in target_lights:
+            for light in target_lights:
+                if light.should_poll:
                     light.update_ha_state(True)
             return
 
