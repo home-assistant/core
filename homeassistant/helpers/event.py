@@ -68,6 +68,8 @@ def track_point_in_utc_time(hass, action, point_in_time):
     """
     Adds a listener that fires once after a specific point in UTC time.
     """
+    # Ensure point_in_time is UTC
+    point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
     def point_in_time_listener(event):

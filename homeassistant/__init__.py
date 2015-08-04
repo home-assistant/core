@@ -598,23 +598,15 @@ class ServiceRegistry(object):
                 if call.data[ATTR_SERVICE_CALL_ID] == call_id:
                     executed_event.set()
 
-                    self._bus.remove_listener(
-                        EVENT_SERVICE_EXECUTED, service_executed)
-
             self._bus.listen(EVENT_SERVICE_EXECUTED, service_executed)
 
         self._bus.fire(EVENT_CALL_SERVICE, event_data)
 
         if blocking:
-            # wait will return False if event not set after our limit has
-            # passed. If not set, clean up the listener
-            if not executed_event.wait(SERVICE_CALL_LIMIT):
-                self._bus.remove_listener(
-                    EVENT_SERVICE_EXECUTED, service_executed)
-
-                return False
-
-            return True
+            success = executed_event.wait(SERVICE_CALL_LIMIT)
+            self._bus.remove_listener(
+                EVENT_SERVICE_EXECUTED, service_executed)
+            return success
 
     def _event_to_service_call(self, event):
         """ Calls a service from an event. """
@@ -675,8 +667,8 @@ class Config(object):
 
     def temperature(self, value, unit):
         """ Converts temperature to user preferred unit if set. """
-        if not (unit and self.temperature_unit and
-                unit != self.temperature_unit):
+        if not (unit in (TEMP_CELCIUS, TEMP_FAHRENHEIT) and
+                self.temperature_unit and unit != self.temperature_unit):
             return value, unit
 
         try:
@@ -783,7 +775,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_timer)
 
 
-def create_worker_pool():
+def create_worker_pool(worker_count=MIN_WORKER_THREAD):
     """ Creates a worker pool to be used. """
 
     def job_handler(job):
@@ -807,4 +799,4 @@ def create_worker_pool():
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
                             date_util.datetime_to_local_str(start), job)
 
-    return util.ThreadPool(job_handler, MIN_WORKER_THREAD, busy_callback)
+    return util.ThreadPool(job_handler, worker_count, busy_callback)
