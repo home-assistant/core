@@ -16,11 +16,7 @@ import random
 import string
 from functools import wraps
 
-# DEPRECATED AS OF 4/27/2015 - moved to homeassistant.util.dt package
-# pylint: disable=unused-import
-from .dt import (  # noqa
-    datetime_to_str, str_to_datetime, strip_microseconds,
-    datetime_to_local_str, utcnow)
+from .dt import datetime_to_local_str, utcnow
 
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
