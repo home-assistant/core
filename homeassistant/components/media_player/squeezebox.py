@@ -80,6 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SqueezeBoxDevice(MediaPlayerDevice):
     """ Represents a SqueezeBox device. """
 
+    # pylint: disable=too-many-arguments
     def __init__(self, name, server, player, port, user, password):
         super(SqueezeBoxDevice, self).__init__()
         self._name = name
@@ -100,9 +101,9 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the state of the device. """
-        if ('power' in self._status and self._status['power'] == '0'):
+        if 'power' in self._status and self._status['power'] == '0':
             return STATE_OFF
-        if('mode' in self._status):
+        if 'mode' in self._status:
             if self._status['mode'] == 'pause':
                 return STATE_PAUSED
             if self._status['mode'] == 'play':
@@ -112,7 +113,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         return STATE_UNKNOWN
 
     def update(self):
-        if(self._user and self._password):
+        if self._user and self._password:
             self._query('login', self._user, self._password)
         self._get_status()
 
@@ -154,18 +155,18 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """ Volume level of the media player (0..1). """
-        if('mixer volume' in self._status):
+        if 'mixer volume' in self._status:
             return int(self._status['mixer volume']) / 100.0
 
     @property
     def is_volume_muted(self):
-        if('mixer volume' in self._status):
+        if 'mixer volume' in self._status:
             return int(self._status['mixer volume']) < 0
 
     @property
     def media_content_id(self):
         """ Content ID of current playing media. """
-        if('current_title' in self._status):
+        if 'current_title' in self._status:
             return self._status['current_title']
 
     @property
@@ -176,13 +177,13 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """ Duration of current playing media in seconds. """
-        if('duration' in self._status):
+        if 'duration' in self._status:
             return int(float(self._status['duration']))
 
     @property
     def media_image_url(self):
         """ Image url of current playing media. """
-        if('artwork_url' in self._status):
+        if 'artwork_url' in self._status:
             return self._status['artwork_url']
         return 'http://{server}:{port}/music/current/cover.jpg?player={player}'\
             .format(
@@ -193,12 +194,12 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """ Title of current playing media. """
-        if('artist' in self._status and 'title' in self._status):
+        if 'artist' in self._status and 'title' in self._status:
             return '{artist} - {title}'.format(
                 artist=self._status['artist'],
                 title=self._status['title']
                 )
-        if('current_title' in self._status):
+        if 'current_title' in self._status:
             return self._status['current_title']
 
     @property
