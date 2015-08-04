@@ -9,7 +9,7 @@ import unittest
 import homeassistant as ha
 import homeassistant.components.demo as demo
 
-from common import mock_http_component
+from tests.common import mock_http_component
 
 
 class TestDemo(unittest.TestCase):
