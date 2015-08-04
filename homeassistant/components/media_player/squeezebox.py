@@ -120,7 +120,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         telnet = telnetlib.Telnet(self._server, self._port)
         if self._user and self._password:
             telnet.write('login {user} {password}\n'.format(
-                user=self._user, 
+                user=self._user,
                 password=self._password).encode('UTF-8'))
             telnet.read_until(b'\n', timeout=3)
         message = '{}\n'.format(' '.join(parameters))
