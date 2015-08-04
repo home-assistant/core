@@ -30,9 +30,9 @@ class TestEventHelpers(unittest.TestCase):
 
     def test_track_point_in_time(self):
         """ Test track point in time. """
-        before_birthday = datetime(1985, 7, 9, 12, 0, 0)
-        birthday_paulus = datetime(1986, 7, 9, 12, 0, 0)
-        after_birthday = datetime(1987, 7, 9, 12, 0, 0)
+        before_birthday = datetime(1985, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
+        birthday_paulus = datetime(1986, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
+        after_birthday = datetime(1987, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
 
         runs = []
 
@@ -52,7 +52,7 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
-        track_point_in_utc_time(
+        track_point_in_time(
             self.hass, lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(after_birthday)
@@ -65,7 +65,7 @@ class TestEventHelpers(unittest.TestCase):
         specific_runs = []
 
         track_time_change(self.hass, lambda x: wildcard_runs.append(1))
-        track_time_change(
+        track_utc_time_change(
             self.hass, lambda x: specific_runs.append(1), second=[0, 30])
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
@@ -84,7 +84,7 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(3, len(wildcard_runs))
 
     def test_track_state_change(self):
-        """ Test states.track_change. """
+        """ Test track_state_change. """
         # 2 lists to track how often our callbacks get called
         specific_runs = []
         wildcard_runs = []
