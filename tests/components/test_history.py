@@ -13,7 +13,7 @@ import homeassistant as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
 
-from common import (
+from tests.common import (
     mock_http_component, mock_state_change_event, get_test_home_assistant)
 
 
