@@ -19,6 +19,7 @@ import logging
 from collections import namedtuple
 
 from homeassistant import State
+from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import reproduce_state
@@ -104,8 +105,8 @@ class Scene(ToggleEntity):
         self.prev_states = None
         self.ignore_updates = False
 
-        self.hass.states.track_change(
-            self.entity_ids, self.entity_state_changed)
+        track_state_change(
+            self.hass, self.entity_ids, self.entity_state_changed)
 
         self.update()
 
