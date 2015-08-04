@@ -7,6 +7,7 @@ Provides functionality to group devices that can be turned on or off.
 
 import homeassistant as ha
 from homeassistant.helpers import generate_entity_id
+from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import Entity
 import homeassistant.util as util
 from homeassistant.const import (
@@ -162,8 +163,8 @@ class Group(Entity):
 
     def start(self):
         """ Starts the tracking. """
-        self.hass.states.track_change(
-            self.tracking, self._state_changed_listener)
+        track_state_change(
+            self.hass, self.tracking, self._state_changed_listener)
 
     def stop(self):
         """ Unregisters the group from Home Assistant. """

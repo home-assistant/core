@@ -63,6 +63,7 @@ import datetime
 import homeassistant.components as core
 
 from homeassistant.components.thermostat import ThermostatDevice
+from homeassistant.helpers.event import track_state_change
 from homeassistant.const import TEMP_CELCIUS, STATE_ON, STATE_OFF
 
 TOL_TEMP = 0.3
@@ -105,12 +106,12 @@ class HeatControl(ThermostatDevice):
         self._away = False
         self._heater_manual_changed = True
 
-        hass.states.track_change(self.heater_entity_id,
-                                 self._heater_turned_on,
-                                 STATE_OFF, STATE_ON)
-        hass.states.track_change(self.heater_entity_id,
-                                 self._heater_turned_off,
-                                 STATE_ON, STATE_OFF)
+        track_state_change(hass, self.heater_entity_id,
+                           self._heater_turned_on,
+                           STATE_OFF, STATE_ON)
+        track_state_change(hass, self.heater_entity_id,
+                           self._heater_turned_off,
+                           STATE_ON, STATE_OFF)
 
     @property
     def name(self):
