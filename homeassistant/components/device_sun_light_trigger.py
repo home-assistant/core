@@ -8,7 +8,7 @@ the state of the sun and devices.
 import logging
 from datetime import timedelta
 
-from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.event import track_point_in_time, track_state_change
 import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from . import light, sun, device_tracker, group
@@ -98,8 +98,8 @@ def setup(hass, config):
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
-    hass.states.track_change(sun.ENTITY_ID, schedule_light_on_sun_rise,
-                             sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
+    track_state_change(hass, sun.ENTITY_ID, schedule_light_on_sun_rise,
+                       sun.STATE_BELOW_HORIZON, sun.STATE_ABOVE_HORIZON)
 
     # If the sun is already above horizon
     # schedule the time-based pre-sun set event
@@ -158,13 +158,13 @@ def setup(hass, config):
             light.turn_off(hass, light_ids)
 
     # Track home coming of each device
-    hass.states.track_change(
-        device_entity_ids, check_light_on_dev_state_change,
+    track_state_change(
+        hass, device_entity_ids, check_light_on_dev_state_change,
         STATE_NOT_HOME, STATE_HOME)
 
     # Track when all devices are gone to shut down lights
-    hass.states.track_change(
-        device_group, check_light_on_dev_state_change,
+    track_state_change(
+        hass, device_group, check_light_on_dev_state_change,
         STATE_HOME, STATE_NOT_HOME)
 
     return True
