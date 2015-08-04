@@ -10,30 +10,36 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
+    homeassistant/components/isy994.py
+    homeassistant/components/*/isy994.py
+
+    homeassistant/components/modbus.py
+    homeassistant/components/*/modbus.py
+
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
-    homeassistant/components/modbus.py
-    homeassistant/components/*/modbus.py
-
-    homeassistant/components/isy994.py
-    homeassistant/components/*/isy994.py
-
     homeassistant/components/*/tellstick.py
     homeassistant/components/*/vera.py
 
     homeassistant/components/browser.py
+    homeassistant/components/camera/*
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/tomato.py
+    homeassistant/components/device_tracker/tplink.py
+    homeassistant/components/discovery.py
+    homeassistant/components/downloader.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/hue.py
+    homeassistant/components/light/limitlessled.py
     homeassistant/components/media_player/cast.py
+    homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/notify/file.py
     homeassistant/components/notify/instapush.py
@@ -53,7 +59,9 @@ omit =
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/switch/command_switch.py
     homeassistant/components/switch/hikvisioncam.py
+    homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/nest.py
 
