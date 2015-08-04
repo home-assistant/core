@@ -113,13 +113,16 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         return STATE_UNKNOWN
 
     def update(self):
-        if self._user and self._password:
-            self._query('login', self._user, self._password)
         self._get_status()
 
     def _query(self, *parameters):
         """ Send request and await response from server  """
         telnet = telnetlib.Telnet(self._server, self._port)
+        if self._user and self._password:
+            telnet.write('login {user} {password}\n'.format(
+                user=self._user, 
+                password=self._password).encode('UTF-8'))
+            telnet.read_until(b'\n', timeout=3)
         message = '{}\n'.format(' '.join(parameters))
         telnet.write(message.encode('UTF-8'))
         response = telnet.read_until(b'\n', timeout=3)\
