@@ -215,5 +215,6 @@ class ForeCastData(object):
 
         forecast = forecastio.load_forecast(self._api_key,
                                             self.latitude,
-                                            self.longitude)
+                                            self.longitude,
+                                            units='si')
         self.data = forecast.currently()
