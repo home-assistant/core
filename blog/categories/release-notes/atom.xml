@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-07-19T13:36:07-07:00</updated>
+  <updated>2015-08-05T16:49:05-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -48,7 +48,7 @@ To update to the latest version, run <code>scripts/update</code>. Please report 
 
 <p><strong>Arduino</strong><br>
 <img src='https://home-assistant.io/images/supported_brands/arduino.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Fabian has contributed support for interfacing with Arduinos. This makes it possible to connect your Arduino via USB and expose pins as sensor data and write to pins via switches. Have a look at <a href="/components/arduino.markdown">the docs</a> for an extensive guide to get started.</p>
+Fabian has contributed support for interfacing with Arduinos. This makes it possible to connect your Arduino via USB and expose pins as sensor data and write to pins via switches. Have a look at <a href="/components/arduino.html">the docs</a> for an extensive guide to get started.</p>
 
 <pre><code class="yaml"># Example configuration.yaml entry
 switch:
@@ -115,7 +115,7 @@ sensor:
 </code></pre>
 
 <p><strong>Forecast.io</strong><br>
-Fabiann has added support for <a href="https://forecast.io/">Forecast.io</a> to get weather forecasts for Home Assistant. You need an API key which is free but requires a <a href="https://developer.forecast.io/register">registration</a>. To add Forecast.io to your installation, add the following to your <code>configuration.yaml</code> file:</p>
+Fabian has added support for <a href="https://forecast.io/">Forecast.io</a> to get weather forecasts for Home Assistant. You need an API key which is free but requires a <a href="https://developer.forecast.io/register">registration</a>. To add Forecast.io to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <pre><code class="yaml"># Example configuration.yaml entry
 sensor:
