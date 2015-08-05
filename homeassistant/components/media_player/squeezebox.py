@@ -59,7 +59,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not config.get(CONF_HOST):
         _LOGGER.error(
             "Missing required configuration items in %s: %s",
-                DOMAIN, CONF_HOST)
+            DOMAIN,
+            CONF_HOST)
         return False
 
     lms = LogitechMediaServer(
@@ -78,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class LogitechMediaServer(object):
     """ Represents a Logitech media server. """
-    
+
     def __init__(self, host, port, username, password):
         self.host = host
         self.port = port
@@ -95,16 +96,16 @@ class LogitechMediaServer(object):
             if not http_port:
                 _LOGGER.error(
                     "Unable to read data from server %s:%s",
-                        self.host,
-                        self.port)
+                    self.host,
+                    self.port)
                 return
             return http_port
         except ConnectionError as ex:
             _LOGGER.error(
                 "Failed to connect to server %s:%s - %s",
-                    self.host,
-                    self.port,
-                    ex)
+                self.host,
+                self.port,
+                ex)
             return
 
     def create_players(self):
