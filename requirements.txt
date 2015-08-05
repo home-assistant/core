@@ -5,9 +5,6 @@ pytz>=2015.2
 
 # Optional, needed for specific components
 
-# Discovery platform (discovery)
-zeroconf>=0.16.0
-
 # Sun (sun)
 astral>=0.8.1
 
@@ -77,5 +74,29 @@ python-forecastio>=1.3.3
 # Firmata Bindings (*.arduino)
 PyMata==2.07a
 
-# Mysensors serial gateway
-pyserial>=2.7
+#Rfxtrx sensor
+https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip
+
+# Mysensors
+https://github.com/theolind/pymysensors/archive/master.zip#egg=pymysensors-0.1
+
+# Netgear (device_tracker.netgear)
+pynetgear>=0.1
+
+# Netdisco (discovery)
+netdisco>=0.1
+
+# Wemo (switch.wemo)
+pywemo>=0.1
+
+# Wink (*.wink)
+https://github.com/balloob/python-wink/archive/master.zip#pywink>=0.1
+
+# Slack notifier
+slacker>=0.6.8
+
+# Temper sensors
+https://github.com/rkabadi/temper-python/archive/master.zip
+
+# PyEdimax
+https://github.com/rkabadi/pyedimax/archive/master.zip
