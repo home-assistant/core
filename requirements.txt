@@ -97,3 +97,6 @@ slacker>=0.6.8
 
 # Temper sensors
 https://github.com/rkabadi/temper-python/archive/master.zip
+
+# PyEdimax
+https://github.com/rkabadi/pyedimax/archive/master.zip

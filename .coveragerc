@@ -55,6 +55,7 @@ omit =
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/nest.py
