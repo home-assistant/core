@@ -99,7 +99,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
     isy994.DISCOVER_LIGHTS: 'isy994',
-    discovery.services.PHILIPS_HUE: 'hue',
+    discovery.SERVICE_HUE: 'hue',
 }
 
 PROP_TO_ATTR = {

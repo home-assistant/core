@@ -27,6 +27,7 @@ omit =
 
     homeassistant/components/browser.py
     homeassistant/components/camera/*
+    homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
@@ -50,6 +51,7 @@ omit =
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/edimax.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/mysensors.py
@@ -57,6 +59,7 @@ omit =
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
+    homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
     homeassistant/components/switch/command_switch.py

@@ -8,7 +8,7 @@ Check out [the website](https://home-assistant.io) for installation instructions
 
 Examples of devices it can interface it:
 
- * Monitoring connected devices to a wireless router: [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), [DD-WRT](http://www.dd-wrt.com/site/index), [TPLink](http://www.tp-link.us/)
+ * Monitoring connected devices to a wireless router: [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), [DD-WRT](http://www.dd-wrt.com/site/index), [TPLink](http://www.tp-link.us/), [ASUSWRT](http://event.asus.com/2013/nw/ASUSWRT/)
  * [Philips Hue](http://meethue.com) lights, [WeMo](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/) switches, and [Tellstick](http://www.telldus.se/products/tellstick) devices and sensors
  * [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast), [Music Player Daemon](http://www.musicpd.org/) and [Kodi (XBMC)](http://kodi.tv/)
  * Support for [ISY994](https://www.universal-devices.com/residential/isy994i-series/) (Insteon and X10 devices), [Z-Wave](http://www.z-wave.com/), [Nest Thermostats](https://nest.com/), and [Modbus](http://www.modbus.org/)
