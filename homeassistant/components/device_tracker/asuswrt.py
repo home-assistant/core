@@ -62,6 +62,7 @@ _IP_NEIGH_REGEX = re.compile(
     r'(?P<status>(\w+))')
 
 
+# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a DD-WRT scanner. """
     if not validate_config(config,
@@ -146,7 +147,8 @@ class AsusWrtDeviceScanner(object):
             _LOGGER.exception("Unexpected response from router")
             return
         except ConnectionRefusedError:
-            _LOGGER.exception("Connection refused by router, is telnet enabled?")
+            _LOGGER.exception("Connection refused by router," +
+                              " is telnet enabled?")
             return
 
         devices = {}
