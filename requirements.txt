@@ -94,3 +94,6 @@ https://github.com/balloob/python-wink/archive/master.zip#pywink>=0.1
 
 # Slack notifier
 slacker>=0.6.8
+
+# Temper sensors
+https://github.com/rkabadi/temper-python/archive/master.zip
