@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
 
-from helpers import get_test_home_assistant, mock_http_component
+from tests.common import get_test_home_assistant, mock_http_component
 
 
 class TestComponentHistory(unittest.TestCase):

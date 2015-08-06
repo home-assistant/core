@@ -6,10 +6,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, DEVICE_DEFAULT_NAME)
 from homeassistant.util import ensure_unique_string, slugify
 
-# Deprecated 3/5/2015 - Moved to homeassistant.helpers.entity
-# pylint: disable=unused-import
-from .entity import Entity as Device, ToggleEntity as ToggleDevice  # noqa
-
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
     """ Generate a unique entity ID based on given entity IDs or used ids. """
