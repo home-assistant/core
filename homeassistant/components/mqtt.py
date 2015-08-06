@@ -24,7 +24,7 @@ For sending test messages:
 $ mosquitto_pub -h 127.0.0.1 -t home-assistant/switch/1/on -m "Switch is ON"
 For reading the messages:
 $ mosquitto_sub -h 127.0.0.1 -v -t "home-assistant/#"
-{"aaaaa":"1111"}
+Payload for test: {"aaaaaaaaaaaaaa":"1111111111111111111"}
 """
 import logging
 
@@ -40,7 +40,6 @@ DEPENDENCIES = []
 MQTT_CLIENT = None
 MQTT_SEND = 'mqtt_send'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
-MQTT_RECEIVED = 'mqtt_received'
 
 
 def setup(hass, config):
@@ -85,7 +84,6 @@ def setup(hass, config):
                           "Please check your settings and the broker itself.")
             return False
 
-
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mqtt)
 
     def send_message(call):
@@ -93,11 +91,6 @@ def setup(hass, config):
         subtopic = 'master'
         complete_topic = 'home-assistant/{}'.format(str(subtopic))
         MQTT_CLIENT.publish(complete_topic, str(call))
-
-    def received_mqtt(call):
-        """ Action when an MQTT message arrives. """
-        pass
-
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
@@ -137,14 +130,13 @@ class MQTT(object):
         pass
 
     def mqtt_on_subscribe(self, mqttc, obj, mid, granted_qos):
-        """ Subscribe callback"""
+        """ Subscribe callback """
         complete_topic = self._topic + '/#'
         _LOGGER.info('Subscribed to %s', complete_topic)
 
     def mqtt_on_message(self, mqttc, obj, msg):
         """ Message callback """
         self.msg = '{} {} {}'.format(msg.topic, str(msg.qos), str(msg.payload))
-        print(self.msg)
         self.hass.event.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
             'topic': msg.topic,
             'subtopic': 'test',
