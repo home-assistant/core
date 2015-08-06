@@ -1,7 +1,6 @@
 """
 homeassistant.components.notify.slack
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Slack platform for notify component.
 
 Configuration:
@@ -25,7 +24,6 @@ default_channel
 *Required
 The default channel to post to if no channel is explicitly specified when
 sending the notification message.
-
 """
 import logging
 
