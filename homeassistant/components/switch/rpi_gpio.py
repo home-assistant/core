@@ -48,9 +48,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(switches)
 
     def cleanup_gpio(event):
+        """ Stuff to do before stop home assistant """
+        # pylint: disable=no-member
         GPIO.cleanup()
 
     def prepare_gpio(event):
+        """ Stuff to do when home assistant starts"""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
@@ -66,6 +69,7 @@ class RPiGPIOSwitch(ToggleEntity):
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = False
         self._gpio = gpio
+        # pylint: disable=no-member
         GPIO.setup(gpio, GPIO.OUT)
 
     @property
@@ -96,15 +100,18 @@ class RPiGPIOSwitch(ToggleEntity):
         self.update_ha_state()
 
     def _switch(self, new_state):
-        """ Execute the actual commands """
+        """ Change the output value to Raspberry Pi GPIO port """
         _LOGGER.info('Setting GPIO %s to %s', self._gpio, new_state)
+        # pylint: disable=bare-except
         try:
+            # pylint: disable=no-member
             GPIO.output(self._gpio, 1 if new_state else 0)
         except:
             _LOGGER.error('GPIO "%s" output failed', self._gpio)
             return False
         return True
 
+    # pylint: disable=no-self-use
     @property
     def device_state_attributes(self):
         """ Returns device specific state attributes. """
