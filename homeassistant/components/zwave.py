@@ -1,7 +1,6 @@
 """
 homeassistant.components.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Connects Home Assistant to a Z-Wave network.
 """
 from pprint import pprint
