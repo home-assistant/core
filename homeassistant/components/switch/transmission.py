@@ -1,7 +1,7 @@
 """
 homeassistant.components.switch.transmission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Enable or disable Transmission BitTorrent client Turtle Mode
+Enable or disable Transmission BitTorrent client Turtle Mode.
 
 Configuration:
 
@@ -28,11 +28,11 @@ The port your Transmission daemon uses, defaults to 9091. Example: 8080
 
 username
 *Optional
-Your Transmission username, if you use authentication
+Your Transmission username, if you use authentication.
 
 password
 *Optional
-Your Transmission username, if you use authentication
+Your Transmission username, if you use authentication.
 
 name
 *Optional
