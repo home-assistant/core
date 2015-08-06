@@ -199,8 +199,7 @@ class TestComponentsGroup(unittest.TestCase):
                 self.hass,
                 {
                     group.DOMAIN: {
-                        'second_group': ','.join((self.group_entity_id,
-                                                  'light.Bowl'))
+                        'second_group': (self.group_entity_id, 'light.Bowl')
                     }
                 }))
 
