@@ -1,8 +1,37 @@
 """
 homeassistant.components.switch.edimax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Edimax switches.
+
+Configuration:
+
+To use the Edimax switch you will need to add something like the following to
+your config/configuration.yaml.
+
+switch:
+    platform: edimax
+    host: 192.168.1.32
+    username: YOUR_USERNAME
+    password: YOUR_PASSWORD
+    name: Edimax Smart Plug
+
+Variables:
+
+host
+*Required
+This is the IP address of your Edimax switch. Example: 192.168.1.32
+
+username
+*Required
+Your username to access your Edimax switch.
+
+password
+*Required
+Your password.
+
+name
+*Optional
+The name to use when displaying this switch instance.
 """
 import logging
 
@@ -47,7 +76,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class SmartPlugSwitch(SwitchDevice):
-    """ Represents an Edimax Smart Plug switch within Home Assistant. """
+    """ Represents an Edimax Smart Plug switch. """
     def __init__(self, smartplug, name):
         self.smartplug = smartplug
         self._name = name
