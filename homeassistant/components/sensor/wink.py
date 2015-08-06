@@ -1,4 +1,8 @@
-""" Support for Wink sensors. """
+"""
+homeassistant.components.sensor.wink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Wink sensors.
+"""
 import logging
 
 from homeassistant.helpers.entity import Entity
@@ -24,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WinkSensorDevice(Entity):
-    """ represents a wink sensor within home assistant. """
+    """ Represents a wink sensor. """
 
     def __init__(self, wink):
         self.wink = wink
