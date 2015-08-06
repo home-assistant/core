@@ -1,4 +1,6 @@
 """
+homeassistant.components.modbus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Modbus sensors.
 
 Configuration:
@@ -22,16 +24,28 @@ sensor:
         0:
             name: My coil switch
 
-VARIABLES:
+Variables:
 
-    - "slave" = slave number (ignored and can be omitted if not serial Modbus)
-    - "unit" = unit to attach to value (optional, ignored for boolean sensors)
-    - "registers" contains a list of relevant registers to read from
-      it can contain a "bits" section, listing relevant bits
-    - "coils" contains a list of relevant coils to read from
+slave
+*Required
+Slave number (ignored and can be omitted if not serial Modbus).
 
-    - each named register will create an integer sensor
-    - each named bit will create a boolean sensor
+unit
+*Required
+Unit to attach to value (optional, ignored for boolean sensors).
+
+registers
+*Required
+Contains a list of relevant registers to read from. It can contain a
+"bits" section, listing relevant bits.
+
+coils
+*Optional
+Contains a list of relevant coils to read from.
+
+Note:
+- Each named register will create an integer sensor.
+- Each named bit will create a boolean sensor.
 """
 
 import logging
