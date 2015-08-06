@@ -15,7 +15,7 @@ like the following to your config/configuration.yaml
 switch:
     platform: hikvisioncam
     name: Hikvision Cam 1 Motion Detection
-    host: 192.168.1.26
+    host: 192.168.1.32
     username: YOUR_USERNAME
     password: YOUR_PASSWORD
 
