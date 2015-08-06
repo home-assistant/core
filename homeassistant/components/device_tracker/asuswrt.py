@@ -157,7 +157,8 @@ class AsusWrtDeviceScanner(object):
             devices[match.group('ip')] = {
                 'ip': match.group('ip'),
                 'mac': match.group('mac').upper(),
-                'host': match.group('host')
+                'host': match.group('host'),
+                'status': ''
                 }
 
         for neighbor in neighbors:
