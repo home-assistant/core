@@ -27,11 +27,11 @@ This is the IP address of your Hikvision camera. Example: 192.168.1.32
 
 username
 *Required
-Your Hikvision camera username
+Your Hikvision camera username.
 
 password
 *Required
-Your Hikvision camera username
+Your Hikvision camera username.
 
 name
 *Optional
