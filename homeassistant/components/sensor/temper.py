@@ -1,10 +1,17 @@
 """
 homeassistant.components.sensor.temper
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for getting temperature from TEMPer devices.
 
-Support for getting temperature from TEMPer devices
+Configuration:
+To use the temper sensors you will need to add something like the following to
+your config/configuration.yaml
+
+Example:
+
+sensor:
+    platform: temper
 """
-
 import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
@@ -32,7 +39,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TemperSensor(Entity):
-    """ Represents an Temper temperature sensor  within Home Assistant. """
+    """ Represents an Temper temperature sensor. """
     def __init__(self, temper_device, temp_unit, name):
         self.temper_device = temper_device
         self.temp_unit = temp_unit
