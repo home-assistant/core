@@ -28,7 +28,6 @@ $ mosquitto_sub -h 127.0.0.1 -v -t "home-assistant/#"
 """
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import validate_config
 from homeassistant.components.protocol import DOMAIN
 from homeassistant.const import (
@@ -41,6 +40,8 @@ DEPENDENCIES = []
 MQTT_CLIENT = None
 MQTT_SEND = 'mqtt_send'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
+MQTT_RECEIVED = 'mqtt_received'
+
 
 def setup(hass, config):
     """ Get the MQTT protocol service. """
@@ -59,10 +60,10 @@ def setup(hass, config):
 
     except ImportError:
         _LOGGER.exception("Error while importing dependency paho-mqtt.")
-
         return False
 
     global MQTT_CLIENT
+
     MQTT_CLIENT = MQTT(hass,
                        config[DOMAIN]['broker'],
                        config[DOMAIN]['port'],
@@ -93,12 +94,15 @@ def setup(hass, config):
         complete_topic = 'home-assistant/{}'.format(str(subtopic))
         MQTT_CLIENT.publish(complete_topic, str(call))
 
+    def received_mqtt(call):
+        """ Action when an MQTT message arrives. """
+        pass
+
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
     hass.services.register(DOMAIN, MQTT_SEND, send_message)
     hass.services.register(DOMAIN, EVENT_MQTT_MESSAGE_RECEIVED)
-
 
     return True
 
