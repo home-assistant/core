@@ -1,11 +1,10 @@
 """
 homeassistant.components.device_tracker.asuswrt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Device tracker platform that supports scanning a ASUSWRT router for device
 presence.
 
-This device tracker needs telnet to be enabled on the router
+This device tracker needs telnet to be enabled on the router.
 
 Configuration:
 
