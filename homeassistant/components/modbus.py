@@ -5,6 +5,11 @@ Modbus component, using pymodbus (python3 branch)
 
 Configuration:
 
+To use the Forecast sensor you will need to add something like the
+following to your config/configuration.yaml
+
+Configuration:
+
 To use the Modbus component you will need to add something like the following
 to your config/configuration.yaml
 
