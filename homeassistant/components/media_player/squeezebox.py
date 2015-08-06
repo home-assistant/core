@@ -41,6 +41,7 @@ import urllib.parse
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     MEDIA_TYPE_MUSIC, DOMAIN)
 
 from homeassistant.const import (
@@ -50,7 +51,8 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK |\
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
 # pylint: disable=unused-argument
