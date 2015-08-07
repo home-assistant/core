@@ -133,8 +133,6 @@ class MQTT(object):
     """ Implements messaging service for MQTT. """
     def __init__(self, hass, broker, port, topic, keepalive, clientid=None):
 
-        import paho.mqtt.client as mqtt
-
         self.hass = hass
         self._broker = broker
         self._port = port
