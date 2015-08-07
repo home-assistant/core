@@ -166,9 +166,8 @@ class MQTT(object):
         self.msg = '{} {} {}'.format(msg.topic, str(msg.qos), str(msg.payload))
         self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
             'topic': msg.topic,
-            'subtopic': 'test',
             'qos': str(msg.qos),
-            'payload': str(msg.payload),
+            'payload': str(msg.payload.decode('utf-8')),
         })
 
     def subscribe(self, topic):
