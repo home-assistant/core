@@ -20,16 +20,46 @@ mqtt:
   qos: 0
   retain: 0
 
-For sending messages:
-$ mosquitto_pub -h 127.0.0.1 -t home-assistant/switch/1/on -m "Switch is ON"
-For recieving all messages:
-$ mosquitto_sub -h 127.0.0.1 -v -t "home-assistant/#"
+Variables:
+
+broker
+*Required
+This is the IP address of your MQTT broker, e.g. 192.168.1.32.
+
+port
+*Required
+The network port to connect to, e.g. 1883.
+
+topic
+*Required
+The MQTT topic to subscribe to, e.g. home-assistant.
+
+keepalive
+*Required
+The keep alive in seconds for this client, e.g. 60.
+
+client_id
+*Required
+A name for this client, e.g. home-assistant.
+
+qos: 0
+*Required
+Quality of service level to use for the subscription. 0, 1, or 2.
+
+retain: 0
+*Required
+If message should be retained. 0 or 1.
 """
 import logging
 
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+
+try:
+    import paho.mqtt.client as mqtt
+except ImportError:
+    mqtt = None
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,9 +68,9 @@ DEPENDENCIES = []
 MQTT_CLIENT = None
 MQTT_SEND = 'mqtt_send'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
+REQUIREMENTS = ['paho-mqtt>=1.1']
 
 
-# pylint: disable=unused-variable
 def setup(hass, config):
     """ Get the MQTT protocol service. """
 
@@ -53,11 +83,8 @@ def setup(hass, config):
                            _LOGGER):
         return False
 
-    try:
-        import paho.mqtt.client as mqtt
-
-    except ImportError:
-        _LOGGER.exception("Error while importing dependency paho-mqtt.")
+    if mqtt is None:
+        _LOGGER.error("Error while importing dependency 'paho-mqtt'.")
         return False
 
     global MQTT_CLIENT
@@ -95,7 +122,6 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
     hass.services.register(DOMAIN, MQTT_SEND, send_message)
-    hass.services.register(DOMAIN, EVENT_MQTT_MESSAGE_RECEIVED)
 
     return True
 
