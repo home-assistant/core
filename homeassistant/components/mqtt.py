@@ -161,10 +161,9 @@ class MQTT(object):
 
     def mqtt_on_message(self, mqttc, obj, msg):
         """ Message callback """
-        self.msg = '{} {} {}'.format(msg.topic, str(msg.qos), str(msg.payload))
         self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
             'topic': msg.topic,
-            'qos': str(msg.qos),
+            'qos': str(msg.qos.decode('utf-8')),
             'payload': str(msg.payload.decode('utf-8')),
         })
 
