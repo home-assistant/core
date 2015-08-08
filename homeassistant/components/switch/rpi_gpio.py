@@ -1,9 +1,7 @@
 """
 homeassistant.components.switch.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Allows to control a swith using Raspberry GPIO.
-Support for switching Raspberry GPIO pins on and off.
+Allows to control the GPIO pins of a Raspberry Pi.
 
 Configuration:
 
@@ -17,8 +15,7 @@ Variables:
 
 ports
 *Required
-An array specifying the GPIO ports to use and the name usd in the fronted.
-
+An array specifying the GPIO ports to use and the name to use in the frontend.
 """
 import logging
 try:
@@ -36,9 +33,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Raspberry PI GPIO switches. """
+    """ Sets up the Raspberry PI GPIO ports. """
     if GPIO is None:
-        _LOGGER.error('RPi.GPIO not available. rpi_gpio switches ignored.')
+        _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
         return
 
     switches = []
@@ -48,22 +45,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(switches)
 
     def cleanup_gpio(event):
-        """ Stuff to do before stop home assistant """
+        """ Stuff to do before stop home assistant. """
         # pylint: disable=no-member
         GPIO.cleanup()
 
     def prepare_gpio(event):
-        """ Stuff to do when home assistant starts"""
+        """ Stuff to do when home assistant starts. """
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
 
 class RPiGPIOSwitch(ToggleEntity):
-
-    '''
-    Represents a switch that can be toggled using Raspberry Pi GPIO.
-    '''
+    """ Represents a port that can be toggled using Raspberry Pi GPIO. """
 
     def __init__(self, name, gpio):
         self._name = name or DEVICE_DEFAULT_NAME
@@ -74,12 +68,12 @@ class RPiGPIOSwitch(ToggleEntity):
 
     @property
     def name(self):
-        """ The name of the port """
+        """ The name of the port. """
         return self._name
 
     @property
     def should_poll(self):
-        """ No polling needed """
+        """ No polling needed. """
         return False
 
     @property
@@ -100,7 +94,7 @@ class RPiGPIOSwitch(ToggleEntity):
         self.update_ha_state()
 
     def _switch(self, new_state):
-        """ Change the output value to Raspberry Pi GPIO port """
+        """ Change the output value to Raspberry Pi GPIO port. """
         _LOGGER.info('Setting GPIO %s to %s', self._gpio, new_state)
         # pylint: disable=bare-except
         try:
