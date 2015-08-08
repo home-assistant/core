@@ -32,7 +32,7 @@ from homeassistant.const import (
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
-    # setup up yout component here
+    # setup up your component here
 
     ...
 
