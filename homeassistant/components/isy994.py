@@ -1,15 +1,15 @@
 """
 homeassistant.components.isy994
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Connects to an ISY-994 controller and loads relevant components to control its
 devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
+
+For configuration details please visit the documentation for this component at
+https://home-assistant.io/components/isy994.html
 """
-# system imports
 import logging
 from urllib.parse import urlparse
 
-# homeassistant imports
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
@@ -19,7 +19,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, ATTR_SERVICE, ATTR_DISCOVERED,
     ATTR_FRIENDLY_NAME)
 
-# homeassistant constants
 DOMAIN = "isy994"
 DEPENDENCIES = []
 REQUIREMENTS = ['PyISY>=1.0.5']
@@ -31,7 +30,6 @@ SENSOR_STRING = 'Sensor'
 HIDDEN_STRING = '{HIDE ME}'
 CONF_TLS_VER = 'tls'
 
-# setup logger
 _LOGGER = logging.getLogger(__name__)
 
 
