@@ -46,6 +46,7 @@ omit =
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/mpd.py
+    homeassistant/components/media_player/squeezebox.py
     homeassistant/components/notify/file.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/nma.py
