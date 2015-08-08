@@ -16,9 +16,7 @@ mqtt:
   port: 1883
   topic: home-assistant
   keepalive: 60
-  client_id: home-assistant
   qos: 0
-  retain: 0
 
 Variables:
 
@@ -27,28 +25,21 @@ broker
 This is the IP address of your MQTT broker, e.g. 192.168.1.32.
 
 port
-*Required
-The network port to connect to, e.g. 1883.
+*Optional
+The network port to connect to. Default is 1883.
 
 topic
 *Required
 The MQTT topic to subscribe to, e.g. home-assistant.
 
 keepalive
-*Required
+*Optional
 The keep alive in seconds for this client, e.g. 60.
 
-client_id
-*Required
-A name for this client, e.g. home-assistant.
-
-qos: 0
-*Required
-Quality of service level to use for the subscription. 0, 1, or 2.
-
-retain: 0
-*Required
-If message should be retained. 0 or 1.
+qos
+*Optional
+Quality of service level to use for the subscription.
+0, 1, or 2, defaults to 0.
 """
 import logging
 
@@ -66,9 +57,22 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "mqtt"
 DEPENDENCIES = []
 MQTT_CLIENT = None
+MQTT_CLIENT_ID = 'home-assistant'
+MQTT_DEFAULT_PORT = 1883
+MQTT_DEFAULT_KEEPALIVE = 60
+MQTT_DEFAULT_QOS = 0
 MQTT_SEND = 'mqtt_send'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
 REQUIREMENTS = ['paho-mqtt>=1.1']
+
+ATTR_SUBTOPIC = 'subtopic'
+ATTR_PAYLOAD = 'payload'
+
+
+def send_message(hass, subtopic, payload):
+    """ Send an MQTT message. """
+    hass.services.call(DOMAIN, MQTT_SEND, {ATTR_SUBTOPIC: subtopic,
+                                           ATTR_PAYLOAD: payload})
 
 
 def setup(hass, config):
@@ -76,10 +80,7 @@ def setup(hass, config):
 
     if not validate_config(config,
                            {DOMAIN: ['broker',
-                                     'port',
-                                     'topic',
-                                     'keepalive',
-                                     'client_id']},
+                                     'topic']},
                            _LOGGER):
         return False
 
@@ -89,12 +90,14 @@ def setup(hass, config):
 
     global MQTT_CLIENT
 
-    MQTT_CLIENT = MQTT(hass,
-                       config[DOMAIN]['broker'],
-                       config[DOMAIN]['port'],
-                       config[DOMAIN]['topic'],
-                       config[DOMAIN]['keepalive'],
-                       config[DOMAIN]['client_id'])
+    broker = config[DOMAIN]['broker']
+    port = config[DOMAIN].get('port', MQTT_DEFAULT_PORT)
+    topic = config[DOMAIN]['topic']
+    keepalive = config[DOMAIN].get('keepalive', MQTT_DEFAULT_KEEPALIVE)
+    qos = config[DOMAIN].get('qos', MQTT_DEFAULT_QOS)
+
+    MQTT_CLIENT = MQTT(hass, broker, port, topic, keepalive, qos,
+                       MQTT_CLIENT_ID)
 
     def stop_mqtt(event):
         """ Stop MQTT component. """
@@ -113,15 +116,18 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mqtt)
 
-    def send_message(call):
-        """ Sending an MQTT message. """
-        subtopic = 'master'
-        complete_topic = 'home-assistant/{}'.format(str(subtopic))
-        MQTT_CLIENT.publish(complete_topic, str(call))
+    def mqtt_message(call):
+        """ Handle sending MQTT message service calls. """
+        subtopic = call.data.get(ATTR_SUBTOPIC)
+        complete_topic = '{}/{}'.format(str(topic), str(subtopic))
+
+        payload = call.data.get(ATTR_PAYLOAD)
+
+        MQTT_CLIENT.publish(complete_topic, payload=payload)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
-    hass.services.register(DOMAIN, MQTT_SEND, send_message)
+    hass.services.register(DOMAIN, MQTT_SEND, mqtt_message)
 
     return True
 
@@ -131,14 +137,14 @@ def setup(hass, config):
 # pylint: disable=too-many-arguments, invalid-name
 class MQTT(object):
     """ Implements messaging service for MQTT. """
-    def __init__(self, hass, broker, port, topic, keepalive, clientid=None):
+    def __init__(self, hass, broker, port, topic, keepalive, qos, clientid):
 
         self.hass = hass
         self._broker = broker
         self._port = port
         self._topic = topic
         self._keepalive = keepalive
-        self.msg = None
+        self._qos = qos
 
         self._mqttc = mqtt.Client(clientid)
         self._mqttc.on_message = self.mqtt_on_message
@@ -156,7 +162,7 @@ class MQTT(object):
 
     def mqtt_on_subscribe(self, mqttc, obj, mid, granted_qos):
         """ Subscribe callback """
-        complete_topic = self._topic + '/#'
+        complete_topic = '{}/#'.format(self._topic)
         _LOGGER.info('Subscribed to %s', complete_topic)
 
     def mqtt_on_message(self, mqttc, obj, msg):
@@ -169,7 +175,7 @@ class MQTT(object):
 
     def subscribe(self, topic):
         """ Subscribe to a topic. """
-        self._mqttc.subscribe(self._topic, 0)
+        self._mqttc.subscribe(self._topic, qos=self._qos)
 
     def unsubscribe(self, topic):
         """ Unsubscribe from topic. """
@@ -184,7 +190,7 @@ class MQTT(object):
         self._mqttc.connect(self._broker,
                             int(self._port),
                             int(self._keepalive))
-        self._mqttc.subscribe(self._topic + '/#', 0)
+        self._mqttc.subscribe('{}/#'.format(self._topic), qos=self._qos)
         self._mqttc.loop_start()
 
     def publish(self, topic, payload):
