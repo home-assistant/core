@@ -57,6 +57,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF)
 
 _LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
