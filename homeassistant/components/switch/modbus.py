@@ -38,6 +38,7 @@ import homeassistant.components.modbus as modbus
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

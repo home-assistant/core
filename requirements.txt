@@ -106,3 +106,7 @@ RPi.GPIO >=0.5.11
 
 # PAHO MQTT Binding (protocol.mqtt)
 paho-mqtt>=1.1
+
+# PyModbus (modbus)
+pymodbus>=1.2.0
+
