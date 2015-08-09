@@ -46,6 +46,7 @@ The keep alive in seconds for this client. Default is 60.
 import logging
 import socket
 
+from homeassistant import HomeAssistantError
 import homeassistant.util as util
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
@@ -152,6 +153,7 @@ def setup(hass, config):
 
 # This is based on one of the paho-mqtt examples:
 # http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.python.git/tree/examples/sub-class.py
+# pylint: disable=too-many-arguments
 class MQTT(object):
     """ Implements messaging service for MQTT. """
     def __init__(self, hass, broker, port, client_id, keepalive, username,
@@ -181,6 +183,7 @@ class MQTT(object):
     def unsubscribe(self, topic):
         """ Unsubscribe from topic. """
         result, mid = self._mqttc.unsubscribe(topic)
+        _raise_on_error(result)
         self._progress[mid] = topic
 
     def start(self):
@@ -196,10 +199,11 @@ class MQTT(object):
         if topic in self.topics:
             return
         result, mid = self._mqttc.subscribe(topic, qos)
+        _raise_on_error(result)
         self._progress[mid] = topic
         self.topics[topic] = None
 
-    def _mqtt_on_connect(self, mqttc, obj, flags, rc):
+    def _mqtt_on_connect(self, mqttc, obj, flags, result_code):
         """ On connect, resubscribe to all topics we were subscribed to. """
         old_topics = self.topics
         self._progress = {}
@@ -230,3 +234,9 @@ class MQTT(object):
             ATTR_QOS: msg.qos,
             ATTR_PAYLOAD: msg.payload.decode('utf-8'),
         })
+
+
+def _raise_on_error(result):
+    """ Raise error if error result. """
+    if result != 0:
+        raise HomeAssistantError('Error talking to MQTT: {}'.format(result))
