@@ -84,7 +84,7 @@ class LimitlessLED(Light):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        self.led.set_brightness(self._brightness, self.group)
+        self.led.set_brightness(self._brightness / 255.0, self.group)
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
