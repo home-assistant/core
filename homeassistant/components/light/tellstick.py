@@ -5,6 +5,8 @@ from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.const import ATTR_FRIENDLY_NAME
 import tellcore.constants as tellcore_constants
 
+REQUIREMENTS = ['tellcore-py>=1.0.4']
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return tellstick lights. """
