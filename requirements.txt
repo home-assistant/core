@@ -108,5 +108,5 @@ RPi.GPIO >=0.5.11
 paho-mqtt>=1.1
 
 # PyModbus (modbus)
-pymodbus>=1.2.0
+https://github.com/bashwork/pymodbus/archive/python3.zip#pymodbus>=1.2.0
 
