@@ -38,7 +38,8 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
 DOMAIN = "modbus"
 
 DEPENDENCIES = []
-REQUIREMENTS = ['pymodbus>=1.2.0']
+REQUIREMENTS = ['https://github.com/bashwork/pymodbus/archive/python3.zip'
+                '#pymodbus>=1.2.0']
 
 # Type of network
 MEDIUM = "type"
