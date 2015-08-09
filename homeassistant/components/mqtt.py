@@ -21,6 +21,8 @@ mqtt:
   port: 1883
   client_id: home-assistant-1
   keepalive: 60
+  username: your_username
+  password: your_secret_password
 
 Variables:
 
@@ -69,6 +71,8 @@ CONF_BROKER = 'broker'
 CONF_PORT = 'port'
 CONF_CLIENT_ID = 'client_id'
 CONF_KEEPALIVE = 'keepalive'
+CONF_USERNAME = 'username'
+CONF_PASSWORD = 'password'
 
 ATTR_QOS = 'qos'
 ATTR_TOPIC = 'topic'
@@ -109,10 +113,13 @@ def setup(hass, config):
     port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
     client_id = util.convert(conf.get(CONF_CLIENT_ID), str)
     keepalive = util.convert(conf.get(CONF_KEEPALIVE), int, DEFAULT_KEEPALIVE)
+    username = util.convert(conf.get(CONF_USERNAME), str)
+    password = util.convert(conf.get(CONF_PASSWORD), str)
 
     global MQTT_CLIENT
     try:
-        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive)
+        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
+                           password)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -147,7 +154,8 @@ def setup(hass, config):
 # http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.python.git/tree/examples/sub-class.py
 class MQTT(object):
     """ Implements messaging service for MQTT. """
-    def __init__(self, hass, broker, port, client_id, keepalive):
+    def __init__(self, hass, broker, port, client_id, keepalive, username,
+                 password):
         import paho.mqtt.client as mqtt
 
         self.hass = hass
@@ -158,6 +166,8 @@ class MQTT(object):
             self._mqttc = mqtt.Client()
         else:
             self._mqttc = mqtt.Client(client_id)
+        if username is not None:
+            self._mqttc.username_pw_set(username, password)
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
         self._mqttc.on_connect = self._mqtt_on_connect
