@@ -52,30 +52,28 @@ def mock_service(hass, domain, service):
     return calls
 
 
+def fire_time_changed(hass, time):
+    hass.bus.fire(EVENT_TIME_CHANGED, {'now': time})
+
+
 def trigger_device_tracker_scan(hass):
     """ Triggers the device tracker to scan. """
-    hass.bus.fire(
-        EVENT_TIME_CHANGED,
-        {'now':
-         dt_util.utcnow().replace(second=0) + timedelta(hours=1)})
+    fire_time_changed(
+        hass, dt_util.utcnow().replace(second=0) + timedelta(hours=1))
 
 
 def ensure_sun_risen(hass):
     """ Trigger sun to rise if below horizon. """
-    if not sun.is_on(hass):
-        hass.bus.fire(
-            EVENT_TIME_CHANGED,
-            {'now':
-             sun.next_rising_utc(hass) + timedelta(seconds=10)})
+    if sun.is_on(hass):
+        return
+    fire_time_changed(hass, sun.next_rising_utc(hass) + timedelta(seconds=10))
 
 
 def ensure_sun_set(hass):
     """ Trigger sun to set if above horizon. """
-    if sun.is_on(hass):
-        hass.bus.fire(
-            EVENT_TIME_CHANGED,
-            {'now':
-             sun.next_setting_utc(hass) + timedelta(seconds=10)})
+    if not sun.is_on(hass):
+        return
+    fire_time_changed(hass, sun.next_setting_utc(hass) + timedelta(seconds=10))
 
 
 def mock_state_change_event(hass, new_state, old_state=None):

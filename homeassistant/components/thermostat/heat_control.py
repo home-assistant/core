@@ -62,7 +62,9 @@ import logging
 import datetime
 import homeassistant.components as core
 
+import homeassistant.util as util
 from homeassistant.components.thermostat import ThermostatDevice
+from homeassistant.helpers.event import track_state_change
 from homeassistant.const import TEMP_CELCIUS, STATE_ON, STATE_OFF
 
 TOL_TEMP = 0.3
@@ -90,27 +92,29 @@ class HeatControl(ThermostatDevice):
         self.target_sensor_entity_id = config.get("target_sensor")
 
         self.time_temp = []
-        for time_temp in list(config.get("time_temp").split(",")):
-            time, temp = time_temp.split(':')
-            time_start, time_end = time.split('-')
-            start_time = datetime.datetime.time(datetime.datetime.
-                                                strptime(time_start, '%H%M'))
-            end_time = datetime.datetime.time(datetime.datetime.
-                                              strptime(time_end, '%H%M'))
-            self.time_temp.append((start_time, end_time, float(temp)))
+        if config.get("time_temp"):
+            for time_temp in list(config.get("time_temp").split(",")):
+                time, temp = time_temp.split(':')
+                time_start, time_end = time.split('-')
+                start_time = datetime.datetime.time(
+                    datetime.datetime.strptime(time_start, '%H%M'))
+                end_time = datetime.datetime.time(
+                    datetime.datetime.strptime(time_end, '%H%M'))
+                self.time_temp.append((start_time, end_time, float(temp)))
 
-        self.min_temp = float(config.get("min_temp"))
+        self._min_temp = util.convert(config.get("min_temp"), float, 0)
+        self._max_temp = util.convert(config.get("max_temp"), float, 100)
 
         self._manual_sat_temp = None
         self._away = False
         self._heater_manual_changed = True
 
-        hass.states.track_change(self.heater_entity_id,
-                                 self._heater_turned_on,
-                                 STATE_OFF, STATE_ON)
-        hass.states.track_change(self.heater_entity_id,
-                                 self._heater_turned_off,
-                                 STATE_ON, STATE_OFF)
+        track_state_change(hass, self.heater_entity_id,
+                           self._heater_turned_on,
+                           STATE_OFF, STATE_ON)
+        track_state_change(hass, self.heater_entity_id,
+                           self._heater_turned_off,
+                           STATE_ON, STATE_OFF)
 
     @property
     def name(self):
@@ -178,7 +182,7 @@ class HeatControl(ThermostatDevice):
         if not self._heater_manual_changed:
             pass
         else:
-            self.set_temperature(100)
+            self.set_temperature(self.max_temp)
 
         self._heater_manual_changed = True
 
@@ -194,3 +198,13 @@ class HeatControl(ThermostatDevice):
     def turn_away_mode_off(self):
         """ Turns away mode off. """
         self._away = False
+
+    @property
+    def min_temp(self):
+        """ Return minimum temperature. """
+        return self._min_temp
+
+    @property
+    def max_temp(self):
+        """ Return maxmum temperature. """
+        return self._max_temp
