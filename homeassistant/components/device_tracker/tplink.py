@@ -31,6 +31,7 @@ password
 The password for your given admin account.
 
 """
+import base64
 import logging
 from datetime import timedelta
 import re
@@ -55,7 +56,10 @@ def get_scanner(hass, config):
                            _LOGGER):
         return None
 
-    scanner = TplinkDeviceScanner(config[DOMAIN])
+    scanner = Tplink2DeviceScanner(config[DOMAIN])
+
+    if not scanner.success_init:
+        scanner = TplinkDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -112,6 +116,66 @@ class TplinkDeviceScanner(object):
 
             if result:
                 self.last_results = [mac.replace("-", ":") for mac in result]
+                return True
+
+            return False
+
+
+class Tplink2DeviceScanner(TplinkDeviceScanner):
+    """ This class queries a wireless router running newer version of TP-Link
+    firmware for connected devices.
+    """
+
+    def scan_devices(self):
+        """ Scans for new devices and return a
+            list containing found device ids. """
+
+        self._update_info()
+        return self.last_results.keys()
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """ The TP-Link firmware doesn't save the name of the wireless
+            device. """
+
+        return self.last_results.get(device)
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """ Ensures the information from the TP-Link router is up to date.
+            Returns boolean if scanning successful. """
+
+        with self.lock:
+            _LOGGER.info("Loading wireless clients...")
+
+            url = 'http://{}/data/map_access_wireless_client_grid.json'\
+                .format(self.host)
+            referer = 'http://{}'.format(self.host)
+
+            # Router uses Authorization cookie instead of header
+            # Let's create the cookie
+            username_password = '{}:{}'.format(self.username, self.password)
+            b64_encoded_username_password = base64.b64encode(
+                username_password.encode('ascii')
+            ).decode('ascii')
+            cookie = 'Authorization=Basic {}'\
+                .format(b64_encoded_username_password)
+
+            response = requests.post(url, headers={'referer': referer,
+                                                   'cookie': cookie})
+
+            try:
+                result = response.json().get('data')
+            except ValueError:
+                _LOGGER.error("Router didn't respond with JSON. "
+                              "Check if credentials are correct.")
+                return False
+
+            if result:
+                self.last_results = {
+                    device['mac_addr'].replace('-', ':'): device['name']
+                    for device in result
+                }
                 return True
 
             return False
