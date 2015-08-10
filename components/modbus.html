@@ -144,6 +144,9 @@
 <span class='line-number'>32</span>
 <span class='line-number'>33</span>
 <span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">modbus</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">serial</span>
@@ -167,6 +170,9 @@
 </span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My boolean sensor</span>
 </span><span class='line'>        <span class="l-Scalar-Plain">2</span><span class="p-Indicator">:</span>
 </span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My other boolean sensor</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">coils</span><span class="p-Indicator">:</span>
+</span><span class='line'>        <span class="l-Scalar-Plain">0</span><span class="p-Indicator">:</span>
+</span><span class='line'>            <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My coil switch</span>
 </span><span class='line'>
 </span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">modbus</span>

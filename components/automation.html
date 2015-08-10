@@ -137,9 +137,9 @@
 </span><span class='line'>  service_data: {"message":"The sun has set"}</span></code></pre></td></tr></table></div></figure>
 
 
-<h2>Setting up triggers</h2>
+<h2><a class='title-link' name='setting-up-triggers' href='#setting-up-triggers'></a> Setting up triggers</h2>
 
-<h4>Time-based automation</h4>
+<h4><a class='title-link' name='time-based-automation' href='#time-based-automation'></a> Time-based automation</h4>
 
 <p>This allows you to trigger actions whenever the time matches your filter. You can setup filters to match on hours, minutes and seconds. Any filter that you omit will match all values.</p>
 
@@ -167,7 +167,7 @@
 </span><span class='line'>  time_seconds: 0</span></code></pre></td></tr></table></div></figure>
 
 
-<h4>State-based automation</h4>
+<h4><a class='title-link' name='state-based-automation' href='#state-based-automation'></a> State-based automation</h4>
 
 <p>This allows you to trigger actions based on state changes of any entity within Home Assistant. You can omit the <code>state_from</code> and <code>state_to</code> to match all.</p>
 
@@ -214,7 +214,29 @@
 </p>
 
 
-<h2>Setting up the action</h2>
+<h4><a class='title-link' name='mqtt-based-automation' href='#mqtt-based-automation'></a> MQTT-based automation</h4>
+
+<p>This allows you to trigger actions based on messages on an MQTT topic. You can specify an optional payload to match as well.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>  # Match any changes to bathroom light
+</span><span class='line'>  platform: mqtt
+</span><span class='line'>  mqtt_topic: home/bathroom/light
+</span><span class='line'>
+</span><span class='line'>  # Match only if bathroom light is turned on
+</span><span class='line'>  platform: mqtt
+</span><span class='line'>  mqtt_topic: home/bathroom/light
+</span><span class='line'>  mqtt_payload: 'on'</span></code></pre></td></tr></table></div></figure>
+
+
+<h2><a class='title-link' name='setting-up-the-action' href='#setting-up-the-action'></a> Setting up the action</h2>
 
 <p>Currently the only supported action is calling a service. Services are what devices expose to be controlled, so this will allow us to control anything that Home Assistant can control.</p>
 
@@ -244,7 +266,7 @@
 </span><span class='line'>  service_data: {"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
 
 
-<h2>Putting it all together</h2>
+<h2><a class='title-link' name='putting-it-all-together' href='#putting-it-all-together'></a> Putting it all together</h2>
 
 <p>For every combination of a trigger and an action we will have to combine the configuration lines and add it to an <code>automation</code> component entry in <code>configuration.yaml</code>. You can add an optional <code>alias</code> key to the configuration to make the logs more understandable. To setup multiple entries, append 2, 3 etc to the section name. An example of a <code>configuration.yaml</code> file:</p>
 

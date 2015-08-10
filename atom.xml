@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-08-05T16:49:05-07:00</updated>
+  <updated>2015-08-09T23:50:11-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,170 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported]]></title>
+    <link href="https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/"/>
+    <updated>2015-08-09T18:01:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support</id>
+    <content type="html"><![CDATA[<p>It&rsquo;s time for the August release and there is some serious good stuff this time. The core of Home Assistant has gone some serious clean up and a bump in test coverage thanks to <a href="https://github.com/balloob">@balloob</a>. If you&rsquo;re a developer, make sure you read up on <a href="https://github.com/balloob/home-assistant/pull/251">the deprecation notices</a>. <a href="https://github.com/fabaff">@fabaff</a> did another great round of documentating all the various components.</p>
+
+<p><strong>MQTT Support</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='50' />
+The big new addition in this release is the support for the MQTT protocol by <a href="https://github.com/fabaff">@fabaff</a> with some help from <a href="https://github.com/balloob">@balloob</a>. It will now be possible to integrate any IoT device that talks via MQTT. For the initial release we support connecting Home Assistant to a broker (no TLS yet). Components can now subscribe and publish to MQTT topics (<a href="https://github.com/balloob/home-assistant/blob/dev/config/custom_components/mqtt_example.py">see the example</a>) and also support for the automation component <a href="https://home-assistant.io/components/automation.html#mqtt-based-automation">has been added</a>. For more information, see <a href="https://home-assistant.io/components/mqtt.html">the MQTT component page</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IP_ADDRESS_BROKER</span>
+</span><span class='line'>  <span class="c1"># All the other options are optional:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1883</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">keepalive</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">60</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_username</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_secret_password</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!--more-->
+
+
+<p><strong>Raspberry PI GPIO Support</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/raspberry-pi.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/gbarba">@gbarba</a> has contributed support to use the general purpose input and output pins on a Raspberry PI as switches inside Home Assistant.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rpi_gpio</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">ports</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">11</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Fan Office</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">12</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light Desk</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>ASUSWRT based routers</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/asus.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/persandstrom">@persandstrom</a> has contributed support to do prescence detection using ASUSWRT based routers.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">asuswrt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ROUTER_IP</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Logitech Squeezebox media player support</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/logitech.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/persandstrom">@persandstrom</a> also contributed support for the Logitech Squeezebox media player. This allows you to control your Logitech Squeezebox from Home Assistant.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">media_player</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">squeezebox</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.21</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9090</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">user</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">password</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Slack notification support</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/slack.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/jamespcole">@jamespcole</a> has contributed a Slack platform for the notification platform. This allows you to deliver messages to any channel.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">slack</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">default_channel</span><span class="p-Indicator">:</span> <span class="s">&#39;#general&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Edimax Smart Switches support</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/edimax.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/rkabadi">@rkabadi</a> has contributed support for integrating Edimax Smart Switches into Home Assistant.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">edimax</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.32</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Edimax Smart Plug</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>RFXtrx sensor support</strong><br>
+<a href="https://github.com/danielhiversen">@danielhiversen</a> has contributed support for RFXtrx sensors. It supports sensors that communicate in the frequency range of 433.92 MHz.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rfxtrx</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">device</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PATH_TO_DEVICE</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The path to your device, e.g. <code>/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0</code></p>
+
+<p><strong>TEMPer temperature sensor support</strong><br>
+Support for Temper temperature sensors has been contributed by <a href="https://github.com/rkabadi">@rkabadi</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">temper</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported]]></title>

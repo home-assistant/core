@@ -114,7 +114,76 @@
 <label class='menu-selector docker' for='docker-install'>Install using Docker</label>
 <div class='install-instructions normal'>
 
+<h3>Preparation</h3>
+<!-- ###### Preparation START ######################## -->
+<div class='prep-instructions-container'>
+<input name='prep-instructions' type='radio' id='generic-prep' checked>
+<input name='prep-instructions' type='radio' id='fedora-prep'>
+<input name='prep-instructions' type='radio' id='centos-prep'>
+<label class='menu-selector generic' for='generic-prep'>Generic</label>
+<label class='menu-selector fedora' for='fedora-prep'>Fedora</label>
+<label class='menu-selector centos' for='centos-prep'>CentOS</label>
+
+<!-- ###### Preparation instructions Generic ######################## -->
+<div class='prep-instructions generic'>
 Installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/'>Python 3.4</a> and <a href='http://git-scm.com/downloads'>git</a> installed and execute the following code in a console:
+
+
+</div>
+<!-- ###### Preparation instructions Fedora ######################## -->
+<div class='prep-instructions fedora'>
+<p>The preparation of a <a href='https://fedoraproject.org'>Fedora</a> 22 host will only take a couple of minutes. First install Python 3.4, <code>git</code> and the other needed packages out of the <a href='https://admin.fedoraproject.org/pkgdb'>Fedora Package Collection</a>. This ensure that you receive updates in the future.</p>
+
+<p class='note'>
+It&#8217;s assumed that your user has an entry in the sudoers file. Otherwise, run the commands which needs more privileges as root.
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo dnf -y install python3 python3-devel git gcc
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+<!-- ##### Preparation instructions Centos ######################### -->
+<div class='prep-instructions centos'>
+
+<p><a href='https://www.centos.org/'>CentOS</a> is providing longtime support and often not shipping the latest release of a software component. To run, Python 3.x on CentOS <a href='https://www.softwarecollections.org/en/scls/rhscl/rh-python34/'>Software Collections</a> needs to be activated.</p>
+
+<h5>Step 1. Install the tools for the Software Collection</h5>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install scl-utils
+</span></code></pre></td></tr></table></div></figure>
+
+<h5>Step 2. Make the repository available.</h5>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install rhscl-rh-python34-*.noarch.rpm
+</span></code></pre></td></tr></table></div></figure>
+
+<h5>Step 3. Install Python 3.x</h5>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install rh-python34
+</span></code></pre></td></tr></table></div></figure>
+
+<h5>Step 4. Start using software collections:</h5>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo scl <span class="nb">enable </span>rh-python34 bash
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+</div>
+
+<br />
+<!-- ###### Preparation END ######################## -->
+
+
+
+
+
+<h3>Installation</h3>
 
 <p>
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -189,7 +258,7 @@ When using boot2docker on OS X you are unable to map the local time to your Dock
 </span><span class='line'><span class="nb">eval</span> <span class="s2">&quot;$(pyenv virtualenv-init -)&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p><b>Step 2. Install requirements</b></p>
+<h5>Step 2. Install requirements</h5>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>

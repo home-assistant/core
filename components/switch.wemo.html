@@ -106,14 +106,16 @@
   
 
   <p><img src='/images/supported_brands/belkin_wemo.png' class='brand' />
-The wemo platform allows you to control your <a href="http://www.belkin.com/us/p/P-F7C027/">Belkin WeMo</a>  switches from within Home Assistant.</p>
+The wemo platform allows you to control your <a href="http://www.belkin.com/us/p/P-F7C027/">Belkin WeMo</a> switches from within Home Assistant.</p>
 
 <p>To add Wemo switches to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">wemo</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">wemo</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
