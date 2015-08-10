@@ -104,6 +104,7 @@ class LimitlessLED(Light):
     def _xy_to_led_color(self, xy_color):
         """ Convert an XY color to the closest LedController color string """
         def abs_dist_squared(p_0, p_1):
+            """ Returns the absolute value of the squared distance """
             return abs((p_0[0] - p_1[0])**2 + (p_0[1] - p_1[1])**2)
 
         candidates = [(abs_dist_squared(xy_color, x[0]), x[1]) for x in
