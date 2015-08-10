@@ -35,6 +35,8 @@ import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
+REQUIREMENTS = ['tellcore-py>=1.0.4']
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -77,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             sensor_name = config[ts_sensor.id]
         except KeyError:
-            if 'only_named' in config:
+            if util.convert(config.get('only_named'), bool, False):
                 continue
             sensor_name = str(ts_sensor.id)
 

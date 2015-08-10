@@ -18,7 +18,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME)
 import homeassistant.components.device_tracker as device_tracker
 
-from helpers import get_test_home_assistant
+from tests.common import get_test_home_assistant
 
 
 def setUpModule():   # pylint: disable=invalid-name

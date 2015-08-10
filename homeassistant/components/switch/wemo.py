@@ -8,21 +8,14 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 
+REQUIREMENTS = ['pywemo>=0.1']
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return WeMo switches. """
-    try:
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.external.pywemo.pywemo as pywemo
-        import homeassistant.external.pywemo.pywemo.discovery as discovery
-    except ImportError:
-        logging.getLogger(__name__).exception((
-            "Failed to import pywemo. "
-            "Did you maybe not run `git submodule init` "
-            "and `git submodule update`?"))
-
-        return
+    import pywemo
+    import pywemo.discovery as discovery
 
     if discovery_info is not None:
         device = discovery.device_from_description(discovery_info)
