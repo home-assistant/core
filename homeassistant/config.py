@@ -13,14 +13,11 @@ from homeassistant.const import (
     CONF_TIME_ZONE)
 import homeassistant.util.location as loc_util
 
-
 _LOGGER = logging.getLogger(__name__)
 
-
 YAML_CONFIG_FILE = 'configuration.yaml'
-CONF_CONFIG_FILE = 'home-assistant.conf'
 
-DEFAULT_CONFIG = [
+DEFAULT_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
      'running'),
@@ -30,9 +27,9 @@ DEFAULT_CONFIG = [
     (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celcius, F for Fahrenheit'),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
-]
-DEFAULT_COMPONENTS = [
-    'discovery', 'frontend', 'conversation', 'history', 'logbook', 'sun']
+)
+DEFAULT_COMPONENTS = (
+    'discovery', 'frontend', 'conversation', 'history', 'logbook', 'sun')
 
 
 def ensure_config_exists(config_dir, detect_location=True):
@@ -95,24 +92,14 @@ def create_default_config(config_dir, detect_location=True):
 
 def find_config_file(config_dir):
     """ Looks in given directory for supported config files. """
-    for filename in (YAML_CONFIG_FILE, CONF_CONFIG_FILE):
-        config_path = os.path.join(config_dir, filename)
+    config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
-        if os.path.isfile(config_path):
-            return config_path
-
-    return None
+    return config_path if os.path.isfile(config_path) else None
 
 
 def load_config_file(config_path):
     """ Loads given config file. """
-    config_ext = os.path.splitext(config_path)[1]
-
-    if config_ext == '.yaml':
-        return load_yaml_config_file(config_path)
-
-    elif config_ext == '.conf':
-        return load_conf_config_file(config_path)
+    return load_yaml_config_file(config_path)
 
 
 def load_yaml_config_file(config_path):
@@ -120,17 +107,16 @@ def load_yaml_config_file(config_path):
     import yaml
 
     def parse(fname):
-        """ Actually parse the file.  """
+        """ Parse a YAML file.  """
         try:
             with open(fname) as conf_file:
                 # If configuration file is empty YAML returns None
                 # We convert that to an empty dict
-                conf_dict = yaml.load(conf_file) or {}
+                return yaml.load(conf_file) or {}
         except yaml.YAMLError:
-            _LOGGER.exception('Error reading YAML configuration file %s',
-                              fname)
-            raise HomeAssistantError()
-        return conf_dict
+            error = 'Error reading YAML configuration file {}'.format(fname)
+            _LOGGER.exception(error)
+            raise HomeAssistantError(error)
 
     def yaml_include(loader, node):
         """
@@ -153,21 +139,3 @@ def load_yaml_config_file(config_path):
         raise HomeAssistantError()
 
     return conf_dict
-
-
-def load_conf_config_file(config_path):
-    """ Parse the old style conf configuration. """
-    import configparser
-
-    config_dict = {}
-
-    config = configparser.ConfigParser()
-    config.read(config_path)
-
-    for section in config.sections():
-        config_dict[section] = {}
-
-        for key, val in config.items(section):
-            config_dict[section][key] = val
-
-    return config_dict
