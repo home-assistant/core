@@ -6,7 +6,7 @@ Allows to setup simple automation rules via the config file.
 """
 import logging
 
-from homeassistant.loader import get_component
+from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.helpers import config_per_platform
 from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID
@@ -27,7 +27,7 @@ def setup(hass, config):
     """ Sets up automation. """
 
     for p_type, p_config in config_per_platform(config, DOMAIN, _LOGGER):
-        platform = get_component('automation.{}'.format(p_type))
+        platform = prepare_setup_platform(hass, config, DOMAIN, p_type)
 
         if platform is None:
             _LOGGER.error("Unknown automation platform specified: %s", p_type)
