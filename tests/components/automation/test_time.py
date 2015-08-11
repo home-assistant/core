@@ -34,13 +34,13 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.stop()
 
     def test_if_fires_when_hour_matches(self):
-        automation.setup(self.hass, {
+        self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 CONF_PLATFORM: 'time',
                 time.CONF_HOURS: 0,
                 automation.CONF_SERVICE: 'test.automation'
             }
-        })
+        }))
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
 
@@ -49,13 +49,13 @@ class TestAutomationTime(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_when_minute_matches(self):
-        automation.setup(self.hass, {
+        self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 CONF_PLATFORM: 'time',
                 time.CONF_MINUTES: 0,
                 automation.CONF_SERVICE: 'test.automation'
             }
-        })
+        }))
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(minute=0))
 
@@ -64,13 +64,13 @@ class TestAutomationTime(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_when_second_matches(self):
-        automation.setup(self.hass, {
+        self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 CONF_PLATFORM: 'time',
                 time.CONF_SECONDS: 0,
                 automation.CONF_SERVICE: 'test.automation'
             }
-        })
+        }))
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
 
@@ -79,7 +79,7 @@ class TestAutomationTime(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_when_all_matches(self):
-        automation.setup(self.hass, {
+        self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 CONF_PLATFORM: 'time',
                 time.CONF_HOURS: 0,
@@ -87,7 +87,7 @@ class TestAutomationTime(unittest.TestCase):
                 time.CONF_SECONDS: 0,
                 automation.CONF_SERVICE: 'test.automation'
             }
-        })
+        }))
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=0, second=0))
