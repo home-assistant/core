@@ -6,6 +6,7 @@ Helper method for writing tests.
 """
 import os
 from datetime import timedelta
+from unittest import mock
 
 import homeassistant as ha
 import homeassistant.util.dt as dt_util
@@ -13,7 +14,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED)
-from homeassistant.components import sun
+from homeassistant.components import sun, mqtt
 
 
 def get_test_config_dir():
@@ -50,6 +51,14 @@ def mock_service(hass, domain, service):
         domain, service, lambda call: calls.append(call))
 
     return calls
+
+
+def fire_mqtt_message(hass, topic, payload, qos=0):
+    hass.bus.fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
+        mqtt.ATTR_TOPIC: topic,
+        mqtt.ATTR_PAYLOAD: payload,
+        mqtt.ATTR_QOS: qos,
+    })
 
 
 def fire_time_changed(hass, time):
@@ -91,6 +100,16 @@ def mock_state_change_event(hass, new_state, old_state=None):
 def mock_http_component(hass):
     hass.http = MockHTTP()
     hass.config.components.append('http')
+
+
+def mock_mqtt_component(hass):
+    with mock.patch('homeassistant.components.mqtt.MQTT'):
+        mqtt.setup(hass, {
+            mqtt.DOMAIN: {
+                mqtt.CONF_BROKER: 'mock-broker',
+            }
+        })
+        hass.config.components.append(mqtt.DOMAIN)
 
 
 class MockHTTP(object):

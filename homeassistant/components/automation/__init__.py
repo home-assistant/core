@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Sets up automation. """
+    success = False
 
     for p_type, p_config in config_per_platform(config, DOMAIN, _LOGGER):
         platform = prepare_setup_platform(hass, config, DOMAIN, p_type)
@@ -36,11 +37,12 @@ def setup(hass, config):
         if platform.register(hass, p_config, _get_action(hass, p_config)):
             _LOGGER.info(
                 "Initialized %s rule %s", p_type, p_config.get(CONF_ALIAS, ""))
+            success = True
         else:
             _LOGGER.error(
                 "Error setting up rule %s", p_config.get(CONF_ALIAS, ""))
 
-    return True
+    return success
 
 
 def _get_action(hass, config):
