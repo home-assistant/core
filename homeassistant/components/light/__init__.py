@@ -1,6 +1,6 @@
 """
 homeassistant.components.light
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to interact with lights.
 
