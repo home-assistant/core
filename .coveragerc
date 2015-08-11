@@ -16,8 +16,6 @@ omit =
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
-    homeassistant/components/mqtt.py
-
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
