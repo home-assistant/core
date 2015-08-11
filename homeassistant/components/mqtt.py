@@ -94,7 +94,8 @@ def subscribe(hass, topic, callback, qos=0):
     def mqtt_topic_subscriber(event):
         """ Match subscribed MQTT topic. """
         if _match_topic(topic, event.data[ATTR_TOPIC]):
-            callback(topic, event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
+            callback(event.data[ATTR_TOPIC], event.data[ATTR_PAYLOAD],
+                     event.data[ATTR_QOS])
 
     hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED, mqtt_topic_subscriber)
 
@@ -244,7 +245,12 @@ def _raise_on_error(result):
 
 def _match_topic(subscription, topic):
     """ Returns if topic matches subscription. """
-    if not subscription.endswith('#'):
-        return subscription == topic
+    if subscription.endswith('#'):
+        return (subscription[:-2] == topic or
+                topic.startswith(subscription[:-1]))
 
-    return subscription[:-2] == topic or topic.startswith(subscription[:-1])
+    sub_parts = subscription.split('/')
+    topic_parts = topic.split('/')
+
+    return (len(sub_parts) == len(topic_parts) and
+            all(a == b for a, b in zip(sub_parts, topic_parts) if a != '+'))
