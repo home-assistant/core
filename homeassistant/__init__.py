@@ -628,12 +628,12 @@ class ServiceRegistry(object):
     def _execute_service(self, service_and_call):
         """ Executes a service and fires a SERVICE_EXECUTED event. """
         service, call = service_and_call
-
         service(call)
 
-        self._bus.fire(
-            EVENT_SERVICE_EXECUTED,
-            {ATTR_SERVICE_CALL_ID: call.data[ATTR_SERVICE_CALL_ID]})
+        if ATTR_SERVICE_CALL_ID in call.data:
+            self._bus.fire(
+                EVENT_SERVICE_EXECUTED,
+                {ATTR_SERVICE_CALL_ID: call.data[ATTR_SERVICE_CALL_ID]})
 
     def _generate_unique_id(self):
         """ Generates a unique service call id. """
