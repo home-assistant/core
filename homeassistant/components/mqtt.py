@@ -92,8 +92,8 @@ def publish(hass, topic, payload):
 def subscribe(hass, topic, callback, qos=0):
     """ Subscribe to a topic. """
     def mqtt_topic_subscriber(event):
-        """ Subscribes to a specific MQTT topic. """
-        if event.data[ATTR_TOPIC] == topic:
+        """ Match subscribed MQTT topic. """
+        if _match_topic(topic, event.data[ATTR_TOPIC]):
             callback(topic, event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
 
     hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED, mqtt_topic_subscriber)
@@ -240,3 +240,11 @@ def _raise_on_error(result):
     """ Raise error if error result. """
     if result != 0:
         raise HomeAssistantError('Error talking to MQTT: {}'.format(result))
+
+
+def _match_topic(subscription, topic):
+    """ Returns if topic matches subscription. """
+    if not subscription.endswith('#'):
+        return subscription == topic
+
+    return subscription[:-2] == topic or topic.startswith(subscription[:-1])
