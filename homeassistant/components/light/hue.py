@@ -1,4 +1,8 @@
-""" Support for Hue lights. """
+"""
+homeassistant.components.light.hue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Hue lights.
+"""
 import logging
 import socket
 from datetime import timedelta
