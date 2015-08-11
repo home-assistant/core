@@ -56,8 +56,7 @@ def _get_action(hass, config):
             service_data = config.get(CONF_SERVICE_DATA, {})
 
             if not isinstance(service_data, dict):
-                _LOGGER.error(
-                    "%s should be a serialized JSON object", CONF_SERVICE_DATA)
+                _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
                 service_data = {}
 
             if CONF_SERVICE_ENTITY_ID in config:
