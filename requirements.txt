@@ -110,3 +110,5 @@ paho-mqtt>=1.1
 # PyModbus (modbus)
 https://github.com/bashwork/pymodbus/archive/python3.zip#pymodbus>=1.2.0
 
+# Verisure
+https://github.com/persandstrom/python-verisure/archive/master.zip
