@@ -155,7 +155,7 @@ def setup(hass, config):
 # This is based on one of the paho-mqtt examples:
 # http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.python.git/tree/examples/sub-class.py
 # pylint: disable=too-many-arguments
-class MQTT(object):
+class MQTT(object):  # pragma: no cover
     """ Implements messaging service for MQTT. """
     def __init__(self, hass, broker, port, client_id, keepalive, username,
                  password):
@@ -237,7 +237,7 @@ class MQTT(object):
         })
 
 
-def _raise_on_error(result):
+def _raise_on_error(result):  # pragma: no cover
     """ Raise error if error result. """
     if result != 0:
         raise HomeAssistantError('Error talking to MQTT: {}'.format(result))
