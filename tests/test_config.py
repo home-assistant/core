@@ -10,13 +10,12 @@ import unittest.mock as mock
 import os
 
 from homeassistant import DOMAIN, HomeAssistantError
-import homeassistant.util.location as location_util
 import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
 
-from common import get_test_config_dir
+from common import get_test_config_dir, mock_detect_location_info
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -26,23 +25,6 @@ def create_file(path):
     """ Creates an empty file. """
     with open(path, 'w'):
         pass
-
-
-def mock_detect_location_info():
-    """ Mock implementation of util.detect_location_info. """
-    return location_util.LocationInfo(
-        ip='1.1.1.1',
-        country_code='US',
-        country_name='United States',
-        region_code='CA',
-        region_name='California',
-        city='San Diego',
-        zip_code='92122',
-        time_zone='America/Los_Angeles',
-        latitude='2.0',
-        longitude='1.0',
-        use_fahrenheit=True,
-    )
 
 
 class TestConfig(unittest.TestCase):
