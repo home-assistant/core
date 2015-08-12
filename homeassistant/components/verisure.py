@@ -85,5 +85,5 @@ def update():
         for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_SMARTPLUG):
             STATUS[MY_PAGES.DEVICE_SMARTPLUG][overview.id] = overview
     except ConnectionError as ex:
-        _LOGGER.error('Caught connection error %, tries to reconnect', ex)
+        _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
         MY_PAGES.login()
