@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     napi = nest.Nest(username, password)
 
     add_devices([
-        NestThermostat(structure, device)
+        NestThermostat(nest.utils, structure, device)
         for structure in napi.structures
         for device in structure.devices
     ])
@@ -43,14 +43,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NestThermostat(ThermostatDevice):
     """ Represents a Nest thermostat within Home Assistant. """
 
-    def __init__(self, structure, device):
+    def __init__(self, nest_utils, structure, device):
         self.structure = structure
         self.device = device
+        self.nest_utils = nest_utils
 
     @property
     def name(self):
         """ Returns the name of the nest, if any. """
-        return self.device.name
+        location = self.device.where
+        name = self.device.name
+        if location is None:
+            return name
+        else:
+            if name == '':
+                return location.capitalize()
+            else:
+                return location.capitalize() + '(' + name + ')'
 
     @property
     def unit_of_measurement(self):
@@ -97,9 +106,16 @@ class NestThermostat(ThermostatDevice):
         """ Returns if away mode is on. """
         return self.structure.away
 
+    def enforce_temp_units(self, temperature):
+        """ Enforces temp units in C for nest API, returns temp """
+        if self.hass.config.temperature_unit == self.unit_of_measurement:
+            return temperature
+        else:
+            return self.nest_utils.f_to_c(temperature)
+
     def set_temperature(self, temperature):
         """ Set new target temperature """
-        self.device.target = temperature
+        self.device.target = self.enforce_temp_units(temperature)
 
     def turn_away_mode_on(self):
         """ Turns away on. """
@@ -108,6 +124,24 @@ class NestThermostat(ThermostatDevice):
     def turn_away_mode_off(self):
         """ Turns away off. """
         self.structure.away = False
+
+    @property
+    def min_temp(self):
+        """ Identifies min_temp in Nest API or defaults if not available. """
+        temp = self.device.away_temperature.low
+        if temp is None:
+            return super().min_temp
+        else:
+            return round(self.hass.config.temperature(temp, TEMP_CELCIUS)[0])
+
+    @property
+    def max_temp(self):
+        """ Identifies mxn_temp in Nest API or defaults if not available. """
+        temp = self.device.away_temperature.high
+        if temp is None:
+            return super().max_temp
+        else:
+            return round(self.hass.config.temperature(temp, TEMP_CELCIUS)[0])
 
     def update(self):
         """ Python-nest has its own mechanism for staying up to date. """
