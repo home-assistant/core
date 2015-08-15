@@ -96,6 +96,7 @@ EFFECT_COLORLOOP = "colorloop"
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 DISCOVER_CHILD_LIGHTS = 'light.child_lights'
+DISCOVER_VERA_LIGHTS = 'light.vera_lights'
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
@@ -103,6 +104,7 @@ DISCOVERY_PLATFORMS = {
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.SERVICE_HUE: 'hue',
     DISCOVER_CHILD_LIGHTS: 'child_light',
+    DISCOVER_VERA_LIGHTS: 'vera'
 }
 
 PROP_TO_ATTR = {

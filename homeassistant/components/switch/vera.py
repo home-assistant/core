@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([new_switch])
 
         hass.states.track_change(
-        discovery_info.get('parent_entity_id'), new_switch.track_state)
+            discovery_info.get('parent_entity_id'), new_switch.track_state)
 
         new_switch.create_child_devices()
 
@@ -192,12 +192,10 @@ class VeraSwitch(ToggleEntity):
 class VeraControllerSwitch(ToggleEntity, VeraControllerDevice):
     """ Represents a Vera Switch that is discovered by a controller entity. """
 
-    def __init__(self, hass, config, device_data, discovery_info={}):
-
-        self._device_data = device_data
-        self._name = config.get('name', self._device_data.get('name'))
-        self._config = config
-        self._hass = hass
+    def __init__(self, hass, config, device_data, discovery_info=None):
+        super().__init__(hass, config, device_data)
+        if discovery_info is None:
+            discovery_info = {}
         self._state_variable = discovery_info.get('state_variable', None)
         self._vera_device_id = self._config.get(
             'vera_id',
@@ -236,8 +234,8 @@ class VeraControllerSwitch(ToggleEntity, VeraControllerDevice):
         service_data['action'] = 'switch'
         service_data['state'] = self._state
         service_data['extra_data'] = {
-                'vera_device_id': self._vera_device_id,
-                'vera_variable': 'Target'}
+            'vera_device_id': self._vera_device_id,
+            'vera_variable': 'Target'}
         self.hass.services.call(
             self._parent_entity_domain,
             SERVICE_SET_VAL,
@@ -249,7 +247,8 @@ class VeraControllerSwitch(ToggleEntity, VeraControllerDevice):
             when the parent device state changes """
         vera_device_data = new_state.attributes.get('vera_device_data', {})
         if self._vera_device_id in vera_device_data.keys():
-            self.set_device_data(vera_device_data.get(self._vera_device_id, {}))
+            self.set_device_data(
+                vera_device_data.get(self._vera_device_id, {}))
         val = str(self._device_data.get(self._state_variable, '0'))
         if val == '1':
             self._state = STATE_ON

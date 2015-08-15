@@ -10,6 +10,7 @@ from homeassistant.components.light import (
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the lights. """
@@ -21,6 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.states.track_change(
         discovery_info.get('parent_entity_id'), child_light.track_state)
+
 
 class ChildLight(ChildSwitch, Light):
     """ This class is a light that can be created by another component

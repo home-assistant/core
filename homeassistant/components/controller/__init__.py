@@ -14,6 +14,7 @@ DEPENDENCIES = ['sensor', 'switch', 'light']
 DISCOVERY_PLATFORMS = {}
 SCAN_INTERVAL = 30
 
+
 def setup(hass, config):
     """ Track states and offer events for sensors. """
     component = EntityComponent(
@@ -26,4 +27,23 @@ def setup(hass, config):
 
 
 class Controller(Entity):
-    pass
+    """ This is the base class for controller devices """
+    @property
+    # pylint: disable=no-self-use
+    def device_type(self):
+        """ A string identifying the controller type,
+        eg. VeraLite or NinjaSphere """
+        return None
+
+    @property
+    # pylint: disable=no-self-use
+    def model(self):
+        """ The specific model info for the controler """
+        return None
+
+    @property
+    # pylint: disable=no-self-use
+    def version(self):
+        """ Should return a version number for the device,
+        for example controller firmware version """
+        return None

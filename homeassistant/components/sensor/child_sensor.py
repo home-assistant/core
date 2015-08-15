@@ -134,7 +134,8 @@ class ChildSensor(Entity):
         return self._value_map.get(str(val), val)
 
     def track_state(self, entity_id, old_state, new_state):
+        """ This is the method called when the parent entity's
+        state changes """
         var_state = new_state.attributes.get(self._watched_variable)
         self._state = self.get_mapped_state_value(var_state)
         self.update_ha_state()
-

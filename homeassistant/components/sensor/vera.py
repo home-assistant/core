@@ -65,6 +65,7 @@ import homeassistant.external.vera.vera as veraApi
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Vera Sensors. """
@@ -200,14 +201,13 @@ class VeraSensor(Entity):
         else:
             self.current_value = 'Unknown'
 
+
 class VeraControllerSensor(VeraControllerDevice):
     """ Represents a Vera Sensor that is discovered by a controller entity. """
-    def __init__(self, hass, config, device_data, discovery_info={}):
-        self._state = None
-        self._device_data = device_data
-        self._name = config.get('name', self._device_data.get('name'))
-        self._config = config
-        self._hass = hass
+    def __init__(self, hass, config, device_data, discovery_info=None):
+        super().__init__(hass, config, device_data)
+        if discovery_info is None:
+            discovery_info = {}
         self._state_variable = self._config.get(
             'state_variable',
             self.select_state_variable())
@@ -226,6 +226,7 @@ class VeraControllerSensor(VeraControllerDevice):
         # Put the variables in order of preference.
         watchable_variables = [
             'temperature',
+            'light',
             'tripped',
             'batterylevel',
             'light',
@@ -235,7 +236,9 @@ class VeraControllerSensor(VeraControllerDevice):
 
         for val in watchable_variables:
             if val in self._device_data.keys():
-                return val
+                # See if this field is excluded for the device
+                if not self._config.get(val, {}).get('exclude', False):
+                    return val
 
         return 'id'
 
@@ -243,6 +246,7 @@ class VeraControllerSensor(VeraControllerDevice):
         """ Derive the unit of measurement for this sensor based on the
         variable it uses for state. """
         if self._state_variable == 'temperature':
+            # pylint: disable=unused-variable
             temp, units = self.get_temperature()
             return units
         elif self._state_variable == 'light':
@@ -263,6 +267,7 @@ class VeraControllerSensor(VeraControllerDevice):
     def state(self):
         """ Return the state value for this device """
         if self._state_variable == 'temperature':
+            # pylint: disable=unused-variable
             temp, units = self.get_temperature()
             return temp
         elif self._state_variable == 'armed':
@@ -283,4 +288,5 @@ class VeraControllerSensor(VeraControllerDevice):
             when the parent device state changes """
         vera_device_data = new_state.attributes.get('vera_device_data', {})
         if self._vera_device_id in vera_device_data.keys():
-            self.set_device_data(vera_device_data.get(self._vera_device_id, {}))
+            self.set_device_data(
+                vera_device_data.get(self._vera_device_id, {}))

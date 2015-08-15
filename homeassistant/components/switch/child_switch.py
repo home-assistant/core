@@ -71,14 +71,16 @@ and available to automations etc.
 The 'state_attributes' is also optional but if a dictionary is passed in the
 items will be added to the child sensors state attributes.
 
-Whenever 'turn_on' or 'turn_off' are called the service specified in 'parent_service'
-will be called.
+Whenever 'turn_on' or 'turn_off' are called the service specified in
+'parent_service' will be called.
 
-The 'extra_data' field will be passed to the service in the service data dictionary
-and can be very useful for establishing context in the service callback.
+The 'extra_data' field will be passed to the service in the service data
+dictionary and can be very useful for establishing context in the service
+callback.
 
-The ''parent_action' field is also passed back to the service when called and can
-be used to distinguish between different types of service requests if necessary.
+The ''parent_action' field is also passed back to the service when called and
+can be used to distinguish between different types of service requests if
+necessary.
 
 NOTES:
 
@@ -121,7 +123,8 @@ class ChildSwitch(ToggleEntity):
         self._name = discovery_info.get('name')
         self._parent_entity_id = discovery_info.get('parent_entity_id')
         self._watched_variable = discovery_info.get('watched_variable')
-        self._state = self.parse_watched_variable(discovery_info.get('initial_state'))
+        self._state = self.parse_watched_variable(
+            discovery_info.get('initial_state'))
         self._parent_service = discovery_info.get('parent_service')
         self._parent_action = discovery_info.get('parent_action')
         self._parent_entity_domain = discovery_info.get('parent_domain')
@@ -162,9 +165,14 @@ class ChildSwitch(ToggleEntity):
         self._state = self.parse_watched_variable(val)
         self.update_ha_state()
 
+    # pylint: disable=no-self-use
     def parse_watched_variable(self, val):
         """ Convert the raw state value into a switch state """
-        if val == STATE_ON or val == '1' or val == 1 or val == True or val == 'True':
+        if (val == STATE_ON
+                or val == '1'
+                or val == 1
+                or val is True
+                or val == 'True'):
             return STATE_ON
         else:
             return STATE_OFF
