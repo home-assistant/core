@@ -147,6 +147,7 @@ class ChildSwitch(ToggleEntity):
     @property
     def state_attributes(self):
         attr = super().state_attributes
+        attr['watched_variable'] = self._watched_variable
         attr['parent_device'] = self._parent_entity_id
 
         for key, value in self._extra_state_attrs.items():

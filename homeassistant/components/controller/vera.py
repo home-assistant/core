@@ -1,7 +1,7 @@
 from homeassistant.components.sensor import (
-    DISCOVER_CHILD_SENSORS)
+    DISCOVER_CHILD_SENSORS, DISCOVER_VERA_SENSORS)
 from homeassistant.components.switch import (
-    DISCOVER_CHILD_SWITCHES)
+    DISCOVER_CHILD_SWITCHES, DISCOVER_VERA_SWITCHES)
 from homeassistant.components.light import (
     DISCOVER_CHILD_LIGHTS, ATTR_BRIGHTNESS)
 from homeassistant.components.controller import (
@@ -17,8 +17,12 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ARMED,
     STATE_ON,
-    ATTR_HIDDEN)
+    ATTR_HIDDEN,
+    STATE_NOT_TRIPPED,
+    STATE_TRIPPED,
+    ATTR_LAST_TRIP_TIME)
 
+import homeassistant.util.dt as dt_util
 from homeassistant.components.controller import Controller
 from homeassistant.helpers.entity import Entity
 # pylint: disable=no-name-in-module, import-error
@@ -35,17 +39,51 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     vera_controller = VeraController(hass, config, vera_api)
     vera_devices = [vera_controller]
 
-    device_data = config.get('device_data', {})
-    for key, value in devices.items():
-        child_config = device_data.get(key, {})
-        cdev = VeraControllerDevice(hass, child_config, vera_controller, value)
-        vera_controller.child_devices[key] = cdev
-        vera_devices.append(cdev)
+    # device_data = config.get('device_data', {})
+    # for key, value in devices.items():
+    #     child_config = device_data.get(key, {})
+    #     cdev = VeraControllerDevice(hass, child_config, vera_controller, value)
+    #     vera_controller.child_devices[key] = cdev
+    #     vera_devices.append(cdev)
 
     add_devices_callback(vera_devices)
 
     for key, value in vera_controller.child_devices.items():
         value.create_child_devices()
+
+    device_data = config.get('device_data', {})
+    for key, value in devices.items():
+        child_config = device_data.get(key, {})
+        print('-------------------------------------------------------------------------')
+        print(child_config)
+        if child_config.get('excluded', False):
+            continue
+
+        if value.get('categoryName', 'Unkown') in ["On/Off Switch", "Switch", "Dimmable Switch"]:
+            data = {}
+            data['name'] = child_config.get('name', value.get('name'))
+            data['parent_entity_id'] = vera_controller.entity_id
+            data['parent_entity_domain'] = DOMAIN
+            data['vera_id'] = value.get('id')
+            data['state_variable'] = 'status'
+            data['config_data'] = child_config
+            data['device_data'] = value
+            hass.bus.fire(
+                EVENT_PLATFORM_DISCOVERED, {
+                    ATTR_SERVICE: DISCOVER_VERA_SWITCHES,
+                    ATTR_DISCOVERED: data})
+        else:
+            data = {}
+            data['name'] = child_config.get('name', value.get('name'))
+            data['parent_entity_id'] = vera_controller.entity_id
+            data['vera_id'] = value.get('id')
+            child_config['temperature_units'] = child_config.get('temperature_units', vera_controller.temperature_units)
+            data['config_data'] = child_config
+            data['device_data'] = value
+            hass.bus.fire(
+                EVENT_PLATFORM_DISCOVERED, {
+                    ATTR_SERVICE: DISCOVER_VERA_SENSORS,
+                    ATTR_DISCOVERED: data})
 
     def set_value_service(service):
         device_id = service.data.get('extra_data').get('vera_device_id')
@@ -71,7 +109,7 @@ class VeraController(Controller):
         self._vera_api = vera_api
         self._name = config.get('name', vera_api.model)
         self.child_devices = {}
-
+        self._vera_device_data = {}
 
     @property
     def state_attributes(self):
@@ -79,6 +117,7 @@ class VeraController(Controller):
         attr['model'] = self._vera_api.model
         attr['version'] = self._vera_api.version
         attr['serial_number'] = self._vera_api.serial_number
+        attr['vera_device_data'] = self._vera_device_data
 
         return attr
 
@@ -89,6 +128,7 @@ class VeraController(Controller):
             if not self.child_devices.get(key, False):
                 continue
             self.child_devices.get(key).set_device_data(value)
+        self._vera_device_data = devices;
 
     @property
     def vera_api(self):
@@ -112,18 +152,25 @@ class VeraController(Controller):
 
 class VeraControllerDevice(Entity):
 
-    def __init__(self, hass, config, vera_controller, device_data):
+    def __init__(self, hass, config, device_data):
         self._state = None
         self._vera_controller = vera_controller
         self._device_data = device_data
         self._name = config.get('name', self._device_data.get('name'))
         self._config = config
         self._hass = hass
+        self._state_variable = self._config.get('state_variable', 'id')
+        self._parent_entity_id = config.get('parent_entity_id', None)
 
     @property
     def state_attributes(self):
         attr = super().state_attributes
         attr['vera_id'] = self._device_data.get('id')
+
+        if 'lasttrip' in self._device_data.keys():
+            last_trip_dt = dt_util.utc_from_timestamp(
+                int(self._device_data.get('lasttrip', 0)))
+            attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(last_trip_dt)
 
         if self.has_temperature:
             # pylint: disable=unused-variable
@@ -139,8 +186,16 @@ class VeraControllerDevice(Entity):
         if self.has_lightlevel:
             attr['light_level'] = self._device_data.get('light')
 
+        if self.has_humidity:
+            attr['humidity'] = self._device_data.get('humidity')
+
         if self.is_armable:
             attr[ATTR_ARMED] = 'True' if str(self._device_data.get('armed')) == '1' else 'False'
+
+        if self.is_armedtripped:
+            attr['armed_tripped'] = (
+                'True' if str(self._device_data.get('armedtripped')) == '1'
+                else 'False')
 
         if self.is_switchable:
             attr['status'] = 'True' if str(self._device_data.get('status')) == '1' else 'False'
@@ -150,7 +205,11 @@ class VeraControllerDevice(Entity):
             attr['level'] = self._device_data.get('level')
             attr[ATTR_BRIGHTNESS] = self.get_brightness()
 
-        attr['hidden'] = True
+        attr[ATTR_HIDDEN] = self._config.get('hidden', False)
+        if self._parent_entity_id is not None:
+            attr['parent_entity_id'] = self._parent_entity_id
+
+        attr['state_variable'] = self._state_variable
 
         return attr
 
@@ -166,14 +225,14 @@ class VeraControllerDevice(Entity):
     def get_temperature(self):
         """ Get the temperature and units. """
         current_temp = self._device_data.get('temperature')
-        vera_temp_units = self._vera_controller.temperature_units
+        vera_temp_units = self._config.get('temperature_units', TEMP_CELCIUS)
 
         if vera_temp_units == 'F':
             temperature_units = TEMP_FAHRENHEIT
         else:
             temperature_units = TEMP_CELCIUS
 
-        return self.hass.config.temperature(
+        return self._hass.config.temperature(
             current_temp,
             temperature_units)
 
@@ -199,6 +258,11 @@ class VeraControllerDevice(Entity):
         return True if 'armed' in self._device_data.keys() else False
 
     @property
+    def is_armedtripped(self):
+        """ Returns true if the device is armed and tripped """
+        return True if 'armedtripped' in self._device_data.keys() else False
+
+    @property
     def has_battery(self):
         """ Returns true if the device supports battery level """
         return True if 'batterylevel' in self._device_data.keys() else False
@@ -212,6 +276,11 @@ class VeraControllerDevice(Entity):
     def has_lightlevel(self):
         """ Returns true if the device supports light level """
         return True if 'light' in self._device_data.keys() else False
+
+    @property
+    def has_humidity(self):
+        """ Returns true if the device has a humidity reading """
+        return True if 'humidity' in self._device_data.keys() else False
 
     @property
     def is_switchable(self):
@@ -258,6 +327,10 @@ class VeraControllerDevice(Entity):
             data['name'] = self._config.get('tripped', {}).get('name', self._name)
             data['parent_entity_id'] = self.entity_id
             data['watched_variable'] = ATTR_TRIPPED
+            data['value_map'] = {
+                'True': STATE_TRIPPED,
+                'False': STATE_NOT_TRIPPED
+            }
             data['initial_state'] = (
                 'True' if str(self._device_data.get('tripped')) == '1' else 'False')
             data['state_attributes'] = self.get_common_state_attrs()
@@ -276,6 +349,20 @@ class VeraControllerDevice(Entity):
             data['unit_of_measurement'] = '%'
             data['state_attributes'] = self.get_common_state_attrs()
             data['state_attributes'][ATTR_HIDDEN] = self.is_child_hidden('battery')
+            self._hass.bus.fire(
+                EVENT_PLATFORM_DISCOVERED, {
+                    ATTR_SERVICE: DISCOVER_CHILD_SENSORS,
+                    ATTR_DISCOVERED: data})
+
+        if self.has_humidity and not self.should_exclude_child('humidity'):
+            data = {}
+            data['name'] = self._config.get('humidity', {}).get('name', self._name)
+            data['parent_entity_id'] = self.entity_id
+            data['watched_variable'] = 'humidity'
+            data['initial_state'] = self._device_data.get('humidity')
+            data['unit_of_measurement'] = '%'
+            data['state_attributes'] = self.get_common_state_attrs()
+            data['state_attributes'][ATTR_HIDDEN] = self.is_child_hidden('humidity')
             self._hass.bus.fire(
                 EVENT_PLATFORM_DISCOVERED, {
                     ATTR_SERVICE: DISCOVER_CHILD_SENSORS,
@@ -383,6 +470,12 @@ class VeraControllerDevice(Entity):
         return attrs
 
     def should_exclude_child(self, type_name):
+        if type_name == self._state_variable:
+            return True
+        elif (type_name == 'switch' and
+                self._state_variable == 'status'):
+            return True
+
         return self._config.get(type_name, {}).get('exclude', False)
 
     def is_child_hidden(self, type_name):

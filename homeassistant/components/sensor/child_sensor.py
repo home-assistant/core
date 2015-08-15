@@ -87,7 +87,9 @@ class ChildSensor(Entity):
     def __init__(self, config, discovery_info=None):
         self._name = discovery_info.get('name')
         self._parent_entity_id = discovery_info.get('parent_entity_id')
-        self._state = discovery_info.get('initial_state')
+        self._value_map = discovery_info.get('value_map', {})
+        self._state = self.get_mapped_state_value(
+            discovery_info.get('initial_state', None))
         self._unit_of_measurement = discovery_info.get('unit_of_measurement')
         self._watched_variable = discovery_info.get('watched_variable')
         self._extra_state_attrs = discovery_info.get('state_attributes', {})
@@ -112,6 +114,7 @@ class ChildSensor(Entity):
     def state_attributes(self):
         attr = super().state_attributes
         attr['parent_device'] = self._parent_entity_id
+        attr['watched_variable'] = self._watched_variable
 
         for key, value in self._extra_state_attrs.items():
             attr[key] = value
@@ -123,8 +126,15 @@ class ChildSensor(Entity):
         """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
 
+    def get_mapped_state_value(self, val):
+        """ A simple helper method to check if the watched variables value is
+        overridden and return the value if so """
+        if val is None:
+            return val
+        return self._value_map.get(str(val), val)
+
     def track_state(self, entity_id, old_state, new_state):
-        if self._state != new_state:
-            self._state = new_state.attributes.get(self._watched_variable)
-            self.update_ha_state()
+        var_state = new_state.attributes.get(self._watched_variable)
+        self._state = self.get_mapped_state_value(var_state)
+        self.update_ha_state()
 
