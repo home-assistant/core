@@ -5,13 +5,21 @@ components.verisure
 import logging
 from datetime import timedelta
 
+from homeassistant import bootstrap
+from homeassistant.loader import get_component
+
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_PLATFORM_DISCOVERED,
+    ATTR_SERVICE, ATTR_DISCOVERED,
     CONF_USERNAME, CONF_PASSWORD)
 
+
 DOMAIN = "verisure"
+DISCOVER_SENSORS = 'verisure.sensors'
+DISCOVER_SWITCHES = 'verisure.switches'
+
 DEPENDENCIES = []
 REQUIREMENTS = [
     'https://github.com/persandstrom/python-verisure/archive/master.zip'
@@ -21,6 +29,12 @@ _LOGGER = logging.getLogger(__name__)
 
 MY_PAGES = None
 STATUS = {}
+
+VERISURE_LOGIN_ERROR = None
+VERISURE_ERROR = None
+
+# if wrong password was given don't try again
+WRONG_PASSWORD_GIVEN = False
 
 MIN_TIME_BETWEEN_REQUESTS = timedelta(seconds=5)
 
@@ -33,7 +47,7 @@ def setup(hass, config):
                            _LOGGER):
         return False
 
-    from verisure import MyPages
+    from verisure import MyPages, LoginError, Error
 
     STATUS[MyPages.DEVICE_ALARM] = {}
     STATUS[MyPages.DEVICE_CLIMATE] = {}
@@ -43,18 +57,27 @@ def setup(hass, config):
     MY_PAGES = MyPages(
         config[DOMAIN][CONF_USERNAME],
         config[DOMAIN][CONF_PASSWORD])
-    MY_PAGES.login()
+    global VERISURE_LOGIN_ERROR, VERISURE_ERROR
+    VERISURE_LOGIN_ERROR = LoginError
+    VERISURE_ERROR = Error
+
+    try:
+        MY_PAGES.login()
+    except (ConnectionError, Error) as ex:
+        _LOGGER.error('Could not log in to verisure mypages, %s', ex.message)
+        return False
+
     update()
 
-    def stop_verisure(event):
-        """ Stop the Verisure service. """
-        MY_PAGES.logout()
+    # Load components for the devices in the ISY controller that we support
+    for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
+                                  ('switch', DISCOVER_SWITCHES))):
+        component = get_component(comp_name)
+        bootstrap.setup_component(hass, component.DOMAIN, config)
 
-    def start_verisure(event):
-        """ Start the Verisure service. """
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_verisure)
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_verisure)
+        hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
+                      {ATTR_SERVICE: discovery,
+                       ATTR_DISCOVERED: {}})
 
     return True
 
@@ -74,9 +97,25 @@ def get_smartplug_status():
     return STATUS[MY_PAGES.DEVICE_SMARTPLUG]
 
 
+def reconnect():
+    ''' reconnect to verisure mypages '''
+    try:
+        MY_PAGES.login()
+    except VERISURE_LOGIN_ERROR as ex:
+        _LOGGER.error("Could not login to Verisure mypages, %s", ex.message)
+        global WRONG_PASSWORD_GIVEN
+        WRONG_PASSWORD_GIVEN = True
+    except (ConnectionError, VERISURE_ERROR) as ex:
+        _LOGGER.error("Could not login to Verisure mypages, %s", ex.message)
+
+
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
 def update():
     ''' Updates the status of verisure components '''
+    if WRONG_PASSWORD_GIVEN:
+        # Is there any way to inform user?
+        return
+
     try:
         for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_ALARM):
             STATUS[MY_PAGES.DEVICE_ALARM][overview.id] = overview
@@ -86,4 +125,4 @@ def update():
             STATUS[MY_PAGES.DEVICE_SMARTPLUG][overview.id] = overview
     except ConnectionError as ex:
         _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
-        MY_PAGES.login()
+        reconnect()
