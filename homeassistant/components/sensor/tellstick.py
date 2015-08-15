@@ -35,6 +35,8 @@ import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
+REQUIREMENTS = ['tellcore-py>=1.0.4']
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):

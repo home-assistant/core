@@ -1,24 +1,21 @@
 """
 homeassistant.components.switch.hikvision
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support turning on/off motion detection on Hikvision cameras.
 
 Note: Currently works using default https port only.
 
-CGI API Guide:
-http://bit.ly/1RuyUuF
+CGI API Guide: http://bit.ly/1RuyUuF
 
 Configuration:
 
-To use the Hikvision motion detection
-switch you will need to add something like the
-following to your config/configuration.yaml
+To use the Hikvision motion detection switch you will need to add something
+like the following to your config/configuration.yaml
 
 switch:
     platform: hikvisioncam
     name: Hikvision Cam 1 Motion Detection
-    host: 192.168.1.26
+    host: 192.168.1.32
     username: YOUR_USERNAME
     password: YOUR_PASSWORD
 
@@ -30,16 +27,15 @@ This is the IP address of your Hikvision camera. Example: 192.168.1.32
 
 username
 *Required
-Your Hikvision camera username
+Your Hikvision camera username.
 
 password
 *Required
-Your Hikvision camera username
+Your Hikvision camera username.
 
 name
 *Optional
 The name to use when displaying this switch instance.
-
 """
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF

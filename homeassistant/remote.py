@@ -120,10 +120,11 @@ class HomeAssistant(ha.HomeAssistant):
     def start(self):
         # Ensure a local API exists to connect with remote
         if self.config.api is None:
-            bootstrap.setup_component(self, 'http')
-            bootstrap.setup_component(self, 'api')
+            if not bootstrap.setup_component(self, 'api'):
+                raise ha.HomeAssistantError(
+                    'Unable to setup local API to receive events')
 
-        ha.Timer(self)
+        ha.create_timer(self)
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)

@@ -49,6 +49,8 @@ Details for the API : https://developer.forecast.io/docs/v2
 import logging
 from datetime import timedelta
 
+REQUIREMENTS = ['python-forecastio>=1.3.3']
+
 try:
     import forecastio
 except ImportError:
@@ -215,5 +217,6 @@ class ForeCastData(object):
 
         forecast = forecastio.load_forecast(self._api_key,
                                             self.latitude,
-                                            self.longitude)
+                                            self.longitude,
+                                            units='si')
         self.data = forecast.currently()
