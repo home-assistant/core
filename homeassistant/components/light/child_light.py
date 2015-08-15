@@ -1,6 +1,95 @@
 """
-homeassistant.components.switch.child_light
+homeassistant.components.light.child_light
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+his component is designed to enable other components to create a light
+without the nned to create an entirely new light component.
+The child light derives its state from monitoring one of the parent
+component's state attributes and will call a specified service when
+toggled.
+
+BASIC USAGE:
+
+You should expose the functionality you want the light to control in your
+parent component.  The child lights are created using HA's discovery
+mechanism.  You simply need to define the state attribute to be montiored
+and the service to be called on toggle and fire the discovery event from
+your component.
+
+from homeassistant.components.light import (
+    DISCOVER_CHILD_LIGHTS)
+
+from homeassistant.const import (
+    EVENT_PLATFORM_DISCOVERED)
+
+...
+
+# In your 'setup_platform' register a service
+
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+
+    # setup up your component here
+
+    ...
+
+    # Register a service
+    def toggle_something_service(service):
+        my_custom_info = service.data.get('extra_data')
+
+        # Do stuff
+
+    hass.services.register(DOMAIN, MY_SERVICE_NAME, toggle_something_service)
+
+# In your 'setup_platform' or from inside the component do the following:
+
+data = {}
+data['name'] = 'Arm my sensor'
+data['parent_entity_id'] = self.entity_id
+data['watched_variable'] = 'brightness'
+data['parent_domain'] = DOMAIN
+data['parent_service'] = MY_SERVICE_NAME
+data['parent_action'] = 'arbitrary_action_name'
+data['state_attributes'] = {}
+data['light_type'] = 'dimmer'
+data['extra_data'] = {
+    'some_usefule_id': self._device_id,
+    'some_other_useful_data': '12345'}
+data['initial_state'] = self._armed
+self._hass.bus.fire(
+    EVENT_PLATFORM_DISCOVERED, {
+        ATTR_SERVICE: DISCOVER_CHILD_LIGHTS,
+        ATTR_DISCOVERED: data})
+
+
+This example will monitor the value of 'brightness' in the parent component's
+'state.attributes' dictionary.  The state card will ned be visible on the UI
+and available to automations etc.
+
+The 'state_attributes' is also optional but if a dictionary is passed in the
+items will be added to the child sensors state attributes.
+
+Whenever 'turn_on' or 'turn_off' are called the service specified in
+'parent_service' will be called.
+
+The 'extra_data' field will be passed to the service in the service data
+dictionary and can be very useful for establishing context in the service
+callback.
+
+The 'parent_action' field is also passed back to the service when called and
+can be used to distinguish between different types of service requests if
+necessary.
+
+The 'light_type' field can be either 'dimmer' or 'switch' depending on the
+type of light.
+
+NOTES:
+
+- At the moment this can only be created via the 'discovery' mechanism.  So do
+not add it into your config file
+
+- You need to add 'light' or 'child_light' as a dependency for your component
+otherwise there is no guarantee this component will be loaded when the
+discovery event fires.
 
 """
 

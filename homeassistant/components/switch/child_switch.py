@@ -87,7 +87,7 @@ NOTES:
 - At the moment this can only be created via the 'discovery' mechanism.  So do
 not add it into your config file
 
-- You need to add 'sensor' or 'child_sensor' as a dependency for your component
+- You need to add 'switch' or 'child_switch' as a dependency for your component
 otherwise there is no guarantee this component will be loaded when the
 discovery event fires.
 

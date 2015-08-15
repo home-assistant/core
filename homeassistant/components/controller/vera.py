@@ -2,6 +2,66 @@
 homeassistant.components.controller.vera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This controller component is responsible for communication with a VeraLite
+Z-Wave controller.  It retrieves the device information from the Vera and
+and using the discovery mechanism creates components for each Vera device.
+Each Vera device may then create one or more child devices for interacting
+with or monitoring various properties of the vera device.  This builds a
+tree structure like the example below.
+
+Controller
+        |-Switch
+        |    |-Child Sensor
+        |
+        |-Sensor
+        |   |-Child Switch
+        |   |-Child Sensor 1
+        |   |-Child Sensor 2
+        |
+        |-Light
+        |   |-Child Sensor
+
+This controller provides a central point for communication with the Vera
+and cuts down the amount of requests sent in the previous implementation.
+The discovered child devices monitor the state change event of the controller
+and are responsible for updating their states when their relevant data
+changes.  The child devices use services to communicate with this controller
+which in turn handles the communication with the Vera unit.
+
+To configure the controller you will need to add something like this to
+your configuration file:
+
+controller:
+  platform: vera
+  vera_controller_url: http://192.168.1.111:3480/
+  default_switches_to_light: true
+  device_data:
+    # Exclduing the child temperature sensor
+    50:
+        temperature:
+          exclude: true
+
+    # Excluding a device with a vera id of 32
+    32:
+      exclude: true
+
+    # Hiding vera device 35 from the states UI
+    35:
+      hidden: true
+
+    # Specifying that a switch is a light
+    36:
+      is_light: true
+
+    # Overriding the name of the vera device 39
+    39:
+        name: 'Loungeroom Lights'
+
+    # Overriding the name of the child humidity sensor
+    40:
+        humidity:
+            name: 'Lounge Humidity'
+
 """
 from homeassistant.components.sensor import (
     DISCOVER_CHILD_SENSORS, DISCOVER_VERA_SENSORS)
@@ -392,7 +452,11 @@ class VeraControllerDevice(Entity):
 
     # pylint: disable=too-many-statements
     def create_child_devices(self):
-        """ Create child devices based on available properties """
+        """ Create child devices based on available properties.
+        This method is rather long but it is basically responsible for
+        checking the properties of the vera device and creating child
+        sensors and switches to alter or monitor additional properties
+        as well as the parent device's main function. """
 
         if (self.has_temperature
                 and not self.should_exclude_child('temperature')):

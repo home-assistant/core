@@ -3,6 +3,9 @@ homeassistant.components.controller
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various controllers that may control many devices.
 For example the Vera Z-Wave controller, Ninja Block, Ninja Sphere etc.
+
+A controller entity should interrogate its configured device and use the
+discovery mechanism to create child entities.
 """
 import logging
 
