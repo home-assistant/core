@@ -42,6 +42,8 @@ class VerisureSmartplug(SwitchDevice):
     """ Represents a Verisure smartplug. """
     def __init__(self, smartplug_status):
         self._id = smartplug_status.id
+        self.STATUS_ON = verisure.MY_PAGES.SMARTPLUG_ON
+        self.STATUS_OFF = verisure.MY_PAGES.SMARTPLUG_OFF
 
     @property
     def name(self):
@@ -52,16 +54,19 @@ class VerisureSmartplug(SwitchDevice):
     def is_on(self):
         """ Returns True if on """
         plug_status = verisure.get_smartplug_status()[self._id].status
-        return plug_status == verisure.MY_PAGES.SMARTPLUG_ON
+        return plug_status == self.STATUS_ON
 
     def turn_on(self):
         """ Set smartplug status on """
         verisure.MY_PAGES.set_smartplug_status(
             self._id,
-            verisure.MY_PAGES.SMARTPLUG_ON)
+            self.STATUS_ON)
 
     def turn_off(self):
         """ Set smartplug status off. """
         verisure.MY_PAGES.set_smartplug_status(
             self._id,
-            verisure.MY_PAGES.SMARTPLUG_OFF)
+            self.STATUS_OFF)
+
+    def update(self):
+        verisure.update()
