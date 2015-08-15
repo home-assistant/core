@@ -10,6 +10,3 @@
 [submodule "homeassistant/components/frontend/www_static/home-assistant-polymer"]
 	path = homeassistant/components/frontend/www_static/home-assistant-polymer
 	url = https://github.com/balloob/home-assistant-polymer.git
-[submodule "homeassistant/external/verisure"]
-	path = homeassistant/external/verisure
-	url = https://github.com/persandstrom/python-verisure.git
