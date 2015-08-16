@@ -10,6 +10,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.components import group, discovery
 from homeassistant.const import ATTR_ENTITY_ID
+import threading
 
 DEFAULT_SCAN_INTERVAL = 15
 
@@ -37,6 +38,7 @@ class EntityComponent(object):
         self.is_polling = False
 
         self.config = None
+        self.entities_lock = threading.RLock()
 
     def setup(self, config):
         """
@@ -61,25 +63,32 @@ class EntityComponent(object):
         Takes in a list of new entities. For each entity will see if it already
         exists. If not, will add it, set it up and push the first state.
         """
-        for entity in new_entities:
-            if entity is not None and entity not in self.entities.values():
-                entity.hass = self.hass
 
-                entity.entity_id = generate_entity_id(
-                    self.entity_id_format, entity.name, self.entities.keys())
+        # This lock is here because when device discovery occurs multiple threads
+        # can attempt to access self.entities simultaneously causing concurrency
+        # issues.
+        with self.entities_lock:
+            for entity in new_entities:
+                if entity is not None and entity not in self.entities.values():
+                    entity.hass = self.hass
 
-                self.entities[entity.entity_id] = entity
+                    entity.entity_id = generate_entity_id(
+                        self.entity_id_format,
+                        entity.name,
+                        self.entities.keys())
 
-                entity.update_ha_state()
+                    self.entities[entity.entity_id] = entity
 
-        if self.group is None and self.group_name is not None:
-            self.group = group.Group(self.hass, self.group_name,
-                                     user_defined=False)
+                    entity.update_ha_state()
 
-        if self.group is not None:
-            self.group.update_tracked_entity_ids(self.entities.keys())
+            if self.group is None and self.group_name is not None:
+                self.group = group.Group(self.hass, self.group_name,
+                                         user_defined=False)
 
-        self._start_polling()
+            if self.group is not None:
+                self.group.update_tracked_entity_ids(self.entities.keys())
+
+            self._start_polling()
 
     def extract_from_service(self, service):
         """
