@@ -43,6 +43,10 @@ STATE_CLOSED = 'closed'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
+STATE_TRIPPED = 'tripped'
+STATE_NOT_TRIPPED = 'not_tripped'
+STATE_ARMED = 'armed'
+STATE_NOT_ARMED = 'not_armed'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event

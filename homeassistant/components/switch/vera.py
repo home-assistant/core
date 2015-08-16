@@ -46,12 +46,16 @@ it should be set to "true" if you want this device excluded.
 """
 import logging
 import time
+from homeassistant.helpers import event
 from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
+from homeassistant.components.controller.vera import VeraControllerDevice
+from homeassistant.components.controller.vera import SERVICE_SET_VAL
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
+    ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
+    STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
 
@@ -95,7 +99,26 @@ def get_devices(hass, config):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return Vera lights. """
-    add_devices(get_devices(hass, config))
+    if discovery_info is None:
+        add_devices(get_devices(hass, config))
+    else:
+        if not discovery_info.get('state_variable', False):
+            _LOGGER.error('The "state_variable" value was not passed \
+                to the Vera switch in the discovery data')
+
+        new_switch = VeraControllerSwitch(
+            hass,
+            discovery_info.get('config_data', {}),
+            discovery_info.get('device_data', {}),
+            discovery_info)
+        add_devices([new_switch])
+
+        event.track_state_change(
+            hass,
+            discovery_info.get('parent_entity_id'),
+            new_switch.track_state)
+
+        new_switch.create_child_devices()
 
 
 class VeraSwitch(ToggleEntity):
@@ -163,3 +186,70 @@ class VeraSwitch(ToggleEntity):
         # because the vera has some lag in updating the device status
         if (self.last_command_send + 5) < time.time():
             self.is_on_status = self.vera_device.is_switched_on()
+
+
+class VeraControllerSwitch(ToggleEntity, VeraControllerDevice):
+    """ Represents a Vera Switch that is discovered by a controller entity. """
+
+    def __init__(self, hass, config, device_data, discovery_info=None):
+        super().__init__(hass, config, device_data)
+        if discovery_info is None:
+            discovery_info = {}
+        self._state_variable = discovery_info.get('state_variable', None)
+        self._vera_device_id = self._config.get(
+            'vera_id',
+            self._device_data.get('id'))
+        self._parent_entity_id = discovery_info.get('parent_entity_id', None)
+        self._parent_entity_domain = discovery_info.get(
+            'parent_entity_domain', None)
+
+        val = str(self._device_data.get(self._state_variable, '0'))
+        if val == '1':
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
+
+    @property
+    def state(self):
+        """ Return the state value for this device """
+        return self._state
+
+    def turn_on(self, **kwargs):
+        """ Turn the entity on. """
+        self._state = STATE_ON
+        self.call_parent_service()
+        self.update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """ Turn the entity off. """
+        self._state = STATE_OFF
+        self.call_parent_service()
+        self.update_ha_state()
+
+    def call_parent_service(self):
+        """ Calls the specified service to send state """
+        service_data = {}
+        service_data[ATTR_ENTITY_ID] = self._parent_entity_id
+        service_data['action'] = 'switch'
+        service_data['state'] = self._state
+        service_data['extra_data'] = {
+            'vera_device_id': self._vera_device_id,
+            'vera_variable': 'Target'}
+        self.hass.services.call(
+            self._parent_entity_domain,
+            SERVICE_SET_VAL,
+            service_data,
+            blocking=True)
+
+    def track_state(self, entity_id, old_state, new_state):
+        """ This is the handler called by the state change event
+            when the parent device state changes """
+        vera_device_data = new_state.attributes.get('vera_device_data', {})
+        if self._vera_device_id in vera_device_data.keys():
+            self.set_device_data(
+                vera_device_data.get(self._vera_device_id, {}))
+        val = str(self._device_data.get(self._state_variable, '0'))
+        if val == '1':
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF

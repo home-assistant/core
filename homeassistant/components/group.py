@@ -12,7 +12,8 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util as util
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
-    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN)
+    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN,
+    STATE_TRIPPED, STATE_NOT_TRIPPED)
 
 DOMAIN = "group"
 DEPENDENCIES = []
@@ -22,7 +23,10 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 ATTR_AUTO = "auto"
 
 # List of ON/OFF state tuples for groupable states
-_GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME)]
+_GROUP_TYPES = [
+    (STATE_ON, STATE_OFF),
+    (STATE_HOME, STATE_NOT_HOME),
+    (STATE_TRIPPED, STATE_NOT_TRIPPED)]
 
 
 def _get_group_on_off(state):

@@ -53,11 +53,14 @@ it should be set to "true" if you want this device excluded
 import logging
 from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers import event
+from homeassistant.components.controller.vera import VeraControllerDevice
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, STATE_ARMED, STATE_NOT_ARMED,
+    STATE_TRIPPED, STATE_NOT_TRIPPED)
 # pylint: disable=no-name-in-module, import-error
 import homeassistant.external.vera.vera as veraApi
 
@@ -101,7 +104,22 @@ def get_devices(hass, config):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Performs setup for Vera controller devices. """
-    add_devices(get_devices(hass, config))
+    if discovery_info is None:
+        add_devices(get_devices(hass, config))
+    else:
+        new_sensor = VeraControllerSensor(
+            hass,
+            discovery_info.get('config_data', {}),
+            discovery_info.get('device_data', {}),
+            discovery_info)
+        add_devices([new_sensor])
+
+        event.track_state_change(
+            hass,
+            discovery_info.get('parent_entity_id'),
+            new_sensor.track_state)
+
+        new_sensor.create_child_devices()
 
 
 class VeraSensor(Entity):
@@ -185,3 +203,99 @@ class VeraSensor(Entity):
             self.current_value = 'Tripped' if tripped == '1' else 'Not Tripped'
         else:
             self.current_value = 'Unknown'
+
+
+class VeraControllerSensor(VeraControllerDevice):
+    """ Represents a Vera Sensor that is discovered by a controller entity. """
+    def __init__(self, hass, config, device_data, discovery_info=None):
+        super().__init__(hass, config, device_data)
+        if discovery_info is None:
+            discovery_info = {}
+        self._state_variable = self._config.get(
+            'state_variable',
+            self.select_state_variable())
+        self._unit_of_measurement = self._config.get(
+            'unit_of_measurement',
+            self.select_units())
+        self._vera_device_id = self._config.get(
+            'vera_id',
+            self._device_data.get('id'))
+        self._parent_entity_id = discovery_info.get('parent_entity_id', None)
+
+    def select_state_variable(self):
+        """ Selects the variable to be used for the state of the parent device.
+        A child sensor that monitors this variable will not be created. """
+        # If no state variable is configured choose one.
+        # Put the variables in order of preference.
+        watchable_variables = [
+            'temperature',
+            'light',
+            'tripped',
+            'batterylevel',
+            'light',
+            'armed',
+            'humidity',
+            'armedtripped']
+
+        for val in watchable_variables:
+            if val in self._device_data.keys():
+                # See if this field is excluded for the device
+                if not self._config.get(val, {}).get('exclude', False):
+                    return val
+
+        return 'id'
+
+    def select_units(self):
+        """ Derive the unit of measurement for this sensor based on the
+        variable it uses for state. """
+        if self._state_variable == 'temperature':
+            # pylint: disable=unused-variable
+            temp, units = self.get_temperature()
+            return units
+        elif self._state_variable == 'light':
+            return 'lux'
+        elif self._state_variable == 'batterylevel':
+            return '%'
+        elif self._state_variable == 'humidity':
+            return '%'
+
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
+        return self._unit_of_measurement
+
+    @property
+    # pylint: disable=too-many-return-statements
+    def state(self):
+        """ Return the state value for this device """
+        if self._state_variable == 'temperature':
+            # pylint: disable=unused-variable
+            temp, units = self.get_temperature()
+            return temp
+        elif self._state_variable == 'armed':
+            if str(self._device_data.get('armed')) == '1':
+                return STATE_ARMED
+            else:
+                return STATE_NOT_ARMED
+        elif self._state_variable == 'tripped':
+            if str(self._device_data.get('tripped')) == '1':
+                return STATE_TRIPPED
+            else:
+                return STATE_NOT_TRIPPED
+        elif self._state_variable == 'armed_tripped':
+            if str(self._device_data.get('armedtripped')) == '1':
+                return STATE_TRIPPED
+            else:
+                return STATE_NOT_TRIPPED
+
+        return self._device_data.get(self._state_variable, None)
+
+    def track_state(self, entity_id, old_state, new_state):
+        """ This is the handler called by the state change event
+            when the parent device state changes """
+        vera_device_data = new_state.attributes.get('vera_device_data', {})
+        if self._vera_device_id in vera_device_data.keys():
+            self.set_device_data(
+                vera_device_data.get(self._vera_device_id, {}))
