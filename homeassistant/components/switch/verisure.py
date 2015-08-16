@@ -16,8 +16,6 @@ import logging
 import homeassistant.components.verisure as verisure
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['verisure']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,7 +40,7 @@ class VerisureSmartplug(SwitchDevice):
     """ Represents a Verisure smartplug. """
     def __init__(self, smartplug_status):
         self._id = smartplug_status.id
-        self.status_off = verisure.MY_PAGES.SMARTPLUG_ON
+        self.status_on = verisure.MY_PAGES.SMARTPLUG_ON
         self.status_off = verisure.MY_PAGES.SMARTPLUG_OFF
 
     @property
@@ -54,7 +52,7 @@ class VerisureSmartplug(SwitchDevice):
     def is_on(self):
         """ Returns True if on """
         plug_status = verisure.get_smartplug_status()[self._id].status
-        return plug_status == self.status_off
+        return plug_status == self.status_on
 
     def turn_on(self):
         """ Set smartplug status on """
@@ -63,7 +61,7 @@ class VerisureSmartplug(SwitchDevice):
             self.status_on)
 
     def turn_off(self):
-        """ Set smartplug status off. """
+        """ Set smartplug status off """
         verisure.MY_PAGES.set_smartplug_status(
             self._id,
             self.status_off)
