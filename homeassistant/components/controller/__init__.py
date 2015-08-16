@@ -16,7 +16,7 @@ DOMAIN = 'controller'
 DEPENDENCIES = ['sensor', 'switch', 'light']
 DISCOVERY_PLATFORMS = {}
 SCAN_INTERVAL = 30
-
+SERVICE_FORCE_UPDATE = 'force_update'
 
 def setup(hass, config):
     """ Track states and offer events for sensors. """
@@ -25,6 +25,18 @@ def setup(hass, config):
         DISCOVERY_PLATFORMS)
 
     component.setup(config)
+
+    def force_update(service):
+        target_controllers = component.extract_from_service(service)
+        """ This service can be called to force a refresh from the
+        controller device """
+        print('jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj')
+        print(service)
+        for target_controller in target_controllers:
+            target_controller.update()
+            target_controller.update_ha_state(True)
+
+    hass.services.register(DOMAIN, SERVICE_FORCE_UPDATE, force_update)
 
     return True
 

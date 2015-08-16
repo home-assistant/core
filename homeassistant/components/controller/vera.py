@@ -62,6 +62,27 @@ controller:
         humidity:
             name: 'Lounge Humidity'
 
+
+Pushing notifications to HA from the Vera
+-----------------------------------------------------------------
+To get "instant" notifications of device state changes from the Vera you can
+set up a scene triggered by your device changes and add the following luup
+code as the action.  This will force the controller to update its data and
+pass any state changes to HA.
+
+  local http = require("socket.http")
+
+  -- 5 Second timeout
+  http.TIMEOUT = 5
+
+  -- The return parameters are in a different order from luup.inet.wget(...)
+  -- This line is broken into multiple lines so that the HA linting works
+  -- but put the whole thing in one line when you add it to the Vera
+  result, status = http.request(
+    "http://<ha ip and port>/api/services/controller/
+    force_update?api_password=<your password>",
+     '{"entity_id": "<your controller entity id>"}')
+
 """
 from homeassistant.components.sensor import (
     DISCOVER_CHILD_SENSORS, DISCOVER_VERA_SENSORS)
@@ -159,7 +180,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         vera_controller.vera_api.set_value(device_id, variable, val)
 
     hass.services.register(DOMAIN, SERVICE_SET_VAL, set_value_service)
-
 
 def discover_swtich(
         config, child_config, vera_controller, device_data, hass):
