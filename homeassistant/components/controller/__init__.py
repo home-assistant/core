@@ -30,8 +30,7 @@ def setup(hass, config):
         target_controllers = component.extract_from_service(service)
         """ This service can be called to force a refresh from the
         controller device """
-        print('jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj')
-        print(service)
+
         for target_controller in target_controllers:
             target_controller.update()
             target_controller.update_ha_state(True)
