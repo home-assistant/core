@@ -497,6 +497,34 @@ class VeraControllerDevice(Entity):
                     ATTR_SERVICE: DISCOVER_CHILD_SENSORS,
                     ATTR_DISCOVERED: data})
 
+        if (self.is_armedtripped
+              and not self.should_exclude_child('armed_tripped')):
+            data = {}
+            data['name'] = (
+                self._config.get('armed_tripped', {}).get('name', self._name))
+            if self.is_trippable:
+                data['name'] = (
+                    self._config.get('armed_tripped', {}).get(
+                        'name', self._name + ' Arm Tripped'))
+            data['parent_entity_id'] = self.entity_id
+            data['watched_variable'] = 'armed_tripped'
+            data['value_map'] = {
+                'True': STATE_TRIPPED,
+                'False': STATE_NOT_TRIPPED
+            }
+            data['initial_state'] = (
+                'True' if str(self._device_data.get('armedtripped')) == '1'
+                else 'False')
+            data['state_attributes'] = self.get_common_state_attrs()
+            # If this device also has a tripped property we hide the armed_
+            # tripped property to avoid clutter
+            data['state_attributes'][ATTR_HIDDEN] = (
+                self.is_child_hidden('armed_tripped', self.is_trippable))
+            self._hass.bus.fire(
+                EVENT_PLATFORM_DISCOVERED, {
+                    ATTR_SERVICE: DISCOVER_CHILD_SENSORS,
+                    ATTR_DISCOVERED: data})
+
         if self.has_battery and not self.should_exclude_child('battery'):
             data = {}
             data['name'] = (
@@ -662,13 +690,16 @@ class VeraControllerDevice(Entity):
         elif (type_name == 'lightlevel' and
               self._state_variable == 'light'):
             return True
+        elif (type_name == 'armedtripped' and
+              self._state_variable == 'armed_tripped'):
+            return True
 
         return self._config.get(type_name, {}).get('exclude', False)
 
-    def is_child_hidden(self, type_name):
+    def is_child_hidden(self, type_name, default_value=False):
         """ Returns true if a child entity should be hidden on the states
         UI """
-        return self._config.get(type_name, {}).get('hidden', False)
+        return self._config.get(type_name, {}).get('hidden', default_value)
 
     def get_brightness(self):
         """ Converts the Vera level property for dimmable lights from a

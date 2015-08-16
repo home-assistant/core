@@ -280,6 +280,11 @@ class VeraControllerSensor(VeraControllerDevice):
                 return STATE_TRIPPED
             else:
                 return STATE_NOT_TRIPPED
+        elif self._state_variable == 'armed_tripped':
+            if str(self._device_data.get('armedtripped')) == '1':
+                return STATE_TRIPPED
+            else:
+                return STATE_NOT_TRIPPED
 
         return self._device_data.get(self._state_variable, None)
 
