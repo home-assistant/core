@@ -12,8 +12,6 @@ from homeassistant.const import TEMP_CELCIUS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['verisure']
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Verisure platform. """
@@ -79,7 +77,7 @@ class VerisureAlarmDevice(Entity):
     @property
     def state(self):
         """ Returns the state of the device. """
-        return verisure.STATUS[self._device][self._id].status
+        return verisure.STATUS[self._device][self._id].label
 
     def update(self):
         verisure.update()
