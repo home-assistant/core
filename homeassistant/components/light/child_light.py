@@ -94,6 +94,7 @@ discovery event fires.
 """
 
 from homeassistant.components.switch.child_switch import ChildSwitch
+from homeassistant.helpers import event
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR)
 from homeassistant.const import (
@@ -109,8 +110,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(dev)
 
-    hass.states.track_change(
-        discovery_info.get('parent_entity_id'), child_light.track_state)
+    event.track_state_change(
+        hass,
+        discovery_info.get('parent_entity_id'),
+        child_light.track_state)
 
 
 class ChildLight(ChildSwitch, Light):

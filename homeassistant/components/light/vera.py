@@ -51,6 +51,7 @@ it should be set to "true" if you want this device excluded.
 """
 import logging
 from requests.exceptions import RequestException
+from homeassistant.helpers import event
 from homeassistant.components.switch.vera import VeraSwitch
 from homeassistant.components.switch.vera import VeraControllerSwitch
 # pylint: disable=no-name-in-module, import-error
@@ -118,8 +119,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         add_devices_callback([new_light])
 
-        hass.states.track_change(
-            discovery_info.get('parent_entity_id'), new_light.track_state)
+        event.track_state_change(
+            hass,
+            discovery_info.get('parent_entity_id'),
+            new_light.track_state)
 
         new_light.create_child_devices()
 

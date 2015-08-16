@@ -94,6 +94,7 @@ discovery event fires.
 """
 
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers import event
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
 
@@ -112,8 +113,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(dev)
 
-    hass.states.track_change(
-        discovery_info.get('parent_entity_id'), child_switch.track_state)
+    event.track_state_change(
+        hass,
+        discovery_info.get('parent_entity_id'),
+        child_switch.track_state)
 
 
 class ChildSwitch(ToggleEntity):

@@ -46,6 +46,7 @@ it should be set to "true" if you want this device excluded.
 """
 import logging
 import time
+from homeassistant.helpers import event
 from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
 from homeassistant.components.controller.vera import VeraControllerDevice
@@ -112,8 +113,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             discovery_info)
         add_devices([new_switch])
 
-        hass.states.track_change(
-            discovery_info.get('parent_entity_id'), new_switch.track_state)
+        event.track_state_change(
+            hass,
+            discovery_info.get('parent_entity_id'),
+            new_switch.track_state)
 
         new_switch.create_child_devices()
 

@@ -61,6 +61,7 @@ discovery event fires.
 """
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import event
 
 import logging
 
@@ -77,8 +78,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(dev)
 
-    hass.states.track_change(
-        discovery_info.get('parent_entity_id'), child_sensor.track_state)
+    event.track_state_change(
+        hass,
+        discovery_info.get('parent_entity_id'),
+        child_sensor.track_state)
 
 
 class ChildSensor(Entity):
