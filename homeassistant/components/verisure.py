@@ -64,7 +64,7 @@ def setup(hass, config):
     try:
         MY_PAGES.login()
     except (ConnectionError, Error) as ex:
-        _LOGGER.error('Could not log in to verisure mypages, %s', ex.message)
+        _LOGGER.error('Could not log in to verisure mypages, %s', ex)
         return False
 
     update()
@@ -102,11 +102,11 @@ def reconnect():
     try:
         MY_PAGES.login()
     except VERISURE_LOGIN_ERROR as ex:
-        _LOGGER.error("Could not login to Verisure mypages, %s", ex.message)
+        _LOGGER.error("Could not login to Verisure mypages, %s", ex)
         global WRONG_PASSWORD_GIVEN
         WRONG_PASSWORD_GIVEN = True
     except (ConnectionError, VERISURE_ERROR) as ex:
-        _LOGGER.error("Could not login to Verisure mypages, %s", ex.message)
+        _LOGGER.error("Could not login to Verisure mypages, %s", ex)
 
 
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
