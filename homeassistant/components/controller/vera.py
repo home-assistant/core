@@ -497,8 +497,8 @@ class VeraControllerDevice(Entity):
                     ATTR_SERVICE: DISCOVER_CHILD_SENSORS,
                     ATTR_DISCOVERED: data})
 
-        if (self.is_armedtripped
-              and not self.should_exclude_child('armed_tripped')):
+        if (self.is_armedtripped and not
+                self.should_exclude_child('armed_tripped')):
             data = {}
             data['name'] = (
                 self._config.get('armed_tripped', {}).get('name', self._name))

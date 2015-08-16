@@ -264,6 +264,7 @@ class VeraControllerSensor(VeraControllerDevice):
         return self._unit_of_measurement
 
     @property
+    # pylint: disable=too-many-return-statements
     def state(self):
         """ Return the state value for this device """
         if self._state_variable == 'temperature':
