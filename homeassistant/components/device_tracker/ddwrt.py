@@ -42,7 +42,7 @@ from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=20)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class DdWrtDeviceScanner(object):
             response = requests.get(
                 url,
                 auth=(self.username, self.password),
-                timeout=4)
+                timeout=10)
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
             return
