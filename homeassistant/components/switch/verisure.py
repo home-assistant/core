@@ -2,14 +2,6 @@
 homeassistant.components.switch.verisure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Verisure Smartplugs
-
-Configuration:
-
-switch:
-  platform: verisure
-
-Variables:
-
 """
 import logging
 
@@ -31,6 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches.extend([
         VerisureSmartplug(value)
         for value in verisure.get_smartplug_status().values()
+        if verisure.SHOW_SMARTPLUGS
         ])
 
     add_devices(switches)
