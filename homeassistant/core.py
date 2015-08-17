@@ -23,7 +23,7 @@ from homeassistant.const import (
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 import homeassistant.util as util
 import homeassistant.util.dt as date_util
-import homeassistant.util.temperature as temp_util
+import homeassistant.helpers.temperature as temp_helper
 
 DOMAIN = "homeassistant"
 
@@ -673,17 +673,13 @@ class Config(object):
             return value, unit
 
         try:
-            if unit == TEMP_CELCIUS:
-                # Convert C to F
-                return (round(temp_util.c_to_f(float(value)), 1),
-                        TEMP_FAHRENHEIT)
-
-            # Convert F to C
-            return round(temp_util.f_to_c(float(value)), 1), TEMP_CELCIUS
-
-        except ValueError:
-            # Could not convert value to float
+            temp = float(value)
+        except ValueError:  # Could not convert value to float
             return value, unit
+
+        return (
+            round(temp_helper.convert(temp, unit, self.temperature_unit), 1),
+            self.temperature_unit)
 
     def as_dict(self):
         """ Converts config to a dictionary. """
