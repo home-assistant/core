@@ -6,7 +6,7 @@ Tests demo component.
 """
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.components.demo as demo
 
 from tests.common import mock_http_component
