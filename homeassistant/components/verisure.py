@@ -1,6 +1,45 @@
 """
 components.verisure
 ~~~~~~~~~~~~~~~~~~
+
+Provides support for verisure components
+
+Configuration:
+
+verisure:
+  username: user@example.com
+  password: password
+  alarm: 1
+  hygrometers: 0
+  smartplugs: 1
+  thermometers: 0
+
+
+Variables:
+
+username
+*Required
+Username to verisure mypages
+
+password
+*Required
+Password to verisure mypages
+
+alarm
+*Opional
+Set to 1 to show alarm, 0 to disable. Default 1
+
+hygrometers
+*Opional
+Set to 1 to show hygrometers, 0 to disable. Default 1
+
+smartplugs
+*Opional
+Set to 1 to show smartplugs, 0 to disable. Default 1
+
+thermometers
+*Opional
+Set to 1 to show thermometers, 0 to disable. Default 1
 """
 import logging
 from datetime import timedelta
@@ -33,6 +72,11 @@ STATUS = {}
 VERISURE_LOGIN_ERROR = None
 VERISURE_ERROR = None
 
+SHOW_THERMOMETERS = True
+SHOW_HYGROMETERS = True
+SHOW_ALARM = True
+SHOW_SMARTPLUGS = True
+
 # if wrong password was given don't try again
 WRONG_PASSWORD_GIVEN = False
 
@@ -52,6 +96,12 @@ def setup(hass, config):
     STATUS[MyPages.DEVICE_ALARM] = {}
     STATUS[MyPages.DEVICE_CLIMATE] = {}
     STATUS[MyPages.DEVICE_SMARTPLUG] = {}
+
+    global SHOW_THERMOMETERS, SHOW_HYGROMETERS, SHOW_ALARM, SHOW_SMARTPLUGS
+    SHOW_THERMOMETERS = int(config[DOMAIN].get('thermometers', '1'))
+    SHOW_HYGROMETERS = int(config[DOMAIN].get('hygrometers', '1'))
+    SHOW_ALARM = int(config[DOMAIN].get('alarm', '1'))
+    SHOW_SMARTPLUGS = int(config[DOMAIN].get('smartplugs', '1'))
 
     global MY_PAGES
     MY_PAGES = MyPages(
@@ -73,6 +123,7 @@ def setup(hass, config):
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
                                   ('switch', DISCOVER_SWITCHES))):
         component = get_component(comp_name)
+        _LOGGER.info(config[DOMAIN])
         bootstrap.setup_component(hass, component.DOMAIN, config)
 
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
