@@ -7,7 +7,7 @@ Tests the entity helper.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.helpers.entity as entity
 from homeassistant.const import ATTR_HIDDEN
 

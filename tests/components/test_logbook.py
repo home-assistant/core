@@ -8,7 +8,7 @@ Tests the logbook component.
 import unittest
 from datetime import timedelta
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util

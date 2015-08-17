@@ -6,7 +6,7 @@ Tests demo component.
 """
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.components.automation as automation
 import homeassistant.components.automation.mqtt as mqtt
 from homeassistant.const import CONF_PLATFORM
