@@ -9,7 +9,7 @@ Uses port 8125 as a port that nothing runs on
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http

@@ -6,7 +6,7 @@ Tests demo component.
 """
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation

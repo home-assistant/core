@@ -5,7 +5,7 @@ homeassistant.components.group
 Provides functionality to group devices that can be turned on or off.
 """
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.helpers import generate_entity_id
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import Entity

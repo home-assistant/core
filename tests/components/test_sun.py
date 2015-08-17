@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from astral import Astral
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 import homeassistant.components.sun as sun
 
