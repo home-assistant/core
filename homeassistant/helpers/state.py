@@ -6,7 +6,7 @@ Helpers that help with state related things.
 """
 import logging
 
-from homeassistant import State
+from homeassistant.core import State
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)

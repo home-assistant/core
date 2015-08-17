@@ -86,7 +86,7 @@ from http import cookies
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
