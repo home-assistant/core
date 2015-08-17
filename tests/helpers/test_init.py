@@ -9,7 +9,7 @@ import unittest
 
 from common import get_test_home_assistant
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.helpers import extract_entity_ids
