@@ -9,7 +9,7 @@ import time
 import os
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
 

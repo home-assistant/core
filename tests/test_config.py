@@ -9,7 +9,7 @@ import unittest
 import unittest.mock as mock
 import os
 
-from homeassistant import DOMAIN, HomeAssistantError
+from homeassistant.core import DOMAIN, HomeAssistantError
 import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,

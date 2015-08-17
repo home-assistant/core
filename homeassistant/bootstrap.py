@@ -13,7 +13,7 @@ import os
 import logging
 from collections import defaultdict
 
-import homeassistant
+import homeassistant.core as core
 import homeassistant.util.dt as date_util
 import homeassistant.util.package as pkg_util
 import homeassistant.util.location as loc_util
@@ -152,9 +152,9 @@ def from_config_dict(config, hass=None):
     Dynamically loads required components and its dependencies.
     """
     if hass is None:
-        hass = homeassistant.HomeAssistant()
+        hass = core.HomeAssistant()
 
-    process_ha_core_config(hass, config.get(homeassistant.DOMAIN, {}))
+    process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     enable_logging(hass)
 
@@ -168,7 +168,7 @@ def from_config_dict(config, hass=None):
 
     # Filter out the repeating and common config section [homeassistant]
     components = (key for key in config.keys()
-                  if ' ' not in key and key != homeassistant.DOMAIN)
+                  if ' ' not in key and key != core.DOMAIN)
 
     if not core_components.setup(hass, config):
         _LOGGER.error('Home Assistant core failed to initialize. '
@@ -192,7 +192,7 @@ def from_config_file(config_path, hass=None):
     instantiates a new Home Assistant object if 'hass' is not given.
     """
     if hass is None:
-        hass = homeassistant.HomeAssistant()
+        hass = core.HomeAssistant()
 
     # Set config dir to directory holding config file
     hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
@@ -222,7 +222,8 @@ def enable_logging(hass):
             }
         ))
     except ImportError:
-        _LOGGER.warn("Colorlog package not found, console coloring disabled")
+        _LOGGER.warning(
+            "Colorlog package not found, console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path('home-assistant.log')

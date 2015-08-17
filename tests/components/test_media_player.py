@@ -8,7 +8,7 @@ Tests media_player component.
 import logging
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.const import (
     STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
