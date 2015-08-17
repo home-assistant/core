@@ -8,7 +8,7 @@ import os
 from datetime import timedelta
 from unittest import mock
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.util.location as location_util
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import ToggleEntity
