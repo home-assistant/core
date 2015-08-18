@@ -10,7 +10,7 @@ from datetime import timedelta
 import logging
 import os
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (

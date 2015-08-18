@@ -8,7 +8,7 @@ Tests the group compoments.
 import unittest
 import logging
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN
 import homeassistant.components.group as group
 

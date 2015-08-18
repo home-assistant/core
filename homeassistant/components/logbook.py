@@ -8,7 +8,7 @@ from datetime import timedelta
 from itertools import groupby
 import re
 
-from homeassistant import State, DOMAIN as HA_DOMAIN
+from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
