@@ -13,7 +13,7 @@ from datetime import datetime, date
 import json
 import atexit
 
-from homeassistant import Event, EventOrigin, State
+from homeassistant.core import Event, EventOrigin, State
 import homeassistant.util.dt as date_util
 from homeassistant.remote import JSONEncoder
 from homeassistant.const import (

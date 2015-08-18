@@ -10,7 +10,7 @@ import unittest
 
 import requests
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH

@@ -7,7 +7,7 @@ Tests core compoments.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF)

@@ -16,16 +16,17 @@ omit =
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
-    homeassistant/components/mqtt.py
+    homeassistant/components/*/tellstick.py
+    homeassistant/components/*/vera.py
+
+    homeassistant/components/verisure.py
+    homeassistant/components/*/verisure.py
 
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
-
-    homeassistant/components/*/tellstick.py
-    homeassistant/components/*/vera.py
 
     homeassistant/components/browser.py
     homeassistant/components/camera/*
