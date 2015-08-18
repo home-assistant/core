@@ -9,7 +9,7 @@ Tests event helpers.
 import unittest
 from datetime import datetime
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.helpers.event import *
 
 

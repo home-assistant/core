@@ -15,7 +15,7 @@ from datetime import datetime
 
 import pytz
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (

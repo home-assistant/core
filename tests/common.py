@@ -6,14 +6,16 @@ Helper method for writing tests.
 """
 import os
 from datetime import timedelta
+from unittest import mock
 
-import homeassistant as ha
+import homeassistant.core as ha
+import homeassistant.util.location as location_util
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED)
-from homeassistant.components import sun
+from homeassistant.components import sun, mqtt
 
 
 def get_test_config_dir():
@@ -39,6 +41,23 @@ def get_test_home_assistant(num_threads=None):
     return hass
 
 
+def mock_detect_location_info():
+    """ Mock implementation of util.detect_location_info. """
+    return location_util.LocationInfo(
+        ip='1.1.1.1',
+        country_code='US',
+        country_name='United States',
+        region_code='CA',
+        region_name='California',
+        city='San Diego',
+        zip_code='92122',
+        time_zone='America/Los_Angeles',
+        latitude='2.0',
+        longitude='1.0',
+        use_fahrenheit=True,
+    )
+
+
 def mock_service(hass, domain, service):
     """
     Sets up a fake service.
@@ -50,6 +69,14 @@ def mock_service(hass, domain, service):
         domain, service, lambda call: calls.append(call))
 
     return calls
+
+
+def fire_mqtt_message(hass, topic, payload, qos=0):
+    hass.bus.fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
+        mqtt.ATTR_TOPIC: topic,
+        mqtt.ATTR_PAYLOAD: payload,
+        mqtt.ATTR_QOS: qos,
+    })
 
 
 def fire_time_changed(hass, time):
@@ -91,6 +118,16 @@ def mock_state_change_event(hass, new_state, old_state=None):
 def mock_http_component(hass):
     hass.http = MockHTTP()
     hass.config.components.append('http')
+
+
+def mock_mqtt_component(hass):
+    with mock.patch('homeassistant.components.mqtt.MQTT'):
+        mqtt.setup(hass, {
+            mqtt.DOMAIN: {
+                mqtt.CONF_BROKER: 'mock-broker',
+            }
+        })
+        hass.config.components.append(mqtt.DOMAIN)
 
 
 class MockHTTP(object):

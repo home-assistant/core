@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the mysensors platform. """
 
     import mysensors.mysensors as mysensors
-    import mysensors.const as const
+    import mysensors.const_14 as const
 
     devices = {}    # keep track of devices added to HA
     # Just assume celcius means that the user wants metric for now.
