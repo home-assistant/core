@@ -1,8 +1,10 @@
-""" Support for ISY994 lights. """
-# system imports
+"""
+homeassistant.components.light.isy994
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for ISY994 lights.
+"""
 import logging
 
-# homeassistant imports
 from homeassistant.components.isy994 import (ISYDeviceABC, ISY, SENSOR_STRING,
                                              HIDDEN_STRING)
 from homeassistant.components.light import ATTR_BRIGHTNESS
@@ -10,7 +12,7 @@ from homeassistant.const import STATE_ON, STATE_OFF
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the isy994 platform. """
+    """ Sets up the ISY994 platform. """
     logger = logging.getLogger(__name__)
     devs = []
     # verify connection
@@ -29,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ISYLightDevice(ISYDeviceABC):
-    """ represents as isy light within home assistant. """
+    """ Represents as ISY light. """
 
     _domain = 'light'
     _dtype = 'analog'

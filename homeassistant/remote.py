@@ -17,7 +17,7 @@ import urllib.parse
 
 import requests
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 
 from homeassistant.const import (
