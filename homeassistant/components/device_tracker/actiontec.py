@@ -1,15 +1,15 @@
 """
 homeassistant.components.device_tracker.actiontec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Actiontec MI424WR (Verizon FIOS) router for device
-presence.
+Device tracker platform that supports scanning an Actiontec MI424WR
+(Verizon FIOS) router for device presence.
 
 This device tracker needs telnet to be enabled on the router.
 
 Configuration:
 
-To use the Actiontec tracker you will need to add something like the following
-to your config/configuration.yaml
+To use the Actiontec tracker you will need to add something like the 
+following to your config/configuration.yaml
 
 device_tracker:
   platform: actiontec
@@ -49,8 +49,6 @@ _LOGGER = logging.getLogger(__name__)
 
 _LEASES_REGEX = re.compile(r'(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))')
 
-
-
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a DD-WRT scanner. """
@@ -62,7 +60,6 @@ def get_scanner(hass, config):
     scanner = ActiontecDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
-
 
 class ActiontecDeviceScanner(object):
     """ This class queries a an actiontec router
@@ -122,11 +119,11 @@ class ActiontecDeviceScanner(object):
             telnet.write((self.username + '\n').encode('ascii'))
             telnet.read_until(b'Password: ')
             telnet.write((self.password + '\n').encode('ascii'))
-            prompt_string = telnet.read_until(b'Wireless Broadband Router> ').split(b'\n')[-1]
+            prompt = telnet.read_until(b'Wireless Broadband Router> ').split(b'\n')[-1]
             telnet.write('firewall mac_cache_dump\n'.encode('ascii'))
             telnet.write('\n'.encode('ascii'))
-            skip_line = telnet.read_until(prompt_string).split(b'\n')[1:-1]
-            leases_result = telnet.read_until(prompt_string).split(b'\n')[1:-1]
+            _=telnet.read_until(prompt).split(b'\n')[1:-1]
+            leases_result = telnet.read_until(prompt).split(b'\n')[1:-1]
             telnet.write('exit\n'.encode('ascii'))
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
@@ -143,4 +140,3 @@ class ActiontecDeviceScanner(object):
                 devices.append(match.group('mac'))
 
         return devices
-
