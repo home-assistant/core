@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-08-09T23:56:23-07:00</updated>
+  <updated>2015-08-17T21:09:41-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,48 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Verisure devices and modern TP-Link routers now supported]]></title>
+    <link href="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/"/>
+    <updated>2015-08-17T20:00:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support</id>
+    <content type="html"><![CDATA[<p>A minor bug fix release to fix some issues that have come up since the last release. Please upgrade as soon as possible by running <code>git pull</code> from the Home Assistant directory.</p>
+
+<p>This release is a major milestone in our test coverage as we&rsquo;ve crossed into the 80s! It has to be noted that this covers mainly the core and automation components. Platforms that communicate with IoT devices have been excluded.</p>
+
+<p>As we didn&rsquo;t want to just push out bug fixes, this release includes a few additions:</p>
+
+<ul>
+<li>Support for modern TP-Link routers like the ArcherC9 line has been contributed by <a href="https://github.com/chrisvis">@chrisvis</a>.</li>
+<li>Improved support for MQTT topic subscriptions has been contributed by <a href="https://github.com/qrtn">@qrtn</a></li>
+</ul>
+
+
+<p><strong>Verisure Support</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/verisure.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Home Assistant support to integrate your <a href="https://www.verisure.com/">Verisure</a> alarms, hygrometers, sensors and thermometers has been contributed by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">verisure</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">user@example.com</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">password</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alarm</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">hygrometers</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">smartplugs</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">thermometers</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported]]></title>

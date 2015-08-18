@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-08-09T23:56:23-07:00</updated>
+  <updated>2015-08-17T21:09:41-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,39 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Verisure devices and modern TP-Link routers now supported]]></title>
+    <link href="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/"/>
+    <updated>2015-08-17T20:00:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support</id>
+    <content type="html"><![CDATA[<p>A minor bug fix release to fix some issues that have come up since the last release. Please upgrade as soon as possible by running <code>git pull</code> from the Home Assistant directory.</p>
+
+<p>This release is a major milestone in our test coverage as we&rsquo;ve crossed into the 80s! It has to be noted that this covers mainly the core and automation components. Platforms that communicate with IoT devices have been excluded.</p>
+
+<p>As we didn&rsquo;t want to just push out bug fixes, this release includes a few additions:</p>
+
+<ul>
+<li>Support for modern TP-Link routers like the ArcherC9 line has been contributed by <a href="https://github.com/chrisvis">@chrisvis</a>.</li>
+<li>Improved support for MQTT topic subscriptions has been contributed by <a href="https://github.com/qrtn">@qrtn</a></li>
+</ul>
+
+
+<p><strong>Verisure Support</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/verisure.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Home Assistant support to integrate your <a href="https://www.verisure.com/">Verisure</a> alarms, hygrometers, sensors and thermometers has been contributed by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+
+<pre><code class="yaml"># Example configuration.yaml entry
+verisure:
+  username: user@example.com
+  password: password
+  alarm: 1
+  hygrometers: 0
+  smartplugs: 1
+  thermometers: 0
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported]]></title>
@@ -531,102 +564,6 @@ sensor:
     - type: 'date'
     - type: 'date_time'
     - type: 'time_date'
-</code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for April 25, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/04/25/release-notes/"/>
-    <updated>2015-04-25T06:57:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/04/25/release-notes</id>
-    <content type="html"><![CDATA[<p>It&rsquo;s been a month since the latest update and a lot has happened again. Here a quick overview of the new things.</p>
-
-<p><strong>Line Charts</strong><br>
-<a href="https://github.com/jamespcole">James</a> has upgraded the history in the frontend to support line graphs. Line graphs will be shown for any entity that has a unit of measurement. The line graphs will also be shown in the more info card of an entity. <a href="/demo/">See the demo for a live example.</a></p>
-
-<p class='img'>
-<img src='https://home-assistant.io/images/screenshots/history-line-graphs.png'>
-</p>
-
-
-<p><strong>ISY994 hub support</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/universal_devices.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/rmkraus">Ryan</a> has contributed support to integrate the ISY994 hub by Universal Devices. This allows you to integrate your X10/Insteon sensors, switches and lights.</p>
-
-<p>He has created an extensive getting started guide which can be found on <a href="/components/isy994.html">the ISY994 component page</a>.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-isy994:
-</code></pre>
-
-<p><strong>Logbook</strong><br>
-<img src='https://home-assistant.io/images/screenshots/logbook.png' style='margin-left:10px; float: right;' height="100" />
-I (Paulus) have added a logbook component. The logbook component provides a different perspective on the history of your house by showing all the changes that happened to your house in chronological order. <a href="/demo/">See the demo for a live example.</a>
-<span class='clearfix'></span></p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-logbook:
-</code></pre>
-
-<!--more-->
-
-
-<p><strong>Transmission support</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/transmission.png' style='border:none; box-shadow: none; float: right;' height='50' />
-James has also contributed support for integrating Transmission into Home Assistant.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: transmission
-  name: Transmission
-  host: 192.168.1.26
-  port: 9091
-  username: YOUR_USERNAME
-  password: YOUR_PASSWORD
-  monitored_variables:
-    - type: 'current_status'
-    - type: 'download_speed'
-    - type: 'upload_speed'
-</code></pre>
-
-<p><strong>Modbus support</strong><br>
-<a href="https://github.com/kixam">Kixam</a> has contributed support for modbus, a serial communication protocol to control PLCs. It currently supports sensors and switches which can be controlled over serial, TCP and UDP connections.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-modbus:
-  type: serial
-  method: rtu
-  port: /dev/ttyUSB0
-  baudrate: 9600
-  stopbits: 1
-  bytesize: 8
-  parity: N
-
-sensor:
-  platform: modbus
-  slave: 1
-  registers:
-    16:
-      name: My integer sensor
-        unit: C
-    24:
-      bits:
-        0:
-          name: My boolean sensor
-        2:
-          name: My other boolean sensor
-
-switch:
-  platform: modbus
-  slave: 1
-  registers:
-    24:
-      bits:
-        0:
-          name: My switch
-        2:
-          name: My other switch
 </code></pre>
 ]]></content>
   </entry>
