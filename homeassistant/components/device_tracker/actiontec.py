@@ -125,7 +125,7 @@ class ActiontecDeviceScanner(object):
             prompt_string = telnet.read_until(b'Wireless Broadband Router> ').split(b'\n')[-1]
             telnet.write('firewall mac_cache_dump\n'.encode('ascii'))
             telnet.write('\n'.encode('ascii'))
-            telnet.read_until(prompt_string).split(b'\n')[1:-1]
+            skip_line = telnet.read_until(prompt_string).split(b'\n')[1:-1]
             leases_result = telnet.read_until(prompt_string).split(b'\n')[1:-1]
             telnet.write('exit\n'.encode('ascii'))
         except EOFError:
@@ -139,6 +139,8 @@ class ActiontecDeviceScanner(object):
         devices = []
         for lease in leases_result:
             match = _LEASES_REGEX.search(lease.decode('utf-8'))
-            if match is not None: devices.append(match.group('mac'))
+            if match is not None: 
+                devices.append(match.group('mac'))
 
         return devices
+
