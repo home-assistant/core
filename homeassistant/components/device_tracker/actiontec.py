@@ -8,7 +8,7 @@ This device tracker needs telnet to be enabled on the router.
 
 Configuration:
 
-To use the Actiontec tracker you will need to add something like the 
+To use the Actiontec tracker you will need to add something like the
 following to your config/configuration.yaml
 
 device_tracker:
@@ -122,7 +122,7 @@ class ActiontecDeviceScanner(object):
             telnet.read_until(b'Password: ')
             telnet.write((self.password + '\n').encode('ascii'))
             prompt = telnet.read_until(b'Wireless Broadband Router> ',
-					'').split(b'\n')[-1]
+                                       '').split(b'\n')[-1]
             telnet.write('firewall mac_cache_dump\n'.encode('ascii'))
             telnet.write('\n'.encode('ascii'))
             telnet.read_until(prompt)
@@ -139,7 +139,7 @@ class ActiontecDeviceScanner(object):
         devices = []
         for lease in leases_result:
             match = _LEASES_REGEX.search(lease.decode('utf-8'))
-            if match is not None: 
+            if match is not None:
                 devices.append(match.group('mac'))
 
         return devices
