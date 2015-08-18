@@ -24,7 +24,7 @@ pyuserinput>=0.1.9
 tellcore-py>=1.0.4
 
 # Nmap bindings (device_tracker.nmap)
-python-libnmap>=0.6.2
+python-libnmap>=0.6.3
 
 # PushBullet bindings (notify.pushbullet)
 pushbullet.py>=0.7.1
