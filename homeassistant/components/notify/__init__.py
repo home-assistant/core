@@ -37,8 +37,7 @@ def setup(hass, config):
     success = False
 
     for platform, p_config in config_per_platform(config, DOMAIN, _LOGGER):
-        # create platform
-        platform = p_config[CONF_PLATFORM]
+        # get platform
         notify_implementation = get_component(
             'notify.{}'.format(platform))
 
