@@ -47,7 +47,9 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
-_LEASES_REGEX = re.compile(r'(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))')
+_LEASES_REGEX = re.compile(
+    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})' +
+    r'\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))')
 
 
 # pylint: disable=unused-argument
@@ -99,8 +101,8 @@ class ActiontecDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the ASUSWRT router is up to date.
-            Returns boolean if scanning successful. """
+        """ Ensures the information from the Actiontec MI424WR router is up
+            to date. Returns boolean if scanning successful. """
         if not self.success_init:
             return False
 
@@ -109,12 +111,12 @@ class ActiontecDeviceScanner(object):
             data = self.get_actiontec_data()
             if not data:
                 return False
-
-            self.last_results = data
+            active_clients = [client for client in data.values()]
+            self.last_results = active_clients
             return True
 
     def get_actiontec_data(self):
-        """ Retrieve data from ASUSWRT and return parsed result.  """
+        """ Retrieve data from Actiontec MI424WR and return parsed result.  """
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'Username: ')
@@ -136,10 +138,12 @@ class ActiontecDeviceScanner(object):
                               " is telnet enabled?")
             return
 
-        devices = []
+        devices = {}
         for lease in leases_result:
             match = _LEASES_REGEX.search(lease.decode('utf-8'))
             if match is not None:
-                devices.append(match.group('mac'))
-
+                devices[match.group('ip')] = {
+                    'ip': match.group('ip'),
+                    'mac': match.group('mac').upper()
+                    }
         return devices
