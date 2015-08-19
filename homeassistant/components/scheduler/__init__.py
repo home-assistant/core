@@ -131,7 +131,7 @@ class ServiceEventListener(EventListener):
     def execute(self, hass):
         """ Call the service. """
         data = {ATTR_ENTITY_ID: self.my_schedule.entity_ids}
-        hass.call_service(self.domain, self.service, data)
+        hass.services.call(self.domain, self.service, data)
 
         # Reschedule for next day
         self.schedule(hass)
