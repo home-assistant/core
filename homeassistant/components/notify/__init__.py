@@ -10,7 +10,7 @@ import logging
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform
 
-from homeassistant.const import CONF_PLATFORM, CONF_NAME
+from homeassistant.const import CONF_NAME
 
 DOMAIN = "notify"
 DEPENDENCIES = []
