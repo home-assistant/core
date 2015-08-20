@@ -3,6 +3,7 @@ homeassistant.components.thermostat.nest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for Nest thermostats.
 """
+import socket
 import logging
 
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
@@ -35,12 +36,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     napi = nest.Nest(username, password)
-
-    add_devices([
-        NestThermostat(structure, device)
-        for structure in napi.structures
-        for device in structure.devices
-    ])
+    try:
+        add_devices([
+            NestThermostat(structure, device)
+            for structure in napi.structures
+            for device in structure.devices
+        ])
+    except socket.error:
+        logger.error(
+            "Connection error logging into the nest web service"
+        )
 
 
 class NestThermostat(ThermostatDevice):
