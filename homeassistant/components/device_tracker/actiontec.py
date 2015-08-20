@@ -88,7 +88,7 @@ class ActiontecDeviceScanner(object):
             list containing found device ids. """
 
         self._update_info()
-        return self.last_results
+        return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
         """ Returns the name of the given device or None if we don't know. """
