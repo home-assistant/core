@@ -18,7 +18,7 @@ old state will not be restored when it is being deactivated.
 import logging
 from collections import namedtuple
 
-from homeassistant import State
+from homeassistant.core import State
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent

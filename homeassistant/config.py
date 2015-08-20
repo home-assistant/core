@@ -7,7 +7,7 @@ Module to help with parsing and generating configuration files.
 import logging
 import os
 
-from homeassistant import HomeAssistantError
+from homeassistant.core import HomeAssistantError
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)

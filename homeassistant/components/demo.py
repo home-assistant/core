@@ -6,7 +6,7 @@ Sets up a demo environment that mimics interaction with devices.
 """
 import time
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.loader as loader
 from homeassistant.const import (

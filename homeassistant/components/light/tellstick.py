@@ -1,4 +1,8 @@
-""" Support for Tellstick lights. """
+"""
+homeassistant.components.light.tellstick
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Tellstick lights.
+"""
 import logging
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
@@ -9,7 +13,7 @@ REQUIREMENTS = ['tellcore-py>=1.0.4']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return tellstick lights. """
+    """ Find and return Tellstick lights. """
 
     try:
         import tellcore.telldus as telldus
@@ -29,7 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TellstickLight(Light):
-    """ Represents a tellstick light """
+    """ Represents a Tellstick light. """
     last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                               tellcore_constants.TELLSTICK_TURNOFF |
                               tellcore_constants.TELLSTICK_DIM |

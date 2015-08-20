@@ -7,7 +7,7 @@ Tests Configurator component.
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.components.configurator as configurator
 from homeassistant.const import EVENT_TIME_CHANGED
 
