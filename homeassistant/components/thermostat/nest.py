@@ -4,9 +4,10 @@ Adds support for Nest thermostats.
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
+from homeassistant.helpers.temperature import convert
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
-REQUIREMENTS = ['python-nest>=2.3.1']
+REQUIREMENTS = ['python-nest>=2.4.0']
 
 
 # pylint: disable=unused-argument
@@ -34,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     napi = nest.Nest(username, password)
 
     add_devices([
-        NestThermostat(nest.utils, structure, device)
+        NestThermostat(structure, device)
         for structure in napi.structures
         for device in structure.devices
     ])
@@ -43,10 +44,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NestThermostat(ThermostatDevice):
     """ Represents a Nest thermostat within Home Assistant. """
 
-    def __init__(self, nest_utils, structure, device):
+    def __init__(self, structure, device):
         self.structure = structure
         self.device = device
-        self.nest_utils = nest_utils
 
     @property
     def name(self):
@@ -106,16 +106,11 @@ class NestThermostat(ThermostatDevice):
         """ Returns if away mode is on. """
         return self.structure.away
 
-    def enforce_temp_units(self, temperature):
-        """ Enforces temp units in C for nest API, returns temp """
-        if self.hass.config.temperature_unit == self.unit_of_measurement:
-            return temperature
-        else:
-            return self.nest_utils.f_to_c(temperature)
-
     def set_temperature(self, temperature):
-        """ Set new target temperature """
-        self.device.target = self.enforce_temp_units(temperature)
+        """ Set new target temperature ensuring it is in proper units """
+        temperature = convert(temperature, self.hass.config.temperature_unit,
+                              self.unit_of_measurement)
+        self.device.target = temperature
 
     def turn_away_mode_on(self):
         """ Turns away on. """
