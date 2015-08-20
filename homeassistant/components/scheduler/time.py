@@ -28,7 +28,7 @@ def create_event_listener(schedule, event_listener_data):
 
     service = event_listener_data['service']
     (hour, minute, second) = [int(x) for x in
-                              event_listener_data['time'].split(':')]
+                              event_listener_data['time'].split(':', 3)]
 
     return TimeEventListener(schedule, service, hour, minute, second)
 
