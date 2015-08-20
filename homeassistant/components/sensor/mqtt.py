@@ -4,7 +4,10 @@ homeassistant.components.sensor.mqtt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a MQTT sensor.
 
-This generic sensor implementation uses the MQTT message payload as the sensor value.
+This generic sensor implementation uses the MQTT message payload 
+as the sensor value. If messages in this state_topic are published
+with RETAIN flag, the sensor will receive an instant update with 
+last known value. Otherwise, the initial state will be undefined.
 
 sensor:
   platform: mqtt
@@ -20,7 +23,7 @@ The name of the sensor. Default is 'MQTT Sensor'.
 
 state_topic
 *Required
-The MQTT topic subscribed to receive sensor values. 
+The MQTT topic subscribed to receive sensor values.
 
 unit_of_measurement
 *Optional
@@ -38,17 +41,18 @@ DEFAULT_NAME = "MQTT Sensor"
 
 DEPENDENCIES = ['mqtt']
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Sensor """
-    
+
     if config.get('state_topic') is None:
         _LOGGER.error("Missing required variable: state_topic")
         return False
-        
+
     add_devices_callback([MqttSensor(
         hass,
-        config.get('name',DEFAULT_NAME),
+        config.get('name', DEFAULT_NAME),
         config.get('state_topic'),
         config.get('unit_of_measurement'))])
 
@@ -86,4 +90,4 @@ class MqttSensor(Entity):
     @property
     def state(self):
         """ Returns the state of the entity. """
-        return self._state          
+        return self._state
