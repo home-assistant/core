@@ -4,16 +4,18 @@ homeassistant.components.switch.mqtt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a MQTT switch.
 
-In an ideal scenario, the MQTT device will have a state topic to publish state changes.
-If these messages are published with RETAIN flag, the MQTT switch will receive 
-an instant state update after subscription and will start with correct state. Otherwise, 
-the initial state of the switch will be false/off.
+In an ideal scenario, the MQTT device will have a state topic to publish
+state changes. If these messages are published with RETAIN flag, the MQTT
+switch will receive an instant state update after subscription and will 
+start with correct state. Otherwise, the initial state of the switch will
+be false/off.
 
-When a state topic is not available, the switch will work in an optimistic mode.
-In this mode, the MQTT switch will immediately change state after every command.
-Otherwise, the switch will wait for state confirmation from device (message from state_topic).
+When a state topic is not available, the switch will work in optimistic mode.
+In this mode, the switch will immediately change state after every command.
+Otherwise, the switch will wait for state confirmation from device
+(message from state_topic).
 
-Optimistic mode can be forced, even if state topic is available. 
+Optimistic mode can be forced, even if state topic is available.
 Try to enable it, if experiencing incorrect switch operation.
 
 
@@ -36,7 +38,7 @@ The name of the switch. Default is 'MQTT Switch'.
 
 state_topic
 *Optional
-The MQTT topic subscribed to receive state updates. 
+The MQTT topic subscribed to receive state updates.
 If not specified, optimistic mode will be forced.
 
 command_topic
@@ -70,6 +72,7 @@ DEFAULT_OPTIMISTIC = False
 
 DEPENDENCIES = ['mqtt']
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Switch """
@@ -77,7 +80,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
         return False
-    
+
     add_devices_callback([MqttSwitch(
         hass,
         config.get('name', DEFAULT_NAME),
@@ -87,10 +90,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('payload_off', DEFAULT_PAYLOAD_OFF),
         config.get('optimistic', DEFAULT_OPTIMISTIC))])
 
+
 class MqttSwitch(SwitchDevice):
     """ Represents a switch that can be togggled using MQTT """
-    def __init__(self, hass, name, state_topic, command_topic, payload_on, payload_off, optimistic):
-        self._state = False        
+    def __init__(self, hass, name, state_topic, command_topic,
+                 payload_on, payload_off, optimistic):
+        self._state = False
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
@@ -98,20 +103,21 @@ class MqttSwitch(SwitchDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
-            
+
         def message_received(topic, payload, qos):
-            if (payload == self._payload_on):
+            """ A new MQTT message has been received. """
+            if payload == self._payload_on:
                 self._state = True
                 self.update_ha_state()
-            elif (payload == self._payload_off):
+            elif payload == self._payload_off:
                 self._state = False
                 self.update_ha_state()
 
         if self._state_topic is None:
-            """ force optimistic mode """
+            # force optimistic mode
             self._optimistic = True
         else:
-            """ subscribe the state_topic """
+            # subscribe the state_topic
             mqtt.subscribe(hass, self._state_topic, message_received)
 
     @property
@@ -133,7 +139,7 @@ class MqttSwitch(SwitchDevice):
         """ Turn the device on. """
         mqtt.publish(self.hass, self._command_topic, self._payload_on)
         if self._optimistic:
-            """ optimistically assume that switch has changed state """
+            # optimistically assume that switch has changed state
             self._state = True
             self.update_ha_state()
 
@@ -141,6 +147,6 @@ class MqttSwitch(SwitchDevice):
         """ Turn the device off. """
         mqtt.publish(self.hass, self._command_topic, self._payload_off)
         if self._optimistic:
-            """ optimistically assume that switch has changed state """
+            # optimistically assume that switch has changed state
             self._state = False
             self.update_ha_state()
