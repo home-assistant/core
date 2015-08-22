@@ -67,6 +67,7 @@ class MqttSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
 
         def message_received(topic, payload, qos):
+            """ A new MQTT message has been received. """
             self._state = payload
             self.update_ha_state()
 
