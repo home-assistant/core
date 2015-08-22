@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('optimistic', DEFAULT_OPTIMISTIC))])
 
 
-#pylint: disable-msg=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSwitch(SwitchDevice):
     """ Represents a switch that can be togggled using MQTT """
     def __init__(self, hass, name, state_topic, command_topic,
