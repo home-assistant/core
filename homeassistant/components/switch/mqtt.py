@@ -6,7 +6,7 @@ Allows to configure a MQTT switch.
 
 In an ideal scenario, the MQTT device will have a state topic to publish
 state changes. If these messages are published with RETAIN flag, the MQTT
-switch will receive an instant state update after subscription and will 
+switch will receive an instant state update after subscription and will
 start with correct state. Otherwise, the initial state of the switch will
 be false/off.
 
@@ -91,6 +91,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('optimistic', DEFAULT_OPTIMISTIC))])
 
 
+#pylint: disable-msg=too-many-arguments
 class MqttSwitch(SwitchDevice):
     """ Represents a switch that can be togggled using MQTT """
     def __init__(self, hass, name, state_topic, command_topic,
