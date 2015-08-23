@@ -84,10 +84,10 @@ https://github.com/theolind/pymysensors/archive/master.zip#egg=pymysensors-0.1
 pynetgear>=0.1
 
 # Netdisco (discovery)
-netdisco>=0.1
+netdisco>=0.2
 
 # Wemo (switch.wemo)
-pywemo>=0.1
+pywemo>=0.2
 
 # Wink (*.wink)
 https://github.com/balloob/python-wink/archive/master.zip#pywink>=0.1
