@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 # interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
 
-REQUIREMENTS = ['python-libnmap>=0.6.2']
+REQUIREMENTS = ['python-libnmap>=0.6.3']
 
 
 def get_scanner(hass, config):

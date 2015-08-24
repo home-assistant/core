@@ -15,7 +15,7 @@ phue>=0.8
 ledcontroller>=1.0.7
 
 # Chromecast bindings (media_player.cast)
-pychromecast>=0.6.9
+pychromecast>=0.6.10
 
 # Keyboard (keyboard)
 pyuserinput>=0.1.9
@@ -24,7 +24,7 @@ pyuserinput>=0.1.9
 tellcore-py>=1.0.4
 
 # Nmap bindings (device_tracker.nmap)
-python-libnmap>=0.6.2
+python-libnmap>=0.6.3
 
 # PushBullet bindings (notify.pushbullet)
 pushbullet.py>=0.7.1
@@ -81,13 +81,13 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip
 https://github.com/theolind/pymysensors/archive/master.zip#egg=pymysensors-0.1
 
 # Netgear (device_tracker.netgear)
-pynetgear>=0.1
+pynetgear>=0.3
 
 # Netdisco (discovery)
-netdisco>=0.1
+netdisco>=0.3
 
 # Wemo (switch.wemo)
-pywemo>=0.1
+pywemo>=0.2
 
 # Wink (*.wink)
 https://github.com/balloob/python-wink/archive/master.zip#pywink>=0.1
