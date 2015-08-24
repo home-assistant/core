@@ -130,6 +130,7 @@ class ActiontecDeviceScanner(object):
             telnet.read_until(prompt)
             leases_result = telnet.read_until(prompt).split(b'\n')[1:-1]
             telnet.write('exit\n'.encode('ascii'))
+            return None
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
             return
