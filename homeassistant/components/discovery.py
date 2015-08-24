@@ -28,11 +28,13 @@ SCAN_INTERVAL = 300  # seconds
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HUE = 'philips_hue'
 SERVICE_CAST = 'google_cast'
+SERVICE_NETGEAR = 'netgear_router'
 
 SERVICE_HANDLERS = {
     SERVICE_WEMO: "switch",
     SERVICE_CAST: "media_player",
     SERVICE_HUE: "light",
+    SERVICE_NETGEAR: 'device_tracker',
 }
 
 
@@ -75,6 +77,13 @@ def setup(hass, config):
 
             # We do not know how to handle this service
             if not component:
+                return
+
+            # Hack - fix when device_tracker supports discovery
+            if service == SERVICE_NETGEAR:
+                bootstrap.setup_component(hass, component, {
+                    'device_tracker': {'platform': 'netgear'}
+                })
                 return
 
             # This component cannot be setup.
