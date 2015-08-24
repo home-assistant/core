@@ -10,7 +10,7 @@ import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.loader as loader
 from homeassistant.const import (
-    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID)
+    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "demo"
 
@@ -48,8 +48,11 @@ def setup(hass, config):
     # Setup room groups
     lights = hass.states.entity_ids('light')
     switches = hass.states.entity_ids('switch')
-    group.setup_group(hass, 'living room', [lights[0], lights[1], switches[0]])
-    group.setup_group(hass, 'bedroom', [lights[2], switches[1]])
+    media_players = sorted(hass.states.entity_ids('media_player'))
+    group.setup_group(hass, 'living room', [lights[0], lights[1], switches[0],
+                                            media_players[1]])
+    group.setup_group(hass, 'bedroom', [lights[2], switches[1],
+                                        media_players[0]])
 
     # Setup IP Camera
     bootstrap.setup_component(
@@ -102,10 +105,10 @@ def setup(hass, config):
     # Setup fake device tracker
     hass.states.set("device_tracker.paulus", "home",
                     {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/297400035/picture"})
+                     "http://graph.facebook.com/297400035/picture",
+                     ATTR_FRIENDLY_NAME: 'Paulus'})
     hass.states.set("device_tracker.anne_therese", "not_home",
-                    {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/621994601/picture"})
+                    {ATTR_FRIENDLY_NAME: 'Anne Therese'})
 
     hass.states.set("group.all_devices", "home",
                     {
