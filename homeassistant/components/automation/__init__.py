@@ -62,8 +62,12 @@ def _get_action(hass, config):
                 service_data = {}
 
             if CONF_SERVICE_ENTITY_ID in config:
-                service_data[ATTR_ENTITY_ID] = \
-                    config[CONF_SERVICE_ENTITY_ID].split(",")
+                try:
+                    service_data[ATTR_ENTITY_ID] = \
+                        config[CONF_SERVICE_ENTITY_ID].split(",")
+                except AttributeError:
+                    service_data[ATTR_ENTITY_ID] = \
+                        config[CONF_SERVICE_ENTITY_ID]
 
             hass.services.call(domain, service, service_data)
 
