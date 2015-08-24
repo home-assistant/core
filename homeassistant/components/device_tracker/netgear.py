@@ -35,7 +35,6 @@ from datetime import timedelta
 import threading
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
@@ -43,20 +42,21 @@ from homeassistant.components.device_tracker import DOMAIN
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pynetgear>=0.1']
+REQUIREMENTS = ['pynetgear>=0.3']
 
 
 def get_scanner(hass, config):
     """ Validates config and returns a Netgear scanner. """
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
+    info = config[DOMAIN]
+    host = info.get(CONF_HOST)
+    username = info.get(CONF_USERNAME)
+    password = info.get(CONF_PASSWORD)
+
+    if password is not None and host is None:
+        _LOGGER.warning('Found username or password but no host')
         return None
 
-    info = config[DOMAIN]
-
-    scanner = NetgearDeviceScanner(
-        info[CONF_HOST], info[CONF_USERNAME], info[CONF_PASSWORD])
+    scanner = NetgearDeviceScanner(host, password, username)
 
     return scanner if scanner.success_init else None
 
@@ -68,16 +68,24 @@ class NetgearDeviceScanner(object):
         import pynetgear
 
         self.last_results = []
-
-        self._api = pynetgear.Netgear(host, username, password)
         self.lock = threading.Lock()
+
+        if host is None:
+            print("BIER")
+            self._api = pynetgear.Netgear()
+        elif username is None:
+            self._api = pynetgear.Netgear(password, host)
+        else:
+            self._api = pynetgear.Netgear(password, host, username)
 
         _LOGGER.info("Logging in")
 
-        self.success_init = self._api.login()
+        results = self._api.get_attached_devices()
+
+        self.success_init = results is not None
 
         if self.success_init:
-            self._update_info()
+            self.last_results = results
         else:
             _LOGGER.error("Failed to Login")
 

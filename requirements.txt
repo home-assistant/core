@@ -81,7 +81,7 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip
 https://github.com/theolind/pymysensors/archive/master.zip#egg=pymysensors-0.1
 
 # Netgear (device_tracker.netgear)
-pynetgear>=0.1
+pynetgear>=0.3
 
 # Netdisco (discovery)
 netdisco>=0.3
