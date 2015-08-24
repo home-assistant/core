@@ -66,14 +66,15 @@ def setup(hass, config):
         'device_tracker.{}'.format(tracker_type))
 
     if tracker_implementation is None:
-        _LOGGER.error("Unknown device_tracker type specified.")
+        _LOGGER.error("Unknown device_tracker type specified: %s.",
+                      tracker_type)
 
         return False
 
     device_scanner = tracker_implementation.get_scanner(hass, config)
 
     if device_scanner is None:
-        _LOGGER.error("Failed to initialize device scanner for %s",
+        _LOGGER.error("Failed to initialize device scanner: %s",
                       tracker_type)
 
         return False
