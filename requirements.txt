@@ -84,7 +84,7 @@ https://github.com/theolind/pymysensors/archive/master.zip#egg=pymysensors-0.1
 pynetgear>=0.1
 
 # Netdisco (discovery)
-netdisco>=0.2
+netdisco>=0.3
 
 # Wemo (switch.wemo)
 pywemo>=0.2
