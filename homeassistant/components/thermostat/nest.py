@@ -4,7 +4,6 @@ Adds support for Nest thermostats.
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.helpers.temperature import convert
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
 REQUIREMENTS = ['python-nest>=2.4.0']
@@ -63,7 +62,7 @@ class NestThermostat(ThermostatDevice):
 
     @property
     def unit_of_measurement(self):
-        """ Returns the unit of measurement. """
+        """ Unit of measurement this thermostat expresses itself in. """
         return TEMP_CELCIUS
 
     @property
@@ -107,9 +106,7 @@ class NestThermostat(ThermostatDevice):
         return self.structure.away
 
     def set_temperature(self, temperature):
-        """ Set new target temperature ensuring it is in proper units """
-        temperature = convert(temperature, self.hass.config.temperature_unit,
-                              self.unit_of_measurement)
+        """ Set new target temperature """
         self.device.target = temperature
 
     def turn_away_mode_on(self):
@@ -127,7 +124,7 @@ class NestThermostat(ThermostatDevice):
         if temp is None:
             return super().min_temp
         else:
-            return round(self.hass.config.temperature(temp, TEMP_CELCIUS)[0])
+            return temp
 
     @property
     def max_temp(self):
@@ -136,7 +133,7 @@ class NestThermostat(ThermostatDevice):
         if temp is None:
             return super().max_temp
         else:
-            return round(self.hass.config.temperature(temp, TEMP_CELCIUS)[0])
+            return temp
 
     def update(self):
         """ Python-nest has its own mechanism for staying up to date. """
