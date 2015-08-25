@@ -123,8 +123,8 @@ class ActiontecDeviceScanner(object):
             telnet.write((self.username + '\n').encode('ascii'))
             telnet.read_until(b'Password: ')
             telnet.write((self.password + '\n').encode('ascii'))
-            prompt = telnet.read_until(b'Wireless Broadband Router> ',
-                                       '').split(b'\n')[-1]
+            prompt = telnet.read_until(
+                b'Wireless Broadband Router> ').split(b'\n')[-1]
             telnet.write('firewall mac_cache_dump\n'.encode('ascii'))
             telnet.write('\n'.encode('ascii'))
             telnet.read_until(prompt)
