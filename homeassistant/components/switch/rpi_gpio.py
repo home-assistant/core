@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if GPIO is None:
         _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
         return
-
+    # pylint: disable=no-member
     GPIO.setmode(GPIO.BCM)
 
     switches = []
@@ -73,9 +73,9 @@ class RPiGPIOSwitch(ToggleEntity):
 
     def __init__(self, name, gpio, active_state):
         self._name = name or DEVICE_DEFAULT_NAME
-        self._state = False if self._active_state == "HIGH" else True
         self._gpio = gpio
         self._active_state = active_state
+        self._state = False if self._active_state == "HIGH" else True
         # pylint: disable=no-member
         GPIO.setup(gpio, GPIO.OUT)
 
