@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if GPIO is None:
         _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
         return
-
+    # pylint: disable=no-member
     GPIO.setmode(GPIO.BCM)
 
     sensors = []
@@ -94,9 +94,10 @@ class RPiGPIOSensor(Entity):
     """ Sets up the Raspberry PI GPIO ports. """
     def __init__(self, port_name, port_num, pull_mode,
                  value_high, value_low, bouncetime):
-        self._name = port_name
+        # pylint: disable=no-member
+        self._name = port_name or DEVICE_DEFAULT_NAME
         self._port = port_num
-        self._pull = GPIO.PUD_DOWN if pull_mode=="DOWN" else GPIO.PUD_UP
+        self._pull = GPIO.PUD_DOWN if pull_mode == "DOWN" else GPIO.PUD_UP
         self._vhigh = value_high
         self._vlow = value_low
         self._bouncetime = bouncetime
@@ -105,6 +106,7 @@ class RPiGPIOSensor(Entity):
 
         def edge_callback(channel):
             """ port changed state """
+            # pylint: disable=no-member
             self._state = self._vhigh if GPIO.input(channel) else self._vlow
             self.update_ha_state()
 
