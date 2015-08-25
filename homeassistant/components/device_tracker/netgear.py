@@ -56,7 +56,7 @@ def get_scanner(hass, config):
         _LOGGER.warning('Found username or password but no host')
         return None
 
-    scanner = NetgearDeviceScanner(host, password, username)
+    scanner = NetgearDeviceScanner(host, username, password)
 
     return scanner if scanner.success_init else None
 
