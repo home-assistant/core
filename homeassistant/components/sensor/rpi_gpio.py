@@ -90,6 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
 
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class RPiGPIOSensor(Entity):
     """ Sets up the Raspberry PI GPIO ports. """
     def __init__(self, port_name, port_num, pull_mode,
