@@ -95,8 +95,8 @@ class ActiontecDeviceScanner(object):
         if not self.last_results:
             return None
         for client in self.last_results:
-            if client == device:
-                return client
+            if client['mac'] == device:
+                return client['ip']
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -130,14 +130,13 @@ class ActiontecDeviceScanner(object):
             telnet.read_until(prompt)
             leases_result = telnet.read_until(prompt).split(b'\n')[1:-1]
             telnet.write('exit\n'.encode('ascii'))
-            return None
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
             return
         except ConnectionRefusedError:
             _LOGGER.exception("Connection refused by router," +
                               " is telnet enabled?")
-            return
+            return None
 
         devices = {}
         for lease in leases_result:
