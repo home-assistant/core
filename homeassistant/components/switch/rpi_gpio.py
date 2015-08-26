@@ -74,8 +74,8 @@ class RPiGPIOSwitch(ToggleEntity):
     def __init__(self, name, gpio, invert_logic):
         self._name = name or DEVICE_DEFAULT_NAME
         self._gpio = gpio
-        self._active_state = !invert_logic
-        self._state = !self._active_state
+        self._active_state = not invert_logic
+        self._state = not self._active_state
         # pylint: disable=no-member
         GPIO.setup(gpio, GPIO.OUT)
 
@@ -102,7 +102,7 @@ class RPiGPIOSwitch(ToggleEntity):
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._switch(!self._active_state):
+        if self._switch(not self._active_state):
             self._state = False
         self.update_ha_state()
 
