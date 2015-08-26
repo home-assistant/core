@@ -8,16 +8,16 @@ Configuration:
 
 switch:
   platform: rpi_gpio
-  active_state: "HIGH"
+  invert_logic: false
   ports:
     11: Fan Office
     12: Light Desk
 
 Variables:
 
-active_state
+invert_logic
 *Optional
-Defines which GPIO state corresponds to a ACTIVE switch. Default is HIGH.
+If true, inverts the output logic to ACTIVE LOW. Default is false (ACTIVE HIGH).
 
 ports
 *Required
@@ -34,7 +34,7 @@ from homeassistant.const import (DEVICE_DEFAULT_NAME,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
-DEFAULT_ACTIVE_STATE = "HIGH"
+DEFAULT_INVERT_LOGIC = False
 
 REQUIREMENTS = ['RPi.GPIO>=0.5.11']
 _LOGGER = logging.getLogger(__name__)
@@ -50,10 +50,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     GPIO.setmode(GPIO.BCM)
 
     switches = []
-    active_state = config.get('active_state', DEFAULT_ACTIVE_STATE)
+    invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
     ports = config.get('ports')
     for port_num, port_name in ports.items():
-        switches.append(RPiGPIOSwitch(port_name, port_num, active_state))
+        switches.append(RPiGPIOSwitch(port_name, port_num, invert_logic))
     add_devices(switches)
 
     def cleanup_gpio(event):
@@ -71,11 +71,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RPiGPIOSwitch(ToggleEntity):
     """ Represents a port that can be toggled using Raspberry Pi GPIO. """
 
-    def __init__(self, name, gpio, active_state):
+    def __init__(self, name, gpio, invert_logic):
         self._name = name or DEVICE_DEFAULT_NAME
         self._gpio = gpio
-        self._active_state = active_state
-        self._state = False if self._active_state == "HIGH" else True
+        self._active_state = !invert_logic
+        self._state = !self._active_state
         # pylint: disable=no-member
         GPIO.setup(gpio, GPIO.OUT)
 
@@ -96,13 +96,13 @@ class RPiGPIOSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        if self._switch(True if self._active_state == "HIGH" else False):
+        if self._switch(self._active_state):
             self._state = True
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._switch(False if self._active_state == "HIGH" else True):
+        if self._switch(!self._active_state):
             self._state = False
         self.update_ha_state()
 
