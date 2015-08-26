@@ -17,7 +17,7 @@ Variables:
 
 invert_logic
 *Optional
-If true, inverts the output logic to ACTIVE LOW. Default is false (ACTIVE HIGH).
+If true, inverts the output logic to ACTIVE LOW. Default is false (ACTIVE HIGH)
 
 ports
 *Required
