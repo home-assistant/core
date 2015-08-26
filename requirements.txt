@@ -30,7 +30,7 @@ python-libnmap>=0.6.3
 pushbullet.py>=0.7.1
 
 # Nest Thermostat bindings (thermostat.nest)
-python-nest>=2.3.1
+python-nest>=2.4.0
 
 # Z-Wave (*.zwave)
 pydispatcher>=2.0.5
