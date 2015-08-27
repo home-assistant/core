@@ -50,11 +50,12 @@ _LOGGER = logging.getLogger(__name__)
 _DEVICES_REGEX = re.compile(
     r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s' +
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
-    r'(?P<status>([^\s]+))\s+' + 
-    r'(?P<type>([^\s]+))\s+' + 
-    r'(?P<intf>([^\s]+))\s+' + 
-    r'(?P<hwintf>([^\s]+))\s+' + 
+    r'(?P<status>([^\s]+))\s+' +
+    r'(?P<type>([^\s]+))\s+' +
+    r'(?P<intf>([^\s]+))\s+' +
+    r'(?P<hwintf>([^\s]+))\s+' +
     r'(?P<host>([^\s]+))')
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
@@ -95,7 +96,7 @@ class ThomsonDeviceScanner(object):
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
-        """ Returns the name of the given device 
+        """ Returns the name of the given device
             or None if we don't know. """
         if not self.last_results:
             return None
@@ -116,7 +117,7 @@ class ThomsonDeviceScanner(object):
             data = self.get_thomson_data()
             if not data:
                 return False
-            
+
             # flag C stands for CONNECTED
             active_clients = [client for client in data.values() if
                               client['status'].find('C') != -1]
