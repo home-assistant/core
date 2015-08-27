@@ -115,13 +115,19 @@ The file platform allows you to store notifications from Home Assistant as a fil
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
+<span class='line-number'>6</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">NOTIFIER_NAME</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">file</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">filename</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">FILENAME</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">timestamp</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1 or 0</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<p>Setting the optional parameter <code>name</code> allows multiple notifiers to be created.
+The default value is <code>notify</code>. The notifier will bind to the service
+<code>notify.NOTIFIER_NAME</code>.</p>
 
 <p>Setting <code>timestamp</code> to 1 adds a timestamp to every entry.</p>
 

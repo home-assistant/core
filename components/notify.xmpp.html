@@ -114,14 +114,20 @@ The xmpp platform allows you to deliver notifications from Home Assistant to a <
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">NOTIFIER_NAME</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">xmpp</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">sender</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JID</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JABBER_ACCOUNT_PASSWORD</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">recipient</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_RECIPIENT</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<p>Setting the optional parameter <code>name</code> allows multiple notifiers to be created.
+The default value is <code>notify</code>. The notifier will bind to the service
+<code>notify.NOTIFIER_NAME</code>.</p>
 
 <p>All Jabber IDs (JID) must include the domain. Make sure that the password matches the account provided as sender.</p>
 

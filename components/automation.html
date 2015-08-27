@@ -133,7 +133,7 @@
 </span><span class='line'>  state_to: 'below_horizon'
 </span><span class='line'>
 </span><span class='line'>  # Action to be done when trigger activated
-</span><span class='line'>  execute_service: notify.notify
+</span><span class='line'>  execute_service: notify.NOTIFIER_NAME
 </span><span class='line'>  service_data: {"message":"The sun has set"}</span></code></pre></td></tr></table></div></figure>
 
 
@@ -262,7 +262,7 @@
 </span><span class='line'>  service_data: {"rgb_color": [255, 0, 0]}
 </span><span class='line'>
 </span><span class='line'>  # Notify the user
-</span><span class='line'>  execute_service: notify.notify
+</span><span class='line'>  execute_service: notify.NOTIFIER_NAME
 </span><span class='line'>  service_data: {"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
 
 
@@ -309,7 +309,7 @@
 </span><span class='line'>  state_from: 'above_horizon'
 </span><span class='line'>  state_to: 'below_horizon'
 </span><span class='line'>
-</span><span class='line'>  execute_service: notify.notify
+</span><span class='line'>  execute_service: notify.NOTIFIER_NAME
 </span><span class='line'>  service_data: {"message":"The sun has set"}
 </span><span class='line'>
 </span><span class='line'>automation 2:
@@ -337,7 +337,7 @@
 
 
 <p class='note'>
-All configuration entries have to be sequential. If you have <code>automation:</code>, <code>automation 2:</code> and <code>automation 4:</code> then the last one will not be processed. 
+All configuration entries have to be sequential. If you have <code>automation:</code>, <code>automation 2:</code> and <code>automation 4:</code> then the last one will not be processed.
 </p>
 
 

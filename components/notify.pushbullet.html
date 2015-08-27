@@ -110,13 +110,20 @@ Home Assistant currently supports the awesome <a href="https://www.pushbullet.co
 
 <p>To add PushBullet to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>notify:
-</span><span class='line'>  platform: pushbullet
-</span><span class='line'>  api_key: YOUR_API_KEY</span></code></pre></td></tr></table></div></figure>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">NOTIFIER_NAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pushbullet</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_API_KEY</span>
+</span></code></pre></td></tr></table></div></figure>
 
+
+<p>Setting the optional parameter <code>name</code> allows multiple notifiers to be created.
+The default value is <code>notify</code>. The notifier will bind to the service
+<code>notify.NOTIFIER_NAME</code>.</p>
 
 <p>For more automation examples, see the <a href="/components/automation.html">getting started with automation page</a>.</p>
 

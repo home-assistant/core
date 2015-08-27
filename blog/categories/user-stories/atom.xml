@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: user-stories | Home Assistant]]></title>
+  <link href="https://home-assistant.io/blog/categories/user-stories/atom.xml" rel="self"/>
+  <link href="https://home-assistant.io/"/>
+  <updated>2015-08-27T00:09:51-07:00</updated>
+  <id>https://home-assistant.io/</id>
+  <author>
+    <name><![CDATA[Paulus Schoutsen]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Laundry Automation: insight and notifications]]></title>
+    <link href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/"/>
+    <updated>2015-08-26T08:12:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant</id>
+    <content type="html"><![CDATA[<p><em>This is a guest post by Home Assistant user and contributor <a href="https://github.com/nkgilley">Nolan Gilley</a>.</em></p>
+
+<p>In our house, laundry has been a struggle for quite some time.  Our washer and dryer both lack a buzzer which leads to forgotten laundry, and stinky mess that needs to be rewashed.  I decided to create a solution by monitoring the washer and dryer myself with some cheap electronics.</p>
+
+<p>As an avid user of Home Assistant, I decided it would be the perfect application to manage the UI and notification system.  Now all I needed was a way to monitor the washer and dryer.  I tried using sound sensors but found them unreliable.  I ended up opting for an accelerometer attached to the back of each appliance.  I also added magnetic reed switches on the doors of the washer and dryer to detect if the doors are open or closed.  I connected the accelerometers and reed switches to a <a href="https://lowpowerlab.com/moteino/">Moteino</a>, an arduino clone with an RF transceiver.  The Moteino can perform the logic to figure out which state the appliances are in and wirelessly communicate that data with another Moteino that is connected via serial to my Raspberry Pi.  The Raspberry Pi reads the serial data and repeats it over MQTT for Home Assistant to use.  This is great because I don&rsquo;t have to run Home Assistant on the Raspberry Pi.  I can run it on a faster machine and point the <a href="/components/mqtt.html">MQTT component</a> to my Raspberry Pi.</p>
+
+<p>After taking some sample data from the accelerometers while each appliance was in operation, I decided to plot the data to help determine the proper thresholds of when the devices were running or off.  I had to do this in order to get precise ranges so the dryer sensor wouldn&rsquo;t get tripped by the washer or vice versa.  In the plot below you can see the acceleration in the x direction for the accelerometer connected to the washing machine.   It&rsquo;s easy to see when the washing machine is in operation here.  I used the same technique for the dryer&rsquo;s accelerometer.</p>
+
+<p class='img'>
+  <a href='https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png'>
+    <img src='https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png' />
+  </a>
+  Graph showing the accelerometer data
+</p>
+
+
+
+
+<!--more-->
+
+
+<p>Next it was just a matter of integrating everything with Home Assistant.  I was able to use the <a href="/components/mqtt.html">MQTT component</a> to read the washer and dryer states from the Moteino and display it in Home Assistant.</p>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-08-laundry-automation/screenshot-ha.png' />
+  Status of the dryer and washer in Home Assistant
+</p>
+
+
+<p>Next I wrote <a href="/components/script.html">scripts</a> that are run whenever the washer or dryer completes a load.  This is triggered by the <a href="/components/automation.html">automation component</a>.  When the laundry is complete I have the lights in the house turn red and <a href="/components/notify.pushbullet.html">notify me via PushBullet</a>.  Once the laundry is taken care of another script runs that sets the lights back to normal.  So far it has been very helpful and very reliable.</p>
+
+<p class='img'>
+  <a href='https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg'>
+    <img src='https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg' />
+  </a>
+  Top left: reed switch. Bottom left: moteino. Right: Accelerometer.
+</p>
+
+
+<p>Materials used:</p>
+
+<ul>
+<li><a href="https://lowpowerlab.com/moteino/">Moteino</a></li>
+<li><a href="http://www.amazon.com/gp/product/B008BOPN40">2 x Accelerometers</a></li>
+<li><a href="http://www.amazon.com/gp/product/B004PARDRO">2 x Reed switch</a></li>
+<li><a href="https://home-assistant.io/">Home Assistant</a></li>
+</ul>
+
+
+<p><a href="https://codebender.cc/sketch:144743">Sketch for the Moteino is available here.</a></p>
+
+<p>Home Assistant Configuration:</p>
+
+<pre><code>mqtt:
+  broker: 192.168.1.100
+  port: 1883
+  keepalive: 60
+  qos: 0
+
+sensor:
+  platform: mqtt
+  name: "Dryer Status"
+  state_topic: "sensor/dryer"
+  unit_of_measurement: ""
+
+sensor 2:
+  platform: mqtt
+  name: "Washer Status"
+  state_topic: "sensor/washer"
+  unit_of_measurement: ""
+
+automation:
+  alias: Dryer complete
+
+  platform: state
+  state_entity_id: sensor.dryer_status
+  state_from: 'Running'
+  state_to: 'Complete'
+
+  execute_service: script.turn_on
+  service_entity_id: script.dryer_complete
+
+automation 2:
+  alias: Dryer emptied
+
+  platform: state
+  state_entity_id: sensor.dryer_status
+  state_from: 'Complete'
+  state_to: 'Empty'
+
+  execute_service: script.turn_on
+  service_entity_id: script.dryer_cleared
+
+script:
+  dryer_complete:
+    alias: Dryer Complete Script
+    sequence:
+      - alias: Pushbullet Notification
+        execute_service: notify.notify
+        service_data:
+          message: "The dryer has finished its cycle, please empty it!"
+      - alias: Living Room Lights Red
+        execute_service: scene.turn_on
+        service_data:
+          entity_id: scene.red
+      - delay:
+          seconds: 1
+      - alias: Living Room Lights Off
+        execute_service: light.turn_off
+        service_data:
+          entity_id: group.living_room
+      - delay:
+          seconds: 1
+      - alias: Living Room Lights Red
+        execute_service: scene.turn_on
+        service_data:
+          entity_id: scene.red
+
+  dryer_cleared:
+    alias: Dryer Cleared Script
+    sequence:
+      - alias: Living Room Lights Off
+        execute_service: light.turn_off
+        service_data:
+          entity_id: group.living_room
+      - delay:
+          seconds: 1
+      - alias: Living Room Lights Normal
+        execute_service: scene.turn_on
+        service_data:
+          entity_id: scene.normal
+</code></pre>
+
+<p>Resources used:</p>
+
+<ul>
+<li><a href="http://www.instructables.com/id/Uber-Home-Automation-w-Arduino-Pi/step13/Washer-Dryer-Smartifier-Water-Leak-Sensor/">Inspiration and Help with Arduino code</a></li>
+<li><a href="https://github.com/LowPowerLab/RFM69/">Moteino Code</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

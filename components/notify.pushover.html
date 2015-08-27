@@ -117,8 +117,10 @@ The <a href="https://pushover.net/">PushOver service</a> is a platform for the n
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
+<span class='line-number'>8</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">NOTIFIER_NAME</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pushover</span>
 </span><span class='line'>    <span class="c1"># Get this by registering a new application on https://pushover.net</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
@@ -126,6 +128,10 @@ The <a href="https://pushover.net/">PushOver service</a> is a platform for the n
 </span><span class='line'>    <span class="l-Scalar-Plain">user_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<p>Setting the optional parameter <code>name</code> allows multiple notifiers to be created.
+The default value is <code>notify</code>. The notifier will bind to the service
+<code>notify.NOTIFIER_NAME</code>.</p>
 
 <h3>Automation example</h3>
 
@@ -149,7 +155,7 @@ The <a href="https://pushover.net/">PushOver service</a> is a platform for the n
 </span><span class='line'>  <span class="l-Scalar-Plain">state_from</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">above_horizon</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">state_to</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">below_horizon</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">notify.notify</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">notify.NOTIFIER_NAME</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;message&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;YAY&quot;</span><span class="p-Indicator">}</span>
 </span></code></pre></td></tr></table></div></figure>
 

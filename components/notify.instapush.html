@@ -118,8 +118,10 @@ The instapush platform uses <a href="https://instapush.im">Instapush</a> to deli
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
+<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">NOTIFIER_NAME</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">instapush</span>
 </span><span class='line'>    <span class="c1"># Get those by creating a new application, event, and tracker on https://instapush.im</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
@@ -128,6 +130,10 @@ The instapush platform uses <a href="https://instapush.im">Instapush</a> to deli
 </span><span class='line'>    <span class="l-Scalar-Plain">tracker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<p>Setting the optional parameter <code>name</code> allows multiple notifiers to be created.
+The default value is <code>notify</code>. The notifier will bind to the service
+<code>notify.NOTIFIER_NAME</code>.</p>
 
 <p>To retrieve those values for existing settings, log into your account at <a href="https://instapush.im">https://instapush.im</a> and go to your <strong>Dashboard</strong>. Then click <strong>APPS</strong> tab, choose an app, and check the <strong>Basic Info</strong> section. The <em>Application ID</em> is the <code>api_key</code> and <code>app_secret</code> is the <em>Application Secret</em>.</p>
 
