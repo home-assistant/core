@@ -74,7 +74,7 @@ python-forecastio>=1.3.3
 # Firmata Bindings (*.arduino)
 PyMata==2.07a
 
-#Rfxtrx sensor
+# Rfxtrx sensor (sensor.rfxtrx)
 https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip
 
 # Mysensors
@@ -92,23 +92,23 @@ pywemo>=0.2
 # Wink (*.wink)
 https://github.com/balloob/python-wink/archive/master.zip#pywink>=0.1
 
-# Slack notifier
+# Slack notifier (notify.slack)
 slacker>=0.6.8
 
-# Temper sensors
+# Temper sensors (sensor.temper)
 https://github.com/rkabadi/temper-python/archive/master.zip
 
 # PyEdimax
 https://github.com/rkabadi/pyedimax/archive/master.zip
 
-# RPI-GPIO platform
+# RPI-GPIO platform (*.rpi_gpio)
 RPi.GPIO >=0.5.11
 
-# PAHO MQTT Binding (protocol.mqtt)
+# PAHO MQTT Binding (mqtt)
 paho-mqtt>=1.1
 
 # PyModbus (modbus)
 https://github.com/bashwork/pymodbus/archive/python3.zip#pymodbus>=1.2.0
 
-# Verisure
+# Verisure (verisure)
 https://github.com/persandstrom/python-verisure/archive/master.zip
