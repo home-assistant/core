@@ -28,8 +28,15 @@ DEFAULT_CONFIG = (
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
-DEFAULT_COMPONENTS = (
-    'discovery', 'frontend', 'conversation', 'history', 'logbook', 'sun')
+DEFAULT_COMPONENTS = {
+    'introduction': 'Show links to resources in log and frontend',
+    'frontend': 'Enables the frontend',
+    'discovery': 'Discover some devices automatically',
+    'conversation': 'Allows you to issue voice commands from the frontend',
+    'history': 'Enables support for tracking state changes over time.',
+    'logbook': 'View all events in a logbook',
+    'sun': 'Track the sun',
+}
 
 
 def ensure_config_exists(config_dir, detect_location=True):
@@ -78,7 +85,8 @@ def create_default_config(config_dir, detect_location=True):
 
             config_file.write("\n")
 
-            for component in DEFAULT_COMPONENTS:
+            for component, description in DEFAULT_COMPONENTS.items():
+                config_file.write("# {}\n".format(description))
                 config_file.write("{}:\n\n".format(component))
 
         return config_path
