@@ -57,6 +57,7 @@ omit =
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/mysensors.py
