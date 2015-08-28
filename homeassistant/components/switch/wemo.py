@@ -37,6 +37,7 @@ class WemoSwitch(SwitchDevice):
     def __init__(self, wemo):
         self.wemo = wemo
         self.insight_params = None
+        self.maker_params = None
 
     @property
     def unique_id(self):
@@ -61,6 +62,34 @@ class WemoSwitch(SwitchDevice):
             return self.insight_params['todaymw']
 
     @property
+    def standby_state(self):
+        """ Is the device on - or in standby. """
+        if self.insight_params:
+            return self.insight_params['standby_state']
+
+    @property
+    def sensor_state(self):
+        """ Is the sensor on or off. """
+        if self.maker_params and self.has_sensor:
+            # Note a state of 1 matches the WeMo app 'not triggered'!
+            if self.maker_params['sensorstate']:
+                return 'off'
+            else:
+                return 'on'
+
+    @property
+    def switch_mode(self):
+        """ Is the switch configured as toggle(0) or momentary (1). """
+        if self.maker_params:
+            return self.maker_params['switchmode']
+
+    @property
+    def has_sensor(self):
+        """ Is the sensor present? """
+        if self.maker_params:
+            return self.maker_params['hassensor']
+
+    @property
     def is_on(self):
         """ True if switch is on. """
         return self.wemo.get_state()
@@ -76,5 +105,8 @@ class WemoSwitch(SwitchDevice):
     def update(self):
         """ Update WeMo state. """
         self.wemo.get_state(True)
-        if self.wemo.model.startswith('Belkin Insight'):
+        if self.wemo.model_name == 'Insight':
             self.insight_params = self.wemo.insight_params
+            self.insight_params['standby_state'] = self.wemo.get_standby_state
+        elif self.wemo.model_name == 'Maker':
+            self.maker_params = self.wemo.maker_params
