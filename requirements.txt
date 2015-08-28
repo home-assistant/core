@@ -105,6 +105,10 @@ https://github.com/rkabadi/pyedimax/archive/master.zip
 # RPI-GPIO platform (*.rpi_gpio)
 RPi.GPIO >=0.5.11
 
+# Adafruit temperature/humidity sensor
+# uncomment on a Raspberry Pi / Beaglebone
+#git+git://github.com/mala-zaba/Adafruit_Python_DHT
+
 # PAHO MQTT Binding (mqtt)
 paho-mqtt>=1.1
 
