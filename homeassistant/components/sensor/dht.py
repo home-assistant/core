@@ -2,8 +2,11 @@
 homeassistant.components.sensor.dht
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adafruit DHT temperature and humidity sensor.
+You need a Python3 compatible version of the Adafruit_Python_DHT library
+(e.g. https://github.com/mala-zaba/Adafruit_Python_DHT,
+also see requirements.txt).
 As this requires access to the GPIO, you will need to run home-assistant
-as root (FIXME).
+as root.
 
 Configuration:
 
@@ -40,7 +43,7 @@ from homeassistant.util import Throttle
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
-# TODO: update this requirement to upstream as soon as it supports python3
+# update this requirement to upstream as soon as it supports python3
 REQUIREMENTS = ['git+git://github.com/mala-zaba/Adafruit_Python_DHT']
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
