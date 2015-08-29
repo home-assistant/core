@@ -38,3 +38,9 @@ class ISYLightDevice(ISYDeviceABC):
     _attrs = {ATTR_BRIGHTNESS: 'value'}
     _onattrs = [ATTR_BRIGHTNESS]
     _states = [STATE_ON, STATE_OFF]
+
+    def _attr_filter(self, attr):
+        """ Filter brightness out of entity while off. """
+        if ATTR_BRIGHTNESS in attr and not self.is_on:
+            del attr[ATTR_BRIGHTNESS]
+        return attr
