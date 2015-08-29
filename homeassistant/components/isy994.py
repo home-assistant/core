@@ -161,6 +161,7 @@ class ISYDeviceABC(ToggleEntity):
 
     def _attr_filter(self, attr):
         """ Placeholder for attribute filters. """
+        # pylint: disable=no-self-use
         return attr
 
     @property
