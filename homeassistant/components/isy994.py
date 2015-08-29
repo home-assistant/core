@@ -156,6 +156,12 @@ class ISYDeviceABC(ToggleEntity):
         attr = {ATTR_FRIENDLY_NAME: self.name}
         for name, prop in self._attrs.items():
             attr[name] = getattr(self, prop)
+            attr = self._attr_filter(attr)
+        return attr
+
+    def _attr_filter(self, attr):
+        """ Placeholder for attribute filters. """
+        # pylint: disable=no-self-use
         return attr
 
     @property
