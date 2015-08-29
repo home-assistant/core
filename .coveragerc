@@ -36,6 +36,7 @@ omit =
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
+    homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/discovery.py
