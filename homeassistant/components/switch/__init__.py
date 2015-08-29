@@ -109,6 +109,16 @@ class SwitchDevice(ToggleEntity):
         return None
 
     @property
+    def standby_state(self):
+        """ Is the device on - or in standby. """
+        return None
+
+    @property
+    def sensor_state(self):
+        """ Is the sensor on or off. """
+        return None
+
+    @property
     def device_state_attributes(self):
         """ Returns device specific state attributes. """
         return None
