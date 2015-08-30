@@ -5,6 +5,11 @@ Modbus component, using pymodbus (python3 branch)
 
 Configuration:
 
+To use the Forecast sensor you will need to add something like the
+following to your config/configuration.yaml
+
+Configuration:
+
 To use the Modbus component you will need to add something like the following
 to your config/configuration.yaml
 
@@ -33,6 +38,8 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
 DOMAIN = "modbus"
 
 DEPENDENCIES = []
+REQUIREMENTS = ['https://github.com/bashwork/pymodbus/archive/' +
+                'd7fc4f1cc975631e0a9011390e8017f64b612661.zip']
 
 # Type of network
 MEDIUM = "type"

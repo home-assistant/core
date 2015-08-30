@@ -48,7 +48,7 @@ from homeassistant.util import Throttle
 from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pywm>=2.2.1']
+REQUIREMENTS = ['pyowm==2.2.1']
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'weather': ['Condition', ''],

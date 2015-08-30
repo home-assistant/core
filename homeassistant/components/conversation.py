@@ -8,7 +8,7 @@ This is more a proof of concept.
 import logging
 import re
 
-import homeassistant
+from homeassistant import core
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
@@ -52,16 +52,14 @@ def setup(hass, config):
             return
 
         if command == 'on':
-            hass.services.call(
-                homeassistant.DOMAIN, SERVICE_TURN_ON, {
-                    ATTR_ENTITY_ID: entity_ids,
-                }, blocking=True)
+            hass.services.call(core.DOMAIN, SERVICE_TURN_ON, {
+                ATTR_ENTITY_ID: entity_ids,
+            }, blocking=True)
 
         elif command == 'off':
-            hass.services.call(
-                homeassistant.DOMAIN, SERVICE_TURN_OFF, {
-                    ATTR_ENTITY_ID: entity_ids,
-                }, blocking=True)
+            hass.services.call(core.DOMAIN, SERVICE_TURN_OFF, {
+                ATTR_ENTITY_ID: entity_ids,
+            }, blocking=True)
 
         else:
             logger.error(

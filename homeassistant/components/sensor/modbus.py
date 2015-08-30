@@ -1,4 +1,6 @@
 """
+homeassistant.components.modbus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Modbus sensors.
 
 Configuration:
@@ -18,16 +20,32 @@ sensor:
                     name: My boolean sensor
                 2:
                     name: My other boolean sensor
+    coils:
+        0:
+            name: My coil switch
 
-VARIABLES:
+Variables:
 
-    - "slave" = slave number (ignored and can be omitted if not serial Modbus)
-    - "unit" = unit to attach to value (optional, ignored for boolean sensors)
-    - "registers" contains a list of relevant registers to read from
-      it can contain a "bits" section, listing relevant bits
+slave
+*Required
+Slave number (ignored and can be omitted if not serial Modbus).
 
-    - each named register will create an integer sensor
-    - each named bit will create a boolean sensor
+unit
+*Required
+Unit to attach to value (optional, ignored for boolean sensors).
+
+registers
+*Required
+Contains a list of relevant registers to read from. It can contain a
+"bits" section, listing relevant bits.
+
+coils
+*Optional
+Contains a list of relevant coils to read from.
+
+Note:
+- Each named register will create an integer sensor.
+- Each named bit will create a boolean sensor.
 """
 
 import logging
@@ -39,6 +57,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF)
 
 _LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -49,21 +68,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No slave number provided for serial Modbus")
         return False
     registers = config.get("registers")
-    for regnum, register in registers.items():
-        if register.get("name"):
-            sensors.append(ModbusSensor(register.get("name"),
+    if registers:
+        for regnum, register in registers.items():
+            if register.get("name"):
+                sensors.append(ModbusSensor(register.get("name"),
+                                            slave,
+                                            regnum,
+                                            None,
+                                            register.get("unit")))
+            if register.get("bits"):
+                bits = register.get("bits")
+                for bitnum, bit in bits.items():
+                    if bit.get("name"):
+                        sensors.append(ModbusSensor(bit.get("name"),
+                                                    slave,
+                                                    regnum,
+                                                    bitnum))
+    coils = config.get("coils")
+    if coils:
+        for coilnum, coil in coils.items():
+            sensors.append(ModbusSensor(coil.get("name"),
                                         slave,
-                                        regnum,
-                                        None,
-                                        register.get("unit")))
-        if register.get("bits"):
-            bits = register.get("bits")
-            for bitnum, bit in bits.items():
-                if bit.get("name"):
-                    sensors.append(ModbusSensor(bit.get("name"),
-                                                slave,
-                                                regnum,
-                                                bitnum))
+                                        coilnum,
+                                        coil=True))
+
     add_devices(sensors)
 
 
@@ -71,13 +99,14 @@ class ModbusSensor(Entity):
     # pylint: disable=too-many-arguments
     """ Represents a Modbus Sensor """
 
-    def __init__(self, name, slave, register, bit=None, unit=None):
+    def __init__(self, name, slave, register, bit=None, unit=None, coil=False):
         self._name = name
         self.slave = int(slave) if slave else 1
         self.register = int(register)
         self.bit = int(bit) if bit else None
         self._value = None
         self._unit = unit
+        self._coil = coil
 
     def __str__(self):
         return "%s: %s" % (self.name, self.state)
@@ -118,19 +147,19 @@ class ModbusSensor(Entity):
         else:
             return self._unit
 
-    @property
-    def state_attributes(self):
-        attr = super().state_attributes
-        return attr
-
     def update(self):
-        result = modbus.NETWORK.read_holding_registers(unit=self.slave,
-                                                       address=self.register,
-                                                       count=1)
-        val = 0
-        for i, res in enumerate(result.registers):
-            val += res * (2**(i*16))
-        if self.bit:
-            self._value = val & (0x0001 << self.bit)
+        """ Update the state of the sensor. """
+        if self._coil:
+            result = modbus.NETWORK.read_coils(self.register, 1)
+            self._value = result.bits[0]
         else:
-            self._value = val
+            result = modbus.NETWORK.read_holding_registers(
+                unit=self.slave, address=self.register,
+                count=1)
+            val = 0
+            for i, res in enumerate(result.registers):
+                val += res * (2**(i*16))
+            if self.bit:
+                self._value = val & (0x0001 << self.bit)
+            else:
+                self._value = val
