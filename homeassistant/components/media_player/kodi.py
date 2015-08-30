@@ -48,7 +48,7 @@ except ImportError:
     jsonrpc_requests = None
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['jsonrpc-requests>=0.1']
+REQUIREMENTS = ['jsonrpc-requests==0.1']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK

@@ -10,6 +10,7 @@ start by calling homeassistant.start_home_assistant(bus)
 """
 
 import os
+import sys
 import logging
 from collections import defaultdict
 
@@ -61,13 +62,13 @@ def setup_component(hass, domain, config=None):
     return True
 
 
-def _handle_requirements(component, name):
+def _handle_requirements(hass, component, name):
     """ Installs requirements for component. """
     if not hasattr(component, 'REQUIREMENTS'):
         return True
 
     for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req):
+        if not pkg_util.install_package(req, target=hass.config.path('lib')):
             _LOGGER.error('Not initializing %s because could not install '
                           'dependency %s', name, req)
             return False
@@ -88,7 +89,7 @@ def _setup_component(hass, domain, config):
             domain, ", ".join(missing_deps))
         return False
 
-    if not _handle_requirements(component, domain):
+    if not _handle_requirements(hass, component, domain):
         return False
 
     try:
@@ -138,14 +139,19 @@ def prepare_setup_platform(hass, config, domain, platform_name):
                     component)
                 return None
 
-    if not _handle_requirements(platform, platform_path):
+    if not _handle_requirements(hass, platform, platform_path):
         return None
 
     return platform
 
 
+def mount_local_lib_path(config_dir):
+    """ Add local library to Python Path """
+    sys.path.insert(0, os.path.join(config_dir, 'lib'))
+
+
 # pylint: disable=too-many-branches, too-many-statements
-def from_config_dict(config, hass=None):
+def from_config_dict(config, hass=None, config_dir=None):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -153,6 +159,10 @@ def from_config_dict(config, hass=None):
     """
     if hass is None:
         hass = core.HomeAssistant()
+        if config_dir is not None:
+            config_dir = os.path.abspath(config_dir)
+            hass.config.config_dir = config_dir
+            mount_local_lib_path(config_dir)
 
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
@@ -195,7 +205,9 @@ def from_config_file(config_path, hass=None):
         hass = core.HomeAssistant()
 
     # Set config dir to directory holding config file
-    hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
+    config_dir = os.path.abspath(os.path.dirname(config_path))
+    hass.config.config_dir = config_dir
+    mount_local_lib_path(config_dir)
 
     config_dict = config_util.load_config_file(config_path)
 

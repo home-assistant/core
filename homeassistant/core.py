@@ -21,9 +21,12 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
+from homeassistant.exceptions import (
+    HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util as util
 import homeassistant.util.dt as date_util
 import homeassistant.helpers.temperature as temp_helper
+from homeassistant.config import get_default_config_dir
 
 DOMAIN = "homeassistant"
 
@@ -660,7 +663,7 @@ class Config(object):
         self.api = None
 
         # Directory that holds the configuration
-        self.config_dir = os.path.join(os.getcwd(), 'config')
+        self.config_dir = get_default_config_dir()
 
     def path(self, *path):
         """ Returns path to the file within the config dir. """
@@ -693,21 +696,6 @@ class Config(object):
             'time_zone': time_zone.zone,
             'components': self.components,
         }
-
-
-class HomeAssistantError(Exception):
-    """ General Home Assistant exception occured. """
-    pass
-
-
-class InvalidEntityFormatError(HomeAssistantError):
-    """ When an invalid formatted entity is encountered. """
-    pass
-
-
-class NoEntitySpecifiedError(HomeAssistantError):
-    """ When no entity is specified. """
-    pass
 
 
 def create_timer(hass, interval=TIMER_INTERVAL):
