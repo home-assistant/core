@@ -214,11 +214,11 @@ class MpdDevice(MediaPlayerDevice):
 
     def media_play(self):
         """ Service to send the MPD the command for play/pause. """
-        self.client.start()
+        self.client.pause(0)
 
     def media_pause(self):
         """ Service to send the MPD the command for play/pause. """
-        self.client.pause()
+        self.client.pause(1)
 
     def media_next_track(self):
         """ Service to send the MPD the command for next track. """
