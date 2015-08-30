@@ -11,8 +11,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 
 
 def ensure_config_path(config_dir):
-    """ Gets the path to the configuration file.
-        Creates one if it not exists. """
+    """ Validates configuration directory. """
 
     lib_dir = os.path.join(config_dir, 'lib')
 
@@ -41,6 +40,7 @@ def ensure_config_path(config_dir):
 
 
 def ensure_config_file(config_dir):
+    """ Ensure configuration file exists. """
     config_path = config_util.ensure_config_exists(config_dir)
 
     if config_path is None:
