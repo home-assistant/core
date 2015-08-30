@@ -78,3 +78,12 @@ class TestConversation(unittest.TestCase):
         event_data = {conversation.ATTR_TEXT: 'turn kitchen over'}
         self.assertTrue(self.hass.services.call(
             conversation.DOMAIN, 'process', event_data, True))
+
+    def test_setup_and_bad_request_notext(self):
+        """ Setup and perform requests with bad command with no text """
+        self.assertTrue(
+            conversation.setup(self.hass, {conversation.DOMAIN: {}}))
+
+        event_data = {}
+        self.assertTrue(self.hass.services.call(
+            conversation.DOMAIN, 'process', event_data, True))
