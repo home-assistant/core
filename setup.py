@@ -7,7 +7,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(HERE, PACKAGE_NAME, 'const.py')) as fp:
     VERSION = re.search("__version__ = ['\"]([^']+)['\"]\n", fp.read()).group(1)
 DOWNLOAD_URL = \
-    'https://github.com/balloob/home-assistant/tarball/{}'.format(VERSION)
+    'https://github.com/balloob/home-assistant/archive/{}.zip'.format(VERSION)
 
 PACKAGES = find_packages() + \
     ['homeassistant.external', 'homeassistant.external.noop',
