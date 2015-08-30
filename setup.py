@@ -30,8 +30,7 @@ setup(
     package_data=PACKAGE_DATA,
     zip_safe=False,
     platforms='any',
-    install_requires=['requests==2.7.0', 'pyyaml==3.11', 'pytz==2015.4',
-                      'netdisco==0.3', 'astral==0.8.1'],
+    install_requires=['requests==2.7.0', 'pyyaml==3.11', 'pytz==2015.4'],
     keywords=['home', 'automation'],
     entry_points={
         'console_scripts': [
