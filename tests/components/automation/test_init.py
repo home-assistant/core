@@ -78,3 +78,18 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual(['hello.world'], self.calls[0].data[ATTR_ENTITY_ID])
+
+    def test_service_specify_entity_id_list(self):
+        automation.setup(self.hass, {
+            automation.DOMAIN: {
+                CONF_PLATFORM: 'event',
+                event.CONF_EVENT_TYPE: 'test_event',
+                automation.CONF_SERVICE: 'test.automation',
+                automation.CONF_SERVICE_ENTITY_ID: ['hello.world', 'hello.world2']
+            }
+        })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(['hello.world', 'hello.world2'], self.calls[0].data[ATTR_ENTITY_ID])

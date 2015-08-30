@@ -130,9 +130,12 @@ class TestRemoteMethods(unittest.TestCase):
 
     def test_set_state(self):
         """ Test Python API set_state. """
-        self.assertTrue(remote.set_state(master_api, 'test.test', 'set_test'))
+        hass.states.set('test.test', 'set_test')
 
-        self.assertEqual('set_test', hass.states.get('test.test').state)
+        state = hass.states.get('test.test')
+
+        self.assertIsNotNone(state)
+        self.assertEqual('set_test', state.state)
 
         self.assertFalse(remote.set_state(broken_api, 'test.test', 'set_test'))
 

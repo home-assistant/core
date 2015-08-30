@@ -49,7 +49,7 @@ Details for the API : https://developer.forecast.io/docs/v2
 import logging
 from datetime import timedelta
 
-REQUIREMENTS = ['python-forecastio>=1.3.3']
+REQUIREMENTS = ['python-forecastio==1.3.3']
 
 try:
     import forecastio

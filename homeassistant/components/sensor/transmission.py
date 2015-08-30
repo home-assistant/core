@@ -67,7 +67,7 @@ from transmissionrpc.error import TransmissionError
 
 import logging
 
-REQUIREMENTS = ['transmissionrpc>=0.11']
+REQUIREMENTS = ['transmissionrpc==0.11']
 SENSOR_TYPES = {
     'current_status': ['Status', ''],
     'download_speed': ['Down Speed', 'MB/s'],

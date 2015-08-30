@@ -30,11 +30,13 @@ omit =
 
     homeassistant/components/browser.py
     homeassistant/components/camera/*
+    homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
+    homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/discovery.py
@@ -56,11 +58,13 @@ omit =
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rfxtrx.py
+    homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
