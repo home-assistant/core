@@ -16,6 +16,8 @@ from datetime import datetime
 import pytz
 
 import homeassistant.core as ha
+from homeassistant.exceptions import (
+    HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
@@ -41,7 +43,7 @@ class TestHomeAssistant(unittest.TestCase):
         """ Stop down stuff we started. """
         try:
             self.hass.stop()
-        except ha.HomeAssistantError:
+        except HomeAssistantError:
             # Already stopped after the block till stopped test
             pass
 
@@ -250,7 +252,7 @@ class TestState(unittest.TestCase):
     def test_init(self):
         """ Test state.init """
         self.assertRaises(
-            ha.InvalidEntityFormatError, ha.State,
+            InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
 
     def test_domain(self):
@@ -489,18 +491,24 @@ class TestConfig(unittest.TestCase):
 
     def test_config_dir_set_correct(self):
         """ Test config dir set correct. """
-        self.assertEqual(os.path.join(os.getcwd(), "config"),
+        data_dir = os.getenv('APPDATA') if os.name == "nt" \
+            else os.path.expanduser('~')
+        self.assertEqual(os.path.join(data_dir, ".homeassistant"),
                          self.config.config_dir)
 
     def test_path_with_file(self):
         """ Test get_config_path method. """
-        self.assertEqual(os.path.join(os.getcwd(), "config", "test.conf"),
+        data_dir = os.getenv('APPDATA') if os.name == "nt" \
+            else os.path.expanduser('~')
+        self.assertEqual(os.path.join(data_dir, ".homeassistant", "test.conf"),
                          self.config.path("test.conf"))
 
     def test_path_with_dir_and_file(self):
         """ Test get_config_path method. """
+        data_dir = os.getenv('APPDATA') if os.name == "nt" \
+            else os.path.expanduser('~')
         self.assertEqual(
-            os.path.join(os.getcwd(), "config", "dir", "test.conf"),
+            os.path.join(data_dir, ".homeassistant", "dir", "test.conf"),
             self.config.path("dir", "test.conf"))
 
     def test_temperature_not_convert_if_no_preference(self):
