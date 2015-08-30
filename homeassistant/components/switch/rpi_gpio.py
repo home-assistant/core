@@ -2,21 +2,28 @@
 homeassistant.components.switch.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to control the GPIO pins of a Raspberry Pi.
+Note: To use RPi GPIO, Home Assistant must be run as root.
 
 Configuration:
 
 switch:
   platform: rpi_gpio
+  invert_logic: false
   ports:
     11: Fan Office
     12: Light Desk
 
 Variables:
 
+invert_logic
+*Optional
+If true, inverts the output logic to ACTIVE LOW. Default is false (ACTIVE HIGH)
+
 ports
 *Required
 An array specifying the GPIO ports to use and the name to use in the frontend.
 """
+
 import logging
 try:
     import RPi.GPIO as GPIO
@@ -27,7 +34,9 @@ from homeassistant.const import (DEVICE_DEFAULT_NAME,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['RPi.GPIO>=0.5.11']
+DEFAULT_INVERT_LOGIC = False
+
+REQUIREMENTS = ['RPi.GPIO==0.5.11']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -37,11 +46,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if GPIO is None:
         _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
         return
+    # pylint: disable=no-member
+    GPIO.setmode(GPIO.BCM)
 
     switches = []
+    invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
     ports = config.get('ports')
     for port_num, port_name in ports.items():
-        switches.append(RPiGPIOSwitch(port_name, port_num))
+        switches.append(RPiGPIOSwitch(port_name, port_num, invert_logic))
     add_devices(switches)
 
     def cleanup_gpio(event):
@@ -59,10 +71,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RPiGPIOSwitch(ToggleEntity):
     """ Represents a port that can be toggled using Raspberry Pi GPIO. """
 
-    def __init__(self, name, gpio):
+    def __init__(self, name, gpio, invert_logic):
         self._name = name or DEVICE_DEFAULT_NAME
-        self._state = False
         self._gpio = gpio
+        self._active_state = not invert_logic
+        self._state = not self._active_state
         # pylint: disable=no-member
         GPIO.setup(gpio, GPIO.OUT)
 
@@ -83,13 +96,13 @@ class RPiGPIOSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        if self._switch(True):
+        if self._switch(self._active_state):
             self._state = True
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._switch(False):
+        if self._switch(not self._active_state):
             self._state = False
         self.update_ha_state()
 
