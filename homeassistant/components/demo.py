@@ -14,7 +14,7 @@ from homeassistant.const import (
 
 DOMAIN = "demo"
 
-DEPENDENCIES = []
+DEPENDENCIES = ['introduction', 'conversation']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     'switch', 'light', 'thermostat', 'sensor', 'media_player', 'notify']
