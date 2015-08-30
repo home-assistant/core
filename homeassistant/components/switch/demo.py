@@ -13,7 +13,7 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return demo switches. """
     add_devices_callback([
-        DemoSwitch('Ceiling', True),
+        DemoSwitch('Decorative Lights', True),
         DemoSwitch('AC', False)
     ])
 
