@@ -21,14 +21,17 @@ The sun event need to have the type 'sun', which service to call, which event
 """
 import logging
 from datetime import timedelta
+import urllib
 
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import (
+    track_point_in_utc_time, track_point_in_time)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.scheduler import ServiceEventListener
 
 DEPENDENCIES = []
-REQUIREMENTS = ['astral>=0.8.1']
+REQUIREMENTS = ['astral==0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
@@ -129,8 +132,13 @@ def setup(hass, config):
 
     if elevation is None:
         google = GoogleGeocoder()
-        google._get_elevation(location)  # pylint: disable=protected-access
-        _LOGGER.info('Retrieved elevation from Google: %s', location.elevation)
+        try:
+            google._get_elevation(location)  # pylint: disable=protected-access
+            _LOGGER.info(
+                'Retrieved elevation from Google: %s', location.elevation)
+        except urllib.error.URLError:
+            # If no internet connection available etc.
+            pass
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
@@ -203,8 +211,8 @@ class Sun(Entity):
         self.update_ha_state()
 
         # Schedule next update at next_change+1 second so sun state has changed
-        self.hass.track_point_in_utc_time(
-            self.point_in_time_listener,
+        track_point_in_utc_time(
+            self.hass, self.point_in_time_listener,
             self.next_change + timedelta(seconds=1))
 
 
@@ -266,7 +274,7 @@ class SunEventListener(ServiceEventListener):
             """ Call the execute method. """
             self.execute(hass)
 
-        hass.track_point_in_time(execute, next_time)
+        track_point_in_time(hass, execute, next_time)
 
         return next_time
 

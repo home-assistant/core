@@ -1,17 +1,24 @@
 """
 homeassistant.components.sensor.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Shows sensor values from rfxtrx sensors.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Shows sensor values from RFXtrx sensors.
 
-Possible config keys:
-device="path to rfxtrx device"
+Configuration:
+To use the rfxtrx sensors you will need to add something like the following to
+your config/configuration.yaml
 
 Example:
 
-sensor 2:
- platform: rfxtrx
- device :  /dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0
+sensor:
+    platform: rfxtrx
+    device: PATH_TO_DEVICE
 
+Variables:
+
+device
+*Required
+Path to your RFXtrx device.
+E.g. /dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0
 """
 import logging
 from collections import OrderedDict
@@ -19,8 +26,8 @@ from collections import OrderedDict
 from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip'
-                '#RFXtrx>=0.15']
+REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
+                'ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip']
 
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELCIUS),
@@ -31,7 +38,7 @@ DATA_TYPES = OrderedDict([
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the rfxtrx platform. """
+    """ Setup the RFXtrx platform. """
     logger = logging.getLogger(__name__)
 
     sensors = {}    # keep track of sensors added to HA
@@ -57,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class RfxtrxSensor(Entity):
-    """ Represents a Rfxtrx Sensor. """
+    """ Represents a RFXtrx sensor. """
 
     def __init__(self, event):
         self.event = event

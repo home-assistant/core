@@ -1,7 +1,6 @@
 """
 homeassistant.components.notify.xmpp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Jabber (XMPP) notification service.
 
 Configuration:
@@ -29,7 +28,6 @@ The password for your given Jabber account.
 recipient
 *Required
 The Jabber ID (JID) that will receive the messages.
-
 """
 import logging
 
@@ -47,7 +45,7 @@ from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
 
-REQUIREMENTS = ['sleekxmpp>=1.3.1']
+REQUIREMENTS = ['sleekxmpp==1.3.1', 'dnspython3==1.12.0']
 
 
 def get_service(hass, config):

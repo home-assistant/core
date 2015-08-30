@@ -1,8 +1,7 @@
 """
 homeassistant.components.switch.transmission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Enable or disable Transmission BitTorrent client Turtle Mode
+Enable or disable Transmission BitTorrent client Turtle Mode.
 
 Configuration:
 
@@ -29,37 +28,32 @@ The port your Transmission daemon uses, defaults to 9091. Example: 8080
 
 username
 *Optional
-Your Transmission username, if you use authentication
+Your Transmission username, if you use authentication.
 
 password
 *Optional
-Your Transmission username, if you use authentication
+Your Transmission username, if you use authentication.
 
 name
 *Optional
 The name to use when displaying this Transmission instance.
-
-
 """
-
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from homeassistant.helpers.entity import ToggleEntity
 # pylint: disable=no-name-in-module, import-error
 import transmissionrpc
-
 from transmissionrpc.error import TransmissionError
-
 import logging
 
 _LOGGING = logging.getLogger(__name__)
-REQUIREMENTS = ['transmissionrpc>=0.11']
+REQUIREMENTS = ['transmissionrpc==0.11']
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Sets up the sensors. """
+    """ Sets up the transmission sensor. """
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
@@ -87,7 +81,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TransmissionSwitch(ToggleEntity):
-
     """ A Transmission sensor. """
 
     def __init__(self, transmission_client, name):

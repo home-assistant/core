@@ -1,6 +1,6 @@
 """
 homeassistant.components.light
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to interact with lights.
 
@@ -166,26 +166,25 @@ def setup(hass, config):
     profiles = {}
 
     for profile_path in profile_paths:
+        if not os.path.isfile(profile_path):
+            continue
+        with open(profile_path) as inp:
+            reader = csv.reader(inp)
 
-        if os.path.isfile(profile_path):
-            with open(profile_path) as inp:
-                reader = csv.reader(inp)
+            # Skip the header
+            next(reader, None)
 
-                # Skip the header
-                next(reader, None)
+            try:
+                for profile_id, color_x, color_y, brightness in reader:
+                    profiles[profile_id] = (float(color_x), float(color_y),
+                                            int(brightness))
+            except ValueError:
+                # ValueError if not 4 values per row
+                # ValueError if convert to float/int failed
+                _LOGGER.error(
+                    "Error parsing light profiles from %s", profile_path)
 
-                try:
-                    for profile_id, color_x, color_y, brightness in reader:
-                        profiles[profile_id] = (float(color_x), float(color_y),
-                                                int(brightness))
-
-                except ValueError:
-                    # ValueError if not 4 values per row
-                    # ValueError if convert to float/int failed
-                    _LOGGER.error(
-                        "Error parsing light profiles from %s", profile_path)
-
-                    return False
+                return False
 
     def handle_light_service(service):
         """ Hande a turn light on or off service call. """
@@ -206,66 +205,70 @@ def setup(hass, config):
             for light in target_lights:
                 light.turn_off(**params)
 
-        else:
-            # Processing extra data for turn light on request
-
-            # We process the profile first so that we get the desired
-            # behavior that extra service data attributes overwrite
-            # profile values
-            profile = profiles.get(dat.get(ATTR_PROFILE))
-
-            if profile:
-                *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
-
-            if ATTR_BRIGHTNESS in dat:
-                # We pass in the old value as the default parameter if parsing
-                # of the new one goes wrong.
-                params[ATTR_BRIGHTNESS] = util.convert(
-                    dat.get(ATTR_BRIGHTNESS), int, params.get(ATTR_BRIGHTNESS))
-
-            if ATTR_XY_COLOR in dat:
-                try:
-                    # xy_color should be a list containing 2 floats
-                    xycolor = dat.get(ATTR_XY_COLOR)
-
-                    # Without this check, a xycolor with value '99' would work
-                    if not isinstance(xycolor, str):
-                        params[ATTR_XY_COLOR] = [float(val) for val in xycolor]
-
-                except (TypeError, ValueError):
-                    # TypeError if xy_color is not iterable
-                    # ValueError if value could not be converted to float
-                    pass
-
-            if ATTR_RGB_COLOR in dat:
-                try:
-                    # rgb_color should be a list containing 3 ints
-                    rgb_color = dat.get(ATTR_RGB_COLOR)
-
-                    if len(rgb_color) == 3:
-                        params[ATTR_XY_COLOR] = \
-                            color_util.color_RGB_to_xy(int(rgb_color[0]),
-                                                       int(rgb_color[1]),
-                                                       int(rgb_color[2]))
-
-                except (TypeError, ValueError):
-                    # TypeError if rgb_color is not iterable
-                    # ValueError if not all values can be converted to int
-                    pass
-
-            if ATTR_FLASH in dat:
-                if dat[ATTR_FLASH] == FLASH_SHORT:
-                    params[ATTR_FLASH] = FLASH_SHORT
-
-                elif dat[ATTR_FLASH] == FLASH_LONG:
-                    params[ATTR_FLASH] = FLASH_LONG
-
-            if ATTR_EFFECT in dat:
-                if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
-                    params[ATTR_EFFECT] = EFFECT_COLORLOOP
-
             for light in target_lights:
-                light.turn_on(**params)
+                if light.should_poll:
+                    light.update_ha_state(True)
+            return
+
+        # Processing extra data for turn light on request
+
+        # We process the profile first so that we get the desired
+        # behavior that extra service data attributes overwrite
+        # profile values
+        profile = profiles.get(dat.get(ATTR_PROFILE))
+
+        if profile:
+            *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
+
+        if ATTR_BRIGHTNESS in dat:
+            # We pass in the old value as the default parameter if parsing
+            # of the new one goes wrong.
+            params[ATTR_BRIGHTNESS] = util.convert(
+                dat.get(ATTR_BRIGHTNESS), int, params.get(ATTR_BRIGHTNESS))
+
+        if ATTR_XY_COLOR in dat:
+            try:
+                # xy_color should be a list containing 2 floats
+                xycolor = dat.get(ATTR_XY_COLOR)
+
+                # Without this check, a xycolor with value '99' would work
+                if not isinstance(xycolor, str):
+                    params[ATTR_XY_COLOR] = [float(val) for val in xycolor]
+
+            except (TypeError, ValueError):
+                # TypeError if xy_color is not iterable
+                # ValueError if value could not be converted to float
+                pass
+
+        if ATTR_RGB_COLOR in dat:
+            try:
+                # rgb_color should be a list containing 3 ints
+                rgb_color = dat.get(ATTR_RGB_COLOR)
+
+                if len(rgb_color) == 3:
+                    params[ATTR_XY_COLOR] = \
+                        color_util.color_RGB_to_xy(int(rgb_color[0]),
+                                                   int(rgb_color[1]),
+                                                   int(rgb_color[2]))
+
+            except (TypeError, ValueError):
+                # TypeError if rgb_color is not iterable
+                # ValueError if not all values can be converted to int
+                pass
+
+        if ATTR_FLASH in dat:
+            if dat[ATTR_FLASH] == FLASH_SHORT:
+                params[ATTR_FLASH] = FLASH_SHORT
+
+            elif dat[ATTR_FLASH] == FLASH_LONG:
+                params[ATTR_FLASH] = FLASH_LONG
+
+        if ATTR_EFFECT in dat:
+            if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                params[ATTR_EFFECT] = EFFECT_COLORLOOP
+
+        for light in target_lights:
+            light.turn_on(**params)
 
         for light in target_lights:
             if light.should_poll:

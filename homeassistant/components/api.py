@@ -9,7 +9,7 @@ import logging
 import threading
 import json
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
 from homeassistant.const import (

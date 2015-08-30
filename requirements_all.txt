@@ -1,0 +1,121 @@
+# Required for Home Assistant core
+requests>=2,<3
+pyyaml>=3.11,<4
+pytz>=2015.4
+pip>=7.0.0
+
+# Optional, needed for specific components
+
+# Sun (sun)
+astral==0.8.1
+
+# Philips Hue library (lights.hue)
+phue==0.8
+
+# Limitlessled/Easybulb/Milight library (lights.limitlessled)
+ledcontroller==1.0.7
+
+# Chromecast bindings (media_player.cast)
+pychromecast==0.6.12
+
+# Keyboard (keyboard)
+pyuserinput==0.1.9
+
+# Tellstick bindings (*.tellstick)
+tellcore-py==1.0.4
+
+# Nmap bindings (device_tracker.nmap)
+python-libnmap==0.6.3
+
+# PushBullet bindings (notify.pushbullet)
+pushbullet.py==0.7.1
+
+# Nest Thermostat bindings (thermostat.nest)
+python-nest==2.4.0
+
+# Z-Wave (*.zwave)
+pydispatcher==2.0.5
+
+# ISY994 bindings (*.isy994)
+PyISY==1.0.5
+
+# PSutil (sensor.systemmonitor)
+psutil==3.0.0
+
+# Pushover bindings (notify.pushover)
+python-pushover==0.2
+
+# Transmission Torrent Client (*.transmission)
+transmissionrpc==0.11
+
+# OpenWeatherMap Web API (sensor.openweathermap)
+pyowm==2.2.1
+
+# XMPP Bindings (notify.xmpp)
+sleekxmpp==1.3.1
+dnspython3==1.12.0
+
+# Blockchain (sensor.bitcoin)
+blockchain==1.1.2
+
+# MPD Bindings (media_player.mpd)
+python-mpd2==0.5.4
+
+# Hikvision (switch.hikvisioncam)
+hikvision==0.4
+
+# console log coloring
+colorlog==2.6.0
+
+# JSON-RPC interface (media_player.kodi)
+jsonrpc-requests==0.1
+
+# Forecast.io Bindings (sensor.forecast)
+python-forecastio==1.3.3
+
+# Firmata Bindings (*.arduino)
+PyMata==2.07a
+
+# Rfxtrx sensor (sensor.rfxtrx)
+https://github.com/Danielhiversen/pyRFXtrx/archive/ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip
+
+# Mysensors
+https://github.com/theolind/pymysensors/archive/35b87d880147a34107da0d40cb815d75e6cb4af7.zip
+
+# Netgear (device_tracker.netgear)
+pynetgear==0.3
+
+# Netdisco (discovery)
+netdisco==0.3
+
+# Wemo (switch.wemo)
+pywemo==0.2
+
+# Wink (*.wink)
+https://github.com/balloob/python-wink/archive/c2b700e8ca866159566ecf5e644d9c297f69f257.zip
+
+# Slack notifier (notify.slack)
+slacker==0.6.8
+
+# Temper sensors (sensor.temper)
+https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip
+
+# PyEdimax
+https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip
+
+# RPI-GPIO platform (*.rpi_gpio)
+# Uncomment for Raspberry Pi
+# RPi.GPIO ==0.5.11
+
+# Adafruit temperature/humidity sensor
+# uncomment on a Raspberry Pi / Beaglebone
+# http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip
+
+# PAHO MQTT Binding (mqtt)
+paho-mqtt==1.1
+
+# PyModbus (modbus)
+https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip
+
+# Verisure (verisure)
+https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60f7f35854390d59be.zip
