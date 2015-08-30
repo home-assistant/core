@@ -54,7 +54,8 @@ def ensure_config_exists(config_dir, detect_location=True):
     config_path = find_config_file(config_dir)
 
     if config_path is None:
-        _LOGGER.info("Unable to find configuration. Creating default one")
+        print("Unable to find configuration. Creating default one at",
+              config_dir)
         config_path = create_default_config(config_dir, detect_location)
 
     return config_path
@@ -100,9 +101,7 @@ def create_default_config(config_dir, detect_location=True):
         return config_path
 
     except IOError:
-        _LOGGER.exception(
-            'Unable to write default configuration file %s', config_path)
-
+        print('Unable to create default configuration file', config_path)
         return None
 
 

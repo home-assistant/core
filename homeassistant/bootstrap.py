@@ -151,7 +151,7 @@ def mount_local_lib_path(config_dir):
 
 
 # pylint: disable=too-many-branches, too-many-statements
-def from_config_dict(config, hass=None, config_dir=None):
+def from_config_dict(config, hass=None, config_dir=None, enable_log=True):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -166,7 +166,8 @@ def from_config_dict(config, hass=None, config_dir=None):
 
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
-    enable_logging(hass)
+    if enable_log:
+        enable_logging(hass)
 
     _ensure_loader_prepared(hass)
 
@@ -209,9 +210,11 @@ def from_config_file(config_path, hass=None):
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
+    enable_logging(hass)
+
     config_dict = config_util.load_config_file(config_path)
 
-    return from_config_dict(config_dict, hass)
+    return from_config_dict(config_dict, hass, enable_log=False)
 
 
 def enable_logging(hass):
