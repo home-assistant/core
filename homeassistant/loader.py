@@ -166,9 +166,10 @@ def load_order_components(components):
                                   key=lambda order: 'group' in order):
         load_order.update(comp_load_order)
 
-    # Push recorder to first place in load order
-    if 'recorder' in load_order:
-        load_order.promote('recorder')
+    # Push some to first place in load order
+    for comp in ('recorder', 'introduction'):
+        if comp in load_order:
+            load_order.promote(comp)
 
     return load_order
 

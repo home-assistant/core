@@ -12,6 +12,7 @@ from datetime import timedelta
 
 from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
+from homeassistant.helpers.entity import _OVERWRITE
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 
@@ -66,14 +67,15 @@ def setup(hass, config):
         'device_tracker.{}'.format(tracker_type))
 
     if tracker_implementation is None:
-        _LOGGER.error("Unknown device_tracker type specified.")
+        _LOGGER.error("Unknown device_tracker type specified: %s.",
+                      tracker_type)
 
         return False
 
     device_scanner = tracker_implementation.get_scanner(hass, config)
 
     if device_scanner is None:
-        _LOGGER.error("Failed to initialize device scanner for %s",
+        _LOGGER.error("Failed to initialize device scanner: %s",
                       tracker_type)
 
         return False
@@ -161,9 +163,12 @@ class DeviceTracker(object):
 
         state = STATE_HOME if is_home else STATE_NOT_HOME
 
+        # overwrite properties that have been set in the config file
+        attr = dict(dev_info['state_attr'])
+        attr.update(_OVERWRITE.get(dev_info['entity_id'], {}))
+
         self.hass.states.set(
-            dev_info['entity_id'], state,
-            dev_info['state_attr'])
+            dev_info['entity_id'], state, attr)
 
     def update_devices(self, now):
         """ Update device states based on the found devices. """

@@ -8,14 +8,9 @@ WARNING: This platform is currently not working due to a changed Cast API
 """
 import logging
 
-try:
-    import pychromecast
-except ImportError:
-    pychromecast = None
-
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_OFF,
-    STATE_UNKNOWN)
+    STATE_UNKNOWN, CONF_HOST)
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
@@ -24,7 +19,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
-REQUIREMENTS = ['pychromecast>=0.6.9']
+REQUIREMENTS = ['pychromecast==0.6.10']
 CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -32,21 +27,23 @@ SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
 KNOWN_HOSTS = []
 
+# pylint: disable=invalid-name
+cast = None
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the cast platform. """
-    global pychromecast  # pylint: disable=invalid-name
-    if pychromecast is None:
-        import pychromecast as pychromecast_
-        pychromecast = pychromecast_
+    global cast
+    import pychromecast
+    cast = pychromecast
 
     logger = logging.getLogger(__name__)
 
     # import CEC IGNORE attributes
     ignore_cec = config.get(CONF_IGNORE_CEC, [])
     if isinstance(ignore_cec, list):
-        pychromecast.IGNORE_CEC += ignore_cec
+        cast.IGNORE_CEC += ignore_cec
     else:
         logger.error('Chromecast conig, %s must be a list.', CONF_IGNORE_CEC)
 
@@ -55,9 +52,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info and discovery_info[0] not in KNOWN_HOSTS:
         hosts = [discovery_info[0]]
 
+    elif CONF_HOST in config:
+        hosts = [config[CONF_HOST]]
+
     else:
         hosts = (host_port[0] for host_port
-                 in pychromecast.discover_chromecasts()
+                 in cast.discover_chromecasts()
                  if host_port[0] not in KNOWN_HOSTS)
 
     casts = []
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for host in hosts:
         try:
             casts.append(CastDevice(host))
-        except pychromecast.ChromecastConnectionError:
+        except cast.ChromecastConnectionError:
             pass
         else:
             KNOWN_HOSTS.append(host)
@@ -80,7 +80,7 @@ class CastDevice(MediaPlayerDevice):
 
     def __init__(self, host):
         import pychromecast.controllers.youtube as youtube
-        self.cast = pychromecast.Chromecast(host)
+        self.cast = cast.Chromecast(host)
         self.youtube = youtube.YouTubeController()
         self.cast.register_handler(self.youtube)
 
@@ -226,7 +226,7 @@ class CastDevice(MediaPlayerDevice):
                 self.cast.quit_app()
 
             self.cast.play_media(
-                CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+                CAST_SPLASH, cast.STREAM_TYPE_BUFFERED)
 
     def turn_off(self):
         """ Turns Chromecast off. """
