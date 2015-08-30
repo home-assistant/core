@@ -10,6 +10,7 @@ start by calling homeassistant.start_home_assistant(bus)
 """
 
 import os
+import sys
 import logging
 from collections import defaultdict
 
