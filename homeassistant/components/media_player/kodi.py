@@ -1,12 +1,12 @@
 """
 homeassistant.components.media_player.kodi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides an interface to the XBMC/Kodi JSON-RPC API
 
 Configuration:
 
-To use Kodi add something like this to your configuration:
+To use the Kodi you will need to add something like the following to
+your config/configuration.yaml.
 
 media_player:
   platform: kodi
@@ -19,7 +19,7 @@ Variables:
 
 name
 *Optional
-The name of the device
+The name of the device.
 
 url
 *Required
@@ -27,13 +27,12 @@ The URL of the XBMC/Kodi JSON-RPC API. Example: http://192.168.0.123/jsonrpc
 
 user
 *Optional
-The XBMC/Kodi HTTP username
+The XBMC/Kodi HTTP username.
 
 password
 *Optional
-The XBMC/Kodi HTTP password
+The XBMC/Kodi HTTP password.
 """
-
 import urllib
 import logging
 
@@ -49,7 +48,7 @@ except ImportError:
     jsonrpc_requests = None
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['jsonrpc-requests>=0.1']
+REQUIREMENTS = ['jsonrpc-requests==0.1']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK

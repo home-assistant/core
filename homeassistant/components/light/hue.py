@@ -1,4 +1,8 @@
-""" Support for Hue lights. """
+"""
+homeassistant.components.light.hue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Hue lights.
+"""
 import logging
 import socket
 from datetime import timedelta
@@ -12,7 +16,7 @@ from homeassistant.components.light import (
     ATTR_FLASH, FLASH_LONG, FLASH_SHORT, ATTR_EFFECT,
     EFFECT_COLORLOOP)
 
-REQUIREMENTS = ['phue>=0.8']
+REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
@@ -35,7 +39,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return
 
     if discovery_info is not None:
-        host = urlparse(discovery_info).hostname
+        host = urlparse(discovery_info[1]).hostname
     else:
         host = config.get(CONF_HOST, None)
 

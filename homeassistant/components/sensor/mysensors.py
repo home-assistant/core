@@ -36,15 +36,15 @@ ATTR_NODE_ID = "node_id"
 ATTR_CHILD_ID = "child_id"
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/master.zip'
-                '#egg=pymysensors-0.1']
+REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/' +
+                '35b87d880147a34107da0d40cb815d75e6cb4af7.zip']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the mysensors platform. """
 
     import mysensors.mysensors as mysensors
-    import mysensors.const as const
+    import mysensors.const_14 as const
 
     devices = {}    # keep track of devices added to HA
     # Just assume celcius means that the user wants metric for now.

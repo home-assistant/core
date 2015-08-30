@@ -10,10 +10,11 @@ start by calling homeassistant.start_home_assistant(bus)
 """
 
 import os
+import sys
 import logging
 from collections import defaultdict
 
-import homeassistant
+import homeassistant.core as core
 import homeassistant.util.dt as date_util
 import homeassistant.util.package as pkg_util
 import homeassistant.util.location as loc_util
@@ -61,14 +62,17 @@ def setup_component(hass, domain, config=None):
     return True
 
 
-def _handle_requirements(component, name):
+def _handle_requirements(hass, component, name):
     """ Installs requirements for component. """
-    if hasattr(component, 'REQUIREMENTS'):
-        for req in component.REQUIREMENTS:
-            if not pkg_util.install_package(req):
-                _LOGGER.error('Not initializing %s because could not install '
-                              'dependency %s', name, req)
-                return False
+    if not hasattr(component, 'REQUIREMENTS'):
+        return True
+
+    for req in component.REQUIREMENTS:
+        if not pkg_util.install_package(req, target=hass.config.path('lib')):
+            _LOGGER.error('Not initializing %s because could not install '
+                          'dependency %s', name, req)
+            return False
+
     return True
 
 
@@ -83,33 +87,30 @@ def _setup_component(hass, domain, config):
         _LOGGER.error(
             'Not initializing %s because not all dependencies loaded: %s',
             domain, ", ".join(missing_deps))
-
         return False
 
-    if not _handle_requirements(component, domain):
+    if not _handle_requirements(hass, component, domain):
         return False
 
     try:
-        if component.setup(hass, config):
-            hass.config.components.append(component.DOMAIN)
-
-            # Assumption: if a component does not depend on groups
-            # it communicates with devices
-            if group.DOMAIN not in component.DEPENDENCIES:
-                hass.pool.add_worker()
-
-            hass.bus.fire(
-                EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
-
-            return True
-
-        else:
+        if not component.setup(hass, config):
             _LOGGER.error('component %s failed to initialize', domain)
-
+            return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception('Error during setup of component %s', domain)
+        return False
 
-    return False
+    hass.config.components.append(component.DOMAIN)
+
+    # Assumption: if a component does not depend on groups
+    # it communicates with devices
+    if group.DOMAIN not in component.DEPENDENCIES:
+        hass.pool.add_worker()
+
+    hass.bus.fire(
+        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+
+    return True
 
 
 def prepare_setup_platform(hass, config, domain, platform_name):
@@ -138,25 +139,35 @@ def prepare_setup_platform(hass, config, domain, platform_name):
                     component)
                 return None
 
-    if not _handle_requirements(platform, platform_path):
+    if not _handle_requirements(hass, platform, platform_path):
         return None
 
     return platform
 
 
+def mount_local_lib_path(config_dir):
+    """ Add local library to Python Path """
+    sys.path.insert(0, os.path.join(config_dir, 'lib'))
+
+
 # pylint: disable=too-many-branches, too-many-statements
-def from_config_dict(config, hass=None):
+def from_config_dict(config, hass=None, config_dir=None, enable_log=True):
     """
     Tries to configure Home Assistant from a config dict.
 
     Dynamically loads required components and its dependencies.
     """
     if hass is None:
-        hass = homeassistant.HomeAssistant()
+        hass = core.HomeAssistant()
+        if config_dir is not None:
+            config_dir = os.path.abspath(config_dir)
+            hass.config.config_dir = config_dir
+            mount_local_lib_path(config_dir)
 
-    process_ha_core_config(hass, config.get(homeassistant.DOMAIN, {}))
+    process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
-    enable_logging(hass)
+    if enable_log:
+        enable_logging(hass)
 
     _ensure_loader_prepared(hass)
 
@@ -168,7 +179,7 @@ def from_config_dict(config, hass=None):
 
     # Filter out the repeating and common config section [homeassistant]
     components = (key for key in config.keys()
-                  if ' ' not in key and key != homeassistant.DOMAIN)
+                  if ' ' not in key and key != core.DOMAIN)
 
     if not core_components.setup(hass, config):
         _LOGGER.error('Home Assistant core failed to initialize. '
@@ -192,14 +203,18 @@ def from_config_file(config_path, hass=None):
     instantiates a new Home Assistant object if 'hass' is not given.
     """
     if hass is None:
-        hass = homeassistant.HomeAssistant()
+        hass = core.HomeAssistant()
 
     # Set config dir to directory holding config file
-    hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
+    config_dir = os.path.abspath(os.path.dirname(config_path))
+    hass.config.config_dir = config_dir
+    mount_local_lib_path(config_dir)
+
+    enable_logging(hass)
 
     config_dict = config_util.load_config_file(config_path)
 
-    return from_config_dict(config_dict, hass)
+    return from_config_dict(config_dict, hass, enable_log=False)
 
 
 def enable_logging(hass):
@@ -222,7 +237,8 @@ def enable_logging(hass):
             }
         ))
     except ImportError:
-        _LOGGER.warn("Colorlog package not found, console coloring disabled")
+        _LOGGER.warning(
+            "Colorlog package not found, console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path('home-assistant.log')

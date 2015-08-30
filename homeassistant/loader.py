@@ -61,11 +61,10 @@ def prepare(hass):
         # python components. If this assumption is not true, HA won't break,
         # just might output more errors.
         for fil in os.listdir(custom_path):
-            if os.path.isdir(os.path.join(custom_path, fil)):
-                if fil != '__pycache__':
-                    AVAILABLE_COMPONENTS.append(
-                        'custom_components.{}'.format(fil))
-
+            if fil == '__pycache__':
+                continue
+            elif os.path.isdir(os.path.join(custom_path, fil)):
+                AVAILABLE_COMPONENTS.append('custom_components.{}'.format(fil))
             else:
                 # For files we will strip out .py extension
                 AVAILABLE_COMPONENTS.append(
@@ -167,9 +166,10 @@ def load_order_components(components):
                                   key=lambda order: 'group' in order):
         load_order.update(comp_load_order)
 
-    # Push recorder to first place in load order
-    if 'recorder' in load_order:
-        load_order.promote('recorder')
+    # Push some to first place in load order
+    for comp in ('recorder', 'introduction'):
+        if comp in load_order:
+            load_order.promote(comp)
 
     return load_order
 
@@ -195,24 +195,24 @@ def _load_order_component(comp_name, load_order, loading):
 
     for dependency in component.DEPENDENCIES:
         # Check not already loaded
-        if dependency not in load_order:
-            # If we are already loading it, we have a circular dependency
-            if dependency in loading:
-                _LOGGER.error('Circular dependency detected: %s -> %s',
-                              comp_name, dependency)
+        if dependency in load_order:
+            continue
 
-                return OrderedSet()
+        # If we are already loading it, we have a circular dependency
+        if dependency in loading:
+            _LOGGER.error('Circular dependency detected: %s -> %s',
+                          comp_name, dependency)
+            return OrderedSet()
 
-            dep_load_order = _load_order_component(
-                dependency, load_order, loading)
+        dep_load_order = _load_order_component(dependency, load_order, loading)
 
-            # length == 0 means error loading dependency or children
-            if len(dep_load_order) == 0:
-                _LOGGER.error('Error loading %s dependency: %s',
-                              comp_name, dependency)
-                return OrderedSet()
+        # length == 0 means error loading dependency or children
+        if len(dep_load_order) == 0:
+            _LOGGER.error('Error loading %s dependency: %s',
+                          comp_name, dependency)
+            return OrderedSet()
 
-            load_order.update(dep_load_order)
+        load_order.update(dep_load_order)
 
     load_order.add(comp_name)
     loading.remove(comp_name)

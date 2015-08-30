@@ -1,9 +1,16 @@
-""" Support for Wink lights. """
+"""
+homeassistant.components.light.wink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Wink lights.
+"""
 import logging
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
+
+REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/' +
+                'c2b700e8ca866159566ecf5e644d9c297f69f257.zip']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -26,7 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class WinkLight(WinkToggleDevice):
-    """ Represents a Wink light """
+    """ Represents a Wink light. """
 
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
