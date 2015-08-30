@@ -34,7 +34,7 @@ from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
 from homeassistant.util.color import color_RGB_to_xy
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['ledcontroller>=1.0.7']
+REQUIREMENTS = ['ledcontroller==1.0.7']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
