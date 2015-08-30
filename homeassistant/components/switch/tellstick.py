@@ -19,7 +19,7 @@ import tellcore.constants as tellcore_constants
 
 SINGAL_REPETITIONS = 1
 
-REQUIREMENTS = ['tellcore-py>=1.0.4']
+REQUIREMENTS = ['tellcore-py==1.0.4']
 
 
 # pylint: disable=unused-argument

@@ -32,7 +32,7 @@ from homeassistant.components.notify import (
     DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 
-REQUIREMENTS = ['slacker>=0.6.8']
+REQUIREMENTS = ['slacker==0.6.8']
 _LOGGER = logging.getLogger(__name__)
 
 
