@@ -26,8 +26,12 @@ from collections import namedtuple
 import subprocess
 import re
 
-from libnmap.process import NmapProcess
-from libnmap.parser import NmapParser, NmapParserException
+try:
+    from libnmap.process import NmapProcess
+    from libnmap.parser import NmapParser, NmapParserException
+    LIB_LOADED = True
+except ImportError:
+    LIB_LOADED = False
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_HOSTS
@@ -51,6 +55,10 @@ def get_scanner(hass, config):
     if not validate_config(config, {DOMAIN: [CONF_HOSTS]},
                            _LOGGER):
         return None
+
+    if not LIB_LOADED:
+        _LOGGER.error("Error while importing dependency python-libnmap.")
+        return False
 
     scanner = NmapDeviceScanner(config[DOMAIN])
 

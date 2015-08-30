@@ -1,5 +1,6 @@
 """ Exceptions used by Home Assistant """
 
+
 class HomeAssistantError(Exception):
     """ General Home Assistant exception occured. """
     pass

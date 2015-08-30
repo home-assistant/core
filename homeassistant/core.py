@@ -7,7 +7,6 @@ of entities and react to changes.
 """
 
 import os
-import sys
 import time
 import logging
 import threading
@@ -23,7 +22,7 @@ from homeassistant.const import (
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError, NoEntitySpecifiedError)
+    HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util as util
 import homeassistant.util.dt as date_util
 import homeassistant.helpers.temperature as temp_helper
