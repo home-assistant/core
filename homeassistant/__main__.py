@@ -8,6 +8,7 @@ import importlib
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 
 
 def validate_python():
@@ -16,7 +17,7 @@ def validate_python():
 
     if major < 3 or (major == 3 and minor < 4):
         print("Home Assistant requires atleast Python 3.4")
-        sys.exit()
+        sys.exit(1)
 
 
 def ensure_pip():
@@ -26,7 +27,7 @@ def ensure_pip():
         print("Home Assistant requires 'pip' to be installed.")
         print("Please install pip: "
               "https://pip.pypa.io/en/latest/installing.html")
-        sys.exit()
+        sys.exit(1)
 
 
 def ensure_config_path(config_dir):
@@ -37,17 +38,17 @@ def ensure_config_path(config_dir):
 
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
-        if config_dir == config_util.get_default_config_dir():
-            try:
-                os.mkdir(config_dir)
-            except OSError:
-                print(('Fatal Error: Unable to create default configuration '
-                       'directory {} ').format(config_dir))
-                sys.exit()
-        else:
+        if config_dir != config_util.get_default_config_dir():
             print(('Fatal Error: Specified configuration directory does '
                    'not exist {} ').format(config_dir))
-            sys.exit()
+            sys.exit(1)
+
+        try:
+            os.mkdir(config_dir)
+        except OSError:
+            print(('Fatal Error: Unable to create default configuration '
+                   'directory {} ').format(config_dir))
+            sys.exit(1)
 
     # Test if library directory exists
     if not os.path.isdir(lib_dir):
@@ -56,13 +57,13 @@ def ensure_config_path(config_dir):
         except OSError:
             print(('Fatal Error: Unable to create library '
                    'directory {} ').format(lib_dir))
-            sys.exit()
+            sys.exit(1)
 
     config_path = config_util.ensure_config_exists(config_dir)
 
     if config_path is None:
         print('Error getting configuration path')
-        sys.exit()
+        sys.exit(1)
 
     return config_path
 
@@ -110,7 +111,7 @@ def main():
             if hass.config.api is not None:
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)
-        from homeassistant.const import EVENT_HOMEASSISTANT_START
+
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
 
     hass.start()
