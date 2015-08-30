@@ -53,9 +53,6 @@ def setup_component(hass, domain, config=None):
         return False
 
     for component in components:
-        if component in hass.config.components:
-            continue
-
         if not _setup_component(hass, component, config):
             return False
 
@@ -78,6 +75,8 @@ def _handle_requirements(hass, component, name):
 
 def _setup_component(hass, domain, config):
     """ Setup a component for Home Assistant. """
+    if domain in hass.config.components:
+        return True
     component = loader.get_component(domain)
 
     missing_deps = [dep for dep in component.DEPENDENCIES
