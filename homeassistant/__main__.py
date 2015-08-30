@@ -108,10 +108,9 @@ def main():
         def open_browser(event):
             """ Open the webinterface in a browser. """
             if hass.config.api is not None:
-                from homeassistant.const import EVENT_HOMEASSISTANT_START
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)
-
+        from homeassistant.const import EVENT_HOMEASSISTANT_START
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
 
     hass.start()
