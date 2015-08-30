@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 
-REQUIREMENTS = ['pywemo==0.2']
+REQUIREMENTS = ['pywemo==0.3']
 
 
 # pylint: disable=unused-argument
