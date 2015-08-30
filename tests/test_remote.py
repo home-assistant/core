@@ -51,6 +51,10 @@ def setUpModule():   # pylint: disable=invalid-name
 
     # Start slave
     slave = remote.HomeAssistant(master_api)
+    bootstrap.setup_component(
+        slave, http.DOMAIN,
+        {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
+         http.CONF_SERVER_PORT: 8130}})
 
     slave.start()
 
