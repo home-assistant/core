@@ -61,13 +61,13 @@ def setup_component(hass, domain, config=None):
     return True
 
 
-def _handle_requirements(component, name):
+def _handle_requirements(hass, component, name):
     """ Installs requirements for component. """
     if not hasattr(component, 'REQUIREMENTS'):
         return True
 
     for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req):
+        if not pkg_util.install_package(req, target=hass.config.path('lib')):
             _LOGGER.error('Not initializing %s because could not install '
                           'dependency %s', name, req)
             return False
@@ -88,7 +88,7 @@ def _setup_component(hass, domain, config):
             domain, ", ".join(missing_deps))
         return False
 
-    if not _handle_requirements(component, domain):
+    if not _handle_requirements(hass, component, domain):
         return False
 
     try:
@@ -138,14 +138,14 @@ def prepare_setup_platform(hass, config, domain, platform_name):
                     component)
                 return None
 
-    if not _handle_requirements(platform, platform_path):
+    if not _handle_requirements(hass, platform, platform_path):
         return None
 
     return platform
 
 
 # pylint: disable=too-many-branches, too-many-statements
-def from_config_dict(config, hass=None):
+def from_config_dict(config, hass=None, config_dir=None):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -153,6 +153,9 @@ def from_config_dict(config, hass=None):
     """
     if hass is None:
         hass = core.HomeAssistant()
+        if config_dir is not None:
+            hass.config.config_dir = os.path.abspath(config_dir)
+            hass.config.mount_local_path()
 
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
@@ -196,6 +199,7 @@ def from_config_file(config_path, hass=None):
 
     # Set config dir to directory holding config file
     hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
+    hass.config.mount_local_path()
 
     config_dict = config_util.load_config_file(config_path)
 
