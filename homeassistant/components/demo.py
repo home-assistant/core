@@ -46,12 +46,12 @@ def setup(hass, config):
             hass, component, {component: {CONF_PLATFORM: 'demo'}})
 
     # Setup room groups
-    lights = hass.states.entity_ids('light')
-    switches = hass.states.entity_ids('switch')
+    lights = sorted(hass.states.entity_ids('light'))
+    switches = sorted(hass.states.entity_ids('switch'))
     media_players = sorted(hass.states.entity_ids('media_player'))
-    group.setup_group(hass, 'living room', [lights[0], lights[1], switches[0],
+    group.setup_group(hass, 'living room', [lights[2], lights[1], switches[0],
                                             media_players[1]])
-    group.setup_group(hass, 'bedroom', [lights[2], switches[1],
+    group.setup_group(hass, 'bedroom', [lights[0], switches[1],
                                         media_players[0]])
 
     # Setup IP Camera
@@ -68,7 +68,7 @@ def setup(hass, config):
         hass, 'script',
         {'script': {
             'demo': {
-                'alias': 'Demo {}'.format(lights[0]),
+                'alias': 'Toggle {}'.format(lights[0].split('.')[1]),
                 'sequence': [{
                     'execute_service': 'light.turn_off',
                     'service_data': {ATTR_ENTITY_ID: lights[0]}
