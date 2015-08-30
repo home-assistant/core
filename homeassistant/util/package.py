@@ -3,11 +3,6 @@ import os
 import subprocess
 import sys
 
-from . import environment as env
-
-# If we are not in a virtual environment, install in user space
-INSTALL_USER = not env.is_virtual()
-
 
 def install_package(package, upgrade=False, target=None):
     """Install a package on PyPi. Accepts pip compatible package strings.
