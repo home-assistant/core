@@ -4,30 +4,10 @@ from __future__ import print_function
 import sys
 import os
 import argparse
-import importlib
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
 from homeassistant.const import EVENT_HOMEASSISTANT_START
-
-
-def validate_python():
-    """ Validate we're running the right Python version. """
-    major, minor = sys.version_info[:2]
-
-    if major < 3 or (major == 3 and minor < 4):
-        print("Home Assistant requires atleast Python 3.4")
-        sys.exit(1)
-
-
-def ensure_pip():
-    """ Validate pip is installed so we can install packages on demand. """
-    if importlib.find_loader('pip') is None:
-        print("Your Python installation did not bundle 'pip'")
-        print("Home Assistant requires 'pip' to be installed.")
-        print("Please install pip: "
-              "https://pip.pypa.io/en/latest/installing.html")
-        sys.exit(1)
 
 
 def ensure_config_path(config_dir):
@@ -59,6 +39,8 @@ def ensure_config_path(config_dir):
                    'directory {} ').format(lib_dir))
             sys.exit(1)
 
+
+def ensure_config_file(config_dir):
     config_path = config_util.ensure_config_exists(config_dir)
 
     if config_path is None:
@@ -70,7 +52,8 @@ def ensure_config_path(config_dir):
 
 def get_arguments():
     """ Get parsed passed in arguments. """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Home Assistant: Observe, Control, Automate.")
     parser.add_argument(
         '-c', '--config',
         metavar='path_to_config_dir',
@@ -90,12 +73,10 @@ def get_arguments():
 
 def main():
     """ Starts Home Assistant. """
-    validate_python()
-
     args = get_arguments()
 
     config_dir = os.path.join(os.getcwd(), args.config)
-    config_path = ensure_config_path(config_dir)
+    ensure_config_path(config_dir)
 
     if args.demo_mode:
         hass = bootstrap.from_config_dict({
@@ -103,7 +84,8 @@ def main():
             'demo': {}
         }, config_dir=config_dir)
     else:
-        hass = bootstrap.from_config_file(config_path)
+        config_file = ensure_config_file(config_dir)
+        hass = bootstrap.from_config_file(config_file)
 
     if args.open_ui:
         def open_browser(event):
