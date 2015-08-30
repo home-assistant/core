@@ -36,7 +36,7 @@ from homeassistant.const import (DEVICE_DEFAULT_NAME,
 
 DEFAULT_INVERT_LOGIC = False
 
-REQUIREMENTS = ['RPi.GPIO>=0.5.11']
+REQUIREMENTS = ['RPi.GPIO==0.5.11']
 _LOGGER = logging.getLogger(__name__)
 
 

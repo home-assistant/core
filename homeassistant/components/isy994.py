@@ -21,7 +21,7 @@ from homeassistant.const import (
 
 DOMAIN = "isy994"
 DEPENDENCIES = []
-REQUIREMENTS = ['PyISY>=1.0.5']
+REQUIREMENTS = ['PyISY==1.0.5']
 DISCOVER_LIGHTS = "isy994.lights"
 DISCOVER_SWITCHES = "isy994.switches"
 DISCOVER_SENSORS = "isy994.sensors"

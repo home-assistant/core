@@ -49,7 +49,7 @@ except ImportError:
     hikvision.api = None
 
 _LOGGING = logging.getLogger(__name__)
-REQUIREMENTS = ['hikvision>=0.4']
+REQUIREMENTS = ['hikvision==0.4']
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-instance-attributes
 

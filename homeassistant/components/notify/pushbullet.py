@@ -28,7 +28,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pushbullet.py>=0.7.1']
+REQUIREMENTS = ['pushbullet.py==0.7.1']
 
 
 def get_service(hass, config):
