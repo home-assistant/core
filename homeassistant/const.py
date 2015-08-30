@@ -1,4 +1,7 @@
 """ Constants used by Home Assistant components. """
+
+__version__ = "0.7.0"
+
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 

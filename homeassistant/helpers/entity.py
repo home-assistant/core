@@ -7,7 +7,7 @@ Provides ABC for entities in HA.
 
 from collections import defaultdict
 
-from homeassistant.core import NoEntitySpecifiedError
+from homeassistant.exceptions import NoEntitySpecifiedError
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN,

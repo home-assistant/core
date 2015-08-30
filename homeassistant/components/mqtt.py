@@ -46,7 +46,7 @@ The keep alive in seconds for this client. Default is 60.
 import logging
 import socket
 
-from homeassistant.core import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
@@ -66,7 +66,7 @@ SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
 
 DEPENDENCIES = []
-REQUIREMENTS = ['paho-mqtt>=1.1']
+REQUIREMENTS = ['paho-mqtt==1.1']
 
 CONF_BROKER = 'broker'
 CONF_PORT = 'port'
