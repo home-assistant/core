@@ -29,8 +29,22 @@ class TestConversation(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_setup_and_good_requests(self):
-        """ Setup and perform good requests """
+    def test_setup_and_turn_on(self):
+        """ Setup and perform good turn on requests """
+        self.assertTrue(
+            conversation.setup(self.hass, {conversation.DOMAIN: {}}))
+
+        light.turn_off(self.hass, '{}.kitchen'.format(light.DOMAIN))
+
+        event_data = {conversation.ATTR_TEXT: 'turn kitchen on'}
+        self.hass.services.call(
+            conversation.DOMAIN, 'process', event_data, True)
+
+        self.assertTrue(
+            light.is_on(self.hass, '{}.kitchen'.format(light.DOMAIN)))
+
+    def test_setup_and_turn_off(self):
+        """ Setup and perform good turn off requests """
         self.assertTrue(
             conversation.setup(self.hass, {conversation.DOMAIN: {}}))
 
@@ -41,13 +55,6 @@ class TestConversation(unittest.TestCase):
             conversation.DOMAIN, 'process', event_data, True)
 
         self.assertFalse(
-            light.is_on(self.hass, '{}.kitchen'.format(light.DOMAIN)))
-
-        event_data = {conversation.ATTR_TEXT: 'turn kitchen on'}
-        self.hass.services.call(
-            conversation.DOMAIN, 'process', event_data, True)
-
-        self.assertTrue(
             light.is_on(self.hass, '{}.kitchen'.format(light.DOMAIN)))
 
     def test_setup_and_bad_request_format(self):
