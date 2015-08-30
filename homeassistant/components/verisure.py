@@ -61,7 +61,8 @@ DISCOVER_SWITCHES = 'verisure.switches'
 
 DEPENDENCIES = []
 REQUIREMENTS = [
-    'https://github.com/persandstrom/python-verisure/archive/master.zip'
+    'https://github.com/persandstrom/python-verisure/archive/' +
+    '9873c4527f01b1ba1f72ae60f7f35854390d59be.zip'
     ]
 
 _LOGGER = logging.getLogger(__name__)
