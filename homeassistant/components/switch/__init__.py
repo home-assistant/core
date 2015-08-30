@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.components import group, discovery, wink, isy994
+from homeassistant.components import group, discovery, wink, isy994, verisure
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -34,6 +34,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
+    verisure.DISCOVER_SWITCHES: 'verisure'
 }
 
 PROP_TO_ATTR = {
@@ -49,21 +50,18 @@ _LOGGER = logging.getLogger(__name__)
 def is_on(hass, entity_id=None):
     """ Returns if the switch is on based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_SWITCHES
-
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 def turn_on(hass, entity_id=None):
     """ Turns all or specified switch on. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
     """ Turns all or specified switch off. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
@@ -88,7 +86,6 @@ def setup(hass, config):
                 switch.update_ha_state(True)
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_switch_service)
-
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_switch_service)
 
     return True
