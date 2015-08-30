@@ -13,8 +13,7 @@ def install_package(package, upgrade=False, target=None):
     """Install a package on PyPi. Accepts pip compatible package strings.
     Return boolean if install successfull."""
     # Not using 'import pip; pip.main([])' because it breaks the logger
-    args = [sys.executable, '-m', 'pip', 'install', '--quiet',
-            '--isolated', '-I', package]
+    args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
     if upgrade:
         args.append('--upgrade')
     if target:
