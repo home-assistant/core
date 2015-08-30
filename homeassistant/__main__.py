@@ -7,7 +7,7 @@ import argparse
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import __version__, EVENT_HOMEASSISTANT_START
 
 
 def ensure_config_path(config_dir):
@@ -54,6 +54,7 @@ def get_arguments():
     """ Get parsed passed in arguments. """
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate.")
+    parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument(
         '-c', '--config',
         metavar='path_to_config_dir',
