@@ -8,7 +8,6 @@ import importlib
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
-from homeassistant.components import frontend, demo
 
 
 def validate_python():
@@ -30,17 +29,6 @@ def ensure_pip():
         sys.exit()
 
 
-def validate_git_submodules():
-    """ Validate the git submodules are cloned. """
-    try:
-        # pylint: disable=no-name-in-module, unused-variable
-        from homeassistant.external.noop import WORKING  # noqa
-    except ImportError:
-        print("Repository submodules have not been initialized")
-        print("Please run: git submodule update --init --recursive")
-        sys.exit()
-
-
 def ensure_config_path(config_dir):
     """ Gets the path to the configuration file.
         Creates one if it not exists. """
@@ -49,11 +37,16 @@ def ensure_config_path(config_dir):
 
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
-        try:
-            os.mkdir(config_dir)
-        except OSError:
-            print(('Fatal Error: Unable to create specified configuration '
-                   'directory {} ').format(config_dir))
+        if config_dir == config_util.get_default_config_dir():
+            try:
+                os.mkdir(config_dir)
+            except OSError:
+                print(('Fatal Error: Unable to create default configuration '
+                       'directory {} ').format(config_dir))
+                sys.exit()
+        else:
+            print(('Fatal Error: Specified configuration directory does '
+                   'not exist {} ').format(config_dir))
             sys.exit()
 
     # Test if library directory exists
@@ -98,8 +91,6 @@ def main():
     """ Starts Home Assistant. """
     validate_python()
 
-    validate_git_submodules()
-
     args = get_arguments()
 
     config_dir = os.path.join(os.getcwd(), args.config)
@@ -107,8 +98,8 @@ def main():
 
     if args.demo_mode:
         hass = bootstrap.from_config_dict({
-            frontend.DOMAIN: {},
-            demo.DOMAIN: {}
+            'frontend': {},
+            'demo': {}
         }, config_dir=config_dir)
     else:
         hass = bootstrap.from_config_file(config_path)

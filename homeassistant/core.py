@@ -666,10 +666,6 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = get_default_config_dir()
 
-    def mount_local_path(self):
-        """ Add local library to Python Path """
-        sys.path.insert(0, self.path('lib'))
-
     def path(self, *path):
         """ Returns path to the file within the config dir. """
         return os.path.join(self.config_dir, *path)

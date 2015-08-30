@@ -144,6 +144,11 @@ def prepare_setup_platform(hass, config, domain, platform_name):
     return platform
 
 
+def mount_local_lib_path(config_dir):
+    """ Add local library to Python Path """
+    sys.path.insert(0, os.path.join(config_dir, 'lib'))
+
+
 # pylint: disable=too-many-branches, too-many-statements
 def from_config_dict(config, hass=None, config_dir=None):
     """
@@ -154,8 +159,9 @@ def from_config_dict(config, hass=None, config_dir=None):
     if hass is None:
         hass = core.HomeAssistant()
         if config_dir is not None:
-            hass.config.config_dir = os.path.abspath(config_dir)
-            hass.config.mount_local_path()
+            config_dir = os.path.abspath(config_dir)
+            hass.config.config_dir = config_dir
+            mount_local_lib_path(config_dir)
 
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
@@ -198,8 +204,9 @@ def from_config_file(config_path, hass=None):
         hass = core.HomeAssistant()
 
     # Set config dir to directory holding config file
-    hass.config.config_dir = os.path.abspath(os.path.dirname(config_path))
-    hass.config.mount_local_path()
+    config_dir = os.path.abspath(os.path.dirname(config_path))
+    hass.config.config_dir = config_dir
+    mount_local_lib_path(config_dir)
 
     config_dict = config_util.load_config_file(config_path)
 
