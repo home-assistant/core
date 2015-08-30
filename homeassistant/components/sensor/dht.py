@@ -44,7 +44,8 @@ from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 # update this requirement to upstream as soon as it supports python3
-REQUIREMENTS = ['git+git://github.com/mala-zaba/Adafruit_Python_DHT']
+REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/' +
+                '4101340de8d2457dd194bca1e8d11cbfc237e919.zip']
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'temperature': ['Temperature', ''],
