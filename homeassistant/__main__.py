@@ -10,9 +10,6 @@ from homeassistant import bootstrap
 import homeassistant.config as config_util
 from homeassistant.components import frontend, demo
 
-USER_DATA_DIR = os.getenv('APPDATA') if os.name == "nt" \
-    else os.path.expanduser('~')
-
 
 def validate_python():
     """ Validate we're running the right Python version. """
@@ -83,7 +80,7 @@ def get_arguments():
     parser.add_argument(
         '-c', '--config',
         metavar='path_to_config_dir',
-        default=os.path.join(USER_DATA_DIR, '.homeassistant'),
+        default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
         '--demo-mode',
@@ -112,7 +109,7 @@ def main():
         hass = bootstrap.from_config_dict({
             frontend.DOMAIN: {},
             demo.DOMAIN: {}
-        })
+        }, config_dir=config_dir)
     else:
         hass = bootstrap.from_config_file(config_path)
 
