@@ -79,9 +79,9 @@ class WemoSwitch(SwitchDevice):
         if self.insight_params:
             standby_state = self.insight_params['standby_state']
             # Standby  is actually '8' but seems more defensive to check for the On and Off states
-            if standby_state == '1' or standby_state == '0'
+            if standby_state == '1' or standby_state == '0':
                 return False
-            else
+            else:
                 return True
 
     @property
