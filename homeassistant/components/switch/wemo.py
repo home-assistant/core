@@ -59,6 +59,9 @@ class WemoSwitch(SwitchDevice):
         if not is_on:
             return STATE_OFF
         elif self.is_standby:
+            print(STATE_STANDBY)
+            print(self.wemo)
+            # import pdb; pdb.set_trace()
             return STATE_STANDBY
         return STATE_ON
 
@@ -79,7 +82,8 @@ class WemoSwitch(SwitchDevice):
         """ Is the device on - or in standby. """
         if self.insight_params:
             standby_state = self.insight_params['state']
-            # Standby  is actually '8' but seems more defensive to check for the On and Off states
+            # Standby  is actually '8' but seems more defensive
+            # to check for the On and Off states
             if standby_state == '1' or standby_state == '0':
                 return False
             else:
