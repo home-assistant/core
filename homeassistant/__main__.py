@@ -10,6 +10,15 @@ import homeassistant.config as config_util
 from homeassistant.const import __version__, EVENT_HOMEASSISTANT_START
 
 
+def validate_python():
+    """ Validate we're running the right Python version. """
+    major, minor = sys.version_info[:2]
+
+    if major < 3 or (major == 3 and minor < 4):
+        print("Home Assistant requires atleast Python 3.4")
+        sys.exit(1)
+
+
 def ensure_config_path(config_dir):
     """ Validates configuration directory. """
 
@@ -74,6 +83,8 @@ def get_arguments():
 
 def main():
     """ Starts Home Assistant. """
+    validate_python()
+
     args = get_arguments()
 
     config_dir = os.path.join(os.getcwd(), args.config)
