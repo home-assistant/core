@@ -9,7 +9,7 @@ This device tracker needs telnet to be enabled on the router.
 Configuration:
 
 To use the Aruba tracker you will need to add something like the following
-to your config/configuration.yaml. You also need to enable Telnet in the 
+to your config/configuration.yaml. You also need to enable Telnet in the
 configuration pages.
 
 device_tracker:
@@ -122,7 +122,7 @@ class ArubaDeviceScanner(object):
             return True
 
     def get_aruba_data(self):
-        """ Retrieve data from Aruba Access Point and return parsed 
+        """ Retrieve data from Aruba Access Point and return parsed
             result.  """
         try:
             telnet = telnetlib.Telnet(self.host)
