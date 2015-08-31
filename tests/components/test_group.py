@@ -199,7 +199,7 @@ class TestComponentsGroup(unittest.TestCase):
                 self.hass,
                 {
                     group.DOMAIN: {
-                        'second_group': self.group_entity_id + ',light.Bowl'
+                        'second_group': 'light.Bowl, ' + self.group_entity_id
                     }
                 }))
 
@@ -207,6 +207,8 @@ class TestComponentsGroup(unittest.TestCase):
             group.ENTITY_ID_FORMAT.format('second_group'))
 
         self.assertEqual(STATE_ON, group_state.state)
+        self.assertEqual(set((self.group_entity_id, 'light.bowl')),
+                         set(group_state.attributes['entity_id']))
         self.assertFalse(group_state.attributes[group.ATTR_AUTO])
 
     def test_groups_get_unique_names(self):
