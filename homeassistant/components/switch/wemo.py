@@ -7,6 +7,7 @@ Support for WeMo switches.
 import logging
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
 REQUIREMENTS = ['pywemo==0.3']
 
@@ -77,7 +78,7 @@ class WemoSwitch(SwitchDevice):
     def is_standby(self):
         """ Is the device on - or in standby. """
         if self.insight_params:
-            standby_state = self.insight_params['standby_state']
+            standby_state = self.insight_params['state']
             # Standby  is actually '8' but seems more defensive to check for the On and Off states
             if standby_state == '1' or standby_state == '0':
                 return False
@@ -90,9 +91,9 @@ class WemoSwitch(SwitchDevice):
         if self.maker_params and self.has_sensor:
             # Note a state of 1 matches the WeMo app 'not triggered'!
             if self.maker_params['sensorstate']:
-                return 'off'
+                return STATE_OFF
             else:
-                return 'on'
+                return STATE_ON
 
     @property
     def switch_mode(self):
