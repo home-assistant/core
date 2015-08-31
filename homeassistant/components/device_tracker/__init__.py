@@ -15,6 +15,7 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import _OVERWRITE
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
+from homeassistant.bootstrap import prepare_setup_platform
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
@@ -62,9 +63,9 @@ def setup(hass, config):
         return False
 
     tracker_type = config[DOMAIN].get(CONF_PLATFORM)
-
-    tracker_implementation = get_component(
-        'device_tracker.{}'.format(tracker_type))
+    
+    tracker_implementation = \
+        prepare_setup_platform(hass, config, DOMAIN, tracker_type)
 
     if tracker_implementation is None:
         _LOGGER.error("Unknown device_tracker type specified: %s.",
