@@ -24,7 +24,6 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_TODAY_MWH = "today_mwh"
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
-ATTR_STANDBY_STATE = "standby_state"
 ATTR_SENSOR_STATE = "sensor_state"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -40,7 +39,6 @@ DISCOVERY_PLATFORMS = {
 PROP_TO_ATTR = {
     'current_power_mwh': ATTR_CURRENT_POWER_MWH,
     'today_power_mw': ATTR_TODAY_MWH,
-    'standby_state': ATTR_STANDBY_STATE,
     'sensor_state': ATTR_SENSOR_STATE
 }
 
@@ -106,8 +104,8 @@ class SwitchDevice(ToggleEntity):
         return None
 
     @property
-    def standby_state(self):
-        """ Is the device on - or in standby. """
+    def is_standby(self):
+        """ Is the device in standby. """
         return None
 
     @property
