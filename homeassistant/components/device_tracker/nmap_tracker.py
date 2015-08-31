@@ -26,13 +26,6 @@ from collections import namedtuple
 import subprocess
 import re
 
-try:
-    from libnmap.process import NmapProcess
-    from libnmap.parser import NmapParser, NmapParserException
-    LIB_LOADED = True
-except ImportError:
-    LIB_LOADED = False
-
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_HOSTS
 from homeassistant.helpers import validate_config
@@ -52,13 +45,16 @@ REQUIREMENTS = ['python-libnmap==0.6.1']
 
 def get_scanner(hass, config):
     """ Validates config and returns a Nmap scanner. """
+    # pylint: disable=unused-variable
     if not validate_config(config, {DOMAIN: [CONF_HOSTS]},
                            _LOGGER):
         return None
 
-    if not LIB_LOADED:
+    try:
+        import libnmap  # noqa
+    except ImportError:
         _LOGGER.error("Error while importing dependency python-libnmap.")
-        return False
+        return None
 
     scanner = NmapDeviceScanner(config[DOMAIN])
 
@@ -83,6 +79,13 @@ class NmapDeviceScanner(object):
     """ This class scans for devices using nmap """
 
     def __init__(self, config):
+        from libnmap.process import NmapProcess
+        from libnmap.parser import NmapParser, NmapParserException
+
+        self.nmap_process = NmapProcess
+        self.nmap_parser = NmapParser
+        self.nmap_parser_exception = NmapParserException
+
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
@@ -116,7 +119,7 @@ class NmapDeviceScanner(object):
         """ Parses results from an nmap scan.
             Returns True if successful, False otherwise. """
         try:
-            results = NmapParser.parse(stdout)
+            results = self.nmap_parser.parse(stdout)
             now = dt_util.now()
             self.last_results = []
             for host in results.hosts:
@@ -134,7 +137,7 @@ class NmapDeviceScanner(object):
                         self.last_results.append(device)
             _LOGGER.info("nmap scan successful")
             return True
-        except NmapParserException as parse_exc:
+        except self.nmap_parser_exception as parse_exc:
             _LOGGER.error("failed to parse nmap results: %s", parse_exc.msg)
             self.last_results = []
             return False
@@ -159,7 +162,7 @@ class NmapDeviceScanner(object):
                 target_list = [t.ip for t in exclude_targets]
                 options += " --exclude {}".format(",".join(target_list))
 
-        nmap = NmapProcess(targets=self.hosts, options=options)
+        nmap = self.nmap_process(targets=self.hosts, options=options)
 
         nmap.run()
 
