@@ -132,17 +132,17 @@ class NmapDeviceScanner(object):
 
         now = dt_util.now()
         self.last_results = []
-        for ip, info in result['scan'].items():
+        for ipv4, info in result['scan'].items():
             if info['status']['state'] != 'up':
                 continue
-            name = info['hostnames'][0] if info['hostnames'] else ip
+            name = info['hostnames'][0] if info['hostnames'] else ipv4
             # Mac address only returned if nmap ran as root
             mac = info['addresses'].get('mac')
             if mac is None:
-                mac = _arp(ip)
+                mac = _arp(ipv4)
             if mac is None:
                 continue
-            device = Device(mac.upper(), name, ip, now)
+            device = Device(mac.upper(), name, ipv4, now)
             self.last_results.append(device)
         self.last_results.extend(exclude_targets)
 
