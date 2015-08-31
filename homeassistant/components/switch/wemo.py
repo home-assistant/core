@@ -52,6 +52,16 @@ class WemoSwitch(SwitchDevice):
         return self.wemo.name
 
     @property
+    def state(self):
+        """ Returns the state. """
+        is_on = self.is_on
+        if not is_on:
+            return STATE_OFF
+        elif self.is_standby:
+            return STATE_STANDBY
+        return STATE_ON
+
+    @property
     def current_power_mwh(self):
         """ Current power usage in mwh. """
         if self.insight_params:
@@ -64,10 +74,15 @@ class WemoSwitch(SwitchDevice):
             return self.insight_params['todaymw']
 
     @property
-    def standby_state(self):
+    def is_standby(self):
         """ Is the device on - or in standby. """
         if self.insight_params:
-            return self.insight_params['standby_state']
+            standby_state = self.insight_params['standby_state']
+            # Standby  is actually '8' but seems more defensive to check for the On and Off states
+            if standby_state == '1' or standby_state == '0'
+                return False
+            else
+                return True
 
     @property
     def sensor_state(self):
