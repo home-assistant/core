@@ -59,9 +59,6 @@ class WemoSwitch(SwitchDevice):
         if not is_on:
             return STATE_OFF
         elif self.is_standby:
-            print(STATE_STANDBY)
-            print(self.wemo)
-            # import pdb; pdb.set_trace()
             return STATE_STANDBY
         return STATE_ON
 
