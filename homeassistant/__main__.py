@@ -86,6 +86,7 @@ def main():
         }, config_dir=config_dir)
     else:
         config_file = ensure_config_file(config_dir)
+        print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(config_file)
 
     if args.open_ui:
