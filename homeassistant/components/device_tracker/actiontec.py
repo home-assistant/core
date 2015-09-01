@@ -101,7 +101,7 @@ class ActiontecDeviceScanner(object):
         self.success_init = data is not None
         _LOGGER.info("actiontec scanner initialized")
         if self.home_interval:
-            _LOGGER.info("home_interval set to: %s" % self.home_interval)
+            _LOGGER.info("home_interval set to: %s", self.home_interval)
 
     def scan_devices(self):
         """ Scans for new devices and return a
@@ -142,11 +142,11 @@ class ActiontecDeviceScanner(object):
             devices = self.get_actiontec_data()
             if not devices:
                 return False
-            for ip in target_list:
-                if ip in devices:
-                    devices.pop(ip)
-            for ip, data in devices.items():
-                device = Device(data['mac'], ip, now)
+            for client in target_list:
+                if client in devices:
+                    devices.pop(client)
+            for name, data in devices.items():
+                device = Device(data['mac'], name, now)
                 self.last_results.append(device)
 
             return True
