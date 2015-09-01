@@ -149,8 +149,9 @@ def mount_local_lib_path(config_dir):
     sys.path.insert(0, os.path.join(config_dir, 'lib'))
 
 
-# pylint: disable=too-many-branches, too-many-statements
-def from_config_dict(config, hass=None, config_dir=None, enable_log=True):
+# pylint: disable=too-many-branches, too-many-statements, too-many-arguments
+def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
+                     verbose=False, daemon=False):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -166,7 +167,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True):
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
-        enable_logging(hass)
+        enable_logging(hass, verbose, daemon)
 
     _ensure_loader_prepared(hass)
 
@@ -195,7 +196,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True):
     return hass
 
 
-def from_config_file(config_path, hass=None):
+def from_config_file(config_path, hass=None, verbose=False, daemon=False):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -209,35 +210,36 @@ def from_config_file(config_path, hass=None):
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
-    enable_logging(hass)
+    enable_logging(hass, verbose, daemon)
 
     config_dict = config_util.load_config_file(config_path)
 
     return from_config_dict(config_dict, hass, enable_log=False)
 
 
-def enable_logging(hass):
+def enable_logging(hass, verbose=False, daemon=False):
     """ Setup the logging for home assistant. """
-    logging.basicConfig(level=logging.INFO)
-    fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-           "[%(name)s] %(message)s%(reset)s")
-    try:
-        from colorlog import ColoredFormatter
-        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            fmt,
-            datefmt='%y-%m-%d %H:%M:%S',
-            reset=True,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red',
-            }
-        ))
-    except ImportError:
-        _LOGGER.warning(
-            "Colorlog package not found, console coloring disabled")
+    if not daemon:
+        logging.basicConfig(level=logging.INFO)
+        fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
+               "[%(name)s] %(message)s%(reset)s")
+        try:
+            from colorlog import ColoredFormatter
+            logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+                fmt,
+                datefmt='%y-%m-%d %H:%M:%S',
+                reset=True,
+                log_colors={
+                    'DEBUG': 'cyan',
+                    'INFO': 'green',
+                    'WARNING': 'yellow',
+                    'ERROR': 'red',
+                    'CRITICAL': 'red',
+                }
+            ))
+        except ImportError:
+            _LOGGER.warning(
+                "Colorlog package not found, console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path('home-assistant.log')
@@ -251,11 +253,13 @@ def enable_logging(hass):
         err_handler = logging.FileHandler(
             err_log_path, mode='w', delay=True)
 
-        err_handler.setLevel(logging.WARNING)
+        err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',
                               datefmt='%y-%m-%d %H:%M:%S'))
-        logging.getLogger('').addHandler(err_handler)
+        logger = logging.getLogger('')
+        logger.addHandler(err_handler)
+        logger.setLevel(logging.INFO)  # this sets the minimum log level
 
     else:
         _LOGGER.error(
