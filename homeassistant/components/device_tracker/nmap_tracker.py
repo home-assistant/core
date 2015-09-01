@@ -114,7 +114,7 @@ class NmapDeviceScanner(object):
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = "-sP --host-timeout 5"
+        options = "-F --host-timeout 5"
         exclude_targets = set()
         if self.home_interval:
             now = dt_util.now()
