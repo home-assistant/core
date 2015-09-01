@@ -137,9 +137,7 @@ class NmapDeviceScanner(object):
                 continue
             name = info['hostnames'][0] if info['hostnames'] else ipv4
             # Mac address only returned if nmap ran as root
-            mac = info['addresses'].get('mac')
-            if mac is None:
-                mac = _arp(ipv4)
+            mac = info['addresses'].get('mac') or _arp(ipv4)
             if mac is None:
                 continue
             device = Device(mac.upper(), name, ipv4, now)
