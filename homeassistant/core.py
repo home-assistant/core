@@ -82,7 +82,11 @@ class HomeAssistant(object):
             DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
 
         if os.name != "nt":
-            signal.signal(signal.SIGQUIT, stop_homeassistant)
+            try:
+                signal.signal(signal.SIGQUIT, stop_homeassistant)
+            except ValueError:
+                _LOGGER.warning(
+                    'Could not bind to SIGQUIT. Are you running in a thread?')
 
         while not request_shutdown.isSet():
             try:
