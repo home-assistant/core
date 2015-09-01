@@ -7,7 +7,6 @@ Tests the device tracker compoments.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from datetime import timedelta
-import logging
 import os
 
 import homeassistant.core as ha
@@ -21,18 +20,12 @@ import homeassistant.components.device_tracker as device_tracker
 from tests.common import get_test_home_assistant
 
 
-def setUpModule():   # pylint: disable=invalid-name
-    """ Setup to ignore group errors. """
-    logging.disable(logging.CRITICAL)
-
-
 class TestComponentsDeviceTracker(unittest.TestCase):
     """ Tests homeassistant.components.device_tracker module. """
 
     def setUp(self):  # pylint: disable=invalid-name
         """ Init needed objects. """
         self.hass = get_test_home_assistant()
-        loader.prepare(self.hass)
 
         self.known_dev_path = self.hass.config.path(
             device_tracker.KNOWN_DEVICES_FILE)
