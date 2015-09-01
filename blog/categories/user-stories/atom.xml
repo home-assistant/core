@@ -4,7 +4,7 @@
   <title><![CDATA[Category: user-stories | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/user-stories/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-01T01:42:38-07:00</updated>
+  <updated>2015-09-01T02:02:41-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,135 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[0.7: Better UI and improved distribution]]></title>
-    <link href="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/"/>
-    <updated>2015-08-31T14:12:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution</id>
-    <content type="html"><![CDATA[<p>As Home Assistant is gaining more and more users we started to feel the pain from not having a
-proper release mechanism. We had no version numbering and required users to checkout the source
-using Git to get started. On top of that, as the number of devices that we support keeps raising, so
-did the number of dependencies that are used. That&rsquo;s why we decided to change the way we roll. From
-now on:</p>
-
-<ul>
-<li>Each release will have a version number, starting with version 0.7. This was chosen because it
-shows that we have been around for some time but are not considering ourselves to be fully
-stable.</li>
-<li>Each release will be pushed to PyPi. This will be the only supported method of distribution.</li>
-<li>Home Assistant is available after installation as a command-line utility <code>hass</code>.</li>
-<li>The default configuration location has been moved from <code>config</code> in the current working directory
-to <code>~/.homeassistant</code> (<code>%APPDATA%/.homeassistant</code> on Windows).</li>
-<li>Requirements for components and platforms are no longer installed into the current Python
-environment (being virtual or not) but will be installed in <code>&lt;config-dir&gt;/lib</code>.</li>
-</ul>
-
-
-<p>A huge shout out to <a href="https://github.com/rmkraus">Ryan Kraus</a> for making this all possible. Please
-make sure you read <a href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#read-more">the full blog post</a> for details on how to migrate your existing setup.</p>
-
-<p>And while Ryan was fixing distribution, I have been hard at work in giving Home Assistant a face
-lift. We already looked pretty good but lacked proper form of organization for users with many
-devices. The new UI moves away from a card per entity and has cards per group and domain instead.
-<a href="/demo/">The demo</a> has been updated so give it a spin.</p>
-
-<p class='img'>
-  <a href='https://home-assistant.io/demo/'>
-    <img src='https://home-assistant.io/images/screenshots/ui2015.png' />
-  </a>
-  Screenshots of the new UI
-</p>
-
-
-
-
-<!--more-->
-
-
-<h3><a class='title-link' name='migration-to-version-07' href='#migration-to-version-07'></a> Migration to version 0.7 </h3>
-
-<p>For this example, let&rsquo;s say we have an old Home Assistant installation in
-<code>/home/paulus/home-assistant</code>.</p>
-
-<p>If you want to migrate your existing configuration to be used as the default configuration:</p>
-
-<pre><code class="bash">cp -r /home/paulus/home-assistant ~/.homeassistant
-</code></pre>
-
-<p>It If you want to have the configuration in a different location, for example
-<code>/home/paulus/home-assistant-config</code>, you will have to point Home Assistant at this configuration
-folder when launching:</p>
-
-<pre><code class="bash">hass --config /home/paulus/home-assistant-config
-</code></pre>
-
-<h3><a class='title-link' name='new-platforms' href='#new-platforms'></a> New platforms </h3>
-
-<p>And last, but not least: new platforms!</p>
-
-<p><strong>MQTT Sensors and Switches</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/sfam">@sfam</a> has blessed us with two more MQTT platforms to extend our
-integration with MQTTT: <a href="/components/sensor.mqtt.html">sensor</a> and <a href="/components/switch.mqtt.html">switch</a>. Both platforms require the
-MQTT component to be connected to a broker.</p>
-
-<pre><code class="yaml"># Example configuration.yml entr
-sensor:
-  platform: mqtt
-  name: "MQTT Sensor"
-  state_topic: "home/bedroom/temperature"
-  unit_of_measurement: "ºC"
-
-switch:
-  platform: mqtt
-  name: "Bedroom Switch"
-  state_topic: "home/bedroom/switch1"
-  command_topic: "home/bedroom/switch1/set"
-  payload_on: "ON"
-  payload_off: "OFF"
-  optimistic: false
-</code></pre>
-
-<p><strong>Actiontec MI424WR Verizon FIOS Wireless router</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/actiontec.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/nkgilley">Nolan</a> has contributed support for Actiontec wireless routers.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-device_tracker:
-  platform: actiontec
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-</code></pre>
-
-<p><strong>DHT temperature and humidty sensors</strong><br>
-<a href="https://github.com/makemeasandwich">@MakeMeASandwich</a> has contributed support for DHT temperature
-and humidity sensors. It allows you to get the current temperature and humidity from a DHT11, DHT22,
-or AM2302 device.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: dht
-  sensor: DHT22
-  pin: 23
-  monitored_conditions:
-    - temperature
-    - humidity
-</code></pre>
-
-<p><strong>Aruba device tracker</strong><br>
-<a href="https://github.com/michaelarnauts">Michael Arnauts</a> has contributed support for Aruba wireless routers for presence detection.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-device_tracker:
-  platform: aruba
-  host: YOUR_ACCESS_POINT_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-</code></pre>
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[Laundry Automation: insight and notifications]]></title>
