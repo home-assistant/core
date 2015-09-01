@@ -149,7 +149,7 @@ def mount_local_lib_path(config_dir):
     sys.path.insert(0, os.path.join(config_dir, 'lib'))
 
 
-# pylint: disable=too-many-branches, too-many-statements
+# pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
                      verbose=False, daemon=False):
     """
