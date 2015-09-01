@@ -19,6 +19,11 @@ hosts
 *Required
 The IP addresses to scan in the network-prefix notation (192.168.1.1/24) or
 the range notation (192.168.1.1-255).
+
+home_interval
+*Optional
+Number of minutes it will not scan devices that it found in previous results.
+This is to save battery.
 """
 import logging
 from datetime import timedelta
@@ -40,20 +45,13 @@ _LOGGER = logging.getLogger(__name__)
 # interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
 
-REQUIREMENTS = ['python-libnmap==0.6.1']
+REQUIREMENTS = ['python-nmap==0.4.1']
 
 
 def get_scanner(hass, config):
     """ Validates config and returns a Nmap scanner. """
-    # pylint: disable=unused-variable
     if not validate_config(config, {DOMAIN: [CONF_HOSTS]},
                            _LOGGER):
-        return None
-
-    try:
-        import libnmap  # noqa
-    except ImportError:
-        _LOGGER.error("Error while importing dependency python-libnmap.")
         return None
 
     scanner = NmapDeviceScanner(config[DOMAIN])
@@ -72,28 +70,20 @@ def _arp(ip_address):
     if match:
         return match.group(0)
     _LOGGER.info("No MAC address found for %s", ip_address)
-    return ''
+    return None
 
 
 class NmapDeviceScanner(object):
     """ This class scans for devices using nmap """
 
     def __init__(self, config):
-        from libnmap.process import NmapProcess
-        from libnmap.parser import NmapParser, NmapParserException
-
-        self.nmap_process = NmapProcess
-        self.nmap_parser = NmapParser
-        self.nmap_parser_exception = NmapParserException
-
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
         minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
         self.home_interval = timedelta(minutes=minutes)
 
-        self.success_init = True
-        self._update_info()
+        self.success_init = self._update_info()
         _LOGGER.info("nmap scanner initialized")
 
     def scan_devices(self):
@@ -115,43 +105,16 @@ class NmapDeviceScanner(object):
         else:
             return None
 
-    def _parse_results(self, stdout):
-        """ Parses results from an nmap scan.
-            Returns True if successful, False otherwise. """
-        try:
-            results = self.nmap_parser.parse(stdout)
-            now = dt_util.now()
-            self.last_results = []
-            for host in results.hosts:
-                if host.is_up():
-                    if host.hostnames:
-                        name = host.hostnames[0]
-                    else:
-                        name = host.ipv4
-                    if host.mac:
-                        mac = host.mac
-                    else:
-                        mac = _arp(host.ipv4)
-                    if mac:
-                        device = Device(mac.upper(), name, host.ipv4, now)
-                        self.last_results.append(device)
-            _LOGGER.info("nmap scan successful")
-            return True
-        except self.nmap_parser_exception as parse_exc:
-            _LOGGER.error("failed to parse nmap results: %s", parse_exc.msg)
-            self.last_results = []
-            return False
-
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Scans the network for devices.
             Returns boolean if scanning successful. """
-        if not self.success_init:
-            return False
-
         _LOGGER.info("Scanning")
 
-        options = "-F --host-timeout 5"
+        from nmap import PortScanner, PortScannerError
+        scanner = PortScanner()
+
+        options = "-sP --host-timeout 5"
         exclude_targets = set()
         if self.home_interval:
             now = dt_util.now()
@@ -162,14 +125,24 @@ class NmapDeviceScanner(object):
                 target_list = [t.ip for t in exclude_targets]
                 options += " --exclude {}".format(",".join(target_list))
 
-        nmap = self.nmap_process(targets=self.hosts, options=options)
-
-        nmap.run()
-
-        if nmap.rc == 0:
-            if self._parse_results(nmap.stdout):
-                self.last_results.extend(exclude_targets)
-        else:
-            self.last_results = []
-            _LOGGER.error(nmap.stderr)
+        try:
+            result = scanner.scan(hosts=self.hosts, arguments=options)
+        except PortScannerError:
             return False
+
+        now = dt_util.now()
+        self.last_results = []
+        for ipv4, info in result['scan'].items():
+            if info['status']['state'] != 'up':
+                continue
+            name = info['hostnames'][0] if info['hostnames'] else ipv4
+            # Mac address only returned if nmap ran as root
+            mac = info['addresses'].get('mac') or _arp(ipv4)
+            if mac is None:
+                continue
+            device = Device(mac.upper(), name, ipv4, now)
+            self.last_results.append(device)
+        self.last_results.extend(exclude_targets)
+
+        _LOGGER.info("nmap scan successful")
+        return True
