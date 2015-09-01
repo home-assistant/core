@@ -118,19 +118,18 @@ def daemonize():
 def check_pid(pid_file):
     """ Check that HA is not already running """
     # check pid file
-    if pid_file:
+    try:
+        pid = int(open(pid_file, 'r').readline())
+    except IOError:
+        pass
+    else:
         try:
-            pid = int(open(pid_file, 'r').readline())
-        except IOError:
+            os.kill(pid, 0)
+        except OSError:
             pass
         else:
-            try:
-                os.kill(pid, 0)
-            except OSError:
-                pass
-            else:
-                print('Fatal Error: HomeAssistant is already running.')
-                sys.exit(1)
+            print('Fatal Error: HomeAssistant is already running.')
+            sys.exit(1)
 
 
 def write_pid(pid_file):
@@ -142,7 +141,8 @@ def write_pid(pid_file):
         try:
             open(pid_file, 'w').write(str(pid))
         except IOError:
-            pass
+            print('Fatal Error: Unable to write pid file {}'.format(pid_file))
+            sys.exit(1)
 
 
 def main():
@@ -155,7 +155,8 @@ def main():
     ensure_config_path(config_dir)
 
     # daemon functions
-    check_pid(args.pid_file)
+    if args.pid_file:
+        check_pid(args.pid_file)
     if args.daemon:
         daemonize()
     write_pid(args.pid_file)
