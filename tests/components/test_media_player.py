@@ -5,7 +5,6 @@ tests.test_component_media_player
 Tests media_player component.
 """
 # pylint: disable=too-many-public-methods,protected-access
-import logging
 import unittest
 
 import homeassistant.core as ha
@@ -16,11 +15,6 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, ATTR_ENTITY_ID)
 import homeassistant.components.media_player as media_player
 from tests.common import mock_service
-
-
-def setUpModule():   # pylint: disable=invalid-name
-    """ Setup to ignore media_player errors. """
-    logging.disable(logging.CRITICAL)
 
 
 class TestMediaPlayer(unittest.TestCase):

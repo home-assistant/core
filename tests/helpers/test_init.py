@@ -21,7 +21,6 @@ class TestComponentsCore(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """ Init needed objects. """
         self.hass = get_test_home_assistant()
-        loader.prepare(self.hass)
 
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
