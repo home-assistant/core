@@ -104,7 +104,7 @@ def setup(hass, config):
     """ Sets up all groups found definded in the configuration. """
     for name, entity_ids in config.get(DOMAIN, {}).items():
         if isinstance(entity_ids, str):
-            entity_ids = entity_ids.split(",")
+            entity_ids = [ent.strip() for ent in entity_ids.split(",")]
         setup_group(hass, name, entity_ids)
 
     return True
