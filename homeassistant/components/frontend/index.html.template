@@ -33,15 +33,16 @@
         right: 0;
         bottom: 0;
       }
-      #init p {
-        margin-bottom: 101px;
+      #init div {
+        line-height: 34px;
+        margin-bottom: 89px;
       }
     </style>
   </head>
   <body fullbleed>
     <div id='init'>
       <img src='/static/splash.png' height='230' />
-      <p>Initializing</p>
+      <div>Initializing</div>
     </div>
     <script src='/static/webcomponents-lite.min.js'></script>
     <link rel='import' href='/static/{{ app_url }}' />
