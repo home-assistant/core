@@ -10,7 +10,6 @@ import os
 import csv
 from datetime import timedelta
 
-from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import _OVERWRITE
 import homeassistant.util as util
@@ -63,7 +62,7 @@ def setup(hass, config):
         return False
 
     tracker_type = config[DOMAIN].get(CONF_PLATFORM)
-    
+
     tracker_implementation = \
         prepare_setup_platform(hass, config, DOMAIN, tracker_type)
 
