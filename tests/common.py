@@ -8,7 +8,7 @@ import os
 from datetime import timedelta
 from unittest import mock
 
-import homeassistant.core as ha
+from homeassistant import core as ha, loader
 import homeassistant.util.location as location_util
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import ToggleEntity
@@ -37,6 +37,9 @@ def get_test_home_assistant(num_threads=None):
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
+
+    # if not loader.PREPARED:
+    loader. prepare(hass)
 
     return hass
 

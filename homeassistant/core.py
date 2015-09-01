@@ -761,8 +761,10 @@ def create_timer(hass, interval=TIMER_INTERVAL):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_timer)
 
 
-def create_worker_pool(worker_count=MIN_WORKER_THREAD):
+def create_worker_pool(worker_count=None):
     """ Creates a worker pool to be used. """
+    if worker_count is None:
+        worker_count = MIN_WORKER_THREAD
 
     def job_handler(job):
         """ Called whenever a job is available to do. """
