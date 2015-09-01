@@ -9,7 +9,7 @@ with open(os.path.join(HERE, PACKAGE_NAME, 'const.py')) as fp:
 DOWNLOAD_URL = \
     'https://github.com/balloob/home-assistant/archive/{}.zip'.format(VERSION)
 
-PACKAGES = find_packages() + \
+PACKAGES = find_packages(exclude=['tests', 'tests.*']) + \
     ['homeassistant.external', 'homeassistant.external.noop',
      'homeassistant.external.nzbclients', 'homeassistant.external.vera']
 
