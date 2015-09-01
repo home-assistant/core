@@ -9,6 +9,7 @@ of entities and react to changes.
 import os
 import time
 import logging
+import signal
 import threading
 import enum
 import re
@@ -73,12 +74,15 @@ class HomeAssistant(object):
             will block until called. """
         request_shutdown = threading.Event()
 
-        def stop_homeassistant(service):
+        def stop_homeassistant(*args):
             """ Stops Home Assistant. """
             request_shutdown.set()
 
         self.services.register(
             DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
+
+        if os.name != "nt":
+            signal.signal(signal.SIGQUIT, stop_homeassistant)
 
         while not request_shutdown.isSet():
             try:

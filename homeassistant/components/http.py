@@ -208,6 +208,11 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         """ Registers a path wit the server. """
         self.paths.append((method, url, callback, require_auth))
 
+    def log_message(self, fmt, *args):
+        """ Redirect built-in log to HA logging """
+        # pylint: disable=no-self-use
+        _LOGGER.info(fmt, *args)
+
 
 # pylint: disable=too-many-public-methods,too-many-locals
 class RequestHandler(SimpleHTTPRequestHandler):
@@ -224,6 +229,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Contructor, call the base constructor and set up session """
         self._session = None
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+
+    def log_message(self, fmt, *arguments):
+        """ Redirect built-in log to HA logging """
+        _LOGGER.info(fmt, *arguments)
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
