@@ -121,13 +121,16 @@ def check_pid(pid_file):
     try:
         pid = int(open(pid_file, 'r').readline())
     except IOError:
+        # PID File does not exist
         pass
     else:
         try:
             os.kill(pid, 0)
         except OSError:
+            # PID does not exist
             pass
         else:
+            # PID already exists
             print('Fatal Error: HomeAssistant is already running.')
             sys.exit(1)
 
