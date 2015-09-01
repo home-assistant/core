@@ -18,8 +18,12 @@ PACKAGE_DATA = \
      'homeassistant.components.frontend.www_static': ['*.*'],
      'homeassistant.components.frontend.www_static.images': ['*.*']}
 
-REQUIRES = \
-    [line.strip() for line in open('requirements.txt', 'r')]
+REQUIRES = [
+    'requests>=2,<3',
+    'pyyaml>=3.11,<4',
+    'pytz>=2015.4',
+    'pip>=7.0.0',
+]
 
 setup(
     name=PACKAGE_NAME,
