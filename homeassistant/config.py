@@ -54,7 +54,7 @@ def ensure_config_exists(config_dir, detect_location=True):
     config_path = find_config_file(config_dir)
 
     if config_path is None:
-        print("Unable to find configuration. Creating default one at",
+        print("Unable to find configuration. Creating default one in",
               config_dir)
         config_path = create_default_config(config_dir, detect_location)
 

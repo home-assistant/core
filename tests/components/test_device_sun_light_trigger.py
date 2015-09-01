@@ -15,8 +15,8 @@ from homeassistant.components import (
 
 
 from tests.common import (
-    get_test_home_assistant, ensure_sun_risen, ensure_sun_set,
-    trigger_device_tracker_scan)
+    get_test_config_dir, get_test_home_assistant, ensure_sun_risen,
+    ensure_sun_set, trigger_device_tracker_scan)
 
 
 KNOWN_DEV_PATH = None
@@ -26,13 +26,8 @@ def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global KNOWN_DEV_PATH
 
-    hass = get_test_home_assistant()
-
-    loader.prepare(hass)
-    KNOWN_DEV_PATH = hass.config.path(
-        device_tracker.KNOWN_DEVICES_FILE)
-
-    hass.stop()
+    KNOWN_DEV_PATH = os.path.join(get_test_config_dir(),
+                                  device_tracker.KNOWN_DEVICES_FILE)
 
     with open(KNOWN_DEV_PATH, 'w') as fil:
         fil.write('device,name,track,picture\n')

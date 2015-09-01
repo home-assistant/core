@@ -10,7 +10,7 @@ import re
 
 from homeassistant import core
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
 DOMAIN = "conversation"
 DEPENDENCIES = []
@@ -44,7 +44,7 @@ def setup(hass, config):
 
         entity_ids = [
             state.entity_id for state in hass.states.all()
-            if state.attributes.get(ATTR_FRIENDLY_NAME, "").lower() == name]
+            if state.name.lower() == name]
 
         if not entity_ids:
             logger.error(

@@ -8,6 +8,7 @@ Uses port 8125 as a port that nothing runs on
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
+from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
@@ -29,7 +30,9 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-def setUpModule():   # pylint: disable=invalid-name
+@patch('homeassistant.components.http.util.get_local_ip',
+       return_value='127.0.0.1')
+def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server and Slave instance. """
     global hass, slave, master_api, broken_api
 
@@ -51,6 +54,10 @@ def setUpModule():   # pylint: disable=invalid-name
 
     # Start slave
     slave = remote.HomeAssistant(master_api)
+    bootstrap.setup_component(
+        slave, http.DOMAIN,
+        {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
+         http.CONF_SERVER_PORT: 8130}})
 
     slave.start()
 
