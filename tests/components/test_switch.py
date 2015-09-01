@@ -19,7 +19,6 @@ class TestSwitch(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = get_test_home_assistant()
-        loader.prepare(self.hass)
 
         platform = loader.get_component('switch.test')
 
