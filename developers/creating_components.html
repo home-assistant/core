@@ -147,6 +147,22 @@ Home Assistant will use the directory that contains your config file as the dire
 </p>
 
 
+<h2><a class='title-link' name='dependencies' href='#dependencies'></a> Dependencies</h2>
+
+<p>Home Assistant allows components and platforms to specify their dependencies and requirements using the variables
+<code>DEPENDENCIES</code> and <code>REQUIREMENTS</code>. Both are lists that contain strings.</p>
+
+<p>Dependencies are other Home Assistant components that should be setup before the platform is loaded.
+An example is the MQTT sensor component, which requires an active connection to a MQTT broker. If
+Home Assistant is unable to load and setup the MQTT component, it will not setup the MQTT sensor
+component.</p>
+
+<p>Requirements are Python libraries that you would normally install using <code>pip</code>. Each entry in a
+requirement list is a pip compatible string. For example, the media player Cast platform depends
+on the Python package PyChromecast thus <code>REQUIREMENTS = ['pychromecast==0.6.12']</code>. If Home
+Assistant is unable to install the package or verify it is installed, the component will fail to
+load.</p>
+
 <h2><a class='title-link' name='initializing-components' href='#initializing-components'></a> Initializing components</h2>
 
 <p>After loading, the bootstrapper will call <code>setup(hass, config)</code> method on the component to initialize it. The following parameters are passed in:</p>

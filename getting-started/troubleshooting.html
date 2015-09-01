@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Troubleshooting - Home Assistant</title>
+    <title>Troubleshooting installation problems - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Common problems and their solutions.">
+    <meta name="description" content="Common installation problems and their solutions.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Troubleshooting">
+    <meta property="og:title" content="Troubleshooting installation problems">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/getting-started/troubleshooting.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Common problems and their solutions.">
+    <meta property="og:description" content="Common installation problems and their solutions.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,58 +98,34 @@
   
   <header>
     <h1 class="title indent">
-      Troubleshooting
+      Troubleshooting Installation Problems
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>It can happen that you run into trouble while installing Home Assistant. This page is here to help you figure out the most common problems.</p>
+  <p>It can happen that you run into trouble while installing Home Assistant. This page is here to help
+you figure out the most common problems.</p>
 
-<p><strong>python3: command not found</strong><br>
-Check if Python 3.4 is installed by running <code>python3 --version</code>. If it is not installed, <a href="https://www.python.org/getit/">download it here</a>.</p>
+<p><strong>pip3: command not found</strong><br>
+This utility should have been installed as part of the Python 3.4 installation. Check if Python 3.4
+is installed by running <code>python3 --version</code>. If it is not installed,
+<a href="https://www.python.org/getit/">download it here</a>.</p>
+
+<p>If you are to succesfully run <code>python3 --version</code> but not <code>pip3</code>, run the following command instead
+to install Home Assistant: <code>python3 -m pip install homeassistant</code>.</p>
 
 <p><strong>No module named pip</strong><br>
-<a href="https://pip.pypa.io/en/stable/">Pip</a> should come bundled with the latest Python 3 but is ommitted by some distributions. If you are unable to run <code>python3 -m pip --version</code> you can install <code>pip</code> by <a href="https://bootstrap.pypa.io/get-pip.py">downloading the installer</a> and run it with Python 3: <code>python3 get-pip.py</code>.</p>
-
-<p><strong>git: command not found</strong><br>
-Check if Git is installed by running <code>git --version</code>. If you are unable to run this command you can install it by following <a href="http://git-scm.com/downloads">these instructions</a>.</p>
-
-<p><strong>No module named &lsquo;pytz&rsquo;</strong><br>
-There is a problem with installing dependencies on the fly. Install the dependencies manually in advance.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>python3 -m pip install --upgrade pip
-</span><span class='line'>python3 -m pip install --upgrade -r requirements.txt
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Ubuntu 14.04: &hellip; returned non-zero exit status</strong><br>
-There is a known issue with installing on Ubuntu 14.04 and possibly many other newer Debian based distributions. The <code>venv</code> Python 3.4 package that has been bundled in the apt-get repository are known to be broken. This has been documented <a href="https://bugs.launchpad.net/ubuntu/+source/python3.4/+bug/1290847">in this bug report</a>. If you are encountering an error that looks like the following while creating the virtual environment, you are experiencing this bug.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>Error: Command <span class="s1">&#39;[&#39;</span>home-assistant/bin/python3.4<span class="s1">&#39;, &#39;</span>-Im<span class="s1">&#39;, &#39;</span>ensurepip<span class="s1">&#39;, &#39;</span>--upgrade<span class="s1">&#39;, &#39;</span>--default-pip<span class="s1">&#39;]&#39;</span> returned non-zero <span class="nb">exit </span>status
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This error can be fixed permanently by running the following commands.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd</span> ~/Downloads
-</span><span class='line'>wget https://gist.githubusercontent.com/rmkraus/c3972492a9de875203c6/raw/46629b63857537deedc85ec4a11cd8284816e2a0/install_ensurepip.py
-</span><span class='line'>sudo python3 install_ensurepip.py
-</span><span class='line'>rm install_ensurepip.py
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>After these commands have been successfully executed, the <code>venv</code> package will be fixed system-wide.</p>
+<a href="https://pip.pypa.io/en/stable/">Pip</a> should come bundled with the latest Python 3 but is ommitted
+by some distributions. If you are unable to run <code>python3 -m pip --version</code> you can install <code>pip</code> by
+<a href="https://bootstrap.pypa.io/get-pip.py">downloading the installer</a> and run it with Python 3:
+<code>python3 get-pip.py</code>.</p>
 
 <p><strong>No access to the frontend</strong><br>
-In newer Linux distributions (at least Fedora 22/CentOS 7) the access to a host are very limited. This means that you can&rsquo;t access the Home Assistant Frontend that is running on a host in your network. Check the Post-installation section on the <a href="/getting-started/index.html">Getting started</a> page and follow the instruction that match your distribution to allow access to port 8123.</p>
+In newer Linux distributions (at least Fedora 22/CentOS 7) the access to a host are very limited.
+This means that you can&rsquo;t access the Home Assistant Frontend that is running on a host in your
+network. Check the Post-installation section on the <a href="/getting-started/">Getting started</a> page and
+follow the instruction that match your distribution to allow access to port 8123.</p>
 
 
 </article>

@@ -134,12 +134,38 @@
 
 <p>If you are planning to add support for a new type of device to an existing component, you can get away with only writing platform logic. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add.</p>
 
-<p class='note'>
-Platform logic should not interface directly with the devices but use a third-party Python 3 library that speaks the actual API.
-</p>
+<h3><a class='title-link' name='interfacing-with-devices' href='#interfacing-with-devices'></a> Interfacing with devices</h3>
+
+<p>One of the rules for Home Assistant is that platform logic should never interface directly with
+devices but use a third-party Python 3 library to do so. This way Home Assistant is able to share
+code with the Python community and we can keep the project maintainable.</p>
+
+<p>Platforms can specify dependencies and requirements the same way as a component does. Please see
+<a href="/developers/creating_components.html#dependencies">the component page</a> for more information.</p>
+
+<h3><a class='title-link' name='creating-entities' href='#creating-entities'></a> Creating Entities</h3>
+
+<p>Home Assistant will call a function with the following signature to initialize
+your new platform. This function must exist in the platform module you create.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">setup_platform</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">add_devices</span><span class="p">,</span> <span class="n">discovery_info</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-<p><a name='discovery'></a></p>
+<p>In this function, your platform should create the appropriate entities and
+register them with the Home Assistant core. Entities are Home Assistant&rsquo;s
+representation of lights, switches, sensors, etc. and are derived from the
+<a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/helpers/entity.py">Entity Abstract Class</a>.
+This abstract class contains logic for integrating most standard features into
+your entities, such as visibility, entity IDs, updates, and many more.</p>
+
+<p>A list of entities can be registered with Home Assistant using the <em>add_devices</em>
+function that is provided as an input to <em>setup_platform</em>. Once entities are
+registered with with Home Assistant their updates will be provided to the core
+and the core will have control over them. For more information on how Entities
+can be customized, take a look at the <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/helpers/entity.py#L18">Entity Abstract
+Class</a>.</p>
 
 <h2><a class='title-link' name='allowing-your-platform-to-be-discovered' href='#allowing-your-platform-to-be-discovered'></a> Allowing your platform to be discovered</h2>
 
@@ -188,32 +214,6 @@ Platform logic should not interface directly with the devices but use a third-pa
 This option is currently limited to built-in components.
 </p>
 
-
-<h3><a class='title-link' name='creating-entities' href='#creating-entities'></a> Creating Entities</h3>
-
-<p>Home Assistant will call a function with the following signature to initialize
-your new platform. This function must exist in the platform module you create.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">setup_platform</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">add_devices</span><span class="p">,</span> <span class="n">discovery_info</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In this function, your platform should create the appropriate entities and
-register them with the Home Assistant core. Entities are Home Assistant&rsquo;s
-representation of lights, switches, sensors, etc. It is best practice for all
-new entities to inherit the
-<a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/helpers/entity.py#L18">Entity Abstract Class</a>.
-This abstract class contains logic for integrating most standard features into
-your entities, such as visibility, entity IDs, updates, and many more. That is
-why it is best practice to reference the existing class.</p>
-
-<p>A list of entities can be registered with Home Assistant using the <em>add_devices</em>
-function that is provided as an input to <em>setup_platform</em>. Once entities are
-registered with with Home Assistant their updates will be provided to the core
-and the core will have control over them. For more information on how Entities
-can be customized, take a look at the <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/helpers/entity.py#L18">Entity Abstract
-Class</a>.</p>
 
 
 </article>

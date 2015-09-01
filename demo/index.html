@@ -5,30 +5,53 @@
     <title>Home Assistant</title>
 
     <link rel='manifest' href='/demo/manifest.json' />
-
-    <meta name='apple-mobile-web-app-capable' content='yes'>
-    <meta name='mobile-web-app-capable' content='yes'>
-
-    <meta name='viewport' content='width=device-width,
-          user-scalable=no' />
-
     <link rel='shortcut icon' href='/demo/favicon.ico' />
     <link rel='icon' type='image/png'
          href='/demo/favicon-192x192.png' sizes='192x192'>
     <link rel='apple-touch-icon' sizes='180x180'
          href='/demo/favicon-apple-180x180.png'>
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+    <meta name='mobile-web-app-capable' content='yes'>
+    <meta name='viewport' content='width=device-width,
+          user-scalable=no' />
     <meta name='theme-color' content='#03a9f4'>
+    <style>
+      #init {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        -webkit-justify-content: center;
+        -webkit-align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-family: 'Roboto', 'Noto', sans-serif;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+      #init div {
+        line-height: 34px;
+        margin-bottom: 89px;
+      }
+    </style>
   </head>
   <body fullbleed>
-      <h3 id='init' align='center'>Initializing Home Assistant</h3>
-      <script src='/demo/webcomponents-lite.min.js'></script>
-      <link rel='import' href='/demo/frontend.html' />
-      <home-assistant auth='no_password_set'></home-assistant>
-      <script>
-        var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
-        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-        s.parentNode.insertBefore(g,s)}(document,'script'));
-      </script>
+    <div id='init'>
+      <img src='/static/splash.png' height='230' />
+      <div>Initializing</div>
+    </div>
+    <script src='/demo/webcomponents-lite.min.js'></script>
+    <link rel='import' href='/demo/frontend.html' />
+    <home-assistant auth='no_password_set'></home-assistant>
+    <script>
+      var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+      (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+      g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+      s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
   </body>
 </html>

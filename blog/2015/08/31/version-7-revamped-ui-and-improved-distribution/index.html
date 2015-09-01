@@ -1,0 +1,470 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>0.7: Better UI and improved distribution - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Home Assistant gains a version number and a face lift.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="0.7: Better UI and improved distribution">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Home Assistant gains a version number and a face lift.">
+    <meta property="og:image" content="https://home-assistant.io/images/screenshots/ui2015.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration.html'>Initial configuration</a></li>
+      <li><a href='/components/'>Component overview</a></li>
+      <li><a href='/getting-started/android.html'>Setting up Android</a></li>
+    </ul>
+  </li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">API</a></li>
+      <li><a href="/developers/credits.html">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="post">
+  <header>
+  
+  <h1 class="title indent">0.7: Better UI and improved distribution</h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-08-31T14:12:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 31, 2015</time>
+    
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> four minutes reading time</span>
+    
+
+  <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/user-stories/'>user-stories</a></li>
+      
+    
+    </ul>
+  </span>
+
+    
+      <a class='comments'
+         href="#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+
+
+  <p>As Home Assistant is gaining more and more users we started to feel the pain from not having a
+proper release mechanism. We had no version numbering and required users to checkout the source
+using Git to get started. On top of that, as the number of devices that we support keeps raising, so
+did the number of dependencies that are used. That&rsquo;s why we decided to change the way we roll. From
+now on:</p>
+
+<ul>
+<li>Each release will have a version number, starting with version 0.7. This was chosen because it
+shows that we have been around for some time but are not considering ourselves to be fully
+stable.</li>
+<li>Each release will be pushed to PyPi. This will be the only supported method of distribution.</li>
+<li>Home Assistant is available after installation as a command-line utility <code>hass</code>.</li>
+<li>The default configuration location has been moved from <code>config</code> in the current working directory
+to <code>~/.homeassistant</code> (<code>%APPDATA%/.homeassistant</code> on Windows).</li>
+<li>Requirements for components and platforms are no longer installed into the current Python
+environment (being virtual or not) but will be installed in <code>&lt;config-dir&gt;/lib</code>.</li>
+</ul>
+
+
+<p>A huge shout out to <a href="https://github.com/rmkraus">Ryan Kraus</a> for making this all possible. Please
+make sure you read <a href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#read-more">the full blog post</a> for details on how to migrate your existing setup.</p>
+
+<p>And while Ryan was fixing distribution, I have been hard at work in giving Home Assistant a face
+lift. We already looked pretty good but lacked proper form of organization for users with many
+devices. The new UI moves away from a card per entity and has cards per group and domain instead.
+<a href="/demo/">The demo</a> has been updated so give it a spin.</p>
+
+<p class='img'>
+  <a href='/demo/'>
+    <img src='/images/screenshots/ui2015.png' />
+  </a>
+  Screenshots of the new UI
+</p>
+
+
+
+
+<a name="read-more"></a>
+
+
+<h3><a class='title-link' name='migration-to-version-07' href='#migration-to-version-07'></a> Migration to version 0.7</h3>
+
+<p>For this example, let&rsquo;s say we have an old Home Assistant installation in
+<code>/home/paulus/home-assistant</code>.</p>
+
+<p>If you want to migrate your existing configuration to be used as the default configuration:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>cp -r /home/paulus/home-assistant ~/.homeassistant
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It If you want to have the configuration in a different location, for example
+<code>/home/paulus/home-assistant-config</code>, you will have to point Home Assistant at this configuration
+folder when launching:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>hass --config /home/paulus/home-assistant-config
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='new-platforms' href='#new-platforms'></a> New platforms</h3>
+
+<p>And last, but not least: new platforms!</p>
+
+<p><strong>MQTT Sensors and Switches</strong><br>
+<img src='/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/sfam">@sfam</a> has blessed us with two more MQTT platforms to extend our
+integration with MQTTT: <a href="/components/sensor.mqtt.html">sensor</a> and <a href="/components/switch.mqtt.html">switch</a>. Both platforms require the
+MQTT component to be connected to a broker.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yml entr</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;MQTT</span><span class="nv"> </span><span class="s">Sensor&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/temperature&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;ºC&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Bedroom</span><span class="nv"> </span><span class="s">Switch&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/switch1&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">command_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/switch1/set&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">payload_on</span><span class="p-Indicator">:</span> <span class="s">&quot;ON&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">payload_off</span><span class="p-Indicator">:</span> <span class="s">&quot;OFF&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">optimistic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Actiontec MI424WR Verizon FIOS Wireless router</strong><br>
+<img src='/images/supported_brands/actiontec.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/nkgilley">Nolan</a> has contributed support for Actiontec wireless routers.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">actiontec</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ROUTER_IP</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>DHT temperature and humidty sensors</strong><br>
+<a href="https://github.com/makemeasandwich">@MakeMeASandwich</a> has contributed support for DHT temperature
+and humidity sensors. It allows you to get the current temperature and humidity from a DHT11, DHT22,
+or AM2302 device.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">dht</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">DHT22</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">pin</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">23</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">monitored_conditions</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">temperature</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">humidity</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Aruba device tracker</strong><br>
+<a href="https://github.com/michaelarnauts">Michael Arnauts</a> has contributed support for Aruba wireless routers for presence detection.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">aruba</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ACCESS_POINT_IP</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</article>
+
+ 
+<section id="disqus">
+  <h3 class="indent title">Comments</h3>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+
+  
+
+
+  <section class="sharing aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Share this post</h1>
+  
+  <a href="//twitter.com/share"
+     class="twitter-share-button"
+     data-url="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/"
+     data-counturl="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="standard"></div>
+  
+  
+    <div class="fb-share-button" style='top: -6px;'
+         data-href="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/"
+         data-layout="button_count">
+    </div>
+  
+</section>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '338291289691179',
+      xfbml      : true,
+      version    : 'v2.2'
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+<section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Other Posts</h1>
+  <ul class="divided">
+    
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/">Laundry Automation: insight and notifications</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/08/17/verisure-and-modern-tp-link-router-support/">Verisure devices and modern TP-Link routers now supported</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/">MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/">IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported</a>
+        </li>
+      
+    
+  </ul>
+</section>
+
+
+
+
+</div>
+
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    
+
+
+<script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+
+
+<script>
+  var disqus_shortname = 'home-assistant';
+  
+    
+    // var disqus_developer = 1;
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/';
+    var disqus_script = 'embed.js';
+  
+  (function () {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  }());
+</script>
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

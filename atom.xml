@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-08-29T09:17:01-07:00</updated>
+  <updated>2015-09-01T01:42:38-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,178 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.7: Better UI and improved distribution]]></title>
+    <link href="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/"/>
+    <updated>2015-08-31T14:12:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution</id>
+    <content type="html"><![CDATA[<p>As Home Assistant is gaining more and more users we started to feel the pain from not having a
+proper release mechanism. We had no version numbering and required users to checkout the source
+using Git to get started. On top of that, as the number of devices that we support keeps raising, so
+did the number of dependencies that are used. That&rsquo;s why we decided to change the way we roll. From
+now on:</p>
+
+<ul>
+<li>Each release will have a version number, starting with version 0.7. This was chosen because it
+shows that we have been around for some time but are not considering ourselves to be fully
+stable.</li>
+<li>Each release will be pushed to PyPi. This will be the only supported method of distribution.</li>
+<li>Home Assistant is available after installation as a command-line utility <code>hass</code>.</li>
+<li>The default configuration location has been moved from <code>config</code> in the current working directory
+to <code>~/.homeassistant</code> (<code>%APPDATA%/.homeassistant</code> on Windows).</li>
+<li>Requirements for components and platforms are no longer installed into the current Python
+environment (being virtual or not) but will be installed in <code>&lt;config-dir&gt;/lib</code>.</li>
+</ul>
+
+
+<p>A huge shout out to <a href="https://github.com/rmkraus">Ryan Kraus</a> for making this all possible. Please
+make sure you read <a href="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#read-more">the full blog post</a> for details on how to migrate your existing setup.</p>
+
+<p>And while Ryan was fixing distribution, I have been hard at work in giving Home Assistant a face
+lift. We already looked pretty good but lacked proper form of organization for users with many
+devices. The new UI moves away from a card per entity and has cards per group and domain instead.
+<a href="https://home-assistant.io/demo/">The demo</a> has been updated so give it a spin.</p>
+
+<p class='img'>
+  <a href='https://home-assistant.io/demo/'>
+    <img src='https://home-assistant.io/images/screenshots/ui2015.png' />
+  </a>
+  Screenshots of the new UI
+</p>
+
+
+
+
+<!--more-->
+
+
+<h3><a class='title-link' name='migration-to-version-07' href='#migration-to-version-07'></a> Migration to version 0.7</h3>
+
+<p>For this example, let&rsquo;s say we have an old Home Assistant installation in
+<code>/home/paulus/home-assistant</code>.</p>
+
+<p>If you want to migrate your existing configuration to be used as the default configuration:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>cp -r /home/paulus/home-assistant ~/.homeassistant
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It If you want to have the configuration in a different location, for example
+<code>/home/paulus/home-assistant-config</code>, you will have to point Home Assistant at this configuration
+folder when launching:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>hass --config /home/paulus/home-assistant-config
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='new-platforms' href='#new-platforms'></a> New platforms</h3>
+
+<p>And last, but not least: new platforms!</p>
+
+<p><strong>MQTT Sensors and Switches</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/sfam">@sfam</a> has blessed us with two more MQTT platforms to extend our
+integration with MQTTT: <a href="https://home-assistant.io/components/sensor.mqtt.html">sensor</a> and <a href="https://home-assistant.io/components/switch.mqtt.html">switch</a>. Both platforms require the
+MQTT component to be connected to a broker.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yml entr</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;MQTT</span><span class="nv"> </span><span class="s">Sensor&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/temperature&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;ºC&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Bedroom</span><span class="nv"> </span><span class="s">Switch&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/switch1&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">command_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/switch1/set&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">payload_on</span><span class="p-Indicator">:</span> <span class="s">&quot;ON&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">payload_off</span><span class="p-Indicator">:</span> <span class="s">&quot;OFF&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">optimistic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Actiontec MI424WR Verizon FIOS Wireless router</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/actiontec.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/nkgilley">Nolan</a> has contributed support for Actiontec wireless routers.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">actiontec</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ROUTER_IP</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>DHT temperature and humidty sensors</strong><br>
+<a href="https://github.com/makemeasandwich">@MakeMeASandwich</a> has contributed support for DHT temperature
+and humidity sensors. It allows you to get the current temperature and humidity from a DHT11, DHT22,
+or AM2302 device.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">dht</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">DHT22</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">pin</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">23</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">monitored_conditions</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">temperature</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">humidity</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Aruba device tracker</strong><br>
+<a href="https://github.com/michaelarnauts">Michael Arnauts</a> has contributed support for Aruba wireless routers for presence detection.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">aruba</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ACCESS_POINT_IP</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Laundry Automation: insight and notifications]]></title>
@@ -1787,15 +1959,6 @@ This article will try to explain how they all relate.</p>
 <p>Home Assistant is trying to be this software. It is not there yet but trying hard. Device discovery and a user interface for configuring home automation are problems we hope to tackle in 2015 while not sacrificing any modularity or usability.</p>
 
 <p>Happy new year!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Website launched!]]></title>
-    <link href="https://home-assistant.io/blog/2014/12/18/website-launched/"/>
-    <updated>2014-12-18T23:24:45-08:00</updated>
-    <id>https://home-assistant.io/blog/2014/12/18/website-launched</id>
-    <content type="html"><![CDATA[<p>I finally took the time to setup a simple website to help people getting started with Home Assistant. The process was super smooth thanks to the great tools <a href="http://jekyllrb.com">Jekyll</a> and <a href="http://octopress.org">Octopress</a> and the great services <a href="https://pages.github.com">GitHub Pages</a> and <a href="https://cloudflare.com">CloudFlare</a>.</p>
 ]]></content>
   </entry>
   
