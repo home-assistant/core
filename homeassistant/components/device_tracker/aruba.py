@@ -51,15 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 _DEVICES_REGEX = re.compile(
     r'(?P<name>([^\s]+))\s+' +
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s+' +
-    r'(?P<os>([^\s]+))\s+' +
-    r'(?P<network>([^\s]+))\s+' +
-    r'(?P<ap>([^\s]+))\s+' +
-    r'(?P<channel>([^\s]+))\s+' +
-    r'(?P<type>([^\s]+))\s+' +
-    r'(?P<role>([^\s]+))\s+' +
-    r'(?P<signal>([^\s]+))\s+' +
-    r'(?P<speed>([^\s]+))')
+    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s+')
 
 
 # pylint: disable=unused-argument
