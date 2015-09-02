@@ -37,7 +37,8 @@ The password for your given admin account.
 
 home_interval
 *Optional
-Number of minutes it will not scan devices that it found in previous results.
+If the home_interval is set then the component will not let a device
+be AWAY if it has been HOME in the last home_interval seconds.
 """
 import logging
 from datetime import timedelta
@@ -94,7 +95,7 @@ class ActiontecDeviceScanner(object):
 
         self.lock = threading.Lock()
 
-        self.last_results = {}
+        self.last_results = []
 
         # Test the router is accessible
         data = self.get_actiontec_data()
@@ -129,26 +130,27 @@ class ActiontecDeviceScanner(object):
 
         with self.lock:
             exclude_targets = set()
-            target_list = []
-            self.last_results = []
+            exclude_target_list = []
             now = dt_util.now()
             if self.home_interval:
                 for host in self.last_results:
                     if host.last_update + self.home_interval > now:
                         exclude_targets.add(host)
                 if len(exclude_targets) > 0:
-                    target_list = [t.ip for t in exclude_targets]
+                    exclude_target_list = [t.ip for t in exclude_targets]
 
-            devices = self.get_actiontec_data()
-            if not devices:
+            self.last_results = []
+            actiontec_data = self.get_actiontec_data()
+            if not actiontec_data:
                 return False
-            for client in target_list:
-                if client in devices:
-                    devices.pop(client)
-            for name, data in devices.items():
+            for client in exclude_target_list:
+                if client in actiontec_data:
+                    actiontec_data.pop(client)
+            for name, data in actiontec_data.items():
                 device = Device(data['mac'], name, now)
                 self.last_results.append(device)
-
+            self.last_results.extend(exclude_targets)
+            _LOGGER.info("actiontec scan successful")
             return True
 
     def get_actiontec_data(self):
