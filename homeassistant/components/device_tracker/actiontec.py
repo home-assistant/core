@@ -140,10 +140,10 @@ class ActiontecDeviceScanner(object):
                 if len(exclude_targets) > 0:
                     exclude_target_list = [t.ip for t in exclude_targets]
 
-            self.last_results = []
             actiontec_data = self.get_actiontec_data()
             if not actiontec_data:
                 return False
+            self.last_results = []
             for client in exclude_target_list:
                 if client in actiontec_data:
                     actiontec_data.pop(client)
