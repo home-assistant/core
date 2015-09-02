@@ -38,7 +38,8 @@ The password for your given admin account.
 home_interval
 *Optional
 If the home_interval is set then the component will not let a device
-be AWAY if it has been HOME in the last home_interval seconds.
+be AWAY if it has been HOME in the last home_interval minutes. This is
+in addition to the 3 minute wait built into the device_tracker component.
 """
 import logging
 from datetime import timedelta
