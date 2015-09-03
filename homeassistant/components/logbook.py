@@ -40,6 +40,8 @@ GROUP_BY_MINUTES = 15
 
 
 def setup(hass, config):
+    """ Listens for download events to download files. """
+
     def _handle_get_logbook(handler, path_match, data):
         """ Return logbook entries. """
         date_str = path_match.group('date')
@@ -69,7 +71,6 @@ def setup(hass, config):
 
         handler.write_json(humanify(events))
 
-    """ Listens for download events to download files. """
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
 
     return True
