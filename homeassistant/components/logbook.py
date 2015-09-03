@@ -4,7 +4,8 @@ homeassistant.components.logbook
 
 Parses events and generates a human log.
 
-To report events in reverse chronological order add the following to configuration.yaml:
+To report events in reverse chronological order add the following
+to configuration.yaml:
 logbook:
   sort_order: descending
 
@@ -31,7 +32,8 @@ QUERY_EVENTS_BETWEEN = """
 """
 
 QUERY_EVENTS_BETWEEN_SORT_DESC = """
-    SELECT * FROM events WHERE time_fired > ? AND time_fired < ? ORDER BY time_fired DESC
+    SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
+    ORDER BY time_fired DESC
 """
 
 GROUP_BY_MINUTES = 15
@@ -46,7 +48,8 @@ def setup(hass, config):
             start_date = dt_util.date_str_to_date(date_str)
 
             if start_date is None:
-                handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
+                handler.write_json_message("Error parsing JSON",
+                                           HTTP_BAD_REQUEST)
                 return
 
             start_day = dt_util.start_of_local_day(start_date)
