@@ -1,0 +1,13 @@
+# This is a simple service file for systems with systemd.
+#
+[Unit]
+Description=Home Assistant
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/hass --config /root/.homeassistant
+
+[Install]
+WantedBy=multi-user.target
+
