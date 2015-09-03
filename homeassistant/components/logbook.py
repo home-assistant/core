@@ -3,6 +3,11 @@ homeassistant.components.logbook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Parses events and generates a human log.
+
+To report events in reverse chronological order add the following to configuration.yaml:
+logbook:
+  sort_order: descending
+
 """
 from datetime import timedelta
 from itertools import groupby
@@ -25,38 +30,46 @@ QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
 """
 
+QUERY_EVENTS_BETWEEN_SORT_DESC = """
+    SELECT * FROM events WHERE time_fired > ? AND time_fired < ? ORDER BY time_fired DESC
+"""
+
 GROUP_BY_MINUTES = 15
 
 
 def setup(hass, config):
+    def _handle_get_logbook(handler, path_match, data):
+        """ Return logbook entries. """
+        date_str = path_match.group('date')
+
+        if date_str:
+            start_date = dt_util.date_str_to_date(date_str)
+
+            if start_date is None:
+                handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
+                return
+
+            start_day = dt_util.start_of_local_day(start_date)
+        else:
+            start_day = dt_util.start_of_local_day()
+
+        end_day = start_day + timedelta(days=1)
+
+        if config[DOMAIN].get('sort_order') == 'descending':
+            events = recorder.query_events(
+                QUERY_EVENTS_BETWEEN_SORT_DESC,
+                (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
+        else:
+            events = recorder.query_events(
+                QUERY_EVENTS_BETWEEN,
+                (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
+
+        handler.write_json(humanify(events))
+
     """ Listens for download events to download files. """
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
 
     return True
-
-
-def _handle_get_logbook(handler, path_match, data):
-    """ Return logbook entries. """
-    date_str = path_match.group('date')
-
-    if date_str:
-        start_date = dt_util.date_str_to_date(date_str)
-
-        if start_date is None:
-            handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
-            return
-
-        start_day = dt_util.start_of_local_day(start_date)
-    else:
-        start_day = dt_util.start_of_local_day()
-
-    end_day = start_day + timedelta(days=1)
-
-    events = recorder.query_events(
-        QUERY_EVENTS_BETWEEN,
-        (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
-
-    handler.write_json(humanify(events))
 
 
 class Entry(object):
