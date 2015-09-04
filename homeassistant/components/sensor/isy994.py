@@ -89,5 +89,5 @@ class ISYSensorDevice(ISYDeviceABC):
     _domain = 'sensor'
 
     def __init__(self, node, states=None):
-        super().__init__(node)
+        super(ISYSensorDevice, self).__init__(node)
         self._states = states or []

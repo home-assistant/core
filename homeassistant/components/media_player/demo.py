@@ -113,7 +113,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     # pylint: disable=abstract-method
 
     def __init__(self, name, youtube_id=None, media_title=None):
-        super().__init__(name)
+        super(DemoYoutubePlayer, self).__init__(name)
         self.youtube_id = youtube_id
         self._media_title = media_title
 
@@ -187,7 +187,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     ]
 
     def __init__(self):
-        super().__init__('Walkman')
+        super(DemoMusicPlayer, self).__init__('Walkman')
         self._cur_track = 0
 
     @property
@@ -263,7 +263,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     # pylint: disable=abstract-method
 
     def __init__(self):
-        super().__init__('Lounge room')
+        super(DemoTVShowPlayer, self).__init__('Lounge room')
         self._cur_episode = 1
         self._episode_count = 13
 

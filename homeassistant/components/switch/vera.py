@@ -119,7 +119,7 @@ class VeraSwitch(ToggleEntity):
 
     @property
     def state_attributes(self):
-        attr = super().state_attributes
+        attr = super(VeraSwitch, self).state_attributes
 
         if self.vera_device.has_battery:
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'

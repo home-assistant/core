@@ -170,7 +170,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     def __init__(self, server_address, request_handler_class,
                  hass, api_password, development, no_password_set,
                  sessions_enabled):
-        super().__init__(server_address, request_handler_class)
+        super(HomeAssistantHTTPServer, self).__init__(server_address, request_handler_class)
 
         self.server_address = server_address
         self.hass = hass
@@ -467,7 +467,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return None
 
 
-class ServerSession:
+class ServerSession(object):
     """ A very simple session class """
     def __init__(self, session_id):
         """ Set up the expiry time on creation """
@@ -487,7 +487,7 @@ class ServerSession:
         return self._expiry < date_util.utcnow()
 
 
-class SessionStore:
+class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
     def __init__(self, enabled=True):
         """ Set up the session store """

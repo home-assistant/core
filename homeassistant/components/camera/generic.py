@@ -71,7 +71,7 @@ class GenericCamera(Camera):
     """
 
     def __init__(self, device_info):
-        super().__init__()
+        super(GenericCamera, self).__init__()
         self._name = device_info.get('name', 'Generic Camera')
         self._username = device_info.get('username')
         self._password = device_info.get('password')

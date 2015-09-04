@@ -122,7 +122,7 @@ class NestThermostat(ThermostatDevice):
         """ Identifies min_temp in Nest API or defaults if not available. """
         temp = self.device.away_temperature.low
         if temp is None:
-            return super().min_temp
+            return super(NestThermostat, self).min_temp
         else:
             return temp
 
@@ -131,7 +131,7 @@ class NestThermostat(ThermostatDevice):
         """ Identifies mxn_temp in Nest API or defaults if not available. """
         temp = self.device.away_temperature.high
         if temp is None:
-            return super().max_temp
+            return super(NestThermostat, self).max_temp
         else:
             return temp
 
