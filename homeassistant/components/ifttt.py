@@ -71,7 +71,7 @@ def setup(hass, config):
         try:
             import pyfttt as pyfttt
             pyfttt.send_event(key, event, value1, value2, value3)
-        except requests.exceptions:
+        except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 
     hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service)
