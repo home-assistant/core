@@ -119,3 +119,6 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 
 # Verisure (verisure)
 https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60f7f35854390d59be.zip
+
+# Python tools for interacting with IFTTT Maker Channel (ifttt)
+pyfttt==0.1
