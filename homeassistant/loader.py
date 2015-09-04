@@ -123,7 +123,7 @@ def get_component(comp_name):
             # This prevents that when only
             # custom_components/switch/some_platform.py exists,
             # the import custom_components.switch would succeeed.
-            if module.__spec__.origin == 'namespace':
+            if PY3 and module.__spec__.origin == 'namespace':
                 continue
 
             _LOGGER.info("Loaded %s from %s", comp_name, path)
