@@ -31,7 +31,7 @@ python-nmap==0.4.1
 pushbullet.py==0.7.1
 
 # Nest Thermostat bindings (thermostat.nest)
-python-nest==2.4.0
+python-nest==2.6.0
 
 # Z-Wave (*.zwave)
 pydispatcher==2.0.5
