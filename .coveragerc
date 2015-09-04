@@ -28,6 +28,7 @@ omit =
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
+    homeassistant/components/ifttt.py
     homeassistant/components/browser.py
     homeassistant/components/camera/*
     homeassistant/components/device_tracker/actiontec.py
