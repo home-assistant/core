@@ -40,7 +40,7 @@ def prepare(hass):
     # Load the built-in components
     import homeassistant.components as components
 
-    AVAILABLE_COMPONENTS.clear()
+    del AVAILABLE_COMPONENTS[:]
 
     AVAILABLE_COMPONENTS.extend(
         item[1] for item in
