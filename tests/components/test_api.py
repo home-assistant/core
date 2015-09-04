@@ -7,7 +7,10 @@ Tests Home Assistant HTTP component does what it should do.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 import json
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import requests
 

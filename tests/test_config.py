@@ -6,8 +6,10 @@ Tests config utils.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-import unittest.mock as mock
-import os
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from homeassistant.core import DOMAIN, HomeAssistantError
 import homeassistant.config as config_util
