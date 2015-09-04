@@ -36,7 +36,7 @@ Password, if password protection is enabled
 
 import logging
 import telnetlib
-import urllib.parse
+from future.moves.urllib.parse import unquote
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
@@ -135,7 +135,7 @@ class LogitechMediaServer(object):
             .split(' ')[-1]\
             .strip()
         telnet.write(b'exit\n')
-        return urllib.parse.unquote(response)
+        return unquote(response)
 
     def get_player_status(self, player):
         """ Get ithe status of a player """
@@ -156,7 +156,7 @@ class LogitechMediaServer(object):
             .split(' ')
         telnet.write(b'exit\n')
         for item in response:
-            parts = urllib.parse.unquote(item).partition(':')
+            parts = unquote(item).partition(':')
             new_status[parts[0]] = parts[2]
         return new_status
 

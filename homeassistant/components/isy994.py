@@ -8,7 +8,7 @@ For configuration details please visit the documentation for this component at
 https://home-assistant.io/components/isy994.html
 """
 import logging
-from urllib.parse import urlparse
+from future.moves.urllib.parse import urlparse
 
 from homeassistant import bootstrap
 from homeassistant.loader import get_component

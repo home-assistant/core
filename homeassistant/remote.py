@@ -13,7 +13,7 @@ import threading
 import logging
 import json
 import enum
-import urllib.parse
+from future.moves.urllib.parse import urljoin
 
 import requests
 
@@ -73,7 +73,7 @@ class API(object):
         if data is not None:
             data = json.dumps(data, cls=JSONEncoder)
 
-        url = urllib.parse.urljoin(self.base_url, path)
+        url = urljoin(self.base_url, path)
 
         try:
             if method == METHOD_GET:

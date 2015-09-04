@@ -82,10 +82,11 @@ import random
 import string
 from datetime import timedelta
 from homeassistant.util import Throttle
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-from http import cookies
+from future.moves.http.server import SimpleHTTPRequestHandler, HTTPServer
+from future.moves.http import cookies
 from socketserver import ThreadingMixIn
-from urllib.parse import urlparse, parse_qs
+from future.moves.urllib.parse import urlparse, parse_qs
+from future.utils import PY3
 
 import homeassistant.core as ha
 from homeassistant.const import (
@@ -160,7 +161,7 @@ def setup(hass, config=None):
 
 
 # pylint: disable=too-many-instance-attributes
-class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
+class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer, object):
     """ Handle HTTP requests in a threaded fashion. """
     # pylint: disable=too-few-public-methods
 
