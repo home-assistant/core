@@ -70,26 +70,9 @@ def setup(hass, config):
 
         try:
             import pyfttt as pyfttt
-            r = pyfttt.send_event(key, event, value1, value2, value3)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Could not connect to IFTTT")
-        except requests.exceptions.HTTPError:
-            _LOGGER.error("Received invalid response")
-        except requests.exceptions.Timeout:
-            _LOGGER.error("Request timed out")
-        except requests.exceptions.TooManyRedirects:
-            _LOGGER.error("Too many redirects")
-        except requests.exceptions.RequestException as e:
-            _LOGGER.error("{e}".format(e=e))
-
-        if r.status_code != requests.codes.ok:
-            try:
-                j = r.json()
-            except ValueError:
-                _LOGGER.error('Could not parse response. Event not sent!')
-
-            for e in j['errors']:
-                _LOGGER.error('{}'.format(e['message']))
+            resp = pyfttt.send_event(key, event, value1, value2, value3)
+        except:
+            _LOGGER.exception("Error communicating with IFTTT")
 
     hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service)
 
