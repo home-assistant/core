@@ -71,6 +71,7 @@ Example result:
 
 """
 
+import io
 import json
 import threading
 import logging
@@ -393,7 +394,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.set_session_cookie_header()
 
         if do_gzip:
-            gzip_data = gzip.compress(inp.read())
+            gzip_data = _compress(inp.read())
 
             self.send_header(HTTP_HEADER_CONTENT_ENCODING, "gzip")
             self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
@@ -536,3 +537,14 @@ class SessionStore(object):
         session.cookie_values[CONF_API_PASSWORD] = api_password
         self.add(session_id, session)
         return session
+
+
+if PY3:
+    _compress = gzip.compress
+else:
+    def _compress(data, compresslevel=9):
+        buf = io.BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode='wb',
+                      compresslevel=compresslevel) as f:
+            f.write(data)
+        return buf.getvalue()
