@@ -37,7 +37,7 @@ ATTR_VALUE3 = 'value3'
 
 DEPENDENCIES = []
 
-REQUIREMENTS = ['pyfttt==0.1']
+REQUIREMENTS = ['pyfttt==0.3']
 
 
 def trigger(hass, event, value1=None, value2=None, value3=None):
