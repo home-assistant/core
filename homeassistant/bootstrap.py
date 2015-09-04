@@ -61,7 +61,7 @@ def setup_component(hass, domain, config=None):
 
 def _handle_requirements(hass, component, name):
     """ Installs requirements for component. """
-    if not hasattr(component, 'REQUIREMENTS'):
+    if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
 
     for req in component.REQUIREMENTS:
@@ -151,7 +151,7 @@ def mount_local_lib_path(config_dir):
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
-                     verbose=False, daemon=False):
+                     verbose=False, daemon=False, skip_pip=False):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -168,6 +168,11 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     if enable_log:
         enable_logging(hass, verbose, daemon)
+
+    hass.config.skip_pip = skip_pip
+    if skip_pip:
+        _LOGGER.warning('Skipping pip installation of required modules. '
+                        'This may cause issues.')
 
     _ensure_loader_prepared(hass)
 
@@ -196,7 +201,8 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     return hass
 
 
-def from_config_file(config_path, hass=None, verbose=False, daemon=False):
+def from_config_file(config_path, hass=None, verbose=False, daemon=False,
+                     skip_pip=True):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -214,7 +220,8 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False):
 
     config_dict = config_util.load_config_file(config_path)
 
-    return from_config_dict(config_dict, hass, enable_log=False)
+    return from_config_dict(config_dict, hass, enable_log=False,
+                            skip_pip=skip_pip)
 
 
 def enable_logging(hass, verbose=False, daemon=False):
