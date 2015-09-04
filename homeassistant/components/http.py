@@ -149,10 +149,12 @@ def setup(hass, config=None):
         _LOGGER.exception("Error setting up HTTP server")
         return False
 
-    hass.bus.listen_once(
-        ha.EVENT_HOMEASSISTANT_START,
-        lambda event:
-        threading.Thread(target=server.start, daemon=True).start())
+    def thread_for_event(event):
+        thread = threading.Thread(target=server.start)
+        thread.daemon = True
+        thread.start()
+
+    hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_START, thread_for_event)
 
     hass.http = server
     hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
