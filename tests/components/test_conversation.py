@@ -6,7 +6,10 @@ Tests Conversation component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import homeassistant.components as core_components
 from homeassistant.components import conversation

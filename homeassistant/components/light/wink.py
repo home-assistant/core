@@ -48,7 +48,7 @@ class WinkLight(WinkToggleDevice):
 
     @property
     def state_attributes(self):
-        attr = super().state_attributes
+        attr = super(WinkLight, self).state_attributes
 
         if self.is_on:
             brightness = self.wink.brightness()

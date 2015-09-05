@@ -71,6 +71,7 @@ Example result:
 
 """
 
+import io
 import json
 import threading
 import logging
@@ -81,10 +82,11 @@ import random
 import string
 from datetime import timedelta
 from homeassistant.util import Throttle
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-from http import cookies
+from future.moves.http.server import SimpleHTTPRequestHandler, HTTPServer
+from future.moves.http import cookies
 from socketserver import ThreadingMixIn
-from urllib.parse import urlparse, parse_qs
+from future.moves.urllib.parse import urlparse, parse_qs
+from future.utils import PY3
 
 import homeassistant.core as ha
 from homeassistant.const import (
@@ -147,10 +149,12 @@ def setup(hass, config=None):
         _LOGGER.exception("Error setting up HTTP server")
         return False
 
-    hass.bus.listen_once(
-        ha.EVENT_HOMEASSISTANT_START,
-        lambda event:
-        threading.Thread(target=server.start, daemon=True).start())
+    def thread_for_event(event):
+        thread = threading.Thread(target=server.start)
+        thread.daemon = True
+        thread.start()
+
+    hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_START, thread_for_event)
 
     hass.http = server
     hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
@@ -159,7 +163,7 @@ def setup(hass, config=None):
 
 
 # pylint: disable=too-many-instance-attributes
-class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
+class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer, object):
     """ Handle HTTP requests in a threaded fashion. """
     # pylint: disable=too-few-public-methods
 
@@ -170,7 +174,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     def __init__(self, server_address, request_handler_class,
                  hass, api_password, development, no_password_set,
                  sessions_enabled):
-        super().__init__(server_address, request_handler_class)
+        super(HomeAssistantHTTPServer, self).__init__(server_address, request_handler_class)
 
         self.server_address = server_address
         self.hass = hass
@@ -393,7 +397,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.set_session_cookie_header()
 
         if do_gzip:
-            gzip_data = gzip.compress(inp.read())
+            gzip_data = _compress(inp.read())
 
             self.send_header(HTTP_HEADER_CONTENT_ENCODING, "gzip")
             self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
@@ -467,7 +471,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return None
 
 
-class ServerSession:
+class ServerSession(object):
     """ A very simple session class """
     def __init__(self, session_id):
         """ Set up the expiry time on creation """
@@ -487,7 +491,7 @@ class ServerSession:
         return self._expiry < date_util.utcnow()
 
 
-class SessionStore:
+class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
     def __init__(self, enabled=True):
         """ Set up the session store """
@@ -536,3 +540,14 @@ class SessionStore:
         session.cookie_values[CONF_API_PASSWORD] = api_password
         self.add(session_id, session)
         return session
+
+
+if PY3:
+    _compress = gzip.compress
+else:
+    def _compress(data, compresslevel=9):
+        buf = io.BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode='wb',
+                      compresslevel=compresslevel) as f:
+            f.write(data)
+        return buf.getvalue()

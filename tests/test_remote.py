@@ -8,7 +8,10 @@ Uses port 8125 as a port that nothing runs on
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap

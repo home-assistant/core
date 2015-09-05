@@ -6,7 +6,7 @@ Support for Hue lights.
 import logging
 import socket
 from datetime import timedelta
-from urllib.parse import urlparse
+from future.moves.urllib.parse import urlparse
 
 from homeassistant.loader import get_component
 import homeassistant.util as util

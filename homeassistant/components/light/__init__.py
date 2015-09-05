@@ -218,7 +218,10 @@ def setup(hass, config):
         profile = profiles.get(dat.get(ATTR_PROFILE))
 
         if profile:
-            *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
+            brightness = profile.pop()
+            params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = (
+                profile, brightness,
+            )
 
         if ATTR_BRIGHTNESS in dat:
             # We pass in the old value as the default parameter if parsing

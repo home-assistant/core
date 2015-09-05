@@ -4,17 +4,17 @@ homeassistant.util
 
 Helper methods for various modules.
 """
-import collections
-from itertools import chain
-import threading
-import queue
 from datetime import datetime
-import re
-import enum
-import socket
-import random
-import string
 from functools import wraps
+from future.moves import queue
+from itertools import chain
+import collections
+import enum
+import random
+import re
+import socket
+import string
+import threading
 
 from .dt import datetime_to_local_str, utcnow
 

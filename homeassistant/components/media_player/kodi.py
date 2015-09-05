@@ -33,6 +33,7 @@ password
 *Optional
 The XBMC/Kodi HTTP password.
 """
+from future.moves.urllib.parse import unquote, urlparse
 import urllib
 import logging
 
@@ -75,10 +76,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def _get_image_url(kodi_url):
     """ Helper function that parses the thumbnail URLs used by Kodi """
-    url_components = urllib.parse.urlparse(kodi_url)
+    url_components = urlparse(kodi_url)
 
     if url_components.scheme == 'image':
-        return urllib.parse.unquote(url_components.netloc)
+        return unquote(url_components.netloc)
 
 
 class KodiDevice(MediaPlayerDevice):

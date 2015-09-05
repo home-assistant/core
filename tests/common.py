@@ -6,7 +6,10 @@ Helper method for writing tests.
 """
 import os
 from datetime import timedelta
-from unittest import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from homeassistant import core as ha, loader
 import homeassistant.util.location as location_util

@@ -97,7 +97,7 @@ def _handle_get_api(handler, path_match, data):
 
 def _handle_get_api_stream(handler, path_match, data):
     """ Provide a streaming interface for the event bus. """
-    gracefully_closed = False
+    gracefully_closed = [False]
     hass = handler.server.hass
     wfile = handler.wfile
     write_lock = threading.Lock()
@@ -116,12 +116,10 @@ def _handle_get_api_stream(handler, path_match, data):
 
     def forward_events(event):
         """ Forwards events to the open request. """
-        nonlocal gracefully_closed
-
         if block.is_set() or event.event_type == EVENT_TIME_CHANGED:
             return
         elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-            gracefully_closed = True
+            gracefully_closed[0] = True
             block.set()
             return
 
@@ -141,7 +139,7 @@ def _handle_get_api_stream(handler, path_match, data):
         if block.is_set():
             break
 
-    if not gracefully_closed:
+    if not gracefully_closed[0]:
         _LOGGER.info("Found broken event stream to %s, cleaning up",
                      handler.client_address[0])
 

@@ -13,7 +13,7 @@ import threading
 import logging
 import json
 import enum
-import urllib.parse
+from future.moves.urllib.parse import urljoin
 
 import requests
 
@@ -73,7 +73,7 @@ class API(object):
         if data is not None:
             data = json.dumps(data, cls=JSONEncoder)
 
-        url = urllib.parse.urljoin(self.base_url, path)
+        url = urljoin(self.base_url, path)
 
         try:
             if method == METHOD_GET:
@@ -158,7 +158,7 @@ class EventBus(ha.EventBus):
     # pylint: disable=too-few-public-methods
 
     def __init__(self, api, pool=None):
-        super().__init__(pool)
+        super(EventBus, self).__init__(pool)
         self._api = api
 
     def fire(self, event_type, event_data=None, origin=ha.EventOrigin.local):
@@ -171,7 +171,7 @@ class EventBus(ha.EventBus):
             fire_event(self._api, event_type, event_data)
 
         else:
-            super().fire(event_type, event_data, origin)
+            super(EventBus, self).fire(event_type, event_data, origin)
 
 
 class EventForwarder(object):
@@ -235,7 +235,7 @@ class StateMachine(ha.StateMachine):
     """
 
     def __init__(self, bus, api):
-        super().__init__(None)
+        super(StateMachine, self).__init__(None)
 
         self._api = api
 

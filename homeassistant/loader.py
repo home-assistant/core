@@ -13,6 +13,7 @@ call get_component('switch.your_platform'). In both cases the config directory
 is checked to see if it contains a user provided version. If not available it
 will check the built-in components and platforms.
 """
+from future.utils import PY3
 import os
 import sys
 import pkgutil
@@ -39,7 +40,7 @@ def prepare(hass):
     # Load the built-in components
     import homeassistant.components as components
 
-    AVAILABLE_COMPONENTS.clear()
+    del AVAILABLE_COMPONENTS[:]
 
     AVAILABLE_COMPONENTS.extend(
         item[1] for item in
@@ -122,7 +123,7 @@ def get_component(comp_name):
             # This prevents that when only
             # custom_components/switch/some_platform.py exists,
             # the import custom_components.switch would succeeed.
-            if module.__spec__.origin == 'namespace':
+            if PY3 and module.__spec__.origin == 'namespace':
                 continue
 
             _LOGGER.info("Loaded %s from %s", comp_name, path)

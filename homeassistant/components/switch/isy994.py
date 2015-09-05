@@ -71,7 +71,7 @@ class ISYProgramDevice(ISYSwitchDevice):
     _dtype = 'binary'
 
     def __init__(self, name, node, actions, states):
-        super().__init__(node)
+        super(ISYProgramDevice, self).__init__(node)
         self._states = states
         self._name = name
         self.action_node = actions

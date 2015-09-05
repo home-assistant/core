@@ -8,10 +8,14 @@ Provides tests to verify that Home Assistant core works.
 # pylint: disable=too-few-public-methods
 import os
 import unittest
-import unittest.mock as mock
 import time
 import threading
 from datetime import datetime
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import pytz
 
