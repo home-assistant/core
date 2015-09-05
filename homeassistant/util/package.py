@@ -19,8 +19,7 @@ def install_package(package, upgrade=True, target=None):
     if upgrade:
         args.append('--upgrade')
     if target:
-        target = os.path.abspath(target)
-        args += ['--target', target]
+        args += ['--target', os.path.abspath(target)]
 
     with INSTALL_LOCK:
         if check_package_exists(package, target):
