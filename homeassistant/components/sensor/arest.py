@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         response = get(resource)
     except exceptions.MissingSchema:
-        _LOGGER.error("Missing schema in configuration. "
+        _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// to your URL.")
         return False
     except exceptions.ConnectionError:
