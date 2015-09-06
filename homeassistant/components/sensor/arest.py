@@ -33,7 +33,7 @@ unit
 *Optional
 Defines the units of measurement of the sensor, if any.
 
-Details for the API : http://arest.io
+Details for the API: http://arest.io
 
 Format of a default JSON response by aREST:
 {
@@ -48,10 +48,15 @@ Format of a default JSON response by aREST:
 """
 import logging
 from requests import get, exceptions
+from datetime import timedelta
 
+from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
+
+# Return cached results if last scan was less then this time ago
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -70,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       "Please check the IP address in the configuration file.")
         return False
 
-    data = ArestData(resource)
+    rest = ArestData(resource)
 
     dev = []
     for variable in config['monitored_variables']:
@@ -79,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if variable['name'] not in response.json()['variables']:
             _LOGGER.error('Variable: "%s" does not exist', variable['name'])
         else:
-            dev.append(ArestSensor(data,
+            dev.append(ArestSensor(rest,
                                    response.json()['name'],
                                    variable['name'],
                                    variable['unit']))
@@ -90,8 +95,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ArestSensor(Entity):
     """ Implements an aREST sensor. """
 
-    def __init__(self, data, location, variable, unit_of_measurement):
-        self._data = data
+    def __init__(self, rest, location, variable, unit_of_measurement):
+        self.rest = rest
         self._name = '{} {}'.format(location.title(), variable.title())
         self._variable = variable
         self._state = 'n/a'
@@ -114,12 +119,14 @@ class ArestSensor(Entity):
         return self._state
 
     def update(self):
-        """ Gets the latest data from aREST API and updates the states. """
-        values = self._data.update()
-        if values is not None:
-            self._state = values[self._variable]
+        """ Gets the latest data from aREST API and updates the state. """
+        self.rest.update()
+        values = self.rest.data
+
+        if 'error' in values:
+            self._state = values['error']
         else:
-            self._state = 'n/a'
+            self._state = values[self._variable]
 
 
 # pylint: disable=too-few-public-methods
@@ -128,12 +135,16 @@ class ArestData(object):
 
     def __init__(self, resource):
         self.resource = resource
+        self.data = dict()
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from aREST API. """
+        """ Gets the latest data from aREST device. """
         try:
             response = get(self.resource)
-            return response.json()['variables']
+            if 'error' in self.data:
+                del self.data['error']
+            self.data = response.json()['variables']
         except exceptions.ConnectionError:
             _LOGGER.error("No route to device. Is device offline?")
-            return None
+            self.data['error'] = 'n/a'
