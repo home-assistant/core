@@ -6,6 +6,9 @@ supported.
 
 Configuration:
 
+To use the arduino sensor you will need to add something like the following
+to your configuration.yaml file.
+
 sensor:
   platform: arduino
   pins:
@@ -46,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Arduino platform. """
 
-    # Verify that Arduino board is present
+    # Verify that the Arduino board is present
     if arduino.BOARD is None:
         _LOGGER.error('A connection has not been made to the Arduino board.')
         return False

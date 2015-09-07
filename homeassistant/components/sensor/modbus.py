@@ -4,8 +4,9 @@ homeassistant.components.modbus
 Support for Modbus sensors.
 
 Configuration:
+
 To use the Modbus sensors you will need to add something like the following to
-your config/configuration.yaml
+your configuration.yaml file.
 
 sensor:
     platform: modbus
@@ -47,7 +48,6 @@ Note:
 - Each named register will create an integer sensor.
 - Each named bit will create a boolean sensor.
 """
-
 import logging
 
 import homeassistant.components.modbus as modbus
@@ -61,7 +61,7 @@ DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Read config and create Modbus devices """
+    """ Read config and create Modbus devices. """
     sensors = []
     slave = config.get("slave", None)
     if modbus.TYPE == "serial" and not slave:
@@ -97,7 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ModbusSensor(Entity):
     # pylint: disable=too-many-arguments
-    """ Represents a Modbus Sensor """
+    """ Represents a Modbus Sensor. """
 
     def __init__(self, name, slave, register, bit=None, unit=None, coil=False):
         self._name = name
@@ -113,8 +113,10 @@ class ModbusSensor(Entity):
 
     @property
     def should_poll(self):
-        """ We should poll, because slaves are not allowed to
-            initiate communication on Modbus networks"""
+        """
+        We should poll, because slaves are not allowed to
+        initiate communication on Modbus networks.
+        """
         return True
 
     @property

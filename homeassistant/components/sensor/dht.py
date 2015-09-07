@@ -1,6 +1,6 @@
 """
 homeassistant.components.sensor.dht
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adafruit DHT temperature and humidity sensor.
 You need a Python3 compatible version of the Adafruit_Python_DHT library
 (e.g. https://github.com/mala-zaba/Adafruit_Python_DHT,
@@ -10,8 +10,8 @@ as root.
 
 Configuration:
 
-To use the Adafruit DHT sensor you will need to
-add something like the following to your config/configuration.yaml:
+To use the Adafruit DHT sensor you will need to add something like the
+following to your configuration.yaml file.
 
 sensor:
   platform: dht
@@ -102,7 +102,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class DHTSensor(Entity):
-
     """ Implements an DHT sensor. """
 
     def __init__(self, dht_client, sensor_type, temp_unit):
@@ -144,7 +143,6 @@ class DHTSensor(Entity):
 
 
 class DHTClient(object):
-
     """ Gets the latest data from the DHT sensor. """
 
     def __init__(self, adafruit_dht, sensor, pin):
