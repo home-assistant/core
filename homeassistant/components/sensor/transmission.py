@@ -7,7 +7,7 @@ Monitors Transmission BitTorrent client API
 Configuration:
 
 To use the Transmission sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
     platform: transmission
@@ -25,7 +25,7 @@ Variables:
 
 host
 *Required
-This is the IP address of your Transmission daemon. Example: 192.168.1.32
+This is the IP address of your Transmission daemon, e.g. 192.168.1.32
 
 port
 *Optional
@@ -54,7 +54,6 @@ type
 The variable you wish to monitor, see the configuration example above for a
 list of all available variables.
 """
-
 from homeassistant.util import Throttle
 from datetime import timedelta
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
@@ -81,7 +80,7 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors. """
+    """ Sets up the Transmission sensors. """
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)

@@ -1,12 +1,12 @@
 """
 homeassistant.components.sensor.forecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Forecast.io service.
+Forecast.io weather service.
 
 Configuration:
 
 To use the Forecast sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
   platform: forecast

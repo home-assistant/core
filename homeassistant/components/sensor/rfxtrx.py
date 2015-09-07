@@ -4,10 +4,9 @@ homeassistant.components.sensor.rfxtrx
 Shows sensor values from RFXtrx sensors.
 
 Configuration:
-To use the rfxtrx sensors you will need to add something like the following to
-your config/configuration.yaml
 
-Example:
+To use the rfxtrx sensors you will need to add something like the following to
+your configuration.yaml file.
 
 sensor:
     platform: rfxtrx
@@ -102,4 +101,5 @@ class RfxtrxSensor(Entity):
 
     @property
     def unit_of_measurement(self):
+        """ Unit this state is expressed in. """
         return self._unit_of_measurement
