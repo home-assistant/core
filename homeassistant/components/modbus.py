@@ -1,17 +1,12 @@
 """
 homeassistant.components.modbus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Modbus component, using pymodbus (python3 branch)
-
-Configuration:
-
-To use the Forecast sensor you will need to add something like the
-following to your config/configuration.yaml
+Modbus component, using pymodbus (python3 branch).
 
 Configuration:
 
 To use the Modbus component you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 #Modbus TCP
 modbus:

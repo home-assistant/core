@@ -1,10 +1,12 @@
 """
 components.verisure
-~~~~~~~~~~~~~~~~~~
-
-Provides support for verisure components
+~~~~~~~~~~~~~~~~~~~
+Provides support for verisure components.
 
 Configuration:
+
+To use the Verisure component you will need to add something like the
+following to your configuration.yaml file.
 
 verisure:
   username: user@example.com
@@ -14,32 +16,31 @@ verisure:
   smartplugs: 1
   thermometers: 0
 
-
 Variables:
 
 username
 *Required
-Username to verisure mypages
+Username to Verisure mypages.
 
 password
 *Required
-Password to verisure mypages
+Password to Verisure mypages.
 
 alarm
-*Opional
-Set to 1 to show alarm, 0 to disable. Default 1
+*Optional
+Set to 1 to show alarm, 0 to disable. Default 1.
 
 hygrometers
-*Opional
-Set to 1 to show hygrometers, 0 to disable. Default 1
+*Optional
+Set to 1 to show hygrometers, 0 to disable. Default 1.
 
 smartplugs
-*Opional
-Set to 1 to show smartplugs, 0 to disable. Default 1
+*Optional
+Set to 1 to show smartplugs, 0 to disable. Default 1.
 
 thermometers
-*Opional
-Set to 1 to show thermometers, 0 to disable. Default 1
+*Optional
+Set to 1 to show thermometers, 0 to disable. Default 1.
 """
 import logging
 from datetime import timedelta
@@ -135,22 +136,22 @@ def setup(hass, config):
 
 
 def get_alarm_status():
-    ''' return a list of status overviews for alarm components '''
+    """ Return a list of status overviews for alarm components. """
     return STATUS[MY_PAGES.DEVICE_ALARM]
 
 
 def get_climate_status():
-    ''' return a list of status overviews for alarm components '''
+    """ Return a list of status overviews for alarm components. """
     return STATUS[MY_PAGES.DEVICE_CLIMATE]
 
 
 def get_smartplug_status():
-    ''' return a list of status overviews for alarm components '''
+    """ Return a list of status overviews for alarm components. """
     return STATUS[MY_PAGES.DEVICE_SMARTPLUG]
 
 
 def reconnect():
-    ''' reconnect to verisure mypages '''
+    """ Reconnect to verisure mypages. """
     try:
         MY_PAGES.login()
     except VERISURE_LOGIN_ERROR as ex:
@@ -163,7 +164,7 @@ def reconnect():
 
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
 def update():
-    ''' Updates the status of verisure components '''
+    """ Updates the status of verisure components. """
     if WRONG_PASSWORD_GIVEN:
         # Is there any way to inform user?
         return
