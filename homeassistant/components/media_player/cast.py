@@ -1,7 +1,6 @@
 """
 homeassistant.components.media_player.chromecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with Cast devices on the network.
 
 WARNING: This platform is currently not working due to a changed Cast API
