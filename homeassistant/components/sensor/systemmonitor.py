@@ -1,13 +1,12 @@
 """
 homeassistant.components.sensor.systemmonitor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Shows system monitor values such as: disk, memory and processor use
+Shows system monitor values such as: disk, memory, and processor use.
 
 Configuration:
 
 To use the System monitor sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
   platform: systemmonitor
