@@ -1,8 +1,7 @@
 """
 homeassistant.components.sensor.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Shows sensor values from tellstick sensors.
+Shows sensor values from Tellstick sensors.
 
 Possible config keys:
 
