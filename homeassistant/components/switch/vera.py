@@ -5,7 +5,7 @@ Support for Vera switches.
 
 Configuration:
 To use the Vera lights you will need to add something like the following to
-your config/configuration.yaml.
+your configuration.yaml file.
 
 switch:
     platform: vera
