@@ -124,7 +124,7 @@ def load_yaml_config_file(config_path):
     def parse(fname):
         """ Parse a YAML file.  """
         try:
-            with open(fname) as conf_file:
+            with open(fname, encoding='utf-8') as conf_file:
                 # If configuration file is empty YAML returns None
                 # We convert that to an empty dict
                 return yaml.load(conf_file) or {}
