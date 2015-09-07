@@ -26,7 +26,7 @@ switch:
   name: "Bedroom Switch"
   state_topic: "home/bedroom/switch1"
   command_topic: "home/bedroom/switch1/set"
-  qos: 2
+  qos: 0
   payload_on: "ON"
   payload_off: "OFF"
   optimistic: false
@@ -128,7 +128,7 @@ class MqttSwitch(SwitchDevice):
             self._optimistic = True
         else:
             # subscribe the state_topic
-            mqtt.subscribe(hass, self._state_topic, message_received, 
+            mqtt.subscribe(hass, self._state_topic, message_received,
                            self._qos)
 
     @property
@@ -148,7 +148,7 @@ class MqttSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_on, 
+        mqtt.publish(self.hass, self._command_topic, self._payload_on,
                      self._qos)
         if self._optimistic:
             # optimistically assume that switch has changed state
@@ -157,7 +157,7 @@ class MqttSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_off, 
+        mqtt.publish(self.hass, self._command_topic, self._payload_off,
                      self._qos)
         if self._optimistic:
             # optimistically assume that switch has changed state
