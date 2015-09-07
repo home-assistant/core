@@ -6,7 +6,7 @@ Support for Edimax switches.
 Configuration:
 
 To use the Edimax switch you will need to add something like the following to
-your config/configuration.yaml.
+your configuration.yaml file.
 
 switch:
     platform: edimax
@@ -89,7 +89,7 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def current_power_mwh(self):
-        """ Current power usage in mwh. """
+        """ Current power usage in mWh. """
         try:
             return float(self.smartplug.now_power) / 1000000.0
         except ValueError:
@@ -97,7 +97,7 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def today_power_mw(self):
-        """ Today total power usage in mw. """
+        """ Today total power usage in mW. """
         try:
             return float(self.smartplug.now_energy_day) / 1000.0
         except ValueError:
