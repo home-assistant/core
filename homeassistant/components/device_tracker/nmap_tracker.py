@@ -1,13 +1,12 @@
 """
 homeassistant.components.device_tracker.nmap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Device tracker platform that supports scanning a network with nmap.
 
 Configuration:
 
 To use the nmap tracker you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 device_tracker:
   platform: nmap_tracker
@@ -74,7 +73,7 @@ def _arp(ip_address):
 
 
 class NmapDeviceScanner(object):
-    """ This class scans for devices using nmap """
+    """ This class scans for devices using nmap. """
 
     def __init__(self, config):
         self.last_results = []
@@ -87,8 +86,9 @@ class NmapDeviceScanner(object):
         _LOGGER.info("nmap scanner initialized")
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
 
         self._update_info()
 
@@ -107,8 +107,10 @@ class NmapDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Scans the network for devices.
-            Returns boolean if scanning successful. """
+        """
+        Scans the network for devices.
+        Returns boolean if scanning successful.
+        """
         _LOGGER.info("Scanning")
 
         from nmap import PortScanner, PortScannerError

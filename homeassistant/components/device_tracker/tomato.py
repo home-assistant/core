@@ -1,14 +1,13 @@
 """
 homeassistant.components.device_tracker.tomato
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Device tracker platform that supports scanning a Tomato router for device
 presence.
 
 Configuration:
 
 To use the Tomato tracker you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 device_tracker:
   platform: tomato
