@@ -1,13 +1,12 @@
 """
 homeassistant.components.notify.syslog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Syslog notification service.
 
 Configuration:
 
 To use the Syslog notifier you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 notify:
   platform: syslog
