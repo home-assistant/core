@@ -12,7 +12,7 @@ Example component to target an entity_id to:
 Configuration:
 
 To use the Example custom component you will need to add the following to
-your config/configuration.yaml
+your configuration.yaml file.
 
 example:
   target: TARGET_ENTITY
