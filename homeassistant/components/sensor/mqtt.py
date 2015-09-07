@@ -13,7 +13,7 @@ sensor:
   platform: mqtt
   name: "MQTT Sensor"
   state_topic: "home/bedroom/temperature"
-  qos: 2
+  qos: 0
   unit_of_measurement: "ºC"
 
 Variables:
@@ -64,6 +64,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('unit_of_measurement'))])
 
 
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSensor(Entity):
     """ Represents a sensor that can be updated using MQTT """
     def __init__(self, hass, name, state_topic, qos, unit_of_measurement):
