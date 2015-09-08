@@ -195,7 +195,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def update(self):
         """ Retrieve latest state. """
-        self._status = self._lms.get_player_status(self._name)
+        self._status = self._lms.get_player_status(self._id)
 
     @property
     def volume_level(self):
