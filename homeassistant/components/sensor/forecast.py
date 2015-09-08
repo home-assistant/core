@@ -37,11 +37,9 @@ monitored_conditions
 *Required
 An array specifying the conditions to monitor.
 
-These are the variables for the monitored_conditions array:
-
-type
+monitored_conditions
 *Required
-The condition you wish to monitor, see the configuration example above for a
+Conditions to monitor. See the configuration example above for a
 list of all available conditions to monitor.
 
 Details for the API : https://developer.forecast.io/docs/v2
