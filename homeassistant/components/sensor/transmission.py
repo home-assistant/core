@@ -1,8 +1,7 @@
 """
 homeassistant.components.sensor.transmission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Monitors Transmission BitTorrent client API
+Monitors Transmission BitTorrent client API.
 
 Configuration:
 
@@ -10,16 +9,16 @@ To use the Transmission sensor you will need to add something like the
 following to your configuration.yaml file.
 
 sensor:
-    platform: transmission
-    name: Transmission
-    host: 192.168.1.26
-    port: 9091
-    username: YOUR_USERNAME
-    password: YOUR_PASSWORD
-    monitored_variables:
-        - type: 'current_status'
-        - type: 'download_speed'
-        - type: 'upload_speed'
+  platform: transmission
+  name: Transmission
+  host: 192.168.1.26
+  port: 9091
+  username: YOUR_USERNAME
+  password: YOUR_PASSWORD
+  monitored_variables:
+    - 'current_status'
+    - 'download_speed'
+    - 'upload_speed'
 
 Variables:
 
@@ -33,11 +32,11 @@ The port your Transmission daemon uses, defaults to 9091. Example: 8080
 
 username
 *Required
-Your Transmission username
+Your Transmission username.
 
 password
 *Required
-Your Transmission password
+Your Transmission password.
 
 name
 *Optional
@@ -45,14 +44,8 @@ The name to use when displaying this Transmission instance.
 
 monitored_variables
 *Required
-An array specifying the variables to monitor.
-
-These are the variables for the monitored_variables array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
-list of all available variables.
+Variables to monitor. See the configuration example above for a
+list of all available variables to monitor.
 """
 from homeassistant.util import Throttle
 from datetime import timedelta
@@ -109,11 +102,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for variable in config['monitored_variables']:
-        if variable['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable['type'])
+        if variable not in SENSOR_TYPES:
+            _LOGGER.error('Sensor type: "%s" does not exist', variable)
         else:
             dev.append(TransmissionSensor(
-                variable['type'], transmission_api, name))
+                variable, transmission_api, name))
 
     add_devices(dev)
 
