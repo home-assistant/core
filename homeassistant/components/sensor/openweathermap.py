@@ -33,7 +33,7 @@ forecast
 Enables the forecast. The default is to display the current conditions.
 
 monitored_conditions
-*Optional
+*Required
 Conditions to monitor. See the configuration example above for a
 list of all available conditions to monitor.
 
