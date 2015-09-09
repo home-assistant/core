@@ -9,8 +9,8 @@ This device tracker needs telnet to be enabled on the router.
 Configuration:
 
 To use the Aruba tracker you will need to add something like the following
-to your config/configuration.yaml. You also need to enable Telnet in the
-configuration pages.
+to your configuration.yaml file. You also need to enable Telnet in the
+configuration page of your router.
 
 device_tracker:
   platform: aruba
@@ -83,8 +83,9 @@ class ArubaDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a list containing found device
-            ids. """
+        """
+        Scans for new devices and return a list containing found device IDs.
+        """
 
         self._update_info()
         return [client['mac'] for client in self.last_results]
@@ -100,8 +101,10 @@ class ArubaDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the Aruba Access Point is up to date.
-            Returns boolean if scanning successful. """
+        """
+        Ensures the information from the Aruba Access Point is up to date.
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
@@ -114,8 +117,7 @@ class ArubaDeviceScanner(object):
             return True
 
     def get_aruba_data(self):
-        """ Retrieve data from Aruba Access Point and return parsed
-            result.  """
+        """ Retrieve data from Aruba Access Point and return parsed result. """
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'User: ')

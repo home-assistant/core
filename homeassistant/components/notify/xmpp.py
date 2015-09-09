@@ -6,7 +6,7 @@ Jabber (XMPP) notification service.
 Configuration:
 
 To use the Jabber notifier you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 notify:
   platform: xmpp
