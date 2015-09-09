@@ -44,8 +44,8 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD,\
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '1234'
 DEVICE_DEFAULT_NAME = 'Edimax Smart Plug'
-REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/' +
-                '365301ce3ff26129a7910c501ead09ea625f3700.zip']
+REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/'
+                '365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1']
 
 # setup logger
 _LOGGER = logging.getLogger(__name__)

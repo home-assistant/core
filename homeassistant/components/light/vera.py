@@ -51,8 +51,10 @@ it should be set to "true" if you want this device excluded.
 import logging
 from requests.exceptions import RequestException
 from homeassistant.components.switch.vera import VeraSwitch
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.vera.vera as veraApi
+
+REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
+                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
+                '#python-vera==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +62,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
+    import pyvera as veraApi
 
     base_url = config.get('vera_controller_url')
     if not base_url:
