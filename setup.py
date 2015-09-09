@@ -1,15 +1,11 @@
 import os
-import re
 from setuptools import setup, find_packages
+from homeassistant.const import __version__
 
 PACKAGE_NAME = 'homeassistant'
 HERE = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(HERE, PACKAGE_NAME, 'const.py'),
-          encoding='utf-8') as fp:
-    VERSION = re.search(
-        "__version__ = ['\"]([^']+)['\"]\n", fp.read()).group(1)
-DOWNLOAD_URL = \
-    'https://github.com/balloob/home-assistant/archive/{}.zip'.format(VERSION)
+DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
+                '{}.zip'.format(__version__))
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*']) + \
     ['homeassistant.external', 'homeassistant.external.noop',
@@ -29,7 +25,7 @@ REQUIRES = [
 
 setup(
     name=PACKAGE_NAME,
-    version=VERSION,
+    version=__version__,
     license='MIT License',
     url='https://home-assistant.io/',
     download_url=DOWNLOAD_URL,
