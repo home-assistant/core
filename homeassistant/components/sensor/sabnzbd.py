@@ -47,11 +47,12 @@ from homeassistant.util import Throttle
 from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
-# pylint: disable=no-name-in-module, import-error
-from homeassistant.external.nzbclients.sabnzbd import SabnzbdApi
-from homeassistant.external.nzbclients.sabnzbd import SabnzbdApiException
 
 import logging
+
+REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
+                'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
+                '#python-sabnzbd==0.1']
 
 SENSOR_TYPES = {
     'current_status': ['Status', ''],
@@ -70,6 +71,8 @@ _THROTTLED_REFRESH = None
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the SABnzbd sensors. """
+    from pysabnzbd import SabnzbdApi, SabnzbdApiException
+
     api_key = config.get("api_key")
     base_url = config.get("base_url")
     name = config.get("name", "SABnzbd")
@@ -130,6 +133,7 @@ class SabnzbdSensor(Entity):
     def refresh_sabnzbd_data(self):
         """ Calls the throttled SABnzbd refresh method. """
         if _THROTTLED_REFRESH is not None:
+            from pysabnzbd import SabnzbdApiException
             try:
                 _THROTTLED_REFRESH()
             except SabnzbdApiException:
