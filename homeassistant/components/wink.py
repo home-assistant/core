@@ -1,8 +1,22 @@
 """
 homeassistant.components.wink
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Connects to a Wink hub and loads relevant components to control its devices.
+
+Configuration:
+
+To use the Wink component you will need to add something like the following
+to your configuration.yaml file.
+
+wink:
+  access_token: YOUR_ACCESS_TOKEN
+
+Variables:
+
+access_token
+*Required
+Please check https://home-assistant.io/components/wink.html for further
+details.
 """
 import logging
 
