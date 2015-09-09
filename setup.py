@@ -7,9 +7,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
                 '{}.zip'.format(__version__))
 
-PACKAGES = find_packages(exclude=['tests', 'tests.*']) + \
-    ['homeassistant.external', 'homeassistant.external.noop',
-     'homeassistant.external.nzbclients', 'homeassistant.external.vera']
+PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 PACKAGE_DATA = \
     {'homeassistant.components.frontend': ['index.html.template'],
