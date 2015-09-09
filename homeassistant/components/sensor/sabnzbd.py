@@ -71,7 +71,7 @@ _THROTTLED_REFRESH = None
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the SABnzbd sensors. """
-    from SabnzbdApiException import SabnzbdApi, SabnzbdApiException
+    from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
     api_key = config.get("api_key")
     base_url = config.get("base_url")
@@ -133,7 +133,7 @@ class SabnzbdSensor(Entity):
     def refresh_sabnzbd_data(self):
         """ Calls the throttled SABnzbd refresh method. """
         if _THROTTLED_REFRESH is not None:
-            from SabnzbdApiException import SabnzbdApiException
+            from pysabnzbd import SabnzbdApiException
             try:
                 _THROTTLED_REFRESH()
             except SabnzbdApiException:
