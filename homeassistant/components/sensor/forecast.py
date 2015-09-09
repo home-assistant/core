@@ -71,7 +71,7 @@ SENSOR_TYPES = {
     'humidity': ['Humidity', '%'],
     'pressure': ['Pressure', 'mBar'],
     'visibility': ['Visibility', 'km'],
-    'ozone': ['Ozone', ''],
+    'ozone': ['Ozone', 'DU'],
 }
 
 # Return cached results if last scan was less then this time ago
