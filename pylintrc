@@ -1,5 +1,4 @@
 [MASTER]
-ignore=external,setup.py
 reports=no
 
 # Reasons disabled:
