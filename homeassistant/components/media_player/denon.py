@@ -48,7 +48,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     DOMAIN)
 from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_IDLE, STATE_UNKNOWN)
+    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,9 +94,8 @@ class DenonDevice(MediaPlayerDevice):
         except (EOFError, BrokenPipeError, ConnectionResetError):
             self._telnet.open(self._host)
 
-        _LOGGER.error(self._telnet.read_very_eager())  # skip
+        self._telnet.read_very_eager()  # skip what is not requested
 
-        _LOGGER.error(message)
         self._telnet.write(message.encode('ASCII') + b'\r')
         # timeout 200ms, defined by protocol
         resp = self._telnet.read_until(b'\r', timeout=0.2)\
@@ -104,8 +103,8 @@ class DenonDevice(MediaPlayerDevice):
 
         if message == "PW?":
             # workaround; PW? sends also SISTATUS
-            _LOGGER.error(self._telnet.read_until(b'\r', timeout=0.2))
-        _LOGGER.error(resp)
+            self._telnet.read_until(b'\r', timeout=0.2)
+
         return resp
 
     @property
@@ -120,7 +119,7 @@ class DenonDevice(MediaPlayerDevice):
         if pwstate == "PWSTANDBY":
             return STATE_OFF
         if pwstate == "PWON":
-            return STATE_IDLE
+            return STATE_ON
 
         return STATE_UNKNOWN
 
