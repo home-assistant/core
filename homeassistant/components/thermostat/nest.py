@@ -1,4 +1,6 @@
 """
+homeassistant.components.thermostat.nest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for Nest thermostats.
 """
 import logging
@@ -41,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NestThermostat(ThermostatDevice):
-    """ Represents a Nest thermostat within Home Assistant. """
+    """ Represents a Nest thermostat. """
 
     def __init__(self, structure, device):
         self.structure = structure
