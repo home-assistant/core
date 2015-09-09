@@ -1,6 +1,6 @@
 """
 homeassistant.components.device_tracker.actiontec
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Device tracker platform that supports scanning an Actiontec MI424WR
 (Verizon FIOS) router for device presence.
 
@@ -9,9 +9,8 @@ This device tracker needs telnet to be enabled on the router.
 Configuration:
 
 To use the Actiontec tracker you will need to add something like the
-following to your config/configuration.yaml.  If you experience disconnects
+following to your configuration.yaml file. If you experience disconnects
 you can modify the home_interval variable.
-
 
 device_tracker:
   platform: actiontec
@@ -69,7 +68,7 @@ _LEASES_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a DD-WRT scanner. """
+    """ Validates config and returns an Actiontec scanner. """
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -83,8 +82,9 @@ Device = namedtuple("Device", ["mac", "ip", "last_update"])
 
 
 class ActiontecDeviceScanner(object):
-    """ This class queries a an actiontec router
-    for connected devices. Adapted from DD-WRT scanner.
+    """
+    This class queries a an actiontec router for connected devices.
+    Adapted from DD-WRT scanner.
     """
 
     def __init__(self, config):
@@ -106,8 +106,9 @@ class ActiontecDeviceScanner(object):
             _LOGGER.info("home_interval set to: %s", self.home_interval)
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
 
         self._update_info()
         return [client.mac for client in self.last_results]
@@ -123,8 +124,10 @@ class ActiontecDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the Actiontec MI424WR router is up
-            to date. Returns boolean if scanning successful. """
+        """
+        Ensures the information from the Actiontec MI424WR router is up
+        to date. Returns boolean if scanning successful.
+        """
         _LOGGER.info("Scanning")
         if not self.success_init:
             return False
@@ -155,7 +158,7 @@ class ActiontecDeviceScanner(object):
             return True
 
     def get_actiontec_data(self):
-        """ Retrieve data from Actiontec MI424WR and return parsed result.  """
+        """ Retrieve data from Actiontec MI424WR and return parsed result. """
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'Username: ')

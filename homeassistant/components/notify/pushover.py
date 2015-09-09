@@ -1,18 +1,17 @@
 """
 homeassistant.components.notify.pushover
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Pushover platform for notify component.
 
 Configuration:
 
 To use the Pushover notifier you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 notify:
-    platform: pushover
-    api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-    user_key: ABCDEFGHJKLMNOPQRSTUVXYZ
+  platform: pushover
+  api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
+  user_key: ABCDEFGHJKLMNOPQRSTUVXYZ
 
 Variables:
 
@@ -33,7 +32,6 @@ https://home-assistant.io/images/favicon-192x192.png
 user_key
 *Required
 To retrieve this value log into your account at https://pushover.net
-
 """
 import logging
 

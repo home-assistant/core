@@ -6,7 +6,7 @@ OpenWeatherMap (OWM) service.
 Configuration:
 
 To use the OpenWeatherMap sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
   platform: openweathermap
@@ -33,7 +33,7 @@ forecast
 Enables the forecast. The default is to display the current conditions.
 
 monitored_conditions
-*Optional
+*Required
 Conditions to monitor. See the configuration example above for a
 list of all available conditions to monitor.
 

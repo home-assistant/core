@@ -2,9 +2,13 @@
 homeassistant.components.switch.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to control the GPIO pins of a Raspberry Pi.
+
 Note: To use RPi GPIO, Home Assistant must be run as root.
 
 Configuration:
+
+To use the Raspberry GPIO switches you will need to add something like the
+following to your configuration.yaml file.
 
 switch:
   platform: rpi_gpio

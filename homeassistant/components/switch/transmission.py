@@ -6,15 +6,15 @@ Enable or disable Transmission BitTorrent client Turtle Mode.
 Configuration:
 
 To use the Transmission switch you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 switch:
-    platform: transmission
-    name: Transmission
-    host: 192.168.1.26
-    port: 9091
-    username: YOUR_USERNAME
-    password: YOUR_PASSWORD
+  platform: transmission
+  name: Transmission
+  host: 192.168.1.26
+  port: 9091
+  username: YOUR_USERNAME
+  password: YOUR_PASSWORD
 
 Variables:
 
