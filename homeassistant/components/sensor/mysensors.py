@@ -35,8 +35,9 @@ ATTR_NODE_ID = "node_id"
 ATTR_CHILD_ID = "child_id"
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/' +
-                '35b87d880147a34107da0d40cb815d75e6cb4af7.zip']
+REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/'
+                '35b87d880147a34107da0d40cb815d75e6cb4af7.zip'
+                '#pymysensors==0.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

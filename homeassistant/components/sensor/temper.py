@@ -17,8 +17,9 @@ from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/' +
-                '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip']
+REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
+                '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip'
+                '#temperusb==1.2.3']
 
 
 # pylint: disable=unused-argument
