@@ -122,3 +122,11 @@ https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60
 
 # Python tools for interacting with IFTTT Maker Channel (ifttt)
 pyfttt==0.3
+
+# sensor.sabnzbd
+https://github.com/balloob/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
+
+# switch.vera
+# sensor.vera
+# light.vera
+https://github.com/balloob/home-assistant-vera-api/archive/a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip#python-vera==0.1
