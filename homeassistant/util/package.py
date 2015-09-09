@@ -5,6 +5,7 @@ import pkg_resources
 import subprocess
 import sys
 import threading
+from urllib.parse import urlparse
 
 _LOGGER = logging.getLogger(__name__)
 INSTALL_LOCK = threading.Lock()
@@ -36,7 +37,11 @@ def check_package_exists(package, target=None):
     """Check if a package exists.
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req."""
-    req = pkg_resources.Requirement.parse(package)
+    try:
+        req = pkg_resources.Requirement.parse(package)
+    except ValueError:
+        # This is a zip file
+        req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
     if target:
         work_set = pkg_resources.WorkingSet([target])
