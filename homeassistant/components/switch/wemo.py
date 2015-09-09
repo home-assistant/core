@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class WemoSwitch(SwitchDevice):
-    """ Represents a WeMo switch within Home Assistant. """
+    """ Represents a WeMo switch. """
     def __init__(self, wemo):
         self.wemo = wemo
         self.insight_params = None

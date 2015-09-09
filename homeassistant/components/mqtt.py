@@ -60,7 +60,6 @@ MQTT_CLIENT = None
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
-DEFAULT_QOS = 0
 
 SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
@@ -75,16 +74,17 @@ CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 
-ATTR_QOS = 'qos'
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
+ATTR_QOS = 'qos'
 
 
-def publish(hass, topic, payload):
+def publish(hass, topic, payload, qos=0):
     """ Send an MQTT message. """
     data = {
         ATTR_TOPIC: topic,
         ATTR_PAYLOAD: payload,
+        ATTR_QOS: qos,
     }
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
@@ -141,9 +141,10 @@ def setup(hass, config):
         """ Handle MQTT publish service calls. """
         msg_topic = call.data.get(ATTR_TOPIC)
         payload = call.data.get(ATTR_PAYLOAD)
+        qos = call.data.get(ATTR_QOS)
         if msg_topic is None or payload is None:
             return
-        MQTT_CLIENT.publish(msg_topic, payload)
+        MQTT_CLIENT.publish(msg_topic, payload, qos)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
@@ -177,9 +178,9 @@ class MQTT(object):  # pragma: no cover
         self._mqttc.on_message = self._mqtt_on_message
         self._mqttc.connect(broker, port, keepalive)
 
-    def publish(self, topic, payload):
+    def publish(self, topic, payload, qos):
         """ Publish a MQTT message. """
-        self._mqttc.publish(topic, payload)
+        self._mqttc.publish(topic, payload, qos)
 
     def unsubscribe(self, topic):
         """ Unsubscribe from topic. """
