@@ -132,6 +132,23 @@ Integrate your <a href="https://efergy.com">Efergy</a> meter information into Ho
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>app_token</strong> (<em>Required</em>): The App Token for your account.</li>
+<li><strong>utc_offset</strong> (<em>Required</em>): Some variables (currently only the daily_cost) require that the
+negative number of minutes your timezone is ahead/behind UTC time.</li>
+<li><strong>monitored_variables</strong> array (<em>Required</em>): Variables to monitor.
+
+<ul>
+<li><strong>type</strong> (<em>Required</em>): Name of the variable.</li>
+<li><strong>period</strong> (<em>Optional</em>): Some variables take a period argument. Valid options are &ldquo;day&rdquo;, &ldquo;week&rdquo;, &ldquo;month&rdquo;, and &ldquo;year&rdquo;.</li>
+<li><strong>currency</strong> (<em>Optional</em>): This is used to display the cost/period as the unit when monitoring the cost. It should correspond to the actual currency used in your dashboard.</li>
+</ul>
+</li>
+</ul>
+
+
 
 </article>
 

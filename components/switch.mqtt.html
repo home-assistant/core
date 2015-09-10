@@ -128,29 +128,37 @@ Try to enable it, if experiencing incorrect switch operation.</p>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yml entr</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Bedroom</span><span class="nv"> </span><span class="s">Switch&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/switch1&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">command_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/switch1/set&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">payload_on</span><span class="p-Indicator">:</span> <span class="s">&quot;ON&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">payload_off</span><span class="p-Indicator">:</span> <span class="s">&quot;OFF&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">optimistic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>command_topic: The MQTT topic to publish commands to change the switch state. <em>Required</em></p>
+<p>Configuration variables:</p>
 
-<p>name: The name of the switch. Default is &lsquo;MQTT Switch&rsquo;. <em>Optional</em></p>
+<ul>
+<li><strong>name</strong> (<em>Optional</em>): The name of the switch. Default is &lsquo;MQTT Switch&rsquo;.</li>
+<li><strong>state_topic</strong> (<em>Optional</em>): The MQTT topic subscribed to receive state updates.</li>
+<li><strong>command_topic</strong> (<em>Required</em>): The MQTT topic to publish commands to change the switch state.</li>
+<li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0 and will also be used to publishing messages.</li>
+<li><strong>payload_on</strong> (<em>Optional</em>): The payload that represents enabled state. Default is &ldquo;ON&rdquo;.</li>
+<li><strong>payload_off</strong> (<em>Optional</em>): The payload that represents disabled state. Default is &ldquo;OFF&rdquo;.</li>
+<li><strong>optimistic</strong> (<em>Optional</em>): Flag that defines if switch works in optimistic mode. Default is true if no state topic defined, else false.</li>
+</ul>
 
-<p>state_topic: The MQTT topic subscribed to receive state updates. <em>Optional</em></p>
 
-<p>payload_on: The payload that represents enabled state. Default is &ldquo;ON&rdquo;. <em>Optional</em></p>
+<p class='note warning'>
+Make sure that your topics match exact. <code>some-topic/</code> and <code>some-topic</code> are different topics.
+</p>
 
-<p>payload_off: The payload that represents disabled state. Default is &ldquo;OFF&rdquo;. <em>Optional</em></p>
-
-<p>optimistic: Flag that defines if switch works in optimistic mode. Default is true if no state topic defined, else false. <em>Optional</em></p>
 
 
 </article>

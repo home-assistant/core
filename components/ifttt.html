@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Belkin WeMo switches support - Home Assistant</title>
+    <title>IFTTT - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate Belkin WeMo switches into Home Assistant.">
+    <meta name="description" content="Instructions how to setup IFTTT within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Belkin WeMo switches support">
+    <meta property="og:title" content="IFTTT">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/switch.wemo.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/ifttt.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to integrate Belkin WeMo switches into Home Assistant.">
+    <meta property="og:description" content="Instructions how to setup IFTTT within Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,24 +98,79 @@
   
   <header>
     <h1 class="title indent">
-      Belkin WeMo Switches Support
+      IFTTT
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p><img src='/images/supported_brands/belkin_wemo.png' class='brand pull-right' />
-The wemo platform allows you to control your <a href="http://www.belkin.com/us/p/P-F7C027/">Belkin WeMo</a> switches from within Home Assistant.</p>
-
-<p>They will be automatically discovered if the discovery component is enabled.</p>
+  <p><img src='/images/supported_brands/ifttt.png' class='brand pull-right' />
+<a href="https://ifttt.com">IFTTT</a> is a web service that allows users to create chains of simple conditional statements, so called &ldquo;recipes&rdquo;. With the ifttt component you can trigger recipes through the &ldquo;maker&rdquo; channel.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">wemo</span>
+</span><span class='line'><span class="l-Scalar-Plain">ifttt</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">xxxxx-x-xxxxxxxxxxxxx</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+<p>Key is your API key which can be obtained by viewing the properties of the <a href="https://ifttt.com/maker">Maker Channel</a>.</p>
+
+<p class='img'>
+<img src='/images/components/ifttt/finding_key.png' />
+Property screen of the Maker Channel
+</p>
+
+
+<p>Once you have added your key to <code>configuration.yaml</code>, restart your Home Assistant server. This will load up the IFTTT component and make a service available to trigger events in IFTTT.</p>
+
+<p class='note'>
+After restarting the server, be sure to watch the console for any logging errors that show up in red, white or yellow.
+</p>
+
+
+<h3><a class='title-link' name='testing-your-trigger' href='#testing-your-trigger'></a> Testing your trigger</h3>
+
+<p>You can use the developer tools to test your <a href="https://ifttt.com/maker">Maker Channel</a> trigger. To do this, open the Home Assistant UI, open the sidebar, click on the first icon in the developer tools. This should get you to the &lsquo;Call Service&rsquo; screen. Fill in the following values:</p>
+
+<table>
+<thead>
+<tr>
+<th>Field </th>
+<th> Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>domain </td>
+<td> <code>ifttt</code></td>
+</tr>
+<tr>
+<td>service </td>
+<td> <code>trigger</code></td>
+</tr>
+<tr>
+<td>Service Data </td>
+<td> <code>{"event": "EventName", "value1": "Hello World"}</code></td>
+</tr>
+</tbody>
+</table>
+
+
+<p class='img'>
+<img src='/images/components/ifttt/testing_service.png' />
+When your screen looks like this, click the &#8216;call service&#8217; button.
+</p>
+
+
+<h3><a class='title-link' name='setting-up-a-recipe' href='#setting-up-a-recipe'></a> Setting up a recipe</h3>
+
+<p class='img'>
+<img src='/images/components/ifttt/setup_trigger.png' />
+You need to setup a unique trigger for each event you sent to IFTTT.
+</p>
 
 
 

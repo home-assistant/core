@@ -105,7 +105,9 @@
   
 
   <p><img src='/images/supported_brands/mysensors.png' class='brand pull-right' />
-Integrate your <a href="https://www.mysensors.org">MySensors sensors</a> by adding the following to your <code>configuration.yaml</code>:</p>
+The <a href="https://www.mysensors.org">MySensors</a> project combines Arduino boards with NRF24L01 radio boards to build sensor networks.</p>
+
+<p>Integrate your Serial MYSensors Gateway by adding the following to your <code>configuration.yaml</code>:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -115,6 +117,18 @@ Integrate your <a href="https://www.mysensors.org">MySensors sensors</a> by addi
 </span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysensors</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/dev/ttyACM0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>port</strong> (<em>Required</em>): The port where your board is connected to your Home Assistant host. If you are using an original Arduino the port will be named <code>ttyACM*</code>. The exact number can be determined with <code>ls /dev/ttyACM*</code>.</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>ls /dev/ttyACM*
 </span></code></pre></td></tr></table></div></figure>
 
 

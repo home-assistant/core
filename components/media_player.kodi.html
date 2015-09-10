@@ -119,12 +119,20 @@ The kodi platform allows you to control a <a href="http://kodi.tv/">Kodi</a> mul
 </pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
 </span><span class='line'>media_player:
 </span><span class='line'>  platform: kodi
-</span><span class='line'>  name: Kodi
 </span><span class='line'>  url: http://192.168.0.123/jsonrpc
-</span><span class='line'>  user: kodi
-</span><span class='line'>  password: my_secure_password</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  name: Kodi
+</span><span class='line'>  user: USERNAME
+</span><span class='line'>  password: PASSWORD</span></code></pre></td></tr></table></div></figure>
 
 
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>url</strong> <em>Required</em>: The URL of the XBMC/Kodi JSON-RPC API, eg. <a href="http://192.168.0.123/jsonrpc">http://192.168.0.123/jsonrpc</a></li>
+<li><strong>name</strong> <em>Optional</em>: The name of the device used in the frontend.</li>
+<li><strong>username</strong> <em>Optional</em>: The XBMC/Kodi HTTP username.</li>
+<li><strong>password</strong> <em>Optional</em>: The XBMC/Kodi HTTP password.</li>
+</ul>
 
 
 

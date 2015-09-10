@@ -104,7 +104,15 @@
   <hr class="divider">
   
 
-  <p>This platform allows you to detect presence by looking at connected devices to an <a href="http://www.arubanetworks.com/products/networking/aruba-instant/">Aruba Instant</a> device. This has been tested on an ARUBA AP-105.</p>
+  <p><img src='/images/supported_brands/aruba.png' class='brand pull-right' />
+This platform allows you to detect presence by looking at connected devices to an <a href="http://www.arubanetworks.com/products/networking/aruba-instant/">Aruba Instant</a> device.</p>
+
+<p>Supported devices (tested):</p>
+
+<ul>
+<li>ARUBA AP-105</li>
+</ul>
+
 
 <p class='note warning'>
 This device tracker needs telnet to be enabled on the router.
@@ -126,6 +134,15 @@ This device tracker needs telnet to be enabled on the router.
 </span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>host</strong> <em>Required</em>: The IP address of your router, e.g. 192.168.1.1.</li>
+<li><strong>username</strong> <em>Required</em>: The username of an user with administrative privileges, usually <em>admin</em>.</li>
+<li><strong>password</strong> <em>Required</em>: The password for your given admin account.</li>
+</ul>
 
 
 <p>See the <a href="/components/device_tracker.html">device tracker component page</a> for instructions how to configure the people to be tracked.</p>

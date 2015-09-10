@@ -112,7 +112,7 @@ This utility should have been installed as part of the Python 3.4 installation. 
 is installed by running <code>python3 --version</code>. If it is not installed,
 <a href="https://www.python.org/getit/">download it here</a>.</p>
 
-<p>If you are to succesfully run <code>python3 --version</code> but not <code>pip3</code>, run the following command instead
+<p>If you are able to successfully run <code>python3 --version</code> but not <code>pip3</code>, run the following command instead
 to install Home Assistant: <code>python3 -m pip install homeassistant</code>.</p>
 
 <p><strong>No module named pip</strong><br>
@@ -122,10 +122,39 @@ by some distributions. If you are unable to run <code>python3 -m pip --version</
 <code>python3 get-pip.py</code>.</p>
 
 <p><strong>No access to the frontend</strong><br>
-In newer Linux distributions (at least Fedora 22/CentOS 7) the access to a host are very limited.
-This means that you can&rsquo;t access the Home Assistant Frontend that is running on a host in your
-network. Check the Post-installation section on the <a href="/getting-started/">Getting started</a> page and
-follow the instruction that match your distribution to allow access to port 8123.</p>
+In newer Linux distributions (at least Fedora 22/CentOS 7) the access to a host is very limited.
+This means that you can&rsquo;t access the Home Assistant Frontend that is running on a host outside of the host machine. Windows and OSX machines may also have issues with this.</p>
+
+<p>To fix this you will need to open your machine&rsquo;s firewall for TCP traffic over port 8123. The method for doing this will vary depending on your operating system and the firewall you have installed. Below are some suggestions to try. Google is your friend here.</p>
+
+<p><a href="http://windows.microsoft.com/en-us/windows/open-port-windows-firewall#1TC=windows-7">Windows</a> and <a href="https://support.apple.com/en-us/HT201642">Mac OSX</a> have good instructions posted.</p>
+
+<p>For firewalld systems (Fedora, RHEL, etc.):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo firewall-cmd --permanent --add-port<span class="o">=</span>8123/tcp
+</span><span class='line'>sudo firewall-cmd --reload
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For UFW systems (Ubuntu, Debian, Raspbian, etc.):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo ufw allow 8123/tcp
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For iptables systems (usually the default):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>iptables -I INPUT -p tcp --dport <span class="m">8123</span> -j ACCEPT
+</span><span class='line'>iptables-save &gt; /etc/network/iptables.rules  <span class="c"># your rules may be saved elsewhere</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a href="/getting-started/index.html">&laquo; Back to Getting Started</a></h3>
 
 
 </article>

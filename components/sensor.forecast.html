@@ -107,7 +107,7 @@
   <p><img src='/images/supported_brands/weather-few-clouds.png' class='brand pull-right' />
 The forecast platform uses the <a href="https://forecast.io/">Forecast.io</a> web service as a source for meteorological data for your location.</p>
 
-<p>You need an API key which is free but requires a <a href="https://developer.forecast.io/register">registration</a>.</p>
+<p>You need an API key which is free but requires a <a href="https://developer.forecast.io/register">registration</a>. You can make 1000 requests per day. This means that you could create approximately every 1.4 minute one.</p>
 
 <p>To add Forecast.io to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
@@ -148,7 +148,31 @@ The forecast platform uses the <a href="https://forecast.io/">Forecast.io</a> we
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Details about the API are available in the (Forecast.io documentation)[<a href="https://developer.forecast.io/docs/v2">https://developer.forecast.io/docs/v2</a>].</p>
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>api_key</strong> (<em>Required</em>): Your API key for <a href="http://forecast.io/.">http://forecast.io/.</a></li>
+<li><strong>display_conditions</strong> array (<em>Required</em>): Conditions to display in the frontend.
+
+<ul>
+<li><strong>summary</strong>: A human-readable text summary.</li>
+<li><strong>precip_type</strong>: The type of precipitation occurring.</li>
+<li><strong>precip_intensity</strong>: The average expected intensity of precipitation occurring.</li>
+<li><strong>temperature</strong>: The current temperature.</li>
+<li><strong>dew_point</strong>: The dew point.</li>
+<li><strong>wind_speed</strong>: The wind speed.</li>
+<li><strong>wind_bearing</strong>: Where the wind is coming from in degrees, with true north at 0° and progressing clockwise.</li>
+<li><strong>cloud_cover</strong>: The percentage of sky occluded by clouds.</li>
+<li><strong>humidity</strong>: The relative humidity.</li>
+<li><strong>pressure</strong>: The sea-level air pressure in millibars.</li>
+<li><strong>visibility</strong>: The average visibility.</li>
+<li><strong>ozone</strong>: The columnar density of total atmospheric ozone in Dobson.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>Details about the API are available in the <a href="https://developer.forecast.io/docs/v2">Forecast.io documentation</a>.</p>
 
 
 </article>

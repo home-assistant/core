@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Belkin WeMo switches support - Home Assistant</title>
+    <title>Denon Network Receivers support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate Belkin WeMo switches into Home Assistant.">
+    <meta name="description" content="Instructions how to integrate Denon Network Receivers into Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Belkin WeMo switches support">
+    <meta property="og:title" content="Denon Network Receivers support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/switch.wemo.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/media_player.denon.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to integrate Belkin WeMo switches into Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate Denon Network Receivers into Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,24 +98,53 @@
   
   <header>
     <h1 class="title indent">
-      Belkin WeMo Switches Support
+      Denon Network Receivers Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p><img src='/images/supported_brands/belkin_wemo.png' class='brand pull-right' />
-The wemo platform allows you to control your <a href="http://www.belkin.com/us/p/P-F7C027/">Belkin WeMo</a> switches from within Home Assistant.</p>
+  <p><img src='/images/supported_brands/denon.png' class='brand pull-right' />
+The denon platform allows you to control a <a href="http://www.denon.co.uk/chg/product/compactsystems/networkmusicsystems/ceolpiccolo">Denon Network Receivers</a> from Home Assistant.</p>
 
-<p>They will be automatically discovered if the discovery component is enabled.</p>
+<p>Supported devices:</p>
+
+<ul>
+<li>Denon DRA-N5</li>
+<li>Denon RCD-N8 (untested)</li>
+</ul>
+
+
+<p>To add a Denon Network Receiver to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">wemo</span>
+</span><span class='line'><span class="l-Scalar-Plain">media_player</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">denon</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IP_ADDRESS</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Music station</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>host</strong> (<em>Required</em>): IP address of the device. Example: 192.168.1.32</li>
+<li><strong>name</strong> (<em>Optional</em>): Name of the device</li>
+</ul>
+
+
+<p>A few notes:</p>
+
+<ul>
+<li>As long as this module is active and connected, the receiver does not seem to accept additional telnet connections.</li>
+<li>Be careful with the volume. 50 % or even 100 % are very loud.</li>
+<li>To be able to wake up the receiver, activate the &ldquo;remote&rdquo; setting in the receiver&rsquo;s settings.</li>
+</ul>
 
 
 

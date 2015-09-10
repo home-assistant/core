@@ -107,11 +107,15 @@
   <p>Home Assistant can get information from your wireless router to track which devices are connected. There are three different types of supported wireless routers:</p>
 
 <ul>
+<li><a href="/components/device_tracker.actiontec.html">Actiontec</a></li>
+<li><a href="/components/device_tracker.aruba.html">Aruba</a></li>
+<li><a href="/components/device_tracker.asuswrt.html">ASUSWRT</a></li>
 <li><a href="/components/device_tracker.ddwrt.html">DD-WRT</a></li>
-<li><a href="/components/device_tracker.tomato.html">tomato</a></li>
-<li><a href="/components/device_tracker.netgear.html">netgear</a></li>
 <li><a href="/components/device_tracker.luci.html">luci (OpenWRT)</a></li>
+<li><a href="/components/device_tracker.netgear.html">netgear</a></li>
+<li><a href="/components/device_tracker.tomato.html">tomato</a></li>
 <li><a href="/components/device_tracker.tplink.html">TP-Link</a></li>
+<li><a href="/components/device_tracker.thomson.html">Thomsom</a></li>
 </ul>
 
 
@@ -119,16 +123,19 @@
 
 <p>To get started add the following lines to your <code>configuration.yaml</code> (example for Netgear):</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>device_tracker:
-</span><span class='line'>  platform: netgear
-</span><span class='line'>  host: 192.168.1.1
-</span><span class='line'>  username: admin
-</span><span class='line'>  password: MY_PASSWORD</span></code></pre></td></tr></table></div></figure>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry for Netgear device</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">netgear</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.1</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">admin</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>

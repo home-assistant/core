@@ -109,6 +109,8 @@ The bitcoin platform displays various details about the <a href="https://bitcoin
 
 <p>If you have an online wallet from <a href="https://blockchain.info/">Blockchain.info</a> the sensor is capable to show your current balance.</p>
 
+<p>You need to enable the API access for your online wallet to get the balance. To do that log in and move to &lsquo;Account Setting&rsquo;, choose &lsquo;IP Restrictions&rsquo;, and check &lsquo;Enable Api Access&rsquo;. You will get an email message from blockchain.info where you must authorize the API access.</p>
+
 <p>To add the Bitcoin sensor to your installation, add a selection of the available display options to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -170,6 +172,39 @@ The bitcoin platform displays various details about the <a href="https://bitcoin
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>wallet</strong> (<em>Optional</em>): This is your wallet identifier from <a href="https://blockchain.info">https://blockchain.info</a> to access the online wallet.</li>
+<li><strong>password</strong> (<em>Optional</em>): Password for your online wallet.</li>
+<li><strong>currency</strong> (<em>Optional</em>): The currency to exchange to, eg. CHF, USD, EUR, etc. Default is USD.</li>
+<li><strong>display_options</strong> array (<em>Required</em>): Options to display in the frontend.
+
+<ul>
+<li><strong>exchangerate</strong>: Exchange rate of 1 BTC</li>
+<li><strong>trade_volume_btc</strong>: Trade volume</li>
+<li><strong>miners_revenue_usd</strong>: Miners revenue</li>
+<li><strong>btc_mined</strong>: BTC mined</li>
+<li><strong>trade_volume_usd</strong>: Trade volume in USD</li>
+<li><strong>difficulty</strong>: Difficulty</li>
+<li><strong>minutes_between_blocks</strong>: Time between blocks in minutes</li>
+<li><strong>number_of_transactions</strong>: Number of transactions</li>
+<li><strong>hash_rate</strong>: Hash rate in PH/s</li>
+<li><strong>timestamp</strong>: Timestamp</li>
+<li><strong>mined_blocks</strong>: Minded Blocks</li>
+<li><strong>blocks_size</strong>: Block size</li>
+<li><strong>total_fees_btc</strong>: Total fees in BTC</li>
+<li><strong>total_btc_sent</strong>: Total sent in BTC</li>
+<li><strong>estimated_btc_sent</strong>: Estimated sent in BTC</li>
+<li><strong>total_btc</strong>: Total of BTC</li>
+<li><strong>total_blocks</strong>: Total Blocks</li>
+<li><strong>next_retarget</strong>: Next retarget</li>
+<li><strong>estimated_transaction_volume_usd</strong>: Estimated transaction volume in BTC</li>
+<li><strong>miners_revenue_btc</strong>: Miners revenue in BTC</li>
+<li><strong>market_price_usd</strong>: Market price in USD</li>
+</ul>
+</li>
+</ul>
 
 
 

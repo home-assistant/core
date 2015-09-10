@@ -104,7 +104,8 @@
   <hr class="divider">
   
 
-  <p>The dht sensor platform allows you to get the current temperature and humidity from a DHT11, DHT22, or AM2302 device.</p>
+  <p><img src='/images/supported_brands/dht.png' class='brand pull-right' />
+The dht sensor platform allows you to get the current temperature and humidity from a DHT11, DHT22, or AM2302 device.</p>
 
 <p>To use your DHTxx sensor in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
@@ -126,6 +127,23 @@
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">humidity</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>sensor</strong> (<em>Required</em>): The sensor type, supported devices are DHT11, DHT22, and AM2302</li>
+<li><strong>pin</strong> (<em>Required</em>): The pin the sensor is connected to.</li>
+<li><strong>monitored_conditions</strong> array: Conditions to monitor.
+
+<ul>
+<li><strong>temperature</strong>:</li>
+<li><strong>humidity</strong>:</li>
+</ul>
+</li>
+</ul>
+
+
+<p>Available conditions are only <em>temperature</em> and <em>humidity</em>.</p>
 
 <p>The name of the pin to which the sensor is connected has different names on different platforms. &lsquo;P8_11&rsquo; for Beaglebone, &lsquo;23&rsquo; for Raspberry Pi.</p>
 

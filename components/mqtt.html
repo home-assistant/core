@@ -119,19 +119,27 @@ MQTT (aka MQ Telemetry Transport) is a machine-to-machine or &ldquo;Internet of 
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IP_ADDRESS_BROKER</span>
-</span><span class='line'>  <span class="c1"># All the other options are optional:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1883</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">client_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home-assistant-1</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">keepalive</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">60</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_username</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_secret_password</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PASSWORD</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>broker</strong> (<em>Required</em>): The IP address of your MQTT broker, e.g. 192.168.1.32.</li>
+<li><strong>port</strong> (<em>Optional</em>): The network port to connect to. Default is 1883.</li>
+<li><strong>client_id</strong> (<em>Optional</em>): Client ID that Home Assistant will use. Has to be unique on the server. Default is a random generated one.</li>
+<li><strong>keepalive</strong> (<em>Optional</em>): The keep alive in seconds for this client. Default is 60.</li>
+<li><strong>username</strong> (<em>Optional</em>): The username to use with your MQTT broker.</li>
+<li><strong>password</strong> (<em>Optional</em>): The corresponding password for the username to use with your MQTT broker.</li>
+</ul>
 
 
 <p class='note'>
@@ -144,7 +152,7 @@ The MQTT component has no TLS support at the moment. This means that only plain-
 <ul>
 <li><a href="/components/sensor.mqtt.html">MQTT Sensor</a></li>
 <li><a href="/components/switch.mqtt.html">MQTT Switch</a></li>
-<li><a href="/components/automation.html#mqtt-based-automation">MQTT-automation rule</a>.</li>
+<li><a href="/components/automation.html#mqtt-based-automation">MQTT-automation rule</a></li>
 <li>Integrating it into a component. See the <a href="https://github.com/balloob/home-assistant/blob/dev/config/custom_components/mqtt_example.py">MQTT example component</a> how to do this.</li>
 </ul>
 

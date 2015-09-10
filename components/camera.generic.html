@@ -110,6 +110,8 @@
 
 <p>Home Assistant will serve the images via its server, making it possible to view your IP camera&rsquo;s while outside of your network.</p>
 
+<p>To enable this sensor in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -120,11 +122,21 @@
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">camera</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">generic</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">my sample camera</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MY_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MY_PASSWORD</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">still_image_url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://194.218.96.92/jpg/image.jpg</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">my sample camera</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PASSWORD</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>still_image_url</strong> <em>Required</em>: The URL your camera serves the image on, eg. <a href="http://192.168.1.21:2112/">http://192.168.1.21:2112/</a></li>
+<li><strong>name</strong> <em>Optional</em>: This parameter allows you to override the name of your camera.</li>
+<li><strong>username</strong> <em>Optional</em>: The username for accessing your camera.</li>
+<li><strong>password</strong> <em>Optional</em>: The password for accessing your camera.</li>
+</ul>
 
 
 

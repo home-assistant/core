@@ -116,8 +116,7 @@ Devices</a>.</p>
 that is configured on the controller. Using the programs on the controller,
 custom switches and sensors can also be created.</p>
 
-<p>To integrate your ISY994 controller with Home Assistant, add the following
-section to your <code>configuration.yaml</code> file:</p>
+<p>To integrate your ISY994 controller with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -127,46 +126,34 @@ section to your <code>configuration.yaml</code> file:</p>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">isy994</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="c1"># requried</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_ADDRESS</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_USERNAME</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_PASSWORD</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1"># optional</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">sensor_string</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SENSOR_STRING</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">hidden_string</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">HIDDEN_STRING</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">tls</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">TLS_VERSION</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_ADDRESS</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ISY_PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sensor_string</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SENSOR_STRING</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">hidden_string</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">HIDDEN_STRING</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tls</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">TLS_VERSION</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The ISY_ADDRESS should be in full URL format. For example:
-<a href="http://192.168.10.100:80">http://192.168.10.100:80</a></p>
+<p>Configuration variables:</p>
 
-<p>The ISY_USERNAME and ISY_PASSWORD are the configured username and password used
-to access the ISY interface.</p>
-
-<p>The SENSOR_STRING is a string that is used to identify which devices are to be
-assumed to be sensors instead of lights of switches. By default, this string is
-&lsquo;Sensor&rsquo;. If this string is found in the device name, Home Assistant will
-assume it is as a sensor.</p>
-
-<p>The HIDDEN_STRING is a string that is used to identify which devices are to be
+<ul>
+<li><strong>host</strong> (<em>Required</em>): The host entry should be in full URL format, eg. <a href="http://192.168.10.100:80">http://192.168.10.100:80</a></li>
+<li><strong>username</strong> (<em>Required</em>): The username that used to access the ISY interface.</li>
+<li><p><strong>password</strong> (<em>Required</em>): The password that used to access the ISY interface.</p></li>
+<li><p><strong>sensor_string</strong> (<em>Optional</em>): This is the string that is used to identify which devices are to be assumed to be sensors instead of lights of switches. By default, this string is &lsquo;Sensor&rsquo;. If this string is found in the device name, Home Assistant will
+assume it is as a sensor.</p></li>
+<li><strong>hidden_string</strong> (<em>Optional</em>): The HIDDEN_STRING is a string that is used to identify which devices are to be
 hidden on Home Assistant&rsquo;s front page. This string will be stripped from the
-device&rsquo;s name before being used. By default, this value is &lsquo;{HIDE ME}&rsquo;.</p>
+device&rsquo;s name before being used. By default, this value is &lsquo;{HIDE ME}&rsquo;.</li>
+<li><strong>tls</strong> (<em>Optional</em>): This entry should refelct the version of TLS that the ISY controller is using for HTTPS encryption. This value can be either 1.1 or 1.2. If this value is not set, it is assumed to be version 1.1. This is the default for most users.
+ISY994 Pro users may likely be using 1.2. When using HTTPS in the host entry, it is best practice to set this value.</li>
+</ul>
 
-<p>The TLS_VERSION value is the version of TLS that the ISY controller is using
-for HTTPS encryption. This value can be either 1.1 or 1.2. If this value is not
-set, it is assumed to be version 1.1. This is the default for most users.
-ISY994 Pro users may likely be using 1.2. When using HTTPS in the ISY_ADDRESS
-string, it is best practice to set this value.</p>
 
-<p>Once the ISY controller is configured, it will automatically import any lights,
-switches, and sensors it can locate.</p>
+<p>Once the ISY controller is configured, it will automatically import any lights, switches, and sensors it can locate.</p>
 
 <h3>Creating Custom Switches</h3>
 

@@ -120,11 +120,19 @@ The limitlessled can control your <a href="http://www.limitlessled.com/">Limitle
 </pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
 </span><span class='line'>light:
 </span><span class='line'>  platform: limitlessled
-</span><span class='line'>  host: 192.168.1.10
+</span><span class='line'>  host: IP_ADDRESS
 </span><span class='line'>  group_1_name: Living Room
 </span><span class='line'>  group_2_name: Bedroom
 </span><span class='line'>  group_3_name: Office
 </span><span class='line'>  group_4_name: Kitchen</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>host</strong> (<em>Required</em>): IP address of the device, eg. 192.168.1.32</li>
+<li><strong>group_X_name</strong> (<em>Required</em>): Name of the group. Multiple entries with a consecutive number.</li>
+</ul>
 
 
 

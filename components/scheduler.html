@@ -107,7 +107,13 @@
   <p>A component that will act as a scheduler and performe actions based
 on the events in the schedule.</p>
 
-<p>It will read a json object from <code>schedule.json</code> in the config dir and create a schedule based on it.</p>
+<p>Load the component by enabling it in <code>configuration.yaml</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>scheduler:</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It will read a json object from the file <code>schedule.json</code> in the config dir (<code>~/.homeassistant</code>) and create a schedule based on it.</p>
 
 <p>Each schedule is a JSON with the keys <code>id</code>, <code>name</code>, <code>description</code>, <code>entity_ids</code>, <code>events</code>.</p>
 
@@ -121,7 +127,7 @@ on the events in the schedule.</p>
 </ul>
 
 
-<p>Example <code>schedule.json</code></p>
+<p>Example <code>schedule.json</code> file</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>

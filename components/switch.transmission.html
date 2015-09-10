@@ -120,15 +120,24 @@ The transmission platform allows you to control your <a href="http://www.transmi
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Transmission</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.26</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9091</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Transmission</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PASSWORD</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><a href="https://github.com/fbradyirl">Finbarr Brady</a> has contributed the transmission switch platform.</p>
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>host</strong> (<em>Required</em>): This is the IP address of your Transmission daemon, e.g. 192.168.1.32.</li>
+<li><strong>port</strong> (<em>Optional</em>): The port your Transmission daemon uses, defaults to 9091.</li>
+<li><strong>name</strong> (<em>Optional</em>): The name to use when displaying this Transmission instance.</li>
+<li><strong>username</strong> (<em>Optional</em>): Your Transmission username, if you use authentication.</li>
+<li><strong>password</strong> (<em>Optional</em>): Your Transmission password, if you use authentication.</li>
+</ul>
+
 
 
 </article>

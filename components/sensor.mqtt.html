@@ -116,20 +116,26 @@ last known value. Otherwise, the initial state will be undefined.</p>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;MQTT</span><span class="nv"> </span><span class="s">Sensor&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home/bedroom/temperature&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;ºC&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;MQTT</span><span class="nv"> </span><span class="s">Sensor&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;°C&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>state_topic: The MQTT topic subscribed to receive sensor values. <em>Required</em></p>
+<p>Configuration variables:</p>
 
-<p>name: The name of the sensor. Default is &lsquo;MQTT Sensor&rsquo;. <em>Optional</em></p>
+<ul>
+<li><strong>state_topic</strong> (<em>Required</em>): The MQTT topic subscribed to receive sensor values.</li>
+<li><strong>name</strong> (<em>Optional</em>): The name of the sensor. Default is &lsquo;MQTT Sensor&rsquo;.</li>
+<li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0.</li>
+<li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the units of measurement of the sensor, if any.</li>
+</ul>
 
-<p>unit_of_measurement: Defines the units of measurement of the sensor, if any. <em>Optional</em></p>
 
 
 </article>

@@ -142,6 +142,27 @@ The openweathermap platform uses <a href="http://openweathermap.org/">OpenWeathe
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>api_key</strong> (<em>Required</em>): Your API key for <a href="http://openweathermap.org/.">http://openweathermap.org/.</a></li>
+<li><strong>forecast</strong> (<em>Optional</em>): Enables the forecast. The default is to display the current conditions.</li>
+<li><strong>display_conditions</strong> array (<em>Required</em>): Conditions to display in the frontend.
+
+<ul>
+<li><strong>weather</strong>: A human-readable text summary.</li>
+<li><strong>temperature</strong>: The current temperature.</li>
+<li><strong>wind_speed</strong>: The wind speed.</li>
+<li><strong>humidity</strong>: The relative humidity.</li>
+<li><strong>pressure</strong>: The sea-level air pressure in millibars.</li>
+<li><strong>clouds</strong>: Description about cloud coverage.</li>
+<li><strong>rain</strong>: The rain volume.</li>
+<li><strong>snow</strong>: The snow volume</li>
+</ul>
+</li>
+</ul>
+
+
 <p>Details about the API are available in the <a href="http://bugs.openweathermap.org/projects/api/wiki">OpenWeatherMap documentation</a>.</p>
 
 

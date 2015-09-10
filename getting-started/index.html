@@ -104,313 +104,93 @@
   <hr class="divider">
   
 
-  <div class='install-instructions-container'>
+  <p><div class='install-instructions-container'>
 <input name='install-instructions' type='radio' id='normal-install' checked>
 <input name='install-instructions' type='radio' id='raspberry-install'>
 <input name='install-instructions' type='radio' id='docker-install'>
 <label class='menu-selector normal' for='normal-install'>Install on local machine</label>
 <label class='menu-selector raspberry' for='raspberry-install'>Install on a Raspberry Pi</label>
-<label class='menu-selector docker' for='docker-install'>Install using Docker</label>
-<div class='install-instructions normal'>
+<label class='menu-selector docker' for='docker-install'>Install using Docker</label></p>
 
-<h3>Preparation</h3>
-<!-- ###### Preparation START ######################## -->
-<div class='prep-instructions-container'>
-<input name='prep-instructions' type='radio' id='generic-prep' checked>
-<input name='prep-instructions' type='radio' id='fedora-prep'>
-<input name='prep-instructions' type='radio' id='centos-prep'>
-<label class='menu-selector generic' for='generic-prep'>Generic</label>
-<label class='menu-selector fedora' for='fedora-prep'>Fedora</label>
-<label class='menu-selector centos' for='centos-prep'>CentOS</label>
+<p><h3>Installation</h3></p>
 
-<!-- ###### Preparation instructions Generic ######################## -->
-<div class='prep-instructions generic'>
-Installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/'>Python 3.4</a> installed and execute the following code in a console:
+<p><div class='install-instructions normal'>
+Installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/' target="_blank">Python 3.4</a> installed and execute the following code in a console:</p>
 
-
-</div>
-<!-- ###### Preparation instructions Fedora ######################## -->
-<div class='prep-instructions fedora'>
-<p>The preparation of a <a href='https://fedoraproject.org'>Fedora</a> 22 host will only take a couple of minutes. First install Python 3.4 and the other needed packages out of the <a href='https://admin.fedoraproject.org/pkgdb'>Fedora Package Collection</a>. This ensure that you receive updates in the future.</p>
-
-<p class='note'>
-It&#8217;s assumed that your user has an entry in the sudoers file. Otherwise, run the commands which needs more privileges as root.
-</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo dnf -y install python3 python3-devel gcc
-</span></code></pre></td></tr></table></div></figure>
-
-</div>
-<!-- ##### Preparation instructions Centos ######################### -->
-<div class='prep-instructions centos'>
-
-<p><a href='https://www.centos.org/'>CentOS</a> is providing longtime support and often not shipping the latest release of a software component. To run, Python 3.x on CentOS <a href='https://www.softwarecollections.org/en/scls/rhscl/rh-python34/'>Software Collections</a> needs to be activated.</p>
-
-<h5>Step 1. Install the tools for the Software Collection</h5>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install scl-utils
-</span></code></pre></td></tr></table></div></figure>
-
-<h5>Step 2. Make the repository available.</h5>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm
-</span></code></pre></td></tr></table></div></figure>
-
-<h5>Step 3. Install Python 3.x</h5>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install rh-python34
-</span></code></pre></td></tr></table></div></figure>
-
-<h5>Step 4. Start using software collections:</h5>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>scl <span class="nb">enable </span>rh-python34 bash
-</span></code></pre></td></tr></table></div></figure>
-
-</div>
-
-</div>
-
-<br />
-<!-- ###### Preparation END ######################## -->
-
-<h3>Installation</h3>
-
-<p>
+<p><p>
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install homeassistant
-</span><span class='line'>hass --open-ui
+</span><span class='line'>hass <span class="se">--</span>open-ui
 </span></code></pre></td></tr></table></div></figure>
 </p>
 <p>Running these commands will:</p>
 <ol>
 <li>Install Home Assistant</li>
-<li>Launch Home Assistant and serve web interface on <a href='http://localhost:8123'>http://localhost:8123</a></li>
+<li>Launch Home Assistant and serve web interface on <a href='http://localhost:8123' target="_blank"><a href="http://localhost:8123">http://localhost:8123</a></a></li>
 </ol>
-<br />
+</div> <!-- INSTALL-INSTRUCTIONS NORMAL --></p>
 
-<!-- ###### Post-Installation START ######################## -->
-<h3>Post-Installation</h3>
+<p><div class='install-instructions docker'>
+<p>Installation with Docker is straightforward. Adjust the following command so that <code>/path/to/your/config/</code> points at the folder where you want to store your config and run it:</p></p>
 
-<div class='post-instructions-container'>
-<input name='post-instructions' type='radio' id='generic-post' checked>
-<input name='post-instructions' type='radio' id='fedora-post'>
-<input name='post-instructions' type='radio' id='debian-post'>
-<label class='menu-selector generic-post' for='generic-post'>Generic</label>
-<label class='menu-selector fedora-post' for='fedora-post'>Fedora/CentOS</label>
-<!-- <label class='menu-selector debian-post' for='debian-post'>Debian</label> &#8211;>
+<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d <span class="se">--</span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/your/config:/config -v /etc/localtime:/etc/localtime:ro <span class="se">--</span><span class="nv">net</span><span class="o">=</span>host balloob/home-assistant
+</span></code></pre></td></tr></table></div></figure></p>
 
-<!-- ###### Post-installation instructions Generic ######################## -->
-<div class='post-instructions generic-post'>
-<p>There is nothing else to do. If you run into any issues, please see the <a href='/getting-started/troubleshooting.html'>troubleshooting page</a>.</p>
+<p><p>This will launch Home Assistant and serve its web interface from port 8123 on your Docker host.</p></p>
 
-<p>If you want to see what Home Assistant can do, you can start the demo mode by running <code>hass --demo-mode</code>.</p>
-
-<p>In the future, if you want to update to the latest version, run <code>pip3 install --upgrade home-assistant</code>.</p>
-
-</div>
-<!-- ###### Post-installation instructions Fedora/CentOS ######################## -->
-<div class='post-instructions fedora-post'>
-<p>By default, the access to port 8123 is not allowed. If you want to allow other hosts in your local network access, open port 8123.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo firewall-cmd --permanent --add-port<span class="o">=</span>8123/tcp
-</span><span class='line'>sudo firewall-cmd --reload
-</span></code></pre></td></tr></table></div></figure>
-<p>Home Assistant will serve its web interface on <a href='http://[IP address of the host]:8123'>http://[IP address of the host]:8123</a>.</p>
-
-<p>If you want that Home Assistant is lauched automatically, an extra step is needed to setup <code>systemd</code>. You need a service file to control Home Assistant with <code>systemd</code>. <!-- The <code>WorkingDirectory</code> and the <code>PYTHONPATH</code> must point to your clone git repository. &#8211;></p>
-
-<!-- WorkingDirectory=/home/fab/home-assistant/
-Environment="PYTHONPATH=/home/fab/home-assistant/" -->
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>su -c <span class="s1">&#39;cat &lt;&lt;EOF &gt;&gt; /lib/systemd/system/home-assistant.service</span>
-</span><span class='line'><span class="s1">[Unit]</span>
-</span><span class='line'><span class="s1">Description=Home Assistant</span>
-</span><span class='line'><span class="s1">After=network.target</span>
-</span><span class='line'>
-</span><span class='line'><span class="s1">[Service]</span>
-</span><span class='line'><span class="s1">Type=simple</span>
-</span><span class='line'><span class="s1">ExecStart=/usr/bin/python3.4 -m homeassistant</span>
-</span><span class='line'>
-</span><span class='line'><span class="s1">[Install]</span>
-</span><span class='line'><span class="s1">WantedBy=multi-user.target</span>
-</span><span class='line'><span class="s1">EOF&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>You need to reload <code>systemd</code> to make the daemon aware of the new configuration. Enable and launch Home Assistant after that.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo systemctl --system daemon-reload
-</span><span class='line'>sudo systemctl <span class="nb">enable </span>home-assistant
-</span><span class='line'>sudo systemctl start home-assistant
-</span></code></pre></td></tr></table></div></figure>
-
-<p>If everything went well, <code>sudo systemctl start home-assistant</code> should give you a positive feedback.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>sudo systemctl status home-assistant -l
-</span><span class='line'>● home-assistant.service - Home Assistant
-</span><span class='line'>   Loaded: loaded <span class="o">(</span>/usr/lib/systemd/system/home-assistant.service<span class="p">;</span> disabled<span class="p">;</span> vendor preset: disabled<span class="o">)</span>
-</span><span class='line'>   Active: active <span class="o">(</span>running<span class="o">)</span> since Thu 2015-06-25 23:38:37 CEST<span class="p">;</span> 3min 13s ago
-</span><span class='line'> Main PID: <span class="m">8557</span> <span class="o">(</span>python3.4<span class="o">)</span>
-</span><span class='line'>   CGroup: /system.slice/home-assistant.service
-</span><span class='line'>           └─8557 /usr/bin/python3.4 -m homeassistant
-</span><span class='line'><span class="o">[</span>...<span class="o">]</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>To get Home Assistant&#8217;s logging output, simple use <code>journalctl</code>.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo journalctl -f -u home-assistant
-</span></code></pre></td></tr></table></div></figure>
-
-<p>In the future, if you want to update to the latest version, run <code>pip3 install --upgrade home-assistant</code>.</p>
-
-<p class='note'>
-Those instructions were written for Fedora 22 Server and Workstation. They may work for Cloud flavor as well but this was not tested.
+<p><p class='note'>
+When using boot2docker on OS X you are unable to map the local time to your Docker container. Replace <code>-v /etc/localtime:/etc/localtime:ro</code> with <code>-e &ldquo;TZ=America/Los_Angeles&rdquo;</code> (replacing America/Los_Angeles with <a href='http://en.wikipedia.org/wiki/List_of_tz_database_time_zones' target="_blank">your timezone</a>)
 </p>
+</div> <!-- INSTALL-INSTRUCTIONS DOCKER --></p>
 
+<p><div class='install-instructions raspberry'>
+<p>Home Assistant uses Python 3.4 which is not shipped with the current Raspbian distibution for the Raspberry Pi. Before installing Home Assistant, you will have to <a href="http://depado.markdownblog.com/2015-03-12-short-tutorial-raspbian-python3-4-rpi-gpio" target="_blank">install Python 3.4</a>.</p>
 
-</div>
-<!-- ##### Post-installation instructions Debian ######################### -->
-<div class='post-instructions debian-post'>
+<p>Once that is complete, installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/' target="_blank">Python 3.4</a> installed and execute the following code in a console:</p>
 
-<p>Coming soon&#8230;</p>
-
-
-
-</div>
-
-</div>
-
-<br />
-<!-- ###### Post-installation END ######################## -->
-
-</div>
-
-<!-- ###### Docker START ######################## -->
-<div class='install-instructions docker'>
-<p>Installation with Docker is straightforward. Adjust the following command so that <code>/path/to/your/config/</code> points at the folder where you want to store your config and run it:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d --name<span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/your/config:/config -v /etc/localtime:/etc/localtime:ro --net<span class="o">=</span>host balloob/home-assistant
-</span></code></pre></td></tr></table></div></figure>
-
-<p>This will launch Home Assistant and serve its web interface from port 8123 on your Docker host.</p>
-
-<p class='note'>
-When using boot2docker on OS X you are unable to map the local time to your Docker container. Replace <code>-v /etc/localtime:/etc/localtime:ro</code> with <code>-e "TZ=America/Los_Angeles"</code> (replacing America/Los_Angeles with <a href='http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'>your timezone</a>)
-</p>
-
-</div>
-
-<!-- ###### Paspberry Pi START ######################## -->
-<div class='install-instructions raspberry'>
-
-<p>Home Assistant uses Python 3.4. This makes installation on a Raspberry Pi a bit more difficult as it is not available in the package repository. Please follow the following instructions to get it up and running.</p>
-
-<p><b>Step 1. Install pyenv</b></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer <span class="p">|</span> bash
-</span></code></pre></td></tr></table></div></figure>
-
-<p>After the installation is done, run:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>nano ~/.bashrc
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Then add these lines to the end of the file and save:</p>
+<p><p>
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;$HOME/.pyenv/bin:$PATH&quot;</span>
-</span><span class='line'><span class="nb">eval</span> <span class="s2">&quot;$(pyenv init -)&quot;</span>
-</span><span class='line'><span class="nb">eval</span> <span class="s2">&quot;$(pyenv virtualenv-init -)&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h5>Step 2. Install requirements</h5>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo apt-get install python3-dev
-</span><span class='line'>sudo apt-get install libsqlite3-dev libreadline-dev libbz2-dev
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Log out and then back in so your bashrc is reloaded.</p>
-
-<p class='note'>
-NOTE: the rest of the commands are not being run as sudo and will install python etc under you user&#8217;s home directory.
-</p>
-
-<p><b>Step 3. Install python 3.4.2 (this will take a few hours)</b></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>pyenv install 3.4.2
-</span></code></pre></td></tr></table></div></figure>
-
-<p><b>Step 4. Create Python Virtual Environment</b></p>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>pyenv virtualenv 3.4.2 homeassistant
-</span></code></pre></td></tr></table></div></figure>
-
-<p><b>Step 5. Set the virtual environment</b></p>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd </span>home-assistant
-</span><span class='line'>pyenv <span class="nb">local </span>homeassistant
-</span></code></pre></td></tr></table></div></figure>
-
-<p><b>Step 6. Install Home Assistant</b></p>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install homeassistant
+</span><span class='line'>hass <span class="se">--</span>open-ui
 </span></code></pre></td></tr></table></div></figure>
+</p>
+<p>Running these commands will:</p>
+<ol>
+<li>Install Home Assistant</li>
+<li>Launch Home Assistant and serve web interface on <a href='http://localhost:8123' target="_blank"><a href="http://localhost:8123">http://localhost:8123</a></a></li>
+</ol>
+</div> <!-- INSTALL-INSTRUCTIONS RASPBERRY --></p>
 
-<p><b>Step 7. Start it up</b></p>
+<p><h3>Troubleshooting</h3></p>
+
+<p><p>If you run into any issues, please see the <a href='/getting-started/troubleshooting.html'>troubleshooting page</a>. It contains solutions to many of the more commonly encountered issues.</p></p>
+
+<p><p>For additional help, in addition to this site, there are three sources:
+<ul>
+<li><a href="https://gitter.im/balloob/home-assistant" target="_blank">Gitter Chatroom</a> for general Home Assistant discussions and questions.</li>
+<li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev" target="_blank">Development Mailing List</a> for development related questions and discussing new features.</li>
+<li><a href="https://github.com/balloob/home-assistant" target="_blank">GitHub Page</a> for issue reporting.</li>
+</ul>
+</p></p>
+
+<p><h3>Staying Up to Date</h3>
+<p>In order to update Home Assistant to the latest stable release, simply type the following into a console:</p>
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>hass
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install <span class="se">--</span>upgrade homeassistant
 </span></code></pre></td></tr></table></div></figure>
+<p>If you would like to stay up to date with the newest unstable builds (alphas, betas, and release candidates), use this command:</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install <span class="se">--</span>upgrade <span class="se">--</span>pre homeassistant
+</span></code></pre></td></tr></table></div></figure></p>
 
-<p>It will be up and running on port 8123</p>
+<p><h3>What&rsquo;s Next</h3>
+<p>If you want to see what Home Assistant can do, you can start the demo mode by running <code>hass --demo-mode</code>. Home Assistant has a few other command line flags that can be displayed by running <code>hass --help</code>.</p>
+<p>From here you may now start configuring Home Assistant to your liking. For more advanced users, the <a href='/getting-started/advanced.html'>advanced configuration page</a> contains brief tutorials on creating more advanced installations.</p></p>
 
-<p>In the future, if you want to update to the latest version, run <code>pip3 install --upgrade home-assistant</code>.</p>
-
-</div>
-
-</div>
-
-
-<h3><a href="/getting-started/configuration.html">Next step: configuring Home Assistant &raquo;</a></h3>
+<h3><a href="/getting-started/configuration.html">Next step: Configuring Home Assistant &raquo;</a></h3>
 
 
 </article>

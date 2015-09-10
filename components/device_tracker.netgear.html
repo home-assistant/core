@@ -116,10 +116,19 @@ This platform allows you to detect presence by looking at connected devices to a
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">netgear</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">admin</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ROUTER_IP</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>host</strong> (<em>Required</em>): The IP address of your router, e.g. 192.168.1.1.</li>
+<li><strong>username</strong> (<em>Required</em>: The username of an user with administrative privileges, usually <em>admin</em>.</li>
+<li><strong>password</strong> (<em>Required</em>): The password for your given admin account.</li>
+</ul>
 
 
 <p>See the <a href="/components/device_tracker.html">device tracker component page</a> for instructions how to configure the people to be tracked.</p>

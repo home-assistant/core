@@ -122,22 +122,41 @@ The <a href="http://www.transmissionbt.com/">Transmission</a> platform allows yo
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Transmission</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.26</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9091</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Transmission</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;current_status&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;download_speed&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;upload_speed&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="s">&#39;current_status&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="s">&#39;download_speed&#39;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="s">&#39;upload_speed&#39;</span>
 </span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>host</strong> (<em>Required</em>): This is the IP address of your Transmission daemon, e.g. 192.168.1.32.</li>
+<li><strong>port</strong> (<em>Optional</em>): The port your Transmission daemon uses, defaults to 9091.</li>
+<li><strong>name</strong> (<em>Optional</em>): The name to use when displaying this Transmission instance.</li>
+<li><strong>username</strong> (<em>Optional</em>): Your Transmission username, if you use authentication.</li>
+<li><strong>password</strong> (<em>Optional</em>): Your Transmission password, if you use authentication.</li>
+<li><strong>display_variables</strong> array: Conditions to display in the frontend.
+
+<ul>
+<li><strong>current_status</strong>: The status of your Transmission daemon.</li>
+<li><strong>download_speed</strong>: The current download speed.</li>
+<li><strong>upload_speed</strong>: The current upload speed.</li>
+</ul>
+</li>
+</ul>
 
 
 <p>To use the monitoring, your transmission client needs to allow remote access. If you are running the graphical transmission client (transmission-gtk) go to <strong>Edit</strong> -> <strong>Perferences</strong> and choose the tab <strong>Remote</strong>. Check <strong>Allow remote access</strong>, enter your username and your password, and uncheck the network restriction as needed.</p>
 
 <p class='img'>
-  <img src='/images/screenshots/transmission-perf.png' />
+  <img src='/images/screenshots/transmission_perf.png' />
 </p>
 
 

@@ -115,14 +115,24 @@ The mpd platform allows you to control a <a href="http://www.musicpd.org/">Music
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
 </span><span class='line'>media_player:
 </span><span class='line'>  platform: mpd
-</span><span class='line'>  server: 127.0.0.1
+</span><span class='line'>  server: IP_ADDRESS
 </span><span class='line'>  port: 6600
-</span><span class='line'>  location: bedroom</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  location: bedroom
+</span><span class='line'>  password: PASSWORD</span></code></pre></td></tr></table></div></figure>
 
 
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>server</strong> <em>Required</em>: IP address of the Music Player Daemon. Example: 192.168.1.32</li>
+<li><strong>port</strong> <em>Optional</em>: Port of the Music Player Daemon, defaults to 6600. Example: 6600</li>
+<li><strong>location</strong> <em>Optional</em>: Location of your Music Player Daemon.</li>
+<li><strong>password</strong> <em>Optional</em>: Password for your Music Player Daemon.</li>
+</ul>
 
 
 

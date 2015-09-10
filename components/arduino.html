@@ -127,8 +127,12 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The port where is your board connected to your Home Assistant host. If you are using an original Arduino the port will be named <code>ttyACM*</code>. The exact
-number can be determined with <code>ls /dev/ttyACM*</code>.</p>
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>port</strong> (<em>Required</em>): The port where your board is connected to your Home Assistant host. If you are using an original Arduino the port will be named <code>ttyACM*</code>. The exact number can be determined with <code>ls /dev/ttyACM*</code>.</li>
+</ul>
+
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>ls /dev/ttyACM*
@@ -171,9 +175,20 @@ A word of caution: The Arduino boards are not storing states. This means that wi
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The digital pins are numbered from 0 to 13. The available pins are 2 till 13. For testing purposes you can use pin 13 because with that pin you can control the internal LED.</p>
+<p>Configuration variables:</p>
 
-<p>The name field of the pins array will be used in the frontend.</p>
+<ul>
+<li><strong>pins</strong> array (<em>Required</em>): Pins to use.
+
+<ul>
+<li><strong>name</strong>: Name that will be used in the frontend for the pin.</li>
+<li><strong>type</strong>: The type of the pin. At the moment only &lsquo;digital&rsquo; is supported.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>The digital pins are numbered from 0 to 13. The available pins are 2 till 13. For testing purposes you can use pin 13 because with that pin you can control the internal LED.</p>
 
 <h2>Sensor Configuration</h2>
 
@@ -204,9 +219,20 @@ A word of caution: The Arduino boards are not storing states. This means that wi
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The 6 analog pins are numbered from A0 to A5.</p>
+<p>Configuration variables:</p>
 
-<p>The name field of the pins array will be used in the frontend.</p>
+<ul>
+<li><strong>pins</strong> array (<em>Required</em>): Pins to use.
+
+<ul>
+<li><strong>name</strong>: Name that will be used in the frontend for the pin.</li>
+<li><strong>type</strong>: The type of the pin. At the moment only &lsquo;analog&rsquo; is supported.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>The 6 analog pins are numbered from A0 to A5.</p>
 
 
 </article>
