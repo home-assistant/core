@@ -93,12 +93,6 @@ class ArestSwitch(SwitchDevice):
     @property
     def is_on(self):
         """ True if device is on. """
-        request = get('{}/digital/{}'.format(self._resource, self._pin))
-        if request.json()['return_value'] == 0:
-            self._state = False
-        else:
-            self._state = True
-
         return self._state
 
     def turn_on(self, **kwargs):
@@ -114,3 +108,8 @@ class ArestSwitch(SwitchDevice):
         if request.status_code is not 200:
             _LOGGER.error("Can't turn off the pin. Is device offline?")
         self._state = False
+
+    def update(self):
+        """ Gets the latest data from aREST API and updates the state. """
+        request = get('{}/digital/{}'.format(self._resource, self._pin))
+        self._state = request.json()['return_value'] != 0
