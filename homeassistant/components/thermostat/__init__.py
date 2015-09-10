@@ -114,7 +114,7 @@ class ThermostatDevice(Entity):
     @property
     def state(self):
         """ Returns the current state. """
-        return self.operation
+        return self.target_temperature
 
     @property
     def device_state_attributes(self):
@@ -147,10 +147,7 @@ class ThermostatDevice(Entity):
             ATTR_TEMPERATURE_HIGH: round(convert(self.target_temperature_high,
                                                  thermostat_unit,
                                                  user_unit), 0),
-            ATTR_OPERATION: round(convert(self.operation,
-                                          thermostat_unit,
-                                          user_unit), 0)
-
+            ATTR_OPERATION: self.operation
         }
 
         is_away = self.is_away_mode_on
