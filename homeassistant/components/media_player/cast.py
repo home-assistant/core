@@ -1,10 +1,24 @@
 """
 homeassistant.components.media_player.chromecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with Cast devices on the network.
 
-WARNING: This platform is currently not working due to a changed Cast API
+WARNING: This platform is currently not working due to a changed Cast API.
+
+Configuration:
+
+To use the chromecast integration you will need to add something like the
+following to your configuration.yaml file.
+
+media_player:
+  platform: chromecast
+  host: 192.168.1.9
+
+Variables:
+
+host
+*Optional
+Use only if you don't want to scan for devices.
 """
 import logging
 

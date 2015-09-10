@@ -78,6 +78,10 @@ def get_arguments():
         action='store_true',
         help='Open the webinterface in a browser')
     parser.add_argument(
+        '--skip-pip',
+        action='store_true',
+        help='Skips pip install of required packages on startup')
+    parser.add_argument(
         '-v', '--verbose',
         action='store_true',
         help="Enable verbose logging to file.")
@@ -86,6 +90,11 @@ def get_arguments():
         metavar='path_to_pid_file',
         default=None,
         help='Path to PID file useful for running as daemon')
+    parser.add_argument(
+        '--log-rotate-days',
+        type=int,
+        default=None,
+        help='Enables daily log rotation and keeps up to the specified days')
     if os.name != "nt":
         parser.add_argument(
             '--daemon',
@@ -161,15 +170,20 @@ def main():
         write_pid(args.pid_file)
 
     if args.demo_mode:
-        hass = bootstrap.from_config_dict({
+        config = {
             'frontend': {},
             'demo': {}
-        }, config_dir=config_dir, daemon=args.daemon, verbose=args.verbose)
+        }
+        hass = bootstrap.from_config_dict(
+            config, config_dir=config_dir, daemon=args.daemon,
+            verbose=args.verbose, skip_pip=args.skip_pip,
+            log_rotate_days=args.log_rotate_days)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
-            config_file, daemon=args.daemon, verbose=args.verbose)
+            config_file, daemon=args.daemon, verbose=args.verbose,
+            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
 
     if args.open_ui:
         def open_browser(event):

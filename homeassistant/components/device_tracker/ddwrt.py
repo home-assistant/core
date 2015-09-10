@@ -1,14 +1,13 @@
 """
 homeassistant.components.device_tracker.ddwrt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Device tracker platform that supports scanning a DD-WRT router for device
 presence.
 
 Configuration:
 
 To use the DD-WRT tracker you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 device_tracker:
   platform: ddwrt
@@ -64,7 +63,8 @@ def get_scanner(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class DdWrtDeviceScanner(object):
-    """ This class queries a wireless router running DD-WRT firmware
+    """
+    This class queries a wireless router running DD-WRT firmware
     for connected devices. Adapted from Tomato scanner.
     """
 
@@ -85,8 +85,9 @@ class DdWrtDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
 
         self._update_info()
 
@@ -124,8 +125,10 @@ class DdWrtDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the DD-WRT router is up to date.
-            Returns boolean if scanning successful. """
+        """
+        Ensures the information from the DD-WRT router is up to date.
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
@@ -163,7 +166,7 @@ class DdWrtDeviceScanner(object):
             return False
 
     def get_ddwrt_data(self, url):
-        """ Retrieve data from DD-WRT and return parsed result.  """
+        """ Retrieve data from DD-WRT and return parsed result. """
         try:
             response = requests.get(
                 url,
