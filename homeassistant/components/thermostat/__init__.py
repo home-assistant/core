@@ -27,6 +27,9 @@ ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
+ATTR_TEMPERATURE_LOW = "target_temp_low"
+ATTR_TEMPERATURE_HIGH = "target_temp_high"
+ATTR_OPERATION = "current_operation"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +114,7 @@ class ThermostatDevice(Entity):
     @property
     def state(self):
         """ Returns the current state. """
-        return self.target_temperature
+        return self.operation
 
     @property
     def device_state_attributes(self):
@@ -134,7 +137,20 @@ class ThermostatDevice(Entity):
                                          user_unit), 0),
             ATTR_MAX_TEMP: round(convert(self.max_temp,
                                          thermostat_unit,
-                                         user_unit), 0)
+                                         user_unit), 0),
+            ATTR_TEMPERATURE: round(convert(self.target_temperature,
+                                            thermostat_unit,
+                                            user_unit), 0),
+            ATTR_TEMPERATURE_LOW: round(convert(self.target_temperature_low,
+                                                thermostat_unit,
+                                                user_unit), 0),
+            ATTR_TEMPERATURE_HIGH: round(convert(self.target_temperature_high,
+                                                 thermostat_unit,
+                                                 user_unit), 0),
+            ATTR_OPERATION: round(convert(self.operation,
+                                          thermostat_unit,
+                                          user_unit), 0)
+
         }
 
         is_away = self.is_away_mode_on
@@ -160,9 +176,24 @@ class ThermostatDevice(Entity):
         raise NotImplementedError
 
     @property
+    def operation(self):
+        """ Returns current operation ie. heat, cool, idle """
+        return NotImplementedError
+
+    @property
     def target_temperature(self):
         """ Returns the temperature we try to reach. """
         raise NotImplementedError
+
+    @property
+    def target_temperature_low(self):
+        """ Returns the lower bound temperature we try to reach. """
+        return self.target_temperature
+
+    @property
+    def target_temperature_high(self):
+        """ Returns the upper bound temperature we try to reach. """
+        return self.target_temperature
 
     @property
     def is_away_mode_on(self):
