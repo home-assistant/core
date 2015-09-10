@@ -1,7 +1,6 @@
 """
 homeassistant.components.sensor.bitcoin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Bitcoin information service that uses blockchain.info and its online wallet.
 
 Configuration:
@@ -12,7 +11,7 @@ check 'Enable Api Access'. You will get an email message from blockchain.info
 where you must authorize the API access.
 
 To use the Bitcoin sensor you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 sensor:
   platform: bitcoin
