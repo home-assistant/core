@@ -71,7 +71,7 @@ def ensure_unique_string(preferred_string, current_strings):
     """ Returns a string that is not present in current_strings.
         If preferred string exists will append _2, _3, .. """
     test_string = preferred_string
-    current_strings = list(current_strings)
+    current_strings = set(current_strings)
 
     tries = 1
 
