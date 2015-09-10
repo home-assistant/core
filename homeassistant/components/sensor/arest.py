@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get('resource', None)
 
     try:
-        response = get(resource)
+        response = get(resource, timeout=10)
     except exceptions.MissingSchema:
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// to your URL.")
@@ -141,7 +141,7 @@ class ArestData(object):
     def update(self):
         """ Gets the latest data from aREST device. """
         try:
-            response = get(self.resource)
+            response = get(self.resource, timeout=10)
             if 'error' in self.data:
                 del self.data['error']
             self.data = response.json()['variables']
