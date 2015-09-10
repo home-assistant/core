@@ -1,9 +1,7 @@
 """
 homeassistant.components.sensor.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Demo platform that has two fake sensors.
-
+Demo platform that has a couple of fake sensors.
 """
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELCIUS, ATTR_BATTERY_LEVEL

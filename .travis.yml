@@ -6,7 +6,7 @@ install:
   - pip install -r requirements_all.txt
   - pip install flake8 pylint coveralls
 script:
-  - flake8 homeassistant --exclude bower_components,external
+  - flake8 homeassistant
   - pylint homeassistant
   - coverage run -m unittest discover tests
 after_success:

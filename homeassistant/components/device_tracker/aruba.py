@@ -9,8 +9,8 @@ This device tracker needs telnet to be enabled on the router.
 Configuration:
 
 To use the Aruba tracker you will need to add something like the following
-to your config/configuration.yaml. You also need to enable Telnet in the
-configuration pages.
+to your configuration.yaml file. You also need to enable Telnet in the
+configuration page of your router.
 
 device_tracker:
   platform: aruba
@@ -51,15 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 _DEVICES_REGEX = re.compile(
     r'(?P<name>([^\s]+))\s+' +
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s+' +
-    r'(?P<os>([^\s]+))\s+' +
-    r'(?P<network>([^\s]+))\s+' +
-    r'(?P<ap>([^\s]+))\s+' +
-    r'(?P<channel>([^\s]+))\s+' +
-    r'(?P<type>([^\s]+))\s+' +
-    r'(?P<role>([^\s]+))\s+' +
-    r'(?P<signal>([^\s]+))\s+' +
-    r'(?P<speed>([^\s]+))')
+    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s+')
 
 
 # pylint: disable=unused-argument
@@ -91,8 +83,9 @@ class ArubaDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a list containing found device
-            ids. """
+        """
+        Scans for new devices and return a list containing found device IDs.
+        """
 
         self._update_info()
         return [client['mac'] for client in self.last_results]
@@ -108,8 +101,10 @@ class ArubaDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the Aruba Access Point is up to date.
-            Returns boolean if scanning successful. """
+        """
+        Ensures the information from the Aruba Access Point is up to date.
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
@@ -122,8 +117,7 @@ class ArubaDeviceScanner(object):
             return True
 
     def get_aruba_data(self):
-        """ Retrieve data from Aruba Access Point and return parsed
-            result.  """
+        """ Retrieve data from Aruba Access Point and return parsed result. """
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'User: ')
