@@ -1,13 +1,12 @@
 """
 homeassistant.components.media_player.mpd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with a Music Player Daemon.
 
 Configuration:
 
 To use MPD you will need to add something like the following to your
-config/configuration.yaml
+configuration.yaml file.
 
 media_player:
   platform: mpd

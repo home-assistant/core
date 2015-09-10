@@ -1,12 +1,12 @@
 """
 homeassistant.components.switch.modbus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Support for Modbus switches.
 
 Configuration:
+
 To use the Modbus switches you will need to add something like the following to
-your config/configuration.yaml
+your configuration.yaml file.
 
 sensor:
     platform: modbus
@@ -42,7 +42,7 @@ DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Read config and create Modbus devices """
+    """ Read configuration and create Modbus devices. """
     switches = []
     slave = config.get("slave", None)
     if modbus.TYPE == "serial" and not slave:
@@ -87,8 +87,10 @@ class ModbusSwitch(ToggleEntity):
 
     @property
     def should_poll(self):
-        """ We should poll, because slaves are not allowed to
-            initiate communication on Modbus networks"""
+        """
+        We should poll, because slaves are not allowed to initiate
+        communication on Modbus networks.
+        """
         return True
 
     @property

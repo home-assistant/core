@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 homeassistant.components.switch.command_switch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Allows to configure custom shell commands to turn a switch on/off.
 """
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class CommandSwitch(SwitchDevice):
-    """ Represents a switch that can be togggled using shell commands """
+    """ Represents a switch that can be togggled using shell commands. """
     def __init__(self, name, command_on, command_off):
         self._name = name
         self._state = False
@@ -39,7 +39,7 @@ class CommandSwitch(SwitchDevice):
 
     @staticmethod
     def _switch(command):
-        """ Execute the actual commands """
+        """ Execute the actual commands. """
         _LOGGER.info('Running command: %s', command)
 
         success = (subprocess.call(command, shell=True) == 0)
@@ -51,12 +51,12 @@ class CommandSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed """
+        """ No polling needed. """
         return False
 
     @property
     def name(self):
-        """ The name of the switch """
+        """ The name of the switch. """
         return self._name
 
     @property
