@@ -53,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         for location in [config.get('from', None), config.get('to', None)]:
             # transport.opendata.ch doesn't play nice with requests.Session
-            result = get(_RESOURCE + 'locations?query=%s' % location)
+            result = get(_RESOURCE + 'locations?query=%s' % location,
+                         timeout=10)
             journey.append(result.json()['stations'][0]['name'])
     except KeyError:
         _LOGGER.exception(
@@ -115,8 +116,8 @@ class PublicTransportData(object):
             'from=' + self.start + '&' +
             'to=' + self.destination + '&' +
             'fields[]=connections/from/departureTimestamp/&' +
-            'fields[]=connections/')
-
+            'fields[]=connections/',
+            timeout=10)
         connections = response.json()['connections'][:2]
 
         try:
