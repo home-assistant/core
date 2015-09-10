@@ -123,14 +123,14 @@ class NestThermostat(ThermostatDevice):
     def target_temperature_low(self):
         """ Returns the lower bound temperature we try to reach. """
         if self.device.mode == 'range':
-            return self.device.target["low"]
+            return round(self.device.target[0], 1)
         return round(self.target_temperature, 1)
 
     @property
     def target_temperature_high(self):
         """ Returns the upper bound temperature we try to reach. """
         if self.device.mode == 'range':
-            return self.device.target["high"]
+            return round(self.device.target[1], 1)
         return round(self.target_temperature, 1)
 
     @property
