@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get('resource', None)
 
     try:
-        response = get(resource)
+        response = get(resource, timeout=10)
     except exceptions.MissingSchema:
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// to your URL.")
@@ -81,7 +81,8 @@ class ArestSwitch(SwitchDevice):
         self._pin = pin
         self._state = None
 
-        request = get('{}/mode/{}/o'.format(self._resource, self._pin))
+        request = get('{}/mode/{}/o'.format(self._resource, self._pin),
+                      timeout=10)
         if request.status_code is not 200:
             _LOGGER.error("Can't set mode. Is device offline?")
 
@@ -97,19 +98,26 @@ class ArestSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        request = get('{}/digital/{}/1'.format(self._resource, self._pin))
-        if request.status_code is not 200:
-            _LOGGER.error("Can't turn on the pin. Is device offline?")
-        self._state = True
+        request = get('{}/digital/{}/1'.format(self._resource, self._pin),
+                      timeout=10)
+        if request.status_code == 200:
+            self._state = True
+        else:
+            _LOGGER.error("Can't turn on pin %s at %s. Is device offline?",
+                          self._resource, self._pin)
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        request = get('{}/digital/{}/0'.format(self._resource, self._pin))
-        if request.status_code is not 200:
-            _LOGGER.error("Can't turn off the pin. Is device offline?")
-        self._state = False
+        request = get('{}/digital/{}/0'.format(self._resource, self._pin),
+                      timeout=10)
+        if request.status_code == 200:
+            self._state = False
+        else:
+            _LOGGER.error("Can't turn on pin %s at %s. Is device offline?",
+                          self._resource, self._pin)
 
     def update(self):
         """ Gets the latest data from aREST API and updates the state. """
-        request = get('{}/digital/{}'.format(self._resource, self._pin))
+        request = get('{}/digital/{}'.format(self._resource, self._pin),
+                      timeout=10)
         self._state = request.json()['return_value'] != 0
