@@ -15,7 +15,7 @@ media_player:
 import logging
 import datetime
 
-REQUIREMENTS = ['SoCo>=0.11.1']
+REQUIREMENTS = ['SoCo==0.11.1']
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
@@ -44,17 +44,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
 class SonosDevice(MediaPlayerDevice):
-    """ Represents a SqueezeBox device. """
+    """ Represents a Sonos device. """
 
     # pylint: disable=too-many-arguments
     def __init__(self, player):
         super(SonosDevice, self).__init__()
         self._player = player
-        self._name = player.get_speaker_info()['zone_name'].replace(
-            ' (R)', '').replace(' (L)', '')
-        self._status = player.get_current_transport_info().get(
-            'current_transport_state')
-        self._trackinfo = player.get_current_track_info()
+        self.update()
+
+    @property
+    def should_poll(self):
+        return True
 
     @property
     def name(self):
@@ -74,8 +74,11 @@ class SonosDevice(MediaPlayerDevice):
 
     def update(self):
         """ Retrieve latest state. """
+        self._name = self._player.get_speaker_info()['zone_name'].replace(
+            ' (R)', '').replace(' (L)', '')
         self._status = self._player.get_current_transport_info().get(
             'current_transport_state')
+        self._trackinfo = self._player.get_current_track_info()
 
     @property
     def volume_level(self):
@@ -129,7 +132,6 @@ class SonosDevice(MediaPlayerDevice):
     def turn_off(self):
         """ turn_off media player. """
         self._player.pause()
-        self.update_ha_state()
 
     def volume_up(self):
         """ volume_up media player. """
@@ -149,14 +151,6 @@ class SonosDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """ mute (true) or unmute (false) media player. """
         self._player.mute = mute
-        self.update_ha_state()
-
-    def media_play_pause(self):
-        """ media_play_pause media player. """
-        if self.state == STATE_PAUSED:
-            self._player.play()
-        else:
-            self._player.pause()
         self.update_ha_state()
 
     def media_play(self):
@@ -188,7 +182,3 @@ class SonosDevice(MediaPlayerDevice):
         """ turn the media player on. """
         self._player.play()
         self.update_ha_state()
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()
