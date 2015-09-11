@@ -66,6 +66,7 @@ class TimeDateSensor(Entity):
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
         self._state = None
+        self._unit_of_measurement = None
         self.update()
 
     @property
@@ -77,6 +78,11 @@ class TimeDateSensor(Entity):
     def state(self):
         """ Returns the state of the device. """
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit the value is expressed in. """
+        return self._unit_of_measurement
 
     def update(self):
         """ Gets the latest data and updates the states. """
@@ -93,13 +99,19 @@ class TimeDateSensor(Entity):
 
         if self.type == 'time':
             self._state = time
+            self._unit_of_measurement = ' '
         elif self.type == 'date':
             self._state = date
+            self._unit_of_measurement = ' '
         elif self.type == 'date_time':
-            self._state = date + ', ' + time
+            self._state = date
+            self._unit_of_measurement = time
         elif self.type == 'time_date':
-            self._state = time + ', ' + date
+            self._state = time
+            self._unit_of_measurement = date
         elif self.type == 'time_utc':
             self._state = time_utc
+            self._unit_of_measurement = ' '
         elif self.type == 'beat':
             self._state = '{0:.2f}'.format(beat)
+            self._unit_of_measurement = ' '
