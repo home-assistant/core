@@ -52,7 +52,8 @@ class SonosDevice(MediaPlayerDevice):
         self._player = player
         self._name = player.get_speaker_info()['zone_name'].replace(
             ' (R)', '').replace(' (L)', '')
-        self._status = player.get_current_transport_info()['current_transport_state']
+        self._status = player.get_current_transport_info().get(
+            'current_transport_state')
         self._trackinfo = player.get_current_track_info()
 
     @property
@@ -73,7 +74,8 @@ class SonosDevice(MediaPlayerDevice):
 
     def update(self):
         """ Retrieve latest state. """
-        self._status = self._player.get_current_transport_info()['current_transport_state']
+        self._status = self._player.get_current_transport_info().get(
+            'current_transport_state')
 
     @property
     def volume_level(self):
