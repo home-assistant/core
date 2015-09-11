@@ -36,13 +36,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
 
     import soco
-    players = []
-    for player in soco.discover():
-        device = SonosDevice(player)
-        players.append(device)
+    add_devices(SonosDevice(p) for p in soco.discover())
 
-    if players:
-        return True
+    return True
 
 
 # pylint: disable=too-many-instance-attributes
