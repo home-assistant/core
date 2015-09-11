@@ -182,3 +182,7 @@ class SonosDevice(MediaPlayerDevice):
         """ turn the media player on. """
         self._player.play()
         self.update_ha_state()
+
+    def play_youtube(self, media_id):
+        """ Plays a YouTube media. """
+        raise NotImplementedError()
