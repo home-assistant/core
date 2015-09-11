@@ -44,6 +44,7 @@ ATTR_DEPARTURE_TIME1 = 'Next departure'
 ATTR_DEPARTURE_TIME2 = 'Next on departure'
 ATTR_START = 'Start'
 ATTR_TARGET = 'Destination'
+ATTR_REMAINING_TIME = 'Remaining time'
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -91,12 +92,6 @@ class SwissPublicTransportSensor(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
-        """Not the unit but the remaining time till the next departure. """
-        if self._times is not None:
-            return '{}'.format(':'.join(str(self._times[2]).split(':')[:2]))
-
-    @property
     def state(self):
         """ Returns the state of the device. """
         return self._state
@@ -109,7 +104,9 @@ class SwissPublicTransportSensor(Entity):
                 ATTR_DEPARTURE_TIME1: self._times[0],
                 ATTR_DEPARTURE_TIME2: self._times[1],
                 ATTR_START: self._from,
-                ATTR_TARGET: self._to
+                ATTR_TARGET: self._to,
+                ATTR_REMAINING_TIME: '{}'.format(
+                    ':'.join(str(self._times[2]).split(':')[:2]))
             }
 
     # pylint: disable=too-many-branches
