@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-10T12:38:32-07:00</updated>
+  <updated>2015-09-11T09:24:25-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,317 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Using MQTT with Home Assistant]]></title>
+    <link href="https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant/"/>
+    <updated>2015-09-11T02:19:38-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant</id>
+    <content type="html"><![CDATA[<p><img src='https://home-assistant.io/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='80' />
+The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt.html">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn&rsquo;t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn&rsquo;t matter if the data is coming from a human, a web service, or a device.</p>
+
+<p>A great example is shown in a <a href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/">Laundry Automation</a> post in this blog.</p>
+
+<p>This post will give you a small overview of some other possibilities on how to use MQTT with Home Assistant.</p>
+
+<!--more-->
+
+
+<h3><a class='title-link' name='manual-usage' href='#manual-usage'></a> Manual usage</h3>
+
+<p>The simplest but not the coolest way as a human to interact with a Home Assistant sensor is launching a command manually. Let&rsquo;s create a &ldquo;Mood&rdquo; sensor. For simplicity Home Assistant and the MQTT broker are both running on the same host. The needed configuration snipplets to add to the <code>configuration.yaml</code> file consists of two parts: one for the broker and one for the sensor.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">127.0.0.1</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Fabian&#39;s</span><span class="nv"> </span><span class="s">Mood&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/fabian/mood&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;</span><span class="nv"> </span><span class="s">&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After a restart of Home Assistant the &ldquo;Mood&rdquo; sensor will show up in the frontend. For more details about the configuration of MQTT itself and the sensor, please refer to the <a href="https://home-assistant.io/components/mqtt.html">MQTT component</a> or the <a href="https://home-assistant.io/components/sensor.mqtt.html">MQTT sensor</a> documentation.</p>
+
+<p>Now we can set the mood. The commandline tool (<code>mosquitto_pub</code>) which is shipped with <code>mosquitto</code> is used to send an MQTT message.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mosquitto_pub  -h 127.0.0.1 -t <span class="s2">&quot;home-assistant/fabian/mood&quot;</span> -m <span class="s2">&quot;bad&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/mood.png' />
+  The Mood sensor
+</p>
+
+
+<h3><a class='title-link' name='python-mqtt-bindings' href='#python-mqtt-bindings'></a> Python MQTT bindings</h3>
+
+<p>The last section was pretty boring, I know. Nobody wants to send MQTT messages by hand if there is a computer on the desk. If you are playing the lottery this section is for you. If not, read it anyway because the lottery is just an example :-).</p>
+
+<p>This example is using the <a href="https://eclipse.org/paho/clients/python/">Paho MQTT Python binding</a> because those binding should be available on the host where Home Assistant is running. If you want to use this example on another machine, please make sure that the bindings are installed (<code>pip3 install paho-mqtt</code>).</p>
+
+<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called &ldquo;Lottery&rdquo;.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Lottery&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/lottery/number&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;</span><span class="nv"> </span><span class="s">&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Don&rsquo;t forget to restart Home Assistant to make the configuration active.</p>
+
+<p>To play, we need numbers from 1 to 49 which can be marked on the ticket. Those numbers should be random and displayed in the Home Assistant frontend. The Python script below is another simple example on how to send MQTT messages from the commandline; this time in a loop. For further information and examples please check the <a href="https://eclipse.org/paho/clients/python/docs/">Paho MQTT</a> documentation.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python3</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">time</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">paho.mqtt.client</span> <span class="kn">as</span> <span class="nn">mqtt</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">paho.mqtt.publish</span> <span class="kn">as</span> <span class="nn">publish</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">broker</span> <span class="o">=</span> <span class="s">&#39;127.0.0.1&#39;</span>
+</span><span class='line'><span class="n">state_topic</span> <span class="o">=</span> <span class="s">&#39;home-assistant/lottery/number&#39;</span>
+</span><span class='line'><span class="n">delay</span> <span class="o">=</span> <span class="mi">5</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Send a single message to set the mood</span>
+</span><span class='line'><span class="n">publish</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="s">&#39;home-assistant/fabian/mood&#39;</span><span class="p">,</span> <span class="s">&#39;good&#39;</span><span class="p">,</span> <span class="n">hostname</span><span class="o">=</span><span class="n">broker</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Send messages in a loop</span>
+</span><span class='line'><span class="n">client</span> <span class="o">=</span> <span class="n">mqtt</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="s">&quot;ha-client&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">broker</span><span class="p">)</span>
+</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">loop_start</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">state_topic</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class='line'>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Every 5 seconds a message with a new number is sent to the broker and picked up by Home Assistant. By the way, my mood is much better now.</p>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/lottery.png' />
+  The Lottery sensor
+</p>
+
+
+<p>With only a few lines of Python and an MQTT broker you can create your own &ldquo;smartdevice&rdquo; or send information to Home Assistant which you haven&rsquo;t think of. Of course this is not limited to Python. If there is an MQTT library available, the device can be used with Home Assistant now.</p>
+
+<h3><a class='title-link' name='arduino' href='#arduino'></a> Arduino</h3>
+
+<p>To get started with real hardware that is capable to send MQTT messages, the Arduino platform is an inexpensive way to do it. In this section an Arduino UNO with an Ethernet shield and a photo resistor is used. The photo resistor is connected to analog pin 0 (A0) and has an output from 0 to 1024.</p>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/arduino-shield.png' />
+  The Arduino UNO with Ethernet shield and photo resistor
+</p>
+
+
+<p>The <a href="http://knolleary.github.io/pubsubclient/">MQTT client</a> for the Arduino needs to be available in your Arduino IDE. Below you will find a sketch which could act as a starting point. Please modify the IP addresses, the MAC address, and the pin as needed and upload the sketch to your Arduino.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/*</span>
+</span><span class='line'><span class="cm">  This sketch is based on the basic MQTT example by</span>
+</span><span class='line'><span class="cm">  http://knolleary.github.io/pubsubclient/</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#include &lt;SPI.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;Ethernet.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;PubSubClient.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define DEBUG 1 </span><span class="c1">// Debug output to serial console</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Device settings</span>
+</span><span class='line'><span class="n">IPAddress</span> <span class="nf">deviceIp</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">43</span><span class="p">);</span>
+</span><span class='line'><span class="n">byte</span> <span class="n">deviceMac</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mh">0xAB</span><span class="p">,</span> <span class="mh">0xCD</span><span class="p">,</span> <span class="mh">0xFE</span><span class="p">,</span> <span class="mh">0xFE</span><span class="p">,</span> <span class="mh">0xFE</span><span class="p">,</span> <span class="mh">0xFE</span> <span class="p">};</span>
+</span><span class='line'><span class="kt">char</span><span class="o">*</span> <span class="n">deviceId</span>  <span class="o">=</span> <span class="s">&quot;sensor01&quot;</span><span class="p">;</span> <span class="c1">// Name of the sensor</span>
+</span><span class='line'><span class="kt">char</span><span class="o">*</span> <span class="n">stateTopic</span> <span class="o">=</span> <span class="s">&quot;home-assistant/sensor01/brightness&quot;</span><span class="p">;</span> <span class="c1">// MQTT topic where values are published</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">sensorPin</span> <span class="o">=</span> <span class="n">A0</span><span class="p">;</span> <span class="c1">// Pin to which the sensor is connected to</span>
+</span><span class='line'><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// Buffer to store the sensor value</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">updateInterval</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span> <span class="c1">// Interval in miliseconds</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// MQTT server settings</span>
+</span><span class='line'><span class="n">IPAddress</span> <span class="nf">mqttServer</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">mqttPort</span> <span class="o">=</span> <span class="mi">1883</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">EthernetClient</span> <span class="n">ethClient</span><span class="p">;</span>
+</span><span class='line'><span class="n">PubSubClient</span> <span class="nf">client</span><span class="p">(</span><span class="n">ethClient</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">reconnect</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">client</span><span class="p">.</span><span class="n">connected</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'><span class="cp">#if DEBUG</span>
+</span><span class='line'>    <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Attempting MQTT connection...&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">client</span><span class="p">.</span><span class="n">connect</span><span class="p">(</span><span class="n">deviceId</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'><span class="cp">#if DEBUG</span>
+</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;connected&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'><span class="cp">#if DEBUG</span>
+</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;failed, rc=&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">client</span><span class="p">.</span><span class="n">state</span><span class="p">());</span>
+</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot; try again in 5 seconds&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>      <span class="n">delay</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">setup</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="mi">57600</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">setServer</span><span class="p">(</span><span class="n">mqttServer</span><span class="p">,</span> <span class="n">mqttPort</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">Ethernet</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="n">deviceMac</span><span class="p">,</span> <span class="n">deviceIp</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">delay</span><span class="p">(</span><span class="mi">1500</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">loop</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">client</span><span class="p">.</span><span class="n">connected</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">reconnect</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">loop</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kt">int</span> <span class="n">sensorValue</span> <span class="o">=</span> <span class="n">analogRead</span><span class="p">(</span><span class="n">sensorPin</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#if DEBUG</span>
+</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Sensor value: &quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="n">sensorValue</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">publish</span><span class="p">(</span><span class="n">stateTopic</span><span class="p">,</span> <span class="n">itoa</span><span class="p">(</span><span class="n">sensorValue</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">10</span><span class="p">));</span>
+</span><span class='line'>  <span class="n">delay</span><span class="p">(</span><span class="n">updateInterval</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The Arduino will send the value of the sensor every second. To use the data in Home Assistant, add an additional MQTT sensor to the <code>configuration.yaml</code> file.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Brightness&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/sensor01/brightness&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;</span><span class="nv"> </span><span class="s">&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After a restart of Home Assistant the values of your Arduino will be available.</p>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/arduino.png' />
+  The Brightness sensor
+</p>
+
+
+<p>I hope that this post could give you some ideas about the usage Home Assistant and MQTT. If you are working on a cool project that includes Home Assistant, please let us now.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[0.7: Better UI and improved distribution]]></title>
@@ -1888,77 +2199,6 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 </span><span class='line'>    <span class="n">notify</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&quot;Hello from my component!&quot;</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Home Control, Automation &amp; the Smart Home]]></title>
-    <link href="https://home-assistant.io/blog/2014/12/26/home-control-home-automation-and-the-smart-home/"/>
-    <updated>2014-12-26T10:23:13-08:00</updated>
-    <id>https://home-assistant.io/blog/2014/12/26/home-control-home-automation-and-the-smart-home</id>
-    <content type="html"><![CDATA[<p>The internet has been buzzing over the last year about home automation. A lot of different terms fly around like the internet of things, home automation and the smart home.
-This article will try to explain how they all relate.</p>
-
-<p>The first thing to introduce is the <strong>Internet of Things</strong> (IoT). This refers to a new generation of devices that cannot only be controlled by humans via buttons or remotes but also provide an interface to communicate with other devices and applications. For example, an IoT-capable coffee machine could receive commands to create different types of coffee and be able to broadcast the amount of water left in its resevoir.</p>
-
-<p>There is no widely adopted open standard for smart device communication. This prevents a lot of devices to communicate with one another. And even if they could, most devices are not designed to manage other devices. To solve this we need a device to be able to communicate with and manage all these connected devices. This device is called a <strong>hub</strong>.</p>
-
-<p>As a bare minimum a hub has to keep track of the state of each device and should be able to control them if possible. For example, it has to know which lights are on or off and offer a way to control the lights. For a sensor it only has to know the value. A hub with these capabilities offers <strong>home control</strong>.</p>
-
-<p class='img'>
-  <a href='https://home-assistant.io/images/screenshots/nexus_7_dashboard.png'>
-    <img alt='Hub dashboard example'
-         src='https://home-assistant.io/images/screenshots/nexus_7_dashboard.png' />
-  </a>
-  Example of a hub&#8217;s dashboard. Showing the state of 2 persons, 4 lights and the sun.
-</p>
-
-
-<!--more-->
-
-
-<p>A step up from home control is to have the user setup triggers to send commands based on information in the home control layer. For example, to turn on the lights when a person arrives home. A hub with these capabilities is capable of <strong>home automation</strong>.</p>
-
-<p>Most hubs on the market today offer this in various degrees of functionality and usability. Some IoT-capable devices offer this too, but only control themselves and are usually limited to location and time-based events.</p>
-
-<p>The last category, and this is still very much in the future, is the <strong>smart home</strong>. A self-learning and adopting system that will decide which events should impact other devices.</p>
-
-<p>An example of a smart home in action is that it observes that when person A comes home, the lights in the living room and the kitchen switch on. While if person B comes home, the lights in the living room and the study room are switched on. The next time person A or B comes home, the smart home will turn on its preferred lights without any configuration being set by the user.</p>
-
-<p>A glimpse today at how the future can look is the <a href="https://nest.com/">Nest thermostat</a>. A thermostat smart enough to learn your schedule and adjust its own temperature accordingly.</p>
-
-<p>All this results in the following overview of Home Automation.</p>
-
-<p class='img'>
-  <a href='https://home-assistant.io/images/architecture/home_automation_landscape.png'>
-    <img alt='Home Automation landscape'
-         src='https://home-assistant.io/images/architecture/home_automation_landscape.png' />
-  </a>
-  Overview of the home automation landscape.
-</p>
-
-
-<h3>Challenges</h3>
-
-<p>You are probably wondering, this all seems relatively simple, why don&rsquo;t I have my very own smart home yet? There are a couple of challenges today that keep us from stepping into the future.</p>
-
-<h4>More Internet of Things-capable devices</h4>
-
-<p>The majority of the IoT products out there are either lights, switches or presence detection. That&rsquo;s not enough for your home to be very smart about. We need televisions, fridges, ovens and more to join the party to increase the number of devices that we can control.</p>
-
-<h4>More data</h4>
-
-<p>Most first generation IoT devices are only exposing information that is needed for controlling it. We need to be able to track all interactions with each device for our smart home to learn how interaction with devices influence other things. For example, we need to be able to track how many cups of coffee were made or how often the fridge was open. This will increase the information flow and open up a whole bunch of new possibilities. For example, the smart home can order new coffee when you&rsquo;re running low.</p>
-
-<h4>Easy to use, open software that we can trust</h4>
-
-<p>To increase adoption we will need people to trust their smart home system. It will be very tough to convince people to upgrade all their devices and upload all interactions with each of them to the cloud. This data could reveal their whole life including all bad habits. That&rsquo;s why such a system should be simple and open-source so people can validate that their data generated at home stays home.</p>
-
-<p>Anoter important booster for adoption is that the software should be easy to set up and use by the average user. A lot of people are not burning their hands yet on Home Automation because they are scared of configurating it.</p>
-
-<p>Home Assistant is trying to be this software. It is not there yet but trying hard. Device discovery and a user interface for configuring home automation are problems we hope to tackle in 2015 while not sacrificing any modularity or usability.</p>
-
-<p>Happy new year!</p>
 ]]></content>
   </entry>
   
