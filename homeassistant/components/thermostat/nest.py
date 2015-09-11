@@ -112,7 +112,7 @@ class NestThermostat(ThermostatDevice):
                 range_average = (low + high)/2
                 if self.current_temperature < range_average:
                     temp = low
-                elif self.current_temperature > range_average:
+                elif self.current_temperature >= range_average:
                     temp = high
         else:
             temp = target
