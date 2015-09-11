@@ -43,6 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
+# pylint: disable=abstract-method
 class SonosDevice(MediaPlayerDevice):
     """ Represents a Sonos device. """
 
@@ -182,7 +183,3 @@ class SonosDevice(MediaPlayerDevice):
         """ turn the media player on. """
         self._player.play()
         self.update_ha_state()
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()
