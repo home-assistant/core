@@ -76,7 +76,7 @@ class ArestSwitch(SwitchDevice):
 
     def __init__(self, resource, location, name, pin):
         self._resource = resource
-        self._name = '{} {}'.format(location.title(), name.title())\
+        self._name = '{} {}'.format(location.title(), name.title()) \
                      or DEVICE_DEFAULT_NAME
         self._pin = pin
         self._state = None
@@ -113,7 +113,7 @@ class ArestSwitch(SwitchDevice):
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error("Can't turn on pin %s at %s. Is device offline?",
+            _LOGGER.error("Can't turn off pin %s at %s. Is device offline?",
                           self._resource, self._pin)
 
     def update(self):
