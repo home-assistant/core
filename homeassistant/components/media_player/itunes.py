@@ -54,56 +54,68 @@ class Itunes(object):
 
     @property
     def _base_url(self):
+        """ Returns the base url for endpoints. """
         return self.host + ":" + str(self.port)
 
     def _request(self, method, path, params=None):
+        """ Makes the actual request and returns the parsed response. """
         url = self._base_url + path
 
         try:
             if method == 'GET':
-                r = requests.get(url)
+                response = requests.get(url)
             elif method == "POST":
-                r = requests.put(url, params)
+                response = requests.put(url, params)
             elif method == "PUT":
-                r = requests.put(url, params)
+                response = requests.put(url, params)
             elif method == "DELETE":
-                r = requests.delete(url)
+                response = requests.delete(url)
 
-            return r.json()
+            return response.json()
         except requests.exceptions.HTTPError:
             return {'player_state': 'error'}
         except requests.exceptions.RequestException:
             return {'player_state': 'offline'}
 
     def _command(self, named_command):
+        """ Makes a request for a controlling command. """
         return self._request('PUT', '/' + named_command)
 
     def now_playing(self):
+        """ Returns the current state. """
         return self._request('GET', '/now_playing')
 
     def set_volume(self, level):
+        """ Sets the volume and returns the current state, level 0-100. """
         return self._request('PUT', '/volume', {'level': level})
 
     def set_muted(self, muted):
+        """ Mutes and returns the current state, muted True or False. """
         return self._request('PUT', '/mute', {'muted': muted})
 
     def play(self):
+        """ Sets playback to play and returns the current state. """
         return self._command('play')
 
     def pause(self):
+        """ Sets playback to paused and returns the current state. """
         return self._command('pause')
 
     def next(self):
+        """ Skips to the next track and returns the current state. """
         return self._command('next')
 
     def previous(self):
+        """ Skips back and returns the current state. """
         return self._command('previous')
 
     def artwork_url(self):
+        """ Returns a URL of the current track's album art. """
         return self._base_url + '/artwork'
 
 # pylint: disable=unused-argument
-
+# pylint: disable=abstract-method
+# pylint: disable=too-many-instance-attributes
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the itunes platform. """
@@ -141,7 +153,8 @@ class ItunesDevice(MediaPlayerDevice):
 
         self.update()
 
-    def updateState(self, state_hash):
+    def update_state(self, state_hash):
+        """ Update all the state properties with the passed in dictionary. """
         self.player_state = state_hash.get('player_state', None)
 
         self.current_volume = state_hash.get('volume', 0)
@@ -178,7 +191,7 @@ class ItunesDevice(MediaPlayerDevice):
     def update(self):
         """ Retrieve latest state. """
         now_playing = self.client.now_playing()
-        self.updateState(now_playing)
+        self.update_state(now_playing)
 
     @property
     def is_volume_muted(self):
@@ -187,6 +200,7 @@ class ItunesDevice(MediaPlayerDevice):
 
     @property
     def volume_level(self):
+        """ Volume level of the media player (0..1). """
         return self.current_volume/100.0
 
     @property
@@ -196,6 +210,7 @@ class ItunesDevice(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
+        """ Content type of current playing media. """
         return MEDIA_TYPE_MUSIC
 
     @property
@@ -206,7 +221,7 @@ class ItunesDevice(MediaPlayerDevice):
            self.current_title is not None:
             return self.client.artwork_url()
         else:
-            return 'https://cloud.githubusercontent.com/assets/260/9829355' \
+            return 'https://cloud.githubusercontent.com/assets/260/9829355'
             '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
 
     @property
@@ -231,30 +246,30 @@ class ItunesDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """ set volume level, range 0..1. """
-        r = self.client.set_volume(int(volume * 100))
-        self.updateState(r)
+        response = self.client.set_volume(int(volume * 100))
+        self.update_state(response)
 
     def mute_volume(self, mute):
         """ mute (true) or unmute (false) media player. """
-        r = self.client.set_muted(mute)
-        self.updateState(r)
+        response = self.client.set_muted(mute)
+        self.update_state(response)
 
     def media_play(self):
         """ media_play media player. """
-        r = self.client.play()
-        self.updateState(r)
+        response = self.client.play()
+        self.update_state(response)
 
     def media_pause(self):
         """ media_pause media player. """
-        r = self.client.pause()
-        self.updateState(r)
+        response = self.client.pause()
+        self.update_state(response)
 
     def media_next_track(self):
         """ media_next media player. """
-        r = self.client.next()
-        self.updateState(r)
+        response = self.client.next()
+        self.update_state(response)
 
     def media_previous_track(self):
         """ media_previous media player. """
-        r = self.client.previous()
-        self.updateState(r)
+        response = self.client.previous()
+        self.update_state(response)
