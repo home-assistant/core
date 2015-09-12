@@ -117,6 +117,7 @@ class Itunes(object):
 # pylint: disable=abstract-method
 # pylint: disable=too-many-instance-attributes
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the itunes platform. """
 
@@ -221,8 +222,8 @@ class ItunesDevice(MediaPlayerDevice):
            self.current_title is not None:
             return self.client.artwork_url()
         else:
-            return 'https://cloud.githubusercontent.com/assets/260/9829355'
-            '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
+            return 'https://cloud.githubusercontent.com/assets/260/9829355' \
+                '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
 
     @property
     def media_title(self):
