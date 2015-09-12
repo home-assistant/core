@@ -130,3 +130,6 @@ https://github.com/balloob/home-assistant-nzb-clients/archive/616cad591540925992
 # sensor.vera
 # light.vera
 https://github.com/balloob/home-assistant-vera-api/archive/a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip#python-vera==0.1
+
+# Sonos bindings (media_player.sonos)
+SoCo==0.11.1
