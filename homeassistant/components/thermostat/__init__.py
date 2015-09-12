@@ -23,6 +23,10 @@ SCAN_INTERVAL = 60
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
+STATE_HEAT = "heat"
+STATE_COOL = "cool"
+STATE_IDLE = "idle"
+
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
 ATTR_MAX_TEMP = "max_temp"
