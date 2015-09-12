@@ -102,9 +102,10 @@ class Itunes(object):
         return self._base_url + '/artwork'
 
 # pylint: disable=unused-argument
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the itunes platform. """
-
 
     add_devices([
         ItunesDevice(
@@ -200,15 +201,13 @@ class ItunesDevice(MediaPlayerDevice):
     def media_image_url(self):
         """ Image url of current playing media. """
 
-        if (self.player_state == STATE_PLAYING or
-            self.player_state == STATE_IDLE or
-            self.player_state == STATE_PAUSED) and
-            self.current_title is not None:
+        if self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED) and \
+           self.current_title is not None:
             return self.client.artwork_url()
         else:
             return 'https://cloud.githubusercontent.com/assets/260/9829355'
-              '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
-              
+            '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
+
     @property
     def media_title(self):
         """ Title of current playing media. """
