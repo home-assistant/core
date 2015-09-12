@@ -22,16 +22,17 @@ The name of the device.
 
 url
 *Required
-The URL of your set up and running version of iTunes-API. Example: http://192.168.1.50:8181
+URL of your running version of iTunes-API. Example: http://192.168.1.50:8181
 
 """
 import logging
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_TYPE_MUSIC, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK)
+    MediaPlayerDevice, MEDIA_TYPE_MUSIC, SUPPORT_PAUSE, SUPPORT_SEEK,
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF)
+    STATE_IDLE, STATE_PLAYING, STATE_PAUSED)
 
 try:
     import requests
@@ -42,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
+
 
 class Itunes(object):
 
@@ -103,6 +105,7 @@ class Itunes(object):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the itunes platform. """
 
+
     add_devices([
         ItunesDevice(
             config.get('name', 'iTunes'),
@@ -110,6 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             config.get('port')
         )
     ])
+
 
 class ItunesDevice(MediaPlayerDevice):
     """ Represents a iTunes-API instance. """
@@ -155,7 +159,7 @@ class ItunesDevice(MediaPlayerDevice):
     def state(self):
         """ Returns the state of the device. """
 
-        if self.player_state == 'offline' or self.player_state == None:
+        if self.player_state == 'offline' or self.player_state is None:
             return 'offline'
 
         if self.player_state == 'error':
@@ -196,11 +200,15 @@ class ItunesDevice(MediaPlayerDevice):
     def media_image_url(self):
         """ Image url of current playing media. """
 
-        if (self.player_state == STATE_PLAYING or self.player_state == STATE_IDLE or self.player_state == STATE_PAUSED) and self.current_title != None:
+        if (self.player_state == STATE_PLAYING or
+            self.player_state == STATE_IDLE or
+            self.player_state == STATE_PAUSED) and
+            self.current_title is not None:
             return self.client.artwork_url()
         else:
-            return "https://cloud.githubusercontent.com/assets/260/9829355/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png"
-
+            return 'https://cloud.githubusercontent.com/assets/260/9829355'
+              '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
+              
     @property
     def media_title(self):
         """ Title of current playing media. """
