@@ -137,49 +137,39 @@ class SonosDevice(MediaPlayerDevice):
     def volume_up(self):
         """ volume_up media player. """
         self._player.volume += 1
-        self.update_ha_state()
 
     def volume_down(self):
         """ volume_down media player. """
         self._player.volume -= 1
-        self.update_ha_state()
 
     def set_volume_level(self, volume):
         """ set volume level, range 0..1. """
         self._player.volume = str(int(volume * 100))
-        self.update_ha_state()
 
     def mute_volume(self, mute):
         """ mute (true) or unmute (false) media player. """
         self._player.mute = mute
-        self.update_ha_state()
 
     def media_play(self):
         """ media_play media player. """
         self._player.play()
-        self.update_ha_state()
 
     def media_pause(self):
         """ media_pause media player. """
         self._player.pause()
-        self.update_ha_state()
 
     def media_next_track(self):
         """ Send next track command. """
         self._player.next()
-        self.update_ha_state()
 
     def media_previous_track(self):
         """ Send next track command. """
         self._player.previous()
-        self.update_ha_state()
 
     def media_seek(self, position):
         """ Send seek command. """
         self._player.seek(str(datetime.timedelta(seconds=int(position))))
-        self.update_ha_state()
 
     def turn_on(self):
         """ turn the media player on. """
         self._player.play()
-        self.update_ha_state()
