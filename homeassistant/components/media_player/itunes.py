@@ -34,10 +34,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED)
 
-try:
-    import requests
-except ImportError:
-    requests = None
+import requests
 
 _LOGGER = logging.getLogger(__name__)
 
