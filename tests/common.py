@@ -10,11 +10,11 @@ from unittest import mock
 
 from homeassistant import core as ha, loader
 import homeassistant.util.location as location_util
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
-    EVENT_STATE_CHANGED)
+    EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
+    ATTR_DISCOVERED)
 from homeassistant.components import sun, mqtt
 
 
@@ -86,10 +86,11 @@ def fire_time_changed(hass, time):
     hass.bus.fire(EVENT_TIME_CHANGED, {'now': time})
 
 
-def trigger_device_tracker_scan(hass):
-    """ Triggers the device tracker to scan. """
-    fire_time_changed(
-        hass, dt_util.utcnow().replace(second=0) + timedelta(hours=1))
+def fire_service_discovered(hass, service, info):
+    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
+        ATTR_SERVICE: service,
+        ATTR_DISCOVERED: info
+    })
 
 
 def ensure_sun_risen(hass):
