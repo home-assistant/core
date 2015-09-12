@@ -1,6 +1,6 @@
 """
-homeassistant.components.tracker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.device_tracker
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to keep track of devices.
 
@@ -91,8 +91,8 @@ def setup(hass, config):
     track_new = util.convert(conf.get(CONF_TRACK_NEW), bool,
                              DEFAULT_CONF_TRACK_NEW)
 
-    devices = load_yaml_config_file(yaml_path)
-    tracker = DeviceTracker(hass, devices, consider_home, track_new)
+    devices = load_config(yaml_path, hass, consider_home)
+    tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
     def setup_platform(p_type, p_config, disc_info=None):
         """ Setup a device tracker platform. """
@@ -127,9 +127,9 @@ def setup(hass, config):
     discovery.listen(hass, DISCOVERY_PLATFORMS.keys(),
                      device_tracker_discovered)
 
-    def update_stale(event):
+    def update_stale(now):
         """ Clean up stale devices. """
-        tracker.update_stale()
+        tracker.update_stale(now)
     track_utc_time_change(hass, update_stale, second=range(0, 60, 5))
 
     return True
@@ -137,26 +137,17 @@ def setup(hass, config):
 
 class DeviceTracker(object):
     """ Track devices """
-    def __init__(self, hass, config, consider_home, track_new):
+    def __init__(self, hass, consider_home, track_new, devices):
         self.hass = hass
-        self.devices = {}
-        self.mac_to_dev = {}
+        self.devices = {dev.dev_id: dev for dev in devices}
+        self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = timedelta(seconds=consider_home)
         self.track_new = track_new
         self.lock = threading.Lock()
 
-        # Load config
-        for dev_id, device_dict in config.items():
-            dev_id = str(dev_id)
-            device_dict = device_dict or {}
-            away_hide = device_dict.get(CONF_AWAY_HIDE, False)
-            device = Device(
-                hass, self.consider_home, device_dict.get('track', False),
-                dev_id, device_dict.get('mac'), device_dict.get('name'),
-                device_dict.get('picture'), away_hide)
-            if device.mac:
-                self.mac_to_dev[device.mac] = device
-            self.devices[dev_id] = device
+        for device in devices:
+            if device.track:
+                device.update_ha_state()
 
     # pylint: disable=too-many-arguments
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
@@ -169,7 +160,7 @@ class DeviceTracker(object):
                 mac = mac.upper()
                 device = self.mac_to_dev.get(mac)
                 if not device:
-                    dev_id = util.slugify(host_name) or mac.replace(':', '')
+                    dev_id = util.slugify(host_name or mac)
             else:
                 dev_id = str(dev_id)
                 device = self.devices.get(dev_id)
@@ -194,10 +185,9 @@ class DeviceTracker(object):
 
             update_config(self.hass.config.path(YAML_DEVICES), dev_id, device)
 
-    def update_stale(self):
+    def update_stale(self, now):
         """ Update stale devices. """
         with self.lock:
-            now = dt_util.utcnow()
             for device in self.devices.values():
                 if device.last_update_home and device.stale(now):
                     device.update_ha_state(True)
@@ -261,6 +251,8 @@ class Device(Entity):
             attr[ATTR_LATITUDE] = self.gps[0],
             attr[ATTR_LONGITUDE] = self.gps[1],
 
+        return attr
+
     @property
     def hidden(self):
         """ If device should be hidden. """
@@ -307,18 +299,15 @@ def convert_csv_config(csv_path, yaml_path):
     return True
 
 
-def update_config(path, dev_id, device):
-    """ Add device to YAML config file. """
-    with open(path, 'a') as out:
-        out.write('\n')
-        out.write('{}:\n'.format(device.dev_id))
-
-        for key, value in (('name', device.name), ('mac', device.mac),
-                           ('picture', ''),
-                           ('track', 'yes' if device.track else 'no'),
-                           (CONF_AWAY_HIDE,
-                            'yes' if device.away_hide else 'no')):
-            out.write('  {}: {}\n'.format(key, '' if value is None else value))
+def load_config(path, hass, consider_home):
+    """ Load devices from YAML config file. """
+    if not os.path.isfile(path):
+        return []
+    return [
+        Device(hass, consider_home, device.get('track', False),
+               str(dev_id), device.get('mac'), device.get('name'),
+               device.get('picture'), device.get(CONF_AWAY_HIDE, False))
+        for dev_id, device in load_yaml_config_file(path).items()]
 
 
 def setup_scanner_platform(hass, config, scanner, see):
@@ -343,3 +332,17 @@ def setup_scanner_platform(hass, config, scanner, see):
                                                                   interval))
 
     device_tracker_scan(None)
+
+
+def update_config(path, dev_id, device):
+    """ Add device to YAML config file. """
+    with open(path, 'a') as out:
+        out.write('\n')
+        out.write('{}:\n'.format(device.dev_id))
+
+        for key, value in (('name', device.name), ('mac', device.mac),
+                           ('picture', device.config_picture),
+                           ('track', 'yes' if device.track else 'no'),
+                           (CONF_AWAY_HIDE,
+                            'yes' if device.away_hide else 'no')):
+            out.write('  {}: {}\n'.format(key, '' if value is None else value))
