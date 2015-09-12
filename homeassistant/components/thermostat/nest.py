@@ -5,12 +5,9 @@ Adds support for Nest thermostats.
 """
 import logging
 
-from homeassistant.components.thermostat import ThermostatDevice
+from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
+                                                 STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
-
-STATE_HEAT = "heat"
-STATE_COOL = "cool"
-STATE_IDLE = "idle"
 
 REQUIREMENTS = ['python-nest==2.6.0']
 
