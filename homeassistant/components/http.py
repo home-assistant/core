@@ -205,7 +205,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.serve_forever()
 
     def register_path(self, method, url, callback, require_auth=True):
-        """ Registers a path wit the server. """
+        """ Registers a path with the server. """
         self.paths.append((method, url, callback, require_auth))
 
     def log_message(self, fmt, *args):
@@ -487,7 +487,7 @@ class ServerSession:
         return self._expiry < date_util.utcnow()
 
 
-class SessionStore:
+class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
     def __init__(self, enabled=True):
         """ Set up the session store """
