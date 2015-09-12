@@ -22,6 +22,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC)
 
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
 
@@ -36,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
 
     import soco
-    add_devices(SonosDevice(p) for p in soco.discover())
+    add_devices(SonosDevice(hass, p) for p in soco.discover())
 
     return True
 
@@ -48,14 +49,18 @@ class SonosDevice(MediaPlayerDevice):
     """ Represents a Sonos device. """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, player):
+    def __init__(self, hass, player):
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
 
+        track_utc_time_change(
+            hass, self.update_ha_state,
+            second=range(0, 60, 5))
+
     @property
     def should_poll(self):
-        return True
+        return False
 
     @property
     def name(self):
