@@ -206,7 +206,7 @@ class ItunesDevice(MediaPlayerDevice):
            self.current_title is not None:
             return self.client.artwork_url()
         else:
-            return 'https://cloud.githubusercontent.com/assets/260/9829355'
+            return 'https://cloud.githubusercontent.com/assets/260/9829355' \
             '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
 
     @property
