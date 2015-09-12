@@ -46,6 +46,7 @@ SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 
 class Itunes(object):
+    """ itunes-api client. """
 
     def __init__(self, host, port):
         self.host = host
