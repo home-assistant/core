@@ -335,8 +335,8 @@ def convert_csv_config(csv_path, yaml_path):
     used_ids = set()
     with open(csv_path) as inp:
         for row in csv.DictReader(inp):
-            dev_id = util.ensure_unique_string(util.slugify(row['name']),
-                                               used_ids)
+            dev_id = util.ensure_unique_string(
+                util.slugify(row['name']) or DEVICE_DEFAULT_NAME, used_ids)
             used_ids.add(dev_id)
             device = Device(None, None, row['track'] == '1', dev_id,
                             row['device'], row['name'], row['picture'])
