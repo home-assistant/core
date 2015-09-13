@@ -4123,7 +4123,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     a {
       color: var(--accent-color);
-    }</style><template><div class="horizontal layout"><display-time date-obj="[[entryObj.when]]"></display-time><domain-icon domain="[[entryObj.domain]]" class="icon"></domain-icon><div class="message" flex=""><template is="dom-if" if="[[!entryObj.entityId]]"><span class="name">[[entryObj.name]]</span></template><template is="dom-if" if="[[entryObj.entityId]]"><a href="#" on-click="entityClicked" class="name">[[entryObj.name]]</a> <span></span></template><span>[[entryObj.message]]</span></div></div></template></dom-module><dom-module id="ha-logbook" assetpath="components/"><style>:host {
+    }</style><template><div class="horizontal layout"><display-time date-obj="[[entryObj.when]]"></display-time><domain-icon domain="[[entryObj.domain]]" class="icon"></domain-icon><div class="message" flex=""><template is="dom-if" if="[[!entryObj.entityId]]"><span class="name">[[entryObj.name]]</span></template><template is="dom-if" if="[[entryObj.entityId]]"><a href="#" on-click="entityClicked" class="name">[[entryObj.name]]</a></template><span></span> <span>[[entryObj.message]]</span></div></div></template></dom-module><dom-module id="ha-logbook" assetpath="components/"><style>:host {
       display: block;
       padding: 16px;
     }</style><template><template is="dom-if" if="[[noEntries(entries)]]">No logbook entries found.</template><template is="dom-repeat" items="[[entries]]"><logbook-entry entry-obj="[[item]]"></logbook-entry></template></template></dom-module><dom-module id="loading-box" assetpath="components/"><style>.text {
