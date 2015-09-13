@@ -35,8 +35,7 @@ import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE, DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME,
-    STATE_UNKNOWN)
+    ATTR_ENTITY_PICTURE, DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
 DOMAIN = "device_tracker"
 DEPENDENCIES = []
@@ -91,7 +90,7 @@ def setup(hass, config):
     track_new = util.convert(conf.get(CONF_TRACK_NEW), bool,
                              DEFAULT_CONF_TRACK_NEW)
 
-    devices = load_config(yaml_path, hass, consider_home)
+    devices = load_config(yaml_path, hass, timedelta(seconds=consider_home))
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
     def setup_platform(p_type, p_config, disc_info=None):
@@ -145,9 +144,14 @@ class DeviceTracker(object):
         self.track_new = track_new
         self.lock = threading.Lock()
 
+        entity_ids = []
         for device in devices:
             if device.track:
+                entity_ids.append(device.entity_id)
                 device.update_ha_state()
+
+        self.group = group.setup_group(hass, GROUP_NAME_ALL_DEVICES,
+                                       entity_ids, False)
 
     # pylint: disable=too-many-arguments
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
@@ -183,6 +187,8 @@ class DeviceTracker(object):
             if device.track:
                 device.update_ha_state()
 
+            self.group.update_tracked_entity_ids(
+                list(self.group.tracking) + [device.entity_id])
             update_config(self.hass.config.path(YAML_DEVICES), dev_id, device)
 
     def update_stale(self, now):
@@ -204,7 +210,7 @@ class Device(Entity):
 
     # Track if the last update of this device was HOME
     last_update_home = False
-    _state = STATE_UNKNOWN
+    _state = STATE_NOT_HOME
 
     def __init__(self, hass, consider_home, track, dev_id, mac, name=None,
                  picture=None, away_hide=False):
