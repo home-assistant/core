@@ -7,29 +7,27 @@ Offers state listening automation rules.
 import logging
 
 from homeassistant.helpers.event import track_state_change
-from homeassistant.const import MATCH_ALL
 
 
 CONF_ENTITY_ID = "state_entity_id"
 CONF_BELOW = "state_below"
 CONF_ABOVE = "state_above"
 
+_LOGGER = logging.getLogger(__name__)
 
 def register(hass, config, action):
     """ Listen for state changes based on `config`. """
     entity_id = config.get(CONF_ENTITY_ID)
 
     if entity_id is None:
-        logging.getLogger(__name__).error(
-            "Missing configuration key %s", CONF_ENTITY_ID)
+        _LOGGER.error("Missing configuration key %s", CONF_ENTITY_ID)
         return False
 
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
 
     if below is None and above is None:
-        logging.getLogger(__name__).error(
-            "Missing configuration key %s or %s", CONF_BELOW, CONF_ABOVE)
+        _LOGGER.error("Missing configuration key %s or %s", CONF_BELOW, CONF_ABOVE)
 
     def numeric_in_range(value, range_start, range_end):
         """ Checks if value is inside the range
@@ -38,6 +36,11 @@ def register(hass, config, action):
         :param range_end:
         :return:
         """
+
+        if value is None:
+            _LOGGER.warn("Missing value in numeric check")
+            return False
+
         value = float(value)
 
         if range_start is not None and range_end is not None:
