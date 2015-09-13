@@ -129,13 +129,13 @@ class EntityComponent(object):
         if platform is None:
             return
 
-        platform_name = '{}.{}'.format(self.domain, platform_type)
-
         try:
             platform.setup_platform(
                 self.hass, platform_config, self.add_entities, discovery_info)
-
-            self.hass.config.components.append(platform_name)
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
                 'Error while setting up platform %s', platform_type)
+            return
+
+        platform_name = '{}.{}'.format(self.domain, platform_type)
+        self.hass.config.components.append(platform_name)

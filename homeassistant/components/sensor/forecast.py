@@ -1,12 +1,12 @@
 """
 homeassistant.components.sensor.forecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Forecast.io service.
+Forecast.io weather service.
 
 Configuration:
 
 To use the Forecast sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
   platform: forecast
@@ -37,11 +37,9 @@ monitored_conditions
 *Required
 An array specifying the conditions to monitor.
 
-These are the variables for the monitored_conditions array:
-
-type
+monitored_conditions
 *Required
-The condition you wish to monitor, see the configuration example above for a
+Conditions to monitor. See the configuration example above for a
 list of all available conditions to monitor.
 
 Details for the API : https://developer.forecast.io/docs/v2
@@ -49,7 +47,7 @@ Details for the API : https://developer.forecast.io/docs/v2
 import logging
 from datetime import timedelta
 
-REQUIREMENTS = ['python-forecastio>=1.3.3']
+REQUIREMENTS = ['python-forecastio==1.3.3']
 
 try:
     import forecastio
@@ -73,7 +71,7 @@ SENSOR_TYPES = {
     'humidity': ['Humidity', '%'],
     'pressure': ['Pressure', 'mBar'],
     'visibility': ['Visibility', 'km'],
-    'ozone': ['Ozone', ''],
+    'ozone': ['Ozone', 'DU'],
 }
 
 # Return cached results if last scan was less then this time ago

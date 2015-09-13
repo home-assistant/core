@@ -6,10 +6,11 @@ Tests Home Assistant util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest
-import time
+from unittest.mock import patch
 from datetime import datetime, timedelta
 
-import homeassistant.util as util
+from homeassistant import util
+import homeassistant.util.dt as dt_util
 
 
 class TestUtil(unittest.TestCase):
@@ -169,21 +170,19 @@ class TestUtil(unittest.TestCase):
     def test_throttle(self):
         """ Test the add cooldown decorator. """
         calls1 = []
+        calls2 = []
 
-        @util.Throttle(timedelta(milliseconds=500))
+        @util.Throttle(timedelta(seconds=4))
         def test_throttle1():
             calls1.append(1)
 
-        calls2 = []
-
-        @util.Throttle(
-            timedelta(milliseconds=500), timedelta(milliseconds=250))
+        @util.Throttle(timedelta(seconds=4), timedelta(seconds=2))
         def test_throttle2():
             calls2.append(1)
 
-        # Ensure init is ok
-        self.assertEqual(0, len(calls1))
-        self.assertEqual(0, len(calls2))
+        now = dt_util.utcnow()
+        plus3 = now + timedelta(seconds=3)
+        plus5 = plus3 + timedelta(seconds=2)
 
         # Call first time and ensure methods got called
         test_throttle1()
@@ -206,25 +205,16 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(2, len(calls1))
         self.assertEqual(1, len(calls2))
 
-        # Sleep past the no throttle interval for throttle2
-        time.sleep(.3)
-
-        test_throttle1()
-        test_throttle2()
+        with patch('homeassistant.util.utcnow', return_value=plus3):
+            test_throttle1()
+            test_throttle2()
 
         self.assertEqual(2, len(calls1))
         self.assertEqual(1, len(calls2))
 
-        test_throttle1(no_throttle=True)
-        test_throttle2(no_throttle=True)
+        with patch('homeassistant.util.utcnow', return_value=plus5):
+            test_throttle1()
+            test_throttle2()
 
         self.assertEqual(3, len(calls1))
         self.assertEqual(2, len(calls2))
-
-        time.sleep(.5)
-
-        test_throttle1()
-        test_throttle2()
-
-        self.assertEqual(4, len(calls1))
-        self.assertEqual(3, len(calls2))

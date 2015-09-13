@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 homeassistant.components.sensor.rpi_gpio
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a binary state sensor using RPi GPIO.
 Note: To use RPi GPIO, Home Assistant must be run as root.
 
@@ -35,11 +35,10 @@ The time in milliseconds for port debouncing. Default is 50ms.
 ports
 *Required
 An array specifying the GPIO ports to use and the name to use in the frontend.
-
 """
-
 import logging
 from homeassistant.helpers.entity import Entity
+
 try:
     import RPi.GPIO as GPIO
 except ImportError:
@@ -53,7 +52,7 @@ DEFAULT_VALUE_HIGH = "HIGH"
 DEFAULT_VALUE_LOW = "LOW"
 DEFAULT_BOUNCETIME = 50
 
-REQUIREMENTS = ['RPi.GPIO>=0.5.11']
+REQUIREMENTS = ['RPi.GPIO==0.5.11']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -119,12 +118,12 @@ class RPiGPIOSensor(Entity):
 
     @property
     def should_poll(self):
-        """ No polling needed """
+        """ No polling needed. """
         return False
 
     @property
     def name(self):
-        """ The name of the sensor """
+        """ The name of the sensor. """
         return self._name
 
     @property

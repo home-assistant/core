@@ -1,7 +1,6 @@
 """
 homeassistant.components.switch.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Support for Tellstick switches.
 
 Because the tellstick sends its actions via radio and from most
@@ -19,7 +18,7 @@ import tellcore.constants as tellcore_constants
 
 SINGAL_REPETITIONS = 1
 
-REQUIREMENTS = ['tellcore-py>=1.0.4']
+REQUIREMENTS = ['tellcore-py==1.0.4']
 
 
 # pylint: disable=unused-argument
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TellstickSwitchDevice(ToggleEntity):
-    """ Represents a Tellstick switch within Home Assistant. """
+    """ Represents a Tellstick switch. """
     last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                               tellcore_constants.TELLSTICK_TURNOFF)
 

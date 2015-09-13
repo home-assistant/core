@@ -1,8 +1,7 @@
 """
 homeassistant.components.sensor.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Shows sensor values from tellstick sensors.
+Shows sensor values from Tellstick sensors.
 
 Possible config keys:
 
@@ -35,7 +34,7 @@ import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
-REQUIREMENTS = ['tellcore-py>=1.0.4']
+REQUIREMENTS = ['tellcore-py==1.0.4']
 
 
 # pylint: disable=unused-argument

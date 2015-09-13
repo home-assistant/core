@@ -7,7 +7,7 @@ Module to help with parsing and generating configuration files.
 import logging
 import os
 
-from homeassistant.core import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
@@ -16,6 +16,7 @@ import homeassistant.util.location as loc_util
 _LOGGER = logging.getLogger(__name__)
 
 YAML_CONFIG_FILE = 'configuration.yaml'
+CONFIG_DIR_NAME = '.homeassistant'
 
 DEFAULT_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -39,6 +40,13 @@ DEFAULT_COMPONENTS = {
 }
 
 
+def get_default_config_dir():
+    """ Put together the default configuration directory based on OS. """
+    data_dir = os.getenv('APPDATA') if os.name == "nt" \
+        else os.path.expanduser('~')
+    return os.path.join(data_dir, CONFIG_DIR_NAME)
+
+
 def ensure_config_exists(config_dir, detect_location=True):
     """ Ensures a config file exists in given config dir.
         Creating a default one if needed.
@@ -46,7 +54,8 @@ def ensure_config_exists(config_dir, detect_location=True):
     config_path = find_config_file(config_dir)
 
     if config_path is None:
-        _LOGGER.info("Unable to find configuration. Creating default one")
+        print("Unable to find configuration. Creating default one in",
+              config_dir)
         config_path = create_default_config(config_dir, detect_location)
 
     return config_path
@@ -92,9 +101,7 @@ def create_default_config(config_dir, detect_location=True):
         return config_path
 
     except IOError:
-        _LOGGER.exception(
-            'Unable to write default configuration file %s', config_path)
-
+        print('Unable to create default configuration file', config_path)
         return None
 
 
@@ -117,7 +124,7 @@ def load_yaml_config_file(config_path):
     def parse(fname):
         """ Parse a YAML file.  """
         try:
-            with open(fname) as conf_file:
+            with open(fname, encoding='utf-8') as conf_file:
                 # If configuration file is empty YAML returns None
                 # We convert that to an empty dict
                 return yaml.load(conf_file) or {}

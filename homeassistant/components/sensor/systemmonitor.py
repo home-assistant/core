@@ -1,13 +1,12 @@
 """
 homeassistant.components.sensor.systemmonitor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Shows system monitor values such as: disk, memory and processor use
+Shows system monitor values such as: disk, memory, and processor use.
 
 Configuration:
 
 To use the System monitor sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
   platform: systemmonitor
@@ -66,7 +65,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
 
-REQUIREMENTS = ['psutil>=3.0.0']
+REQUIREMENTS = ['psutil==3.0.0']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
     'disk_use': ['Disk Use', 'GiB'],

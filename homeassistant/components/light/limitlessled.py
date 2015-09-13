@@ -15,7 +15,7 @@ Support for LimitlessLED bulbs, also known as...
 Configuration:
 
 To use limitlessled you will need to add the following to your
-config/configuration.yaml.
+configuration.yaml file.
 
 light:
   platform: limitlessled
@@ -24,7 +24,6 @@ light:
   group_2_name: Bedroom
   group_3_name: Office
   group_4_name: Kitchen
-
 """
 import logging
 
@@ -34,7 +33,7 @@ from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
 from homeassistant.util.color import color_RGB_to_xy
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['ledcontroller>=1.0.7']
+REQUIREMENTS = ['ledcontroller==1.0.7']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -107,7 +106,7 @@ class LimitlessLED(Light):
         return self._xy_color
 
     def _xy_to_led_color(self, xy_color):
-        """ Convert an XY color to the closest LedController color string """
+        """ Convert an XY color to the closest LedController color string. """
         def abs_dist_squared(p_0, p_1):
             """ Returns the absolute value of the squared distance """
             return abs((p_0[0] - p_1[0])**2 + (p_0[1] - p_1[1])**2)

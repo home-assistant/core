@@ -1,12 +1,12 @@
 """
 homeassistant.components.media_player.squeezebox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides an interface to the Logitech SqueezeBox API
 
 Configuration:
 
-To use SqueezeBox add something like this to your configuration:
+To use SqueezeBox add something something like the following to your
+configuration.yaml file.
 
 media_player:
   platform: squeezebox
@@ -19,19 +19,19 @@ Variables:
 
 host
 *Required
-The host name or address of the Logitech Media Server
+The host name or address of the Logitech Media Server.
 
 port
 *Optional
-Telnet port to Logitech Media Server, default 9090
+Telnet port to Logitech Media Server, default 9090.
 
 usermame
 *Optional
-Username, if password protection is enabled
+Username, if password protection is enabled.
 
 password
 *Optional
-Password, if password protection is enabled
+Password, if password protection is enabled.
 """
 
 import logging
@@ -91,7 +91,7 @@ class LogitechMediaServer(object):
         self.init_success = True if self.http_port else False
 
     def _get_http_port(self):
-        """ Get http port from media server, it is used to get cover art """
+        """ Get http port from media server, it is used to get cover art. """
         http_port = None
         try:
             http_port = self.query('pref', 'httpport', '?')
@@ -111,7 +111,7 @@ class LogitechMediaServer(object):
             return
 
     def create_players(self):
-        """ Create a list of SqueezeBoxDevices connected to the LMS """
+        """ Create a list of SqueezeBoxDevices connected to the LMS. """
         players = []
         count = self.query('player', 'count', '?')
         for index in range(0, int(count)):
@@ -121,7 +121,7 @@ class LogitechMediaServer(object):
         return players
 
     def query(self, *parameters):
-        """ Send request and await response from server  """
+        """ Send request and await response from server. """
         telnet = telnetlib.Telnet(self.host, self.port)
         if self._username and self._password:
             telnet.write('login {username} {password}\n'.format(
@@ -138,7 +138,7 @@ class LogitechMediaServer(object):
         return urllib.parse.unquote(response)
 
     def get_player_status(self, player):
-        """ Get ithe status of a player """
+        """ Get ithe status of a player. """
         #   (title) : Song title
         # Requested Information
         # a (artist): Artist name 'artist'
@@ -195,7 +195,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def update(self):
         """ Retrieve latest state. """
-        self._status = self._lms.get_player_status(self._name)
+        self._status = self._lms.get_player_status(self._id)
 
     @property
     def volume_level(self):
