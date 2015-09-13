@@ -215,7 +215,7 @@ class TestAutomationState(unittest.TestCase):
             }
         }))
 
-        # 9 is below 10
+        # 4 is below 5 so it should not fire
         self.hass.states.set('test.entity', 4)
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
