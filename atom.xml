@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-12T18:24:29-07:00</updated>
+  <updated>2015-09-13T10:20:01-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,214 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Home Assistant meets IFTTT]]></title>
+    <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
+    <updated>2015-09-13T09:28:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
+    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
+<a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
+webservice that integrates with almost every possible webservice out there. Adding Home
+Assistant to this mix means Home Assistant connects with all these.</p>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
+</p>
+
+
+<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
+if your smoke alarm goes off. Click the read more button for some example recipes.</p>
+
+<p>IFTTT integration requires your Home Assistant instance to be accessible from the web. This can be
+achieved by forwarding the port from your router to the device running Home Assistant. If your ISP
+is giving you a new IP address from time to time, consider using <a href="https://duckdns.org">DuckDNS</a>.</p>
+
+<!--more-->
+
+
+<p>In each of the following examples, make sure to replace the XXX in the url with your correct
+host address and api password.</p>
+
+<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed</h2>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png' />
+</p>
+
+
+<p>Maker channel setup:</p>
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+<tr>
+<td> BODY </td>
+<td> { &ldquo;entity_id&rdquo;: &ldquo;switch.irrigation&rdquo; }</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen</h2>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png' />
+</p>
+
+
+<p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
+Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
+<code>value1</code>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Post a tweet when fire alarm is triggered</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home/alarm/fire</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;HA_FIRE_ALARM&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;value1&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">fire</span><span class="nv"> </span><span class="s">alarm</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">triggered!&quot;</span><span class="p-Indicator">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home</h2>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png' />
+</p>
+
+
+<p>Maker channel setup:</p>
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+<tr>
+<td> BODY </td>
+<td> { &ldquo;entity_id&rdquo;: &ldquo;light.kitchen&rdquo; }</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant</h2>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png' />
+</p>
+
+
+<p>Maker channel setup:</p>
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+<tr>
+<td> BODY </td>
+<td> { &ldquo;entity_id&rdquo;: &ldquo;group.all_lights&rdquo;, &ldquo;flash&rdquo;:&ldquo;yes&rdquo; }</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button</h2>
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png' />
+</p>
+
+
+<p>Maker channel setup:</p>
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+</tbody>
+</table>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Using MQTT with Home Assistant]]></title>
@@ -2146,59 +2354,6 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 
 
 <p>A new <a href="https://home-assistant.io/developers/add_new_platform.html#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Hello PushBullet, nice talking to you]]></title>
-    <link href="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"/>
-    <updated>2015-01-04T13:29:07-08:00</updated>
-    <id>https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you</id>
-    <content type="html"><![CDATA[<p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn&rsquo;t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
-
-<p>The new notify component will take in messages and tells them to the user. For now this will be powered by the very awesome <a href="https://www.pushbullet.com/">PushBullet</a> but any other messaging platform can be easily added.</p>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/screenshots/pushbullet_moto360.png' />
-  A message triggered by the simple_alarm component is shown by PushBullet on the Moto360.
-</p>
-
-
-<p>Read on to learn how to enable the notify component and integrate it with other components.</p>
-
-<!--more-->
-
-
-<h3>Enabling the notify component</h3>
-
-<p>To enable the new notify component, add the following to your <code>home-assistant.conf</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[notify]
-</span><span class='line'>platform=pushbullet
-</span><span class='line'>api_key=ABCDEFGHJKLMNOPQRSTUVXYZ</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You can get your api key from <a href="https://www.pushbullet.com/account">your account page on PushBullet.com</a>.</p>
-
-<h3>Sending messages from your component</h3>
-
-<p>To be able to send messages, the notify component has to be loaded and initialized successfully.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.loader</span> <span class="kn">as</span> <span class="nn">loader</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-</span><span class='line'>    <span class="n">notify</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_component</span><span class="p">(</span><span class="s">&#39;notify&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">notify</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">hass</span><span class="p">,</span> <span class="s">&quot;Hello from my component!&quot;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
 ]]></content>
   </entry>
   
