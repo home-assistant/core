@@ -1,5 +1,5 @@
 """
-homeassistant.components.sensor
+homeassistant.components.alarm_control_panel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various sensors that can be monitored.
 """
@@ -8,12 +8,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import verisure
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-    ATTR_ENTITY_PICTURE,
+    ATTR_ENTITY_ID,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
 
-DOMAIN = 'alarm'
+DOMAIN = 'alarm_control_panel'
 DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
@@ -30,11 +28,12 @@ SERVICE_TO_METHOD = {
     SERVICE_ALARM_ARM_AWAY: 'alarm_arm_away',
 }
 
-ATTR_CODE = 'code' 
+ATTR_CODE = 'code'
 
 ATTR_TO_PROPERTY = [
     ATTR_CODE,
 ]
+
 
 def setup(hass, config):
     """ Track states and offer events for sensors. """
@@ -43,15 +42,15 @@ def setup(hass, config):
         DISCOVERY_PLATFORMS)
 
     component.setup(config)
-    
+
     def alarm_service_handler(service):
         """ Maps services to methods on Alarm. """
         target_alarms = component.extract_from_service(service)
-        
+
         if ATTR_CODE not in service.data:
             return
 
-        code  = service.data[ATTR_CODE]
+        code = service.data[ATTR_CODE]
 
         method = SERVICE_TO_METHOD[service.service]
 
@@ -72,7 +71,7 @@ def alarm_disarm(hass, code, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_ALARM_DISARM, data)
-    
+
 
 def alarm_arm_home(hass, code, entity_id=None):
     """ Send the alarm the command for arm home. """
@@ -83,6 +82,7 @@ def alarm_arm_home(hass, code, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_HOME, data)
 
+
 def alarm_arm_away(hass, code, entity_id=None):
     """ Send the alarm the command for arm away. """
     data = {ATTR_CODE: code}
@@ -92,15 +92,17 @@ def alarm_arm_away(hass, code, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data)
 
-class AlarmControl(Entity):
+
+class AlarmControlPanel(Entity):
+    """ ABC for alarm control devices. """
     def alarm_disarm(self, code):
-        """ Send disar command. """
+        """ Send disarm command. """
         raise NotImplementedError()
-    
+
     def alarm_arm_home(self, code):
         """ Send pause command. """
         raise NotImplementedError()
-    
+
     def alarm_arm_away(self, code):
         """ Send pause command. """
         raise NotImplementedError()
