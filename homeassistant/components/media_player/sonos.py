@@ -79,6 +79,11 @@ class SonosDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def unique_id(self):
+        """ Returns a unique id. """
+        return "{}.{}".format(self.__class__, self._player.uid)
+
+    @property
     def state(self):
         """ Returns the state of the device. """
         if self._status == 'PAUSED_PLAYBACK':
