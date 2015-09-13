@@ -12,12 +12,11 @@ import homeassistant.components.automation.numeric_state as numeric_state
 from homeassistant.const import CONF_PLATFORM
 
 
-class TestAutomationState(unittest.TestCase):
+class TestAutomationNumericState(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
-        self.hass.states.set('test.entity', 'hello')
         self.calls = []
 
         def record_call(service):
@@ -96,7 +95,7 @@ class TestAutomationState(unittest.TestCase):
         # 9 is below 10 so this should not fire again
         self.hass.states.set('test.entity', 8)
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        self.assertEqual(0, len(self.calls))
 
 
     def test_if_fires_on_entity_change_above(self):
