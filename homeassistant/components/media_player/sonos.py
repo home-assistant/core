@@ -36,15 +36,15 @@ SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
-
     import soco
 
     players = soco.discover()
     if not players:
-        _LOGGER.warning('No Sonos speakers found. Disabling: ' + __name__)
+        _LOGGER.warning('No Sonos speakers found. Disabling: %s', __name__)
         return False
 
     add_devices(SonosDevice(hass, p) for p in players)
+    _LOGGER.info('Added %s Sonos speakers', len(players))
 
     return True
 
@@ -120,6 +120,13 @@ class SonosDevice(MediaPlayerDevice):
     def media_duration(self):
         """ Duration of current playing media in seconds. """
         dur = self._trackinfo.get('duration', '0:00')
+
+        # If the speaker is playing from the "line-in" source, getting
+        # track metadata can return NOT_IMPLEMENTED, which breaks the
+        # volume logic below
+        if dur == 'NOT_IMPLEMENTED':
+            return None
+
         return sum(60 ** x[0] * int(x[1]) for x in
                    enumerate(reversed(dur.split(':'))))
 
