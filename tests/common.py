@@ -38,8 +38,8 @@ def get_test_home_assistant(num_threads=None):
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
 
-    # if not loader.PREPARED:
-    loader. prepare(hass)
+    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
+        loader.prepare(hass)
 
     return hass
 

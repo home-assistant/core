@@ -5,6 +5,7 @@ tests.test_component_demo
 Tests demo component.
 """
 import unittest
+from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.components.demo as demo
@@ -23,13 +24,15 @@ class TestDemo(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_if_demo_state_shows_by_default(self):
+    @patch('homeassistant.components.sun.setup')
+    def test_if_demo_state_shows_by_default(self, mock_sun_setup):
         """ Test if demo state shows if we give no configuration. """
         demo.setup(self.hass, {demo.DOMAIN: {}})
 
         self.assertIsNotNone(self.hass.states.get('a.Demo_Mode'))
 
-    def test_hiding_demo_state(self):
+    @patch('homeassistant.components.sun.setup')
+    def test_hiding_demo_state(self, mock_sun_setup):
         """ Test if you can hide the demo card. """
         demo.setup(self.hass, {demo.DOMAIN: {'hide_demo_state': 1}})
 
