@@ -15,8 +15,6 @@ media_player:
 import logging
 import datetime
 
-REQUIREMENTS = ['SoCo==0.11.1']
-
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
@@ -25,6 +23,9 @@ from homeassistant.components.media_player import (
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
+
+
+REQUIREMENTS = ['SoCo==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +38,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
 
     import soco
-    add_devices(SonosDevice(hass, p) for p in soco.discover())
+
+    players = soco.discover()
+    if not players:
+        _LOGGER.warning('No Sonos speakers found. Disabling: ' + __name__)
+        return False
+
+    add_devices(SonosDevice(hass, p) for p in players)
 
     return True
 
