@@ -28,7 +28,8 @@ def register(hass, config, action):
     above = config.get(CONF_ABOVE)
 
     if below is None and above is None:
-        _LOGGER.error("Missing configuration key. One of %s or %s is required",
+        _LOGGER.error("Missing configuration key."
+                      " One of %s or %s is required",
                       CONF_BELOW, CONF_ABOVE)
         return False
 
@@ -57,8 +58,8 @@ def register(hass, config, action):
         """ Listens for state changes and calls action. """
 
         # Fire action if we go from outside range into range
-        if numeric_in_range(to_s.state, above, below) and \
-           (from_s is None or not numeric_in_range(from_s.state, above, below)):
+        if numeric_in_range(to_s.state, above, below) and (from_s is None
+           or not numeric_in_range(from_s.state, above, below)):
             action()
 
     track_state_change(
