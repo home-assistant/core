@@ -15,7 +15,7 @@ from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
-    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, )
+    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, DEVICE_DEFAULT_NAME)
 import homeassistant.components.device_tracker as device_tracker
 
 from tests.common import (
@@ -65,7 +65,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         }
         person2 = {
             'mac': 'MN:OP:QR:ST:UV:WX:YZ',
-            'name': 'Anne Therese',
+            'name': '',
             'track': False,
             'picture': None,
         }
@@ -87,9 +87,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             self.assertEqual(2, len(yaml_config))
 
             for pers, yaml_pers in zip(
-                (person2, person1), sorted(yaml_config.values(),
-                                           key=lambda pers: pers['name'])):
+                (person1, person2), sorted(yaml_config.values(),
+                                           key=lambda pers: pers['mac'])):
                 for key, value in pers.items():
+                    if key == 'name' and value == '':
+                        value = DEVICE_DEFAULT_NAME
                     self.assertEqual(value, yaml_pers.get(key))
 
         finally:
