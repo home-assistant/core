@@ -105,7 +105,10 @@
   
 
   <p><img src='/images/supported_brands/ifttt.png' class='brand pull-right' />
-<a href="https://ifttt.com">IFTTT</a> is a web service that allows users to create chains of simple conditional statements, so called &ldquo;recipes&rdquo;. With the ifttt component you can trigger recipes through the &ldquo;maker&rdquo; channel.</p>
+<a href="https://ifttt.com">IFTTT</a> is a web service that allows users to create chains of simple conditional
+statements, so called &ldquo;recipes&rdquo;. With the ifttt component you can trigger recipes through the &ldquo;maker&rdquo;
+channel. See the <a href="/blog/2015/09/13/home-assistant-meets-ifttt/">announcement blog post</a> for examples
+how to use it.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -172,6 +175,13 @@ When your screen looks like this, click the &#8216;call service&#8217; button.
 You need to setup a unique trigger for each event you sent to IFTTT.
 </p>
 
+
+<h3><a class='title-link' name='sending-events-from-ifttt-to-home-assistant' href='#sending-events-from-ifttt-to-home-assistant'></a> Sending events from IFTTT to Home Assistant</h3>
+
+<p>To be able to receive events from IFTTT, your Home Assistant instance needs to be accessible from
+the web. This can be achieved by forwarding port 8123 from your router to the device running Home
+Assistant. If your ISP is giving you a new IP address from time to time, consider using
+<a href="https://duckdns.org">DuckDNS</a>.</p>
 
 
 </article>

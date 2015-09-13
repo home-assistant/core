@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-13T10:20:01-07:00</updated>
+  <updated>2015-09-13T10:30:39-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -21,19 +21,18 @@
     <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
 <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
 webservice that integrates with almost every possible webservice out there. Adding Home
-Assistant to this mix means Home Assistant connects with all these.</p>
+Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
+
+<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
+if your smoke alarm goes off.</p>
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
 </p>
 
 
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
-if your smoke alarm goes off. Click the read more button for some example recipes.</p>
-
-<p>IFTTT integration requires your Home Assistant instance to be accessible from the web. This can be
-achieved by forwarding the port from your router to the device running Home Assistant. If your ISP
-is giving you a new IP address from time to time, consider using <a href="https://duckdns.org">DuckDNS</a>.</p>
+<p>Head over to the <a href="/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
+read more button for some example recipes.</p>
 
 <!--more-->
 
