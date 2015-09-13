@@ -58,9 +58,9 @@ from homeassistant.const import (
 DOMAIN = "verisure"
 DISCOVER_SENSORS = 'verisure.sensors'
 DISCOVER_SWITCHES = 'verisure.switches'
-DISCOVER_ALARMS = 'verisure.alarms'
+DISCOVER_ALARMS = 'verisure.alarms_control_panel'
 
-DEPENDENCIES = ['alarm']
+DEPENDENCIES = ['alarm_control_panel']
 REQUIREMENTS = [
     'https://github.com/persandstrom/python-verisure/archive/master.zip'
     ]
