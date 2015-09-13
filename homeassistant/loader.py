@@ -123,6 +123,8 @@ def get_component(comp_name):
             # custom_components/switch/some_platform.py exists,
             # the import custom_components.switch would succeeed.
             if module.__spec__.origin == 'namespace':
+
+                print("!!!!!!!!!!!!!!!!!!!!! " + module.__spec__.origin)
                 continue
 
             _LOGGER.info("Loaded %s from %s", comp_name, path)
