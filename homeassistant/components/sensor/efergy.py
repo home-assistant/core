@@ -7,7 +7,7 @@ Monitors home energy use as measured by an efergy engage hub using its
 Configuration:
 
 To use the efergy sensor you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 sensor:
   platform: efergy
@@ -61,7 +61,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the efergy sensor. """
+    """ Sets up the Efergy sensor. """
     app_token = config.get("app_token")
     if not app_token:
         _LOGGER.error(
@@ -118,7 +118,7 @@ class EfergySensor(Entity):
         return self._unit_of_measurement
 
     def update(self):
-        """ Gets the efergy monitor data from the web service """
+        """ Gets the Efergy monitor data from the web service. """
         if self.type == 'instant_readings':
             url_string = _RESOURCE + 'getInstant?token=' + self.app_token
             response = get(url_string)

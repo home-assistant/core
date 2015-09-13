@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.scheduler import ServiceEventListener
 
 DEPENDENCIES = []
-REQUIREMENTS = ['astral>=0.8.1']
+REQUIREMENTS = ['astral==0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 

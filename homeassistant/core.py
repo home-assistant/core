@@ -9,6 +9,7 @@ of entities and react to changes.
 import os
 import time
 import logging
+import signal
 import threading
 import enum
 import re
@@ -21,9 +22,12 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
+from homeassistant.exceptions import (
+    HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util as util
 import homeassistant.util.dt as date_util
 import homeassistant.helpers.temperature as temp_helper
+from homeassistant.config import get_default_config_dir
 
 DOMAIN = "homeassistant"
 
@@ -70,12 +74,19 @@ class HomeAssistant(object):
             will block until called. """
         request_shutdown = threading.Event()
 
-        def stop_homeassistant(service):
+        def stop_homeassistant(*args):
             """ Stops Home Assistant. """
             request_shutdown.set()
 
         self.services.register(
             DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
+
+        if os.name != "nt":
+            try:
+                signal.signal(signal.SIGQUIT, stop_homeassistant)
+            except ValueError:
+                _LOGGER.warning(
+                    'Could not bind to SIGQUIT. Are you running in a thread?')
 
         while not request_shutdown.isSet():
             try:
@@ -653,6 +664,9 @@ class Config(object):
         self.location_name = None
         self.time_zone = None
 
+        # If True, pip install is skipped for requirements on startup
+        self.skip_pip = False
+
         # List of loaded components
         self.components = []
 
@@ -660,7 +674,7 @@ class Config(object):
         self.api = None
 
         # Directory that holds the configuration
-        self.config_dir = os.path.join(os.getcwd(), 'config')
+        self.config_dir = get_default_config_dir()
 
     def path(self, *path):
         """ Returns path to the file within the config dir. """
@@ -693,21 +707,6 @@ class Config(object):
             'time_zone': time_zone.zone,
             'components': self.components,
         }
-
-
-class HomeAssistantError(Exception):
-    """ General Home Assistant exception occured. """
-    pass
-
-
-class InvalidEntityFormatError(HomeAssistantError):
-    """ When an invalid formatted entity is encountered. """
-    pass
-
-
-class NoEntitySpecifiedError(HomeAssistantError):
-    """ When no entity is specified. """
-    pass
 
 
 def create_timer(hass, interval=TIMER_INTERVAL):
@@ -773,8 +772,10 @@ def create_timer(hass, interval=TIMER_INTERVAL):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_timer)
 
 
-def create_worker_pool(worker_count=MIN_WORKER_THREAD):
+def create_worker_pool(worker_count=None):
     """ Creates a worker pool to be used. """
+    if worker_count is None:
+        worker_count = MIN_WORKER_THREAD
 
     def job_handler(job):
         """ Called whenever a job is available to do. """

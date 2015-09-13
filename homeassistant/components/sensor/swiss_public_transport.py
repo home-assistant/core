@@ -1,14 +1,13 @@
 """
 homeassistant.components.sensor.swiss_public_transport
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 The Swiss public transport sensor will give you the next two departure times
 from a given location to another one. This sensor is limited to Switzerland.
 
 Configuration:
 
 To use the Swiss public transport sensor you will need to add something like
-the following to your config/configuration.yaml
+the following to your configuration.yaml file.
 
 sensor:
   platform: swiss_public_transport
@@ -54,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         for location in [config.get('from', None), config.get('to', None)]:
             # transport.opendata.ch doesn't play nice with requests.Session
-            result = get(_RESOURCE + 'locations?query=%s' % location)
+            result = get(_RESOURCE + 'locations?query=%s' % location,
+                         timeout=10)
             journey.append(result.json()['stations'][0]['name'])
     except KeyError:
         _LOGGER.exception(
@@ -116,8 +116,8 @@ class PublicTransportData(object):
             'from=' + self.start + '&' +
             'to=' + self.destination + '&' +
             'fields[]=connections/from/departureTimestamp/&' +
-            'fields[]=connections/')
-
+            'fields[]=connections/',
+            timeout=10)
         connections = response.json()['connections'][:2]
 
         try:

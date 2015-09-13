@@ -5,7 +5,7 @@ Support for Vera switches.
 
 Configuration:
 To use the Vera lights you will need to add something like the following to
-your config/configuration.yaml.
+your configuration.yaml file.
 
 switch:
     platform: vera
@@ -52,8 +52,10 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.vera.vera as veraApi
+
+REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
+                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
+                '#python-vera==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +63,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Vera switches. """
+    import pyvera as veraApi
 
     base_url = config.get('vera_controller_url')
     if not base_url:

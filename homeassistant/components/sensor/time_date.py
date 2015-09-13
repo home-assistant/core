@@ -1,13 +1,12 @@
 """
 homeassistant.components.sensor.time_date
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Date and Time service.
 
 Configuration:
 
 To use the Date and Time sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
   platform: time_date

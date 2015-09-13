@@ -205,8 +205,13 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.serve_forever()
 
     def register_path(self, method, url, callback, require_auth=True):
-        """ Registers a path wit the server. """
+        """ Registers a path with the server. """
         self.paths.append((method, url, callback, require_auth))
+
+    def log_message(self, fmt, *args):
+        """ Redirect built-in log to HA logging """
+        # pylint: disable=no-self-use
+        _LOGGER.info(fmt, *args)
 
 
 # pylint: disable=too-many-public-methods,too-many-locals
@@ -224,6 +229,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Contructor, call the base constructor and set up session """
         self._session = None
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+
+    def log_message(self, fmt, *arguments):
+        """ Redirect built-in log to HA logging """
+        _LOGGER.info(fmt, *arguments)
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
@@ -478,7 +487,7 @@ class ServerSession:
         return self._expiry < date_util.utcnow()
 
 
-class SessionStore:
+class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
     def __init__(self, enabled=True):
         """ Set up the session store """

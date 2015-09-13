@@ -26,6 +26,7 @@ switch:
   name: "Bedroom Switch"
   state_topic: "home/bedroom/switch1"
   command_topic: "home/bedroom/switch1/set"
+  qos: 0
   payload_on: "ON"
   payload_off: "OFF"
   optimistic: false
@@ -44,6 +45,11 @@ If not specified, optimistic mode will be forced.
 command_topic
 *Required
 The MQTT topic to publish commands to change the switch state.
+
+qos
+*Optional
+The maximum QoS level of the state topic. Default is 0.
+This QoS will also be used to publishing messages.
 
 payload_on
 *Optional
@@ -66,6 +72,7 @@ from homeassistant.components.switch import SwitchDevice
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Switch"
+DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
@@ -86,6 +93,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('name', DEFAULT_NAME),
         config.get('state_topic'),
         config.get('command_topic'),
+        config.get('qos', DEFAULT_QOS),
         config.get('payload_on', DEFAULT_PAYLOAD_ON),
         config.get('payload_off', DEFAULT_PAYLOAD_OFF),
         config.get('optimistic', DEFAULT_OPTIMISTIC))])
@@ -94,13 +102,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSwitch(SwitchDevice):
     """ Represents a switch that can be togggled using MQTT """
-    def __init__(self, hass, name, state_topic, command_topic,
+    def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_on, payload_off, optimistic):
         self._state = False
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
+        self._qos = qos
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
@@ -119,7 +128,8 @@ class MqttSwitch(SwitchDevice):
             self._optimistic = True
         else:
             # subscribe the state_topic
-            mqtt.subscribe(hass, self._state_topic, message_received)
+            mqtt.subscribe(hass, self._state_topic, message_received,
+                           self._qos)
 
     @property
     def should_poll(self):
@@ -138,7 +148,8 @@ class MqttSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_on)
+        mqtt.publish(self.hass, self._command_topic, self._payload_on,
+                     self._qos)
         if self._optimistic:
             # optimistically assume that switch has changed state
             self._state = True
@@ -146,7 +157,8 @@ class MqttSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_off)
+        mqtt.publish(self.hass, self._command_topic, self._payload_off,
+                     self._qos)
         if self._optimistic:
             # optimistically assume that switch has changed state
             self._state = False

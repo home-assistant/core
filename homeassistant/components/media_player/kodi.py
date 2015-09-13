@@ -6,7 +6,7 @@ Provides an interface to the XBMC/Kodi JSON-RPC API
 Configuration:
 
 To use the Kodi you will need to add something like the following to
-your config/configuration.yaml.
+your configuration.yaml file.
 
 media_player:
   platform: kodi
@@ -48,7 +48,7 @@ except ImportError:
     jsonrpc_requests = None
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['jsonrpc-requests>=0.1']
+REQUIREMENTS = ['jsonrpc-requests==0.1']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def _get_image_url(kodi_url):
-    """ Helper function that parses the thumbnail URLs used by Kodi """
+    """ Helper function that parses the thumbnail URLs used by Kodi. """
     url_components = urllib.parse.urlparse(kodi_url)
 
     if url_components.scheme == 'image':
@@ -107,6 +107,7 @@ class KodiDevice(MediaPlayerDevice):
         try:
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:
+            _LOGGER.exception('Unable to fetch kodi data')
             return None
 
     @property
@@ -235,7 +236,7 @@ class KodiDevice(MediaPlayerDevice):
         self.update_ha_state()
 
     def _set_play_state(self, state):
-        """ Helper method for play/pause/toggle """
+        """ Helper method for play/pause/toggle. """
         players = self._get_players()
 
         if len(players) != 0:
@@ -256,7 +257,7 @@ class KodiDevice(MediaPlayerDevice):
         self._set_play_state(False)
 
     def _goto(self, direction):
-        """ Helper method used for previous/next track """
+        """ Helper method used for previous/next track. """
         players = self._get_players()
 
         if len(players) != 0:

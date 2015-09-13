@@ -1,7 +1,6 @@
 """
 custom_components.mqtt_example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Shows how to communicate with MQTT. Follows a topic on MQTT and updates the
 state of an entity to the last message received on that topic.
 
@@ -12,7 +11,7 @@ example payload {"new_state": "some new state"}.
 Configuration:
 
 To use the mqtt_example component you will need to add the following to your
-config/configuration.yaml
+configuration.yaml file.
 
 mqtt_example:
   topic: home-assistant/mqtt_example

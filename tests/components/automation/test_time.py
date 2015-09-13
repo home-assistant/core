@@ -21,7 +21,6 @@ class TestAutomationTime(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
-        loader.prepare(self.hass)
         self.calls = []
 
         def record_call(service):

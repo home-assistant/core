@@ -13,6 +13,7 @@ sensor:
   platform: mqtt
   name: "MQTT Sensor"
   state_topic: "home/bedroom/temperature"
+  qos: 0
   unit_of_measurement: "ºC"
 
 Variables:
@@ -24,6 +25,10 @@ The name of the sensor. Default is 'MQTT Sensor'.
 state_topic
 *Required
 The MQTT topic subscribed to receive sensor values.
+
+qos
+*Optional
+The maximum QoS level of the state topic. Default is 0.
 
 unit_of_measurement
 *Optional
@@ -38,6 +43,7 @@ import homeassistant.components.mqtt as mqtt
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Sensor"
+DEFAULT_QOS = 0
 
 DEPENDENCIES = ['mqtt']
 
@@ -54,16 +60,19 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         hass,
         config.get('name', DEFAULT_NAME),
         config.get('state_topic'),
+        config.get('qos', DEFAULT_QOS),
         config.get('unit_of_measurement'))])
 
 
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSensor(Entity):
     """ Represents a sensor that can be updated using MQTT """
-    def __init__(self, hass, name, state_topic, unit_of_measurement):
+    def __init__(self, hass, name, state_topic, qos, unit_of_measurement):
         self._state = "-"
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
+        self._qos = qos
         self._unit_of_measurement = unit_of_measurement
 
         def message_received(topic, payload, qos):
@@ -71,7 +80,7 @@ class MqttSensor(Entity):
             self._state = payload
             self.update_ha_state()
 
-        mqtt.subscribe(hass, self._state_topic, message_received)
+        mqtt.subscribe(hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):
