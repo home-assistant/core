@@ -58,8 +58,9 @@ from homeassistant.const import (
 DOMAIN = "verisure"
 DISCOVER_SENSORS = 'verisure.sensors'
 DISCOVER_SWITCHES = 'verisure.switches'
+DISCOVER_ALARMS = 'verisure.alarms'
 
-DEPENDENCIES = []
+DEPENDENCIES = ['alarm']
 REQUIREMENTS = [
     'https://github.com/persandstrom/python-verisure/archive/master.zip'
     ]
@@ -121,7 +122,8 @@ def setup(hass, config):
 
     # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
-                                  ('switch', DISCOVER_SWITCHES))):
+                                  ('switch', DISCOVER_SWITCHES),
+                                  ('alarm', DISCOVER_ALARMS))):
         component = get_component(comp_name)
         _LOGGER.info(config[DOMAIN])
         bootstrap.setup_component(hass, component.DOMAIN, config)
@@ -164,7 +166,7 @@ def reconnect():
 def update():
     ''' Updates the status of verisure components '''
     if WRONG_PASSWORD_GIVEN:
-        # Is there any way to inform user?
+        _LOGGER.error('Wrong password')
         return
 
     try:
