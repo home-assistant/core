@@ -33,7 +33,7 @@ def register(hass, config, action):
                       CONF_BELOW, CONF_ABOVE)
         return False
 
-    def numeric_in_range(value, range_start, range_end):
+    def _in_range(value, range_start, range_end):
         """ Checks if value is inside the range
         :param value:
         :param range_start:
@@ -58,9 +58,8 @@ def register(hass, config, action):
         """ Listens for state changes and calls action. """
 
         # Fire action if we go from outside range into range
-        if numeric_in_range(to_s.state, above, below) and \
-                (from_s is None or \
-                     not numeric_in_range(from_s.state, above, below)):
+        if _in_range(to_s.state, above, below) and \
+                (from_s is None or not _in_range(from_s.state, above, below)):
             action()
 
     track_state_change(
