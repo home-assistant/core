@@ -133,29 +133,25 @@ class ThermostatDevice(Entity):
         user_unit = self.hass.config.temperature_unit
 
         data = {
-            ATTR_CURRENT_TEMPERATURE: round(convert(self.current_temperature,
-                                                    thermostat_unit,
-                                                    user_unit), 1),
-            ATTR_MIN_TEMP: round(convert(self.min_temp,
-                                         thermostat_unit,
-                                         user_unit), 0),
-            ATTR_MAX_TEMP: round(convert(self.max_temp,
-                                         thermostat_unit,
-                                         user_unit), 0),
-            ATTR_TEMPERATURE: round(convert(self.target_temperature,
-                                            thermostat_unit,
-                                            user_unit), 0),
-            ATTR_TEMPERATURE_LOW: round(convert(self.target_temperature_low,
-                                                thermostat_unit,
-                                                user_unit), 0),
-            ATTR_TEMPERATURE_HIGH: round(convert(self.target_temperature_high,
-                                                 thermostat_unit,
-                                                 user_unit), 0),
-            ATTR_OPERATION: self.operation
+            ATTR_CURRENT_TEMPERATURE: round(convert(
+                self.current_temperature, thermostat_unit, user_unit), 1),
+            ATTR_MIN_TEMP: round(convert(
+                self.min_temp, thermostat_unit, user_unit), 0),
+            ATTR_MAX_TEMP: round(convert(
+                self.max_temp, thermostat_unit, user_unit), 0),
+            ATTR_TEMPERATURE: round(convert(
+                self.target_temperature, thermostat_unit, user_unit), 0),
+            ATTR_TEMPERATURE_LOW: round(convert(
+                self.target_temperature_low, thermostat_unit, user_unit), 0),
+            ATTR_TEMPERATURE_HIGH: round(convert(
+                self.target_temperature_high, thermostat_unit, user_unit), 0),
         }
 
-        is_away = self.is_away_mode_on
+        operation = self.operation
+        if operation is not None:
+            data[ATTR_OPERATION] = operation
 
+        is_away = self.is_away_mode_on
         if is_away is not None:
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
@@ -169,7 +165,7 @@ class ThermostatDevice(Entity):
     @property
     def unit_of_measurement(self):
         """ Unit of measurement this thermostat expresses itself in. """
-        return NotImplementedError
+        raise NotImplementedError
 
     @property
     def current_temperature(self):
@@ -179,7 +175,7 @@ class ThermostatDevice(Entity):
     @property
     def operation(self):
         """ Returns current operation ie. heat, cool, idle """
-        return NotImplementedError
+        return None
 
     @property
     def target_temperature(self):
