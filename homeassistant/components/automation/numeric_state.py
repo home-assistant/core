@@ -15,6 +15,7 @@ CONF_ABOVE = "state_above"
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def register(hass, config, action):
     """ Listen for state changes based on `config`. """
     entity_id = config.get(CONF_ENTITY_ID)
@@ -27,7 +28,9 @@ def register(hass, config, action):
     above = config.get(CONF_ABOVE)
 
     if below is None and above is None:
-        _LOGGER.error("Missing configuration key %s or %s", CONF_BELOW, CONF_ABOVE)
+        _LOGGER.error("Missing configuration key. One of %s or %s is required",
+                      CONF_BELOW, CONF_ABOVE)
+        return False
 
     def numeric_in_range(value, range_start, range_end):
         """ Checks if value is inside the range
@@ -44,18 +47,18 @@ def register(hass, config, action):
         value = float(value)
 
         if range_start is not None and range_end is not None:
-            return float(range_start) < value < float(range_end)
+            return float(range_start) <= value < float(range_end)
         elif range_end is not None:
             return value < float(range_end)
         else:
-            return value > float(range_start)
+            return float(range_start) <= value
 
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
 
         # Fire action if we go from outside range into range
         if numeric_in_range(to_s.state, above, below) and \
-           from_s is None or not numeric_in_range(from_s.state, above, below):
+           (from_s is None or not numeric_in_range(from_s.state, above, below)):
             action()
 
     track_state_change(
