@@ -1,13 +1,12 @@
 """
 homeassistant.components.notify.instapush
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Instapush notification service.
 
 Configuration:
 
 To use the Instapush notifier you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 notify:
   platform: instapush
@@ -16,7 +15,7 @@ notify:
   event: YOUR_EVENT
   tracker: YOUR_TRACKER
 
-VARIABLES:
+Variables:
 
 api_key
 *Required
@@ -50,7 +49,6 @@ curl -X POST \
     https://api.instapush.im/v1/post
 
 Details for the API : https://instapush.im/developer/rest
-
 """
 import logging
 import json

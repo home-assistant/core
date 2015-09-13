@@ -8,14 +8,16 @@ Provides tests to verify that Home Assistant core works.
 # pylint: disable=too-few-public-methods
 import os
 import unittest
-import unittest.mock as mock
+from unittest.mock import patch
 import time
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytz
 
 import homeassistant.core as ha
+from homeassistant.exceptions import (
+    HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
@@ -41,7 +43,7 @@ class TestHomeAssistant(unittest.TestCase):
         """ Stop down stuff we started. """
         try:
             self.hass.stop()
-        except ha.HomeAssistantError:
+        except HomeAssistantError:
             # Already stopped after the block till stopped test
             pass
 
@@ -53,29 +55,26 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(calls))
 
+    # @patch('homeassistant.core.time.sleep')
     def test_block_till_stoped(self):
         """ Test if we can block till stop service is called. """
-        blocking_thread = threading.Thread(target=self.hass.block_till_stopped)
+        with patch('time.sleep'):
+            blocking_thread = threading.Thread(
+                target=self.hass.block_till_stopped)
 
-        self.assertFalse(blocking_thread.is_alive())
+            self.assertFalse(blocking_thread.is_alive())
 
-        blocking_thread.start()
+            blocking_thread.start()
 
-        # Threads are unpredictable, try 20 times if we're ready
-        wait_loops = 0
-        while not blocking_thread.is_alive() and wait_loops < 20:
-            wait_loops += 1
-            time.sleep(0.05)
+            self.assertTrue(blocking_thread.is_alive())
 
-        self.assertTrue(blocking_thread.is_alive())
+            self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
+            self.hass.pool.block_till_done()
 
-        self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
-        self.hass.pool.block_till_done()
-
-        # Threads are unpredictable, try 20 times if we're ready
-        wait_loops = 0
-        while blocking_thread.is_alive() and wait_loops < 20:
-            wait_loops += 1
+        # Wait for thread to stop
+        for _ in range(20):
+            if not blocking_thread.is_alive():
+                break
             time.sleep(0.05)
 
         self.assertFalse(blocking_thread.is_alive())
@@ -86,13 +85,9 @@ class TestHomeAssistant(unittest.TestCase):
                                   lambda event: calls.append(1))
 
         def raise_keyboardinterrupt(length):
-            # We don't want to patch the sleep of the timer.
-            if length == 1:
-                raise KeyboardInterrupt
+            raise KeyboardInterrupt
 
-        self.hass.start()
-
-        with mock.patch('time.sleep', raise_keyboardinterrupt):
+        with patch('homeassistant.core.time.sleep', raise_keyboardinterrupt):
             self.hass.block_till_stopped()
 
         self.assertEqual(1, len(calls))
@@ -250,7 +245,7 @@ class TestState(unittest.TestCase):
     def test_init(self):
         """ Test state.init """
         self.assertRaises(
-            ha.InvalidEntityFormatError, ha.State,
+            InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
 
     def test_domain(self):
@@ -398,9 +393,10 @@ class TestStateMachine(unittest.TestCase):
     def test_last_changed_not_updated_on_same_state(self):
         state = self.states.get('light.Bowl')
 
-        time.sleep(1)
+        future = dt_util.utcnow() + timedelta(hours=10)
 
-        self.states.set("light.Bowl", "on")
+        with patch('homeassistant.util.dt.utcnow', return_value=future):
+            self.states.set("light.Bowl", "on", {'attr': 'triggers_change'})
 
         self.assertEqual(state.last_changed,
                          self.states.get('light.Bowl').last_changed)
@@ -489,18 +485,24 @@ class TestConfig(unittest.TestCase):
 
     def test_config_dir_set_correct(self):
         """ Test config dir set correct. """
-        self.assertEqual(os.path.join(os.getcwd(), "config"),
+        data_dir = os.getenv('APPDATA') if os.name == "nt" \
+            else os.path.expanduser('~')
+        self.assertEqual(os.path.join(data_dir, ".homeassistant"),
                          self.config.config_dir)
 
     def test_path_with_file(self):
         """ Test get_config_path method. """
-        self.assertEqual(os.path.join(os.getcwd(), "config", "test.conf"),
+        data_dir = os.getenv('APPDATA') if os.name == "nt" \
+            else os.path.expanduser('~')
+        self.assertEqual(os.path.join(data_dir, ".homeassistant", "test.conf"),
                          self.config.path("test.conf"))
 
     def test_path_with_dir_and_file(self):
         """ Test get_config_path method. """
+        data_dir = os.getenv('APPDATA') if os.name == "nt" \
+            else os.path.expanduser('~')
         self.assertEqual(
-            os.path.join(os.getcwd(), "config", "dir", "test.conf"),
+            os.path.join(data_dir, ".homeassistant", "dir", "test.conf"),
             self.config.path("dir", "test.conf"))
 
     def test_temperature_not_convert_if_no_preference(self):

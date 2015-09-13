@@ -1,31 +1,30 @@
 """
 homeassistant.components.sensor.transmission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Monitors Transmission BitTorrent client API
+Monitors Transmission BitTorrent client API.
 
 Configuration:
 
 To use the Transmission sensor you will need to add something like the
-following to your config/configuration.yaml
+following to your configuration.yaml file.
 
 sensor:
-    platform: transmission
-    name: Transmission
-    host: 192.168.1.26
-    port: 9091
-    username: YOUR_USERNAME
-    password: YOUR_PASSWORD
-    monitored_variables:
-        - type: 'current_status'
-        - type: 'download_speed'
-        - type: 'upload_speed'
+  platform: transmission
+  name: Transmission
+  host: 192.168.1.26
+  port: 9091
+  username: YOUR_USERNAME
+  password: YOUR_PASSWORD
+  monitored_variables:
+    - 'current_status'
+    - 'download_speed'
+    - 'upload_speed'
 
 Variables:
 
 host
 *Required
-This is the IP address of your Transmission daemon. Example: 192.168.1.32
+This is the IP address of your Transmission daemon, e.g. 192.168.1.32
 
 port
 *Optional
@@ -33,11 +32,11 @@ The port your Transmission daemon uses, defaults to 9091. Example: 8080
 
 username
 *Required
-Your Transmission username
+Your Transmission username.
 
 password
 *Required
-Your Transmission password
+Your Transmission password.
 
 name
 *Optional
@@ -45,16 +44,9 @@ The name to use when displaying this Transmission instance.
 
 monitored_variables
 *Required
-An array specifying the variables to monitor.
-
-These are the variables for the monitored_variables array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
-list of all available variables.
+Variables to monitor. See the configuration example above for a
+list of all available variables to monitor.
 """
-
 from homeassistant.util import Throttle
 from datetime import timedelta
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
@@ -67,7 +59,7 @@ from transmissionrpc.error import TransmissionError
 
 import logging
 
-REQUIREMENTS = ['transmissionrpc>=0.11']
+REQUIREMENTS = ['transmissionrpc==0.11']
 SENSOR_TYPES = {
     'current_status': ['Status', ''],
     'download_speed': ['Down Speed', 'MB/s'],
@@ -81,7 +73,7 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors. """
+    """ Sets up the Transmission sensors. """
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
@@ -110,11 +102,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for variable in config['monitored_variables']:
-        if variable['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable['type'])
+        if variable not in SENSOR_TYPES:
+            _LOGGER.error('Sensor type: "%s" does not exist', variable)
         else:
             dev.append(TransmissionSensor(
-                variable['type'], transmission_api, name))
+                variable, transmission_api, name))
 
     add_devices(dev)
 

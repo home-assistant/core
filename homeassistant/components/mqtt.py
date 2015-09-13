@@ -46,7 +46,7 @@ The keep alive in seconds for this client. Default is 60.
 import logging
 import socket
 
-from homeassistant.core import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
@@ -66,7 +66,7 @@ SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
 
 DEPENDENCIES = []
-REQUIREMENTS = ['paho-mqtt>=1.1']
+REQUIREMENTS = ['paho-mqtt==1.1']
 
 CONF_BROKER = 'broker'
 CONF_PORT = 'port'
@@ -75,21 +75,23 @@ CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 
-ATTR_QOS = 'qos'
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
+ATTR_QOS = 'qos'
 
 
-def publish(hass, topic, payload):
+def publish(hass, topic, payload, qos=None):
     """ Send an MQTT message. """
     data = {
         ATTR_TOPIC: topic,
         ATTR_PAYLOAD: payload,
     }
+    if qos is not None:
+        data[ATTR_QOS] = qos
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-def subscribe(hass, topic, callback, qos=0):
+def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     """ Subscribe to a topic. """
     def mqtt_topic_subscriber(event):
         """ Match subscribed MQTT topic. """
@@ -141,9 +143,10 @@ def setup(hass, config):
         """ Handle MQTT publish service calls. """
         msg_topic = call.data.get(ATTR_TOPIC)
         payload = call.data.get(ATTR_PAYLOAD)
+        qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
         if msg_topic is None or payload is None:
             return
-        MQTT_CLIENT.publish(msg_topic, payload)
+        MQTT_CLIENT.publish(msg_topic, payload, qos)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
@@ -177,9 +180,9 @@ class MQTT(object):  # pragma: no cover
         self._mqttc.on_message = self._mqtt_on_message
         self._mqttc.connect(broker, port, keepalive)
 
-    def publish(self, topic, payload):
+    def publish(self, topic, payload, qos):
         """ Publish a MQTT message. """
-        self._mqttc.publish(topic, payload)
+        self._mqttc.publish(topic, payload, qos)
 
     def unsubscribe(self, topic):
         """ Unsubscribe from topic. """
