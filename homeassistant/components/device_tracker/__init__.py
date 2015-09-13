@@ -75,6 +75,8 @@ DISCOVERY_PLATFORMS = {
 }
 _LOGGER = logging.getLogger(__name__)
 
+# pylint: disable=too-many-arguments
+
 
 def is_on(hass, entity_id=None):
     """ Returns if any or specified device is home. """
@@ -86,10 +88,12 @@ def is_on(hass, entity_id=None):
 def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
         gps=None):
     """ Call service to notify you see device. """
-    data = {key: value for key, value in (
-            (ATTR_MAC, mac), (ATTR_DEV_ID, dev_id),
-            (ATTR_HOST_NAME, host_name), (ATTR_LOCATION_NAME, location_name),
-            (ATTR_GPS, gps)) if value is not None}
+    data = {key: value for key, value in
+            ((ATTR_MAC, mac),
+             (ATTR_DEV_ID, dev_id),
+             (ATTR_HOST_NAME, host_name),
+             (ATTR_LOCATION_NAME, location_name),
+             (ATTR_GPS, gps)) if value is not None}
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
@@ -152,9 +156,9 @@ def setup(hass, config):
 
     def see_service(call):
         """ Service to see a device. """
-        args = {key: value for key, value in call.data.items() if key in (
-                ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                ATTR_GPS)}
+        args = {key: value for key, value in call.data.items() if key in
+                (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
+                 ATTR_GPS)}
         tracker.see(**args)
 
     hass.services.register(DOMAIN, SERVICE_SEE, see_service)
@@ -180,7 +184,6 @@ class DeviceTracker(object):
 
         self.group = None
 
-    # pylint: disable=too-many-arguments
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
             gps=None):
         """ Notify device tracker that you see a device. """
@@ -352,7 +355,7 @@ def load_config(path, hass, consider_home):
         for dev_id, device in load_yaml_config_file(path).items()]
 
 
-def setup_scanner_platform(hass, config, scanner, see):
+def setup_scanner_platform(hass, config, scanner, see_device):
     """ Helper method to connect scanner-based platform to device tracker. """
     interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
                             DEFAULT_SCAN_INTERVAL)
@@ -368,7 +371,7 @@ def setup_scanner_platform(hass, config, scanner, see):
             else:
                 host_name = scanner.get_device_name(mac)
                 seen.add(mac)
-            see(mac=mac, host_name=host_name)
+            see_device(mac=mac, host_name=host_name)
 
     track_utc_time_change(hass, device_tracker_scan, second=range(0, 60,
                                                                   interval))
