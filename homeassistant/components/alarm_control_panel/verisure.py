@@ -1,16 +1,16 @@
 """
-homeassistant.components.alarm.verisure
+homeassistant.components.alarm_control_panel.verisure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Interfaces with Verisure alarm.
+Interfaces with Verisure alarm control panel.
 """
 import logging
 
 import homeassistant.components.verisure as verisure
-import homeassistant.components.alarm as alarm
+import homeassistant.components.alarm_control_panel as alarm
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_UNKNOWN,
-        STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY)
+from homeassistant.const import (
+    STATE_UNKNOWN,
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(alarms)
 
 
-class VerisureAlarm(alarm.AlarmControl):
+class VerisureAlarm(alarm.AlarmControlPanel):
     """ represents a Verisure alarm status within home assistant. """
 
     def __init__(self, alarm_status):
@@ -56,24 +56,32 @@ class VerisureAlarm(alarm.AlarmControl):
         elif verisure.STATUS[self._device][self._id].status == 'armedaway':
             self._state = STATE_ALARM_ARMED_AWAY
         elif verisure.STATUS[self._device][self._id].status != 'pending':
-            _LOGGER.error('Unknown alarm state ' +  verisure.STATUS[self._device][self._id].status)
+            _LOGGER.error(
+                'Unknown alarm state %s',
+                verisure.STATUS[self._device][self._id].status)
         return self._state
 
     def update(self):
         ''' update alarm status '''
         verisure.update()
-    
+
     def alarm_disarm(self, code):
         """ Send disarm command. """
-        verisure.MY_PAGES.set_alarm_status(code, verisure.MY_PAGES.ALARM_DISARMED)
-        _LOGGER.warning('disarming')        
-    
+        verisure.MY_PAGES.set_alarm_status(
+            code,
+            verisure.MY_PAGES.ALARM_DISARMED)
+        _LOGGER.warning('disarming')
+
     def alarm_arm_home(self, code):
         """ Send arm home command. """
-        verisure.MY_PAGES.set_alarm_status(code, verisure.MY_PAGES.ALARM_ARMED_HOME)
-        _LOGGER.warning('arming home')        
-    
+        verisure.MY_PAGES.set_alarm_status(
+            code,
+            verisure.MY_PAGES.ALARM_ARMED_HOME)
+        _LOGGER.warning('arming home')
+
     def alarm_arm_away(self, code):
         """ Send arm away command. """
-        verisure.MY_PAGES.set_alarm_status(code, verisure.MY_PAGES.ALARM_ARMED_AWAY)
-        _LOGGER.warning('arming away')        
+        verisure.MY_PAGES.set_alarm_status(
+            code,
+            verisure.MY_PAGES.ALARM_ARMED_AWAY)
+        _LOGGER.warning('arming away')
