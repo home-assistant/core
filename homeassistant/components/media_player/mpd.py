@@ -1,19 +1,19 @@
 """
 homeassistant.components.media_player.mpd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with a Music Player Daemon.
 
 Configuration:
 
 To use MPD you will need to add something like the following to your
-config/configuration.yaml
+configuration.yaml file.
 
 media_player:
   platform: mpd
   server: 127.0.0.1
   port: 6600
   location: bedroom
+  password: superSecretPassword123
 
 Variables:
 
@@ -28,6 +28,10 @@ Port of the Music Player Daemon, defaults to 6600. Example: 6600
 location
 *Optional
 Location of your Music Player Daemon.
+
+password
+*Optional
+Password for your Music Player Daemon.
 """
 import logging
 import socket
@@ -48,7 +52,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['python-mpd2>=0.5.4']
+REQUIREMENTS = ['python-mpd2==0.5.4']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
@@ -61,6 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     daemon = config.get('server', None)
     port = config.get('port', 6600)
     location = config.get('location', 'MPD')
+    password = config.get('password', None)
 
     global mpd  # pylint: disable=invalid-name
     if mpd is None:
@@ -71,6 +76,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         mpd_client = mpd.MPDClient()
         mpd_client.connect(daemon, port)
+
+        if password is not None:
+            mpd_client.password(password)
+
         mpd_client.close()
         mpd_client.disconnect()
     except socket.error:
@@ -79,8 +88,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Please check your settings")
 
         return False
+    except mpd.CommandError as error:
 
-    add_devices([MpdDevice(daemon, port, location)])
+        if "incorrect password" in str(error):
+            _LOGGER.error(
+                "MPD reported incorrect password. "
+                "Please check your password.")
+
+            return False
+        else:
+            raise
+
+    add_devices([MpdDevice(daemon, port, location, password)])
 
 
 class MpdDevice(MediaPlayerDevice):
@@ -89,10 +108,11 @@ class MpdDevice(MediaPlayerDevice):
     # MPD confuses pylint
     # pylint: disable=no-member, abstract-method
 
-    def __init__(self, server, port, location):
+    def __init__(self, server, port, location, password):
         self.server = server
         self.port = port
         self._name = location
+        self.password = password
         self.status = None
         self.currentsong = None
 
@@ -107,6 +127,10 @@ class MpdDevice(MediaPlayerDevice):
             self.currentsong = self.client.currentsong()
         except mpd.ConnectionError:
             self.client.connect(self.server, self.port)
+
+            if self.password is not None:
+                self.client.password(self.password)
+
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
 
@@ -189,11 +213,11 @@ class MpdDevice(MediaPlayerDevice):
 
     def media_play(self):
         """ Service to send the MPD the command for play/pause. """
-        self.client.start()
+        self.client.pause(0)
 
     def media_pause(self):
         """ Service to send the MPD the command for play/pause. """
-        self.client.pause()
+        self.client.pause(1)
 
     def media_next_track(self):
         """ Service to send the MPD the command for next track. """

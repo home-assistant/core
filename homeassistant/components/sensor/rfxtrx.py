@@ -4,10 +4,9 @@ homeassistant.components.sensor.rfxtrx
 Shows sensor values from RFXtrx sensors.
 
 Configuration:
-To use the rfxtrx sensors you will need to add something like the following to
-your config/configuration.yaml
 
-Example:
+To use the rfxtrx sensors you will need to add something like the following to
+your configuration.yaml file.
 
 sensor:
     platform: rfxtrx
@@ -26,8 +25,8 @@ from collections import OrderedDict
 from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/master.zip'
-                '#RFXtrx>=0.15']
+REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
+                'ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip#RFXtrx==0.15']
 
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELCIUS),
@@ -102,4 +101,5 @@ class RfxtrxSensor(Entity):
 
     @property
     def unit_of_measurement(self):
+        """ Unit this state is expressed in. """
         return self._unit_of_measurement

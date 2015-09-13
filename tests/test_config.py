@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
 
-from common import get_test_config_dir, mock_detect_location_info
+from tests.common import get_test_config_dir, mock_detect_location_info
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -49,13 +49,15 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(YAML_PATH, config_util.find_config_file(CONFIG_DIR))
 
-    def test_ensure_config_exists_creates_config(self):
+    @mock.patch('builtins.print')
+    def test_ensure_config_exists_creates_config(self, mock_print):
         """ Test that calling ensure_config_exists creates a new config file if
             none exists. """
 
         config_util.ensure_config_exists(CONFIG_DIR, False)
 
         self.assertTrue(os.path.isfile(YAML_PATH))
+        self.assertTrue(mock_print.called)
 
     def test_ensure_config_exists_uses_existing_config(self):
         """ Test that calling ensure_config_exists uses existing config. """
@@ -100,11 +102,12 @@ class TestConfig(unittest.TestCase):
         self.assertEqual({'hello': 'world'},
                          config_util.load_config_file(YAML_PATH))
 
-    def test_create_default_config_detect_location(self):
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                mock_detect_location_info)
+    @mock.patch('builtins.print')
+    def test_create_default_config_detect_location(self, mock_print):
         """ Test that detect location sets the correct config keys. """
-        with mock.patch('homeassistant.util.location.detect_location_info',
-                        mock_detect_location_info):
-            config_util.ensure_config_exists(CONFIG_DIR)
+        config_util.ensure_config_exists(CONFIG_DIR)
 
         config = config_util.load_config_file(YAML_PATH)
 
@@ -121,11 +124,15 @@ class TestConfig(unittest.TestCase):
         }
 
         self.assertEqual(expected_values, ha_conf)
+        self.assertTrue(mock_print.called)
 
-    def test_create_default_config_returns_none_if_write_error(self):
+    @mock.patch('builtins.print')
+    def test_create_default_config_returns_none_if_write_error(self,
+                                                               mock_print):
         """
         Test that writing default config to non existing folder returns None.
         """
         self.assertIsNone(
             config_util.create_default_config(
                 os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
+        self.assertTrue(mock_print.called)

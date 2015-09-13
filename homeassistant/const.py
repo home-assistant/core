@@ -1,4 +1,7 @@
 """ Constants used by Home Assistant components. """
+
+__version__ = "0.7.3dev0"
+
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 
@@ -37,12 +40,13 @@ STATE_ON = 'on'
 STATE_OFF = 'off'
 STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
-STATE_UNKNOWN = "unknown"
+STATE_UNKNOWN = 'unknown'
 STATE_OPEN = 'open'
 STATE_CLOSED = 'closed'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
+STATE_STANDBY = 'standby'
 STATE_ALARM_DISARMED = 'disarmed'
 STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'

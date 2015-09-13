@@ -1,7 +1,7 @@
 """
 homeassistant.components.switch.verisure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for Verisure Smartplugs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Verisure Smartplugs.
 """
 import logging
 
@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Arduino platform. """
+    """ Sets up the Verisure platform. """
 
     if not verisure.MY_PAGES:
         _LOGGER.error('A connection has not been made to Verisure mypages.')
@@ -48,13 +48,13 @@ class VerisureSmartplug(SwitchDevice):
         return plug_status == self.status_on
 
     def turn_on(self):
-        """ Set smartplug status on """
+        """ Set smartplug status on. """
         verisure.MY_PAGES.set_smartplug_status(
             self._id,
             self.status_on)
 
     def turn_off(self):
-        """ Set smartplug status off """
+        """ Set smartplug status off. """
         verisure.MY_PAGES.set_smartplug_status(
             self._id,
             self.status_off)
