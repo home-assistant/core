@@ -57,6 +57,7 @@ class SonosDevice(MediaPlayerDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, player):
+        self.hass = hass
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
@@ -77,6 +78,11 @@ class SonosDevice(MediaPlayerDevice):
     def name(self):
         """ Returns the name of the device. """
         return self._name
+
+    @property
+    def unique_id(self):
+        """ Returns a unique id. """
+        return "{}.{}".format(self.__class__, self._player.uid)
 
     @property
     def state(self):
