@@ -60,8 +60,15 @@ DEFAULT_SCAN_INTERVAL = 12
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
 
+SERVICE_SEE = 'see'
+
 ATTR_LATITUDE = 'latitude'
 ATTR_LONGITUDE = 'longitude'
+ATTR_MAC = 'mac'
+ATTR_DEV_ID = 'dev_id'
+ATTR_HOST_NAME = 'host_name'
+ATTR_LOCATION_NAME = 'location_name'
+ATTR_GPS = 'gps'
 
 DISCOVERY_PLATFORMS = {
     discovery.SERVICE_NETGEAR: 'netgear',
@@ -74,6 +81,16 @@ def is_on(hass, entity_id=None):
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
     return hass.states.is_state(entity, STATE_HOME)
+
+
+def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
+        gps=None):
+    """ Call service to notify you see device. """
+    data = {key: value for key, value in (
+            (ATTR_MAC, mac), (ATTR_DEV_ID, dev_id),
+            (ATTR_HOST_NAME, host_name), (ATTR_LOCATION_NAME, location_name),
+            (ATTR_GPS, gps)) if value is not None}
+    hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
 def setup(hass, config):
@@ -132,6 +149,15 @@ def setup(hass, config):
     track_utc_time_change(hass, update_stale, second=range(0, 60, 5))
 
     tracker.setup_group()
+
+    def see_service(call):
+        """ Service to see a device. """
+        args = {key: value for key, value in call.data.items() if key in (
+                ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
+                ATTR_GPS)}
+        tracker.see(**args)
+
+    hass.services.register(DOMAIN, SERVICE_SEE, see_service)
 
     return True
 
