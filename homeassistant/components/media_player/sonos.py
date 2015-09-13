@@ -93,8 +93,7 @@ class SonosDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """ Volume level of the media player (0..1). """
-        if 'mixer volume' in self._status:
-            return self._player.volume / 100.0
+        return self._player.volume / 100.0
 
     @property
     def is_volume_muted(self):
