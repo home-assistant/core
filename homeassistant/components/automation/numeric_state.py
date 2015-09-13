@@ -40,11 +40,11 @@ def register(hass, config, action):
         :return:
         """
 
-        if value is None:
+        try:
+            value = float(value)
+        except ValueError:
             _LOGGER.warn("Missing value in numeric check")
             return False
-
-        value = float(value)
 
         if range_start is not None and range_end is not None:
             return float(range_start) <= value < float(range_end)
