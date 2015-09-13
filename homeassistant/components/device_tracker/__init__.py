@@ -131,6 +131,8 @@ def setup(hass, config):
         tracker.update_stale(now)
     track_utc_time_change(hass, update_stale, second=range(0, 60, 5))
 
+    tracker.setup_group()
+
     return True
 
 
@@ -150,8 +152,7 @@ class DeviceTracker(object):
                 entity_ids.append(device.entity_id)
                 device.update_ha_state()
 
-        self.group = group.setup_group(hass, GROUP_NAME_ALL_DEVICES,
-                                       entity_ids, False)
+        self.group = None
 
     # pylint: disable=too-many-arguments
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
@@ -187,9 +188,18 @@ class DeviceTracker(object):
             if device.track:
                 device.update_ha_state()
 
-            self.group.update_tracked_entity_ids(
-                list(self.group.tracking) + [device.entity_id])
+            # During init, we ignore the group
+            if self.group is not None:
+                self.group.update_tracked_entity_ids(
+                    list(self.group.tracking) + [device.entity_id])
             update_config(self.hass.config.path(YAML_DEVICES), dev_id, device)
+
+    def setup_group(self):
+        """ Initializes group for all tracked devices. """
+        entity_ids = (dev.entity_id for dev in self.devices.values()
+                      if dev.track)
+        self.group = group.setup_group(
+            self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
     def update_stale(self, now):
         """ Update stale devices. """
