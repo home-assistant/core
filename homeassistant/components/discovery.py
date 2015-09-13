@@ -79,13 +79,6 @@ def setup(hass, config):
             if not component:
                 return
 
-            # Hack - fix when device_tracker supports discovery
-            if service == SERVICE_NETGEAR:
-                bootstrap.setup_component(hass, component, {
-                    'device_tracker': {'platform': 'netgear'}
-                })
-                return
-
             # This component cannot be setup.
             if not bootstrap.setup_component(hass, component, config):
                 return
