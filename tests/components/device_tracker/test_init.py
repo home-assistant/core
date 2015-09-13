@@ -213,3 +213,21 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(STATE_NOT_HOME, state.state)
         self.assertSequenceEqual((entity_id,),
                                  state.attributes.get(ATTR_ENTITY_ID))
+
+    @patch('homeassistant.components.device_tracker.DeviceTracker.see')
+    def test_see_service(self, mock_see):
+        self.assertTrue(device_tracker.setup(self.hass, {}))
+        mac = 'AB:CD:EF:GH'
+        dev_id = 'some_device'
+        host_name = 'example.com'
+        location_name = 'Work'
+        gps = [.3, .8]
+
+        device_tracker.see(self.hass, mac, dev_id, host_name, location_name,
+                           gps)
+
+        self.hass.pool.block_till_done()
+
+        mock_see.assert_called_once_with(
+            mac=mac, dev_id=dev_id, host_name=host_name,
+            location_name=location_name, gps=gps)
