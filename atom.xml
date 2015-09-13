@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-11T09:24:25-07:00</updated>
+  <updated>2015-09-12T18:24:29-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -39,7 +39,6 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-<span class='line-number'>8</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">127.0.0.1</span>
 </span><span class='line'>
@@ -47,7 +46,6 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 </span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Fabian&#39;s</span><span class="nv"> </span><span class="s">Mood&quot;</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/fabian/mood&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;</span><span class="nv"> </span><span class="s">&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -68,13 +66,15 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 </p>
 
 
+<p>This is a really bad example. Don&rsquo;t do this in the real world because you won&rsquo;t be able to create diagrams of historical data. Better use a numerical value.</p>
+
 <h3><a class='title-link' name='python-mqtt-bindings' href='#python-mqtt-bindings'></a> Python MQTT bindings</h3>
 
 <p>The last section was pretty boring, I know. Nobody wants to send MQTT messages by hand if there is a computer on the desk. If you are playing the lottery this section is for you. If not, read it anyway because the lottery is just an example :-).</p>
 
 <p>This example is using the <a href="https://eclipse.org/paho/clients/python/">Paho MQTT Python binding</a> because those binding should be available on the host where Home Assistant is running. If you want to use this example on another machine, please make sure that the bindings are installed (<code>pip3 install paho-mqtt</code>).</p>
 
-<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called &ldquo;Lottery&rdquo;.</p>
+<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called &ldquo;Lottery&rdquo; and the unit of measurement will be &ldquo;No.&rdquo;.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -83,7 +83,7 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Lottery&quot;</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/lottery/number&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;</span><span class="nv"> </span><span class="s">&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;No.&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -308,7 +308,7 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Brightness&quot;</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/sensor01/brightness&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;</span><span class="nv"> </span><span class="s">&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;cd&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

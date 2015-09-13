@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Developers - Home Assistant</title>
+    <title>iTunes support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Home Assistant developer information. Everything to get you started">
+    <meta name="description" content="Instructions how to integrate iTunes into Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Developers">
+    <meta property="og:title" content="iTunes support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/developers/">
+    <meta property="og:url" content="https://home-assistant.io/components/media_player.itunes.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Home Assistant developer information. Everything to get you started">
+    <meta property="og:description" content="Instructions how to integrate iTunes into Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,77 +98,46 @@
   
   <header>
     <h1 class="title indent">
-      Developers
+      iTunes Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Home Assistant is build from the ground-up to be easily extensible by other developers using
-components. It uses <a href="https://www.python.org/">Python 3</a> for the backend and
-<a href="https://www.polymer-project.org/">Polymer (Webcomponents)</a> for the frontend.</p>
+  <p><img src='/images/supported_brands/itunes.png' class='brand pull-right' />
+ The iTunes platform allows you to control <a href="http://apple.com/itunes/">iTunes</a> via
+ <a href="https://github.com/maddox/itunes-api">itunes-api</a> from Home Assistant. Play,
+ pause, or skip songs remotely on iTunes running on your Mac.</p>
 
-<p>Home Assistant is open-source and MIT licensed. The source can be found here:</p>
-
-<ul>
-<li><a href="https://github.com/balloob/home-assistant">home-assistant</a> - Python server-backend</li>
-<li><a href="https://github.com/balloob/home-assistant-js">home-assistant-js</a> - javascript-backend powering the client</li>
-<li><a href="https://github.com/balloob/home-assistant-polymer">home-assistant-polymer</a> - Polymer UI</li>
-</ul>
-
-
-<h3><a class='title-link' name='starting-development' href='#starting-development'></a> Starting development</h3>
-
-<p>You will need to setup a development environment if you want to start developing a new feature or
-component for Home Assistant.</p>
-
-<ol>
-<li>Clone the Home Assistant repository:<br>
-<code>git clone https://github.com/balloob/home-assistant.git</code></li>
-<li>Setup your computer for development:<br>
-<code>python3 setup.py develop</code></li>
-</ol>
+<p class='note'>
+iTunes itself can not be remotely controlled. In order to control your iTunes,
+you&#8217;ll need to install middleware named `itunes-api`. `itunes-api` is a simple REST
+server that talks to a local instance of iTunes via Applescript. It&#8217;s very easy to set up
+and run. You can find more about it on it&#8217;s [GitHub repo](https://github.com/maddox/itunes-api).
+</p>
 
 
-<p>After following these steps, running <code>hass</code> will invoke your local installation.</p>
+<p>To add iTunes to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
-<h3><a class='title-link' name='submitting-improvements' href='#submitting-improvements'></a> Submitting improvements</h3>
-
-<p>Improvements to Home Assistant should be submitted one feature at a time using Github pull
-requests.</p>
-
-<ol>
-<li>Go to <a href="https://github.com/balloob/home-assistant">the Home Assistant repository</a>
-and click fork in the top right.</li>
-<li>Follow steps in the previous section but with your forked repository.</li>
-<li>Create a new branch to hold your changes<br>
-<code>git checkout -b some-feature</code></li>
-<li>Make the changes you want</li>
-<li>Commit the changes<br>
-<code>git add .</code><br>
-<code>git commit -m "Added some-feature"</code></li>
-<li>Push your commited changes back to your fork on Github<br>
-<code>git push origin HEAD</code></li>
-<li>Follow <a href="https://help.github.com/articles/creating-a-pull-request/">these steps</a> to create your
-pull request.</li>
-</ol>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
+</span><span class='line'>media_player:
+</span><span class='line'>  platform: itunes
+</span><span class='line'>  name: iTunes
+</span><span class='line'>  host: http://192.168.1.50
+</span><span class='line'>  port: 8181</span></code></pre></td></tr></table></div></figure>
 
 
-<h3><a class='title-link' name='further-reading' href='#further-reading'></a> Further reading</h3>
+<p>Configuration variables:</p>
 
 <ul>
-  <li><a href="/developers/architecture.html">
-    Home Assistant Architecture
-  </a></li>
-  <li><a href="/developers/frontend.html">Frontend development</a></li>
-  <li><a href="/developers/creating_components.html">
-    Creating a custom component
-  </a></li>
-  <li><a href="/developers/add_new_platform.html">
-    Adding support for a new platform
-  </a></li>
-  <li><a href="/developers/api.html">Rest API</a></li>
-  <li><a href="/developers/website.html">Website </a></li>
+<li><strong>host</strong> <em>Required</em>: The URL of the itunes-api API, eg. <a href="http://192.168.1.50">http://192.168.1.50</a></li>
+<li><strong>port</strong> <em>Optional</em>: The PORT that itunes-api is running on.</li>
 </ul>
 
 

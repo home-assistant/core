@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Command line switches support - Home Assistant</title>
+    <title>aREST switch support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to have a switch call command line commands.">
+    <meta name="description" content="Instructions how to integrate aREST switches within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Command line switches support">
+    <meta property="og:title" content="aREST switch support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/switch.command_switch.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/switch.arest.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to have a switch call command line commands.">
+    <meta property="og:description" content="Instructions how to integrate aREST switches within Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,16 +98,16 @@
   
   <header>
     <h1 class="title indent">
-      Command Line Switches Support
+      aREST Switch Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p><img src='/images/supported_brands/utilities-terminal.png' class='brand pull-right' />
-A switch platform that issues specific commands when it is turned on and off. This might very well become our most platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
+  <p><img src='/images/supported_brands/arest.png' class='brand pull-right' />
+The arest switch platform allows you to toggle pins of your devices (like Arduino boards with a ethernet/wifi connection, the ESP8266, and the Raspberry Pi) running the <a href="http://arest.io/">aREST</a> RESTful framework.</p>
 
-<p>To enable it, add the following lines to your <code>configuration.yaml</code>:</p>
+<p>To use your aREST enabled device in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -116,50 +116,37 @@ A switch platform that issues specific commands when it is turned on and off. Th
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_switch</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">switches</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">kitchen_light</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">oncmd</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">switch_command on kitchen</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">switch_command off kitchen</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">arest</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADDRESS</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">pins</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">11</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Fan Office</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">12</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light Desk</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 <p>Configuration variables:</p>
 
 <ul>
-<li><strong>switches</strong> (<em>Required</em>): The array that contains all command switches.
+<li><strong>resource</strong> (<em>Required</em>): IP address and schema of the device that is exposing an aREST API, e.g. <a href="http://192.168.1.10.">http://192.168.1.10.</a></li>
+<li><strong>pins</strong> (<em>Required</em>): An array with all used pins of your board.
 
 <ul>
-<li><strong>entry</strong> (<em>Required</em>): Name of the command switch. Multiple entries are possible.
-
-<ul>
-<li><strong>oncmd</strong> (<em>Required</em>): The action to take for on.</li>
-<li><strong>offcmd</strong> (<em>Required</em>): The action to take for off.</li>
-</ul>
-</li>
+<li><strong>name</strong> (<em>Required</em>): The name of the pin you wish to toggle.</li>
 </ul>
 </li>
 </ul>
 
 
-<p>The example below is doing the same as the <a href="/components/switch.arest.html">aREST switch</a>. The commandline tool <code>[curl](http://curl.haxx.se/)</code> is used to toogle a pin which is controllable through REST.</p>
+<p>Accessing one of the endpoints (eg. <a href="http://192.168.1.10/analog/2/">http://192.168.1.10/analog/2/</a>) will give you a JSON response. The interesting part is <code>return_value</code> which represents the sensor&rsquo;s data.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_switch</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">switches</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">arest_pin4</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">oncmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/bin/curl</span><span class="nv"> </span><span class="s">-X</span><span class="nv"> </span><span class="s">GET</span><span class="nv"> </span><span class="s">http://192.168.1.10/digital/4/1&quot;</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/bin/curl</span><span class="nv"> </span><span class="s">-X</span><span class="nv"> </span><span class="s">GET</span><span class="nv"> </span><span class="s">http://192.168.1.10/digital/4/0&quot;</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span><span class="nt">&quot;return_value&quot;</span><span class="p">:</span> <span class="mi">34</span><span class="p">,</span> <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;sensor02&quot;</span><span class="p">,</span> <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;livingroom&quot;</span><span class="p">,</span> <span class="nt">&quot;connected&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

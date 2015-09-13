@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-11T09:24:25-07:00</updated>
+  <updated>2015-09-12T18:24:29-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -39,7 +39,6 @@ sensor:
   - platform: mqtt
     name: "Fabian's Mood"
     state_topic: "home-assistant/fabian/mood"
-    unit_of_measurement: " "
 </code></pre>
 
 <p>After a restart of Home Assistant the &ldquo;Mood&rdquo; sensor will show up in the frontend. For more details about the configuration of MQTT itself and the sensor, please refer to the <a href="https://home-assistant.io/components/mqtt.html">MQTT component</a> or the <a href="https://home-assistant.io/components/sensor.mqtt.html">MQTT sensor</a> documentation.</p>
@@ -55,18 +54,20 @@ sensor:
 </p>
 
 
+<p>This is a really bad example. Don&rsquo;t do this in the real world because you won&rsquo;t be able to create diagrams of historical data. Better use a numerical value.</p>
+
 <h3><a class='title-link' name='python-mqtt-bindings' href='#python-mqtt-bindings'></a> Python MQTT bindings </h3>
 
 <p>The last section was pretty boring, I know. Nobody wants to send MQTT messages by hand if there is a computer on the desk. If you are playing the lottery this section is for you. If not, read it anyway because the lottery is just an example :-).</p>
 
 <p>This example is using the <a href="https://eclipse.org/paho/clients/python/">Paho MQTT Python binding</a> because those binding should be available on the host where Home Assistant is running. If you want to use this example on another machine, please make sure that the bindings are installed (<code>pip3 install paho-mqtt</code>).</p>
 
-<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called &ldquo;Lottery&rdquo;.</p>
+<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called &ldquo;Lottery&rdquo; and the unit of measurement will be &ldquo;No.&rdquo;.</p>
 
 <pre><code class="yaml">  - platform: mqtt
     name: "Lottery"
     state_topic: "home-assistant/lottery/number"
-    unit_of_measurement: " "
+    unit_of_measurement: "No."
 </code></pre>
 
 <p>Don&rsquo;t forget to restart Home Assistant to make the configuration active.</p>
@@ -194,7 +195,7 @@ void loop() {
 <pre><code class="yaml">  - platform: mqtt
     name: "Brightness"
     state_topic: "home-assistant/sensor01/brightness"
-    unit_of_measurement: " "
+    unit_of_measurement: "cd"
 </code></pre>
 
 <p>After a restart of Home Assistant the values of your Arduino will be available.</p>

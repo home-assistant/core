@@ -129,13 +129,26 @@ Do not use development mode in production. Home Assistant uses aggressive cachin
 </span><span class='line'>  development: 1</span></code></pre></td></tr></table></div></figure>
 
 
-<p>After turning on development mode, you will have to install the web components that the frontend depends on. Firing off a build of the frontend by running <code>scripts/build_frontend</code> will ensure all dependencies are installed.</p>
+<p>Next step is to get the frontend code. When you clone the Home Assistant repository, the frontend
+repository is not cloned by default. You will have to trigger this manually by running from the
+command line:</p>
 
-<p>Once this is done, you can start editting the webcomponents in the folder <code>homeassistant/components/frontend/www_static/home-assistant-polymer/src</code>. To see the changes you&rsquo;ve made, simply refresh your browser.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>git submodule update --init
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>After checking out the frontend code, you will have to install the frontend dependencies. Firing off
+a build of the frontend by running <code>scripts/build_frontend</code> will ensure they get installed.</p>
+
+<p>Once this is done, you can start editting the webcomponents in the folder
+<code>homeassistant/components/frontend/www_static/home-assistant-polymer/src</code>. To see the changes you&rsquo;ve
+made, simply refresh your browser.</p>
 
 <h2><a class='title-link' name='enabling-javascript-backend-development' href='#enabling-javascript-backend-development'></a> Enabling JavaScript backend development</h2>
 
-<p>Polymer is only providing a UI toolkit for Home Assistant. All data management and interaction with the server is done by <code>home-assistant-js</code> leveraging NuclearJS. To enable JavaScript development:</p>
+<p>Polymer is only providing a UI toolkit for Home Assistant. All data management and interaction with
+the server is done by <code>home-assistant-js</code> leveraging NuclearJS. To enable JavaScript development:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -146,9 +159,13 @@ Do not use development mode in production. Home Assistant uses aggressive cachin
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><code>npm run js_dev</code> will start the process that will ensure that your latest changes to the JavaScript files will be loaded when you refresh the page. This command has to be always running while working on home-assistant-js.</p>
+<p><code>npm run js_dev</code> will start the process that will ensure that your latest changes to the JavaScript
+files will be loaded when you refresh the page. This command has to be always running while working
+on home-assistant-js.</p>
 
-<p>After your changes have been accepted into the <code>home-assistant-js</code> repository, we&rsquo;ll have to update Home Assistant Polymer to use the latest version. This can be done by updating <code>package.json</code>. Look for the line that contains <code>home-assistant-js</code> and update the SHA to the SHA of your commit.</p>
+<p>After your changes have been accepted into the <code>home-assistant-js</code> repository, we&rsquo;ll have to update
+Home Assistant Polymer to use the latest version. This can be done by updating <code>package.json</code>. Look
+for the line that contains <code>home-assistant-js</code> and update the SHA to the SHA of your commit.</p>
 
 <h1><a class='title-link' name='building-the-polymer-frontend' href='#building-the-polymer-frontend'></a> Building the Polymer frontend</h1>
 
@@ -184,16 +201,17 @@ Do not use development mode in production. Home Assistant uses aggressive cachin
 
 <p>Some domains will be filtered out of the main view and are available through separate menu options. Examples are <code>group</code>, <code>script</code>, <code>scene</code>.</p>
 
-<p>The different card types can be found <a href="https://github.com/balloob/home-assistant-polymer/tree/master/src/cards">here</a>.</p>
+<p>The different card types can be found <a href="https://github.com/balloob/home-assistant-polymer/tree/master/src/state-summary">here</a>.</p>
 
-<p>Adding a custom card type can be done with a few simple steps. For this example we will add a new state card for the domain <code>camera</code>:<br/>
+<p>Adding a custom card type can be done with a few simple steps. For this example we will add a new
+state card for the domain <code>camera</code>:
 <em>(All files in this example link to their source-code)</em></p>
 
 <ol>
 <li>Add <code>'camera'</code> to the array <code>DOMAINS_WITH_CARD</code> in the file <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/util/state-card-type.js#L3-L4"><code>/util/state-card-type.js</code></a>.</li>
-<li>Create the files <code>state-card-camera.html</code> and <code>state-card-camera.js</code> in the folder <a href="https://github.com/balloob/home-assistant-polymer/tree/master/src/cards"><code>/cards/</code></a>.</li>
-<li>Add <code>require('./state-card-camera')</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/cards/state-card-content.js"><code>state-card-content.js</code></a>.</li>
-<li>Add <code>&lt;link rel="import" href="state-card-camera.html"&gt;</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/cards/state-card-content.html"><code>state-card-content.html</code></a>.</li>
+<li>Create the files <code>state-card-camera.html</code> and <code>state-card-camera.js</code> in the folder <a href="https://github.com/balloob/home-assistant-polymer/tree/master/src/state-summary"><code>/state-summary/</code></a>.</li>
+<li>Add <code>require('./state-card-camera')</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/state-summary/state-card-content.js"><code>state-card-content.js</code></a>.</li>
+<li>Add <code>&lt;link rel="import" href="state-card-camera.html"&gt;</code> to <a href="https://github.com/balloob/home-assistant-polymer/blob/master/src/state-summary/state-card-content.html"><code>state-card-content.html</code></a>.</li>
 </ol>
 
 
