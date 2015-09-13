@@ -14,8 +14,8 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE, ATTR_HIDDEN, STATE_HOME, STATE_NOT_HOME,
-    CONF_PLATFORM, ATTR_FRIENDLY_NAME)
+    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
+    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, )
 import homeassistant.components.device_tracker as device_tracker
 
 from tests.common import (
@@ -193,3 +193,23 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.assertTrue(self.hass.states.get(entity_id)
                             .attributes.get(ATTR_HIDDEN))
+
+    def test_group_all_devices(self):
+        dev_id = 'test_entity'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, dev_id, None,
+            away_hide=True)
+        device_tracker.update_config(self.yaml_devices, dev_id, device)
+
+        scanner = get_component('device_tracker.test').SCANNER
+        scanner.reset()
+
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        state = self.hass.states.get(device_tracker.ENTITY_ID_ALL_DEVICES)
+        self.assertIsNotNone(state)
+        self.assertEqual(STATE_NOT_HOME, state.state)
+        self.assertSequenceEqual((entity_id,),
+                                 state.attributes.get(ATTR_ENTITY_ID))
