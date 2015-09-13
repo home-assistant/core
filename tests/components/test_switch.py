@@ -7,9 +7,9 @@ Tests switch component.
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-import homeassistant.loader as loader
+from homeassistant import loader
+from homeassistant.components import switch
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
-import homeassistant.components.switch as switch
 
 from tests.common import get_test_home_assistant
 
