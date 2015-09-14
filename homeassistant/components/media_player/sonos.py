@@ -62,13 +62,9 @@ class SonosDevice(MediaPlayerDevice):
         self._player = player
         self.update()
 
-        track_utc_time_change(
-            hass, self.update_sonos,
-            second=range(0, 60, 5))
-
     @property
     def should_poll(self):
-        return False
+        return True
 
     def update_sonos(self, now):
         """ Updates state, called by track_utc_time_change """
