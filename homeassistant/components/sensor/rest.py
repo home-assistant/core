@@ -70,12 +70,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     rest = RestData(resource)
 
-    dev = []
     add_devices([RestSensor(rest,
                             config.get('name', DEFAULT_NAME),
                             config.get('variable'),
                             config.get('unit'))])
-    add_devices(dev)
 
 
 class RestSensor(Entity):
