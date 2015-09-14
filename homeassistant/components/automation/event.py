@@ -12,7 +12,7 @@ CONF_EVENT_DATA = "event_data"
 _LOGGER = logging.getLogger(__name__)
 
 
-def register(hass, config, action):
+def trigger(hass, config, action):
     """ Listen for events based on config. """
     event_type = config.get(CONF_EVENT_TYPE)
 
