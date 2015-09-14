@@ -3,6 +3,13 @@ homeassistant.components.media_player.itunes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides an interface to iTunes-API (https://github.com/maddox/itunes-api)
 
+The iTunes media player will allow you to control your iTunes instance. You
+can play/pause/next/previous/mute, adjust volume, etc.
+
+In addition to controlling iTunes, your available AirPlay endpoints will be
+added as media players as well. You can then individually address them append
+turn them on, turn them off, or adjust their volume.
+
 Configuration:
 
 To use iTunes you will need to add something like the following to
