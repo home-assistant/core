@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     for dev_name, properties in switches.items():
         devices.append(
             CommandSwitch(
-                dev_name,
+                properties.get('name', dev_name),
                 properties.get('oncmd', 'true'),
                 properties.get('offcmd', 'true')))
 
