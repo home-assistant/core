@@ -9,7 +9,7 @@ import logging
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.helpers import config_per_platform
 from homeassistant.util import split_entity_id
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 
 DOMAIN = "automation"
 
@@ -19,6 +19,7 @@ CONF_ALIAS = "alias"
 CONF_SERVICE = "execute_service"
 CONF_SERVICE_ENTITY_ID = "service_entity_id"
 CONF_SERVICE_DATA = "service_data"
+CONF_IF = "if"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,12 @@ def setup(hass, config):
             _LOGGER.error("Unknown automation platform specified: %s", p_type)
             continue
 
-        if platform.register(hass, p_config, _get_action(hass, p_config)):
+        action = _get_action(hass, p_config)
+
+        if CONF_IF in p_config:
+            action = _process_if(hass, config, p_config[CONF_IF], action)
+
+        if platform.trigger(hass, p_config, action):
             _LOGGER.info(
                 "Initialized %s rule %s", p_type, p_config.get(CONF_ALIAS, ""))
             success = True
@@ -70,5 +76,30 @@ def _get_action(hass, config):
                         config[CONF_SERVICE_ENTITY_ID]
 
             hass.services.call(domain, service, service_data)
+
+    return action
+
+
+def _process_if(hass, config, if_configs, action):
+    """ Processes if checks. """
+
+    if isinstance(if_configs, dict):
+        if_configs = [if_configs]
+
+    for if_config in if_configs:
+        p_type = if_config.get(CONF_PLATFORM)
+        if p_type is None:
+            _LOGGER.error("No platform defined found for if-statement %s",
+                          if_config)
+            continue
+
+        platform = prepare_setup_platform(hass, config, DOMAIN, p_type)
+
+        if platform is None or not hasattr(platform, 'if_action'):
+            _LOGGER.error("Unsupported if-statement platform specified: %s",
+                          p_type)
+            continue
+
+        action = platform.if_action(hass, if_config, action)
 
     return action
