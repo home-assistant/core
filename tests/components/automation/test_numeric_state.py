@@ -8,7 +8,7 @@ import unittest
 
 import homeassistant.core as ha
 import homeassistant.components.automation as automation
-import homeassistant.components.automation.numeric_state as numeric_state
+from homeassistant.components.automation import event, numeric_state
 from homeassistant.const import CONF_PLATFORM
 
 
@@ -232,3 +232,38 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 11)
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
+
+    def test_if_action(self):
+        entity_id = 'domain.test_entity'
+        test_state = 10
+        automation.setup(self.hass, {
+            automation.DOMAIN: {
+                CONF_PLATFORM: 'event',
+                event.CONF_EVENT_TYPE: 'test_event',
+                automation.CONF_SERVICE: 'test.automation',
+                automation.CONF_IF: [{
+                    CONF_PLATFORM: 'numeric_state',
+                    numeric_state.CONF_ENTITY_ID: entity_id,
+                    numeric_state.CONF_ABOVE: test_state,
+                    numeric_state.CONF_BELOW: test_state + 2,
+                }]
+            }
+        })
+
+        self.hass.states.set(entity_id, test_state )
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, test_state - 1)
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, test_state + 1)
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(2, len(self.calls))
