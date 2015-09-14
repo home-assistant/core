@@ -38,6 +38,7 @@ https://home-assistant.io/components/sensor.rest.html
 """
 import logging
 from requests import get, exceptions
+from json import loads
 from datetime import timedelta
 
 from homeassistant.util import Throttle
@@ -59,13 +60,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         response = get(resource, timeout=10)
+        if not response.ok:
+            _LOGGER.error('Response status is "%s"', response.status_code)
     except exceptions.MissingSchema:
-        _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// to your URL.")
+        _LOGGER.error('Missing resource or schema in configuration. '
+                      'Add http:// to your URL.')
         return False
     except exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint. "
-                      "Please check the URL in the configuration file.")
+        _LOGGER.error('No route to resource/endpoint. '
+                      'Please check the URL in the configuration file.')
+        return False
+
+    try:
+        data = loads(response.text)
+    except ValueError:
+        _LOGGER.error('No valid JSON in the response in: %s', data)
+        return False
+
+    try:
+        data[config.get('variable')]
+    except KeyError:
+        _LOGGER.error('Variable "%s" not found in response: "%s"',
+                      config.get('variable'), data)
         return False
 
     rest = RestData(resource)
@@ -110,12 +126,7 @@ class RestSensor(Entity):
         if 'error' in value:
             self._state = value['error']
         else:
-            try:
-                self._state = value[self._variable]
-            except KeyError:
-                _LOGGER.error('Variable "%s" not found in response: "%s".',
-                              self._variable, value)
-                self._state = 'N/A'
+            self._state = value[self._variable]
 
 
 # pylint: disable=too-few-public-methods
