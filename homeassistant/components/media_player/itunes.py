@@ -126,18 +126,19 @@ class Itunes(object):
         """ Returns a list of AirPlay devices. """
         return self._request('GET', '/airplay_devices')
 
-    def airplay_device(self, id):
+    def airplay_device(self, device_id):
         """ Returns an AirPlay device. """
-        return self._request('GET', '/airplay_devices/' + id)
+        return self._request('GET', '/airplay_devices/' + device_id)
 
-    def toggle_airplay_device(self, id, toggle):
+    def toggle_airplay_device(self, device_id, toggle):
         """ Toggles airplay device on or off, id, toggle True or False. """
         command = 'on' if toggle else 'off'
-        return self._request('PUT', '/airplay_devices/' + id + '/' + command)
+        path = '/airplay_devices/' + device_id + '/' + command
+        return self._request('PUT', path)
 
-    def set_volume_airplay_device(self, id, level):
+    def set_volume_airplay_device(self, device_id, level):
         """ Sets volume, returns current state of device, id,level 0-100. """
-        path = '/airplay_devices/' + id + '/volume'
+        path = '/airplay_devices/' + device_id + '/volume'
         return self._request('PUT', path, {'level': level})
 
 # pylint: disable=unused-argument
@@ -334,8 +335,8 @@ class AirPlayDevice(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, id, client):
-        self._id = id
+    def __init__(self, device_id, client):
+        self._id = device_id
 
         self.client = client
 
@@ -346,8 +347,11 @@ class AirPlayDevice(MediaPlayerDevice):
         self.volume = 0
         self.supports_audio = False
         self.supports_video = False
+        self.player_state = None
 
     def update_state(self, state_hash):
+        """ Update all the state properties with the passed in dictionary. """
+
         if 'player_state' in state_hash:
             self.player_state = state_hash.get('player_state', None)
 
