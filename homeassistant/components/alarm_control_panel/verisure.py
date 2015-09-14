@@ -49,6 +49,12 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """ Returns the state of the device. """
+        return self._state
+
+    def update(self):
+        ''' update alarm status '''
+        verisure.update()
+        
         if verisure.STATUS[self._device][self._id].status == 'unarmed':
             self._state = STATE_ALARM_DISARMED
         elif verisure.STATUS[self._device][self._id].status == 'armedhome':
@@ -59,11 +65,6 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             _LOGGER.error(
                 'Unknown alarm state %s',
                 verisure.STATUS[self._device][self._id].status)
-        return self._state
-
-    def update(self):
-        ''' update alarm status '''
-        verisure.update()
 
     def alarm_disarm(self, code):
         """ Send disarm command. """

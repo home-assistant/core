@@ -1,7 +1,7 @@
 """
 homeassistant.components.alarm_control_panel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Component to interface with various sensors that can be monitored.
+Component to interface with a alarm control panel.
 """
 import logging
 from homeassistant.helpers.entity import Entity
@@ -100,9 +100,9 @@ class AlarmControlPanel(Entity):
         raise NotImplementedError()
 
     def alarm_arm_home(self, code):
-        """ Send pause command. """
+        """ Send arm home command. """
         raise NotImplementedError()
 
     def alarm_arm_away(self, code):
-        """ Send pause command. """
+        """ Send arm away command. """
         raise NotImplementedError()
