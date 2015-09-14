@@ -19,7 +19,7 @@ from homeassistant.const import (
 
 DOMAIN = 'media_player'
 DEPENDENCIES = []
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
