@@ -16,7 +16,7 @@ CONF_ABOVE = "state_above"
 _LOGGER = logging.getLogger(__name__)
 
 
-def register(hass, config, action):
+def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
     entity_id = config.get(CONF_ENTITY_ID)
 
