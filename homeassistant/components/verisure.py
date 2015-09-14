@@ -125,7 +125,7 @@ def setup(hass, config):
     # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
                                   ('switch', DISCOVER_SWITCHES),
-                                  ('alarm', DISCOVER_ALARMS))):
+                                  ('alarm_control_panel', DISCOVER_ALARMS))):
         component = get_component(comp_name)
         _LOGGER.info(config[DOMAIN])
         bootstrap.setup_component(hass, component.DOMAIN, config)
