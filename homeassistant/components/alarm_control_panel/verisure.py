@@ -54,7 +54,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     def update(self):
         ''' update alarm status '''
         verisure.update()
-        
+
         if verisure.STATUS[self._device][self._id].status == 'unarmed':
             self._state = STATE_ALARM_DISARMED
         elif verisure.STATUS[self._device][self._id].status == 'armedhome':
