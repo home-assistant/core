@@ -10,6 +10,7 @@ from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.helpers import config_per_platform
 from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.components import logbook
 
 DOMAIN = "automation"
 
@@ -37,6 +38,9 @@ def setup(hass, config):
 
         action = _get_action(hass, p_config)
 
+        if action is None:
+            return
+
         if CONF_IF in p_config:
             action = _process_if(hass, config, p_config[CONF_IF], action)
 
@@ -54,28 +58,35 @@ def setup(hass, config):
 def _get_action(hass, config):
     """ Return an action based on a config. """
 
+    name = config.get(CONF_ALIAS, 'Unnamed automation')
+
+    if CONF_SERVICE not in config:
+        _LOGGER.error('Error setting up %s, no action specified.',
+                      name)
+        return
+
     def action():
         """ Action to be executed. """
-        _LOGGER.info("Executing rule %s", config.get(CONF_ALIAS, ""))
+        _LOGGER.info('Executing %s', name)
+        logbook.log_entry(hass, name, 'has been triggered', DOMAIN)
 
-        if CONF_SERVICE in config:
-            domain, service = split_entity_id(config[CONF_SERVICE])
+        domain, service = split_entity_id(config[CONF_SERVICE])
 
-            service_data = config.get(CONF_SERVICE_DATA, {})
+        service_data = config.get(CONF_SERVICE_DATA, {})
 
-            if not isinstance(service_data, dict):
-                _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
-                service_data = {}
+        if not isinstance(service_data, dict):
+            _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
+            service_data = {}
 
-            if CONF_SERVICE_ENTITY_ID in config:
-                try:
-                    service_data[ATTR_ENTITY_ID] = \
-                        config[CONF_SERVICE_ENTITY_ID].split(",")
-                except AttributeError:
-                    service_data[ATTR_ENTITY_ID] = \
-                        config[CONF_SERVICE_ENTITY_ID]
+        if CONF_SERVICE_ENTITY_ID in config:
+            try:
+                service_data[ATTR_ENTITY_ID] = \
+                    config[CONF_SERVICE_ENTITY_ID].split(",")
+            except AttributeError:
+                service_data[ATTR_ENTITY_ID] = \
+                    config[CONF_SERVICE_ENTITY_ID]
 
-            hass.services.call(domain, service, service_data)
+        hass.services.call(domain, service, service_data)
 
     return action
 
