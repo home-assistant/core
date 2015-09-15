@@ -70,7 +70,7 @@ def if_action(hass, config, action):
         """ Execute action if state matches. """
 
         state = hass.states.get(entity_id)
-        if state is None or _in_range(state.state, above, below):
+        if state is not None and _in_range(state.state, above, below):
             action()
 
     return state_if
