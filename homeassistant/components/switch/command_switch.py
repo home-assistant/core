@@ -36,8 +36,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.command_switch.html
 """
 import logging
-from homeassistant.components.switch import SwitchDevice
 import subprocess
+
+from homeassistant.components.switch import SwitchDevice
 
 _LOGGER = logging.getLogger(__name__)
 
