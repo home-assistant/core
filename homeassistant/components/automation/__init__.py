@@ -44,7 +44,8 @@ def setup(hass, config):
             continue
 
         if CONF_CONDITION in p_config:
-            action = _process_if(hass, config, p_config[CONF_CONDITION], action)
+            action = _process_if(hass, config, p_config[CONF_CONDITION],
+                                 action)
 
         _process_trigger(hass, config, p_config.get(CONF_TRIGGER, []), name,
                          action)
