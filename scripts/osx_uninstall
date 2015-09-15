@@ -1,0 +1,4 @@
+#!/bin/sh
+
+launchctl unload ~/Library/LaunchAgents/org.home-assistant.plist
+rm ~/Library/LaunchAgents/org.home-assistant.plist
