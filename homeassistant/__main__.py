@@ -165,19 +165,22 @@ def install_osx():
     hass_path = os.popen('which hass').read().strip()
     user = os.popen('whoami').read().strip()
 
-    plist = codecs.open('scripts/org.home-assistant.plist', 'r', 'utf-8').read()
+    plist = codecs.open('scripts/org.home-assistant.plist', 'r', 'utf-8')
+    plist = plist.read()
 
     plist = plist.replace("$APP_PATH$", app_path)
     plist = plist.replace("$HASS_PATH$", hass_path)
     plist = plist.replace("$USER$", user)
 
     path = os.path.expanduser("~/Library/LaunchAgents/org.home-assistant.plist")
+    os.remove(path)
     plist_file = codecs.open(path, 'w', 'utf-8')
     plist_file.write(plist)
     plist_file.close()
     os.popen('launchctl load -w -F ' + path)
 
-    print("Home Assistant has been installed. Open it here: http://localhost:8123")
+    print("Home Assistant has been installed. \
+        Open it here: http://localhost:8123")
 
 
 def uninstall_osx():
