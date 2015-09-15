@@ -48,14 +48,14 @@ def trigger(hass, config, action):
     return True
 
 
-def if_action(hass, config, action):
+def if_action(hass, config):
     """ Wraps action method with state based condition. """
 
     entity_id = config.get(CONF_ENTITY_ID)
 
     if entity_id is None:
         _LOGGER.error("Missing configuration key %s", CONF_ENTITY_ID)
-        return action
+        return None
 
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
@@ -64,16 +64,14 @@ def if_action(hass, config, action):
         _LOGGER.error("Missing configuration key."
                       " One of %s or %s is required",
                       CONF_BELOW, CONF_ABOVE)
-        return action
+        return None
 
-    def state_if():
-        """ Execute action if state matches. """
-
+    def if_numeric_state():
+        """ Test numeric state condition. """
         state = hass.states.get(entity_id)
-        if state is not None and _in_range(state.state, above, below):
-            action()
+        return state is not None and _in_range(state.state, above, below)
 
-    return state_if
+    return if_numeric_state
 
 
 def _in_range(value, range_start, range_end):

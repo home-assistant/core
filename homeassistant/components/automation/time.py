@@ -36,7 +36,7 @@ def trigger(hass, config, action):
     return True
 
 
-def if_action(hass, config, action):
+def if_action(hass, config):
     """ Wraps action method with time based condition. """
     before = config.get(CONF_BEFORE)
     after = config.get(CONF_AFTER)
@@ -46,6 +46,7 @@ def if_action(hass, config, action):
         logging.getLogger(__name__).error(
             "Missing if-condition configuration key %s, %s or %s",
             CONF_BEFORE, CONF_AFTER, CONF_WEEKDAY)
+        return None
 
     def time_if():
         """ Validate time based if-condition """
@@ -59,7 +60,7 @@ def if_action(hass, config, action):
                                        minute=int(before_m))
 
             if now > before_point:
-                return
+                return False
 
         if after is not None:
             # Strip seconds if given
@@ -68,15 +69,15 @@ def if_action(hass, config, action):
             after_point = now.replace(hour=int(after_h), minute=int(after_m))
 
             if now < after_point:
-                return
+                return False
 
         if weekday is not None:
             now_weekday = WEEKDAYS[now.weekday()]
 
             if isinstance(weekday, str) and weekday != now_weekday or \
                now_weekday not in weekday:
-                return
+                return False
 
-        action()
+        return True
 
     return time_if

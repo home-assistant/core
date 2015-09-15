@@ -23,6 +23,11 @@ CONF_SERVICE_DATA = "service_data"
 CONF_CONDITION = "condition"
 CONF_ACTION = 'action'
 CONF_TRIGGER = "trigger"
+CONF_CONDITION_TYPE = "condition_type"
+
+CONDITION_TYPE_AND = "and"
+CONDITION_TYPE_OR = "or"
+DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +49,13 @@ def setup(hass, config):
             continue
 
         if CONF_CONDITION in p_config:
+            cond_type = p_config.get(CONF_CONDITION_TYPE,
+                                     DEFAULT_CONDITION_TYPE).lower()
             action = _process_if(hass, config, p_config[CONF_CONDITION],
-                                 action)
+                                 action, cond_type)
+
+            if action is None:
+                continue
 
         _process_trigger(hass, config, p_config.get(CONF_TRIGGER, []), name,
                          action)
@@ -116,21 +126,36 @@ def _migrate_old_config(config):
     return new_conf
 
 
-def _process_if(hass, config, if_configs, action):
+def _process_if(hass, config, if_configs, action, cond_type):
     """ Processes if checks. """
 
     if isinstance(if_configs, dict):
         if_configs = [if_configs]
 
+    checks = []
     for if_config in if_configs:
         platform = _resolve_platform('condition', hass, config,
                                      if_config.get(CONF_PLATFORM))
         if platform is None:
             continue
 
-        action = platform.if_action(hass, if_config, action)
+        check = platform.if_action(hass, if_config)
 
-    return action
+        if check is None:
+            return None
+
+        checks.append(check)
+
+    if cond_type == CONDITION_TYPE_AND:
+        def if_action():
+            if all(check() for check in checks):
+                action()
+    else:
+        def if_action():
+            if any(check() for check in checks):
+                action()
+
+    return if_action
 
 
 def _process_trigger(hass, config, trigger_configs, name, action):
