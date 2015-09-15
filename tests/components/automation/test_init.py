@@ -162,7 +162,6 @@ class TestAutomationEvent(unittest.TestCase):
                 ],
                 'action': {
                     'execute_service': 'test.automation',
-                    'service_entity_id': ['hello.world', 'hello.world2']
                 }
             }
         })
@@ -171,5 +170,92 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.hass.states.set('test.entity', 'hello')
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(self.calls))
+
+    def test_two_conditions_with_and(self):
+        entity_id = 'test.entity'
+        automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': [
+                    {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                ],
+                'condition': [
+                    {
+                        'platform': 'state',
+                        'entity_id': entity_id,
+                        'state': 100
+                    },
+                    {
+                        'platform': 'numeric_state',
+                        'entity_id': entity_id,
+                        'below': 150
+                    }
+                ],
+                'action': {
+                    'execute_service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.states.set(entity_id, 100)
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, 101)
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, 151)
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_two_conditions_with_or(self):
+        entity_id = 'test.entity'
+        automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': [
+                    {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                ],
+                'condition_type': 'OR',
+                'condition': [
+                    {
+                        'platform': 'state',
+                        'entity_id': entity_id,
+                        'state': 200
+                    },
+                    {
+                        'platform': 'numeric_state',
+                        'entity_id': entity_id,
+                        'below': 150
+                    }
+                ],
+                'action': {
+                    'execute_service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.states.set(entity_id, 200)
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, 100)
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(self.calls))
+
+        self.hass.states.set(entity_id, 250)
+        self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(self.calls))
