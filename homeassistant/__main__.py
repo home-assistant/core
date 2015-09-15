@@ -179,8 +179,12 @@ def install_osx():
 
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
 
-    with open(path, 'w', encoding='utf-8') as outp:
-      outp.write(plist)
+    try:
+        with open(path, 'w', encoding='utf-8') as outp:
+          outp.write(plist)
+    except IOError as err:
+        print('Unable to write to ' + path, err)
+        return
 
     os.popen('launchctl load -w -F ' + path)
 
