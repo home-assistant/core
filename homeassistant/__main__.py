@@ -4,7 +4,6 @@ from __future__ import print_function
 import sys
 import os
 import argparse
-import codecs
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
@@ -182,7 +181,7 @@ def install_osx():
 
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
 
-    with codecs.open(path, 'w', 'utf-8') as outp:
+    with open(path, 'w', encoding='utf-8') as outp:
       outp.write(plist)
 
     os.popen('launchctl load -w -F ' + path)
