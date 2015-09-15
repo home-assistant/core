@@ -12,7 +12,7 @@
     </dict>
 
     <key>Program</key>
-    <string>%HASS_PATH%</string>
+    <string>$HASS_PATH$</string>
 
     <key>AbandonProcessGroup</key>
     <false/>
@@ -27,13 +27,13 @@
     </dict>
 
     <key>WorkingDirectory</key>
-    <string>%PATH%</string>
+    <string>$APP_PATH$</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/%USER%/Library/Logs/home-assitant.log</string>
+    <string>/Users/$USER$/Library/Logs/home-assitant.log</string>
 
     <key>StandardOutPath</key>
-    <string>/Users/%USER%/Library/Logs/home-assitant.log</string>
+    <string>/Users/$USER$/Library/Logs/home-assitant.log</string>
 
   </dict>
 </plist>
