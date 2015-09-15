@@ -165,7 +165,10 @@ def install_osx():
     hass_path = os.popen('which hass').read().strip()
     user = os.popen('whoami').read().strip()
 
-    plist = codecs.open('scripts/org.homeassistant.plist', 'r', 'utf-8')
+    cwd = os.path.dirname(__file__)
+    template_path = os.path.join(cwd, 'startup', 'launchd.plist')
+
+    plist = codecs.open(template_path, 'r', 'utf-8')
     plist = plist.read()
 
     plist = plist.replace("$HASS_PATH$", hass_path)
