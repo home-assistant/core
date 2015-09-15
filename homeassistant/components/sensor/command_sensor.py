@@ -75,6 +75,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     )])
 
 
+# pylint: disable=too-many-arguments
 class CommandSensor(Entity):
     """ Represents a sensor that is returning a value of a shell commands. """
     def __init__(self, data, name, unit_of_measurement, corr_factor,
