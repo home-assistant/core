@@ -4,6 +4,7 @@ from __future__ import print_function
 import sys
 import os
 import argparse
+import codecs
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
@@ -95,6 +96,14 @@ def get_arguments():
         type=int,
         default=None,
         help='Enables daily log rotation and keeps up to the specified days')
+    parser.add_argument(
+        '--install-osx',
+        action='store_true',
+        help='Installs as a service on OS X and loads on boot.')
+    parser.add_argument(
+        '--uninstall-osx',
+        action='store_true',
+        help='Uninstalls from OS X.')
     if os.name != "nt":
         parser.add_argument(
             '--daemon',
@@ -151,6 +160,32 @@ def write_pid(pid_file):
         print('Fatal Error: Unable to write pid file {}'.format(pid_file))
         sys.exit(1)
 
+def install_osx():
+    app_path = os.popen('pwd').read().strip()
+    hass_path = os.popen('which hass').read().strip()
+    user = os.popen('whoami').read().strip()
+
+    plist = codecs.open('scripts/org.home-assistant.plist', 'r', 'utf-8').read()
+
+    plist = plist.replace("$APP_PATH$", app_path)
+    plist = plist.replace("$HASS_PATH$", hass_path)
+    plist = plist.replace("$USER$", user)
+
+    path = os.path.expanduser("~/Library/LaunchAgents/org.home-assistant.plist")
+    plist_file = codecs.open(path, 'w', 'utf-8')
+    plist_file.write(plist)
+    plist_file.close()
+    os.popen('launchctl load -w -F ' + path)
+
+    print("Home Assistant has been installed. Open it here: http://localhost:8123")
+
+
+def uninstall_osx():
+    path = os.path.expanduser("~/Library/LaunchAgents/org.home-assistant.plist")
+    os.popen('launchctl unload ' + path)
+
+    print("Home Assistant has been uninstalled.")
+
 
 def main():
     """ Starts Home Assistant. """
@@ -160,6 +195,14 @@ def main():
 
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
+
+    # os x launchd functions
+    if args.install_osx:
+        install_osx()
+        return
+    if args.uninstall_osx:
+        uninstall_osx()
+        return
 
     # daemon functions
     if args.pid_file:
