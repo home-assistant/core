@@ -10,9 +10,9 @@ from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_time_change
 
-CONF_HOURS = "time_hours"
-CONF_MINUTES = "time_minutes"
-CONF_SECONDS = "time_seconds"
+CONF_HOURS = "hours"
+CONF_MINUTES = "minutes"
+CONF_SECONDS = "seconds"
 CONF_BEFORE = "before"
 CONF_AFTER = "after"
 CONF_WEEKDAY = "weekday"

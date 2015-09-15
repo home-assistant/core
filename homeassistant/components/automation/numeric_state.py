@@ -9,9 +9,9 @@ import logging
 from homeassistant.helpers.event import track_state_change
 
 
-CONF_ENTITY_ID = "state_entity_id"
-CONF_BELOW = "state_below"
-CONF_ABOVE = "state_above"
+CONF_ENTITY_ID = "entity_id"
+CONF_BELOW = "below"
+CONF_ABOVE = "above"
 
 _LOGGER = logging.getLogger(__name__)
 

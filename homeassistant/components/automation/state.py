@@ -10,11 +10,10 @@ from homeassistant.helpers.event import track_state_change
 from homeassistant.const import MATCH_ALL
 
 
-CONF_ENTITY_ID = "state_entity_id"
-CONF_FROM = "state_from"
-CONF_TO = "state_to"
+CONF_ENTITY_ID = "entity_id"
+CONF_FROM = "from"
+CONF_TO = "to"
 CONF_STATE = "state"
-CONF_IF_ENTITY_ID = "entity_id"
 
 
 def trigger(hass, config, action):
@@ -41,7 +40,7 @@ def trigger(hass, config, action):
 
 def if_action(hass, config, action):
     """ Wraps action method with state based condition. """
-    entity_id = config.get(CONF_IF_ENTITY_ID)
+    entity_id = config.get(CONF_ENTITY_ID)
     state = config.get(CONF_STATE)
 
     if entity_id is None or state is None:
