@@ -258,3 +258,67 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(self.calls))
+
+    def test_using_trigger_as_condition(self):
+        """ """
+        entity_id = 'test.entity'
+        automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': [
+                    {
+                        'platform': 'state',
+                        'entity_id': entity_id,
+                        'state': 100
+                    },
+                    {
+                        'platform': 'numeric_state',
+                        'entity_id': entity_id,
+                        'below': 150
+                    }
+                ],
+                'condition': 'use_trigger_values',
+                'action': {
+                    'execute_service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.states.set(entity_id, 100)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, 120)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, 151)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_using_trigger_as_condition_with_invalid_condition(self):
+        """ Event is not a valid condition. Will it still work? """
+        entity_id = 'test.entity'
+        self.hass.states.set(entity_id, 100)
+        automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': [
+                    {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    {
+                        'platform': 'numeric_state',
+                        'entity_id': entity_id,
+                        'below': 150
+                    }
+                ],
+                'condition': 'use_trigger_values',
+                'action': {
+                    'execute_service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
