@@ -60,6 +60,7 @@ MQTT_CLIENT = None
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
+DEFAULT_QOS = 0
 
 SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
@@ -79,17 +80,18 @@ ATTR_PAYLOAD = 'payload'
 ATTR_QOS = 'qos'
 
 
-def publish(hass, topic, payload, qos=0):
+def publish(hass, topic, payload, qos=None):
     """ Send an MQTT message. """
     data = {
         ATTR_TOPIC: topic,
         ATTR_PAYLOAD: payload,
-        ATTR_QOS: qos,
     }
+    if qos is not None:
+        data[ATTR_QOS] = qos
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-def subscribe(hass, topic, callback, qos=0):
+def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     """ Subscribe to a topic. """
     def mqtt_topic_subscriber(event):
         """ Match subscribed MQTT topic. """
@@ -141,7 +143,7 @@ def setup(hass, config):
         """ Handle MQTT publish service calls. """
         msg_topic = call.data.get(ATTR_TOPIC)
         payload = call.data.get(ATTR_PAYLOAD)
-        qos = call.data.get(ATTR_QOS)
+        qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
         if msg_topic is None or payload is None:
             return
         MQTT_CLIENT.publish(msg_topic, payload, qos)

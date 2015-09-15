@@ -107,6 +107,7 @@ class KodiDevice(MediaPlayerDevice):
         try:
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:
+            _LOGGER.exception('Unable to fetch kodi data')
             return None
 
     @property

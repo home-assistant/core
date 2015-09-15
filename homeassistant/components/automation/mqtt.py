@@ -14,7 +14,7 @@ CONF_TOPIC = 'mqtt_topic'
 CONF_PAYLOAD = 'mqtt_payload'
 
 
-def register(hass, config, action):
+def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
     topic = config.get(CONF_TOPIC)
     payload = config.get(CONF_PAYLOAD)

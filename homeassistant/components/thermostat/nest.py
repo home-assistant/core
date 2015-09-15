@@ -3,9 +3,11 @@ homeassistant.components.thermostat.nest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for Nest thermostats.
 """
+import socket
 import logging
 
-from homeassistant.components.thermostat import ThermostatDevice
+from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
+                                                 STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
 REQUIREMENTS = ['python-nest==2.6.0']
@@ -34,12 +36,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     napi = nest.Nest(username, password)
-
-    add_devices([
-        NestThermostat(structure, device)
-        for structure in napi.structures
-        for device in structure.devices
-    ])
+    try:
+        add_devices([
+            NestThermostat(structure, device)
+            for structure in napi.structures
+            for device in structure.devices
+        ])
+    except socket.error:
+        logger.error(
+            "Connection error logging into the nest web service"
+        )
 
 
 class NestThermostat(ThermostatDevice):
@@ -84,23 +90,50 @@ class NestThermostat(ThermostatDevice):
         return round(self.device.temperature, 1)
 
     @property
+    def operation(self):
+        """ Returns current operation ie. heat, cool, idle """
+        if self.device.hvac_ac_state is True:
+            return STATE_COOL
+        elif self.device.hvac_heater_state is True:
+            return STATE_HEAT
+        else:
+            return STATE_IDLE
+
+    @property
     def target_temperature(self):
         """ Returns the temperature we try to reach. """
         target = self.device.target
 
-        if isinstance(target, tuple):
+        if self.device.mode == 'range':
             low, high = target
-
-            if self.current_temperature < low:
-                temp = low
-            elif self.current_temperature > high:
+            if self.operation == STATE_COOL:
                 temp = high
+            elif self.operation == STATE_HEAT:
+                temp = low
             else:
-                temp = (low + high)/2
+                range_average = (low + high)/2
+                if self.current_temperature < range_average:
+                    temp = low
+                elif self.current_temperature >= range_average:
+                    temp = high
         else:
             temp = target
 
         return round(temp, 1)
+
+    @property
+    def target_temperature_low(self):
+        """ Returns the lower bound temperature we try to reach. """
+        if self.device.mode == 'range':
+            return round(self.device.target[0], 1)
+        return round(self.target_temperature, 1)
+
+    @property
+    def target_temperature_high(self):
+        """ Returns the upper bound temperature we try to reach. """
+        if self.device.mode == 'range':
+            return round(self.device.target[1], 1)
+        return round(self.target_temperature, 1)
 
     @property
     def is_away_mode_on(self):
@@ -109,6 +142,11 @@ class NestThermostat(ThermostatDevice):
 
     def set_temperature(self, temperature):
         """ Set new target temperature """
+        if self.device.mode == 'range':
+            if self.target_temperature == self.target_temperature_low:
+                temperature = (temperature, self.target_temperature_high)
+            elif self.target_temperature == self.target_temperature_high:
+                temperature = (self.target_temperature_low, temperature)
         self.device.target = temperature
 
     def turn_away_mode_on(self):
