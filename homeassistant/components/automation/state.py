@@ -13,15 +13,16 @@ from homeassistant.const import MATCH_ALL
 CONF_ENTITY_ID = "state_entity_id"
 CONF_FROM = "state_from"
 CONF_TO = "state_to"
+CONF_STATE = "state"
 
 
-def register(hass, config, action):
+def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
     entity_id = config.get(CONF_ENTITY_ID)
 
     if entity_id is None:
         logging.getLogger(__name__).error(
-            "Missing configuration key %s", CONF_ENTITY_ID)
+            "Missing trigger configuration key %s", CONF_ENTITY_ID)
         return False
 
     from_state = config.get(CONF_FROM, MATCH_ALL)
@@ -35,3 +36,22 @@ def register(hass, config, action):
         hass, entity_id, state_automation_listener, from_state, to_state)
 
     return True
+
+
+def if_action(hass, config, action):
+    """ Wraps action method with state based condition. """
+    entity_id = config.get(CONF_ENTITY_ID)
+    state = config.get(CONF_STATE)
+
+    if entity_id is None or state is None:
+        logging.getLogger(__name__).error(
+            "Missing if-condition configuration key %s or %s", CONF_ENTITY_ID,
+            CONF_STATE)
+        return action
+
+    def state_if():
+        """ Execute action if state matches. """
+        if hass.states.is_state(entity_id, state):
+            action()
+
+    return state_if
