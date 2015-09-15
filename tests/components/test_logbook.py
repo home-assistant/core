@@ -63,6 +63,25 @@ class TestComponentHistory(unittest.TestCase):
             entries[0], name='Home Assistant', message='restarted',
             domain=ha.DOMAIN)
 
+    def test_process_custom_logbook_entries(self):
+        """ Tests if custom log book entries get added as an entry. """
+        name = 'Nice name'
+        message = 'has a custom entry'
+        entity_id = 'sun.sun'
+
+        entries = list(logbook.humanify((
+            ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
+                logbook.ATTR_NAME: name,
+                logbook.ATTR_MESSAGE: message,
+                logbook.ATTR_ENTITY_ID: entity_id,
+                }),
+            )))
+
+        self.assertEqual(1, len(entries))
+        self.assert_entry(
+            entries[0], name=name, message=message,
+            domain='sun', entity_id=entity_id)
+
     def assert_entry(self, entry, when=None, name=None, message=None,
                      domain=None, entity_id=None):
         """ Asserts an entry is what is expected """

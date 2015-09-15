@@ -22,6 +22,8 @@ CONF_ALIAS = "alias"
 CONF_SERVICE = "execute_service"
 CONF_SERVICE_DATA = "service_data"
 CONF_SEQUENCE = "sequence"
+CONF_EVENT = "event"
+CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,6 +111,8 @@ class Script(object):
         for action in self.actions:
             if CONF_SERVICE in action:
                 self._call_service(action)
+            elif CONF_EVENT in action:
+                self._fire_event(action)
             elif CONF_DELAY in action:
                 delay = timedelta(**action[CONF_DELAY])
                 point_in_time = date_util.now() + delay
@@ -140,3 +144,10 @@ class Script(object):
         domain, service = split_entity_id(action[CONF_SERVICE])
         data = action.get(CONF_SERVICE_DATA, {})
         self.hass.services.call(domain, service, data)
+
+    def _fire_event(self, action):
+        """ Fires an event. """
+        self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
+        _LOGGER.info("Executing script %s step %s", self.alias,
+                     self.last_action)
+        self.hass.bus.fire(action[CONF_EVENT], action.get(CONF_EVENT_DATA))

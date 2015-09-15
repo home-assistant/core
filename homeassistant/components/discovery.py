@@ -19,22 +19,22 @@ from homeassistant.const import (
 
 DOMAIN = "discovery"
 DEPENDENCIES = []
-REQUIREMENTS = ['netdisco==0.3']
+REQUIREMENTS = ['netdisco==0.4']
 
 SCAN_INTERVAL = 300  # seconds
 
-# Next 3 lines for now a mirror from netdisco.const
-# Should setup a mapping netdisco.const -> own constants
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HUE = 'philips_hue'
 SERVICE_CAST = 'google_cast'
 SERVICE_NETGEAR = 'netgear_router'
+SERVICE_SONOS = 'sonos'
 
 SERVICE_HANDLERS = {
     SERVICE_WEMO: "switch",
     SERVICE_CAST: "media_player",
     SERVICE_HUE: "light",
     SERVICE_NETGEAR: 'device_tracker',
+    SERVICE_SONOS: 'media_player',
 }
 
 
@@ -77,13 +77,6 @@ def setup(hass, config):
 
             # We do not know how to handle this service
             if not component:
-                return
-
-            # Hack - fix when device_tracker supports discovery
-            if service == SERVICE_NETGEAR:
-                bootstrap.setup_component(hass, component, {
-                    'device_tracker': {'platform': 'netgear'}
-                })
                 return
 
             # This component cannot be setup.
