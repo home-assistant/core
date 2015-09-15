@@ -19,12 +19,13 @@ from homeassistant.const import (
 
 DOMAIN = 'media_player'
 DEPENDENCIES = []
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DISCOVERY_PLATFORMS = {
     discovery.SERVICE_CAST: 'cast',
+    discovery.SERVICE_SONOS: 'sonos',
 }
 
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
