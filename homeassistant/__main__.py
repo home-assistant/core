@@ -162,14 +162,12 @@ def write_pid(pid_file):
 
 
 def install_osx():
-    app_path = os.popen('pwd').read().strip()
     hass_path = os.popen('which hass').read().strip()
     user = os.popen('whoami').read().strip()
 
     plist = codecs.open('scripts/org.homeassistant.plist', 'r', 'utf-8')
     plist = plist.read()
 
-    plist = plist.replace("$APP_PATH$", app_path)
     plist = plist.replace("$HASS_PATH$", hass_path)
     plist = plist.replace("$USER$", user)
 
