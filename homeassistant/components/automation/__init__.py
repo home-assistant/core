@@ -7,63 +7,67 @@ Allows to setup simple automation rules via the config file.
 import logging
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.helpers import config_per_platform
 from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.components import logbook
 
-DOMAIN = "automation"
+DOMAIN = 'automation'
 
-DEPENDENCIES = ["group"]
+DEPENDENCIES = ['group']
 
-CONF_ALIAS = "alias"
-CONF_SERVICE = "execute_service"
-CONF_SERVICE_ENTITY_ID = "service_entity_id"
-CONF_SERVICE_DATA = "service_data"
-CONF_IF = "if"
+CONF_ALIAS = 'alias'
+CONF_SERVICE = 'execute_service'
+CONF_SERVICE_ENTITY_ID = 'service_entity_id'
+CONF_SERVICE_DATA = 'service_data'
+
+CONF_CONDITION = 'condition'
+CONF_ACTION = 'action'
+CONF_TRIGGER = 'trigger'
+CONF_CONDITION_TYPE = 'condition_type'
+
+CONDITION_USE_TRIGGER_VALUES = 'use_trigger_values'
+CONDITION_TYPE_AND = 'and'
+CONDITION_TYPE_OR = 'or'
+
+DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
     """ Sets up automation. """
-    success = False
+    config_key = DOMAIN
+    found = 1
 
-    for p_type, p_config in config_per_platform(config, DOMAIN, _LOGGER):
-        platform = prepare_setup_platform(hass, config, DOMAIN, p_type)
+    while config_key in config:
+        p_config = _migrate_old_config(config[config_key])
+        found += 1
+        config_key = "{} {}".format(DOMAIN, found)
 
-        if platform is None:
-            _LOGGER.error("Unknown automation platform specified: %s", p_type)
-            continue
-
-        action = _get_action(hass, p_config)
+        name = p_config.get(CONF_ALIAS, config_key)
+        action = _get_action(hass, p_config.get(CONF_ACTION, {}), name)
 
         if action is None:
-            return
+            continue
 
-        if CONF_IF in p_config:
-            action = _process_if(hass, config, p_config[CONF_IF], action)
+        if CONF_CONDITION in p_config or CONF_CONDITION_TYPE in p_config:
+            action = _process_if(hass, config, p_config, action)
 
-        if platform.trigger(hass, p_config, action):
-            _LOGGER.info(
-                "Initialized %s rule %s", p_type, p_config.get(CONF_ALIAS, ""))
-            success = True
-        else:
-            _LOGGER.error(
-                "Error setting up rule %s", p_config.get(CONF_ALIAS, ""))
+            if action is None:
+                continue
 
-    return success
+        _process_trigger(hass, config, p_config.get(CONF_TRIGGER, []), name,
+                         action)
+
+    return True
 
 
-def _get_action(hass, config):
+def _get_action(hass, config, name):
     """ Return an action based on a config. """
 
-    name = config.get(CONF_ALIAS, 'Unnamed automation')
-
     if CONF_SERVICE not in config:
-        _LOGGER.error('Error setting up %s, no action specified.',
-                      name)
-        return
+        _LOGGER.error('Error setting up %s, no action specified.', name)
+        return None
 
     def action():
         """ Action to be executed. """
@@ -71,7 +75,6 @@ def _get_action(hass, config):
         logbook.log_entry(hass, name, 'has been triggered', DOMAIN)
 
         domain, service = split_entity_id(config[CONF_SERVICE])
-
         service_data = config.get(CONF_SERVICE_DATA, {})
 
         if not isinstance(service_data, dict):
@@ -91,26 +94,107 @@ def _get_action(hass, config):
     return action
 
 
-def _process_if(hass, config, if_configs, action):
+def _migrate_old_config(config):
+    """ Migrate old config to new. """
+    if CONF_PLATFORM not in config:
+        return config
+
+    _LOGGER.warning(
+        'You are using an old configuration format. Please upgrade: '
+        'https://home-assistant.io/components/automation.html')
+
+    new_conf = {
+        CONF_TRIGGER: dict(config),
+        CONF_CONDITION: config.get('if', []),
+        CONF_ACTION: dict(config),
+    }
+
+    for cat, key, new_key in (('trigger', 'mqtt_topic', 'topic'),
+                              ('trigger', 'mqtt_payload', 'payload'),
+                              ('trigger', 'state_entity_id', 'entity_id'),
+                              ('trigger', 'state_before', 'before'),
+                              ('trigger', 'state_after', 'after'),
+                              ('trigger', 'state_to', 'to'),
+                              ('trigger', 'state_from', 'from'),
+                              ('trigger', 'state_hours', 'hours'),
+                              ('trigger', 'state_minutes', 'minutes'),
+                              ('trigger', 'state_seconds', 'seconds')):
+        if key in new_conf[cat]:
+            new_conf[cat][new_key] = new_conf[cat].pop(key)
+
+    return new_conf
+
+
+def _process_if(hass, config, p_config, action):
     """ Processes if checks. """
+
+    cond_type = p_config.get(CONF_CONDITION_TYPE,
+                             DEFAULT_CONDITION_TYPE).lower()
+
+    if_configs = p_config.get(CONF_CONDITION)
+    use_trigger = if_configs == CONDITION_USE_TRIGGER_VALUES
+
+    if use_trigger:
+        if_configs = p_config[CONF_TRIGGER]
 
     if isinstance(if_configs, dict):
         if_configs = [if_configs]
 
+    checks = []
     for if_config in if_configs:
-        p_type = if_config.get(CONF_PLATFORM)
-        if p_type is None:
-            _LOGGER.error("No platform defined found for if-statement %s",
-                          if_config)
+        platform = _resolve_platform('if_action', hass, config,
+                                     if_config.get(CONF_PLATFORM))
+        if platform is None:
             continue
 
-        platform = prepare_setup_platform(hass, config, DOMAIN, p_type)
+        check = platform.if_action(hass, if_config)
 
-        if platform is None or not hasattr(platform, 'if_action'):
-            _LOGGER.error("Unsupported if-statement platform specified: %s",
-                          p_type)
+        # Invalid conditions are allowed if we base it on trigger
+        if check is None and not use_trigger:
+            return None
+
+        checks.append(check)
+
+    if cond_type == CONDITION_TYPE_AND:
+        def if_action():
+            """ AND all conditions. """
+            if all(check() for check in checks):
+                action()
+    else:
+        def if_action():
+            """ OR all conditions. """
+            if any(check() for check in checks):
+                action()
+
+    return if_action
+
+
+def _process_trigger(hass, config, trigger_configs, name, action):
+    """ Setup triggers. """
+    if isinstance(trigger_configs, dict):
+        trigger_configs = [trigger_configs]
+
+    for conf in trigger_configs:
+        platform = _resolve_platform('trigger', hass, config,
+                                     conf.get(CONF_PLATFORM))
+        if platform is None:
             continue
 
-        action = platform.if_action(hass, if_config, action)
+        if platform.trigger(hass, conf, action):
+            _LOGGER.info("Initialized rule %s", name)
+        else:
+            _LOGGER.error("Error setting up rule %s", name)
 
-    return action
+
+def _resolve_platform(method, hass, config, platform):
+    """ Find automation platform. """
+    if platform is None:
+        return None
+    platform = prepare_setup_platform(hass, config, DOMAIN, platform)
+
+    if platform is None or not hasattr(platform, method):
+        _LOGGER.error("Unknown automation platform specified for %s: %s",
+                      method, platform)
+        return None
+
+    return platform
