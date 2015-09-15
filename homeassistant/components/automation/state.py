@@ -14,6 +14,7 @@ CONF_ENTITY_ID = "state_entity_id"
 CONF_FROM = "state_from"
 CONF_TO = "state_to"
 CONF_STATE = "state"
+CONF_IF_ENTITY_ID = "entity_id"
 
 
 def trigger(hass, config, action):
@@ -40,13 +41,13 @@ def trigger(hass, config, action):
 
 def if_action(hass, config, action):
     """ Wraps action method with state based condition. """
-    entity_id = config.get(CONF_ENTITY_ID)
+    entity_id = config.get(CONF_IF_ENTITY_ID)
     state = config.get(CONF_STATE)
 
     if entity_id is None or state is None:
         logging.getLogger(__name__).error(
-            "Missing if-condition configuration key %s or %s", CONF_ENTITY_ID,
-            CONF_STATE)
+            "Missing if-condition configuration key %s or %s",
+            CONF_IF_ENTITY_ID, CONF_STATE)
         return action
 
     def state_if():
