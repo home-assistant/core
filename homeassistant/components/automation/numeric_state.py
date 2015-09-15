@@ -1,8 +1,8 @@
 """
-homeassistant.components.automation.state
+homeassistant.components.automation.numeric_state
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Offers state listening automation rules.
+Offers numeric state listening automation rules.
 """
 import logging
 
@@ -33,27 +33,7 @@ def trigger(hass, config, action):
                       CONF_BELOW, CONF_ABOVE)
         return False
 
-    def _in_range(value, range_start, range_end):
-        """ Checks if value is inside the range
-        :param value:
-        :param range_start:
-        :param range_end:
-        :return:
-        """
-
-        try:
-            value = float(value)
-        except ValueError:
-            _LOGGER.warn("Missing value in numeric check")
-            return False
-
-        if range_start is not None and range_end is not None:
-            return float(range_start) <= value < float(range_end)
-        elif range_end is not None:
-            return value < float(range_end)
-        else:
-            return float(range_start) <= value
-
+    # pylint: disable=unused-argument
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
 
@@ -66,3 +46,48 @@ def trigger(hass, config, action):
         hass, entity_id, state_automation_listener)
 
     return True
+
+
+def if_action(hass, config, action):
+    """ Wraps action method with state based condition. """
+
+    entity_id = config.get(CONF_ENTITY_ID)
+
+    if entity_id is None:
+        _LOGGER.error("Missing configuration key %s", CONF_ENTITY_ID)
+        return action
+
+    below = config.get(CONF_BELOW)
+    above = config.get(CONF_ABOVE)
+
+    if below is None and above is None:
+        _LOGGER.error("Missing configuration key."
+                      " One of %s or %s is required",
+                      CONF_BELOW, CONF_ABOVE)
+        return action
+
+    def state_if():
+        """ Execute action if state matches. """
+
+        state = hass.states.get(entity_id)
+        if state is None or _in_range(state.state, above, below):
+            action()
+
+    return state_if
+
+
+def _in_range(value, range_start, range_end):
+    """ Checks if value is inside the range """
+
+    try:
+        value = float(value)
+    except ValueError:
+        _LOGGER.warn("Missing value in numeric check")
+        return False
+
+    if range_start is not None and range_end is not None:
+        return float(range_start) <= value < float(range_end)
+    elif range_end is not None:
+        return value < float(range_end)
+    else:
+        return float(range_start) <= value
