@@ -26,9 +26,6 @@
       <false/>
     </dict>
 
-    <key>WorkingDirectory</key>
-    <string>$APP_PATH$</string>
-
     <key>StandardErrorPath</key>
     <string>/Users/$USER$/Library/Logs/homeassitant.log</string>
 
