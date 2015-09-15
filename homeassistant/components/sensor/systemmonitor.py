@@ -119,7 +119,7 @@ class SystemMonitorSensor(Entity):
 
     @property
     def name(self):
-        return self._name
+        return self._name.rstrip()
 
     @property
     def state(self):
