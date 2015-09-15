@@ -45,8 +45,8 @@ def if_action(hass, config, action):
 
     if entity_id is None or state is None:
         logging.getLogger(__name__).error(
-            "Missing if-condition configuration key %s or %s",
-            CONF_IF_ENTITY_ID, CONF_STATE)
+            "Missing if-condition configuration key %s or %s", CONF_ENTITY_ID,
+            CONF_STATE)
         return action
 
     def state_if():
