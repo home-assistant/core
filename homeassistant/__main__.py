@@ -182,9 +182,6 @@ def install_osx():
 
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
 
-    if os.path.isfile(path):
-        os.remove(path)
-
     with codecs.open(path, 'w', 'utf-8') as outp:
       outp.write(plist)
 
