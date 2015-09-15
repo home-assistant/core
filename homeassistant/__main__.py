@@ -162,6 +162,7 @@ def write_pid(pid_file):
 
 
 def install_osx():
+    """ Setup to run via launchd on OS X """
     hass_path = os.popen('which hass').read().strip()
     user = os.popen('whoami').read().strip()
 
@@ -189,6 +190,7 @@ def install_osx():
 
 
 def uninstall_osx():
+    """ Unload from launchd on OS X """
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
     os.popen('launchctl unload ' + path)
 
