@@ -67,7 +67,7 @@ class TestAutomationSun(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'sun',
-                    'event': 'sunset',
+                    'event': 'sunrise',
                 },
                 'action': {
                     'execute_service': 'test.automation',
@@ -114,7 +114,7 @@ class TestAutomationSun(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'sun',
-                    'event': 'sunset',
+                    'event': 'sunrise',
                     'offset': '-0:30:00'
                 },
                 'action': {
