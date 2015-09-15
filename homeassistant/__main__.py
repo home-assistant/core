@@ -163,13 +163,20 @@ def write_pid(pid_file):
 
 def install_osx():
     """ Setup to run via launchd on OS X """
-    hass_path = os.popen('which hass').read().strip()
-    user = os.popen('whoami').read().strip()
+    with os.popen('which hass') as inp:
+      hass_path = inp.read().strip()
+
+    with os.popen('whoami') as inp:
+      user = inp.read().strip()
 
     cwd = os.path.dirname(__file__)
     template_path = os.path.join(cwd, 'startup', 'launchd.plist')
 
+    with open(template_path, 'r', encoding='utf-8') as inp:
+      plist = inp.read()
+
     plist = codecs.open(template_path, 'r', 'utf-8')
+
     plist = plist.read()
 
     plist = plist.replace("$HASS_PATH$", hass_path)
@@ -180,9 +187,9 @@ def install_osx():
     if os.path.isfile(path):
         os.remove(path)
 
-    plist_file = codecs.open(path, 'w', 'utf-8')
-    plist_file.write(plist)
-    plist_file.close()
+    with codecs.open(path, 'w', 'utf-8') as outp:
+      outp.write(plist)
+
     os.popen('launchctl load -w -F ' + path)
 
     print("Home Assistant has been installed. \
