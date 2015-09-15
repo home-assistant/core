@@ -160,20 +160,24 @@ def write_pid(pid_file):
         print('Fatal Error: Unable to write pid file {}'.format(pid_file))
         sys.exit(1)
 
+
 def install_osx():
     app_path = os.popen('pwd').read().strip()
     hass_path = os.popen('which hass').read().strip()
     user = os.popen('whoami').read().strip()
 
-    plist = codecs.open('scripts/org.home-assistant.plist', 'r', 'utf-8')
+    plist = codecs.open('scripts/org.homeassistant.plist', 'r', 'utf-8')
     plist = plist.read()
 
     plist = plist.replace("$APP_PATH$", app_path)
     plist = plist.replace("$HASS_PATH$", hass_path)
     plist = plist.replace("$USER$", user)
 
-    path = os.path.expanduser("~/Library/LaunchAgents/org.home-assistant.plist")
-    os.remove(path)
+    path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
+
+    if os.path.isfile(path):
+        os.remove(path)
+
     plist_file = codecs.open(path, 'w', 'utf-8')
     plist_file.write(plist)
     plist_file.close()
@@ -184,7 +188,7 @@ def install_osx():
 
 
 def uninstall_osx():
-    path = os.path.expanduser("~/Library/LaunchAgents/org.home-assistant.plist")
+    path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
     os.popen('launchctl unload ' + path)
 
     print("Home Assistant has been uninstalled.")
