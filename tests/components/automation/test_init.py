@@ -1,8 +1,7 @@
 """
-tests.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests demo component.
+tests.components.automation.test_init
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tests automation component.
 """
 import unittest
 

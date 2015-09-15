@@ -1,8 +1,8 @@
 """
-tests.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.automation.test_state
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests demo component.
+Tests state automation.
 """
 import unittest
 
