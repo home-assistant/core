@@ -241,7 +241,6 @@ class TestAutomationTime(unittest.TestCase):
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
 
-        self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -260,7 +259,6 @@ class TestAutomationTime(unittest.TestCase):
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(minute=0))
 
-        self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -279,7 +277,6 @@ class TestAutomationTime(unittest.TestCase):
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
 
-        self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -301,7 +298,25 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=0, second=0))
 
-        self.hass.states.set('test.entity', 'world')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_using_after(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'after': '5:00:00',
+                },
+                'action': {
+                    'execute_service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=5, minute=0, second=0))
+
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 

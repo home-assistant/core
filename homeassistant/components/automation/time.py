@@ -22,6 +22,14 @@ WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
+    if CONF_AFTER in config:
+        after = dt_util.parse_time_str(config[CONF_AFTER])
+        if after is None:
+            logging.getLogger(__name__).error(
+                'Received invalid after value: %s', config[CONF_AFTER])
+            return False
+        hours, minutes, seconds = after.hour, after.minute, after.second
+
     hours = convert(config.get(CONF_HOURS), int)
     minutes = convert(config.get(CONF_MINUTES), int)
     seconds = convert(config.get(CONF_SECONDS), int)
@@ -51,22 +59,22 @@ def if_action(hass, config):
     def time_if():
         """ Validate time based if-condition """
         now = dt_util.now()
-
         if before is not None:
-            # Strip seconds if given
-            before_h, before_m = before.split(':')[0:2]
+            time = dt_util.parse_time_str(before)
+            if time is None:
+                return False
 
-            before_point = now.replace(hour=int(before_h),
-                                       minute=int(before_m))
+            before_point = now.replace(hour=time.hour, minute=time.minute)
 
             if now > before_point:
                 return False
 
         if after is not None:
-            # Strip seconds if given
-            after_h, after_m = after.split(':')[0:2]
+            time = dt_util.parse_time_str(after)
+            if time is None:
+                return False
 
-            after_point = now.replace(hour=int(after_h), minute=int(after_m))
+            after_point = now.replace(hour=time.hour, minute=time.minute)
 
             if now < after_point:
                 return False
