@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>org.home-assitant</string>
+    <string>org.homeassitant</string>
 
     <key>EnvironmentVariables</key>
     <dict>
@@ -30,10 +30,10 @@
     <string>$APP_PATH$</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/$USER$/Library/Logs/home-assitant.log</string>
+    <string>/Users/$USER$/Library/Logs/homeassitant.log</string>
 
     <key>StandardOutPath</key>
-    <string>/Users/$USER$/Library/Logs/home-assitant.log</string>
+    <string>/Users/$USER$/Library/Logs/homeassitant.log</string>
 
   </dict>
 </plist>
