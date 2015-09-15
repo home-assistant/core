@@ -1,8 +1,8 @@
 """
-tests.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.automation.test_mqtt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests demo component.
+Tests mqtt automation.
 """
 import unittest
 

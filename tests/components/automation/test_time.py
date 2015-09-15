@@ -1,8 +1,8 @@
 """
-tests.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.automation.test_time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests demo component.
+Tests time automation.
 """
 from datetime import timedelta
 import unittest
