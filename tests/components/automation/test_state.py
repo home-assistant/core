@@ -8,8 +8,6 @@ import unittest
 
 import homeassistant.core as ha
 import homeassistant.components.automation as automation
-from homeassistant.components.automation import event, state
-from homeassistant.const import CONF_PLATFORM
 
 
 class TestAutomationState(unittest.TestCase):
@@ -32,17 +30,17 @@ class TestAutomationState(unittest.TestCase):
     def test_setup_fails_if_no_entity_id(self):
         self.assertFalse(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'execute_service': 'test.automation'
             }
         }))
 
     def test_if_fires_on_entity_change(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                state.CONF_ENTITY_ID: 'test.entity',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'state_entity_id': 'test.entity',
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -53,10 +51,10 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fires_on_entity_change_with_from_filter(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                state.CONF_ENTITY_ID: 'test.entity',
-                state.CONF_FROM: 'hello',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'state_entity_id': 'test.entity',
+                'state_from': 'hello',
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -67,10 +65,10 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fires_on_entity_change_with_to_filter(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                state.CONF_ENTITY_ID: 'test.entity',
-                state.CONF_TO: 'world',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'state_entity_id': 'test.entity',
+                'state_to': 'world',
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -81,11 +79,11 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fires_on_entity_change_with_both_filters(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                state.CONF_ENTITY_ID: 'test.entity',
-                state.CONF_FROM: 'hello',
-                state.CONF_TO: 'world',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'state_entity_id': 'test.entity',
+                'state_from': 'hello',
+                'state_to': 'world',
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -96,11 +94,11 @@ class TestAutomationState(unittest.TestCase):
     def test_if_not_fires_if_to_filter_not_match(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                state.CONF_ENTITY_ID: 'test.entity',
-                state.CONF_FROM: 'hello',
-                state.CONF_TO: 'world',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'state_entity_id': 'test.entity',
+                'state_from': 'hello',
+                'state_to': 'world',
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -113,11 +111,11 @@ class TestAutomationState(unittest.TestCase):
 
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                state.CONF_ENTITY_ID: 'test.entity',
-                state.CONF_FROM: 'hello',
-                state.CONF_TO: 'world',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'state_entity_id': 'test.entity',
+                'state_from': 'hello',
+                'state_to': 'world',
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -128,9 +126,9 @@ class TestAutomationState(unittest.TestCase):
     def test_if_not_fires_if_entity_not_match(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'state',
-                state.CONF_ENTITY_ID: 'test.another_entity',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'state',
+                'state_entity_id': 'test.another_entity',
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -143,13 +141,13 @@ class TestAutomationState(unittest.TestCase):
         test_state = 'new_state'
         automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'event',
-                event.CONF_EVENT_TYPE: 'test_event',
-                automation.CONF_SERVICE: 'test.automation',
-                automation.CONF_IF: [{
-                    CONF_PLATFORM: 'state',
-                    state.CONF_ENTITY_ID: entity_id,
-                    state.CONF_STATE: test_state,
+                'platform': 'event',
+                'event_type': 'test_event',
+                'execute_service': 'test.automation',
+                'if': [{
+                    'platform': 'state',
+                    'entity_id': entity_id,
+                    'state': test_state,
                 }]
             }
         })
