@@ -10,9 +10,9 @@ from homeassistant.helpers.event import track_state_change
 from homeassistant.const import MATCH_ALL
 
 
-CONF_ENTITY_ID = "state_entity_id"
-CONF_FROM = "state_from"
-CONF_TO = "state_to"
+CONF_ENTITY_ID = "entity_id"
+CONF_FROM = "from"
+CONF_TO = "to"
 CONF_STATE = "state"
 
 
@@ -26,7 +26,7 @@ def trigger(hass, config, action):
         return False
 
     from_state = config.get(CONF_FROM, MATCH_ALL)
-    to_state = config.get(CONF_TO, MATCH_ALL)
+    to_state = config.get(CONF_TO) or config.get(CONF_STATE) or MATCH_ALL
 
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
@@ -38,7 +38,7 @@ def trigger(hass, config, action):
     return True
 
 
-def if_action(hass, config, action):
+def if_action(hass, config):
     """ Wraps action method with state based condition. """
     entity_id = config.get(CONF_ENTITY_ID)
     state = config.get(CONF_STATE)
@@ -47,11 +47,12 @@ def if_action(hass, config, action):
         logging.getLogger(__name__).error(
             "Missing if-condition configuration key %s or %s", CONF_ENTITY_ID,
             CONF_STATE)
-        return action
+        return None
 
-    def state_if():
-        """ Execute action if state matches. """
-        if hass.states.is_state(entity_id, state):
-            action()
+    state = str(state)
 
-    return state_if
+    def if_state():
+        """ Test if condition. """
+        return hass.states.is_state(entity_id, state)
+
+    return if_state
