@@ -175,8 +175,6 @@ def install_osx():
     with open(template_path, 'r', encoding='utf-8') as inp:
       plist = inp.read()
 
-    plist = codecs.open(template_path, 'r', 'utf-8')
-
     plist = plist.read()
 
     plist = plist.replace("$HASS_PATH$", hass_path)
