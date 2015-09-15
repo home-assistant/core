@@ -148,10 +148,12 @@ def _process_if(hass, config, if_configs, action, cond_type):
 
     if cond_type == CONDITION_TYPE_AND:
         def if_action():
+            """ AND all conditions. """
             if all(check() for check in checks):
                 action()
     else:
         def if_action():
+            """ OR all conditions. """
             if any(check() for check in checks):
                 action()
 
