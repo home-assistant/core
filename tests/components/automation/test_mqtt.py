@@ -8,9 +8,6 @@ import unittest
 
 import homeassistant.core as ha
 import homeassistant.components.automation as automation
-import homeassistant.components.automation.mqtt as mqtt
-from homeassistant.const import CONF_PLATFORM
-
 from tests.common import mock_mqtt_component, fire_mqtt_message
 
 
@@ -31,20 +28,57 @@ class TestAutomationState(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_setup_fails_if_no_topic(self):
-        self.assertFalse(automation.setup(self.hass, {
+    def test_old_config_if_fires_on_topic_match(self):
+        self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'mqtt',
+                'mqtt_topic': 'test-topic',
+                'execute_service': 'test.automation'
             }
         }))
+
+        fire_mqtt_message(self.hass, 'test-topic', '')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_old_config_if_fires_on_topic_and_payload_match(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'platform': 'mqtt',
+                'mqtt_topic': 'test-topic',
+                'mqtt_payload': 'hello',
+                'execute_service': 'test.automation'
+            }
+        }))
+
+        fire_mqtt_message(self.hass, 'test-topic', 'hello')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_old_config_if_not_fires_on_topic_but_no_payload_match(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'platform': 'mqtt',
+                'mqtt_topic': 'test-topic',
+                'mqtt_payload': 'hello',
+                'execute_service': 'test.automation'
+            }
+        }))
+
+        fire_mqtt_message(self.hass, 'test-topic', 'no-hello')
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_topic_match(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                mqtt.CONF_TOPIC: 'test-topic',
-                automation.CONF_SERVICE: 'test.automation'
+                'trigger': {
+                    'platform': 'mqtt',
+                    'topic': 'test-topic'
+                },
+                'action': {
+                    'execute_service': 'test.automation'
+                }
             }
         }))
 
@@ -55,10 +89,14 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fires_on_topic_and_payload_match(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                mqtt.CONF_TOPIC: 'test-topic',
-                mqtt.CONF_PAYLOAD: 'hello',
-                automation.CONF_SERVICE: 'test.automation'
+                'trigger': {
+                    'platform': 'mqtt',
+                    'topic': 'test-topic',
+                    'payload': 'hello'
+                },
+                'action': {
+                    'execute_service': 'test.automation'
+                }
             }
         }))
 
@@ -69,10 +107,14 @@ class TestAutomationState(unittest.TestCase):
     def test_if_not_fires_on_topic_but_no_payload_match(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                mqtt.CONF_TOPIC: 'test-topic',
-                mqtt.CONF_PAYLOAD: 'hello',
-                automation.CONF_SERVICE: 'test.automation'
+                'trigger': {
+                    'platform': 'mqtt',
+                    'topic': 'test-topic',
+                    'payload': 'hello'
+                },
+                'action': {
+                    'execute_service': 'test.automation'
+                }
             }
         }))
 
