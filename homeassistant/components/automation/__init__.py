@@ -11,22 +11,24 @@ from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.components import logbook
 
-DOMAIN = "automation"
+DOMAIN = 'automation'
 
-DEPENDENCIES = ["group"]
+DEPENDENCIES = ['group']
 
-CONF_ALIAS = "alias"
-CONF_SERVICE = "execute_service"
-CONF_SERVICE_ENTITY_ID = "service_entity_id"
-CONF_SERVICE_DATA = "service_data"
+CONF_ALIAS = 'alias'
+CONF_SERVICE = 'execute_service'
+CONF_SERVICE_ENTITY_ID = 'service_entity_id'
+CONF_SERVICE_DATA = 'service_data'
 
-CONF_CONDITION = "condition"
+CONF_CONDITION = 'condition'
 CONF_ACTION = 'action'
-CONF_TRIGGER = "trigger"
-CONF_CONDITION_TYPE = "condition_type"
+CONF_TRIGGER = 'trigger'
+CONF_CONDITION_TYPE = 'condition_type'
 
-CONDITION_TYPE_AND = "and"
-CONDITION_TYPE_OR = "or"
+CONDITION_USE_TRIGGER_VALUES = 'use_trigger_values'
+CONDITION_TYPE_AND = 'and'
+CONDITION_TYPE_OR = 'or'
+
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,11 +50,8 @@ def setup(hass, config):
         if action is None:
             continue
 
-        if CONF_CONDITION in p_config:
-            cond_type = p_config.get(CONF_CONDITION_TYPE,
-                                     DEFAULT_CONDITION_TYPE).lower()
-            action = _process_if(hass, config, p_config[CONF_CONDITION],
-                                 action, cond_type)
+        if CONF_CONDITION in p_config or CONF_CONDITION_TYPE in p_config:
+            action = _process_if(hass, config, p_config, action)
 
             if action is None:
                 continue
@@ -126,22 +125,32 @@ def _migrate_old_config(config):
     return new_conf
 
 
-def _process_if(hass, config, if_configs, action, cond_type):
+def _process_if(hass, config, p_config, action):
     """ Processes if checks. """
+
+    cond_type = p_config.get(CONF_CONDITION_TYPE,
+                             DEFAULT_CONDITION_TYPE).lower()
+
+    if_configs = p_config.get(CONF_CONDITION)
+    use_trigger = if_configs == CONDITION_USE_TRIGGER_VALUES
+
+    if use_trigger:
+        if_configs = p_config[CONF_TRIGGER]
 
     if isinstance(if_configs, dict):
         if_configs = [if_configs]
 
     checks = []
     for if_config in if_configs:
-        platform = _resolve_platform('condition', hass, config,
+        platform = _resolve_platform('if_action', hass, config,
                                      if_config.get(CONF_PLATFORM))
         if platform is None:
             continue
 
         check = platform.if_action(hass, if_config)
 
-        if check is None:
+        # Invalid conditions are allowed if we base it on trigger
+        if check is None and not use_trigger:
             return None
 
         checks.append(check)
@@ -177,15 +186,15 @@ def _process_trigger(hass, config, trigger_configs, name, action):
             _LOGGER.error("Error setting up rule %s", name)
 
 
-def _resolve_platform(requester, hass, config, platform):
+def _resolve_platform(method, hass, config, platform):
     """ Find automation platform. """
     if platform is None:
         return None
     platform = prepare_setup_platform(hass, config, DOMAIN, platform)
 
-    if platform is None:
+    if platform is None or not hasattr(platform, method):
         _LOGGER.error("Unknown automation platform specified for %s: %s",
-                      requester, platform)
+                      method, platform)
         return None
 
     return platform
