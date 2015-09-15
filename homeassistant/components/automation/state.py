@@ -26,7 +26,7 @@ def trigger(hass, config, action):
         return False
 
     from_state = config.get(CONF_FROM, MATCH_ALL)
-    to_state = config.get(CONF_TO, MATCH_ALL)
+    to_state = config.get(CONF_TO) or config.get(CONF_STATE) or MATCH_ALL
 
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """

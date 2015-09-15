@@ -209,6 +209,24 @@ class TestAutomationState(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_entity_change_with_state_filter(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.entity',
+                    'state': 'world'
+                },
+                'action': {
+                    'execute_service': 'test.automation'
+                }
+            }
+        }))
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_entity_change_with_both_filters(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
