@@ -38,7 +38,7 @@ def trigger(hass, config, action):
     return True
 
 
-def if_action(hass, config, action):
+def if_action(hass, config):
     """ Wraps action method with state based condition. """
     entity_id = config.get(CONF_ENTITY_ID)
     state = config.get(CONF_STATE)
@@ -47,11 +47,12 @@ def if_action(hass, config, action):
         logging.getLogger(__name__).error(
             "Missing if-condition configuration key %s or %s", CONF_ENTITY_ID,
             CONF_STATE)
-        return action
+        return None
 
-    def state_if():
-        """ Execute action if state matches. """
-        if hass.states.is_state(entity_id, state):
-            action()
+    state = str(state)
 
-    return state_if
+    def if_state():
+        """ Test if condition. """
+        return hass.states.is_state(entity_id, state)
+
+    return if_state
