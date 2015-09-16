@@ -3,4 +3,8 @@ if [ ${PWD##*/} == "scripts" ]; then
     cd ..
 fi
 
-python3 -m unittest discover tests
+if [ "$1" = "coverage" ]; then
+  coverage run -m unittest discover tests
+else
+  python3 -m unittest discover tests
+fi

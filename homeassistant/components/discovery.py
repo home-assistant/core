@@ -1,17 +1,16 @@
 """
+homeassistant.components.discovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Starts a service to scan in intervals for new devices.
 
 Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
 
 Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
-
 """
 import logging
 import threading
-
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.netdisco.netdisco.const as services
 
 from homeassistant import bootstrap
 from homeassistant.const import (
@@ -20,13 +19,22 @@ from homeassistant.const import (
 
 DOMAIN = "discovery"
 DEPENDENCIES = []
+REQUIREMENTS = ['netdisco==0.3']
 
 SCAN_INTERVAL = 300  # seconds
 
+# Next 3 lines for now a mirror from netdisco.const
+# Should setup a mapping netdisco.const -> own constants
+SERVICE_WEMO = 'belkin_wemo'
+SERVICE_HUE = 'philips_hue'
+SERVICE_CAST = 'google_cast'
+SERVICE_NETGEAR = 'netgear_router'
+
 SERVICE_HANDLERS = {
-    services.BELKIN_WEMO: "switch",
-    services.GOOGLE_CAST: "media_player",
-    services.PHILIPS_HUE: "light",
+    SERVICE_WEMO: "switch",
+    SERVICE_CAST: "media_player",
+    SERVICE_HUE: "light",
+    SERVICE_NETGEAR: 'device_tracker',
 }
 
 
@@ -53,14 +61,7 @@ def setup(hass, config):
     """ Starts a discovery service. """
     logger = logging.getLogger(__name__)
 
-    try:
-        from homeassistant.external.netdisco.netdisco.service import \
-            DiscoveryService
-    except ImportError:
-        logger.exception(
-            "Unable to import netdisco. "
-            "Did you install all the zeroconf dependency?")
-        return False
+    from netdisco.service import DiscoveryService
 
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
@@ -76,6 +77,13 @@ def setup(hass, config):
 
             # We do not know how to handle this service
             if not component:
+                return
+
+            # Hack - fix when device_tracker supports discovery
+            if service == SERVICE_NETGEAR:
+                bootstrap.setup_component(hass, component, {
+                    'device_tracker': {'platform': 'netgear'}
+                })
                 return
 
             # This component cannot be setup.

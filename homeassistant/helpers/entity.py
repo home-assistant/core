@@ -5,19 +5,28 @@ homeassistant.helpers.entity
 Provides ABC for entities in HA.
 """
 
-from homeassistant import NoEntitySpecifiedError
+from collections import defaultdict
+
+from homeassistant.exceptions import NoEntitySpecifiedError
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF,
-    DEVICE_DEFAULT_NAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN,
+    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS,
+    TEMP_FAHRENHEIT)
+
+# Dict mapping entity_id to a boolean that overwrites the hidden property
+_OVERWRITE = defaultdict(dict)
 
 
 class Entity(object):
     """ ABC for Home Assistant entities. """
     # pylint: disable=no-self-use
 
-    hass = None
-    entity_id = None
+    _hidden = False
+
+    # SAFE TO OVERWRITE
+    # The properties and methods here are safe to overwrite when inherting this
+    # class. These may be used to customize the behavior of the entity.
 
     @property
     def should_poll(self):
@@ -52,6 +61,20 @@ class Entity(object):
         """ Unit of measurement of this entity, if any. """
         return None
 
+    @property
+    def hidden(self):
+        """ Suggestion if the entity should be hidden from UIs. """
+        return self._hidden
+
+    @hidden.setter
+    def hidden(self, val):
+        """ Sets the suggestion for visibility. """
+        self._hidden = bool(val)
+
+    def update(self):
+        """ Retrieve latest state. """
+        pass
+
     # DEPRECATION NOTICE:
     # Device is moving from getters to properties.
     # For now the new properties will call the old functions
@@ -69,9 +92,13 @@ class Entity(object):
         """ Returns optional state attributes. """
         return None
 
-    def update(self):
-        """ Retrieve latest state. """
-        pass
+    # DO NOT OVERWRITE
+    # These properties and methods are either managed by Home Assistant or they
+    # are used to perform a very specific function. Overwriting these may
+    # produce undesirable effects in the entity's operation.
+
+    hass = None
+    entity_id = None
 
     def update_ha_state(self, force_refresh=False):
         """
@@ -97,6 +124,16 @@ class Entity(object):
         if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
             attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
+        if self.hidden:
+            attr[ATTR_HIDDEN] = self.hidden
+
+        # overwrite properties that have been set in the config file
+        attr.update(_OVERWRITE.get(self.entity_id, {}))
+
+        # remove hidden property if false so it won't show up
+        if not attr.get(ATTR_HIDDEN, True):
+            attr.pop(ATTR_HIDDEN)
+
         # Convert temperature if we detect one
         if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,
                                                   TEMP_FAHRENHEIT):
@@ -114,6 +151,20 @@ class Entity(object):
 
     def __repr__(self):
         return "<Entity {}: {}>".format(self.name, self.state)
+
+    @staticmethod
+    def overwrite_attribute(entity_id, attrs, vals):
+        """
+        Overwrite any attribute of an entity.
+        This function should receive a list of attributes and a
+        list of values. Set attribute to None to remove any overwritten
+        value in place.
+        """
+        for attr, val in zip(attrs, vals):
+            if val is None:
+                _OVERWRITE[entity_id.lower()].pop(attr, None)
+            else:
+                _OVERWRITE[entity_id.lower()][attr] = val
 
 
 class ToggleEntity(Entity):

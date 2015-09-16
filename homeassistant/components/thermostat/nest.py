@@ -1,10 +1,14 @@
 """
+homeassistant.components.thermostat.nest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for Nest thermostats.
 """
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
+
+REQUIREMENTS = ['python-nest==2.6.0']
 
 
 # pylint: disable=unused-argument
@@ -39,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NestThermostat(ThermostatDevice):
-    """ Represents a Nest thermostat within Home Assistant. """
+    """ Represents a Nest thermostat. """
 
     def __init__(self, structure, device):
         self.structure = structure
@@ -48,11 +52,19 @@ class NestThermostat(ThermostatDevice):
     @property
     def name(self):
         """ Returns the name of the nest, if any. """
-        return self.device.name
+        location = self.device.where
+        name = self.device.name
+        if location is None:
+            return name
+        else:
+            if name == '':
+                return location.capitalize()
+            else:
+                return location.capitalize() + '(' + name + ')'
 
     @property
     def unit_of_measurement(self):
-        """ Returns the unit of measurement. """
+        """ Unit of measurement this thermostat expresses itself in. """
         return TEMP_CELCIUS
 
     @property
@@ -74,7 +86,21 @@ class NestThermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """ Returns the temperature we try to reach. """
-        return round(self.device.target, 1)
+        target = self.device.target
+
+        if isinstance(target, tuple):
+            low, high = target
+
+            if self.current_temperature < low:
+                temp = low
+            elif self.current_temperature > high:
+                temp = high
+            else:
+                temp = (low + high)/2
+        else:
+            temp = target
+
+        return round(temp, 1)
 
     @property
     def is_away_mode_on(self):
@@ -92,6 +118,24 @@ class NestThermostat(ThermostatDevice):
     def turn_away_mode_off(self):
         """ Turns away off. """
         self.structure.away = False
+
+    @property
+    def min_temp(self):
+        """ Identifies min_temp in Nest API or defaults if not available. """
+        temp = self.device.away_temperature.low
+        if temp is None:
+            return super().min_temp
+        else:
+            return temp
+
+    @property
+    def max_temp(self):
+        """ Identifies mxn_temp in Nest API or defaults if not available. """
+        temp = self.device.away_temperature.high
+        if temp is None:
+            return super().max_temp
+        else:
+            return temp
 
     def update(self):
         """ Python-nest has its own mechanism for staying up to date. """

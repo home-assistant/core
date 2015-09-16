@@ -10,8 +10,9 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.temperature import convert
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, TEMP_CELCIUS)
 
 DOMAIN = "thermostat"
 DEPENDENCIES = []
@@ -24,6 +25,8 @@ SERVICE_SET_TEMPERATURE = "set_temperature"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
+ATTR_MAX_TEMP = "max_temp"
+ATTR_MIN_TEMP = "min_temp"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +87,9 @@ def setup(hass, config):
                 return
 
             for thermostat in target_thermostats:
-                thermostat.set_temperature(temperature)
+                thermostat.set_temperature(convert(
+                    temperature, hass.config.temperature_unit,
+                    thermostat.unit_of_measurement))
 
         for thermostat in target_thermostats:
             thermostat.update_ha_state(True)
@@ -116,9 +121,20 @@ class ThermostatDevice(Entity):
     @property
     def state_attributes(self):
         """ Returns optional state attributes. """
+
+        thermostat_unit = self.unit_of_measurement
+        user_unit = self.hass.config.temperature_unit
+
         data = {
-            ATTR_CURRENT_TEMPERATURE: self.hass.config.temperature(
-                self.current_temperature, self.unit_of_measurement)[0]
+            ATTR_CURRENT_TEMPERATURE: round(convert(self.current_temperature,
+                                                    thermostat_unit,
+                                                    user_unit), 1),
+            ATTR_MIN_TEMP: round(convert(self.min_temp,
+                                         thermostat_unit,
+                                         user_unit), 0),
+            ATTR_MAX_TEMP: round(convert(self.max_temp,
+                                         thermostat_unit,
+                                         user_unit), 0)
         }
 
         is_away = self.is_away_mode_on
@@ -132,6 +148,11 @@ class ThermostatDevice(Entity):
             data.update(device_attr)
 
         return data
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement this thermostat expresses itself in. """
+        return NotImplementedError
 
     @property
     def current_temperature(self):
@@ -162,3 +183,13 @@ class ThermostatDevice(Entity):
     def turn_away_mode_off(self):
         """ Turns away mode off. """
         pass
+
+    @property
+    def min_temp(self):
+        """ Return minimum temperature. """
+        return convert(7, TEMP_CELCIUS, self.unit_of_measurement)
+
+    @property
+    def max_temp(self):
+        """ Return maxmum temperature. """
+        return convert(35, TEMP_CELCIUS, self.unit_of_measurement)
