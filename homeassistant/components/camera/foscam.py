@@ -5,8 +5,6 @@ This component provides basic support for Foscam IP cameras.
 
 As part of the basic support the following features will be provided:
 -MJPEG video streaming
--Saving a snapshot
--Recording(JPEG frame capture)
 
 To use this component, add the following to your config/configuration.yaml:
 
@@ -52,7 +50,6 @@ The port that the camera is running on. The default is 88.
 
 """
 import logging
-from requests.auth import HTTPBasicAuth
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera import Camera
