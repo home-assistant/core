@@ -1,7 +1,7 @@
 """
 Support for Foscam IP Cameras.
 
-This component provides basic support for Foscam IP cameras. 
+This component provides basic support for Foscam IP cameras.
 
 As part of the basic support the following features will be provided:
 -MJPEG video streaming
@@ -34,15 +34,16 @@ The IP address of your foscam device
 
 username
 *Required
-THe username of a visitor or operator of your camera. Oddly admin accounts don't seem to have access to take snapshots
+The username of a visitor or operator of your camera.
+Oddly admin accounts don't seem to have access to take snapshots.
 
 password
 *Required
-the password for accessing your camera
+The password for accessing your camera.
 
 name
 *Optional
-This parameter allows you to override the name of your camera in homeassistant
+This parameter allows you to override the name of your camera in homeassistant.
 
 port
 *Optional
@@ -62,7 +63,8 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Adds a Foscam IP Camera. """
-    if not validate_config({DOMAIN: config}, {DOMAIN: ['username', 'password', 'ip']}, _LOGGER):
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: ['username', 'password', 'ip']}, _LOGGER):
         return None
 
     add_devices_callback([FoscamCamera(config)])
@@ -76,17 +78,20 @@ class FoscamCamera(Camera):
 
     def __init__(self, device_info):
         super().__init__()
-        
+
         ip = device_info.get('ip')
         port = device_info.get('port', 88)
-        
+
         self._base_url = 'http://' + ip + ':' + str(port) + '/'
         self._username = device_info.get('username')
         self._password = device_info.get('password')
-        self._snap_picture_url = self._base_url + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture&usr=' + self._username + '&pwd=' + self._password
+        self._snap_picture_url = self._base_url
+        + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture&usr='
+        + self._username + '&pwd=' + self._password
         self._name = device_info.get('name', 'Foscam Camera')
-        
-        _LOGGER.info('Using the following URL for %s: %s', self._name, self._snap_picture_url)
+
+        _LOGGER.info('Using the following URL for %s: %s',
+                     self._name, self._snap_picture_url)
 
     def camera_image(self):
         """ Return a still image reponse from the camera """
@@ -96,7 +101,7 @@ class FoscamCamera(Camera):
 
         # parse the response to find the image file name
         pattern = re.compile('src="\.\.\/(.*\.jpg)"')
-        filename = pattern.search(response.content.decode("utf-8") ).group(1)
+        filename = pattern.search(response.content.decode("utf-8")).group(1)
 
         # send request for the image
         response = requests.get(self._base_url + filename)
