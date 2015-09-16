@@ -5,14 +5,19 @@ homeassistant.components.history
 Provide pre-made queries on top of the recorder component.
 """
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from itertools import groupby
 from collections import defaultdict
 
+import homeassistant.util.dt as dt_util
 import homeassistant.components.recorder as recorder
+from homeassistant.const import HTTP_BAD_REQUEST
 
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
+
+URL_HISTORY_PERIOD = re.compile(
+    r'/api/history/period(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
 
 
 def last_5_states(entity_id):
@@ -22,7 +27,7 @@ def last_5_states(entity_id):
     query = """
         SELECT * FROM states WHERE entity_id=? AND
         last_changed=last_updated
-        ORDER BY last_changed DESC LIMIT 0, 5
+        ORDER BY state_id DESC LIMIT 0, 5
     """
 
     return recorder.query_states(query, (entity_id, ))
@@ -30,7 +35,7 @@ def last_5_states(entity_id):
 
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
     """
-    Return states changes during period start_time - end_time.
+    Return states changes during UTC period start_time - end_time.
     """
     where = "last_changed=last_updated AND last_changed > ? "
     data = [start_time]
@@ -50,8 +55,10 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
 
     result = defaultdict(list)
 
+    entity_ids = [entity_id] if entity_id is not None else None
+
     # Get the states at the start time
-    for state in get_states(start_time):
+    for state in get_states(start_time, entity_ids):
         state.last_changed = start_time
         result[state.entity_id].append(state)
 
@@ -62,13 +69,17 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
     return result
 
 
-def get_states(point_in_time, entity_ids=None, run=None):
+def get_states(utc_point_in_time, entity_ids=None, run=None):
     """ Returns the states at a specific point in time. """
     if run is None:
-        run = recorder.run_information(point_in_time)
+        run = recorder.run_information(utc_point_in_time)
+
+        # History did not run before utc_point_in_time
+        if run is None:
+            return []
 
     where = run.where_after_start_run + "AND created < ? "
-    where_data = [point_in_time]
+    where_data = [utc_point_in_time]
 
     if entity_ids is not None:
         where += "AND entity_id IN ({}) ".format(
@@ -87,13 +98,14 @@ def get_states(point_in_time, entity_ids=None, run=None):
     return recorder.query_states(query, where_data)
 
 
-def get_state(point_in_time, entity_id, run=None):
+def get_state(utc_point_in_time, entity_id, run=None):
     """ Return a state at a specific point in time. """
-    states = get_states(point_in_time, (entity_id,), run)
+    states = get_states(utc_point_in_time, (entity_id,), run)
 
     return states[0] if states else None
 
 
+# pylint: disable=unused-argument
 def setup(hass, config):
     """ Setup history hooks. """
     hass.http.register_path(
@@ -103,12 +115,12 @@ def setup(hass, config):
             r'recent_states'),
         _api_last_5_states)
 
-    hass.http.register_path(
-        'GET', re.compile(r'/api/history/period'), _api_history_period)
+    hass.http.register_path('GET', URL_HISTORY_PERIOD, _api_history_period)
 
     return True
 
 
+# pylint: disable=unused-argument
 # pylint: disable=invalid-name
 def _api_last_5_states(handler, path_match, data):
     """ Return the last 5 states for an entity id as JSON. """
@@ -119,10 +131,25 @@ def _api_last_5_states(handler, path_match, data):
 
 def _api_history_period(handler, path_match, data):
     """ Return history over a period of time. """
-    # 1 day for now..
-    start_time = datetime.now() - timedelta(seconds=86400)
+    date_str = path_match.group('date')
+    one_day = timedelta(seconds=86400)
+
+    if date_str:
+        start_date = dt_util.date_str_to_date(date_str)
+
+        if start_date is None:
+            handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
+            return
+
+        start_time = dt_util.as_utc(dt_util.start_of_local_day(start_date))
+    else:
+        start_time = dt_util.utcnow() - one_day
+
+    end_time = start_time + one_day
+
+    print("Fetchign", start_time, end_time)
 
     entity_id = data.get('filter_entity_id')
 
     handler.write_json(
-        state_changes_during_period(start_time, entity_id=entity_id).values())
+        state_changes_during_period(start_time, end_time, entity_id).values())

@@ -6,9 +6,11 @@ Scripts are a sequence of actions that can be triggered manually
 by the user or automatically based upon automation events, etc.
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
+import homeassistant.util.dt as date_util
 import threading
 
+from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import split_entity_id
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, EVENT_TIME_CHANGED)
@@ -109,9 +111,9 @@ class Script(object):
                 self._call_service(action)
             elif CONF_DELAY in action:
                 delay = timedelta(**action[CONF_DELAY])
-                point_in_time = datetime.now() + delay
-                self.listener = self.hass.track_point_in_time(
-                    self, point_in_time)
+                point_in_time = date_util.now() + delay
+                self.listener = track_point_in_time(
+                    self.hass, self, point_in_time)
                 return False
         return True
 

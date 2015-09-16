@@ -26,6 +26,10 @@ class MockScanner(object):
         """ Make a device leave the house. """
         self.devices_home.remove(device)
 
+    def reset(self):
+        """ Resets which devices are home. """
+        self.devices_home = []
+
     def scan_devices(self):
         """ Returns a list of fake devices. """
 

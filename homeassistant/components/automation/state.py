@@ -6,6 +6,7 @@ Offers state listening automation rules.
 """
 import logging
 
+from homeassistant.helpers.event import track_state_change
 from homeassistant.const import MATCH_ALL
 
 
@@ -30,7 +31,7 @@ def register(hass, config, action):
         """ Listens for state changes and calls action. """
         action()
 
-    hass.states.track_change(
-        entity_id, state_automation_listener, from_state, to_state)
+    track_state_change(
+        hass, entity_id, state_automation_listener, from_state, to_state)
 
     return True

@@ -8,6 +8,22 @@ Example component to target an entity_id to:
  - turn it off if all lights are turned off
  - turn it off if all people leave the house
  - offer a service to turn it on for 10 seconds
+
+Configuration:
+
+To use the Example custom component you will need to add the following to
+your configuration.yaml file.
+
+example:
+  target: TARGET_ENTITY
+
+Variable:
+
+target
+*Required
+TARGET_ENTITY should be one of your devices that can be turned on and off,
+ie a light or a switch. Example value could be light.Ceiling or switch.AC
+(if you have these devices with those names).
 """
 import time
 import logging
@@ -22,7 +38,7 @@ DOMAIN = "example"
 
 # List of component names (string) your component depends upon
 # We depend on group because group will be loaded after all the components that
-# initalize devices have been setup.
+# initialize devices have been setup.
 DEPENDENCIES = ['group']
 
 # Configuration key for the entity id we are targetting
@@ -31,6 +47,7 @@ CONF_TARGET = 'target'
 # Name of the service that we expose
 SERVICE_FLASH = 'flash'
 
+# Shortcut for the logger
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -115,5 +132,5 @@ def setup(hass, config):
     # Register our service with HASS.
     hass.services.register(DOMAIN, SERVICE_FLASH, flash_service)
 
-    # Tells the bootstrapper that the component was succesfully initialized
+    # Tells the bootstrapper that the component was successfully initialized
     return True
