@@ -6,6 +6,7 @@ Tests sun automation.
 """
 from datetime import datetime
 import unittest
+from unittest.mock import patch
 
 import homeassistant.core as ha
 from homeassistant.components import sun
@@ -38,19 +39,22 @@ class TestAutomationSun(unittest.TestCase):
             sun.STATE_ATTR_NEXT_SETTING: '02:00:00 16-09-2015',
         })
 
+        now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 2, tzinfo=dt_util.UTC)
 
-        self.assertTrue(automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'sun',
-                    'event': 'sunset',
-                },
-                'action': {
-                    'execute_service': 'test.automation',
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            self.assertTrue(automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'sun',
+                        'event': 'sunset',
+                    },
+                    'action': {
+                        'execute_service': 'test.automation',
+                    }
                 }
-            }
-        }))
+            }))
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
@@ -61,19 +65,22 @@ class TestAutomationSun(unittest.TestCase):
             sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
         })
 
+        now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 14, tzinfo=dt_util.UTC)
 
-        self.assertTrue(automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'sun',
-                    'event': 'sunrise',
-                },
-                'action': {
-                    'execute_service': 'test.automation',
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            self.assertTrue(automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'sun',
+                        'event': 'sunrise',
+                    },
+                    'action': {
+                        'execute_service': 'test.automation',
+                    }
                 }
-            }
-        }))
+            }))
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
@@ -84,20 +91,23 @@ class TestAutomationSun(unittest.TestCase):
             sun.STATE_ATTR_NEXT_SETTING: '02:00:00 16-09-2015',
         })
 
+        now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 2, 30, tzinfo=dt_util.UTC)
 
-        self.assertTrue(automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'sun',
-                    'event': 'sunset',
-                    'offset': '0:30:00'
-                },
-                'action': {
-                    'execute_service': 'test.automation',
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            self.assertTrue(automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'sun',
+                        'event': 'sunset',
+                        'offset': '0:30:00'
+                    },
+                    'action': {
+                        'execute_service': 'test.automation',
+                    }
                 }
-            }
-        }))
+            }))
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
@@ -108,20 +118,23 @@ class TestAutomationSun(unittest.TestCase):
             sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
         })
 
+        now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 13, 30, tzinfo=dt_util.UTC)
 
-        self.assertTrue(automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'sun',
-                    'event': 'sunrise',
-                    'offset': '-0:30:00'
-                },
-                'action': {
-                    'execute_service': 'test.automation',
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            self.assertTrue(automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'sun',
+                        'event': 'sunrise',
+                        'offset': '-0:30:00'
+                    },
+                    'action': {
+                        'execute_service': 'test.automation',
+                    }
                 }
-            }
-        }))
+            }))
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
