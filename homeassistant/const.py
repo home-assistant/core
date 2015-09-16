@@ -47,6 +47,9 @@ STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
 STATE_STANDBY = 'standby'
+STATE_ALARM_DISARMED = 'disarmed'
+STATE_ALARM_ARMED_HOME = 'armed_home'
+STATE_ALARM_ARMED_AWAY = 'armed_away'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -113,6 +116,10 @@ SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
 SERVICE_MEDIA_SEEK = "media_seek"
+
+SERVICE_ALARM_DISARM = "alarm_disarm"
+SERVICE_ALARM_ARM_HOME = "alarm_arm_home"
+SERVICE_ALARM_ARM_AWAY = "alarm_arm_away"
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
