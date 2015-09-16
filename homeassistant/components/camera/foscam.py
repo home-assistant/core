@@ -61,7 +61,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Adds a generic IP Camera. """
+    """ Adds a Foscam IP Camera. """
     if not validate_config({DOMAIN: config}, {DOMAIN: ['username', 'password', 'ip']}, _LOGGER):
         return None
 
@@ -76,15 +76,17 @@ class FoscamCamera(Camera):
 
     def __init__(self, device_info):
         super().__init__()
-        self._name = device_info.get('name', 'Foscam Camera')
+        
+        ip = device_info.get('ip')
+        port = device_info.get('port', 88)
+        
+        self._base_url = 'http://' + ip + ':' + str(port) + '/'
         self._username = device_info.get('username')
         self._password = device_info.get('password')
-
-        port = device_info.get('port', 88)
-
-        self._base_url = 'http://' + device_info.get('ip') + ':' + str(port) + '/'
         self._snap_picture_url = self._base_url + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture&usr=' + self._username + '&pwd=' + self._password
-        _LOGGER.info('Using the following URL for Foscam camera: ' + self._snap_picture_url)
+        self._name = device_info.get('name', 'Foscam Camera')
+        
+        _LOGGER.info('Using the following URL for %s: %s', self._name, self._snap_picture_url)
 
     def camera_image(self):
         """ Return a still image reponse from the camera """
