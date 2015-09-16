@@ -356,7 +356,10 @@ class AirPlayDevice(MediaPlayerDevice):
             self.player_state = state_hash.get('player_state', None)
 
         if 'name' in state_hash:
-            self.device_name = state_hash.get('name', 'AirPlay')
+            name = state_hash.get('name', '')
+            kind = state_hash.get('kind', 'AirPlay')
+
+            self.device_name = (name + ' ' + kind).strip()
 
         if 'kind' in state_hash:
             self.kind = state_hash.get('kind', None)
