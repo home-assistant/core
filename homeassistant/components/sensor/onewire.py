@@ -17,35 +17,26 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the one wire Sensors"""
-    # TODO check if kernel modules are loaded
 
-    # TODO implment config fore the name, but also default solution
     if DEVICE_FILES == []:
-        _LOGGER.error('No onewire sensor found')
+        _LOGGER.error('No onewire sensor found. Check if dtoverlay=w1-gpio,gpiopin=4 is in your /boot/config.txt and the correct gpiopin number is set.')
         return
 
     devs = []
-    names = []
-    try:
-        ## only one name given
-        if type(config['names']) == str:
-            names = config[names]
-        
-        ## map names and sensors in given order
-        elif type(config['names']) == list:
-            names = config['names']
+    names = SENSOR_IDS
 
-        ## map names with ids
-        elif type(config['names']) == dict:
-            for sensor_id in SENSOR_IDS:
-                names.append(config['names'][sensor_id])
-                
-    except KeyError:
-        ## use id as name
-        if not config['names']:
-            for sensor_id in SENSOR_IDS:
-                names.append(sensor_id)
-        
+    for key in config.keys():
+        if key=="names":
+             ## only one name given
+             if isinstance(config['names'], str):
+                 names = [config['names']]
+             ## map names and sensors in given order
+             elif isinstance(config['names'], list):
+                 names = config['names']
+             ## map names to ids.
+             elif isinstance(config['names'], dict):
+                 names = [config['names'].get(sensor_id, sensor_id) for sensor_id in SENSOR_IDS]
+                       
     for device_file, name in zip(DEVICE_FILES, names):
         devs.append(OneWire(name, device_file, TEMP_CELCIUS))
     add_devices(devs)
@@ -90,4 +81,4 @@ class OneWire(Entity):
     @property
     def unit_of_measurement(self):
         return self._unit_of_measurement
-    
+        
