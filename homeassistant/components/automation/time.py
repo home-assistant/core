@@ -22,6 +22,10 @@ WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
+    hours = convert(config.get(CONF_HOURS), int)
+    minutes = convert(config.get(CONF_MINUTES), int)
+    seconds = convert(config.get(CONF_SECONDS), int)
+
     if CONF_AFTER in config:
         after = dt_util.parse_time_str(config[CONF_AFTER])
         if after is None:
@@ -29,10 +33,6 @@ def trigger(hass, config, action):
                 'Received invalid after value: %s', config[CONF_AFTER])
             return False
         hours, minutes, seconds = after.hour, after.minute, after.second
-
-    hours = convert(config.get(CONF_HOURS), int)
-    minutes = convert(config.get(CONF_MINUTES), int)
-    seconds = convert(config.get(CONF_SECONDS), int)
 
     def time_automation_listener(now):
         """ Listens for time changes and calls action. """
