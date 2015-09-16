@@ -1,5 +1,23 @@
 """
+homeassistant.components.notify.pushbullet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PushBullet platform for notify component.
+
+Configuration:
+
+To use the PushBullet notifier you will need to add something like the
+following to your configuration.yaml file.
+
+notify:
+  platform: pushbullet
+  api_key: YOUR_API_KEY
+
+Variables:
+
+api_key
+*Required
+Enter the API key for PushBullet. Go to https://www.pushbullet.com/ to retrieve
+your API key.
 """
 import logging
 
@@ -9,10 +27,11 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['pushbullet.py==0.7.1']
 
 
 def get_service(hass, config):
-    """ Get the pushbullet notification service. """
+    """ Get the PushBullet notification service. """
 
     if not validate_config(config,
                            {DOMAIN: [CONF_API_KEY]},

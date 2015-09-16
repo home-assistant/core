@@ -8,15 +8,18 @@ import logging
 import threading
 import os
 import csv
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
+from homeassistant.helpers.entity import _OVERWRITE
 import homeassistant.util as util
+import homeassistant.util.dt as dt_util
+from homeassistant.bootstrap import prepare_setup_platform
 
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME,
-    CONF_PLATFORM)
+    CONF_PLATFORM, DEVICE_DEFAULT_NAME)
 from homeassistant.components import group
 
 DOMAIN = "device_tracker"
@@ -40,6 +43,8 @@ CONF_SECONDS = "interval_seconds"
 
 DEFAULT_CONF_SECONDS = 12
 
+TRACK_NEW_DEVICES = "track_new_devices"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -58,18 +63,19 @@ def setup(hass, config):
 
     tracker_type = config[DOMAIN].get(CONF_PLATFORM)
 
-    tracker_implementation = get_component(
-        'device_tracker.{}'.format(tracker_type))
+    tracker_implementation = \
+        prepare_setup_platform(hass, config, DOMAIN, tracker_type)
 
     if tracker_implementation is None:
-        _LOGGER.error("Unknown device_tracker type specified.")
+        _LOGGER.error("Unknown device_tracker type specified: %s.",
+                      tracker_type)
 
         return False
 
     device_scanner = tracker_implementation.get_scanner(hass, config)
 
     if device_scanner is None:
-        _LOGGER.error("Failed to initialize device scanner for %s",
+        _LOGGER.error("Failed to initialize device scanner: %s",
                       tracker_type)
 
         return False
@@ -77,7 +83,10 @@ def setup(hass, config):
     seconds = util.convert(config[DOMAIN].get(CONF_SECONDS), int,
                            DEFAULT_CONF_SECONDS)
 
-    tracker = DeviceTracker(hass, device_scanner, seconds)
+    track_new_devices = config[DOMAIN].get(TRACK_NEW_DEVICES) or False
+    _LOGGER.info("Tracking new devices: %s", track_new_devices)
+
+    tracker = DeviceTracker(hass, device_scanner, seconds, track_new_devices)
 
     # We only succeeded if we got to parse the known devices file
     return not tracker.invalid_known_devices_file
@@ -86,12 +95,15 @@ def setup(hass, config):
 class DeviceTracker(object):
     """ Class that tracks which devices are home and which are not. """
 
-    def __init__(self, hass, device_scanner, seconds):
+    def __init__(self, hass, device_scanner, seconds, track_new_devices):
         self.hass = hass
 
         self.device_scanner = device_scanner
 
         self.lock = threading.Lock()
+
+        # Do we track new devices by default?
+        self.track_new_devices = track_new_devices
 
         # Dictionary to keep track of known devices and devices we track
         self.tracked = {}
@@ -113,7 +125,7 @@ class DeviceTracker(object):
             """ Reload known devices file. """
             self._read_known_devices_file()
 
-            self.update_devices(datetime.now())
+            self.update_devices(dt_util.utcnow())
 
             dev_group.update_tracked_entity_ids(self.device_entity_ids)
 
@@ -125,7 +137,7 @@ class DeviceTracker(object):
         seconds = range(0, 60, seconds)
 
         _LOGGER.info("Device tracker interval second=%s", seconds)
-        hass.track_time_change(update_device_state, second=seconds)
+        track_utc_time_change(hass, update_device_state, second=seconds)
 
         hass.services.register(DOMAIN,
                                SERVICE_DEVICE_TRACKER_RELOAD,
@@ -151,66 +163,40 @@ class DeviceTracker(object):
 
         state = STATE_HOME if is_home else STATE_NOT_HOME
 
+        # overwrite properties that have been set in the config file
+        attr = dict(dev_info['state_attr'])
+        attr.update(_OVERWRITE.get(dev_info['entity_id'], {}))
+
         self.hass.states.set(
-            dev_info['entity_id'], state,
-            dev_info['state_attr'])
+            dev_info['entity_id'], state, attr)
 
     def update_devices(self, now):
         """ Update device states based on the found devices. """
         if not self.lock.acquire(False):
             return
 
-        found_devices = set(dev.upper() for dev in
-                            self.device_scanner.scan_devices())
+        try:
+            found_devices = set(dev.upper() for dev in
+                                self.device_scanner.scan_devices())
 
-        for device in self.tracked:
-            is_home = device in found_devices
+            for device in self.tracked:
+                is_home = device in found_devices
 
-            self._update_state(now, device, is_home)
+                self._update_state(now, device, is_home)
 
-            if is_home:
-                found_devices.remove(device)
+                if is_home:
+                    found_devices.remove(device)
 
-        # Did we find any devices that we didn't know about yet?
-        new_devices = found_devices - self.untracked_devices
+            # Did we find any devices that we didn't know about yet?
+            new_devices = found_devices - self.untracked_devices
 
-        if new_devices:
-            self.untracked_devices.update(new_devices)
+            if new_devices:
+                if not self.track_new_devices:
+                    self.untracked_devices.update(new_devices)
 
-            # Write new devices to known devices file
-            if not self.invalid_known_devices_file:
-
-                known_dev_path = self.hass.config.path(KNOWN_DEVICES_FILE)
-
-                try:
-                    # If file does not exist we will write the header too
-                    is_new_file = not os.path.isfile(known_dev_path)
-
-                    with open(known_dev_path, 'a') as outp:
-                        _LOGGER.info(
-                            "Found %d new devices, updating %s",
-                            len(new_devices), known_dev_path)
-
-                        writer = csv.writer(outp)
-
-                        if is_new_file:
-                            writer.writerow((
-                                "device", "name", "track", "picture"))
-
-                        for device in new_devices:
-                            # See if the device scanner knows the name
-                            # else defaults to unknown device
-                            dname = self.device_scanner.get_device_name(device)
-                            name = dname or "unknown device"
-
-                            writer.writerow((device, name, 0, ""))
-
-                except IOError:
-                    _LOGGER.exception(
-                        "Error updating %s with %d new devices",
-                        known_dev_path, len(new_devices))
-
-        self.lock.release()
+                self._update_known_devices_file(new_devices)
+        finally:
+            self.lock.release()
 
     # pylint: disable=too-many-branches
     def _read_known_devices_file(self):
@@ -226,7 +212,6 @@ class DeviceTracker(object):
         self.untracked_devices.clear()
 
         with open(known_dev_path) as inp:
-            default_last_seen = datetime(1990, 1, 1)
 
             # To track which devices need an entity_id assigned
             need_entity_id = []
@@ -247,10 +232,7 @@ class DeviceTracker(object):
                             # We found a new device
                             need_entity_id.append(device)
 
-                            self.tracked[device] = {
-                                'name': row['name'],
-                                'last_seen': default_last_seen
-                            }
+                            self._track_device(device, row['name'])
 
                         # Update state_attr with latest from file
                         state_attr = {
@@ -275,21 +257,7 @@ class DeviceTracker(object):
 
                     self.tracked.pop(device)
 
-                # Setup entity_ids for the new devices
-                used_entity_ids = [info['entity_id'] for device, info
-                                   in self.tracked.items()
-                                   if device not in need_entity_id]
-
-                for device in need_entity_id:
-                    name = self.tracked[device]['name']
-
-                    entity_id = util.ensure_unique_string(
-                        ENTITY_ID_FORMAT.format(util.slugify(name)),
-                        used_entity_ids)
-
-                    used_entity_ids.append(entity_id)
-
-                    self.tracked[device]['entity_id'] = entity_id
+                self._generate_entity_ids(need_entity_id)
 
                 if not self.tracked:
                     _LOGGER.warning(
@@ -308,3 +276,72 @@ class DeviceTracker(object):
 
             finally:
                 self.lock.release()
+
+    def _update_known_devices_file(self, new_devices):
+        """ Add new devices to known devices file. """
+        if not self.invalid_known_devices_file:
+            known_dev_path = self.hass.config.path(KNOWN_DEVICES_FILE)
+
+            try:
+                # If file does not exist we will write the header too
+                is_new_file = not os.path.isfile(known_dev_path)
+
+                with open(known_dev_path, 'a') as outp:
+                    _LOGGER.info("Found %d new devices, updating %s",
+                                 len(new_devices), known_dev_path)
+
+                    writer = csv.writer(outp)
+
+                    if is_new_file:
+                        writer.writerow(("device", "name", "track", "picture"))
+
+                    for device in new_devices:
+                        # See if the device scanner knows the name
+                        # else defaults to unknown device
+                        name = self.device_scanner.get_device_name(device) or \
+                            DEVICE_DEFAULT_NAME
+
+                        track = 0
+                        if self.track_new_devices:
+                            self._track_device(device, name)
+                            track = 1
+
+                        writer.writerow((device, name, track, ""))
+
+                if self.track_new_devices:
+                    self._generate_entity_ids(new_devices)
+
+            except IOError:
+                _LOGGER.exception("Error updating %s with %d new devices",
+                                  known_dev_path, len(new_devices))
+
+    def _track_device(self, device, name):
+        """
+        Add a device to the list of tracked devices.
+        Does not generate the entity id yet.
+        """
+        default_last_seen = dt_util.utcnow().replace(year=1990)
+
+        self.tracked[device] = {
+            'name': name,
+            'last_seen': default_last_seen,
+            'state_attr': {ATTR_FRIENDLY_NAME: name}
+        }
+
+    def _generate_entity_ids(self, need_entity_id):
+        """ Generate entity ids for a list of devices. """
+        # Setup entity_ids for the new devices
+        used_entity_ids = [info['entity_id'] for device, info
+                           in self.tracked.items()
+                           if device not in need_entity_id]
+
+        for device in need_entity_id:
+            name = self.tracked[device]['name']
+
+            entity_id = util.ensure_unique_string(
+                ENTITY_ID_FORMAT.format(util.slugify(name)),
+                used_entity_ids)
+
+            used_entity_ids.append(entity_id)
+
+            self.tracked[device]['entity_id'] = entity_id

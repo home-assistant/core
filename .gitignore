@@ -7,6 +7,9 @@ homeassistant/components/frontend/www_static/polymer/bower_components/*
 config/custom_components/*
 !config/custom_components/example.py
 !config/custom_components/hello_world.py
+!config/custom_components/mqtt_example.py
+
+tests/config/home-assistant.log
 
 # Hide sublime text stuff
 *.sublime-project
@@ -64,5 +67,12 @@ nosetests.xml
 .project
 .pydevproject
 
-# Hide emacs backups
+# emacs auto backups
 *~
+*#
+*.orig
+.python-version
+
+# venv stuff
+pyvenv.cfg
+pip-selfcheck.json

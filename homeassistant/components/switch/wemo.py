@@ -1,28 +1,25 @@
-""" Support for WeMo switchces. """
+"""
+homeassistant.components.switch.wemo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Support for WeMo switches.
+"""
 import logging
 
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components.switch import (
-    ATTR_TODAY_MWH, ATTR_CURRENT_POWER_MWH)
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
+
+REQUIREMENTS = ['pywemo==0.3']
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return wemo switches. """
-    try:
-        # pylint: disable=no-name-in-module, import-error
-        import homeassistant.external.pywemo.pywemo as pywemo
-        import homeassistant.external.pywemo.pywemo.discovery as discovery
-    except ImportError:
-        logging.getLogger(__name__).exception((
-            "Failed to import pywemo. "
-            "Did you maybe not run `git submodule init` "
-            "and `git submodule update`?"))
-
-        return
+    """ Find and return WeMo switches. """
+    import pywemo
+    import pywemo.discovery as discovery
 
     if discovery_info is not None:
-        device = discovery.device_from_description(discovery_info)
+        device = discovery.device_from_description(discovery_info[2])
 
         if device:
             add_devices_callback([WemoSwitch(device)])
@@ -38,10 +35,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
          if isinstance(switch, pywemo.Switch)])
 
 
-class WemoSwitch(ToggleEntity):
-    """ represents a WeMo switch within home assistant. """
+class WemoSwitch(SwitchDevice):
+    """ Represents a WeMo switch. """
     def __init__(self, wemo):
         self.wemo = wemo
+        self.insight_params = None
+        self.maker_params = None
 
     @property
     def unique_id(self):
@@ -54,15 +53,60 @@ class WemoSwitch(ToggleEntity):
         return self.wemo.name
 
     @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        if self.wemo.model.startswith('Belkin Insight'):
-            cur_info = self.wemo.insight_params
+    def state(self):
+        """ Returns the state. """
+        is_on = self.is_on
+        if not is_on:
+            return STATE_OFF
+        elif self.is_standby:
+            return STATE_STANDBY
+        return STATE_ON
 
-            return {
-                ATTR_CURRENT_POWER_MWH: cur_info['currentpower'],
-                ATTR_TODAY_MWH: cur_info['todaymw']
-            }
+    @property
+    def current_power_mwh(self):
+        """ Current power usage in mwh. """
+        if self.insight_params:
+            return self.insight_params['currentpower']
+
+    @property
+    def today_power_mw(self):
+        """ Today total power usage in mw. """
+        if self.insight_params:
+            return self.insight_params['todaymw']
+
+    @property
+    def is_standby(self):
+        """ Is the device on - or in standby. """
+        if self.insight_params:
+            standby_state = self.insight_params['state']
+            # Standby  is actually '8' but seems more defensive
+            # to check for the On and Off states
+            if standby_state == '1' or standby_state == '0':
+                return False
+            else:
+                return True
+
+    @property
+    def sensor_state(self):
+        """ Is the sensor on or off. """
+        if self.maker_params and self.has_sensor:
+            # Note a state of 1 matches the WeMo app 'not triggered'!
+            if self.maker_params['sensorstate']:
+                return STATE_OFF
+            else:
+                return STATE_ON
+
+    @property
+    def switch_mode(self):
+        """ Is the switch configured as toggle(0) or momentary (1). """
+        if self.maker_params:
+            return self.maker_params['switchmode']
+
+    @property
+    def has_sensor(self):
+        """ Is the sensor present? """
+        if self.maker_params:
+            return self.maker_params['hassensor']
 
     @property
     def is_on(self):
@@ -78,5 +122,10 @@ class WemoSwitch(ToggleEntity):
         self.wemo.off()
 
     def update(self):
-        """ Update Wemo state. """
+        """ Update WeMo state. """
         self.wemo.get_state(True)
+        if self.wemo.model_name == 'Insight':
+            self.insight_params = self.wemo.insight_params
+            self.insight_params['standby_state'] = self.wemo.get_standby_state
+        elif self.wemo.model_name == 'Maker':
+            self.maker_params = self.wemo.maker_params

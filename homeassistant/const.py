@@ -1,4 +1,7 @@
 """ Constants used by Home Assistant components. """
+
+__version__ = "0.7.2"
+
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 
@@ -11,6 +14,7 @@ CONF_LONGITUDE = "longitude"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_NAME = "name"
 CONF_TIME_ZONE = "time_zone"
+CONF_CUSTOMIZE = "customize"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
@@ -39,6 +43,10 @@ STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = "unknown"
 STATE_OPEN = 'open'
 STATE_CLOSED = 'closed'
+STATE_PLAYING = 'playing'
+STATE_PAUSED = 'paused'
+STATE_IDLE = 'idle'
+STATE_STANDBY = 'standby'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -86,6 +94,9 @@ ATTR_TRIPPED = "device_tripped"
 # time the device was tripped
 ATTR_LAST_TRIP_TIME = "last_tripped_time"
 
+# For all entity's, this hold whether or not it should be hidden
+ATTR_HIDDEN = "hidden"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
@@ -95,11 +106,13 @@ SERVICE_TURN_OFF = 'turn_off'
 SERVICE_VOLUME_UP = "volume_up"
 SERVICE_VOLUME_DOWN = "volume_down"
 SERVICE_VOLUME_MUTE = "volume_mute"
+SERVICE_VOLUME_SET = "volume_set"
 SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
 SERVICE_MEDIA_PLAY = "media_play"
 SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
-SERVICE_MEDIA_PREV_TRACK = "media_prev_track"
+SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
+SERVICE_MEDIA_SEEK = "media_seek"
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
@@ -107,6 +120,7 @@ SERVER_PORT = 8123
 URL_ROOT = "/"
 URL_API = "/api/"
 URL_API_STREAM = "/api/stream"
+URL_API_CONFIG = "/api/config"
 URL_API_STATES = "/api/states"
 URL_API_STATES_ENTITY = "/api/states/{}"
 URL_API_EVENTS = "/api/events"
@@ -115,6 +129,7 @@ URL_API_SERVICES = "/api/services"
 URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
 URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
+URL_API_BOOTSTRAP = "/api/bootstrap"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -135,3 +150,4 @@ HTTP_HEADER_CACHE_CONTROL = "Cache-Control"
 HTTP_HEADER_EXPIRES = "Expires"
 
 CONTENT_TYPE_JSON = "application/json"
+CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'

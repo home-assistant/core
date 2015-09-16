@@ -1,10 +1,24 @@
 """
+homeassistant.components.wink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects to a Wink hub and loads relevant components to control its devices.
+
+Configuration:
+
+To use the Wink component you will need to add something like the following
+to your configuration.yaml file.
+
+wink:
+  access_token: YOUR_ACCESS_TOKEN
+
+Variables:
+
+access_token
+*Required
+Please check https://home-assistant.io/components/wink.html for further
+details.
 """
 import logging
-
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.wink.pywink as pywink
 
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
@@ -16,6 +30,9 @@ from homeassistant.const import (
 
 DOMAIN = "wink"
 DEPENDENCIES = []
+REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
+                'c2b700e8ca866159566ecf5e644d9c297f69f257.zip'
+                '#python-wink==0.1']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -29,6 +46,7 @@ def setup(hass, config):
     if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, logger):
         return False
 
+    import pywink
     pywink.set_bearer_token(config[DOMAIN][CONF_ACCESS_TOKEN])
 
     # Load components for the devices in the Wink that we support
@@ -53,14 +71,14 @@ def setup(hass, config):
 
 
 class WinkToggleDevice(ToggleEntity):
-    """ represents a Wink switch within home assistant. """
+    """ Represents a Wink switch within Home Assistant. """
 
     def __init__(self, wink):
         self.wink = wink
 
     @property
     def unique_id(self):
-        """ Returns the id of this WeMo switch """
+        """ Returns the id of this Wink switch. """
         return "{}.{}".format(self.__class__, self.wink.deviceId())
 
     @property
@@ -90,4 +108,4 @@ class WinkToggleDevice(ToggleEntity):
 
     def update(self):
         """ Update state of the light. """
-        self.wink.wait_till_desired_reached()
+        self.wink.updateState()

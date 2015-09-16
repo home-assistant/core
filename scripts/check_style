@@ -5,5 +5,5 @@ if [ ${PWD##*/} == "scripts" ]; then
     cd ..
 fi
 
+flake8 homeassistant
 pylint homeassistant
-flake8 homeassistant --exclude bower_components,external

@@ -1,5 +1,5 @@
 """
-homeassistant.keyboard
+homeassistant.components.keyboard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides functionality to emulate keyboard presses on host machine.
@@ -8,12 +8,13 @@ import logging
 
 from homeassistant.const import (
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREV_TRACK,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_PLAY_PAUSE)
 
 
 DOMAIN = "keyboard"
 DEPENDENCIES = []
+REQUIREMENTS = ['pyuserinput==0.1.9']
 
 
 def volume_up(hass):
@@ -43,7 +44,7 @@ def media_next_track(hass):
 
 def media_prev_track(hass):
     """ Press the keyboard button for prev track. """
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PREV_TRACK)
+    hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
 
 
 def setup(hass, config):
@@ -79,7 +80,7 @@ def setup(hass, config):
                            lambda service:
                            keyboard.tap_key(keyboard.media_next_track_key))
 
-    hass.services.register(DOMAIN, SERVICE_MEDIA_PREV_TRACK,
+    hass.services.register(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK,
                            lambda service:
                            keyboard.tap_key(keyboard.media_prev_track_key))
 
