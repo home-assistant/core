@@ -21,7 +21,7 @@ from .dt import datetime_to_local_str, utcnow
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
-RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
+RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 
 
 def sanitize_filename(filename):
@@ -36,7 +36,7 @@ def sanitize_path(path):
 
 def slugify(text):
     """ Slugifies a given text. """
-    text = text.replace(" ", "_")
+    text = text.lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
