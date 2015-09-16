@@ -5,6 +5,7 @@ homeassistant.components.automation.time
 Offers time listening automation rules.
 """
 from homeassistant.util import convert
+from homeassistant.helpers.event import track_time_change
 
 CONF_HOURS = "time_hours"
 CONF_MINUTES = "time_minutes"
@@ -21,8 +22,7 @@ def register(hass, config, action):
         """ Listens for time changes and calls action. """
         action()
 
-    hass.track_time_change(
-        time_automation_listener,
-        hour=hours, minute=minutes, second=seconds)
+    track_time_change(hass, time_automation_listener,
+                      hour=hours, minute=minutes, second=seconds)
 
     return True

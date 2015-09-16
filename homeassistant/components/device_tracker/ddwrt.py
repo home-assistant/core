@@ -1,4 +1,34 @@
-""" Supports scanning a DD-WRT router. """
+"""
+homeassistant.components.device_tracker.ddwrt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Device tracker platform that supports scanning a DD-WRT router for device
+presence.
+
+Configuration:
+
+To use the DD-WRT tracker you will need to add something like the following
+to your configuration.yaml file.
+
+device_tracker:
+  platform: ddwrt
+  host: YOUR_ROUTER_IP
+  username: YOUR_ADMIN_USERNAME
+  password: YOUR_ADMIN_PASSWORD
+
+Variables:
+
+host
+*Required
+The IP address of your router, e.g. 192.168.1.1.
+
+username
+*Required
+The username of an user with administrative privileges, usually 'admin'.
+
+password
+*Required
+The password for your given admin account.
+"""
 import logging
 from datetime import timedelta
 import re
@@ -20,7 +50,7 @@ _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a DdWrt scanner. """
+    """ Validates config and returns a DD-WRT scanner. """
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -33,7 +63,8 @@ def get_scanner(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class DdWrtDeviceScanner(object):
-    """ This class queries a wireless router running DD-WRT firmware
+    """
+    This class queries a wireless router running DD-WRT firmware
     for connected devices. Adapted from Tomato scanner.
     """
 
@@ -54,8 +85,9 @@ class DdWrtDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
 
         self._update_info()
 
@@ -93,8 +125,10 @@ class DdWrtDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the DdWrt router is up to date.
-            Returns boolean if scanning successful. """
+        """
+        Ensures the information from the DD-WRT router is up to date.
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
@@ -111,8 +145,8 @@ class DdWrtDeviceScanner(object):
                 self.last_results = []
                 active_clients = data.get('active_wireless', None)
                 if active_clients:
-                    # This is really lame, instead of using JSON the ddwrt UI
-                    # uses it's own data format for some reason and then
+                    # This is really lame, instead of using JSON the DD-WRT UI
+                    # uses its own data format for some reason and then
                     # regex's out values so I guess I have to do the same,
                     # LAME!!!
 
@@ -132,7 +166,7 @@ class DdWrtDeviceScanner(object):
             return False
 
     def get_ddwrt_data(self, url):
-        """ Retrieve data from DD-WRT and return parsed result  """
+        """ Retrieve data from DD-WRT and return parsed result. """
         try:
             response = requests.get(
                 url,
@@ -154,8 +188,7 @@ class DdWrtDeviceScanner(object):
 
 
 def _parse_ddwrt_response(data_str):
-    """ Parse the awful DD-WRT data format, why didn't they use JSON????.
-        This code is a python version of how they are parsing in the JS  """
+    """ Parse the DD-WRT data format. """
     return {
         key: val for key, val in _DDWRT_DATA_REGEX
         .findall(data_str)}

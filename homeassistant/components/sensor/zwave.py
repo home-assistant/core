@@ -1,7 +1,6 @@
 """
 homeassistant.components.sensor.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Interfaces with Z-Wave sensors.
 """
 # pylint: disable=import-error

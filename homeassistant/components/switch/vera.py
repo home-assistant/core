@@ -1,9 +1,11 @@
 """
+homeassistant.components.switch.vera
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Vera switches.
 
 Configuration:
 To use the Vera lights you will need to add something like the following to
-your config/configuration.yaml
+your configuration.yaml file.
 
 switch:
     platform: vera
@@ -15,48 +17,45 @@ switch:
         13:
             name: Another Switch
 
-VARIABLES:
+Variables:
 
 vera_controller_url
 *Required
 This is the base URL of your vera controller including the port number if not
-running on 80
-Example: http://192.168.1.21:3480/
-
+running on 80. Example: http://192.168.1.21:3480/
 
 device_data
 *Optional
 This contains an array additional device info for your Vera devices.  It is not
 required and if not specified all lights configured in your Vera controller
 will be added with default values.  You should use the id of your vera device
-as the key for the device within device_data
-
+as the key for the device within device_data.
 
 These are the variables for the device_data array:
-
 
 name
 *Optional
 This parameter allows you to override the name of your Vera device in the HA
 interface, if not specified the value configured for the device in your Vera
-will be used
-
+will be used.
 
 exclude
 *Optional
 This parameter allows you to exclude the specified device from homeassistant,
-it should be set to "true" if you want this device excluded
-
+it should be set to "true" if you want this device excluded.
 """
 import logging
 import time
 from requests.exceptions import RequestException
+import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.vera.vera as veraApi
+
+REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
+                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
+                '#python-vera==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +63,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def get_devices(hass, config):
     """ Find and return Vera switches. """
+    import pyvera as veraApi
 
     base_url = config.get('vera_controller_url')
     if not base_url:
@@ -78,9 +78,10 @@ def get_devices(hass, config):
     vera_controller = veraApi.VeraController(base_url)
     devices = []
     try:
-        devices = vera_controller.get_devices(['Switch', 'Armable Sensor'])
+        devices = vera_controller.get_devices([
+            'Switch', 'Armable Sensor', 'On/Off Switch'])
     except RequestException:
-        # There was a network related error connecting to the vera controller
+        # There was a network related error connecting to the vera controller.
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
@@ -101,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class VeraSwitch(ToggleEntity):
-    """ Represents a Vera Switch """
+    """ Represents a Vera Switch. """
 
     def __init__(self, vera_device, extra_data=None):
         self.vera_device = vera_device
@@ -132,11 +133,12 @@ class VeraSwitch(ToggleEntity):
 
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.refresh_value('LastTrip')
-            trip_time_str = time.strftime(
-                "%Y-%m-%d %H:%M",
-                time.localtime(int(last_tripped))
-            )
-            attr[ATTR_LAST_TRIP_TIME] = trip_time_str
+            if last_tripped is not None:
+                utc_time = dt_util.utc_from_timestamp(int(last_tripped))
+                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
+                    utc_time)
+            else:
+                attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.refresh_value('Tripped')
             attr[ATTR_TRIPPED] = 'True' if tripped == '1' else 'False'
 
