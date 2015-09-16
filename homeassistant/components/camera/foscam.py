@@ -77,17 +77,17 @@ class FoscamCamera(Camera):
     """
 
     def __init__(self, device_info):
-        super().__init__()
+        super(FoscamCamera, self).__init__()
 
-        ip = device_info.get('ip')
+        ip_address = device_info.get('ip')
         port = device_info.get('port', 88)
 
-        self._base_url = 'http://' + ip + ':' + str(port) + '/'
+        self._base_url = 'http://' + ip_address + ':' + str(port) + '/'
         self._username = device_info.get('username')
         self._password = device_info.get('password')
-        self._snap_picture_url = self._base_url
-        + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture&usr='
-        + self._username + '&pwd=' + self._password
+        self._snap_picture_url = self._base_url \
+            + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture&usr=' \
+            + self._username + '&pwd=' + self._password
         self._name = device_info.get('name', 'Foscam Camera')
 
         _LOGGER.info('Using the following URL for %s: %s',
@@ -100,7 +100,8 @@ class FoscamCamera(Camera):
         response = requests.get(self._snap_picture_url)
 
         # parse the response to find the image file name
-        pattern = re.compile('src="\.\.\/(.*\.jpg)"')
+
+        pattern = re.compile('src="[.][.]/(.*[.]jpg)"')
         filename = pattern.search(response.content.decode("utf-8")).group(1)
 
         # send request for the image
