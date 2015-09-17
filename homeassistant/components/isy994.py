@@ -1,15 +1,15 @@
 """
 homeassistant.components.isy994
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Connects to an ISY-994 controller and loads relevant components to control its
 devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
+
+For configuration details please visit the documentation for this component at
+https://home-assistant.io/components/isy994.html
 """
-# system imports
 import logging
 from urllib.parse import urlparse
 
-# homeassistant imports
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
 from homeassistant.helpers import validate_config
@@ -19,17 +19,17 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, ATTR_SERVICE, ATTR_DISCOVERED,
     ATTR_FRIENDLY_NAME)
 
-# homeassistant constants
 DOMAIN = "isy994"
 DEPENDENCIES = []
+REQUIREMENTS = ['PyISY==1.0.5']
 DISCOVER_LIGHTS = "isy994.lights"
 DISCOVER_SWITCHES = "isy994.switches"
 DISCOVER_SENSORS = "isy994.sensors"
 ISY = None
 SENSOR_STRING = 'Sensor'
 HIDDEN_STRING = '{HIDE ME}'
+CONF_TLS_VER = 'tls'
 
-# setup logger
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,7 +42,6 @@ def setup(hass, config):
         import PyISY
     except ImportError:
         _LOGGER.error("Error while importing dependency PyISY.")
-
         return False
 
     # pylint: disable=global-statement
@@ -74,10 +73,12 @@ def setup(hass, config):
     global HIDDEN_STRING
     SENSOR_STRING = str(config[DOMAIN].get('sensor_string', SENSOR_STRING))
     HIDDEN_STRING = str(config[DOMAIN].get('hidden_string', HIDDEN_STRING))
+    tls_version = config[DOMAIN].get(CONF_TLS_VER, None)
 
     # connect to ISY controller
     global ISY
-    ISY = PyISY.ISY(addr, port, user, password, use_https=https, log=_LOGGER)
+    ISY = PyISY.ISY(addr, port, user, password, use_https=https,
+                    tls_ver=tls_version, log=_LOGGER)
     if not ISY.connected:
         return False
 
@@ -155,6 +156,12 @@ class ISYDeviceABC(ToggleEntity):
         attr = {ATTR_FRIENDLY_NAME: self.name}
         for name, prop in self._attrs.items():
             attr[name] = getattr(self, prop)
+            attr = self._attr_filter(attr)
+        return attr
+
+    def _attr_filter(self, attr):
+        """ Placeholder for attribute filters. """
+        # pylint: disable=no-self-use
         return attr
 
     @property

@@ -9,11 +9,15 @@ from datetime import timedelta
 from itertools import groupby
 from collections import defaultdict
 
-import homeassistant.util.dt as date_util
+import homeassistant.util.dt as dt_util
 import homeassistant.components.recorder as recorder
+from homeassistant.const import HTTP_BAD_REQUEST
 
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
+
+URL_HISTORY_PERIOD = re.compile(
+    r'/api/history/period(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
 
 
 def last_5_states(entity_id):
@@ -111,8 +115,7 @@ def setup(hass, config):
             r'recent_states'),
         _api_last_5_states)
 
-    hass.http.register_path(
-        'GET', re.compile(r'/api/history/period'), _api_history_period)
+    hass.http.register_path('GET', URL_HISTORY_PERIOD, _api_history_period)
 
     return True
 
@@ -128,10 +131,25 @@ def _api_last_5_states(handler, path_match, data):
 
 def _api_history_period(handler, path_match, data):
     """ Return history over a period of time. """
-    # 1 day for now..
-    start_time = date_util.utcnow() - timedelta(seconds=86400)
+    date_str = path_match.group('date')
+    one_day = timedelta(seconds=86400)
+
+    if date_str:
+        start_date = dt_util.date_str_to_date(date_str)
+
+        if start_date is None:
+            handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
+            return
+
+        start_time = dt_util.as_utc(dt_util.start_of_local_day(start_date))
+    else:
+        start_time = dt_util.utcnow() - one_day
+
+    end_time = start_time + one_day
+
+    print("Fetchign", start_time, end_time)
 
     entity_id = data.get('filter_entity_id')
 
     handler.write_json(
-        state_changes_during_period(start_time, entity_id=entity_id).values())
+        state_changes_during_period(start_time, end_time, entity_id).values())

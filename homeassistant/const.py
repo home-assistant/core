@@ -1,4 +1,7 @@
 """ Constants used by Home Assistant components. """
+
+__version__ = "0.7.2"
+
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 
@@ -43,6 +46,7 @@ STATE_CLOSED = 'closed'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
+STATE_STANDBY = 'standby'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -146,3 +150,4 @@ HTTP_HEADER_CACHE_CONTROL = "Cache-Control"
 HTTP_HEADER_EXPIRES = "Expires"
 
 CONTENT_TYPE_JSON = "application/json"
+CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'

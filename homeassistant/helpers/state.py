@@ -6,7 +6,7 @@ Helpers that help with state related things.
 """
 import logging
 
-from homeassistant import State
+from homeassistant.core import State
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
@@ -30,7 +30,16 @@ class TrackStates(object):
         return self.states
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.states.extend(self.hass.states.get_since(self.now))
+        self.states.extend(get_changed_since(self.hass.states.all(), self.now))
+
+
+def get_changed_since(states, utc_point_in_time):
+    """
+    Returns all states that have been changed since utc_point_in_time.
+    """
+    point_in_time = dt_util.strip_microseconds(utc_point_in_time)
+
+    return [state for state in states if state.last_updated >= point_in_time]
 
 
 def reproduce_state(hass, states, blocking=False):

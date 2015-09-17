@@ -10,14 +10,13 @@ import unittest
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
-from helpers import get_test_home_assistant, MockModule
+from common import get_test_home_assistant, MockModule
 
 
 class TestLoader(unittest.TestCase):
     """ Test the loader module. """
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = get_test_home_assistant()
-        loader.prepare(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """

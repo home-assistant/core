@@ -1,14 +1,13 @@
 """
 homeassistant.components.sensor.swiss_public_transport
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 The Swiss public transport sensor will give you the next two departure times
 from a given location to another one. This sensor is limited to Switzerland.
 
 Configuration:
 
 To use the Swiss public transport sensor you will need to add something like
-the following to your config/configuration.yaml
+the following to your configuration.yaml file.
 
 sensor:
   platform: swiss_public_transport
@@ -122,7 +121,7 @@ class PublicTransportData(object):
 
         try:
             return [
-                dt_util.datetime_to_short_time_str(
+                dt_util.datetime_to_time_str(
                     dt_util.as_local(dt_util.utc_from_timestamp(
                         item['from']['departureTimestamp']))
                 )

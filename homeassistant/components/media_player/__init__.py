@@ -24,7 +24,7 @@ SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DISCOVERY_PLATFORMS = {
-    discovery.services.GOOGLE_CAST: 'cast',
+    discovery.SERVICE_CAST: 'cast',
 }
 
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
@@ -98,9 +98,7 @@ ATTR_TO_PROPERTY = [
 def is_on(hass, entity_id=None):
     """ Returns true if specified media player entity_id is on.
     Will check all media player if no entity_id specified. """
-
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
-
     return any(not hass.states.is_state(entity_id, STATE_OFF)
                for entity_id in entity_ids)
 
@@ -108,28 +106,24 @@ def is_on(hass, entity_id=None):
 def turn_on(hass, entity_id=None):
     """ Will turn on specified media player or all. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
     """ Will turn off specified media player or all. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 def volume_up(hass, entity_id=None):
     """ Send the media player the command for volume up. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_VOLUME_UP, data)
 
 
 def volume_down(hass, entity_id=None):
     """ Send the media player the command for volume down. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
 
 
@@ -156,35 +150,30 @@ def set_volume_level(hass, volume, entity_id=None):
 def media_play_pause(hass, entity_id=None):
     """ Send the media player the command for play/pause. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data)
 
 
 def media_play(hass, entity_id=None):
     """ Send the media player the command for play/pause. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY, data)
 
 
 def media_pause(hass, entity_id=None):
     """ Send the media player the command for play/pause. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
 
 
 def media_next_track(hass, entity_id=None):
     """ Send the media player the command for next track. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
 
 
 def media_previous_track(hass, entity_id=None):
     """ Send the media player the command for prev track. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
 
@@ -262,29 +251,30 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service)
 
-    def play_youtube_video_service(service, media_id):
+    def play_youtube_video_service(service, media_id=None):
         """ Plays specified media_id on the media player. """
-        target_players = component.extract_from_service(service)
+        if media_id is None:
+            service.data.get('video')
 
-        if media_id:
-            for player in target_players:
-                player.play_youtube(media_id)
+        if media_id is None:
+            return
 
-                if player.should_poll:
-                    player.update_ha_state(True)
+        for player in component.extract_from_service(service):
+            player.play_youtube(media_id)
 
-    hass.services.register(DOMAIN, "start_fireplace",
-                           lambda service:
-                           play_youtube_video_service(service, "eyU3bRy2x44"))
+            if player.should_poll:
+                player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, "start_epic_sax",
-                           lambda service:
-                           play_youtube_video_service(service, "kxopViU98Xo"))
+    hass.services.register(
+        DOMAIN, "start_fireplace",
+        lambda service: play_youtube_video_service(service, "eyU3bRy2x44"))
 
-    hass.services.register(DOMAIN, SERVICE_YOUTUBE_VIDEO,
-                           lambda service:
-                           play_youtube_video_service(
-                               service, service.data.get('video')))
+    hass.services.register(
+        DOMAIN, "start_epic_sax",
+        lambda service: play_youtube_video_service(service, "kxopViU98Xo"))
+
+    hass.services.register(
+        DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service)
 
     return True
 

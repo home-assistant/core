@@ -17,6 +17,7 @@ from datetime import timedelta
 import logging
 
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components.scheduler import ServiceEventListener
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class TimeEventListener(ServiceEventListener):
             """ Call the execute method """
             self.execute(hass)
 
-        hass.track_point_in_time(execute, next_time)
+        track_point_in_time(hass, execute, next_time)
 
         _LOGGER.info(
             'TimeEventListener scheduled for %s, will call service %s.%s',

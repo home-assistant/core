@@ -1,13 +1,12 @@
 """
 homeassistant.components.notify.xmpp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Jabber (XMPP) notification service.
 
 Configuration:
 
 To use the Jabber notifier you will need to add something like the following
-to your config/configuration.yaml
+to your configuration.yaml file.
 
 notify:
   platform: xmpp
@@ -29,7 +28,6 @@ The password for your given Jabber account.
 recipient
 *Required
 The Jabber ID (JID) that will receive the messages.
-
 """
 import logging
 
@@ -46,6 +44,8 @@ except ImportError:
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
+
+REQUIREMENTS = ['sleekxmpp==1.3.1', 'dnspython3==1.12.0']
 
 
 def get_service(hass, config):

@@ -1,7 +1,6 @@
 """
 homeassistant.components.sensor.isy994
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Support for ISY994 sensors.
 """
 import logging

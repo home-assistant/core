@@ -1,14 +1,19 @@
-""" Support for Tellstick lights. """
+"""
+homeassistant.components.light.tellstick
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Tellstick lights.
+"""
 import logging
 # pylint: disable=no-name-in-module, import-error
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.helpers.entity import ToggleEntity
 import tellcore.constants as tellcore_constants
+
+REQUIREMENTS = ['tellcore-py==1.0.4']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return tellstick lights. """
+    """ Find and return Tellstick lights. """
 
     try:
         import tellcore.telldus as telldus
@@ -27,8 +32,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(lights)
 
 
-class TellstickLight(ToggleEntity):
-    """ Represents a tellstick light """
+class TellstickLight(Light):
+    """ Represents a Tellstick light. """
     last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                               tellcore_constants.TELLSTICK_TURNOFF |
                               tellcore_constants.TELLSTICK_DIM |
@@ -38,7 +43,7 @@ class TellstickLight(ToggleEntity):
     def __init__(self, tellstick):
         self.tellstick = tellstick
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick.name}
-        self.brightness = 0
+        self._brightness = 0
 
     @property
     def name(self):
@@ -48,34 +53,28 @@ class TellstickLight(ToggleEntity):
     @property
     def is_on(self):
         """ True if switch is on. """
-        return self.brightness > 0
+        return self._brightness > 0
+
+    @property
+    def brightness(self):
+        """ Brightness of this light between 0..255. """
+        return self._brightness
 
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         self.tellstick.turn_off()
-        self.brightness = 0
+        self._brightness = 0
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness is None:
-            self.brightness = 255
+            self._brightness = 255
         else:
-            self.brightness = brightness
+            self._brightness = brightness
 
-        self.tellstick.dim(self.brightness)
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        attr = {
-            ATTR_FRIENDLY_NAME: self.name
-        }
-
-        attr[ATTR_BRIGHTNESS] = int(self.brightness)
-
-        return attr
+        self.tellstick.dim(self._brightness)
 
     def update(self):
         """ Update state of the light. """
@@ -83,12 +82,12 @@ class TellstickLight(ToggleEntity):
             self.last_sent_command_mask)
 
         if last_command == tellcore_constants.TELLSTICK_TURNON:
-            self.brightness = 255
+            self._brightness = 255
         elif last_command == tellcore_constants.TELLSTICK_TURNOFF:
-            self.brightness = 0
+            self._brightness = 0
         elif (last_command == tellcore_constants.TELLSTICK_DIM or
               last_command == tellcore_constants.TELLSTICK_UP or
               last_command == tellcore_constants.TELLSTICK_DOWN):
             last_sent_value = self.tellstick.last_sent_value()
             if last_sent_value is not None:
-                self.brightness = last_sent_value
+                self._brightness = last_sent_value
