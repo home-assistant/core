@@ -256,7 +256,7 @@ class Recorder(threading.Thread):
         """ Query the database. """
         try:
             with self.conn, self.lock:
-                _LOGGER.info("Running query %s", sql_query)
+                _LOGGER.debug("Running query %s", sql_query)
 
                 cur = self.conn.cursor()
 
