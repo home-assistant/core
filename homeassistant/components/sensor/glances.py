@@ -3,7 +3,6 @@ homeassistant.components.sensor.glances
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Gathers system information of hosts which running glances.
 
-
 Configuration:
 
 To use the glances sensor you will need to add something like the following
