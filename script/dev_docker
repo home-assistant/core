@@ -3,10 +3,7 @@
 # Optional: pass in a timezone as first argument
 # If not given will attempt to mount /etc/localtime
 
-# If current pwd is scripts, go 1 up.
-if [ ${PWD##*/} == "scripts" ]; then
-    cd ..
-fi
+cd "$(dirname "$0")/.."
 
 docker build -t home-assistant-dev .
 
