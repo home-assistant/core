@@ -1,3 +1,8 @@
+#!/bin/sh
+
+# script/test: Run test suite for application. Optionallly pass in a path to an
+#              individual test file to run a single test.
+
 cd "$(dirname "$0")/.."
 
 echo "Running tests..."
