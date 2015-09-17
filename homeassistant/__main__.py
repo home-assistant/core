@@ -103,6 +103,10 @@ def get_arguments():
         '--uninstall-osx',
         action='store_true',
         help='Uninstalls from OS X.')
+    parser.add_argument(
+        '--restart-osx',
+        action='store_true',
+        help='Restarts on OS X.')
     if os.name != "nt":
         parser.add_argument(
             '--daemon',
@@ -199,7 +203,6 @@ def uninstall_osx():
 
     print("Home Assistant has been uninstalled.")
 
-
 def main():
     """ Starts Home Assistant. """
     validate_python()
@@ -215,6 +218,10 @@ def main():
         return
     if args.uninstall_osx:
         uninstall_osx()
+        return
+    if args.restart_osx:
+        uninstall_osx()
+        install_osx()
         return
 
     # daemon functions
