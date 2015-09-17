@@ -2,5 +2,7 @@ sudo: false
 language: python
 python:
   - "3.4"
+install:
+  - script/bootstrap_server
 script:
   - script/cibuild
