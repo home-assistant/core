@@ -1,0 +1,10 @@
+cd "$(dirname "$0")/.."
+
+echo "Update the submodule to latest version..."
+git submodule update
+
+echo "Installing dependencies..."
+python3 -m pip install --upgrade -r requirements_all.txt
+
+echo  "Installing development dependencies.."
+python3 -m pip install --upgrade flake8 pylint coveralls py.test
