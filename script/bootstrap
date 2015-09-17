@@ -1,0 +1,4 @@
+cd "$(dirname "$0")/.."
+
+script/bootstrap_server
+script/bootstrap_frontend

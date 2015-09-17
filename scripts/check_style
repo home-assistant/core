@@ -1,9 +1,0 @@
-# Run style checks
-
-# If current pwd is scripts, go 1 up.
-if [ ${PWD##*/} == "scripts" ]; then
-    cd ..
-fi
-
-flake8 homeassistant
-pylint homeassistant
