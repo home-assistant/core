@@ -51,6 +51,8 @@ def reproduce_state(hass, states, blocking=False):
         current_state = hass.states.get(state.entity_id)
 
         if current_state is None:
+            _LOGGER.warning('reproduce_state: Unable to find entity %s',
+                            state.entity_id)
             continue
 
         if state.state == STATE_ON:
@@ -58,7 +60,8 @@ def reproduce_state(hass, states, blocking=False):
         elif state.state == STATE_OFF:
             service = SERVICE_TURN_OFF
         else:
-            _LOGGER.warning("Unable to reproduce state for %s", state)
+            _LOGGER.warning("reproduce_state: Unable to reproduce state %s",
+                            state)
             continue
 
         service_data = dict(state.attributes)

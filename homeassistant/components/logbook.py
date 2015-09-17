@@ -12,9 +12,10 @@ from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
+from homeassistant import util
 import homeassistant.util.dt as dt_util
-import homeassistant.components.recorder as recorder
-import homeassistant.components.sun as sun
+from homeassistant.components import recorder, sun
+
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -25,7 +26,28 @@ QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
 """
 
+EVENT_LOGBOOK_ENTRY = 'LOGBOOK_ENTRY'
+
 GROUP_BY_MINUTES = 15
+
+ATTR_NAME = 'name'
+ATTR_MESSAGE = 'message'
+ATTR_DOMAIN = 'domain'
+ATTR_ENTITY_ID = 'entity_id'
+
+
+def log_entry(hass, name, message, domain=None, entity_id=None):
+    """ Adds an entry to the logbook. """
+    data = {
+        ATTR_NAME: name,
+        ATTR_MESSAGE: message
+    }
+
+    if domain is not None:
+        data[ATTR_DOMAIN] = domain
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+    hass.bus.fire(EVENT_LOGBOOK_ENTRY, data)
 
 
 def setup(hass, config):
@@ -174,6 +196,20 @@ def humanify(events):
                 yield Entry(
                     event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
+
+            elif event.event_type == EVENT_LOGBOOK_ENTRY:
+                domain = event.data.get(ATTR_DOMAIN)
+                entity_id = event.data.get(ATTR_ENTITY_ID)
+                if domain is None and entity_id is not None:
+                    try:
+                        domain = util.split_entity_id(str(entity_id))[0]
+                    except IndexError:
+                        pass
+
+                yield Entry(
+                    event.time_fired, event.data.get(ATTR_NAME),
+                    event.data.get(ATTR_MESSAGE), domain,
+                    entity_id)
 
 
 def _entry_message_from_state(domain, state):

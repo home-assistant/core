@@ -131,3 +131,20 @@ def date_str_to_date(dt_str):
 def strip_microseconds(dattim):
     """ Returns a copy of dattime object but with microsecond set to 0. """
     return dattim.replace(microsecond=0)
+
+
+def parse_time_str(time_str):
+    """ Parse a time string (00:20:00) into Time object.
+        Return None if invalid.
+    """
+    parts = str(time_str).split(':')
+    if len(parts) < 2:
+        return None
+    try:
+        hour = int(parts[0])
+        minute = int(parts[1])
+        second = int(parts[2]) if len(parts) > 2 else 0
+        return dt.time(hour, minute, second)
+    except ValueError:
+        # ValueError if value cannot be converted to an int or not in range
+        return None
