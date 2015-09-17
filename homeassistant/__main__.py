@@ -203,6 +203,7 @@ def uninstall_osx():
 
     print("Home Assistant has been uninstalled.")
 
+
 def main():
     """ Starts Home Assistant. """
     validate_python()
