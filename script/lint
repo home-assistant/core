@@ -1,0 +1,9 @@
+# Run style checks
+
+cd "$(dirname "$0")/.."
+
+echo "Checking style with flake8..."
+flake8 homeassistant
+
+echo "Checking style with pylint..."
+pylint homeassistant

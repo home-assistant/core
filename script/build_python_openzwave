@@ -3,10 +3,7 @@
 # apt-get install cython3 libudev-dev python-sphinx python3-setuptools
 # pip3 install cython
 
-# If current pwd is scripts, go 1 up.
-if [ ${PWD##*/} == "scripts" ]; then
-    cd ..
-fi
+cd "$(dirname "$0")/.."
 
 if [ ! -d build ]; then
   mkdir build
