@@ -484,7 +484,7 @@ class MediaPlayerDevice(Entity):
         else:
             state_attr = {
                 attr: getattr(self, attr) for attr
-                in ATTR_TO_PROPERTY if getattr(self, attr)
+                in ATTR_TO_PROPERTY if getattr(self, attr) is not None
             }
 
             if self.media_image_url:

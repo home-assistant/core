@@ -28,6 +28,14 @@ REQUIREMENTS = ['SoCo==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+# The soco library is excessively chatty when it comes to logging and
+# causes a LOT of spam in the logs due to making a http connection to each
+# speaker every 10 seconds. Quiet it down a bit to just actual problems.
+_SOCO_LOGGER = logging.getLogger('soco')
+_SOCO_LOGGER.setLevel(logging.ERROR)
+_REQUESTS_LOGGER = logging.getLogger('requests')
+_REQUESTS_LOGGER.setLevel(logging.ERROR)
+
 SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
 
