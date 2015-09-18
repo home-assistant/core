@@ -1,13 +1,14 @@
-# This is a simple service file for systems with systemd.
+# This is a simple service file for systems with systemd to tun HA as user.
 #
 [Unit]
-Description=Home Assistant
+Description=Home Assistant for %i
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/hass --config /root/.homeassistant
+User=%i
+WorkingDirectory=%h
+ExecStart=/usr/bin/hass --config %h/.homeassistant/
 
 [Install]
 WantedBy=multi-user.target
-
