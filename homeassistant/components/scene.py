@@ -33,7 +33,7 @@ ATTR_ACTIVE_REQUESTED = "active_requested"
 
 CONF_ENTITIES = "entities"
 
-SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'write_after_set'])
+SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'read_after_set'])
 
 
 def setup(hass, config):
@@ -71,7 +71,7 @@ def setup(hass, config):
 def _process_config(scene_config):
     """ Process passed in config into a format to work with. """
     name = scene_config.get('name')
-    write_after_set = scene_config.get('write_after_set')
+    read_after_set = scene_config.get('read_after_set')
     states = {}
     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
 
@@ -92,7 +92,7 @@ def _process_config(scene_config):
 
         states[entity_id.lower()] = State(entity_id, state, attributes)
 
-    return SceneConfig(name, states, write_after_set)
+    return SceneConfig(name, states, read_after_set)
 
 
 class Scene(ToggleEntity):
@@ -209,7 +209,7 @@ class Scene(ToggleEntity):
         print('REPRODUCE_STATE')
         self.ignore_updates = True
         reproduce_state(self.hass, states, True)
-        if self.scene_config.write_after_set:
+        if self.scene_config.read_after_set:
             self._state_read_after_set(states)
         self.ignore_updates = False
 
