@@ -32,9 +32,9 @@ class TestUtil(unittest.TestCase):
 
     def test_slugify(self):
         """ Test slugify. """
-        self.assertEqual("Test", util.slugify("T-!@#$!#@$!$est"))
-        self.assertEqual("Test_More", util.slugify("Test More"))
-        self.assertEqual("Test_More", util.slugify("Test_(More)"))
+        self.assertEqual("test", util.slugify("T-!@#$!#@$!$est"))
+        self.assertEqual("test_more", util.slugify("Test More"))
+        self.assertEqual("test_more", util.slugify("Test_(More)"))
 
     def test_split_entity_id(self):
         """ Test split_entity_id. """

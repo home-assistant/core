@@ -10,8 +10,8 @@ import homeassistant.components.mqtt as mqtt
 
 DEPENDENCIES = ['mqtt']
 
-CONF_TOPIC = 'mqtt_topic'
-CONF_PAYLOAD = 'mqtt_payload'
+CONF_TOPIC = 'topic'
+CONF_PAYLOAD = 'payload'
 
 
 def trigger(hass, config, action):

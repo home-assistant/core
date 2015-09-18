@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# script/cibuild: Setup environment for CI to run tests. This is primarily
+#                 designed to run on the continuous integration server.
+
+script/test coverage
+coveralls
