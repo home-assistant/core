@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         data,
         config.get('name', DEFAULT_NAME),
         config.get('unit_of_measurement'),
-        config.get('correction_factor', None),
+        config.get('correction_factor', 1.0),
         config.get('decimal_places', 0)
     )])
 
