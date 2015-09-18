@@ -33,7 +33,7 @@ ATTR_ACTIVE_REQUESTED = "active_requested"
 
 CONF_ENTITIES = "entities"
 
-SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
+SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'write_after_set'])
 
 
 def setup(hass, config):
@@ -71,6 +71,7 @@ def setup(hass, config):
 def _process_config(scene_config):
     """ Process passed in config into a format to work with. """
     name = scene_config.get('name')
+    write_after_set = scene_config.get('write_after_set')
     states = {}
     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
 
@@ -91,7 +92,7 @@ def _process_config(scene_config):
 
         states[entity_id.lower()] = State(entity_id, state, attributes)
 
-    return SceneConfig(name, states)
+    return SceneConfig(name, states, write_after_set)
 
 
 class Scene(ToggleEntity):
@@ -178,14 +179,38 @@ class Scene(ToggleEntity):
         """ Returns if given state is as requested. """
         state = self.scene_config.states.get(cur_state and cur_state.entity_id)
 
-        return (cur_state is not None and state.state == cur_state.state and
+        ret = (cur_state is not None and state.state == cur_state.state and
                 all(value == cur_state.attributes.get(key)
                     for key, value in state.attributes.items()))
 
+        print('AS REQUESTED')
+        print(ret)
+        print(self.scene_config.states)
+        return ret
+
+    def _state_read_after_write(self, states):
+        """ Reads back state after setting. """
+        print('BEFORE')
+        print(self.scene_config.states)
+        target_state = self.scene_config.states
+        for key, value in target_state.items():
+            actual = self.hass.states.get(key)
+            print('ACTUAL')
+            print(actual)
+            if actual and actual != value and actual.state == value.state:
+                print('CHANGING CONFIG')
+                for k in value.attributes.keys():
+                    value.attributes[k] = actual.attributes[k]
+        print('AFTER')
+        print(self.scene_config.states)
+
     def _reproduce_state(self, states):
         """ Wraps reproduce state with Scence specific logic. """
+        print('REPRODUCE_STATE')
         self.ignore_updates = True
         reproduce_state(self.hass, states, True)
+        if self.scene_config.write_after_set:
+            self._state_read_after_write(states)
         self.ignore_updates = False
 
         self.update_ha_state(True)
