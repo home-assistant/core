@@ -10,21 +10,35 @@ from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_time_change
 
-CONF_HOURS = "time_hours"
-CONF_MINUTES = "time_minutes"
-CONF_SECONDS = "time_seconds"
+CONF_HOURS = "hours"
+CONF_MINUTES = "minutes"
+CONF_SECONDS = "seconds"
 CONF_BEFORE = "before"
 CONF_AFTER = "after"
 CONF_WEEKDAY = "weekday"
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
-    hours = convert(config.get(CONF_HOURS), int)
-    minutes = convert(config.get(CONF_MINUTES), int)
-    seconds = convert(config.get(CONF_SECONDS), int)
+    if CONF_AFTER in config:
+        after = dt_util.parse_time_str(config[CONF_AFTER])
+        if after is None:
+            _error_time(config[CONF_AFTER], CONF_AFTER)
+            return False
+        hours, minutes, seconds = after.hour, after.minute, after.second
+    elif (CONF_HOURS in config or CONF_MINUTES in config
+          or CONF_SECONDS in config):
+        hours = convert(config.get(CONF_HOURS), int)
+        minutes = convert(config.get(CONF_MINUTES), int)
+        seconds = convert(config.get(CONF_SECONDS), int)
+    else:
+        _LOGGER.error('One of %s, %s, %s OR %s needs to be specified',
+                      CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AFTER)
+        return False
 
     def time_automation_listener(now):
         """ Listens for time changes and calls action. """
@@ -36,7 +50,7 @@ def trigger(hass, config, action):
     return True
 
 
-def if_action(hass, config, action):
+def if_action(hass, config):
     """ Wraps action method with time based condition. """
     before = config.get(CONF_BEFORE)
     after = config.get(CONF_AFTER)
@@ -46,37 +60,46 @@ def if_action(hass, config, action):
         logging.getLogger(__name__).error(
             "Missing if-condition configuration key %s, %s or %s",
             CONF_BEFORE, CONF_AFTER, CONF_WEEKDAY)
+        return None
+
+    if before is not None:
+        before = dt_util.parse_time_str(before)
+        if before is None:
+            _error_time(before, CONF_BEFORE)
+            return None
+
+    if after is not None:
+        after = dt_util.parse_time_str(after)
+        if after is None:
+            _error_time(after, CONF_AFTER)
+            return None
 
     def time_if():
         """ Validate time based if-condition """
         now = dt_util.now()
+        if before is not None and now > now.replace(hour=before.hour,
+                                                    minute=before.minute):
+                return False
 
-        if before is not None:
-            # Strip seconds if given
-            before_h, before_m = before.split(':')[0:2]
-
-            before_point = now.replace(hour=int(before_h),
-                                       minute=int(before_m))
-
-            if now > before_point:
-                return
-
-        if after is not None:
-            # Strip seconds if given
-            after_h, after_m = after.split(':')[0:2]
-
-            after_point = now.replace(hour=int(after_h), minute=int(after_m))
-
-            if now < after_point:
-                return
+        if after is not None and now < now.replace(hour=after.hour,
+                                                   minute=after.minute):
+                return False
 
         if weekday is not None:
             now_weekday = WEEKDAYS[now.weekday()]
 
             if isinstance(weekday, str) and weekday != now_weekday or \
                now_weekday not in weekday:
-                return
+                return False
 
-        action()
+        return True
 
     return time_if
+
+
+def _error_time(value, key):
+    """ Helper method to print error. """
+    _LOGGER.error(
+        "Received invalid value for '%s': %s", key, value)
+    if isinstance(value, int):
+        _LOGGER.error('Make sure you wrap time values in quotes')

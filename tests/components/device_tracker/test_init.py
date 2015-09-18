@@ -7,7 +7,7 @@ Tests the device tracker compoments.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from unittest.mock import patch
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 
 from homeassistant.config import load_yaml_config_file
@@ -127,7 +127,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))[0]
-        self.assertEqual('DEV1', config.dev_id)
+        self.assertEqual('dev1', config.dev_id)
         self.assertEqual(True, config.track)
 
     def test_discovery(self):
@@ -145,17 +145,25 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner.reset()
         scanner.come_home('DEV1')
 
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        register_time = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
+        scan_time = datetime(2015, 9, 15, 23, 1, tzinfo=dt_util.UTC)
+
+        with patch('homeassistant.components.device_tracker.dt_util.utcnow',
+                   return_value=register_time):
+            self.assertTrue(device_tracker.setup(self.hass, {
+                'device_tracker': {
+                    'platform': 'test',
+                    'consider_home': 59,
+                }}))
+
         self.assertEqual(STATE_HOME,
                          self.hass.states.get('device_tracker.dev1').state)
 
         scanner.leave_home('DEV1')
 
-        now = dt_util.utcnow().replace(second=0) + timedelta(hours=1)
-
-        with patch('homeassistant.util.dt.utcnow', return_value=now):
-            fire_time_changed(self.hass, now)
+        with patch('homeassistant.components.device_tracker.dt_util.utcnow',
+                   return_value=scan_time):
+            fire_time_changed(self.hass, scan_time)
             self.hass.pool.block_till_done()
 
         self.assertEqual(STATE_NOT_HOME,
