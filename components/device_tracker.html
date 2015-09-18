@@ -129,16 +129,20 @@
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry for Netgear device</span>
 </span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">netgear</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.1</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">admin</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">track_new_devices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.csv</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture.</p>
+<p>By default, the device tracker will add all found devices into the <code>known_devices.yaml</code>.  It will default to displaying them in the UI as well.  To disable displaying new devices in the UI, change the value of <code>track_new_devices:</code> to <code>no</code>.</p>
+
+<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.yaml</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture and set whether the device will be show in the UI when in away state..</p>
 
 
 </article>

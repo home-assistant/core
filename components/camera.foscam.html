@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>OpenWRT support - Home Assistant</title>
+    <title>Foscam IP camera support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate OpenWRT routers into Home Assistant.">
+    <meta name="description" content="Instructions how to integrate Foscam IP cameras within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="OpenWRT support">
+    <meta property="og:title" content="Foscam IP camera support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.luci.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/camera.foscam.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to integrate OpenWRT routers into Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate Foscam IP cameras within Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,14 +98,16 @@
   
   <header>
     <h1 class="title indent">
-      OpenWRT Support
+      Foscam IP Camera Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p><img src='/images/supported_brands/openwrt.png' class='brand pull-right' />
-Before this scanner can be used you have to install the luci RPC package on OpenWRT: <code>opkg install luci-mod-rpc</code>.</p>
+  <p><img src='/images/supported_brands/foscam.png' class='brand pull-right' />
+The foscam platform allows you to watch the live stream of your <a href="http://www.foscam.com/">Foscam</a> IP camera in Home Assistant.</p>
+
+<p>To enable your Foscam IP camera in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -113,25 +115,29 @@ Before this scanner can be used you have to install the luci RPC package on Open
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">luci</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ROUTER_IP_ADDRESS</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
+</span><span class='line'><span class="l-Scalar-Plain">camera</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">foscam</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">ip</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.0.123</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Door Camera</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">88</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PASSWORD</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 <p>Configuration variables:</p>
 
 <ul>
-<li><strong>host</strong> (<em>Required</em>): The IP address of your router, e.g. 192.168.1.1.</li>
-<li><strong>username</strong> (<em>Required</em>): The username of an user with administrative privileges, usually <em>admin</em>.</li>
-<li><strong>password</strong> (<em>Required</em>): The password for your given admin account.</li>
+<li><strong>ip</strong> <em>Required</em>: The IP address your camera.</li>
+<li><strong>port</strong> <em>Optional</em>: The port that the camera is running on. The default is 88.</li>
+<li><strong>name</strong> <em>Optional</em>: This parameter allows you to override the name of your camera.</li>
+<li><strong>username</strong> <em>Required</em>: The username for accessing your camera.</li>
+<li><strong>password</strong> <em>Required</em>: The password for accessing your camera.</li>
 </ul>
 
-
-<p>See the <a href="/components/device_tracker.html">device tracker component page</a> for instructions how to configure the people to be tracked.</p>
 
 
 </article>

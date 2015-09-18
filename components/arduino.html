@@ -146,93 +146,13 @@ A word of caution: The Arduino boards are not storing states. This means that wi
 </p>
 
 
-<h2>Switch Configuration</h2>
-
-<p>Support for switching pins is limited to high/on and low/off of the digital pins. PWM (pin 3,5,6,9,10, and 11 on a Arduino Uno) is not supported yet.</p>
-
-<p>To enable the Arduino switch pins with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">arduino</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">pins</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">11</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Fan Office</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">digital</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">12</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light Desk</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">digital</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Configuration variables:</p>
+<h2>Building on top of the Arduino component</h2>
 
 <ul>
-<li><strong>pins</strong> array (<em>Required</em>): Pins to use.
-
-<ul>
-<li><strong>name</strong>: Name that will be used in the frontend for the pin.</li>
-<li><strong>type</strong>: The type of the pin. At the moment only &lsquo;digital&rsquo; is supported.</li>
-</ul>
-</li>
+<li><a href="/components/sensor.arduino.html">Arduino Sensor</a></li>
+<li><a href="/components/switch.arduino.html">Arduino Switch</a></li>
 </ul>
 
-
-<p>The digital pins are numbered from 0 to 13. The available pins are 2 till 13. For testing purposes you can use pin 13 because with that pin you can control the internal LED.</p>
-
-<h2>Sensor Configuration</h2>
-
-<p>The sensor platform allow you to get an numerical values from an analog input pin. Usually between 0 and 1024.</p>
-
-<p>To enable an Arduino sensor with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">arduino</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">pins</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">1</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Door switch</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">analog</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">0</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Brightness</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">analog</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Configuration variables:</p>
-
-<ul>
-<li><strong>pins</strong> array (<em>Required</em>): Pins to use.
-
-<ul>
-<li><strong>name</strong>: Name that will be used in the frontend for the pin.</li>
-<li><strong>type</strong>: The type of the pin. At the moment only &lsquo;analog&rsquo; is supported.</li>
-</ul>
-</li>
-</ul>
-
-
-<p>The 6 analog pins are numbered from A0 to A5.</p>
 
 
 </article>

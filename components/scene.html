@@ -115,6 +115,16 @@
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">scene</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Romantic</span>
@@ -124,6 +134,16 @@
 </span><span class='line'>        <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
 </span><span class='line'>        <span class="l-Scalar-Plain">color</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.33</span><span class="p-Indicator">,</span> <span class="nv">0.66</span><span class="p-Indicator">]</span>
 </span><span class='line'>        <span class="l-Scalar-Plain">brightness</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">200</span>
+</span><span class='line'>
+</span><span class='line'><span class="-Error"> </span><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all_lights_on</span>
+</span><span class='line'>   <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">group.all_lights</span><span class="p-Indicator">:</span>
+</span><span class='line'>        <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
+</span><span class='line'>
+</span><span class='line'> <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all_lights_off</span>
+</span><span class='line'>   <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">group.all_lights</span><span class="p-Indicator">:</span>
+</span><span class='line'>        <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">off</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

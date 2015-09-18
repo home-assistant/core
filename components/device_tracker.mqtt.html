@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>OpenWRT support - Home Assistant</title>
+    <title>MQTT device tracker support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate OpenWRT routers into Home Assistant.">
+    <meta name="description" content="Instructions how to integrate MQTT based trackers into Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="OpenWRT support">
+    <meta property="og:title" content="MQTT device tracker support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.luci.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.mqtt.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to integrate OpenWRT routers into Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate MQTT based trackers into Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,14 +98,14 @@
   
   <header>
     <h1 class="title indent">
-      OpenWRT Support
+      MQTT Device Tracker Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p><img src='/images/supported_brands/openwrt.png' class='brand pull-right' />
-Before this scanner can be used you have to install the luci RPC package on OpenWRT: <code>opkg install luci-mod-rpc</code>.</p>
+  <p><img src='/images/supported_brands/mqtt.png' class='brand pull-right' />
+Before this tracker allows the detection of devices which are able to send MQTT messages.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -113,21 +113,27 @@ Before this scanner can be used you have to install the luci RPC package on Open
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">luci</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ROUTER_IP_ADDRESS</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">devices</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">paulus_oneplus</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/location/paulus</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">annetherese_n4</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/location/annetherese</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 <p>Configuration variables:</p>
 
 <ul>
-<li><strong>host</strong> (<em>Required</em>): The IP address of your router, e.g. 192.168.1.1.</li>
-<li><strong>username</strong> (<em>Required</em>): The username of an user with administrative privileges, usually <em>admin</em>.</li>
-<li><strong>password</strong> (<em>Required</em>): The password for your given admin account.</li>
+<li><strong>qos</strong> (<em>Required</em>): Quality of service, default to 0.</li>
+<li><strong>devices</strong> (<em>Required</em>): Array of devices to track.
+
+<ul>
+<li><strong>&lsquo;device_name&rsquo;</strong> (<em>Required</em>): Name to use followed by the topic.</li>
+</ul>
+</li>
 </ul>
 
 

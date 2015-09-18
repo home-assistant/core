@@ -109,8 +109,10 @@
 <p><div class='advanced-installs-container'>
 <input name='advanced-installs' type='radio' id='upstart-install' checked>
 <input name='advanced-installs' type='radio' id='systemd-install'>
+<input name='advanced-installs' type='radio' id='osx-install'>
 <label class='menu-selector upstart' for='upstart-install'>Upstart Daemon</label>
-<label class='menu-selector systemd' for='systemd-install'>Systemd Daemon</label></p>
+<label class='menu-selector systemd' for='systemd-install'>Systemd Daemon</label>
+<label class='menu-selector osx' for='osx-install'>OS X</label></p>
 
 <p><div class='advanced-installs upstart'>
 Many linux distributions use the Upstart system (or similar) for managing daemons. Typically, systems based on Debian 7 or previous use Upstart. This includes Ubuntu releases before 15.04 and all current Raspian releases. If you are unsure if your system is using Upstart, you may check with the following command:</p>
@@ -208,6 +210,34 @@ Newer linux distributions are trending towards using systemd for managing daemon
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo journalctl -f -u home-assistant
 </span></code></pre></td></tr></table></div></figure>
 </div> <!-- SYSTEMD --></p>
+
+<p><div class='advanced-installs osx'>
+Setting up Home Assistant to run as a background service is simple. OS X will
+start it on boot and make sure it&rsquo;s always running.</p>
+
+<p>To get Home Assistant installed as a background service, run:</p>
+
+<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>hass &ndash;install-osx
+</span><span class='line'>
+</span><span class='line'>Home Assistant has been installed.         Open it here: <a href="http://localhost:8123">http://localhost:8123</a>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Home Assistant will log to <code>~/Library/Logs/homeassistant.log</code></p>
+
+<p>To uninstall the service, run:</p>
+
+<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>hass &ndash;uninstall-osx
+</span><span class='line'>
+</span><span class='line'>Home Assistant has been uninstalled.
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p></div> <!-- OSX --></p>
 
 <h3><a href="/getting-started/index.html">&laquo; Back to Getting Started</a></h3>
 

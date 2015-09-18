@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-13T10:51:21-07:00</updated>
+  <updated>2015-09-17T23:41:36-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -14,79 +14,64 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Home Assistant meets IFTTT]]></title>
-    <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
-    <updated>2015-09-13T09:28:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
-    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
-<a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
-webservice that integrates with almost every possible webservice out there. Adding Home
-Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
-
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
-if your smoke alarm goes off.</p>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
-</p>
-
-
-<p>Head over to the <a href="https://home-assistant.io/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
-read more button for some example recipes.</p>
+    <title type="html"><![CDATA[Remote Monitoring with Glances]]></title>
+    <link href="https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant/"/>
+    <updated>2015-09-18T02:00:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant</id>
+    <content type="html"><![CDATA[<p><img src='https://home-assistant.io/images/supported_brands/glances.png' style='border:none; box-shadow: none; float: right;' height='80' />
+Inspried by a <a href="https://github.com/balloob/home-assistant/issues/310">feature requests</a> I started looking into the available options to do monitoring of remote hosts. The feature request is about displaying system information in a similar way than the <a href="https://home-assistant.io/components/sensor.systemmonitor.html">systemmonitor</a> sensor does it for the local system. After a while I started to think that it would be a nice addition for a small home network where no full-blown system monitoring setup is present.</p>
 
 <!--more-->
 
 
-<p>In each of the following examples, make sure to replace the XXX in the url with your correct
-host address and api password.</p>
+<p>The basic problem is to get the data from the remote host. Starting with <a href="https://pypi.python.org/pypi/psutil">psutil</a> that is used by the systemmonitor sensor, a possible solution is only a click away and named <a href="https://github.com/nicolargo/glances">Glances</a>. Glances has a nice curses-based interface and a <a href="https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API">RESTful API</a>.</p>
 
-<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed</h2>
+<p>The <a href="https://home-assistant.io/components/sensor.glances.html">Glances sensor</a> sensor uses that API to get all needed data.</p>
+
+<p>In this post a default Fedora 22 Workstation installation is used on the host that should be monitored. In fact, it doesn&rsquo;t matter if the system is the local one or a remote one as long as Glances is available. With some adjustments it should work on your own systems too. The difference will be the package and the firewall management tools.</p>
+
+<p>First some extra packages are needed beside Glances, especially the <a href="http://bottlepy.org/docs/dev/index.html">bottle</a> webserver. I guess that Glances is available for your distribution as well. Otherwise follow those <a href="https://github.com/nicolargo/glances#installation">instructions</a>.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo dnf -y install glances python-bottle</span></code></pre></td></tr></table></div></figure>
+
+
+<p>On Fedora the Firewall settings are strict. Let&rsquo;s open port 61208 to allow other hosts to connect to that port. This is not needed if you just want to observe your local machine.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo firewall-cmd --permanent --add-port<span class="o">=</span>61208/tcp
+</span><span class='line'>sudo firewall-cmd --reload
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Launch <code>glances</code> and keep an eye on the output.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>glances -w
+</span><span class='line'>Glances web server started on http://0.0.0.0:61208/
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now browse to <a href="http://IP_ADRRESS:61208/.">http://IP_ADRRESS:61208/.</a> You should see the webified view of Glances.</p>
 
 <p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png' />
+  <img src='https://home-assistant.io/images/blog/2015-09-glances/web-glances.png' />
+  Glances web interface
 </p>
 
 
-<p>Maker channel setup:</p>
+<p>Another check is to access the API located at <a href="http://IP_ADRRESS:61208/api/2/mem/used">http://IP_ADRRESS:61208/api/2/mem/used</a> and to confirm that a detail about your memory usage is provided as a JSON response. If so, you are good to proceed.</p>
 
-<table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;switch.irrigation&rdquo; }</td>
-</tr>
-</tbody>
-</table>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>curl -X GET http://IP_ADDRESS:61208/api/2/mem/used
+</span><span class='line'><span class="o">{</span><span class="s2">&quot;used&quot;</span>: 203943936<span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen</h2>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png' />
-</p>
-
-
-<p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
-Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
-<code>value1</code>.</p>
+<p>Add the <a href="https://home-assistant.io/components/sensor.glances.html">glances sensor</a> entry to your <code>configuration.yaml</code> file and restart Home Assistant then.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -96,127 +81,26 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Post a tweet when fire alarm is triggered</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home/alarm/fire</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;HA_FIRE_ALARM&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;value1&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">fire</span><span class="nv"> </span><span class="s">alarm</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">triggered!&quot;</span><span class="p-Indicator">}</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">glances</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">NAS</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IP_ADDRESS</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">resources</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="s">&#39;disk_use_percent&#39;</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="s">&#39;disk_use&#39;</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="s">&#39;disk_free&#39;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home</h2>
+<p>If there are no error in the log file then you should see your new sensors.</p>
 
 <p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png' />
+  <img src='https://home-assistant.io/images/blog/2015-09-glances/sensors.png' />
+  The Glances sensors
 </p>
 
 
-<p>Maker channel setup:</p>
-
-<table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;light.kitchen&rdquo; }</td>
-</tr>
-</tbody>
-</table>
-
-
-<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant</h2>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png' />
-</p>
-
-
-<p>Maker channel setup:</p>
-
-<table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;group.all_lights&rdquo;, &ldquo;flash&rdquo;:&ldquo;yes&rdquo; }</td>
-</tr>
-</tbody>
-</table>
-
-
-<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button</h2>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png' />
-</p>
-
-
-<p>Maker channel setup:</p>
-
-<table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-</tbody>
-</table>
-
+<p><a href="https://github.com/nicolargo/glances">Glances</a> has a couple of optional dependencies which are extenting the range of provided information. This means that it would be possible to get details about the RAID system, HDD temperature, IP addresses, sensors, etc., please create a <a href="https://github.com/balloob/home-assistant/pulls">Pull request</a> with your additions or a <a href="https://github.com/balloob/home-assistant/issues/new">Feature request</a> if you want see more details in your Home Assistant frontend.</p>
 ]]></content>
   </entry>
   
