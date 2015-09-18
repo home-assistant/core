@@ -205,7 +205,6 @@ class HueLight(Light):
             command['effect'] = 'none'
 
         self.bridge.set_light(self.light_id, command)
-        self.update()
 
     def turn_off(self, **kwargs):
         """ Turn the specified or all lights off. """
