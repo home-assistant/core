@@ -5,12 +5,12 @@
 
 cd "$(dirname "$0")/.."
 
+script/lint
+
 echo "Running tests..."
 
 if [ "$1" = "coverage" ]; then
-  coverage run -m unittest discover tests
+  py.test --cov homeassistant tests
 else
-  python3 -m unittest discover tests
+  py.test tests
 fi
-
-script/lint
