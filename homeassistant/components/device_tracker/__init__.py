@@ -176,10 +176,8 @@ class DeviceTracker(object):
         self.track_new = track_new
         self.lock = threading.Lock()
 
-        entity_ids = []
         for device in devices:
             if device.track:
-                entity_ids.append(device.entity_id)
                 device.update_ha_state()
 
         self.group = None
@@ -194,9 +192,9 @@ class DeviceTracker(object):
                 mac = mac.upper()
                 device = self.mac_to_dev.get(mac)
                 if not device:
-                    dev_id = util.slugify(host_name or mac)
+                    dev_id = util.slugify(host_name or '') or util.slugify(mac)
             else:
-                dev_id = str(dev_id)
+                dev_id = str(dev_id).lower()
                 device = self.devices.get(dev_id)
 
             if device:
@@ -234,7 +232,8 @@ class DeviceTracker(object):
         """ Update stale devices. """
         with self.lock:
             for device in self.devices.values():
-                if device.last_update_home and device.stale(now):
+                if (device.track and device.last_update_home and
+                        device.stale(now)):
                     device.update_ha_state(True)
 
 
@@ -336,7 +335,8 @@ def convert_csv_config(csv_path, yaml_path):
     with open(csv_path) as inp:
         for row in csv.DictReader(inp):
             dev_id = util.ensure_unique_string(
-                util.slugify(row['name']) or DEVICE_DEFAULT_NAME, used_ids)
+                (util.slugify(row['name']) or DEVICE_DEFAULT_NAME).lower(),
+                used_ids)
             used_ids.add(dev_id)
             device = Device(None, None, row['track'] == '1', dev_id,
                             row['device'], row['name'], row['picture'])
@@ -350,8 +350,9 @@ def load_config(path, hass, consider_home):
         return []
     return [
         Device(hass, consider_home, device.get('track', False),
-               str(dev_id), device.get('mac'), device.get('name'),
-               device.get('picture'), device.get(CONF_AWAY_HIDE, False))
+               str(dev_id).lower(), str(device.get('mac')).upper(),
+               device.get('name'), device.get('picture'),
+               device.get(CONF_AWAY_HIDE, False))
         for dev_id, device in load_yaml_config_file(path).items()]
 
 
