@@ -188,7 +188,7 @@ class Scene(ToggleEntity):
         print(self.scene_config.states)
         return ret
 
-    def _state_read_after_write(self, states):
+    def _state_read_after_set(self, states):
         """ Reads back state after setting. """
         print('BEFORE')
         print(self.scene_config.states)
@@ -210,7 +210,7 @@ class Scene(ToggleEntity):
         self.ignore_updates = True
         reproduce_state(self.hass, states, True)
         if self.scene_config.write_after_set:
-            self._state_read_after_write(states)
+            self._state_read_after_set(states)
         self.ignore_updates = False
 
         self.update_ha_state(True)
