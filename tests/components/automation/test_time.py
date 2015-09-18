@@ -285,9 +285,9 @@ class TestAutomationTime(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
-                    'hours': 0,
-                    'minutes': 0,
-                    'seconds': 0,
+                    'hours': 1,
+                    'minutes': 2,
+                    'seconds': 3,
                 },
                 'action': {
                     'execute_service': 'test.automation'
@@ -296,7 +296,7 @@ class TestAutomationTime(unittest.TestCase):
         }))
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
-            hour=0, minute=0, second=0))
+            hour=1, minute=2, second=3))
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
@@ -319,6 +319,30 @@ class TestAutomationTime(unittest.TestCase):
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+
+    @patch('homeassistant.components.automation.time._LOGGER.error')
+    def test_if_not_fires_using_wrong_after(self, mock_error):
+        """ YAML translates time values to total seconds. This should break the
+            before rule. """
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'after': 3605,
+                    # Total seconds. Hour = 3600 second
+                },
+                'action': {
+                    'execute_service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=1, minute=0, second=5))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+        self.assertEqual(2, mock_error.call_count)
 
     def test_if_action_before(self):
         automation.setup(self.hass, {
