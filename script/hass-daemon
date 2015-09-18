@@ -34,6 +34,7 @@ RUN_AS="USER"
 PID_FILE="/var/run/hass.pid"
 CONFIG_DIR="/var/opt/homeassistant"
 FLAGS="-v --config $CONFIG_DIR --pid-file $PID_FILE --daemon"
+REDIRECT="> $CONFIG_DIR/home-assistant.log 2>&1"
 
 start() {
   if [ -f $PID_FILE ] && kill -0 $(cat $PID_FILE); then
@@ -41,7 +42,7 @@ start() {
     return 1
   fi
   echo 'Starting service…' >&2
-  local CMD="$PRE_EXEC hass $FLAGS;"
+  local CMD="$PRE_EXEC hass $FLAGS $REDIRECT;"
   su -c "$CMD" $RUN_AS
   echo 'Service started' >&2
 }
