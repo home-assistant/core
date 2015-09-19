@@ -11,11 +11,10 @@ signal_repetitions: 3
 """
 import logging
 
-
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity import ToggleEntity
 import tellcore.constants as tellcore_constants
-
+from tellcore.library import DirectCallbackDispatcher
 SINGAL_REPETITIONS = 1
 
 REQUIREMENTS = ['tellcore-py==1.0.4']
@@ -31,16 +30,23 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             "Failed to import tellcore")
         return
 
+    # pylint: disable=no-member
+    if telldus.TelldusCore.callback_dispatcher is None:
+        dispatcher = DirectCallbackDispatcher()
+        core = telldus.TelldusCore(callback_dispatcher=dispatcher)
+    else:
+        core = telldus.TelldusCore()
+
     signal_repetitions = config.get('signal_repetitions', SINGAL_REPETITIONS)
 
-    core = telldus.TelldusCore()
     switches_and_lights = core.devices()
 
     switches = []
 
     for switch in switches_and_lights:
         if not switch.methods(tellcore_constants.TELLSTICK_DIM):
-            switches.append(TellstickSwitchDevice(switch, signal_repetitions))
+            switches.append(
+                TellstickSwitchDevice(switch, signal_repetitions, core))
 
     add_devices_callback(switches)
 
@@ -50,15 +56,28 @@ class TellstickSwitchDevice(ToggleEntity):
     last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                               tellcore_constants.TELLSTICK_TURNOFF)
 
-    def __init__(self, tellstick, signal_repetitions):
-        self.tellstick = tellstick
-        self.state_attr = {ATTR_FRIENDLY_NAME: tellstick.name}
+    def __init__(self, tellstick_device, signal_repetitions, core):
+        self.tellstick_device = tellstick_device
+        self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self.signal_repetitions = signal_repetitions
+        self.callback_id = core.register_device_event(self._device_event)
+
+    # pylint: disable=unused-argument
+    def _device_event(self, id_, method, data, cid):
+        """ Called when a state has changed . """
+
+        if self.tellstick_device.id == id_:
+            self.update_ha_state()
+
+    @property
+    def should_poll(self):
+        """ Tells Home Assistant not to poll this entity. """
+        return False
 
     @property
     def name(self):
         """ Returns the name of the switch if any. """
-        return self.tellstick.name
+        return self.tellstick_device.name
 
     @property
     def state_attributes(self):
@@ -68,7 +87,7 @@ class TellstickSwitchDevice(ToggleEntity):
     @property
     def is_on(self):
         """ True if switch is on. """
-        last_command = self.tellstick.last_sent_command(
+        last_command = self.tellstick_device.last_sent_command(
             self.last_sent_command_mask)
 
         return last_command == tellcore_constants.TELLSTICK_TURNON
@@ -76,9 +95,9 @@ class TellstickSwitchDevice(ToggleEntity):
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
         for _ in range(self.signal_repetitions):
-            self.tellstick.turn_on()
+            self.tellstick_device.turn_on()
 
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         for _ in range(self.signal_repetitions):
-            self.tellstick.turn_off()
+            self.tellstick_device.turn_off()
