@@ -102,6 +102,11 @@ class AlarmControlPanel(Entity):
         """ Boolean if alarm requires a code """
         return None
 
+    @property
+    def code_format(self):
+        """ regex for code format """
+        return None
+
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
         raise NotImplementedError()
