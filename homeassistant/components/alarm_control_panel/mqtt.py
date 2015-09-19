@@ -20,6 +20,7 @@ alarm_control_panel:
   payload_disarm: "DISARM"
   payload_arm_home: "ARM_HOME"
   payload_arm_away: "ARM_AWAY"
+  code: "mySecretCode"
 
 Variables:
 
@@ -51,6 +52,10 @@ The payload to set armed-home mode. Default is "ARM_HOME".
 payload_arm_away
 *Optional
 The payload to set armed-away mode. Default is "ARM_AWAY".
+
+code
+*Optional
+If defined, specifies a code to enable or disable the alarm in the frontend.
 
 """
 
@@ -90,7 +95,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get('qos', DEFAULT_QOS),
         config.get('payload_disarm', DEFAULT_PAYLOAD_DISARM),
         config.get('payload_arm_home', DEFAULT_PAYLOAD_ARM_HOME),
-        config.get('payload_arm_away', DEFAULT_PAYLOAD_ARM_AWAY))])
+        config.get('payload_arm_away', DEFAULT_PAYLOAD_ARM_AWAY),
+        config.get('code'))])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
@@ -98,7 +104,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
     """ represents a MQTT alarm status within home assistant. """
 
     def __init__(self, hass, name, state_topic, command_topic, qos,
-                 payload_disarm, payload_arm_home, payload_arm_away):
+                 payload_disarm, payload_arm_home, payload_arm_away, code):
         self._state = STATE_UNKNOWN
         self._hass = hass
         self._name = name
@@ -108,6 +114,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
+        self._code = code
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
@@ -133,20 +140,34 @@ class MqttAlarm(alarm.AlarmControlPanel):
 
     @property
     def requires_code(self):
-        """ code is not required """
-        return False
+        """ code is required if it's defined in configuration file """
+        return self._code is not None
+
+    @property
+    def code_format(self):
+        """ One or more characters """
+        return '.+'
 
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_disarm,
-                     self._qos)
+        if code == str(self._code) or not self.requires_code:
+            mqtt.publish(self.hass, self._command_topic,
+                         self._payload_disarm, self._qos)
+        else:
+            _LOGGER.warning("Wrong code entered while disarming!")
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_arm_home,
-                     self._qos)
+        if code == str(self._code) or not self.requires_code:
+            mqtt.publish(self.hass, self._command_topic,
+                         self._payload_arm_home, self._qos)
+        else:
+            _LOGGER.warning("Wrong code entered while arming home!")
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_arm_away,
-                     self._qos)
+        if code == str(self._code) or not self.requires_code:
+            mqtt.publish(self.hass, self._command_topic,
+                         self._payload_arm_away, self._qos)
+        else:
+            _LOGGER.warning("Wrong code entered while arming away!")
