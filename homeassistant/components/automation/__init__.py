@@ -16,9 +16,9 @@ DOMAIN = 'automation'
 DEPENDENCIES = ['group']
 
 CONF_ALIAS = 'alias'
-CONF_SERVICE = 'execute_service'
-CONF_SERVICE_ENTITY_ID = 'service_entity_id'
-CONF_SERVICE_DATA = 'service_data'
+CONF_SERVICE = 'service'
+CONF_SERVICE_ENTITY_ID = 'entity_id'
+CONF_SERVICE_DATA = 'data'
 
 CONF_CONDITION = 'condition'
 CONF_ACTION = 'action'
@@ -118,7 +118,10 @@ def _migrate_old_config(config):
                               ('trigger', 'state_from', 'from'),
                               ('trigger', 'state_hours', 'hours'),
                               ('trigger', 'state_minutes', 'minutes'),
-                              ('trigger', 'state_seconds', 'seconds')):
+                              ('trigger', 'state_seconds', 'seconds'),
+                              ('action', 'execute_service', 'service'),
+                              ('action', 'service_entity_id', 'entity_id'),
+                              ('action', 'service_data', 'data')):
         if key in new_conf[cat]:
             new_conf[cat][new_key] = new_conf[cat].pop(key)
 

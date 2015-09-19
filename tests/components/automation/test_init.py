@@ -10,7 +10,7 @@ import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID
 
 
-class TestAutomationEvent(unittest.TestCase):
+class TestAutomation(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
@@ -26,7 +26,7 @@ class TestAutomationEvent(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_service_data_not_a_dict(self):
+    def test_old_config_service_data_not_a_dict(self):
         automation.setup(self.hass, {
             automation.DOMAIN: {
                 'platform': 'event',
@@ -87,6 +87,24 @@ class TestAutomationEvent(unittest.TestCase):
         self.assertEqual(['hello.world', 'hello.world2'],
                          self.calls[0].data.get(ATTR_ENTITY_ID))
 
+    def test_service_data_not_a_dict(self):
+        automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'data': 100,
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_service_specify_data(self):
         automation.setup(self.hass, {
             automation.DOMAIN: {
@@ -95,8 +113,8 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'action': {
-                    'execute_service': 'test.automation',
-                    'service_data': {'some': 'data'}
+                    'service': 'test.automation',
+                    'data': {'some': 'data'}
                 }
             }
         })
@@ -114,8 +132,8 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'action': {
-                    'execute_service': 'test.automation',
-                    'service_entity_id': 'hello.world'
+                    'service': 'test.automation',
+                    'entity_id': 'hello.world'
                 }
             }
         })
@@ -134,8 +152,8 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'action': {
-                    'execute_service': 'test.automation',
-                    'service_entity_id': ['hello.world', 'hello.world2']
+                    'service': 'test.automation',
+                    'entity_id': ['hello.world', 'hello.world2']
                 }
             }
         })
@@ -160,7 +178,7 @@ class TestAutomationEvent(unittest.TestCase):
                     }
                 ],
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         })
@@ -195,7 +213,7 @@ class TestAutomationEvent(unittest.TestCase):
                     }
                 ],
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         })
@@ -239,7 +257,7 @@ class TestAutomationEvent(unittest.TestCase):
                     }
                 ],
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         })
@@ -278,7 +296,7 @@ class TestAutomationEvent(unittest.TestCase):
                 ],
                 'condition': 'use_trigger_values',
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         })
@@ -314,7 +332,7 @@ class TestAutomationEvent(unittest.TestCase):
                 ],
                 'condition': 'use_trigger_values',
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         })
