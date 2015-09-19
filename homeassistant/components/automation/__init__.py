@@ -50,7 +50,8 @@ def setup(hass, config):
         elif isinstance(config[config_key], list):
             list_no = 0
             for config_block in config[config_key]:
-                name = config_block.get(CONF_ALIAS, "{}, {}".format(config_key, list_no))
+                name = config_block.get(CONF_ALIAS,
+                                        "{}, {}".format(config_key, list_no))
                 list_no += 1
                 config_block = _migrate_old_config(config_block)
                 _setup_automation(hass, config_block, name, config)
@@ -64,6 +65,7 @@ def setup(hass, config):
 
     return True
 
+
 def _setup_automation(hass, config_block, name, config):
     """ Setup one instance of automation """
 
@@ -72,7 +74,7 @@ def _setup_automation(hass, config_block, name, config):
     if action is None:
         return False
 
-    if CONF_CONDITION in p_config or CONF_CONDITION_TYPE in p_config:
+    if CONF_CONDITION in config_block or CONF_CONDITION_TYPE in config_block:
         action = _process_if(hass, config, config_block, action)
 
         if action is None:
@@ -81,6 +83,7 @@ def _setup_automation(hass, config_block, name, config):
     _process_trigger(hass, config, config_block.get(CONF_TRIGGER, []), name,
                      action)
     return True
+
 
 def _get_action(hass, config, name):
     """ Return an action based on a config. """
