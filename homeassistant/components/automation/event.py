@@ -20,11 +20,12 @@ def trigger(hass, config, action):
         _LOGGER.error("Missing configuration key %s", CONF_EVENT_TYPE)
         return False
 
-    event_data = config.get(CONF_EVENT_DATA, {})
+    event_data = config.get(CONF_EVENT_DATA)
 
     def handle_event(event):
         """ Listens for events and calls the action when data matches. """
-        if event_data == event.data:
+        if not event_data or all(val == event.data.get(key) for key, val
+                                 in event_data.items()):
             action()
 
     hass.bus.listen(event_type, handle_event)
