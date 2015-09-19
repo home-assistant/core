@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# script/bootstrap: Resolve all dependencies that the application requires to
+#                   run.
+
+cd "$(dirname "$0")/.."
+
+script/bootstrap_server
+script/bootstrap_frontend
