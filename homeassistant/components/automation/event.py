@@ -24,6 +24,7 @@ def trigger(hass, config, action):
 
     def handle_event(event):
         """ Listens for events and calls the action when data matches. """
+        event.data.pop('service_call_id')
         if event_data == event.data:
             action()
 
