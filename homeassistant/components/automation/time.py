@@ -79,11 +79,11 @@ def if_action(hass, config):
         now = dt_util.now()
         if before is not None and now > now.replace(hour=before.hour,
                                                     minute=before.minute):
-                return False
+            return False
 
         if after is not None and now < now.replace(hour=after.hour,
                                                    minute=after.minute):
-                return False
+            return False
 
         if weekday is not None:
             now_weekday = WEEKDAYS[now.weekday()]
