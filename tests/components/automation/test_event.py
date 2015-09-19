@@ -98,7 +98,8 @@ class TestAutomationEvent(unittest.TestCase):
             }
         }))
 
-        self.hass.bus.fire('test_event', {'some_attr': 'some_value'})
+        self.hass.bus.fire('test_event', {'some_attr': 'some_value',
+                                          'another': 'value'})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
