@@ -75,7 +75,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         }))
@@ -93,7 +93,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_data': {'some_attr': 'some_value'}
                 },
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         }))
@@ -111,7 +111,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_data': {'some_attr': 'some_value'}
                 },
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         }))
