@@ -42,15 +42,15 @@ def setup(hass, config):
     while config_key in config:
         # check for one block syntax
         if isinstance(config[config_key], dict):
-            name = config[config_key].get(CONF_ALIAS, config_key)
-            _setup_automation(hass, config[config_key], name, config)
+            config_block = _migrate_old_config(config[config_key])
+            name = config_block.get(CONF_ALIAS, config_key)
+            _setup_automation(hass, config_block, name, config)
 
         # check for multiple block syntax
         elif isinstance(config[config_key], list):
             for list_no, config_block in enumerate(config[config_key]):
                 name = config_block.get(CONF_ALIAS,
                                         "{}, {}".format(config_key, list_no))
-                config_block = _migrate_old_config(config_block)
                 _setup_automation(hass, config_block, name, config)
 
         # any scalar value is incorrect
