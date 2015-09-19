@@ -37,7 +37,7 @@ FLAGS="-v --config $CONFIG_DIR --pid-file $PID_FILE --daemon"
 REDIRECT="> $CONFIG_DIR/home-assistant.log 2>&1"
 
 start() {
-  if [ -f $PID_FILE ] && kill -0 $(cat $PID_FILE); then
+  if [ -f $PID_FILE ] && kill -0 $(cat $PID_FILE) 2> /dev/null; then
     echo 'Service already running' >&2
     return 1
   fi
@@ -48,12 +48,13 @@ start() {
 }
 
 stop() {
-  if [ ! -f "$PID_FILE" ] || ! kill -0 $(cat "$PID_FILE"); then
+    if [ ! -f "$PID_FILE" ] || ! kill -0 $(cat "$PID_FILE") 2> /dev/null; then
     echo 'Service not running' >&2
     return 1
   fi
   echo 'Stopping service…' >&2
   kill -3 $(cat "$PID_FILE")
+  while ps -p $(cat "$PID_FILE") > /dev/null 2>&1; do sleep 1;done;
   echo 'Service stopped' >&2
 }
 
