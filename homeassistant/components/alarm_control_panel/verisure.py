@@ -51,6 +51,11 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         """ Returns the state of the device. """
         return self._state
 
+    @property
+    def requires_code(self):
+        """ code is required """
+        return True
+
     def update(self):
         ''' update alarm status '''
         verisure.update()
@@ -66,21 +71,21 @@ class VerisureAlarm(alarm.AlarmControlPanel):
                 'Unknown alarm state %s',
                 verisure.STATUS[self._device][self._id].status)
 
-    def alarm_disarm(self, code):
+    def alarm_disarm(self, code=None):
         """ Send disarm command. """
         verisure.MY_PAGES.set_alarm_status(
             code,
             verisure.MY_PAGES.ALARM_DISARMED)
         _LOGGER.warning('disarming')
 
-    def alarm_arm_home(self, code):
+    def alarm_arm_home(self, code=None):
         """ Send arm home command. """
         verisure.MY_PAGES.set_alarm_status(
             code,
             verisure.MY_PAGES.ALARM_ARMED_HOME)
         _LOGGER.warning('arming home')
 
-    def alarm_arm_away(self, code):
+    def alarm_arm_away(self, code=None):
         """ Send arm away command. """
         verisure.MY_PAGES.set_alarm_status(
             code,
