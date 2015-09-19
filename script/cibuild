@@ -4,4 +4,9 @@
 #                 designed to run on the continuous integration server.
 
 script/test coverage
+
+STATUS=$?
+
 coveralls
+
+exit $STATUS
