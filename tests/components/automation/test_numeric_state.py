@@ -35,7 +35,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'below': 10,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -56,7 +56,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'below': 10,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -78,7 +78,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'below': 10,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -97,7 +97,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'above': 10,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -119,7 +119,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'above': 10,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -142,7 +142,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'above': 10,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -162,7 +162,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'above': 5,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -181,7 +181,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'above': 5,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -203,7 +203,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'above': 5,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -226,7 +226,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'above': 5,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -244,7 +244,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'entity_id': 'test.another_entity',
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -269,7 +269,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'below': test_state + 2
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         })
