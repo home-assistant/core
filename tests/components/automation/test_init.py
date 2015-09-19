@@ -322,3 +322,41 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+
+    def test_automation_list_setting(self):
+        """ Event is not a valid condition. Will it still work? """
+        automation.setup(self.hass, {
+            automation.DOMAIN: [
+                {
+                    'trigger': [
+                        {
+                            'platform': 'event',
+                            'event_type': 'test_event',
+                        },
+
+                    ],
+                    'action': {
+                        'execute_service': 'test.automation',
+                    }
+                },
+                {
+                    'trigger': [
+                        {
+                            'platform': 'event',
+                            'event_type': 'test_event_2',
+                        },
+                    ],
+                    'action': {
+                        'execute_service': 'test.automation',
+                    }
+                }
+            ]
+        })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.bus.fire('test_event_2')
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(self.calls))
