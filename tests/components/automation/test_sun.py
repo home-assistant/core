@@ -51,7 +51,7 @@ class TestAutomationSun(unittest.TestCase):
                         'event': 'sunset',
                     },
                     'action': {
-                        'execute_service': 'test.automation',
+                        'service': 'test.automation',
                     }
                 }
             }))
@@ -77,7 +77,7 @@ class TestAutomationSun(unittest.TestCase):
                         'event': 'sunrise',
                     },
                     'action': {
-                        'execute_service': 'test.automation',
+                        'service': 'test.automation',
                     }
                 }
             }))
@@ -104,7 +104,7 @@ class TestAutomationSun(unittest.TestCase):
                         'offset': '0:30:00'
                     },
                     'action': {
-                        'execute_service': 'test.automation',
+                        'service': 'test.automation',
                     }
                 }
             }))
@@ -131,7 +131,7 @@ class TestAutomationSun(unittest.TestCase):
                         'offset': '-0:30:00'
                     },
                     'action': {
-                        'execute_service': 'test.automation',
+                        'service': 'test.automation',
                     }
                 }
             }))
