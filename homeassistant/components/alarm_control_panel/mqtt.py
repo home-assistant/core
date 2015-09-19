@@ -131,17 +131,22 @@ class MqttAlarm(alarm.AlarmControlPanel):
         """ Returns the state of the device. """
         return self._state
 
-    def alarm_disarm(self, code):
+    @property
+    def requires_code(self):
+        """ code is not required """
+        return False
+
+    def alarm_disarm(self, code=None):
         """ Send disarm command. """
         mqtt.publish(self.hass, self._command_topic, self._payload_disarm,
                      self._qos)
 
-    def alarm_arm_home(self, code):
+    def alarm_arm_home(self, code=None):
         """ Send arm home command. """
         mqtt.publish(self.hass, self._command_topic, self._payload_arm_home,
                      self._qos)
 
-    def alarm_arm_away(self, code):
+    def alarm_arm_away(self, code=None):
         """ Send arm away command. """
         mqtt.publish(self.hass, self._command_topic, self._payload_arm_away,
                      self._qos)
