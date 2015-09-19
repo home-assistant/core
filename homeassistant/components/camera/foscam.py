@@ -1,41 +1,31 @@
 """
-Support for Foscam IP Cameras.
-
+homeassistant.components.camera.foscam
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This component provides basic support for Foscam IP cameras.
 
 As part of the basic support the following features will be provided:
 -MJPEG video streaming
 
-To use this component, add the following to your config/configuration.yaml:
+To use this component, add the following to your configuration.yaml file.
 
 camera:
-    platform: foscam
-    name: Door Camera
-    ip: 192.168.0.123
-    port: 88
-    username: visitor
-    password: password
+  platform: foscam
+  name: Door Camera
+  ip: 192.168.0.123
+  port: 88
+  username: YOUR_USERNAME
+  password: YOUR_PASSWORD
 
-camera 2:
-    name: 'Second Camera'
-    ...
-camera 3:
-    name: 'Camera Three'
-    ...
-
-
-VARIABLES:
-
-These are the variables for the device_data array:
+Variables:
 
 ip
 *Required
-The IP address of your foscam device
+The IP address of your Foscam device.
 
 username
 *Required
-The username of a visitor or operator of your camera.
-Oddly admin accounts don't seem to have access to take snapshots.
+The username of a visitor or operator of your camera. Oddly admin accounts
+don't seem to have access to take snapshots.
 
 password
 *Required
@@ -49,6 +39,8 @@ port
 *Optional
 The port that the camera is running on. The default is 88.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/camera.foscam.html
 """
 import logging
 from homeassistant.helpers import validate_config
@@ -72,9 +64,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class FoscamCamera(Camera):
-    """
-    An implementation of a Foscam IP camera.
-    """
+    """ An implementation of a Foscam IP camera. """
 
     def __init__(self, device_info):
         super(FoscamCamera, self).__init__()
@@ -94,7 +84,7 @@ class FoscamCamera(Camera):
                      self._name, self._snap_picture_url)
 
     def camera_image(self):
-        """ Return a still image reponse from the camera """
+        """ Return a still image reponse from the camera. """
 
         # send the request to snap a picture
         response = requests.get(self._snap_picture_url)
@@ -111,5 +101,5 @@ class FoscamCamera(Camera):
 
     @property
     def name(self):
-        """ Return the name of this device """
+        """ Return the name of this device. """
         return self._name
