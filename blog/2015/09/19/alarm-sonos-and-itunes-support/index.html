@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Verisure devices and modern TP-Link routers now supported - Home Assistant</title>
+    <title>Alarms, Sonos and iTunes now supported - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="New support for Verisure switches, sensors and hygrometers and modern TP-Link routers">
+    <meta name="description" content="Home Assistant 0.7.3 has been released with support for Sonos, iTunes and improved .">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Verisure devices and modern TP-Link routers now supported">
+    <meta property="og:title" content="Alarms, Sonos and iTunes now supported">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="New support for Verisure switches, sensors and hygrometers and modern TP-Link routers">
+    <meta property="og:description" content="Home Assistant 0.7.3 has been released with support for Sonos, iTunes and improved .">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -97,7 +97,7 @@
           <article class="post">
   <header>
   
-  <h1 class="title indent">Verisure devices and modern TP-Link routers now supported</h1>
+  <h1 class="title indent">Alarms, Sonos and iTunes now supported</h1>
   
 
   
@@ -114,13 +114,13 @@
   
 
 
-<time datetime="2015-08-17T20:00:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 17, 2015</time>
+<time datetime="2015-09-19T07:47:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> September 19, 2015</time>
     
   
 
 <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
 
-    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
     
 
   <span>
@@ -146,21 +146,48 @@
 
 
 
-  <p>A minor bug fix release to fix some issues that have come up since the last release. Please upgrade as soon as possible by running <code>git pull</code> from the Home Assistant directory.</p>
+  <p>It&rsquo;s like someone opened a can of rock solid developers and emptied it above our
+<a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with
+great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
 
-<p>This release is a major milestone in our test coverage as we&rsquo;ve crossed into the 80s! It has to be noted that this covers mainly the core and automation components. Platforms that communicate with IoT devices have been excluded.</p>
+<p>See <a href="https://github.com/balloob/home-assistant/releases/tag/0.7.3">GitHub</a> for more detailed release notes.</p>
 
-<p>As we didn&rsquo;t want to just push out bug fixes, this release includes a few additions:</p>
+<p><em>Migration note: the <code>scheduler</code> component has been removed in favor of the <code>automation</code> component.</em></p>
 
-<ul>
-<li>Support for modern TP-Link routers like the ArcherC9 line has been contributed by <a href="https://github.com/chrisvis">@chrisvis</a>.</li>
-<li>Improved support for MQTT topic subscriptions has been contributed by <a href="https://github.com/qrtn">@qrtn</a></li>
-</ul>
+<p><strong>Sonos</strong><br>
+<img src='/images/supported_brands/sonos.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Sonos support has been added by <a href="https://github.com/rhooper">@rhooper</a> and <a href="https://github.com/SEJeff">@SEJeff</a>. Home Assistant is now able to automatically
+detect Sonos devices in your network and set them up for you. It will allow you to control music
+playing on your Sonos and change the volume.</p>
+
+<p><strong>iTunes and airplay speakers</strong><br>
+<img src='/images/supported_brands/itunes.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will
+have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
+</span><span class='line'>media_player:
+</span><span class='line'>  platform: itunes
+</span><span class='line'>  name: iTunes
+</span><span class='line'>  host: http://192.168.1.50
+</span><span class='line'>  port: 8181</span></code></pre></td></tr></table></div></figure>
 
 
-<p><strong>Verisure Support</strong><br>
-<img src='/images/supported_brands/verisure.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Home Assistant support to integrate your <a href="https://www.verisure.com/">Verisure</a> alarms, hygrometers, sensors and thermometers has been contributed by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+
+
+<a name="read-more"></a>
+
+
+<p><strong>Automation</strong><br>
+Automation has gotten a lot of love. It now supports conditions, multiple triggers and new types of
+triggers. The best to get started with it is to head over to the new
+<a href="/getting-started/automation.html">getting started with automation</a> page.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -170,16 +197,45 @@ Home Assistant support to integrate your <a href="https://www.verisure.com/">Ver
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">verisure</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">user@example.com</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">password</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">alarm</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">hygrometers</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">smartplugs</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">thermometers</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example of entry in configuration.yaml</span>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light on in the evening</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-01:00:00&quot;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;16:00:00&quot;</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00:00&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<p><strong>Verisure Alarms</strong><br>
+<img src='/images/supported_brands/verisure.png' style='border:none; box-shadow: none; float: right;' height='50' />
+We now support arming and disarming your verisure alarm from within Home Assistant thanks to added
+support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
 
 
 </article>
@@ -206,15 +262,15 @@ Home Assistant support to integrate your <a href="https://www.verisure.com/">Ver
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/"
-     data-counturl="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"
+     data-counturl="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/"
+         data-href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"
          data-layout="button_count">
     </div>
   
@@ -245,10 +301,6 @@ Home Assistant support to integrate your <a href="https://www.verisure.com/">Ver
   <h1 class="title delta">Other Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2015/09/19/alarm-sonos-and-itunes-support/">Alarms, Sonos and iTunes now supported</a>
-        </li>
       
     
       
@@ -322,8 +374,8 @@ Home Assistant support to integrate your <a href="https://www.verisure.com/">Ver
   
     
     // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/';
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/';
     var disqus_script = 'embed.js';
   
   (function () {

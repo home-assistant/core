@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-19T22:10:53-07:00</updated>
+  <updated>2015-09-19T23:32:27-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,104 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Alarms, Sonos and iTunes now supported]]></title>
+    <link href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"/>
+    <updated>2015-09-19T07:47:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support</id>
+    <content type="html"><![CDATA[<p>It&rsquo;s like someone opened a can of rock solid developers and emptied it above our
+<a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with
+great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
+
+<p>See <a href="https://github.com/balloob/home-assistant/releases/tag/0.7.3">GitHub</a> for more detailed release notes.</p>
+
+<p><em>Migration note: the <code>scheduler</code> component has been removed in favor of the <code>automation</code> component.</em></p>
+
+<p><strong>Sonos</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/sonos.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Sonos support has been added by <a href="https://github.com/rhooper">@rhooper</a> and <a href="https://github.com/SEJeff">@SEJeff</a>. Home Assistant is now able to automatically
+detect Sonos devices in your network and set them up for you. It will allow you to control music
+playing on your Sonos and change the volume.</p>
+
+<p><strong>iTunes and airplay speakers</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/itunes.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will
+have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
+</span><span class='line'>media_player:
+</span><span class='line'>  platform: itunes
+</span><span class='line'>  name: iTunes
+</span><span class='line'>  host: http://192.168.1.50
+</span><span class='line'>  port: 8181</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!--more-->
+
+
+<p><strong>Automation</strong><br>
+Automation has gotten a lot of love. It now supports conditions, multiple triggers and new types of
+triggers. The best to get started with it is to head over to the new
+<a href="https://home-assistant.io/getting-started/automation.html">getting started with automation</a> page.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example of entry in configuration.yaml</span>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light on in the evening</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-01:00:00&quot;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;16:00:00&quot;</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00:00&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Verisure Alarms</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/verisure.png' style='border:none; box-shadow: none; float: right;' height='50' />
+We now support arming and disarming your verisure alarm from within Home Assistant thanks to added
+support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Remote Monitoring with Glances]]></title>
@@ -109,57 +207,36 @@ Inspried by a <a href="https://github.com/balloob/home-assistant/issues/310">fea
     <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
     <updated>2015-09-13T09:28:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
-    <content type="html"><![CDATA[<p> <p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
+    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
 <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
 webservice that integrates with almost every possible webservice out there. Adding Home
-Assistant to this mix means Home Assistant can connect with all via IFTTT.</p></p>
+Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
 
 <p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
 if your smoke alarm goes off.</p>
-
-
-
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
 </p>
 
 
-
-
 <p>Head over to the <a href="https://home-assistant.io/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
 read more button for some example recipes.</p>
 
-
-
-
 <!--more-->
-
-
 
 
 <p>In each of the following examples, make sure to replace the XXX in the url with your correct
 host address and api password.</p>
 
-
-
-
 <h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed</h2>
-
-
-
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -189,26 +266,16 @@ host address and api password.</p>
 </table>
 
 
-
-
 <h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen</h2>
-
-
-
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png' />
 </p>
 
 
-
-
 <p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
 Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
 <code>value1</code>.</p>
-
-
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -233,24 +300,14 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 </span></code></pre></td></tr></table></div></figure>
 
 
-
-
 <h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home</h2>
-
-
-
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -280,24 +337,14 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 </table>
 
 
-
-
 <h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant</h2>
-
-
-
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -327,24 +374,14 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 </table>
 
 
-
-
 <h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button</h2>
-
-
-
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -368,8 +405,6 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 </tr>
 </tbody>
 </table>
-
-
 
 ]]></content>
   </entry>
@@ -2458,34 +2493,6 @@ Home Assistant should now throw better errors and offer solutions if you do not 
 
 <p><strong>Streamlined first launch</strong><br>
 Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Nest in the house!]]></title>
-    <link href="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/"/>
-    <updated>2015-01-13T08:29:04-08:00</updated>
-    <id>https://home-assistant.io/blog/2015/01/13/nest-in-da-house</id>
-    <content type="html"><![CDATA[<p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we&rsquo;re expanding the supported devices. Today, we&rsquo;re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/screenshots/nest-thermostat-card.png' />
-</p>
-
-
-<p>The new integration exists out of two parts: a generic thermostat component and a Nest platform implementation. The initial version implements provides a read-only card and services to control it. The plan is in the future to add temperature and away mode controls from the thermostat card and more info dialog. Internally, we are using the Python package <a href="https://github.com/jkoelker/python-nest">python-nest by jkoelker</a> to talk to the Nest.</p>
-
-<p>If you own a Nest thermostat, add the following lines to your <code>home-assistant.conf</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[thermostat]
-</span><span class='line'>platform=nest
-</span><span class='line'>username=YOUR_USERNAME
-</span><span class='line'>password=YOUR_PASSWORD</span></code></pre></td></tr></table></div></figure>
-
 ]]></content>
   </entry>
   

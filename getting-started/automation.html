@@ -113,7 +113,7 @@ offers <a href="/components/#automation">a few built-in automations</a> but main
 
 <p>Every automation rule consists of triggers, an action to be performed and optional conditions.</p>
 
-<p>Triggers can be any event observed in Home Assistant. For example, it can be a certain point in time
+<p>Triggers can be anything observed in Home Assistant. For example, it can be a certain point in time
 or a person coming home, which can be observed by the state changing from <code>not_home</code> to <code>home</code>.</p>
 
 <p>Actions will call services within Home Assistant. For example, turn a light on, set the temperature
@@ -170,8 +170,12 @@ example tell which device to turn on or what color to use.</p>
 
 <h2><a class='title-link' name='creating-your-first-automation-rule' href='#creating-your-first-automation-rule'></a> Creating your first automation rule</h2>
 
-<p>Before we dive deeper into what every piece of automation <em>can</em> do, let&rsquo;s loot at a simple automation
+<p>Before we dive deeper into what every piece of automation <em>can</em> do, let&rsquo;s look at a simple automation
 rule: <strong>Turn on the lights when the sun sets</strong></p>
+
+<p>In this example, we are defining a trigger to track the sunset and tell it to fire when the sun is
+setting. When this event is triggered, the service <code>light.turn_on</code> is called without any
+parameters. Because we specify no parameters, it will turn on all the lights.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -191,10 +195,6 @@ rule: <strong>Turn on the lights when the sun sets</strong></p>
 </span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
 </span></code></pre></td></tr></table></div></figure>
 
-
-<p>In this example, we are defining a trigger to track the sunset and tell it to fire one hour before
-the sun is setting. When this event is triggered, the service <code>light.turn_on</code> is called without any
-parameters. Because we specify no parameters, it will turn on all the lights.</p>
 
 <p>After a few days of running this automation rule you come to realize that this automation rule is not
 good enough. It was already dark when the lights went on and the one day you weren&rsquo;t home, the lights

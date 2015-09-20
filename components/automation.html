@@ -132,7 +132,7 @@ full configuration but only the relevant part.</p>
 <span class='line-number'>18</span>
 <span class='line-number'>19</span>
 <span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example of a full entry in configuration.yaml</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example of entry in configuration.yaml</span>
 </span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light on in the evening</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
@@ -147,8 +147,8 @@ full configuration but only the relevant part.</p>
 </span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16:00:00</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">23:00:00</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;16:00:00&quot;</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00:00&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
@@ -253,15 +253,15 @@ being sent over the topic.</p>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
 </span><span class='line'>    <span class="c1"># Optional</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">from</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">not_home</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">to</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">from</span><span class="p-Indicator">:</span> <span class="s">&quot;not_home&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">to</span><span class="p-Indicator">:</span> <span class="s">&quot;home&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 
 
 <p class='note'>
-  Use quotes around your values for <code>state_from</code> and <code>state_to</code> to avoid the YAML parser interpreting some values as booleans.
+  Use quotes around your values for <code>from</code> and <code>to</code> to avoid the YAML parser interpreting some values as booleans.
 </p>
 
 
@@ -309,7 +309,7 @@ hour when it is 5 minutes past whole.</p>
 </span><span class='line'>    <span class="c1"># All following are optional.</span>
 </span><span class='line'>    <span class="c1"># When &#39;after&#39; is used, you cannot also match on hour, minute, seconds.</span>
 </span><span class='line'>    <span class="c1"># Military time format.</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">15:32:00</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;15:32:00&quot;</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">hours</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">minutes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">seconds</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
@@ -403,8 +403,8 @@ certain day of the week.</p>
 </span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
 </span><span class='line'>    <span class="c1"># At least one of the following is required.</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">15:00:00</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">23:00:00</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;15:00:00&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00:00&quot;</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">weekday</span><span class="p-Indicator">:</span>
 </span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mon</span>
 </span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">wed</span>

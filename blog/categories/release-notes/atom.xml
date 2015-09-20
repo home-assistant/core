@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-19T22:10:53-07:00</updated>
+  <updated>2015-09-19T23:32:27-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -14,61 +14,109 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Alarms, Sonos and iTunes now supported]]></title>
+    <link href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"/>
+    <updated>2015-09-19T07:47:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support</id>
+    <content type="html"><![CDATA[<p>It&rsquo;s like someone opened a can of rock solid developers and emptied it above our
+<a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with
+great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
+
+<p>See <a href="https://github.com/balloob/home-assistant/releases/tag/0.7.3">GitHub</a> for more detailed release notes.</p>
+
+<p><em>Migration note: the <code>scheduler</code> component has been removed in favor of the <code>automation</code> component.</em></p>
+
+<p><strong>Sonos</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/sonos.png' style='border:none; box-shadow: none; float: right;' height='50' />
+Sonos support has been added by <a href="https://github.com/rhooper">@rhooper</a> and <a href="https://github.com/SEJeff">@SEJeff</a>. Home Assistant is now able to automatically
+detect Sonos devices in your network and set them up for you. It will allow you to control music
+playing on your Sonos and change the volume.</p>
+
+<p><strong>iTunes and airplay speakers</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/itunes.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will
+have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
+
+<pre><code># Example configuration.yaml entry
+media_player:
+  platform: itunes
+  name: iTunes
+  host: http://192.168.1.50
+  port: 8181
+</code></pre>
+
+<!--more-->
+
+
+<p><strong>Automation</strong><br>
+Automation has gotten a lot of love. It now supports conditions, multiple triggers and new types of
+triggers. The best to get started with it is to head over to the new
+<a href="/getting-started/automation.html">getting started with automation</a> page.</p>
+
+<pre><code class="yaml"># Example of entry in configuration.yaml
+automation:
+  alias: Light on in the evening
+  trigger:
+    - platform: sun
+      event: sunset
+      offset: "-01:00:00"
+    - platform: state
+      entity_id: group.all_devices
+      state: home
+  condition:
+    - platform: state
+      entity_id: group.all_devices
+      state: home
+    - platform: time
+      after: "16:00:00"
+      before: "23:00:00"
+  action:
+    service: homeassistant.turn_on
+    entity_id: group.living_room
+</code></pre>
+
+<p><strong>Verisure Alarms</strong><br>
+<img src='https://home-assistant.io/images/supported_brands/verisure.png' style='border:none; box-shadow: none; float: right;' height='50' />
+We now support arming and disarming your verisure alarm from within Home Assistant thanks to added
+support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Home Assistant meets IFTTT]]></title>
     <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
     <updated>2015-09-13T09:28:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
-    <content type="html"><![CDATA[<p> <p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
+    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
 <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
 webservice that integrates with almost every possible webservice out there. Adding Home
-Assistant to this mix means Home Assistant can connect with all via IFTTT.</p></p>
+Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
 
 <p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
 if your smoke alarm goes off.</p>
-
-
-
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
 </p>
 
 
-
-
-<p>Head over to the <a href="https://home-assistant.io/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
+<p>Head over to the <a href="/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
 read more button for some example recipes.</p>
 
-
-
-
 <!--more-->
-
-
 
 
 <p>In each of the following examples, make sure to replace the XXX in the url with your correct
 host address and api password.</p>
 
-
-
-
-<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed</h2>
-
-
-
+<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed </h2>
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -98,63 +146,37 @@ host address and api password.</p>
 </table>
 
 
-
-
-<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen</h2>
-
-
-
+<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen </h2>
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png' />
 </p>
 
 
-
-
 <p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
 Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
 <code>value1</code>.</p>
 
+<pre><code class="yaml"># Configuration.yaml entry
+automation:
+  alias: Post a tweet when fire alarm is triggered
 
-<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Post a tweet when fire alarm is triggered</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home/alarm/fire</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;HA_FIRE_ALARM&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;value1&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">fire</span><span class="nv"> </span><span class="s">alarm</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">triggered!&quot;</span><span class="p-Indicator">}</span>
-</span></code></pre></td></tr></table></div></figure></p>
+  platform: mqtt
+  mqtt_topic: home/alarm/fire
+  mqtt_payload: 'on'
 
-<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home</h2>
+  execute_service: ifttt.trigger
+  service_data: {"event":"HA_FIRE_ALARM", "value1":"The fire alarm just triggered!"}
+</code></pre>
 
-
-
+<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home </h2>
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -184,24 +206,14 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 </table>
 
 
-
-
-<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant</h2>
-
-
-
+<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant </h2>
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -231,24 +243,14 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 </table>
 
 
-
-
-<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button</h2>
-
-
-
+<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button </h2>
 
 <p class='img'>
   <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png' />
 </p>
 
 
-
-
 <p>Maker channel setup:</p>
-
-
-
 
 <table>
 <thead>
@@ -272,8 +274,6 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 </tr>
 </tbody>
 </table>
-
-
 
 ]]></content>
   </entry>
@@ -539,178 +539,6 @@ sensor:
     - pressure
     - visibility
     - ozone
-</code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for June 10, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/06/10/release-notes/"/>
-    <updated>2015-06-10T18:54:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/06/10/release-notes</id>
-    <content type="html"><![CDATA[<p>Wow, almost a month has gone by since the last release and this release is <em>packed</em>. The biggest part of this release is probably one that you won&rsquo;t notice: the frontend has been upgraded from Polymer 0.5 to the brand new released Polymer 1.0. Polymer has been declared stable by the Google overlords which will allow us to expand functionality that was waiting for this moment to arrive.</p>
-
-<p>This release sets a record for the amount of people involved: 8! <a href="https://github.com/Andythigpen">Andythigpen</a>, <a href="https://github.com/Jamespcole">Jamespcole</a>, <a href="https://github.com/Azelphur">Azelphur</a>, <a href="https://github.com/Fabaff">Fabaff</a>, <a href="https://github.com/Dutchy-">Dutchy-</a>, <a href="https://github.com/Fbradyirl">Fbradyirl</a>, <a href="https://github.com/wind-rider">wind-rider</a> and <a href="https://github.com/ettisan">ettisan</a>, thanks a lot for your contributions!</p>
-
-<p>A big improvement has been brought this release by wind-rider. He took the time to revive the Chromecast support and started improving the media player integration. This triggered other people to join in resulting in a revamped media player experience and support for the Music Player Daemon.</p>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/screenshots/media_player-card.png' />
-  Example of the new media player cards
-</p>
-
-
-
-
-<p class='note'>
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
-</p>
-
-
-
-
-<!--more-->
-
-
-<p>Before jumping into the newly supported platforms, here are the other improvements that are landing this release:</p>
-
-<ul>
-<li>Fronted upgraded to Polymer 1.0 by @balloob</li>
-<li>Include other YAML files using the <code>!include</code> keyword by @andythigpen</li>
-<li>Switch support and bug fixes for Vera platform by @jamespcole</li>
-<li>HTTP session support for the HTTP component by @jamespcole</li>
-<li>Device tracker bugfixes by @Dutchy-</li>
-<li>Bugfix for device tracker platform by @fbradyirl</li>
-<li>Fixing Chromecast support by @wind-rider</li>
-<li>Media player improvements by @balloob and @wind-rider</li>
-<li>Nest thermostat bugfixes by @balloob</li>
-<li>Fix the device tracker getting in a deadlock by @balloob</li>
-<li>Update documentation by @fabaff</li>
-</ul>
-
-
-<p><strong>Music Player Daemon</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/mpd.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Fabaff has contributed MusicPlayerDaemon support. The mpd platform allows you to control a <a href="http://www.musicpd.org/">Music Player Daemon</a> from Home Assistant. Right now, only playback is supported and not playlist manipulation.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-media_player:
-  platform: mpd
-  server: 127.0.0.1
-  port: 6600
-  location: bedroom
-</code></pre>
-
-<p><strong>Command line switch</strong><br>
-A switch platform that issues specific commands when it is turned on and off. This might very well become our most popular platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-switch:
-  platform: command_switch
-  switches:
-    - kitchen_light:
-        oncmd: switch_command on kitchen
-        offcmd: switch_command off kitchen
-</code></pre>
-
-<p><strong>LimitlessLED</strong><br>
-This new platform can control your LimitlessLED lights from within Home Assistant. The lights are also known as EasyBulb, AppLight, AppLamp, MiLight, LEDme, dekolight or iLight.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-light:
-  platform: limitlessled
-  host: 192.168.1.10
-  group_1_name: Living Room
-  group_2_name: Bedroom
-  group_3_name: Office
-  group_4_name: Kitchen
-</code></pre>
-
-<p><strong>Bitcoin sensor</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/bitcoin.png' style='border:none; box-shadow: none; float: right;' height='50' />
-The bitcoin platform displays various details about the <a href="https://bitcoin.org">Bitcoin</a> network. If you have an online wallet from <a href="https://blockchain.info/">Blockchain.info</a> the sensor is capable to show your current balance.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: bitcoin
-  wallet: 'YOUR WALLET_ID'
-  password: YOUR_ACCOUNT_PASSWORD
-  currency: YOUR CURRENCY
-  display_options:
-    - exchangerate
-    - trade_volume_btc
-    - miners_revenue_usd
-    - btc_mined
-    - trade_volume_usd
-    - difficulty
-    - minutes_between_blocks
-    - number_of_transactions
-    - hash_rate
-    - timestamp
-    - mined_blocks
-    - blocks_size
-    - total_fees_btc
-    - total_btc_sent
-    - estimated_btc_sent
-    - total_btc
-    - total_blocks
-    - next_retarget
-    - estimated_transaction_volume_usd
-    - miners_revenue_btc
-    - market_price_usd
-</code></pre>
-
-<p><strong>SMTP notificatoin platform</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/smtp.png' style='border:none; box-shadow: none; float: right;' height='50' />
-The smtp platform allows you to deliver notifications from Home Assistant to an e-mail recipient.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-notify:
-  platform: mail
-  server: MAIL_SERVER
-  port: YOUR_SMTP_PORT
-  sender: SENDER_EMAIL_ADDRESS
-  starttls: 1 or 0
-  username: YOUR_SMTP_USERNAME
-  password: YOUR_SMTP_PASSWORD
-  recipient: YOUR_RECIPIENT
-</code></pre>
-
-<p><strong>Syslog notification platform</strong><br>
-The syslog platform allows you to deliver notifications from Home Assistant to the local syslog.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-notify:
-  platform: syslog
-</code></pre>
-
-<p><strong>Swiss Public transport sensor</strong><br>
-The swiss public transport sensor will give you the next two departure times from a given location to another one in Switzerland. See the <a href="/components/sensor.swiss_public_transport.html">component page</a> for more information how to set it up.</p>
-
-<p><strong>Transmission turtle mode switch</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/transmission.png' style='border:none; box-shadow: none; float: right;' height='50' />
-The transmission platform allows you to control your <a href="http://www.transmissionbt.com/">Transmission</a> client from within Home Assistant. The platform enables you switch to your &lsquo;Alternative Speed Limits&rsquo; (aka &lsquo;Turtle mode&rsquo;) setting.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-switch:
-  platform: transmission
-  name: Transmission
-  host: 192.168.1.26
-  port: 9091
-  username: YOUR_USERNAME
-  password: YOUR_PASSWORD
-</code></pre>
-
-<p><strong>Hikvision camera motion detection support</strong><br>
-This switch platform allows you to control your motion detection setting on your Hikvision camera.</p>
-
-<pre><code># Example configuration.yaml entry
-switch:
-    platform: hikvisioncam
-    name: Hikvision Cam 1 Motion Detection
-    host: 192.168.1.26
-    username: YOUR_USERNAME
-    password: YOUR_PASSWORD
 </code></pre>
 ]]></content>
   </entry>
