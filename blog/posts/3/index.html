@@ -22,7 +22,7 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/posts/3/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Hello PushBullet, nice talking to you January 4, 2015 Paulus Schoutsen 1 minute reading time component Comments One of the things that was missing in Home Assistant for a while was a way to &hellip;">
+    <meta property="og:description" content="Bootstrapping your setup with Discovery January 11, 2015 Paulus Schoutsen less than one minute reading time component Comments Most people do not like configuring things. Things just have to work, &hellip;">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -53,9 +53,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Initial configuration</a></li>
+      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
-      <li><a href='/getting-started/android.html'>Setting up Android</a></li>
     </ul>
   </li>
   <li>
@@ -94,6 +95,79 @@
         
 
             
+  
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/">Bootstrapping your setup with Discovery</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-11T21:49:08-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 11, 2015</time>
+    
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> less than one minute reading time</span>
+    
+
+  <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/component/'>component</a></li>
+      
+    
+    </ul>
+  </span>
+
+    
+      <a class='comments'
+         href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+
+
+  <p>Most people do not like configuring things. Things just have to work, out of the box. Reaching this scenario is the goal of what we are about to introduce: our new discovery component.</p>
+
+<p>The discovery component will scan the WiFi network from time to time for connected zeroconf/mDNS and uPnP devices. The intial introduction is mainly focussed on getting the right architecture in place and discovers Belkin WeMo switches and Google Chromecasts connected to your network. When found, it will load and notify the appropritate component and it will be ready to use within seconds.</p>
+
+<p>Most devices still require some sort of interaction from the user after being discovered - be it a button being pressed or some sort of authentication. This is a challenge that will be solved in the future.</p>
+
+<p>To enable the discovery component, add the following to your <code>home-assistant.conf</code>:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[discovery]</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A new <a href="/developers/add_new_platform.html#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
+
+
+  </article>
+  <hr>
   
   
   <article class="listing">

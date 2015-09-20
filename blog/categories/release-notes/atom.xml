@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-19T21:36:21-07:00</updated>
+  <updated>2015-09-19T22:10:53-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,271 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Home Assistant meets IFTTT]]></title>
+    <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
+    <updated>2015-09-13T09:28:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
+    <content type="html"><![CDATA[<p> <p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
+<a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
+webservice that integrates with almost every possible webservice out there. Adding Home
+Assistant to this mix means Home Assistant can connect with all via IFTTT.</p></p>
+
+<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
+if your smoke alarm goes off.</p>
+
+
+
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
+</p>
+
+
+
+
+<p>Head over to the <a href="https://home-assistant.io/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
+read more button for some example recipes.</p>
+
+
+
+
+<!--more-->
+
+
+
+
+<p>In each of the following examples, make sure to replace the XXX in the url with your correct
+host address and api password.</p>
+
+
+
+
+<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed</h2>
+
+
+
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png' />
+</p>
+
+
+
+
+<p>Maker channel setup:</p>
+
+
+
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+<tr>
+<td> BODY </td>
+<td> { &ldquo;entity_id&rdquo;: &ldquo;switch.irrigation&rdquo; }</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen</h2>
+
+
+
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png' />
+</p>
+
+
+
+
+<p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
+Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
+<code>value1</code>.</p>
+
+
+<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Post a tweet when fire alarm is triggered</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home/alarm/fire</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;HA_FIRE_ALARM&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;value1&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">fire</span><span class="nv"> </span><span class="s">alarm</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">triggered!&quot;</span><span class="p-Indicator">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home</h2>
+
+
+
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png' />
+</p>
+
+
+
+
+<p>Maker channel setup:</p>
+
+
+
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+<tr>
+<td> BODY </td>
+<td> { &ldquo;entity_id&rdquo;: &ldquo;light.kitchen&rdquo; }</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant</h2>
+
+
+
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png' />
+</p>
+
+
+
+
+<p>Maker channel setup:</p>
+
+
+
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+<tr>
+<td> BODY </td>
+<td> { &ldquo;entity_id&rdquo;: &ldquo;group.all_lights&rdquo;, &ldquo;flash&rdquo;:&ldquo;yes&rdquo; }</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button</h2>
+
+
+
+
+<p class='img'>
+  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png' />
+</p>
+
+
+
+
+<p>Maker channel setup:</p>
+
+
+
+
+<table>
+<thead>
+<tr>
+<th> Field </th>
+<th> Value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> URL   </td>
+<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</a></td>
+</tr>
+<tr>
+<td> METHOD </td>
+<td> POST</td>
+</tr>
+<tr>
+<td> CONTENT TYPE </td>
+<td> application/json</td>
+</tr>
+</tbody>
+</table>
+
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Verisure devices and modern TP-Link routers now supported]]></title>
@@ -446,124 +711,6 @@ switch:
     host: 192.168.1.26
     username: YOUR_USERNAME
     password: YOUR_PASSWORD
-</code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for May 14, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/05/14/release-notes/"/>
-    <updated>2015-05-14T22:25:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/05/14/release-notes</id>
-    <content type="html"><![CDATA[<p>Almost three busy weeks have past since the last release. We used this time to finally make the overhaul to use UTC as the internal date time format. We added a bunch of test coverage in the process to make sure the transition went smoothly. Pleas see <a href="/blog/2015/05/09/utc-time-zone-awareness/#backwards-incompatible-stuff">the blog post about the UTC refactor</a> for backwards incompatible changes.</p>
-
-<p>This release includes a significant startup boost for the frontend and a fix for Wemo discovery after their latest firmware upgrade.</p>
-
-<p>I would like to give a big shout out to our newest contributor <a href="https://github.com/fabaff">fabaff</a> for taking the time to improve the documentation.</p>
-
-<p class='note'>
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
-</p>
-
-
-
-
-<!--more-->
-
-
-<p><strong>Overwriting Entity Attributes</strong><br>
-Before diving into the newly supported devices and services, I want to highlight an awesome configuration enhancement by <a href="https://github.com/rmkraus">rmkraus</a>: overwriting entity attributes.</p>
-
-<p>These new configuration settings allow you to overwrite entity state attributes. The main usage for this is being able to overwrite attributes that influence how an entity is shown in the interface.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-homeassistant:
-  customize:
-    light.bowl:
-      # hides this entity from the interface
-      hidden: true
-    light.ceiling:
-      # Replaces the state badge with given picture
-      entity_picture: http://graph.facebook.com/schoutsen/picture
-</code></pre>
-
-<p><strong>MySensors</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/mysensors.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/andythigpen">Andythigpen</a> and <a href="https://github.com/theolind">Theolind</a> have added support for the <a href="http://www.mysensors.org">MySensors platform</a> to Home Assistant.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: mysensors
-  port: /dev/ttyACM0
-</code></pre>
-
-<p><strong>OpenWeatherMap</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/openweathermap.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://openweathermap.org">OpenWeatherMap</a>. This will allow you to integrate local meteorological data into Home Assistant.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: openweathermap
-  api_key: YOUR_API_KEY
-  monitored_variables:
-    - type: 'weather'
-    - type: 'temperature'
-    - type: 'wind_speed'
-    - type: 'humidity'
-    - type: 'pressure'
-    - type: 'clouds'
-    - type: 'rain'
-    - type: 'snow'
-</code></pre>
-
-<p><strong>InstaPush</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/instapush.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="https://instapush.im">InstaPush</a>. This will allow you send messages from Home Assistant to your iOS and Android devices.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-notify:
-    platform: instapush
-    # Get those by creating a new application, event, and tracker on https://instapush.im
-    api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-    app_secret: ABCDEFGHJKLMNOPQRSTUVXYZ
-    event: ABCDEFGHJKLMNOPQRSTUVXYZ
-    tracker: ABCDEFGHJKLMNOPQRSTUVXYZ
-</code></pre>
-
-<p><strong>XMPP</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/xmpp.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for Jabber/XMPP. This will allow you send messages from Home Assistant to anyone on Jabber/XMPP.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-notify:
-    platform: xmpp
-    sender: YOUR_JID
-    password: YOUR_JABBER_ACCOUNT_PASSWORD
-    recipient: YOUR_RECIPIENT
-</code></pre>
-
-<p><strong>Notify My Android</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/nma.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://www.notifymyandroid.com/">Notify My Android</a>. This will allow you to send messages from Home Assistant to your Android device.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-notify:
-    platform: nma
-    # Get this by registering a new application on http://www.notifymyandroid.com/
-    api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-</code></pre>
-
-<p><strong>Time &amp; Date sensor</strong><br>
-<a href="https://github.com/fabaff">Fabaff</a> has contributed a time &amp; date sensor. This will allow you to show the current time/date on the dashboard.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: time_date
-  monitored_variables:
-    - type: 'time'
-    - type: 'date'
-    - type: 'date_time'
-    - type: 'time_date'
 </code></pre>
 ]]></content>
   </entry>
