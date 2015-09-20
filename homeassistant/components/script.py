@@ -1,7 +1,7 @@
 """
 homeassistant.components.script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+entity_id
 Scripts are a sequence of actions that can be triggered manually
 by the user or automatically based upon automation events, etc.
 """
@@ -25,6 +25,7 @@ CONF_SEQUENCE = "sequence"
 CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
+ATTR_ENTITY_ID = "entity_id"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,15 +44,22 @@ def setup(hass, config):
         hass.services.register(DOMAIN, name, script)
         scripts.append(script)
 
+    def _get_entities(service):
+        """  Make sure that we always get a list of entities """
+        if isinstance(service.data[ATTR_ENTITY_ID], list):
+            return service.data[ATTR_ENTITY_ID]
+        else:
+            return [service.data[ATTR_ENTITY_ID]]
+
     def turn_on(service):
         """ Calls a script. """
-        for entity_id in service.data['entity_id']:
+        for entity_id in _get_entities(service):
             domain, service = split_entity_id(entity_id)
             hass.services.call(domain, service, {})
 
     def turn_off(service):
         """ Cancels a script. """
-        for entity_id in service.data['entity_id']:
+        for entity_id in _get_entities(service):
             for script in scripts:
                 if script.entity_id == entity_id:
                     script.cancel()
