@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Advanced Installation - Home Assistant</title>
+    <title>Launch Home Assistant on boot - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Brief advanced installation tutorials.">
+    <meta name="description" content="Instructions how to setup Home Assistant to launch on boot on various platforms..">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Advanced Installation">
+    <meta property="og:title" content="Launch Home Assistant on boot">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/getting-started/advanced.html/">
+    <meta property="og:url" content="https://home-assistant.io/getting-started/autostart.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Brief advanced installation tutorials.">
+    <meta property="og:description" content="Instructions how to setup Home Assistant to launch on boot on various platforms..">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,15 +98,13 @@
   
   <header>
     <h1 class="title indent">
-      Advanced Installation
+      Launch Home Assistant on Boot
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Here are some general tutorials on how to setup some of the more advanced deployments that are frequently requested.</p>
-
-<p><div class='advanced-installs-container'>
+  <p><div class='advanced-installs-container'>
 <input name='advanced-installs' type='radio' id='upstart-install' checked>
 <input name='advanced-installs' type='radio' id='systemd-install'>
 <input name='advanced-installs' type='radio' id='osx-install'>
@@ -123,7 +121,7 @@ Many linux distributions use the Upstart system (or similar) for managing daemon
 
 <p>If the preceding command returns the string <code>init</code>, you are likely using Upstart.</p>
 
-<p>Upstart will launch init scripts that are located in the directory <code>/etc/init.d/</code>. A sample init script for systems using Upstart is <a href="https://raw.githubusercontent.com/balloob/home-assistant/dev/scripts/hass-daemon">maintained by this project</a>.</p>
+<p>Upstart will launch init scripts that are located in the directory <code>/etc/init.d/</code>. A sample init script for systems using Upstart is <a href="https://raw.githubusercontent.com/balloob/home-assistant/dev/script/hass-daemon">maintained by this project</a>.</p>
 
 <p>To install this script, download it, tweak it to you liking, and install it by following the directions in the header. This script will setup Home Assistant to run when the system boots. To start/stop Home Assistant manually, issue the following commands:
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>

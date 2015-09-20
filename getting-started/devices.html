@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Scripts - Home Assistant</title>
+    <title>Adding devices to Home Assistant - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to setup scripts within Home Assistant.">
+    <meta name="description" content="Steps to help you get your devices in Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Scripts">
+    <meta property="og:title" content="Adding devices to Home Assistant">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/script.html/">
+    <meta property="og:url" content="https://home-assistant.io/getting-started/devices.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to setup scripts within Home Assistant.">
+    <meta property="og:description" content="Steps to help you get your devices in Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,14 +98,56 @@
   
   <header>
     <h1 class="title indent">
-      Scripts
+      Adding Devices to Home Assistant
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>The script component allows users to create a sequence of service calls and delays. Scripts can be
-started using the service <code>script/turn_on</code> and interrupted using the service <code>script/turn_off</code>.</p>
+  <p>Home Assistant will be able to automatically discover and configure any Google Chromecasts, Netgear
+routers, Belkin WeMo switches, Philips Hue bridges and Sonos speakers in your network if you have
+<a href="/components/discovery.html">the discovery component</a> enabled (which is by default).</p>
+
+<p>See the <a href="/components/">components overview page</a> to find installation instructions for your devices
+and services.</p>
+
+<p>To get the most out of automation, it is useful to setup the following things:</p>
+
+<ul>
+<li><a href="/components/#presence">Presence Detection</a></li>
+<li><a href="/components/#notify-service">Notification service</a></li>
+</ul>
+
+
+<p>If you can&rsquo;t find support for your favorite device or service,
+<a href="/developers/add_new_platform.html">consider adding support</a></p>
+
+<h3><a class='title-link' name='grouping-devices' href='#grouping-devices'></a> Grouping devices</h3>
+
+<p>Once you get a bunch of devices set up, it is time to organize them. This can be done using groups.
+Each group exists of a name and a list of entity IDs. Entity IDs can be retrieved from the web interface
+by using the Set State page in the Developer Tools (icon in the middle).</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">living_room</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.table_lamp, switch.ac</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">bedroom</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.bedroom</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">media_player.nexus_player</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='customizing-devices-and-services' href='#customizing-devices-and-services'></a> Customizing devices and services</h3>
+
+<p>By default, all of your devices will be visible and have a default icon determined by their domain.
+You may find it desireable to customize the look and feel of your front page by altering some
+of these parameters. This can be done by adding the following config to the <code>homeassistant:</code> section.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -116,47 +158,19 @@ started using the service <code>script/turn_on</code> and interrupted using the 
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">script</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="c1"># Turns on the bedroom lights and then the living room lights 1 minute later</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">wakeup</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Wake Up</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">sequence</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">logbook_entry</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">event_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Paulus</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">message</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">is waking up</span>
-</span><span class='line'>          <span class="c1"># Optional</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">domain</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Bedroom lights on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.bedroom</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">delay</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="c1"># supports seconds, milliseconds, minutes, hours, etc.</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">minutes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Living room lights on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
+</span><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># Add this to your existing configuration</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
+</span><span class='line'>        <span class="l-Scalar-Plain">some.entity_id</span><span class="p-Indicator">:</span>
+</span><span class='line'>            <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</span><span class='line'>            <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://placehold.it/200x200</span>
+</span><span class='line'>            <span class="l-Scalar-Plain">friendly_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My better name</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<h3><a href="/getting-started/automation.html">Next step: Setting up automation &raquo;</a></h3>
 
 
 </article>

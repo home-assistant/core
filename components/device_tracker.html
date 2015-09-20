@@ -119,7 +119,13 @@
 </ul>
 
 
-<p>You can also decide to directly scan the network for devices by using the <a href="/components/device_tracker.nmap_scanner.html">nmap scanner</a>.</p>
+<p>Alternative trackers:</p>
+
+<ul>
+<li><a href="/components/device_tracker.mqtt.html">MQTT</a></li>
+<li><a href="/components/device_tracker.nmap_scanner.html">nmap scanner</a> to scan the network for devices</li>
+</ul>
+
 
 <p>To get started add the following lines to your <code>configuration.yaml</code> (example for Netgear):</p>
 
@@ -130,19 +136,33 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry for Netgear device</span>
 </span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">netgear</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.1</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">admin</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Optional configuration</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># If new devices have to be added to the UI and tracked by default (default: yes)</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">track_new_devices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="c1"># How often to scan for new devices (default: 12)</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">interval_seconds</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">12</span>
+</span><span class='line'>  <span class="c1"># Seconds to wait till marking someone as not home after not being seen (default: 180)</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">consider_home</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">180</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>By default, the device tracker will add all found devices into the <code>known_devices.yaml</code>.  It will default to displaying them in the UI as well.  To disable displaying new devices in the UI, change the value of <code>track_new_devices:</code> to <code>no</code>.</p>
-
-<p>Once tracking, the <code>device_tracker</code> component will maintain a file in your config dir called <code>known_devices.yaml</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture and set whether the device will be show in the UI when in away state..</p>
+<p>Once tracking, a file will be created in your config dir called <code>known_devices.yaml</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture and set whether the device will be show in the UI when in away state.</p>
 
 
 </article>

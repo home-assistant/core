@@ -1,0 +1,396 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Automating Home Assistant - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Steps to help you get automation setup in Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Automating Home Assistant">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/getting-started/automation.html/">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Steps to help you get automation setup in Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration.html'>Initial configuration</a></li>
+      <li><a href='/components/'>Component overview</a></li>
+      <li><a href='/getting-started/android.html'>Setting up Android</a></li>
+    </ul>
+  </li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">API</a></li>
+      <li><a href="/developers/credits.html">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Automating Home Assistant
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>When all your devices are set up it&rsquo;s time to put the cherry on the pie: automation. Home Assistant
+offers <a href="/components/#automation">a few built-in automations</a> but mainly you&rsquo;ll be using
+<a href="/components/automation.html">the automation component</a> to set up your own rules.</p>
+
+<h3><a class='title-link' name='the-basics-of-automation' href='#the-basics-of-automation'></a> The basics of automation</h3>
+
+<p>Every automation rule consists of triggers, an action to be performed and optional conditions.</p>
+
+<p>Triggers can be any event observed in Home Assistant. For example, it can be a certain point in time
+or a person coming home, which can be observed by the state changing from <code>not_home</code> to <code>home</code>.</p>
+
+<p>Actions will call services within Home Assistant. For example, turn a light on, set the temperature
+on your thermostat or activate a scene.</p>
+
+<p>Conditions are used to prevent actions from firing unless certain conditions are met. For example,
+it is possible to only turn on the light if someone comes home and it is after a certain point in
+time.</p>
+
+<p>The difference between a condition and a trigger can be confusing. The difference is that the trigger
+looks at the event that is happening, ie a car engine turning on. Conditions looks at the current state
+of the system, ie is the car engine on.</p>
+
+<h3><a class='title-link' name='exploring-the-internal-state' href='#exploring-the-internal-state'></a> Exploring the internal state</h3>
+
+<p>Automation rules are based on the internal state of Home Assistant. This is available for exploring
+in the app using the developer tools. The first icon will show you the available services and the
+second icon will show you the current devices.</p>
+
+<p>Each device is represented in Home Assistant as an entity consisting of the following parts:</p>
+
+<table>
+<thead>
+<tr>
+<th> Name </th>
+<th> Description </th>
+<th> Example </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> Entity ID </td>
+<td> Unique identifier for the entity. </td>
+<td> <code>light.kitchen</code></td>
+</tr>
+<tr>
+<td> State </td>
+<td> The current state of the device. </td>
+<td> <code>home</code></td>
+</tr>
+<tr>
+<td> Attributes </td>
+<td> Extra data related to the device and/or current state. </td>
+<td> <code>brightness</code></td>
+</tr>
+</tbody>
+</table>
+
+
+<p>A service can be called to have Home Assistant perform an action. Turn on a light, run a script or
+enable a scene. Each service has a domain and a name. For example the service <code>light.turn_on</code> is
+capable of turning on any light device in your system. Services can be passed parameters to for
+example tell which device to turn on or what color to use.</p>
+
+<h2><a class='title-link' name='creating-your-first-automation-rule' href='#creating-your-first-automation-rule'></a> Creating your first automation rule</h2>
+
+<p>Before we dive deeper into what every piece of automation <em>can</em> do, let&rsquo;s loot at a simple automation
+rule: <strong>Turn on the lights when the sun sets</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Turn on light when sun sets</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In this example, we are defining a trigger to track the sunset and tell it to fire one hour before
+the sun is setting. When this event is triggered, the service <code>light.turn_on</code> is called without any
+parameters. Because we specify no parameters, it will turn on all the lights.</p>
+
+<p>After a few days of running this automation rule you come to realize that this automation rule is not
+good enough. It was already dark when the lights went on and the one day you weren&rsquo;t home, the lights
+turned on anyway. Time for some tweaking. Let&rsquo;s add an offset to the sunset trigger and a condition
+to only turn on the lights if anyone is home.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Turn on light when sun sets</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-01:00:00&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you&rsquo;re happy and all is good. You start to like this automation business and buy some more lights,
+this time you put them in the bedroom. But what you now realize is that when the sun is setting, the
+lights in the bedroom are also being turned on! Time to tweak the automation to only turn on the living
+room lights.</p>
+
+<p>The first thing you do is to look at the entities in the developer tools (second icon) in the app.
+You see the names of your lights and you write them down: <code>light.table_lamp</code>, <code>light.bedroom</code>,
+<code>light.ceiling</code>.</p>
+
+<p>Instead of hard coding the entity ids of the lights in the automation rule, we will set up a group.
+This will allow us to see the living room separate in the app and be able to address it from
+automation rules.</p>
+
+<p>So we tweak the config to add the group and have the automation rule only turn on the group.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">living_room</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.table_lamp</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.ceiling</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Turn on light when sun sets</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-01:00:00&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Christmas is coming along and you decide to buy a remote switch to control the christmas lights from
+Home Assistant. You can&rsquo;t claim to live in the house of the future if you&rsquo;re still manually turn on
+your christmas lights!</p>
+
+<p>We hook the switch up to Home Assistant and grab the entity id from the developer tools:
+<code>switch.christmas_lights</code>. We will update the group to include the switch and will change our action.
+We are no longer able to call <code>light.turn_on</code> because we also want to turn on a switch. This is
+where <code>homeassistant.turn_on</code> comes to the rescue. This service is capable of turning any entity on.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">living_room</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.table_lamp</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.ceiling</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">switch.christmas_lights</span>
+</span><span class='line'>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Turn on light when sun sets</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-01:00:00&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='further-reading' href='#further-reading'></a> Further reading</h3>
+
+<p>We went over the basics of creating a home automation rule. From here no longer any hand holding,
+go automate!</p>
+
+<ul>
+<li>Learn about the available <a href="/components/automation.html#triggers">automation triggers</a></li>
+<li>Learn about the available <a href="/components/automation.html#conditions">automation conditions</a></li>
+<li>Learn about <a href="/components/script.html">scripts</a> to help you trigger multiple actions and delays</li>
+<li>Learn about <a href="/components/scene.html">scenes</a> to help you set many entities at once to your liking</li>
+</ul>
+
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    
+
+
+<script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+
+
+
+
+
+  </body>
+</html>

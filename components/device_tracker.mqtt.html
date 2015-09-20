@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>MQTT device tracker support - Home Assistant</title>
+    <title>MQTT device tracker - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate MQTT based trackers into Home Assistant.">
+    <meta name="description" content="Instructions how to use MQTT to track devices in Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="MQTT device tracker support">
+    <meta property="og:title" content="MQTT device tracker">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/device_tracker.mqtt.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to integrate MQTT based trackers into Home Assistant.">
+    <meta property="og:description" content="Instructions how to use MQTT to track devices in Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -98,14 +98,15 @@
   
   <header>
     <h1 class="title indent">
-      MQTT Device Tracker Support
+      MQTT Device Tracker
     </h1>
   </header>
   <hr class="divider">
   
 
   <p><img src='/images/supported_brands/mqtt.png' class='brand pull-right' />
-Before this tracker allows the detection of devices which are able to send MQTT messages.</p>
+This platform allows you to detect presence by monitoring a MQTT topic for new locations. To use this
+platform, you specify a unique topic for each device.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -123,21 +124,6 @@ Before this tracker allows the detection of devices which are able to send MQTT 
 </span><span class='line'>    <span class="l-Scalar-Plain">annetherese_n4</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/location/annetherese</span>
 </span></code></pre></td></tr></table></div></figure>
 
-
-<p>Configuration variables:</p>
-
-<ul>
-<li><strong>qos</strong> (<em>Required</em>): Quality of service, default to 0.</li>
-<li><strong>devices</strong> (<em>Required</em>): Array of devices to track.
-
-<ul>
-<li><strong>&lsquo;device_name&rsquo;</strong> (<em>Required</em>): Name to use followed by the topic.</li>
-</ul>
-</li>
-</ul>
-
-
-<p>See the <a href="/components/device_tracker.html">device tracker component page</a> for instructions how to configure the people to be tracked.</p>
 
 
 </article>

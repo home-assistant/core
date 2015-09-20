@@ -104,13 +104,20 @@
   <hr class="divider">
   
 
-  <p>Home Assistant will create a configuration folder when it is run for the first time. Depending on your operating system this is <code>~/.homeassistant</code> (OS X/Linux) or <code>%APPDATA%/.homeassistant</code> (Windows). If you want to use a different folder for configuration, run <code>hass --config path/to/config</code>.</p></p>
+  <p>Home Assistant will create a configuration folder when it is run for the first time. Location depends
+on operating system: on OS X/Linux it is <code>~/.homeassistant</code> and on Windows it is <code>%APPDATA%/.homeassistant</code>.
+If you want to use a different folder for configuration, run <code>hass --config path/to/config</code>.</p>
 
-<p>Inside your configuration folder is the file <code>configuration.yaml</code>. This is the main file that contains which components will be loaded and what their configuration is. An example configuration file is located at <a href="https://github.com/balloob/home-assistant/blob/master/config/configuration.yaml.example"><code>here</code></a>.</p>
+<p>Inside your configuration folder is the file <code>configuration.yaml</code>. This is the main file that contains
+which components will be loaded and what their configuration is. An example configuration file is
+located <a href="https://github.com/balloob/home-assistant/blob/master/config/configuration.yaml.example">here</a>.</p>
 
-<p>When launched for the first time, Home Assistant will write a default configuration enabling the web interface and device discovery. It can take up to a minute for your devices to be discovered and show up in the interface.</p>
+<p>When launched for the first time, Home Assistant will write a default configuration enabling the web
+interface and device discovery. It can take up to a minute for your devices to be discovered and
+show up in the interface.</p>
 
-<p>If you are running into troubles while configuring Home Assistant, have a look at <a href="/getting-started/troubleshooting-configuration.html">the configuration troubleshoot page</a>.</p>
+<p>If you are running into troubles while configuring Home Assistant, have a look at
+<a href="/getting-started/troubleshooting-configuration.html">the configuration troubleshoot page</a>.</p>
 
 <p class='note'>
   You will have to restart Home Assistant for changes in <code>configuration.yaml</code> to take effect.
@@ -119,7 +126,9 @@
 
 <h3><a class='title-link' name='setting-up-the-basic-info' href='#setting-up-the-basic-info'></a> Setting up the basic info</h3>
 
-<p>By default Home Assistant will try to detect your location and will automatically select a temperature unit and time zone based on your location. You can overwrite this by adding the following information to your <code>configuration.yaml</code>:</p>
+<p>By default Home Assistant will try to detect your location and will automatically select a
+temperature unit and time zone based on your location. You can overwrite this by adding the
+following information to your <code>configuration.yaml</code>:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -167,99 +176,21 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h3><a class='title-link' name='adding-devices-and-services' href='#adding-devices-and-services'></a> Adding devices and services</h3>
-
-<p>Home Assistant will be able to automatically discover and configure any Google Chromecasts, Netgear routers,
-Belkin WeMo switches and Philips Hue bridges in your network if you have
-<a href="/components/discovery.html">the discovery component</a> enabled (which is by default).</p>
-
-<p>Not all devices can be discovered, so if you have any of the following devices or services, please see their respective pages for installation instructions:</p>
-
-<ul>
-<li><a href="/components/device_tracker.html">Device tracking</a></li>
-<li><a href="/components/isy994.html">ISY994 controller</a></li>
-<li><a href="/components/thermostat.html">Nest thermostat</a></li>
-<li><a href="/components/notify.html">Notifications</a></li>
-<li><a href="/blog/2015/03/22/release-notes/#sabnzbd">SABnzbd</a></li>
-<li><a href="/components/tellstick.html">TellStick</a></li>
-<li><a href="/components/wink.html">Wink hub</a></li>
-<li><a href="/developers/add_new_platform.html">Add support for your own device or service</a></li>
-</ul>
-
-
-<p>See the <a href="/components/">components overview page</a> for a complete list of supported devices.</p>
-
-<h3><a class='title-link' name='grouping-devices' href='#grouping-devices'></a> Grouping devices</h3>
-
-<p>Once you get a bunch of devices set up, it is time to organize them. This can be done using groups.
-Each group exists of a name and a list of entity IDs. Entity IDs can be retrieved from the web interface
-by using the Set State page in the Developer Tools (one in the middle).</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">group</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">living_room</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.table_lamp, switch.ac</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">bedroom</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.bedroom</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">media_player.nexus_player</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3><a class='title-link' name='customizing-devices-and-services' href='#customizing-devices-and-services'></a> Customizing devices and services</h3>
-
-<p>By default, most of your devices will be visible on the Home Assistant States
-page and have a default icon determined by their domain. You may find it
-desireable to customize the look and feel of your front page by altering some
-of these parameters.</p>
-
-<p>By adding the following parameters to the <code>homeassistant:</code> section of your
-<code>configuration.yaml</code>, you can customize the attributes of any state on
-your front page.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1"># Add this to your existing configuration</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">some.entity_id</span><span class="p-Indicator">:</span>
-</span><span class='line'>            <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
-</span><span class='line'>            <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://URL.TO/PICTURE</span>
-</span><span class='line'>            <span class="l-Scalar-Plain">friendly_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SOME CUSTOM NAME</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<p class='note'>Customizations are currently unavailable for device tracker entities.</p>
-
-
-<h3><a class='title-link' name='setting-up-home-automation' href='#setting-up-home-automation'></a> Setting up Home Automation</h3>
-
-<p>When all your devices are set up it&rsquo;s time to put the cherry on the pie: automation. There are many ways to automate your home with Home Assistant so we have divided it into a couple of topics:</p>
-
-<ul>
-<li><a href="/components/device_sun_light_trigger.html">Automatic light control based on the sun and if people are home</a> (built-in component)</li>
-<li><a href="/components/simple_alarm.html">Intruder alerts</a> (built-in component)</li>
-<li><a href="/components/automation.html">Setup your own automation rules</a> (using configuration file)</li>
-<li><a href="/developers/creating_components.html">Create your own automation component</a> (writing Python code)</li>
-</ul>
-
-
 <h3><a class='title-link' name='setting-up-your-phone-or-tablet' href='#setting-up-your-phone-or-tablet'></a> Setting up your phone or tablet</h3>
 
 <p>Home Assistant runs as a self hosted web application. Home Assistant contains support to be added to your homescreen. If you&rsquo;re on Android you can follow <a href="/getting-started/android.html">the visual guide</a>. For other devices, open Home Assistant on your mobile browser and click on the add to homescreen option.</p>
+
+<h3><a class='title-link' name='remote-access' href='#remote-access'></a> Remote access</h3>
+
+<p>To make Home Assistant accessible while away from home, you will have to setup port forwarding from
+your router to port 8123 on the computer that is hosting Home Assistant. Instructions how to do this
+can be found by searching <code>&lt;Router model&gt; port forwarding instructions</code>.</p>
+
+<p>Some internet service providers will only offer dynamic IPs. This can cause you to be unable to
+access Home Assistant while being remote. You can solve this by using a free Dynamic DNS service
+like <a href="https://www.duckdns.org/">DuckDNS</a>.</p>
+
+<h3><a href="/getting-started/devices.html">Next step: Setting up devices &raquo;</a></h3>
 
 
 </article>

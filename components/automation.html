@@ -104,172 +104,14 @@
   <hr class="divider">
   
 
-  <p>This page will talk about automating Home Assistant using the <code>automation</code> component. For more advanced ways of automation, see the <a href="/developers/creating_components.html">create a component</a> page.</p>
+  <p>This page will go into more detail about the various options the <code>automation</code> component offers. If
+you haven&rsquo;t yet, read the <a href="/getting-started/automation.html">getting started page on automation</a>.</p>
 
-<p>Each part of automation consists of two parts: the trigger part and the action part. The final result will look something like this:</p>
+<p>A configuration section of an automation requires a <code>trigger</code> and an <code>action</code> section. <code>condition</code> and
+<code>condition_type</code> are optional. To keep this page compact, all following sections will not show the
+full configuration but only the relevant part.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>automation:
-</span><span class='line'>  # Optional alias that the logs will use to refer to the entry
-</span><span class='line'>  alias: Sunset notification
-</span><span class='line'>
-</span><span class='line'>  # Type of trigger and information for the trigger
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: 'above_horizon'
-</span><span class='line'>  state_to: 'below_horizon'
-</span><span class='line'>
-</span><span class='line'>  # Action to be done when trigger activated
-</span><span class='line'>  execute_service: notify.NOTIFIER_NAME
-</span><span class='line'>  service_data: {"message":"The sun has set"}</span></code></pre></td></tr></table></div></figure>
-
-
-<h2><a class='title-link' name='setting-up-triggers' href='#setting-up-triggers'></a> Setting up triggers</h2>
-
-<h4><a class='title-link' name='time-based-automation' href='#time-based-automation'></a> Time-based automation</h4>
-
-<p>This allows you to trigger actions whenever the time matches your filter. You can setup filters to match on hours, minutes and seconds. Any filter that you omit will match all values.</p>
-
-<p>Here are some example values:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>  # Match at the start of every hour
-</span><span class='line'>  platform: time
-</span><span class='line'>  time_minutes: 0
-</span><span class='line'>  time_seconds: 0
-</span><span class='line'>
-</span><span class='line'>  # Match at 4pm
-</span><span class='line'>  platform: time
-</span><span class='line'>  time_hours: 16
-</span><span class='line'>  time_minutes: 0
-</span><span class='line'>  time_seconds: 0</span></code></pre></td></tr></table></div></figure>
-
-
-<h4><a class='title-link' name='state-based-automation' href='#state-based-automation'></a> State-based automation</h4>
-
-<p>This allows you to trigger actions based on state changes of any entity within Home Assistant. You can omit the <code>state_from</code> and <code>state_to</code> to match all.</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>  # Match when the sun sets
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: 'above_horizon'
-</span><span class='line'>  state_to: 'below_horizon'
-</span><span class='line'>
-</span><span class='line'>  # Match when a person comes home
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: device_tracker.Paulus_OnePlus_One
-</span><span class='line'>  state_from: 'not_home'
-</span><span class='line'>  state_to: 'home'
-</span><span class='line'>
-</span><span class='line'>  # Match when a light turns on
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: light.Ceiling
-</span><span class='line'>  state_from: 'off'
-</span><span class='line'>  state_to: 'on'</span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<p class='note'>
-  Use quotes around your values for <code>state_from</code> and <code>state_to</code> to avoid the YAML parser interpreting some values as booleans.
-</p>
-
-
-<h4><a class='title-link' name='mqtt-based-automation' href='#mqtt-based-automation'></a> MQTT-based automation</h4>
-
-<p>This allows you to trigger actions based on messages on an MQTT topic. You can specify an optional payload to match as well.</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>  # Match any changes to bathroom light
-</span><span class='line'>  platform: mqtt
-</span><span class='line'>  mqtt_topic: home/bathroom/light
-</span><span class='line'>
-</span><span class='line'>  # Match only if bathroom light is turned on
-</span><span class='line'>  platform: mqtt
-</span><span class='line'>  mqtt_topic: home/bathroom/light
-</span><span class='line'>  mqtt_payload: 'on'</span></code></pre></td></tr></table></div></figure>
-
-
-<h2><a class='title-link' name='setting-up-the-action' href='#setting-up-the-action'></a> Setting up the action</h2>
-
-<p>Currently the only supported action is calling a service. Services are what devices expose to be controlled, so this will allow us to control anything that Home Assistant can control.</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>  # Turn the lights Ceiling and Wall on.
-</span><span class='line'>  execute_service: light.turn_on
-</span><span class='line'>  service_entity_id: light.Ceiling,light.Wall
-</span><span class='line'>
-</span><span class='line'>  # Turn the lights Ceiling and Wall on and turn them red.
-</span><span class='line'>  execute_service: light.turn_on
-</span><span class='line'>  service_entity_id: light.Ceiling,light.Wall
-</span><span class='line'>  service_data: {"rgb_color": [255, 0, 0]}
-</span><span class='line'>
-</span><span class='line'>  # Notify the user
-</span><span class='line'>  execute_service: notify.NOTIFIER_NAME
-</span><span class='line'>  service_data: {"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
-
-
-<h2><a class='title-link' name='putting-it-all-together' href='#putting-it-all-together'></a> Putting it all together</h2>
-
-<p>For every combination of a trigger and an action we will have to combine the configuration lines and add it to an <code>automation</code> component entry in <code>configuration.yaml</code>. You can add an optional <code>alias</code> key to the configuration to make the logs more understandable. To setup multiple entries, append 2, 3 etc to the section name. An example of a <code>configuration.yaml</code> file:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -289,48 +131,27 @@
 <span class='line-number'>18</span>
 <span class='line-number'>19</span>
 <span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>automation:
-</span><span class='line'>  alias: Sunset notification
-</span><span class='line'>
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: 'above_horizon'
-</span><span class='line'>  state_to: 'below_horizon'
-</span><span class='line'>
-</span><span class='line'>  execute_service: notify.NOTIFIER_NAME
-</span><span class='line'>  service_data: {"message":"The sun has set"}
-</span><span class='line'>
-</span><span class='line'>automation 2:
-</span><span class='line'>  alias: Turn lights off at 8am in the morning
-</span><span class='line'>
-</span><span class='line'>  platform: time
-</span><span class='line'>  time_hours: 8
-</span><span class='line'>  time_minutes: 0
-</span><span class='line'>  time_seconds: 0
-</span><span class='line'>
-</span><span class='line'>  execute_service: light.turn_off
-</span><span class='line'>
-</span><span class='line'>automation 3:
-</span><span class='line'>  alias: Turn lights in study room on when Paulus comes home
-</span><span class='line'>
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: device_tracker.Paulus_OnePlus
-</span><span class='line'>  state_from: 'not_home'
-</span><span class='line'>  state_to: 'home'
-</span><span class='line'>
-</span><span class='line'>  execute_service: homeassistant.turn_on
-</span><span class='line'>  service_entity_id: group.Study_Room</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example of a full entry in configuration.yaml</span>
+</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light on in the evening</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-01:00:00&quot;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16:00:00</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">23:00:00</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -339,6 +160,305 @@
 All configuration entries have to be sequential. If you have <code>automation:</code>, <code>automation 2:</code> and <code>automation 4:</code> then the last one will not be processed.
 </p>
 
+
+<ul>
+<li><a href="#conditions">Jump to conditions</a></li>
+<li><a href="#actions">Jump to actions</a></li>
+</ul>
+
+
+<h3><a class='title-link' name='triggers' href='#triggers'></a> Triggers</h3>
+
+<p>Triggers are what starts the processing of an automation rule. It is possible to specify multiple
+triggers for the same rule. Once a trigger starts, Home Assistant will validate the conditions, if any,
+and call the action.</p>
+
+<h4><a class='title-link' name='event-trigger' href='#event-trigger'></a> Event trigger</h4>
+
+<p>Triggers when an event is being processed. Events are the raw building blocks of Home Assistant.
+You can match events on just the event name or also require specific event data to be present.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">event</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event_type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MY_CUSTOM_EVENT</span>
+</span><span class='line'>    <span class="c1"># optional</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event_data</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">mood</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">happy</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='mqtt-trigger' href='#mqtt-trigger'></a> MQTT trigger</h4>
+
+<p>Triggers when a specific message is received on given topic. Optionally can match on the payload
+being sent over the topic.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">living_room/switch/ac</span>
+</span><span class='line'>    <span class="c1"># Optional</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='numeric-state-trigger' href='#numeric-state-trigger'></a> Numeric state trigger</h4>
+
+<p>On state change of a specified entity, attempts to parse the state as a number and triggers if value is above and/or below a threshold.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">numeric_state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor.temperature</span>
+</span><span class='line'>    <span class="c1"># At least one of the following required</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">above</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">17</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">below</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">25</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='state-trigger' href='#state-trigger'></a> State trigger</h4>
+
+<p>Triggers when the state of an entity changes. If only entity_id given will match all state changes.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
+</span><span class='line'>    <span class="c1"># Optional</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">from</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">not_home</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">to</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note'>
+  Use quotes around your values for <code>state_from</code> and <code>state_to</code> to avoid the YAML parser interpreting some values as booleans.
+</p>
+
+
+<h4><a class='title-link' name='sun-trigger' href='#sun-trigger'></a> Sun trigger</h4>
+
+<p>Triggers based on sunrise and sunset, both with an optional offset.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
+</span><span class='line'>    <span class="c1"># Possible values: sunset, sunrise</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
+</span><span class='line'>    <span class="c1"># Optional time offset</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">-00:45:00</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='time-trigger' href='#time-trigger'></a> Time trigger</h4>
+
+<p>Time can be triggered in many ways. The most common is to specify <code>after</code> and trigger at a specific
+point in time each day. Alternatively, you can also match if the hour, minute or second of the current
+time has a specifc value. For example, by only setting minutes in the config to 5 it will trigger every
+hour when it is 5 minutes past whole.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
+</span><span class='line'>    <span class="c1"># All following are optional.</span>
+</span><span class='line'>    <span class="c1"># When &#39;after&#39; is used, you cannot also match on hour, minute, seconds.</span>
+</span><span class='line'>    <span class="c1"># Military time format.</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">15:32:00</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">hours</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">minutes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">seconds</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='conditions' href='#conditions'></a> Conditions</h3>
+
+<p>Conditions are an optional part of an automation rule and be used to prevent an action from happening
+when triggered. Conditions look very familiar to triggers but are very different. A trigger will look
+at events happening at the system while a condition only looks at how the system looks right now.
+A trigger can observe that a switch is being turned on. A condition can only see if a switch is on
+or off.</p>
+
+<p>An automation rule can have mulitiple triggers. By default the action will only fire if all conditions
+pass. An optional key <code>condition_type: 'or'</code> can be set on the automation rule to fire action if any
+condition matches.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition_type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">or</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If your triggers and conditions are exactly the same, you can use a shortcut to specify conditions.
+In this case, triggers that are not valid conditions will be ignored.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">use_trigger_values</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='numeric-state-condition' href='#numeric-state-condition'></a> Numeric state condition</h4>
+
+<p>Attempts to parse the state of specified entity as a number and triggers if value is above and/or
+below a threshold.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">numeric_state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor.temperature</span>
+</span><span class='line'>    <span class="c1"># At least one of the following required</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">above</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">17</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">below</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">25</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='state-condition' href='#state-condition'></a> State condition</h4>
+
+<p>Tests if an entity is a specified state.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">not_home</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='time-condition' href='#time-condition'></a> Time condition</h4>
+
+<p>The time condition can test if it is after a specified time, before a specified time or if it is a
+certain day of the week.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
+</span><span class='line'>    <span class="c1"># At least one of the following is required.</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">15:00:00</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">23:00:00</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">weekday</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mon</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">wed</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">fri</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='actions' href='#actions'></a> Actions</h3>
+
+<p>When an automation rule fires, it calls a service. For this service you can specify an entity id it
+should apply to and optional service parameters (to specify for example the brightness).</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="c1"># Change the light in the kitchen and living room to 150 brightness and color red.</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.kitchen</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">light.living_room</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">brightness</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">150</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">rgb_color</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">255</span><span class="p-Indicator">,</span> <span class="nv">0</span><span class="p-Indicator">,</span> <span class="nv">0</span><span class="p-Indicator">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="c1"># Notify me on my mobile phone of an event</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">notify.notify</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">message</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Something just happened, better take a look!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you want to specify multiple services to be called or include a delay, have a look at the
+<a href="/components/script.html">script component</a>. If you want to describe how certain entities should look,
+check out the <a href="/components/scene.html">scene component</a>.</p>
 
 
 </article>

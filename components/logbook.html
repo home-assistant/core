@@ -104,8 +104,10 @@
   <hr class="divider">
   
 
-  <p><img src='/images/supported_brands/accessories-text-editor.png' class='brand pull-right' />
-The logbook component provides a different perspective on the history of your house by showing all the changes that happened to your house in chronological order. <a href="/demo/">See the demo for a live example</a>.</p>
+  <p><img src='/images/screenshots/logbook.png' style='margin-left:10px; float: right;' height="100" />
+The logbook component provides a different perspective on the history of your house by showing all
+the changes that happened to your house in reverse chronological order.
+<a href="/demo/">See the demo for a live example</a>.</p>
 
 <p>To enable the logbook in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
@@ -116,7 +118,34 @@ The logbook component provides a different perspective on the history of your ho
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src='/images/screenshots/logbook.png' style='margin-left:10px; float: right;' height="100" /></p>
+<p>It is possible to add custom entries to the logbook by using the script component to fire an event.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">script</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">add_logbook_entry</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Add Logbook</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">sequence</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">LOGBOOK_ENTRY</span>
+</span><span class='line'>        <span class="l-Scalar-Plain">event_data</span><span class="p-Indicator">:</span>
+</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Kitchen</span>
+</span><span class='line'>          <span class="l-Scalar-Plain">message</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">is being used</span>
+</span><span class='line'>          <span class="c1"># Optional</span>
+</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.kitchen</span>
+</span><span class='line'>          <span class="l-Scalar-Plain">domain</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 
 </article>
