@@ -38,13 +38,11 @@ def distance(lon1, lat1, lon2, lat2):
     in decimal degrees on the earth using the Haversine algorithm.
     """
     # convert decimal degrees to radians
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    lon1, lat1, lon2, lat2 = (radians(val) for val in (lon1, lat1, lon2, lat2))
 
-    # haversine formula
     dlon = lon2 - lon1
     dlat = lat2 - lat1
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a))
+    angle = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
     # Radius of earth in meters.
     radius = 6371000
-    return c * radius
+    return 2 * radius * asin(sqrt(angle))
