@@ -7,19 +7,21 @@ cd "$(dirname "$0")/.."
 
 script/lint
 
-STATUS=$?
+LINT_STATUS=$?
 
 echo "Running tests..."
 
 if [ "$1" = "coverage" ]; then
   py.test --cov --cov-report=
+  TEST_STATUS=$?
 else
   py.test
+  TEST_STATUS=$?
 fi
 
-if [ $STATUS -eq 0 ]
+if [ $LINT_STATUS -eq 0 ]
 then
-  exit $?
+  exit $TEST_STATUS
 else
-  exit $STATUS
+  exit $LINT_STATUS
 fi
