@@ -35,6 +35,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     for switch in switches_and_lights:
         if switch.methods(tellcore_constants.TELLSTICK_DIM):
             lights.append(TellstickLight(switch, core))
+
+    def _device_event_callback(id_, method, data, cid):
+        for light_device in lights:
+            if light_device.tellstick_device.id == id_:
+                light_device.update_ha_state(True)
+
+    core.register_device_event(_device_event_callback)
+
     add_devices_callback(lights)
 
 
@@ -50,14 +58,6 @@ class TellstickLight(Light):
         self.tellstick_device = tellstick_device
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self._brightness = 0
-        self.callback_id = core.register_device_event(self._device_event)
-
-    # pylint: disable=unused-argument
-    def _device_event(self, id_, method, data, cid):
-        """ Called when a state has changed . """
-
-        if self.tellstick_device.id == id_:
-            self.update_ha_state()
 
     @property
     def name(self):
