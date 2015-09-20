@@ -5,14 +5,15 @@ cd "$(dirname "$0")/.."
 echo "Checking style with flake8..."
 flake8 --exclude www_static homeassistant
 
-STATUS=$?
+FLAKE8_STATUS=$?
 
 echo "Checking style with pylint..."
 pylint homeassistant
+PYLINT_STATUS=$?
 
-if [ $STATUS -eq 0 ]
+if [ $FLAKE8_STATUS -eq 0 ]
 then
-  exit $?
+  exit $FLAKE8_STATUS
 else
-  exit $STATUS
+  exit $PYLINT_STATUS
 fi
