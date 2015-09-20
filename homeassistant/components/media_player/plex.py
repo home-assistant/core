@@ -42,8 +42,8 @@ from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
 from plexapi.myplex import MyPlexUser
 
-REQUIREMENTS = ['https://github.com/miniconfig/python-plex-api/archive'
-                '437e36dca3b7780dc0cb73941d662302c0cd2fa9'
+REQUIREMENTS = ['https://github.com/miniconfig/python-plexapi/archive/'
+                '437e36dca3b7780dc0cb73941d662302c0cd2fa9.zip'
                 '#python-plexapi==1.0.2.5']
 
 _LOGGER = logging.getLogger(__name__)
