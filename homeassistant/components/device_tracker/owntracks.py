@@ -1,6 +1,6 @@
 """
 homeassistant.components.device_tracker.owntracks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 OwnTracks platform for the device tracker.
 
@@ -17,7 +17,7 @@ LOCATION_TOPIC = 'owntracks/+/+'
 
 
 def setup_scanner(hass, config, see):
-    """ Set up a MQTT tracker. """
+    """ Set up a OwnTracksks tracker. """
 
     def owntracks_location_update(topic, payload, qos):
         """ MQTT message received. """

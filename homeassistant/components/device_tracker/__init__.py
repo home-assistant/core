@@ -77,6 +77,7 @@ ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
+ATTR_GPS_ACCURACY = 'gps_accuracy'
 ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
@@ -95,7 +96,7 @@ def is_on(hass, entity_id=None):
 
 
 def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
-        gps=None):
+        gps=None, gps_accuracy=None, battery=None):
     """ Call service to notify you see device. """
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -171,7 +172,7 @@ def setup(hass, config):
         """ Service to see a device. """
         args = {key: value for key, value in call.data.items() if key in
                 (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS)}
+                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY)}
         tracker.see(**args)
 
     hass.services.register(DOMAIN, SERVICE_SEE, see_service)
@@ -197,7 +198,7 @@ class DeviceTracker(object):
         self.group = None
 
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
-            gps=None):
+            gps=None, gps_accuracy=None, battery=None):
         """ Notify device tracker that you see a device. """
         with self.lock:
             if mac is None and dev_id is None:
@@ -212,7 +213,8 @@ class DeviceTracker(object):
                 device = self.devices.get(dev_id)
 
             if device:
-                device.seen(host_name, location_name, gps)
+                device.seen(host_name, location_name, gps, gps_accuracy,
+                            battery)
                 if device.track:
                     device.update_ha_state()
                 return
@@ -225,7 +227,7 @@ class DeviceTracker(object):
             if mac is not None:
                 self.mac_to_dev[mac] = device
 
-            device.seen(host_name, location_name, gps)
+            device.seen(host_name, location_name, gps, gps_accuracy, battery)
             if device.track:
                 device.update_ha_state()
 
@@ -318,6 +320,7 @@ class Device(Entity):
         if self.gps:
             attr[ATTR_LATITUDE] = self.gps[0]
             attr[ATTR_LONGITUDE] = self.gps[1]
+            attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
