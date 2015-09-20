@@ -34,9 +34,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     for switch in switches_and_lights:
         if switch.methods(tellcore_constants.TELLSTICK_DIM):
-            lights.append(TellstickLight(switch, core))
+            lights.append(TellstickLight(switch))
 
+    # pylint: disable=unused-argument
     def _device_event_callback(id_, method, data, cid):
+        """ Called from the TelldusCore library to update one device """
         for light_device in lights:
             if light_device.tellstick_device.id == id_:
                 light_device.update_ha_state(True)
@@ -54,7 +56,7 @@ class TellstickLight(Light):
                               tellcore_constants.TELLSTICK_UP |
                               tellcore_constants.TELLSTICK_DOWN)
 
-    def __init__(self, tellstick_device, core):
+    def __init__(self, tellstick_device):
         self.tellstick_device = tellstick_device
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self._brightness = 0
