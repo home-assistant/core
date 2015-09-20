@@ -343,33 +343,26 @@ class TestAutomation(unittest.TestCase):
 
     def test_automation_list_setting(self):
         """ Event is not a valid condition. Will it still work? """
-        automation.setup(self.hass, {
-            automation.DOMAIN: [
-                {
-                    'trigger': [
-                        {
-                            'platform': 'event',
-                            'event_type': 'test_event',
-                        },
-
-                    ],
-                    'action': {
-                        'execute_service': 'test.automation',
-                    }
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: [{
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
                 },
-                {
-                    'trigger': [
-                        {
-                            'platform': 'event',
-                            'event_type': 'test_event_2',
-                        },
-                    ],
-                    'action': {
-                        'execute_service': 'test.automation',
-                    }
+
+                'action': {
+                    'service': 'test.automation',
                 }
-            ]
-        })
+            }, {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event_2',
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
+            }]
+        }))
 
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
