@@ -21,6 +21,8 @@ device_tracker:
   # Maximum distance from home we consider people home
   range_home: 100
 """
+# pylint: disable=too-many-instance-attributes, too-many-arguments
+# pylint: disable=too-many-locals
 import csv
 from datetime import timedelta
 import logging
@@ -75,6 +77,7 @@ ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
+ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
     discovery.SERVICE_NETGEAR: 'netgear',
@@ -250,12 +253,13 @@ class DeviceTracker(object):
 
 class Device(Entity):
     """ Tracked device. """
-    # pylint: disable=too-many-instance-attributes, too-many-arguments
 
     host_name = None
     location_name = None
     gps = None
+    gps_accuracy = 0
     last_seen = None
+    battery = None
 
     # Track if the last update of this device was HOME
     last_update_home = False
@@ -289,8 +293,9 @@ class Device(Entity):
     @property
     def gps_home(self):
         """ Return if device is within range of home. """
-        return (self.gps is not None and
-                self.hass.config.distance(*self.gps) < self.home_range)
+        distance = max(
+            0, self.hass.config.distance(*self.gps) - self.gps_accuracy)
+        return self.gps is not None and distance <= self.home_range
 
     @property
     def name(self):
@@ -311,8 +316,11 @@ class Device(Entity):
             attr[ATTR_ENTITY_PICTURE] = self.config_picture
 
         if self.gps:
-            attr[ATTR_LATITUDE] = self.gps[0],
-            attr[ATTR_LONGITUDE] = self.gps[1],
+            attr[ATTR_LATITUDE] = self.gps[0]
+            attr[ATTR_LONGITUDE] = self.gps[1]
+
+        if self.battery:
+            attr[ATTR_BATTERY] = self.battery
 
         return attr
 
@@ -321,11 +329,14 @@ class Device(Entity):
         """ If device should be hidden. """
         return self.away_hide and self.state != STATE_HOME
 
-    def seen(self, host_name=None, location_name=None, gps=None):
+    def seen(self, host_name=None, location_name=None, gps=None,
+             gps_accuracy=0, battery=None):
         """ Mark the device as seen. """
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
+        self.gps_accuracy = gps_accuracy
+        self.battery = battery
         if gps is None:
             self.gps = None
         else:
