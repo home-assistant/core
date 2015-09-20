@@ -97,8 +97,10 @@ class TellstickSwitchDevice(ToggleEntity):
         """ Turns the switch on. """
         for _ in range(self.signal_repetitions):
             self.tellstick_device.turn_on()
+        self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         for _ in range(self.signal_repetitions):
             self.tellstick_device.turn_off()
+        self.update_ha_state()
