@@ -48,7 +48,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             switches.append(
                 TellstickSwitchDevice(switch, signal_repetitions))
 
+    # pylint: disable=unused-argument
     def _device_event_callback(id_, method, data, cid):
+        """ Called from the TelldusCore library to update one device """
         for switch_device in switches:
             if switch_device.tellstick_device.id == id_:
                 switch_device.update_ha_state(True)
