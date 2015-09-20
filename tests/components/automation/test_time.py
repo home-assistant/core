@@ -36,9 +36,9 @@ class TestAutomationTime(unittest.TestCase):
     def test_old_config_if_fires_when_hour_matches(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'time',
+                'platform': 'time',
                 time.CONF_HOURS: 0,
-                automation.CONF_SERVICE: 'test.automation'
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -51,9 +51,9 @@ class TestAutomationTime(unittest.TestCase):
     def test_old_config_if_fires_when_minute_matches(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'time',
+                'platform': 'time',
                 time.CONF_MINUTES: 0,
-                automation.CONF_SERVICE: 'test.automation'
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -66,9 +66,9 @@ class TestAutomationTime(unittest.TestCase):
     def test_old_config_if_fires_when_second_matches(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'time',
+                'platform': 'time',
                 time.CONF_SECONDS: 0,
-                automation.CONF_SERVICE: 'test.automation'
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -85,7 +85,7 @@ class TestAutomationTime(unittest.TestCase):
                 time.CONF_HOURS: 0,
                 time.CONF_MINUTES: 0,
                 time.CONF_SECONDS: 0,
-                automation.CONF_SERVICE: 'test.automation'
+                'execute_service': 'test.automation'
             }
         }))
 
@@ -101,7 +101,7 @@ class TestAutomationTime(unittest.TestCase):
             automation.DOMAIN: {
                 CONF_PLATFORM: 'event',
                 event.CONF_EVENT_TYPE: 'test_event',
-                automation.CONF_SERVICE: 'test.automation',
+                'execute_service': 'test.automation',
                 'if': {
                     CONF_PLATFORM: 'time',
                     time.CONF_BEFORE: '10:00'
@@ -131,7 +131,7 @@ class TestAutomationTime(unittest.TestCase):
             automation.DOMAIN: {
                 CONF_PLATFORM: 'event',
                 event.CONF_EVENT_TYPE: 'test_event',
-                automation.CONF_SERVICE: 'test.automation',
+                'execute_service': 'test.automation',
                 'if': {
                     CONF_PLATFORM: 'time',
                     time.CONF_AFTER: '10:00'
@@ -161,7 +161,7 @@ class TestAutomationTime(unittest.TestCase):
             automation.DOMAIN: {
                 CONF_PLATFORM: 'event',
                 event.CONF_EVENT_TYPE: 'test_event',
-                automation.CONF_SERVICE: 'test.automation',
+                'execute_service': 'test.automation',
                 'if': {
                     CONF_PLATFORM: 'time',
                     time.CONF_WEEKDAY: 'mon',
@@ -192,7 +192,7 @@ class TestAutomationTime(unittest.TestCase):
             automation.DOMAIN: {
                 CONF_PLATFORM: 'event',
                 event.CONF_EVENT_TYPE: 'test_event',
-                automation.CONF_SERVICE: 'test.automation',
+                'execute_service': 'test.automation',
                 'if': {
                     CONF_PLATFORM: 'time',
                     time.CONF_WEEKDAY: ['mon', 'tue'],
@@ -234,7 +234,7 @@ class TestAutomationTime(unittest.TestCase):
                     'hours': 0,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -252,7 +252,7 @@ class TestAutomationTime(unittest.TestCase):
                     'minutes': 0,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -270,7 +270,7 @@ class TestAutomationTime(unittest.TestCase):
                     'seconds': 0,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -285,18 +285,18 @@ class TestAutomationTime(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
-                    'hours': 0,
-                    'minutes': 0,
-                    'seconds': 0,
+                    'hours': 1,
+                    'minutes': 2,
+                    'seconds': 3,
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
-            hour=0, minute=0, second=0))
+            hour=1, minute=2, second=3))
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
@@ -309,7 +309,7 @@ class TestAutomationTime(unittest.TestCase):
                     'after': '5:00:00',
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -319,6 +319,30 @@ class TestAutomationTime(unittest.TestCase):
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+
+    @patch('homeassistant.components.automation.time._LOGGER.error')
+    def test_if_not_fires_using_wrong_after(self, mock_error):
+        """ YAML translates time values to total seconds. This should break the
+            before rule. """
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'after': 3605,
+                    # Total seconds. Hour = 3600 second
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=1, minute=0, second=5))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+        self.assertEqual(2, mock_error.call_count)
 
     def test_if_action_before(self):
         automation.setup(self.hass, {
@@ -332,7 +356,7 @@ class TestAutomationTime(unittest.TestCase):
                     'before': '10:00',
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         })
@@ -366,7 +390,7 @@ class TestAutomationTime(unittest.TestCase):
                     'after': '10:00',
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         })
@@ -400,7 +424,7 @@ class TestAutomationTime(unittest.TestCase):
                     'weekday': 'mon',
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         })
@@ -435,7 +459,7 @@ class TestAutomationTime(unittest.TestCase):
                     'weekday': ['mon', 'tue'],
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         })
