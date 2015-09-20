@@ -46,7 +46,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     for switch in switches_and_lights:
         if not switch.methods(tellcore_constants.TELLSTICK_DIM):
             switches.append(
-                TellstickSwitchDevice(switch, signal_repetitions, core))
+                TellstickSwitchDevice(switch, signal_repetitions))
+
+    def _device_event_callback(id_, method, data, cid):
+        for switch_device in switches:
+            if switch_device.tellstick_device.id == id_:
+                switch_device.update_ha_state(True)
+
+    core.register_device_event(_device_event_callback)
 
     add_devices_callback(switches)
 
@@ -56,18 +63,10 @@ class TellstickSwitchDevice(ToggleEntity):
     last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                               tellcore_constants.TELLSTICK_TURNOFF)
 
-    def __init__(self, tellstick_device, signal_repetitions, core):
+    def __init__(self, tellstick_device, signal_repetitions):
         self.tellstick_device = tellstick_device
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self.signal_repetitions = signal_repetitions
-        self.callback_id = core.register_device_event(self._device_event)
-
-    # pylint: disable=unused-argument
-    def _device_event(self, id_, method, data, cid):
-        """ Called when a state has changed . """
-
-        if self.tellstick_device.id == id_:
-            self.update_ha_state()
 
     @property
     def should_poll(self):
