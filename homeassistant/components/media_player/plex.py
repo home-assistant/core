@@ -52,6 +52,8 @@ SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 # pylint: disable=abstract-method
 # pylint: disable=unused-argument
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the plex platform. """
     name = config.get('name', '')
@@ -61,14 +63,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plexserver = plexuser.getResource(name).connect()
     dev = plexserver.clients()
     for device in dev:
-        if not "PlayStation" in device.name:
+        if "PlayStation" not in device.name:
             add_devices([PlexClient(device.name, plexserver)])
+
 
 class PlexClient(MediaPlayerDevice):
     """ Represents a Plex device. """
 
     # pylint: disable=too-many-public-methods
-
 
     def __init__(self, name, plexserver):
         self.client = plexserver.client(name)
@@ -114,7 +116,8 @@ class PlexClient(MediaPlayerDevice):
         if self._media is None:
             return None
         else:
-            media_type = self.server.library.getByKey(self.media_content_id).type
+            media_type = self.server.library.getByKey(
+                self.media_content_id).type
             if media_type == 'episode':
                 return MEDIA_TYPE_TVSHOW
             elif media_type == 'movie':
@@ -143,11 +146,13 @@ class PlexClient(MediaPlayerDevice):
         # find a string we can use as a title
         if self._media is not None:
             return self.server.library.getByKey(self.media_content_id).title
+
     @property
     def media_season(self):
         """ Season of curent playing media. (TV Show only) """
         if self._media is not None:
-            show_season = self.server.library.getByKey(self.media_content_id).season().index
+            show_season = self.server.library.getByKey(
+                self.media_content_id).season().index
             return show_season
         else:
             return None
@@ -156,7 +161,8 @@ class PlexClient(MediaPlayerDevice):
     def media_series_title(self):
         """ Series title of current playing media. (TV Show only)"""
         if self._media is not None:
-            series_title = self.server.library.getByKey(self.media_content_id).show().title
+            series_title = self.server.library.getByKey(
+                self.media_content_id).show().title
             return series_title
         else:
             return None
@@ -165,7 +171,8 @@ class PlexClient(MediaPlayerDevice):
     def media_episode(self):
         """ Episode of current playing media. (TV Show only) """
         if self._media is not None:
-            show_episode = self.server.library.getByKey(self.media_content_id).index
+            show_episode = self.server.library.getByKey(
+                self.media_content_id).index
             return show_episode
         else:
             return None
