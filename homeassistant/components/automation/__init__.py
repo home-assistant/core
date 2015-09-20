@@ -40,25 +40,45 @@ def setup(hass, config):
     found = 1
 
     while config_key in config:
-        p_config = _migrate_old_config(config[config_key])
+        # check for one block syntax
+        if isinstance(config[config_key], dict):
+            config_block = _migrate_old_config(config[config_key])
+            name = config_block.get(CONF_ALIAS, config_key)
+            _setup_automation(hass, config_block, name, config)
+
+        # check for multiple block syntax
+        elif isinstance(config[config_key], list):
+            for list_no, config_block in enumerate(config[config_key]):
+                name = config_block.get(CONF_ALIAS,
+                                        "{}, {}".format(config_key, list_no))
+                _setup_automation(hass, config_block, name, config)
+
+        # any scalar value is incorrect
+        else:
+            _LOGGER.error('Error in config in section %s.', config_key)
+
         found += 1
         config_key = "{} {}".format(DOMAIN, found)
 
-        name = p_config.get(CONF_ALIAS, config_key)
-        action = _get_action(hass, p_config.get(CONF_ACTION, {}), name)
+    return True
+
+
+def _setup_automation(hass, config_block, name, config):
+    """ Setup one instance of automation """
+
+    action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
+
+    if action is None:
+        return False
+
+    if CONF_CONDITION in config_block or CONF_CONDITION_TYPE in config_block:
+        action = _process_if(hass, config, config_block, action)
 
         if action is None:
-            continue
+            return False
 
-        if CONF_CONDITION in p_config or CONF_CONDITION_TYPE in p_config:
-            action = _process_if(hass, config, p_config, action)
-
-            if action is None:
-                continue
-
-        _process_trigger(hass, config, p_config.get(CONF_TRIGGER, []), name,
-                         action)
-
+    _process_trigger(hass, config, config_block.get(CONF_TRIGGER, []), name,
+                     action)
     return True
 
 
