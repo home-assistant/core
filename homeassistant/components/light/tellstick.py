@@ -80,6 +80,7 @@ class TellstickLight(Light):
         """ Turns the switch off. """
         self.tellstick_device.turn_off()
         self._brightness = 0
+        self.update_ha_state()
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
@@ -91,6 +92,7 @@ class TellstickLight(Light):
             self._brightness = brightness
 
         self.tellstick_device.dim(self._brightness)
+        self.update_ha_state()
 
     def update(self):
         """ Update state of the light. """
