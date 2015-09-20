@@ -27,8 +27,7 @@ def trigger(hass, config, action):
     if CONF_AFTER in config:
         after = dt_util.parse_time_str(config[CONF_AFTER])
         if after is None:
-            _LOGGER.error(
-                'Received invalid after value: %s', config[CONF_AFTER])
+            _error_time(config[CONF_AFTER], CONF_AFTER)
             return False
         hours, minutes, seconds = after.hour, after.minute, after.second
     elif (CONF_HOURS in config or CONF_MINUTES in config
@@ -63,28 +62,28 @@ def if_action(hass, config):
             CONF_BEFORE, CONF_AFTER, CONF_WEEKDAY)
         return None
 
+    if before is not None:
+        before = dt_util.parse_time_str(before)
+        if before is None:
+            _error_time(before, CONF_BEFORE)
+            return None
+
+    if after is not None:
+        after = dt_util.parse_time_str(after)
+        if after is None:
+            _error_time(after, CONF_AFTER)
+            return None
+
     def time_if():
         """ Validate time based if-condition """
         now = dt_util.now()
-        if before is not None:
-            time = dt_util.parse_time_str(before)
-            if time is None:
-                return False
+        if before is not None and now > now.replace(hour=before.hour,
+                                                    minute=before.minute):
+            return False
 
-            before_point = now.replace(hour=time.hour, minute=time.minute)
-
-            if now > before_point:
-                return False
-
-        if after is not None:
-            time = dt_util.parse_time_str(after)
-            if time is None:
-                return False
-
-            after_point = now.replace(hour=time.hour, minute=time.minute)
-
-            if now < after_point:
-                return False
+        if after is not None and now < now.replace(hour=after.hour,
+                                                   minute=after.minute):
+            return False
 
         if weekday is not None:
             now_weekday = WEEKDAYS[now.weekday()]
@@ -96,3 +95,11 @@ def if_action(hass, config):
         return True
 
     return time_if
+
+
+def _error_time(value, key):
+    """ Helper method to print error. """
+    _LOGGER.error(
+        "Received invalid value for '%s': %s", key, value)
+    if isinstance(value, int):
+        _LOGGER.error('Make sure you wrap time values in quotes')

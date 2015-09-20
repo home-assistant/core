@@ -132,7 +132,10 @@ def humanify(events):
         # Process events
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
-                entity_id = event.data['entity_id']
+                entity_id = event.data.get('entity_id')
+
+                if entity_id is None:
+                    continue
 
                 if entity_id.startswith('sensor.'):
                     last_sensor_event[entity_id] = event
