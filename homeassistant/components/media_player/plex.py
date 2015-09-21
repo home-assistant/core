@@ -10,7 +10,7 @@ To use Plex add something like this to your configuration:
 
 media_player:
   platform: plex
-  name: plex
+  name: plex_server
   user: plex
   password: my_secure_password
 
@@ -18,11 +18,7 @@ Variables:
 
 name
 *Required
-The name of the backend device
-
-device
-*Required
-The frontend device (Look under settings > devices).
+The name of the backend device (Look under Plex Media Server > settings > server).
 
 user
 *Required
@@ -44,7 +40,7 @@ from plexapi.myplex import MyPlexUser
 
 REQUIREMENTS = ['https://github.com/miniconfig/python-plexapi/archive/'
                 '437e36dca3b7780dc0cb73941d662302c0cd2fa9.zip'
-                '#python-plexapi==1.0.2.5']
+                '#python-plexapi==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
