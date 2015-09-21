@@ -93,16 +93,28 @@ def alarm_arm_away(hass, code, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data)
 
 
+# pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """ ABC for alarm control devices. """
-    def alarm_disarm(self, code):
+
+    @property
+    def requires_code(self):
+        """ Boolean if alarm requires a code """
+        return None
+
+    @property
+    def code_format(self):
+        """ regex for code format """
+        return None
+
+    def alarm_disarm(self, code=None):
         """ Send disarm command. """
         raise NotImplementedError()
 
-    def alarm_arm_home(self, code):
+    def alarm_arm_home(self, code=None):
         """ Send arm home command. """
         raise NotImplementedError()
 
-    def alarm_arm_away(self, code):
+    def alarm_arm_away(self, code=None):
         """ Send arm away command. """
         raise NotImplementedError()
