@@ -18,7 +18,7 @@ For help on building your component, please see the [developer documentation](ht
 After you finish adding support for your device:
 
  - Update the supported devices in the `README.md` file.
- - Add any new dependencies to `requirements.txt`.
+ - Add any new dependencies to `requirements_all.txt`. There is no ordering right now, so just add it to the end.
  - Update the `.coveragerc` file.
  - Provide some documentation for [home-assistant.io](https://home-assistant.io/). The documentation is handled in a separate [git repository](https://github.com/balloob/home-assistant.io).
  - Make sure all your code passes Pylint and flake8 (PEP8 and some more) validation. To generate reports, run `pylint homeassistant > pylint.txt` and `flake8 homeassistant --exclude bower_components,external > flake8.txt`.
