@@ -36,7 +36,6 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-from plexapi.myplex import MyPlexUser
 
 REQUIREMENTS = ['https://github.com/miniconfig/python-plexapi/archive/'
                 '437e36dca3b7780dc0cb73941d662302c0cd2fa9.zip'
@@ -52,6 +51,7 @@ SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the plex platform. """
+    from plexapi.myplex import MyPlexUser
     name = config.get('name', '')
     user = config.get('user', '')
     password = config.get('password', '')
