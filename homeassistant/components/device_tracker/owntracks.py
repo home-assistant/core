@@ -25,7 +25,6 @@ def setup_scanner(hass, config, see):
 
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typelocation
-        print("BIER", payload)
         try:
             data = json.loads(payload)
         except ValueError:
