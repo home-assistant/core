@@ -13,7 +13,7 @@ PYLINT_STATUS=$?
 
 if [ $FLAKE8_STATUS -eq 0 ]
 then
-  exit $FLAKE8_STATUS
-else
   exit $PYLINT_STATUS
+else
+  exit $FLAKE8_STATUS
 fi
