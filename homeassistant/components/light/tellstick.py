@@ -11,6 +11,7 @@ import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.0.4']
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick lights. """
