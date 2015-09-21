@@ -95,8 +95,7 @@ class PlexClient(MediaPlayerDevice):
                 return STATE_PLAYING
             elif state == 'paused':
                 return STATE_PAUSED
-            else:
-                return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     def update(self):
         timeline = self.client.timeline()
@@ -115,21 +114,19 @@ class PlexClient(MediaPlayerDevice):
         """ Content type of current playing media. """
         if self._media is None:
             return None
-        else:
-            media_type = self.server.library.getByKey(
-                self.media_content_id).type
-            if media_type == 'episode':
-                return MEDIA_TYPE_TVSHOW
-            elif media_type == 'movie':
-                return MEDIA_TYPE_VIDEO
-            return None
+        media_type = self.server.library.getByKey(
+            self.media_content_id).type
+        if media_type == 'episode':
+            return MEDIA_TYPE_TVSHOW
+        elif media_type == 'movie':
+            return MEDIA_TYPE_VIDEO
+        return None
 
     @property
     def media_duration(self):
         """ Duration of current playing media in seconds. """
         if self._media is not None:
             total_time = self._media.get('duration')
-
             return total_time
 
     @property
@@ -137,8 +134,7 @@ class PlexClient(MediaPlayerDevice):
         """ Image url of current playing media. """
         if self._media is not None:
             return self.server.library.getByKey(self.media_content_id).thumbUrl
-        else:
-            return None
+        return None
 
     @property
     def media_title(self):
@@ -154,8 +150,7 @@ class PlexClient(MediaPlayerDevice):
             show_season = self.server.library.getByKey(
                 self.media_content_id).season().index
             return show_season
-        else:
-            return None
+        return None
 
     @property
     def media_series_title(self):
@@ -164,8 +159,7 @@ class PlexClient(MediaPlayerDevice):
             series_title = self.server.library.getByKey(
                 self.media_content_id).show().title
             return series_title
-        else:
-            return None
+        return None
 
     @property
     def media_episode(self):
@@ -174,8 +168,7 @@ class PlexClient(MediaPlayerDevice):
             show_episode = self.server.library.getByKey(
                 self.media_content_id).index
             return show_episode
-        else:
-            return None
+        return None
 
     @property
     def supported_media_commands(self):
