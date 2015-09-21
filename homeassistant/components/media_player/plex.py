@@ -18,7 +18,7 @@ Variables:
 
 name
 *Required
-The name of the backend device (Look under Plex Media Server > settings > server).
+The name of the backend device (Under Plex Media Server > settings > server).
 
 user
 *Required
