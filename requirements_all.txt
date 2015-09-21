@@ -133,3 +133,6 @@ https://github.com/balloob/home-assistant-vera-api/archive/a8f823066ead6c7da6fb5
 
 # Sonos bindings (media_player.sonos)
 SoCo==0.11.1
+
+# PlexAPI (media_player.plex)
+https://github.com/miniconfig/python-plexapi/archive/437e36dca3b7780dc0cb73941d662302c0cd2fa9.zip#python-plexapi==1.0.2
