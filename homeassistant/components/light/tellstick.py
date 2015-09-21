@@ -37,7 +37,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if switch.methods(tellcore_constants.TELLSTICK_DIM):
             lights.append(TellstickLight(switch))
 
-    # pylint: disable=unused-argument
     def _device_event_callback(id_, method, data, cid):
         """ Called from the TelldusCore library to update one device """
         for light_device in lights:
