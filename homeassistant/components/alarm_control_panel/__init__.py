@@ -98,13 +98,8 @@ class AlarmControlPanel(Entity):
     """ ABC for alarm control devices. """
 
     @property
-    def requires_code(self):
-        """ Boolean if alarm requires a code """
-        return None
-
-    @property
     def code_format(self):
-        """ regex for code format """
+        """ regex for code format or None if no code is required """
         return None
 
     def alarm_disarm(self, code=None):
