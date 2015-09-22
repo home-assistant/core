@@ -3,41 +3,11 @@ homeassistant.components.sensor.rest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The rest sensor will consume JSON responses sent by an exposed REST API.
 
-Configuration:
-
-To use the rest sensor you will need to add something like the following
-to your configuration.yaml file.
-
-sensor:
-  platform: arest
-    name: REST sensor
-    resource: http://IP_ADDRESS/ENDPOINT
-    variable: temperature
-    unit: '°C'
-
-Variables:
-
-name
-*Optional
-The name of the sensor. Default is 'REST Sensor'.
-
-resource
-*Required
-The full URL of the REST service/endpoint that provide the JSON response.
-
-variable
-*Required
-The name of the variable inside the JSON response you want to monitor.
-
-unit
-*Optional
-Defines the units of measurement of the sensor, if any.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest.html
 """
 import logging
-from requests import get, exceptions
+import requests
 from json import loads
 from datetime import timedelta
 
@@ -46,7 +16,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "REST Sensor"
+DEFAULT_NAME = 'REST Sensor'
+DEFAULT_METHOD = 'GET'
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -56,18 +27,31 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the REST sensor. """
 
+    use_get = False
+    use_post = False
+
     resource = config.get('resource', None)
+    method = config.get('method', DEFAULT_METHOD)
+    payload = config.get('payload', None)
+
+    if method == 'GET':
+        use_get = True
+    elif method == 'POST':
+        use_post = True
 
     try:
-        response = get(resource, timeout=10)
+        if use_get:
+            response = requests.get(resource, timeout=10)
+        elif use_post:
+            response = requests.post(resource, data=payload, timeout=10)
         if not response.ok:
             _LOGGER.error('Response status is "%s"', response.status_code)
             return False
-    except exceptions.MissingSchema:
+    except requests.exceptions.MissingSchema:
         _LOGGER.error('Missing resource or schema in configuration. '
                       'Add http:// to your URL.')
         return False
-    except exceptions.ConnectionError:
+    except requests.exceptions.ConnectionError:
         _LOGGER.error('No route to resource/endpoint. '
                       'Please check the URL in the configuration file.')
         return False
@@ -85,23 +69,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       config.get('variable'), data)
         return False
 
-    rest = RestData(resource)
+    if use_get:
+        rest = RestDataGet(resource)
+    elif use_post:
+        rest = RestDataPost(resource, payload)
 
     add_devices([RestSensor(rest,
                             config.get('name', DEFAULT_NAME),
                             config.get('variable'),
-                            config.get('unit'))])
+                            config.get('unit_of_measurement'),
+                            config.get('correction_factor', None),
+                            config.get('decimal_places', None))])
 
 
+# pylint: disable=too-many-arguments
 class RestSensor(Entity):
     """ Implements a REST sensor. """
 
-    def __init__(self, rest, name, variable, unit_of_measurement):
+    def __init__(self, rest, name, variable, unit_of_measurement, corr_factor,
+                 decimal_places):
         self.rest = rest
         self._name = name
         self._variable = variable
         self._state = 'n/a'
         self._unit_of_measurement = unit_of_measurement
+        self._corr_factor = corr_factor
+        self._decimal_places = decimal_places
         self.update()
 
     @property
@@ -127,25 +120,63 @@ class RestSensor(Entity):
         if 'error' in value:
             self._state = value['error']
         else:
-            self._state = value[self._variable]
+            try:
+                if value is not None:
+                    if self._corr_factor is not None \
+                            and self._decimal_places is not None:
+                        self._state = round(
+                            (float(value[self._variable]) *
+                             float(self._corr_factor)),
+                            self._decimal_places)
+                    elif self._corr_factor is not None \
+                            and self._decimal_places is None:
+                        self._state = round(float(value[self._variable]) *
+                                            float(self._corr_factor))
+                    else:
+                        self._state = value[self._variable]
+            except ValueError:
+                self._state = value[self._variable]
 
 
 # pylint: disable=too-few-public-methods
-class RestData(object):
-    """ Class for handling the data retrieval. """
+class RestDataGet(object):
+    """ Class for handling the data retrieval with GET method. """
 
     def __init__(self, resource):
-        self.resource = resource
+        self._resource = resource
         self.data = dict()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from REST service. """
+        """ Gets the latest data from REST service with GET method. """
         try:
-            response = get(self.resource, timeout=10)
+            response = requests.get(self._resource, timeout=10)
             if 'error' in self.data:
                 del self.data['error']
             self.data = response.json()
-        except exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("No route to resource/endpoint.")
+            self.data['error'] = 'N/A'
+
+
+# pylint: disable=too-few-public-methods
+class RestDataPost(object):
+    """ Class for handling the data retrieval with POST method. """
+
+    def __init__(self, resource, payload):
+        self._resource = resource
+        self._payload = payload
+        self.data = dict()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """ Gets the latest data from REST service with POST method. """
+        try:
+            response = requests.post(self._resource, data=self._payload,
+                                     timeout=10)
+            if 'error' in self.data:
+                del self.data['error']
+            self.data = response.json()
+        except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to resource/endpoint.")
             self.data['error'] = 'N/A'
