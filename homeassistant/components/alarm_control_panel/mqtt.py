@@ -139,18 +139,13 @@ class MqttAlarm(alarm.AlarmControlPanel):
         return self._state
 
     @property
-    def requires_code(self):
-        """ code is required if it's defined in configuration file """
-        return self._code is not None
-
-    @property
     def code_format(self):
-        """ One or more characters """
-        return '.+'
+        """ One or more characters if code is defined """
+        return None if self._code is None else '.+'
 
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
-        if code == str(self._code) or not self.requires_code:
+        if code == str(self._code) or self.code_format is None:
             mqtt.publish(self.hass, self._command_topic,
                          self._payload_disarm, self._qos)
         else:
@@ -158,7 +153,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
-        if code == str(self._code) or not self.requires_code:
+        if code == str(self._code) or self.code_format is None:
             mqtt.publish(self.hass, self._command_topic,
                          self._payload_arm_home, self._qos)
         else:
@@ -166,7 +161,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
-        if code == str(self._code) or not self.requires_code:
+        if code == str(self._code) or self.code_format is None:
             mqtt.publish(self.hass, self._command_topic,
                          self._payload_arm_away, self._qos)
         else:
