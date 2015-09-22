@@ -9,18 +9,22 @@ import logging
 
 BASE_DIR = '/sys/bus/w1/devices/'
 DEVICE_FOLDERS = glob(os.path.join(BASE_DIR, '28*'))
-SENSOR_IDS = [os.path.split(device_folder)[1] for device_folder in DEVICE_FOLDERS]
-DEVICE_FILES = [os.path.join(device_folder, 'w1_slave') for device_folder in DEVICE_FOLDERS]
+SENSOR_IDS = []
+DEVICE_FILES = []
+for device_folder in DEVICE_FOLDERS:
+    SENSOR_IDS.append(os.path.split(device_folder)[1])
+    DEVICE_FILES.append(os.path.join(device_folder, 'w1_slave'))
 
 _LOGGER = logging.getLogger(__name__)
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the one wire Sensors"""
 
     if DEVICE_FILES == []:
-        _LOGGER.error('No onewire sensor found. Check if 
-                      dtoverlay=w1-gpio,gpiopin=4 is in your /boot/config.txt 
+        _LOGGER.error('No onewire sensor found. Check if
+                      dtoverlay=w1-gpio,gpiopin=4 is in your /boot/config.txt
                       and the correct gpiopin number is set.')
         return
 
@@ -29,19 +33,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for key in config.keys():
         if key == "names":
-            ## only one name given
+            # only one name given
             if isinstance(config['names'], str):
                 names = [config['names']]
-            ## map names and sensors in given order
+            # map names and sensors in given order
             elif isinstance(config['names'], list):
                 names = config['names']
-            ## map names to ids.
+            # map names to ids.
             elif isinstance(config['names'], dict):
                 names = [config['names'].get(sensor_id, sensor_id) for sensor_id in SENSOR_IDS]
     for device_file, name in zip(DEVICE_FILES, names):
         devs.append(OneWire(name, device_file, TEMP_CELCIUS))
     add_devices(devs)
 
+    
 class OneWire(Entity):
     """ A Dallas 1 Wire Sensor"""
 
