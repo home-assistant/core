@@ -8,6 +8,7 @@ device_tracker:
   platform: owntracks
 """
 import json
+import logging
 
 import homeassistant.components.mqtt as mqtt
 
@@ -24,18 +25,29 @@ def setup_scanner(hass, config, see):
 
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typelocation
-
-        parts = topic.split('/')
         try:
             data = json.loads(payload)
         except ValueError:
             # If invalid JSON
+            logging.getLogger(__name__).error(
+                'Unable to parse payload as JSON: %s', payload)
             return
+
         if data.get('_type') != 'location':
             return
-        dev_id = '{}_{}'.format(parts[1], parts[2])
-        see(dev_id=dev_id, host_name=parts[1], gps=(data['lat'], data['lon']),
-            gps_accuracy=data['acc'], battery=data['batt'])
+
+        parts = topic.split('/')
+        kwargs = {
+            'dev_id': '{}_{}'.format(parts[1], parts[2]),
+            'host_name': parts[1],
+            'gps': (data['lat'], data['lon']),
+        }
+        if 'acc' in data:
+            kwargs['gps_accuracy'] = data['acc']
+        if 'batt' in data:
+            kwargs['battery'] = data['batt']
+
+        see(**kwargs)
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
 
