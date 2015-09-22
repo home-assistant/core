@@ -23,9 +23,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the one wire Sensors"""
 
     if DEVICE_FILES == []:
-        _LOGGER.error('No onewire sensor found. Check if
-                      dtoverlay=w1-gpio,gpiopin=4 is in your /boot/config.txt
-                      and the correct gpiopin number is set.')
+        _LOGGER.error('No onewire sensor found.')
+        _LOGGER.error('Check if dtoverlay=w1-gpio,gpiopin=4.')
+        _LOGGER.error('is in your /boot/config.txt and')
+        _LOGGER.error('the correct gpiopin number is set.')
         return
 
     devs = []
@@ -41,12 +42,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 names = config['names']
             # map names to ids.
             elif isinstance(config['names'], dict):
-                names = [config['names'].get(sensor_id, sensor_id) for sensor_id in SENSOR_IDS]
+                names = []
+                for sensor_id in SENSOR_IDS:
+                    names.append(config['names'].get(sensor_id, sensor_id))
     for device_file, name in zip(DEVICE_FILES, names):
         devs.append(OneWire(name, device_file, TEMP_CELCIUS))
     add_devices(devs)
 
-    
+
 class OneWire(Entity):
     """ A Dallas 1 Wire Sensor"""
 
