@@ -123,6 +123,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
     # Not found
     if platform is None:
+        _LOGGER.error('Unable to find platform %s', platform_path)
         return None
 
     # Already loaded
@@ -296,11 +297,15 @@ def process_ha_core_config(hass, config):
         else:
             _LOGGER.error('Received invalid time zone %s', time_zone_str)
 
-    for key, attr in ((CONF_LATITUDE, 'latitude'),
-                      (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name')):
+    for key, attr, typ in ((CONF_LATITUDE, 'latitude', float),
+                           (CONF_LONGITUDE, 'longitude', float),
+                           (CONF_NAME, 'location_name', str)):
         if key in config:
-            setattr(hac, attr, config[key])
+            try:
+                setattr(hac, attr, typ(config[key]))
+            except ValueError:
+                _LOGGER.error('Received invalid %s value for %s: %s',
+                              typ.__name__, key, attr)
 
     set_time_zone(config.get(CONF_TIME_ZONE))
 

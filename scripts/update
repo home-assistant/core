@@ -1,6 +1,0 @@
-echo "The update script has been deprecated since Home Assistant v0.7"
-echo
-echo "Home Assistant is now distributed via PyPi and can be installed and"
-echo "upgraded by running: pip3 install --upgrade homeassistant"
-echo
-echo "If you are developing a new feature for Home Assistant, run: git pull"

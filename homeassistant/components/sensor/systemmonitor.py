@@ -59,7 +59,6 @@ arg
 Additional details for the type, eg. path, binary name, etc.
 """
 import logging
-import psutil
 
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
@@ -120,7 +119,7 @@ class SystemMonitorSensor(Entity):
 
     @property
     def name(self):
-        return self._name
+        return self._name.rstrip()
 
     @property
     def state(self):
@@ -133,6 +132,7 @@ class SystemMonitorSensor(Entity):
 
     # pylint: disable=too-many-branches
     def update(self):
+        import psutil
         if self.type == 'disk_use_percent':
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == 'disk_use':
