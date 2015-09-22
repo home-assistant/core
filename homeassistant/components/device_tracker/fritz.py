@@ -42,10 +42,10 @@ class FritzBoxScanner():
         try:
             import fritzconnection as fc
         except ImportError:
-            _LOGGER.exception(
-                ("Failed to import fritzconnection. Did you install\n
-                  fritzconnection with the bugfix from\n
-                  'https://bitbucket.org/Fettlaus/fritzconnection'"))
+            _LOGGER.exception('Failed to import fritzconnection.')
+            _LOGGER.exception('Did you install fritzconnection with the')
+            _LOGGER.exception('bugfix from')
+            _LOGGER.exception('"https://bitbucket.org/Fettlaus/fritzconnection"')
             self.success_init = False
             return
 
