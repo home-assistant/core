@@ -12,7 +12,8 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 PACKAGE_DATA = \
     {'homeassistant.components.frontend': ['index.html.template'],
      'homeassistant.components.frontend.www_static': ['*.*'],
-     'homeassistant.components.frontend.www_static.images': ['*.*']}
+     'homeassistant.components.frontend.www_static.images': ['*.*'],
+     'homeassistant.startup': ['*.*']}
 
 REQUIRES = [
     'requests>=2,<3',

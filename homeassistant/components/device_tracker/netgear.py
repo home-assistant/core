@@ -70,7 +70,6 @@ class NetgearDeviceScanner(object):
         self.lock = threading.Lock()
 
         if host is None:
-            print("BIER")
             self._api = pynetgear.Netgear()
         elif username is None:
             self._api = pynetgear.Netgear(password, host)

@@ -1,12 +1,8 @@
 # Builds the frontend for production
 
-# If current pwd is scripts, go 1 up.
-if [ ${PWD##*/} == "scripts" ]; then
-    cd ..
-fi
+cd "$(dirname "$0")/.."
 
 cd homeassistant/components/frontend/www_static/home-assistant-polymer
-npm install
 npm run frontend_prod
 
 cp bower_components/webcomponentsjs/webcomponents-lite.min.js ..

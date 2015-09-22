@@ -2,12 +2,43 @@
 """
 homeassistant.components.switch.command_switch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Allows to configure custom shell commands to turn a switch on/off.
+
+Configuration:
+
+To use the command_line switch you will need to add something like the
+following to your configuration.yaml file.
+
+switch:
+  platform: command_switch
+  switches:
+    name_of_the_switch:
+      oncmd: switch_command on for name_of_the_switch
+      offcmd: switch_command off for name_of_the_switch
+
+Variables:
+
+These are the variables for the switches array:
+
+name_of_the_switch
+*Required
+Name of the command switch. Multiple entries are possible.
+
+oncmd
+*Required
+The action to take for on.
+
+offcmd
+*Required
+The action to take for off.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.command_switch.html
 """
 import logging
-from homeassistant.components.switch import SwitchDevice
 import subprocess
+
+from homeassistant.components.switch import SwitchDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +53,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     for dev_name, properties in switches.items():
         devices.append(
             CommandSwitch(
-                dev_name,
+                properties.get('name', dev_name),
                 properties.get('oncmd', 'true'),
                 properties.get('offcmd', 'true')))
 

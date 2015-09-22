@@ -95,6 +95,18 @@ def get_arguments():
         type=int,
         default=None,
         help='Enables daily log rotation and keeps up to the specified days')
+    parser.add_argument(
+        '--install-osx',
+        action='store_true',
+        help='Installs as a service on OS X and loads on boot.')
+    parser.add_argument(
+        '--uninstall-osx',
+        action='store_true',
+        help='Uninstalls from OS X.')
+    parser.add_argument(
+        '--restart-osx',
+        action='store_true',
+        help='Restarts on OS X.')
     if os.name != "nt":
         parser.add_argument(
             '--daemon',
@@ -152,6 +164,46 @@ def write_pid(pid_file):
         sys.exit(1)
 
 
+def install_osx():
+    """ Setup to run via launchd on OS X """
+    with os.popen('which hass') as inp:
+        hass_path = inp.read().strip()
+
+    with os.popen('whoami') as inp:
+        user = inp.read().strip()
+
+    cwd = os.path.dirname(__file__)
+    template_path = os.path.join(cwd, 'startup', 'launchd.plist')
+
+    with open(template_path, 'r', encoding='utf-8') as inp:
+        plist = inp.read()
+
+    plist = plist.replace("$HASS_PATH$", hass_path)
+    plist = plist.replace("$USER$", user)
+
+    path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
+
+    try:
+        with open(path, 'w', encoding='utf-8') as outp:
+            outp.write(plist)
+    except IOError as err:
+        print('Unable to write to ' + path, err)
+        return
+
+    os.popen('launchctl load -w -F ' + path)
+
+    print("Home Assistant has been installed. \
+        Open it here: http://localhost:8123")
+
+
+def uninstall_osx():
+    """ Unload from launchd on OS X """
+    path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
+    os.popen('launchctl unload ' + path)
+
+    print("Home Assistant has been uninstalled.")
+
+
 def main():
     """ Starts Home Assistant. """
     validate_python()
@@ -160,6 +212,18 @@ def main():
 
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
+
+    # os x launchd functions
+    if args.install_osx:
+        install_osx()
+        return
+    if args.uninstall_osx:
+        uninstall_osx()
+        return
+    if args.restart_osx:
+        uninstall_osx()
+        install_osx()
+        return
 
     # daemon functions
     if args.pid_file:
