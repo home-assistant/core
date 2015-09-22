@@ -42,6 +42,7 @@ class FritzBoxScanner():
         try:
             import fritzconnection as fc
         except ImportError:
+            # pylint: disable=line-too-long
             _LOGGER.exception('Failed to import fritzconnection. Did you install fritzconnection with the bugfix from "https://bitbucket.org/Fettlaus/fritzconnection"') # flake8: noqa
             self.success_init = False
             return
