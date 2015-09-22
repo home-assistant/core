@@ -66,11 +66,12 @@ nosetests.xml
 .project
 .pydevproject
 
+.python-version
+
 # emacs auto backups
 *~
 *#
 *.orig
-.python-version
 
 # venv stuff
 pyvenv.cfg
