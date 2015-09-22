@@ -1,6 +1,5 @@
 """ Supports scanning a FritzBox router"""
 import logging
-import json
 from datetime import timedelta
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
@@ -35,8 +34,8 @@ class FritzBoxScanner():
     This scanner asks the fritzbox for its known hosts and returns
     theis state (on, or off)
 
-    Due to a bug in the fritzbox api (router side), not more than 
-    16 hosts are returned. """
+    Due to a bug in the fritzbox api (router side), not more than
+    16 hosts are returned."""
     def __init__(self, config):
         self.last_results = []
 
@@ -44,26 +43,28 @@ class FritzBoxScanner():
             import fritzconnection as fc
         except ImportError:
             _LOGGER.exception(
-                ("Failed to import fritzconnection. Did you install fritzconnection with the bugfix from https://bitbucket.org/Fettlaus/fritzconnection"))
+                ("Failed to import fritzconnection. Did you install
+                  fritzconnection with the bugfix from 
+                  https://bitbucket.org/Fettlaus/fritzconnection"))
             self.success_init = False
-            return 
-            
+            return
         
-        host = '169.254.1.1' ### this is valid for all fritzboxes
-        if  CONF_HOST in config.keys(): host = config[CONF_HOST]
+        host = '169.254.1.1'  # this is valid for all fritzboxes
+        if  CONF_HOST in config.keys():
+            host = config[CONF_HOST]
         password = ''
-        if CONF_PASSWORD in config.keys(): password = config[CONF_PASSWORD]
+        if CONF_PASSWORD in config.keys():
+            password = config[CONF_PASSWORD]
         self._fritzBox = fc.FritzHosts(address=host, password=password)
-        ### I have not found a way to validate login, at atleast for
-        ### my fritzbox, i can get the list of known hosts even without
-        ### password 
+        # I have not found a way to validate login, atleast for
+        # my fritzbox, i can get the list of known hosts even without
+        # password
         self.success_init = True
 
         if self.success_init:
             self._update_info()
         else:
             _LOGGER.error("Failed to login into FritzBox")
-        
 
     def scan_devices(self):
         """ Scans for new devices and return a
@@ -74,7 +75,6 @@ class FritzBoxScanner():
             if knownHost["status"] == "1":
                 activeHosts.append(knownHost["mac"])
         return activeHosts
-        
 
     def get_device_name(self, mac):
         """ Returns the name of the given device or None if not known. """
