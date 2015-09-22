@@ -42,10 +42,7 @@ class FritzBoxScanner():
         try:
             import fritzconnection as fc
         except ImportError:
-            _LOGGER.exception('Failed to import fritzconnection.')
-            _LOGGER.exception('Did you install fritzconnection with the')
-            _LOGGER.exception('bugfix from')
-            _LOGGER.exception('"https://bitbucket.org/Fettlaus/fritzconnection"')
+            _LOGGER.exception('Failed to import fritzconnection. Did you install fritzconnection with the bugfix from "https://bitbucket.org/Fettlaus/fritzconnection"') # flake8: noqa
             self.success_init = False
             return
 
@@ -55,7 +52,7 @@ class FritzBoxScanner():
         password = ''
         if CONF_PASSWORD in config.keys():
             password = config[CONF_PASSWORD]
-        self._fritzBox = fc.FritzHosts(address=host, password=password)
+        self._fritz_box = fc.FritzHosts(address=host, password=password)
         # I have not found a way to validate login, atleast for
         # my fritzbox, i can get the list of known hosts even without
         # password
@@ -70,16 +67,16 @@ class FritzBoxScanner():
         """ Scans for new devices and return a
             list containing found device ids. """
         self._update_info()
-        activeHosts = []
-        for knownHost in self.last_results:
-            if knownHost["status"] == "1":
-                activeHosts.append(knownHost["mac"])
-        return activeHosts
+        active_hosts = []
+        for known_host in self.last_results:
+            if known_host["status"] == "1":
+                active_hosts.append(known_host["mac"])
+        return active_hosts
 
     def get_device_name(self, mac):
         """ Returns the name of the given device or None if not known. """
 
-        ret = self._fritzBox.get_specific_host_entry(mac)["NewHostName"]
+        ret = self._fritz_box.get_specific_host_entry(mac)["NewHostName"]
         if ret == {}:
             return None
         return ret
@@ -92,4 +89,4 @@ class FritzBoxScanner():
             return
 
         _LOGGER.info("Scanning")
-        self.last_results = self._fritzBox.get_hosts_info()
+        self.last_results = self._fritz_box.get_hosts_info()
