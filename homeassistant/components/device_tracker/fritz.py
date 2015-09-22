@@ -43,14 +43,14 @@ class FritzBoxScanner():
             import fritzconnection as fc
         except ImportError:
             _LOGGER.exception(
-                ("Failed to import fritzconnection. Did you install
-                  fritzconnection with the bugfix from 
-                  https://bitbucket.org/Fettlaus/fritzconnection"))
+                ("Failed to import fritzconnection. Did you install\n
+                  fritzconnection with the bugfix from\n
+                  'https://bitbucket.org/Fettlaus/fritzconnection'"))
             self.success_init = False
             return
-        
+
         host = '169.254.1.1'  # this is valid for all fritzboxes
-        if  CONF_HOST in config.keys():
+        if CONF_HOST in config.keys():
             host = config[CONF_HOST]
         password = ''
         if CONF_PASSWORD in config.keys():
