@@ -21,7 +21,7 @@ from .dt import datetime_to_local_str, utcnow
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
-RE_SLUGIFY = re.compile(r'[^A-Za-z0-9_]+')
+RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 
 
 def sanitize_filename(filename):
@@ -36,7 +36,7 @@ def sanitize_path(path):
 
 def slugify(text):
     """ Slugifies a given text. """
-    text = text.replace(" ", "_")
+    text = text.lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
@@ -71,7 +71,7 @@ def ensure_unique_string(preferred_string, current_strings):
     """ Returns a string that is not present in current_strings.
         If preferred string exists will append _2, _3, .. """
     test_string = preferred_string
-    current_strings = list(current_strings)
+    current_strings = set(current_strings)
 
     tries = 1
 
@@ -244,22 +244,22 @@ class Throttle(object):
             Wrapper that allows wrapped to be called only once per min_time.
             If we cannot acquire the lock, it is running so return None.
             """
-            if lock.acquire(False):
-                try:
-                    last_call = wrapper.last_call
+            if not lock.acquire(False):
+                return None
+            try:
+                last_call = wrapper.last_call
 
-                    # Check if method is never called or no_throttle is given
-                    force = not last_call or kwargs.pop('no_throttle', False)
+                # Check if method is never called or no_throttle is given
+                force = not last_call or kwargs.pop('no_throttle', False)
 
-                    if force or datetime.now() - last_call > self.min_time:
-
-                        result = method(*args, **kwargs)
-                        wrapper.last_call = datetime.now()
-                        return result
-                    else:
-                        return None
-                finally:
-                    lock.release()
+                if force or utcnow() - last_call > self.min_time:
+                    result = method(*args, **kwargs)
+                    wrapper.last_call = utcnow()
+                    return result
+                else:
+                    return None
+            finally:
+                lock.release()
 
         wrapper.last_call = None
 

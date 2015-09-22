@@ -21,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 FRONTEND_URLS = [
-    URL_ROOT, '/logbook', '/history', '/devService', '/devState', '/devEvent']
+    URL_ROOT, '/logbook', '/history', '/map', '/devService', '/devState',
+    '/devEvent']
 STATES_URL = re.compile(r'/states(/([a-zA-Z\._\-0-9/]+)|)')
 
 

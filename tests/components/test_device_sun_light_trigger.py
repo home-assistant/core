@@ -9,14 +9,14 @@ import os
 import unittest
 
 import homeassistant.loader as loader
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (
     device_tracker, light, sun, device_sun_light_trigger)
 
 
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, ensure_sun_risen,
-    ensure_sun_set, trigger_device_tracker_scan)
+    ensure_sun_set)
 
 
 KNOWN_DEV_PATH = None
@@ -27,7 +27,7 @@ def setUpModule():   # pylint: disable=invalid-name
     global KNOWN_DEV_PATH
 
     KNOWN_DEV_PATH = os.path.join(get_test_config_dir(),
-                                  device_tracker.KNOWN_DEVICES_FILE)
+                                  device_tracker.CSV_DEVICES)
 
     with open(KNOWN_DEV_PATH, 'w') as fil:
         fil.write('device,name,track,picture\n')
@@ -37,7 +37,8 @@ def setUpModule():   # pylint: disable=invalid-name
 
 def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server. """
-    os.remove(KNOWN_DEV_PATH)
+    os.remove(os.path.join(get_test_config_dir(),
+                           device_tracker.YAML_DEVICES))
 
 
 class TestDeviceSunLightTrigger(unittest.TestCase):
@@ -54,15 +55,16 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         loader.get_component('light.test').init()
 
-        device_tracker.setup(self.hass, {
+        self.assertTrue(device_tracker.setup(self.hass, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
-        })
+        }))
 
-        light.setup(self.hass, {
+        self.assertTrue(light.setup(self.hass, {
             light.DOMAIN: {CONF_PLATFORM: 'test'}
-        })
+        }))
 
-        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        self.assertTrue(sun.setup(
+            self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}))
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -71,8 +73,8 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
     def test_lights_on_when_sun_sets(self):
         """ Test lights go on when there is someone home and the sun sets. """
 
-        device_sun_light_trigger.setup(
-            self.hass, {device_sun_light_trigger.DOMAIN: {}})
+        self.assertTrue(device_sun_light_trigger.setup(
+            self.hass, {device_sun_light_trigger.DOMAIN: {}}))
 
         ensure_sun_risen(self.hass)
 
@@ -92,12 +94,11 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         self.hass.pool.block_till_done()
 
-        device_sun_light_trigger.setup(
-            self.hass, {device_sun_light_trigger.DOMAIN: {}})
+        self.assertTrue(device_sun_light_trigger.setup(
+            self.hass, {device_sun_light_trigger.DOMAIN: {}}))
 
-        self.scanner.leave_home('DEV1')
-
-        trigger_device_tracker_scan(self.hass)
+        self.hass.states.set(device_tracker.ENTITY_ID_ALL_DEVICES,
+                             STATE_NOT_HOME)
 
         self.hass.pool.block_till_done()
 
@@ -111,11 +112,11 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         self.hass.pool.block_till_done()
 
-        device_sun_light_trigger.setup(
-            self.hass, {device_sun_light_trigger.DOMAIN: {}})
+        self.assertTrue(device_sun_light_trigger.setup(
+            self.hass, {device_sun_light_trigger.DOMAIN: {}}))
 
-        self.scanner.come_home('DEV2')
-        trigger_device_tracker_scan(self.hass)
+        self.hass.states.set(
+            device_tracker.ENTITY_ID_FORMAT.format('device_2'), STATE_HOME)
 
         self.hass.pool.block_till_done()
 

@@ -157,11 +157,19 @@ class AsusWrtDeviceScanner(object):
         devices = {}
         for lease in leases_result:
             match = _LEASES_REGEX.search(lease.decode('utf-8'))
+
+            # For leases where the client doesn't set a hostname, ensure
+            # it is blank and not '*', which breaks the entity_id down
+            # the line
+            host = match.group('host')
+            if host == '*':
+                host = ''
+
             devices[match.group('ip')] = {
+                'host': host,
+                'status': '',
                 'ip': match.group('ip'),
                 'mac': match.group('mac').upper(),
-                'host': match.group('host'),
-                'status': ''
                 }
 
         for neighbor in neighbors:

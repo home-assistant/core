@@ -15,10 +15,6 @@ tests/config/home-assistant.log
 *.sublime-project
 *.sublime-workspace
 
-# Hide code validator output
-pep8.txt
-pylint.txt
-
 # Hide some OS X stuff
 .DS_Store
 .AppleDouble
@@ -29,6 +25,9 @@ Icon
 ._*
 
 .idea
+
+# pytest
+.cache
 
 # GITHUB Proposed Python stuff:
 *.py[cod]

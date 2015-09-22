@@ -1,10 +1,7 @@
 # Open a docker that can be used to debug/dev python-openzwave
 # Pass in a command line argument to build
 
-# If current pwd is scripts, go 1 up.
-if [ ${PWD##*/} == "scripts" ]; then
-    cd ..
-fi
+cd "$(dirname "$0")/.."
 
 if [ $# -gt 0 ]
 then

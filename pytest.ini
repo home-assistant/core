@@ -1,0 +1,2 @@
+[pytest]
+testpaths = tests

@@ -10,8 +10,8 @@ from collections import defaultdict
 from homeassistant.exceptions import NoEntitySpecifiedError
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, ATTR_HIDDEN,
-    STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, TEMP_CELCIUS,
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_DEFAULT_NAME, STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
@@ -44,17 +44,17 @@ class Entity(object):
     @property
     def name(self):
         """ Returns the name of the entity. """
-        return self.get_name()
+        return DEVICE_DEFAULT_NAME
 
     @property
     def state(self):
         """ Returns the state of the entity. """
-        return self.get_state()
+        return STATE_UNKNOWN
 
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        return {}
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -64,33 +64,11 @@ class Entity(object):
     @property
     def hidden(self):
         """ Suggestion if the entity should be hidden from UIs. """
-        return self._hidden
-
-    @hidden.setter
-    def hidden(self, val):
-        """ Sets the suggestion for visibility. """
-        self._hidden = bool(val)
+        return False
 
     def update(self):
         """ Retrieve latest state. """
         pass
-
-    # DEPRECATION NOTICE:
-    # Device is moving from getters to properties.
-    # For now the new properties will call the old functions
-    # This will be removed in the future.
-
-    def get_name(self):
-        """ Returns the name of the entity if any. """
-        return DEVICE_DEFAULT_NAME
-
-    def get_state(self):
-        """ Returns state of the entity. """
-        return "Unknown"
-
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return None
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
