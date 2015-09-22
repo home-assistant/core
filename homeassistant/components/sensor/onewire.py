@@ -19,24 +19,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the one wire Sensors"""
 
     if DEVICE_FILES == []:
-        _LOGGER.error('No onewire sensor found. Check if dtoverlay=w1-gpio,gpiopin=4 is in your /boot/config.txt and the correct gpiopin number is set.')
+        _LOGGER.error('No onewire sensor found. Check if 
+                      dtoverlay=w1-gpio,gpiopin=4 is in your /boot/config.txt 
+                      and the correct gpiopin number is set.')
         return
 
     devs = []
     names = SENSOR_IDS
 
     for key in config.keys():
-        if key=="names":
-             ## only one name given
-             if isinstance(config['names'], str):
-                 names = [config['names']]
-             ## map names and sensors in given order
-             elif isinstance(config['names'], list):
-                 names = config['names']
-             ## map names to ids.
-             elif isinstance(config['names'], dict):
-                 names = [config['names'].get(sensor_id, sensor_id) for sensor_id in SENSOR_IDS]
-                       
+        if key == "names":
+            ## only one name given
+            if isinstance(config['names'], str):
+                names = [config['names']]
+            ## map names and sensors in given order
+            elif isinstance(config['names'], list):
+                names = config['names']
+            ## map names to ids.
+            elif isinstance(config['names'], dict):
+                names = [config['names'].get(sensor_id, sensor_id) for sensor_id in SENSOR_IDS]
     for device_file, name in zip(DEVICE_FILES, names):
         devs.append(OneWire(name, device_file, TEMP_CELCIUS))
     add_devices(devs)
@@ -50,9 +51,10 @@ class OneWire(Entity):
         self._unit_of_measurement = unit_of_measurement
 
     def _read_temp_raw(self):
-        f = open(self._device_file, 'r')
-        lines = f.readlines()
-        f.close()
+        """ read the temperature as it is returned by the sensor"""
+        ds_device_file = open(self._device_file, 'r')
+        lines = ds_device_file.readlines()
+        ds_device_file.close()
         return lines
 
     @property
@@ -74,11 +76,10 @@ class OneWire(Entity):
         if equals_pos != -1:
             temp_string = lines[1][equals_pos+2:]
             temp = float(temp_string) / 1000.0
-            if self._unit_of_measurement ==  TEMP_FAHRENHEIT:
+            if self._unit_of_measurement == TEMP_FAHRENHEIT:
                 temp = temp * 9.0 / 5.0 + 32.0
             return temp
 
     @property
     def unit_of_measurement(self):
         return self._unit_of_measurement
-        
