@@ -158,17 +158,19 @@ full configuration but only the relevant part.</p>
 
 
 <p class='note'>
-All configuration entries have to be sequential. If you have <code>automation:</code>, <code>automation 2:</code> and <code>automation 4:</code> then the last one will not be processed.
+All configuration entries have to be sequential. If you have <code>automation:</code>,
+<code>automation 2:</code> and <code>automation 4:</code> then the last one will not be processed.
 </p>
 
 
 <ul>
 <li><a href="#conditions">Jump to conditions</a></li>
 <li><a href="#actions">Jump to actions</a></li>
+<li><a href="#troubleshooting">Jump to troubleshooting</a></li>
 </ul>
 
 
-<h3><a class='title-link' name='triggers' href='#triggers'></a> Triggers</h3>
+<h2><a class='title-link' name='triggers' href='#triggers'></a> Triggers</h2>
 
 <p>Triggers are what starts the processing of an automation rule. It is possible to specify multiple
 triggers for the same rule. Once a trigger starts, Home Assistant will validate the conditions, if any,
@@ -218,7 +220,8 @@ being sent over the topic.</p>
 
 <h4><a class='title-link' name='numeric-state-trigger' href='#numeric-state-trigger'></a> Numeric state trigger</h4>
 
-<p>On state change of a specified entity, attempts to parse the state as a number and triggers if value is above and/or below a threshold.</p>
+<p>On state change of a specified entity, attempts to parse the state as a number and triggers if value
+is above and/or below a threshold.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -261,7 +264,8 @@ being sent over the topic.</p>
 
 
 <p class='note'>
-  Use quotes around your values for <code>from</code> and <code>to</code> to avoid the YAML parser interpreting some values as booleans.
+  Use quotes around your values for <code>from</code> and <code>to</code> to avoid the YAML parser
+  interpreting some values as booleans.
 </p>
 
 
@@ -290,8 +294,8 @@ being sent over the topic.</p>
 
 <p>Time can be triggered in many ways. The most common is to specify <code>after</code> and trigger at a specific
 point in time each day. Alternatively, you can also match if the hour, minute or second of the current
-time has a specifc value. For example, by only setting minutes in the config to 5 it will trigger every
-hour when it is 5 minutes past whole.</p>
+time has a specific value. For example, by only setting minutes in the config to 5 it will trigger every
+hour when it is 5 minutes past whole.  You cannot use <code>after</code> together with hour, minute or second.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -303,20 +307,31 @@ hour when it is 5 minutes past whole.</p>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
 </span><span class='line'>    <span class="c1"># All following are optional.</span>
 </span><span class='line'>    <span class="c1"># When &#39;after&#39; is used, you cannot also match on hour, minute, seconds.</span>
 </span><span class='line'>    <span class="c1"># Military time format.</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;15:32:00&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">hours</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10</span>
+</span><span class='line'>    <span class="c1"># after: &quot;15:32:00&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">hours</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">minutes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">seconds</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">weekday</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">sat</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">sun</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h3><a class='title-link' name='conditions' href='#conditions'></a> Conditions</h3>
+<p>You can use <code>weekday</code> to limit the trigger times to speific days as well (also available in conditions).
+Valid values for <code>weekday</code> are (<code>sun</code>, <code>mon</code>, <code>tue</code>, <code>wed</code>, <code>thu</code>, <code>fri</code> &amp; <code>sat</code>)</p>
+
+<p>The above example will trigger on Saturday and Sunday every hour on the 5 (2:05, 3:05, 4:05, etc).</p>
+
+<h2><a class='title-link' name='conditions' href='#conditions'></a> Conditions</h2>
 
 <p>Conditions are an optional part of an automation rule and be used to prevent an action from happening
 when triggered. Conditions look very familiar to triggers but are very different. A trigger will look
@@ -387,7 +402,7 @@ below a threshold.</p>
 <h4><a class='title-link' name='time-condition' href='#time-condition'></a> Time condition</h4>
 
 <p>The time condition can test if it is after a specified time, before a specified time or if it is a
-certain day of the week.</p>
+certain day of the week</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -412,7 +427,9 @@ certain day of the week.</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h3><a class='title-link' name='actions' href='#actions'></a> Actions</h3>
+<p>Valid values for <code>weekday</code> are (sun, mon, tue, wed, thu, fri &amp; sat)</p>
+
+<h2><a class='title-link' name='actions' href='#actions'></a> Actions</h2>
 
 <p>When an automation rule fires, it calls a service. For this service you can specify an entity id it
 should apply to and optional service parameters (to specify for example the brightness).</p>
@@ -460,6 +477,27 @@ should apply to and optional service parameters (to specify for example the brig
 <p>If you want to specify multiple services to be called or include a delay, have a look at the
 <a href="/components/script.html">script component</a>. If you want to describe how certain entities should look,
 check out the <a href="/components/scene.html">scene component</a>.</p>
+
+<h2><a class='title-link' name='troubleshooting' href='#troubleshooting'></a> Troubleshooting</h2>
+
+<p>You can verify that your automation rules are being initialized correctly by watching both the realtime
+logs and also the logbook.  The realtime logs will show the rules being initialized (once for each trigger):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>INFO <span class="o">[</span>homeassistant.components.automation<span class="o">]</span> Initialized rule Rainy Day
+</span><span class='line'>INFO <span class="o">[</span>homeassistant.components.automation<span class="o">]</span> Initialized rule Rainy Day
+</span><span class='line'>INFO <span class="o">[</span>homeassistant.components.automation<span class="o">]</span> Initialized rule Rainy Day
+</span><span class='line'>INFO <span class="o">[</span>homeassistant.components.automation<span class="o">]</span> Initialized rule Rain is over
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The Logbook component will show a line entry when an automation is triggered.  You can look at the
+previous entry to determine which trigger in the rule triggered the event.</p>
+
+<p><img src="/images/components/automation/logbook.png" alt="Logbook example" /></p>
 
 
 </article>

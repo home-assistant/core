@@ -114,11 +114,15 @@ As an alternative to the router-based device tracking, it is possible to directl
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
+<span class='line-number'>5</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
 </span><span class='line'>device_tracker:
 </span><span class='line'>  platform: nmap_tracker
-</span><span class='line'>  hosts: 192.168.1.1/24</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  hosts: 192.168.1.1/24
+</span><span class='line'>  home_interval: 10</span></code></pre></td></tr></table></div></figure>
 
+
+<p><code>home_interval</code> is an optional value set in minutes.  This will be the number of minutes to exclude devices from a scan while they are home.  This is useful for iOS users that are experiencing issues where thier iDevices drop off the network for periods in order to save battery life.</p>
 
 <p>See the <a href="/components/device_tracker.html">device tracker component page</a> for instructions how to configure the people to be tracked.</p>
 
