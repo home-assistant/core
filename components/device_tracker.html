@@ -145,6 +145,7 @@
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
+<span class='line-number'>16</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry for Netgear device</span>
 </span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">netgear</span>
@@ -154,11 +155,12 @@
 </span><span class='line'>
 </span><span class='line'>  <span class="c1"># Optional configuration</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="c1"># If new devices have to be added to the UI and tracked by default (default: yes)</span>
+</span><span class='line'>  <span class="c1"># If new discovered devices are tracked by default (default: yes)</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">track_new_devices</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="c1"># How often to scan for new devices (default: 12)</span>
+</span><span class='line'>  <span class="c1"># Seconds between each scan for new devices (default: 12)</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">interval_seconds</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">12</span>
-</span><span class='line'>  <span class="c1"># Seconds to wait till marking someone as not home after not being seen (default: 180)</span>
+</span><span class='line'>  <span class="c1"># Seconds to wait till marking someone as not home after not being seen</span>
+</span><span class='line'>  <span class="c1"># (default: 180)</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">consider_home</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">180</span>
 </span></code></pre></td></tr></table></div></figure>
 
