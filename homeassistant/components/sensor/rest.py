@@ -62,6 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = get(resource, timeout=10)
         if not response.ok:
             _LOGGER.error('Response status is "%s"', response.status_code)
+            return False
     except exceptions.MissingSchema:
         _LOGGER.error('Missing resource or schema in configuration. '
                       'Add http:// to your URL.')
