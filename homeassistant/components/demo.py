@@ -17,7 +17,7 @@ DOMAIN = "demo"
 DEPENDENCIES = ['introduction', 'conversation']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    'switch', 'light', 'thermostat', 'sensor', 'media_player', 'notify']
+    'switch', 'light', 'sensor', 'thermostat', 'media_player', 'notify']
 
 
 def setup(hass, config):

@@ -31,7 +31,7 @@ Details for the API : http://transport.opendata.ch
 """
 import logging
 from datetime import timedelta
-from requests import get
+import requests
 
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -53,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         for location in [config.get('from', None), config.get('to', None)]:
             # transport.opendata.ch doesn't play nice with requests.Session
-            result = get(_RESOURCE + 'locations?query=%s' % location)
+            result = requests.get(_RESOURCE + 'locations?query=%s' % location,
+                                  timeout=10)
             journey.append(result.json()['stations'][0]['name'])
     except KeyError:
         _LOGGER.exception(
@@ -109,14 +110,14 @@ class PublicTransportData(object):
     def update(self):
         """ Gets the latest data from opendata.ch. """
 
-        response = get(
+        response = requests.get(
             _RESOURCE +
             'connections?' +
             'from=' + self.start + '&' +
             'to=' + self.destination + '&' +
             'fields[]=connections/from/departureTimestamp/&' +
-            'fields[]=connections/')
-
+            'fields[]=connections/',
+            timeout=10)
         connections = response.json()['connections'][:2]
 
         try:

@@ -1,7 +1,7 @@
 """
 homeassistant.components.switch.arduino
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for switching Arduino pins on and off. So fare only digital pins are
+Support for switching Arduino pins on and off. So far only digital pins are
 supported.
 
 Configuration:

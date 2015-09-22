@@ -1,15 +1,13 @@
 """
-tests.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.automation.test_event
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests demo component.
+Tests event automation.
 """
 import unittest
 
 import homeassistant.core as ha
 import homeassistant.components.automation as automation
-import homeassistant.components.automation.event as event
-from homeassistant.const import CONF_PLATFORM
 
 
 class TestAutomationEvent(unittest.TestCase):
@@ -28,20 +26,57 @@ class TestAutomationEvent(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_fails_setup_if_no_event_type(self):
-        self.assertFalse(automation.setup(self.hass, {
+    def test_old_config_if_fires_on_event(self):
+        self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'event',
-                automation.CONF_SERVICE: 'test.automation'
+                'platform': 'event',
+                'event_type': 'test_event',
+                'execute_service': 'test.automation'
             }
         }))
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_old_config_if_fires_on_event_with_data(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'platform': 'event',
+                'event_type': 'test_event',
+                'event_data': {'some_attr': 'some_value'},
+                'execute_service': 'test.automation'
+            }
+        }))
+
+        self.hass.bus.fire('test_event', {'some_attr': 'some_value'})
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_old_config_if_not_fires_if_event_data_not_matches(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'platform': 'event',
+                'event_type': 'test_event',
+                'event_data': {'some_attr': 'some_value'},
+                'execute_service': 'test.automation'
+            }
+        }))
+
+        self.hass.bus.fire('test_event', {'some_attr': 'some_other_value'})
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_event(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'event',
-                event.CONF_EVENT_TYPE: 'test_event',
-                automation.CONF_SERVICE: 'test.automation'
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
             }
         }))
 
@@ -52,24 +87,33 @@ class TestAutomationEvent(unittest.TestCase):
     def test_if_fires_on_event_with_data(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'event',
-                event.CONF_EVENT_TYPE: 'test_event',
-                event.CONF_EVENT_DATA: {'some_attr': 'some_value'},
-                automation.CONF_SERVICE: 'test.automation'
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                    'event_data': {'some_attr': 'some_value'}
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
             }
         }))
 
-        self.hass.bus.fire('test_event', {'some_attr': 'some_value'})
+        self.hass.bus.fire('test_event', {'some_attr': 'some_value',
+                                          'another': 'value'})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_if_event_data_not_matches(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
-                CONF_PLATFORM: 'event',
-                event.CONF_EVENT_TYPE: 'test_event',
-                event.CONF_EVENT_DATA: {'some_attr': 'some_value'},
-                automation.CONF_SERVICE: 'test.automation'
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                    'event_data': {'some_attr': 'some_value'}
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
             }
         }))
 

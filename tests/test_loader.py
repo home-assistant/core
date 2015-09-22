@@ -10,7 +10,7 @@ import unittest
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
-from common import get_test_home_assistant, MockModule
+from tests.common import get_test_home_assistant, MockModule
 
 
 class TestLoader(unittest.TestCase):
@@ -24,9 +24,9 @@ class TestLoader(unittest.TestCase):
 
     def test_set_component(self):
         """ Test if set_component works. """
-        loader.set_component('switch.test', http)
+        loader.set_component('switch.test_set', http)
 
-        self.assertEqual(http, loader.get_component('switch.test'))
+        self.assertEqual(http, loader.get_component('switch.test_set'))
 
     def test_get_component(self):
         """ Test if get_component works. """

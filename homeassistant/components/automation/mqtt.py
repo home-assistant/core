@@ -10,11 +10,11 @@ import homeassistant.components.mqtt as mqtt
 
 DEPENDENCIES = ['mqtt']
 
-CONF_TOPIC = 'mqtt_topic'
-CONF_PAYLOAD = 'mqtt_payload'
+CONF_TOPIC = 'topic'
+CONF_PAYLOAD = 'payload'
 
 
-def register(hass, config, action):
+def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
     topic = config.get(CONF_TOPIC)
     payload = config.get(CONF_PAYLOAD)
