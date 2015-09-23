@@ -41,9 +41,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         """ Called from the TelldusCore library to update one device """
         for light_device in lights:
             if light_device.tellstick_device.id == id_:
+                # Execute the update in another thread
+                threading.Thread(target=light_device.update_ha_state, daemon=False, args=(True,)).start()
                 light_device.update_ha_state(True)
 
-    core.register_device_event(_device_event_callback)
+    callback_id = core.register_device_event(_device_event_callback)
+
+    def unload_telldus_lib():
+        if callback_id is not None:
+            core.unregister_callback(callback_id)
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, unload_telldus_lib)
 
     add_devices_callback(lights)
 
