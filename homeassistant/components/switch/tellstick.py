@@ -91,8 +91,6 @@ class TellstickSwitchDevice(ToggleEntity):
     @property
     def is_on(self):
         """ True if switch is on. """
-        logging.getLogger(__name__).info(
-                    "Returning state for {}".format(self.tellstick_device.id))
         last_command = self.tellstick_device.last_sent_command(
             self.last_sent_command_mask)
 
