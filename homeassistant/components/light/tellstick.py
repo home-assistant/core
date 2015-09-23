@@ -24,12 +24,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             "Failed to import tellcore")
         return []
 
-    # pylint: disable=no-member
-    #if telldus.TelldusCore.callback_dispatcher is None:
-    #dispatcher = DirectCallbackDispatcher()
-    #core = telldus.TelldusCore(callback_dispatcher=dispatcher)
-    #else:
-    core = telldus.TelldusCore()
+    core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
 
     switches_and_lights = core.devices()
     lights = []
@@ -48,7 +43,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     callback_id = core.register_device_event(_device_event_callback)
 
-    def unload_telldus_lib():
+    def unload_telldus_lib(event):
         if callback_id is not None:
             core.unregister_callback(callback_id)
 
