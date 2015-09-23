@@ -50,14 +50,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         logging.getLogger(__name__).info(
             "got TellCore callback {} {} {} {}".format(id_, method, data, cid))
         for switch_device in switches:
-            logging.getLogger(__name__).info(
-                "checking switch {}".format(switch_device.tellstick_device.id))
+            logging.getLogger(__name__).info("checking switch {}: ".format(switch_device.tellstick_device.id))
             if switch_device.tellstick_device.id == id_:
                 # Execute the update in another thread
-                logging.getLogger(__name__).info(
-                    "Updating state to {}".fromat(method))
+                logging.getLogger(__name__).info("Updating state to: {}".fromat(method))
                 #threading.Thread(target=switch_device.update_ha_state, daemon=False).start()
-                break
 
     callback_id = core.register_device_event(_device_event_callback)
 
