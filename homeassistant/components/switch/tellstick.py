@@ -33,11 +33,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return
 
     # pylint: disable=no-member
-    if telldus.TelldusCore.callback_dispatcher is None:
+    #if telldus.TelldusCore.callback_dispatcher is None:
         dispatcher = DirectCallbackDispatcher()
-        core = telldus.TelldusCore(callback_dispatcher=dispatcher)
-    else:
-        core = telldus.TelldusCore()
+    core = telldus.TelldusCore(callback_dispatcher=dispatcher)
+    #else:
+    #    core = telldus.TelldusCore()
 
     signal_repetitions = config.get('signal_repetitions', SINGAL_REPETITIONS)
 
