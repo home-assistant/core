@@ -55,8 +55,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if switch_device.tellstick_device.id == id_:
                 # Execute the update in another thread
                 logging.getLogger(__name__).info(
-                    "Updating state to {}".switch_device.state())
-                threading.Thread(target=switch_device.update_ha_state, daemon=False).start()
+                    "Updating state to {}".fromat(switch_device.state()))
+                #threading.Thread(target=switch_device.update_ha_state, daemon=False).start()
                 break
 
     callback_id = core.register_device_event(_device_event_callback)
@@ -98,6 +98,8 @@ class TellstickSwitchDevice(ToggleEntity):
     @property
     def is_on(self):
         """ True if switch is on. """
+        logging.getLogger(__name__).info(
+                    "Returning state for {}".format(self.tellstick_device.id))
         last_command = self.tellstick_device.last_sent_command(
             self.last_sent_command_mask)
 
