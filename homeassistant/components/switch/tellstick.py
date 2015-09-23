@@ -53,8 +53,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             logging.getLogger(__name__).info("checking switch {}: ".format(switch_device.tellstick_device.id))
             if switch_device.tellstick_device.id == id_:
                 # Execute the update in another thread
-                logging.getLogger(__name__).info("Updating state to: {}".format(method))
-                threading.Thread(target=switch_device.update_ha_state, daemon=False).start()
+                logging.getLogger(__name__).info("Updating state to: {}".format(switch_device.state))
+                switch_device.update_ha_state()
                 break
 
     callback_id = core.register_device_event(_device_event_callback)
