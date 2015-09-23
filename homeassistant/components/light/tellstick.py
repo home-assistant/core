@@ -6,12 +6,12 @@ Support for Tellstick lights.
 import logging
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    ATTR_FRIENDLY_NAME)
+from homeassistant.const import ( EVENT_HOMEASSISTANT_STOP,
+                                  ATTR_FRIENDLY_NAME)
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.1.2']
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -44,6 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     callback_id = core.register_device_event(_device_event_callback)
 
     def unload_telldus_lib(event):
+        """ Un-register the callback bindings """
         if callback_id is not None:
             core.unregister_callback(callback_id)
 
