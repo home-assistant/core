@@ -6,8 +6,8 @@ Support for Tellstick lights.
 import logging
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
-from homeassistant.const import ( EVENT_HOMEASSISTANT_STOP,
-                                  ATTR_FRIENDLY_NAME)
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
+                                 ATTR_FRIENDLY_NAME)
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.1.2']
