@@ -35,6 +35,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def _device_event_callback(id_, method, data, cid):
         """ Called from the TelldusCore library to update one device """
+        logging.getLogger(__name__).info(
+            "got TellCore callback {} {} {} {}".format(id_, method, data, cid))
         for light_device in lights:
             if light_device.tellstick_device.id == id_:
                 # Execute the update in another thread
