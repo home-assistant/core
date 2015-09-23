@@ -40,6 +40,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         for light_device in lights:
             if light_device.tellstick_device.id == id_:
                 # Execute the update in another thread
+                logging.getLogger(__name__).info(
+                    "Updating state to {}".switch_device.state())
                 threading.Thread(target=light_device.update_ha_state, daemon=False, args=(True,)).start()
                 light_device.update_ha_state(True)
 
