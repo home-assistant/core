@@ -11,7 +11,9 @@ signal_repetitions: 3
 """
 import logging
 
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    ATTR_FRIENDLY_NAME)
 from homeassistant.helpers.entity import ToggleEntity
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
