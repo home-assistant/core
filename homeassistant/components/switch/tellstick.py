@@ -17,7 +17,7 @@ import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 SINGAL_REPETITIONS = 1
 
-REQUIREMENTS = ['tellcore-py==1.0.4']
+REQUIREMENTS = ['tellcore-py==1.1.2']
 
 
 # pylint: disable=unused-argument

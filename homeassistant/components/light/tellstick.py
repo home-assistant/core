@@ -9,7 +9,7 @@ from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.const import ATTR_FRIENDLY_NAME
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
-REQUIREMENTS = ['tellcore-py==1.0.4']
+REQUIREMENTS = ['tellcore-py==1.1.2']
 
 
 # pylint: disable=unused-argument
