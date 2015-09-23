@@ -13,7 +13,6 @@ import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
-
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick lights. """
@@ -26,11 +25,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return []
 
     # pylint: disable=no-member
-    if telldus.TelldusCore.callback_dispatcher is None:
-        dispatcher = DirectCallbackDispatcher()
-        core = telldus.TelldusCore(callback_dispatcher=dispatcher)
-    else:
-        core = telldus.TelldusCore()
+    #if telldus.TelldusCore.callback_dispatcher is None:
+    #dispatcher = DirectCallbackDispatcher()
+    #core = telldus.TelldusCore(callback_dispatcher=dispatcher)
+    #else:
+    core = telldus.TelldusCore()
 
     switches_and_lights = core.devices()
     lights = []
