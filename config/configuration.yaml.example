@@ -70,11 +70,18 @@ device_sun_light_trigger:
 
 # A comma separated list of states that have to be tracked as a single group
 # Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
+# You can also have groups within groups.
 group:
+  Home:
+    - group.living_room
+    - group.kitchen
   living_room:
     - light.Bowl
     - light.Ceiling
     - light.TV_back_light
+  kitchen:
+    - light.fan_bulb_1
+    - light.fan_bulb_2
   children:
    - device_tracker.child_1
    - device_tracker.child_2
@@ -96,27 +103,23 @@ browser:
 keyboard:
 
 automation:
+  
+- alias: Sun starts shining
   platform: state
-  alias: Sun starts shining
-
   state_entity_id: sun.sun
-  # Next two are optional, omit to match all
-  state_from: below_horizon
-  state_to: above_horizon
+  state: 'above_horizon'
 
-  execute_service: light.turn_off
-  service_entity_id: group.living_room
+  service: light.turn_off
+  entity_id: group.living_room
 
-automation 2:
+- alias: 'Beer o Clock'
   platform: time
-  alias: Beer o Clock
+  hours: 16
+  minutes: 0
+  seconds: 0
 
-  time_hours: 16
-  time_minutes: 0
-  time_seconds: 0
-
-  execute_service: notify.notify
-  service_data:
+  service: notify.notify
+  data:
     message: It's 4, time for beer!
 
 sensor:
@@ -136,6 +139,23 @@ sensor:
     - type: 'processor_use'
     - type: 'process'
       arg: 'octave-cli'
+
+sensor 2:
+  platform: forecast
+  api_key: <register on Forecast.io for your PRIVATE API>
+  monitored_conditions:
+    - summary
+    - precip_type
+    - precip_intensity
+    - temperature
+    - dew_point
+    - wind_speed
+    - wind_bearing
+    - cloud_cover
+    - humidity
+    - pressure
+    - visibility
+    - ozone
 
 script:
   # Turns on the bedroom lights and then the living room lights 1 minute later
