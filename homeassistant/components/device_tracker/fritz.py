@@ -12,6 +12,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['fritzconnection==0.4.6']
 
 def get_scanner(hass, config):
     """ Validates config and returns FritzBoxScanner obj"""
