@@ -164,7 +164,7 @@ class TestAutomationState(unittest.TestCase):
                     'entity_id': 'test.entity',
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -182,7 +182,7 @@ class TestAutomationState(unittest.TestCase):
                     'from': 'hello'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -200,7 +200,7 @@ class TestAutomationState(unittest.TestCase):
                     'to': 'world'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -218,7 +218,7 @@ class TestAutomationState(unittest.TestCase):
                     'state': 'world'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -237,7 +237,7 @@ class TestAutomationState(unittest.TestCase):
                     'to': 'world'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -256,7 +256,7 @@ class TestAutomationState(unittest.TestCase):
                     'to': 'world'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -277,7 +277,7 @@ class TestAutomationState(unittest.TestCase):
                     'to': 'world'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -294,7 +294,7 @@ class TestAutomationState(unittest.TestCase):
                     'entity_id': 'test.anoter_entity',
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -318,7 +318,7 @@ class TestAutomationState(unittest.TestCase):
                     'state': test_state
                 }],
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         })

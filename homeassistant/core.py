@@ -26,6 +26,7 @@ from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util as util
 import homeassistant.util.dt as date_util
+import homeassistant.util.location as location
 import homeassistant.helpers.temperature as temp_helper
 from homeassistant.config import get_default_config_dir
 
@@ -675,6 +676,10 @@ class Config(object):
 
         # Directory that holds the configuration
         self.config_dir = get_default_config_dir()
+
+    def distance(self, lat, lon):
+        """ Calculate distance from Home Assistant in meters. """
+        return location.distance(self.latitude, self.longitude, lat, lon)
 
     def path(self, *path):
         """ Returns path to the file within the config dir. """
