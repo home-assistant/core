@@ -10,6 +10,7 @@ from homeassistant.core import State
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     STATE_PLAYING, STATE_PAUSED, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,9 +58,9 @@ def reproduce_state(hass, states, blocking=False):
             continue
 
         if state.domain == 'media_player' and state == STATE_PAUSED:
-            service = 'media_pause'
+            service = SERVICE_MEDIA_PAUSE
         elif state.domain == 'media_player' and state == STATE_PLAYING:
-            service = 'media_play'
+            service = SERVICE_MEDIA_PLAY
         else
             if state.state == STATE_ON:
                 service = SERVICE_TURN_ON
