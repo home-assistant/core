@@ -132,9 +132,22 @@ full configuration but only the relevant part.</p>
 <span class='line-number'>18</span>
 <span class='line-number'>19</span>
 <span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example of entry in configuration.yaml</span>
 </span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light on in the evening</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;Rule</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">Light</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">evening&#39;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
@@ -152,14 +165,26 @@ full configuration but only the relevant part.</p>
 </span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;Rule</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">Away</span><span class="nv"> </span><span class="s">Mode&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>   <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>     <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;not_home&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">use_trigger_values</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>     <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_off</span>
+</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_lights</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 
 
 <p class='note'>
-All configuration entries have to be sequential. If you have <code>automation:</code>,
-<code>automation 2:</code> and <code>automation 4:</code> then the last one will not be processed.
+With the updated automation layout, you are now able to list all rules under on a single `automation:` entry.  Use `-alias` to define the start of each rule.
 </p>
 
 

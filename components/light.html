@@ -136,7 +136,7 @@ The light component supports multiple entries in <code>configuration.yaml</code>
 
 <h3>Service <code>light.turn_on</code></h3>
 
-<p>Turns one or multiple lights on.</p>
+<p>Turns one light on or multiple lights on using <a href="/components/group.html">groups</a>.</p>
 
 <table>
 <thead>
@@ -153,34 +153,34 @@ The light component supports multiple entries in <code>configuration.yaml</code>
 <td> Only act on specified lights. Else targets all.</td>
 </tr>
 <tr>
-<td> <code>transition_seconds</code> </td>
-<td> no </td>
-<td> Seconds to take to switch to new state.</td>
+<td> <code>transition</code> </td>
+<td> yes </td>
+<td> Seconds to take to switch to new state. *not supported by Wink</td>
 </tr>
 <tr>
 <td> <code>profile</code> </td>
-<td> no </td>
+<td> yes </td>
 <td> Which light profile to use.</td>
 </tr>
 <tr>
 <td> <code>xy_color</code> </td>
-<td> no </td>
+<td> yes </td>
 <td> Two comma seperated floats that represent the color in XY</td>
 </tr>
 <tr>
 <td> <code>rgb_color</code> </td>
-<td> no </td>
+<td> yes </td>
 <td> Three comma seperated integers that represent the color in RGB</td>
 </tr>
 <tr>
 <td> <code>brightness</code> </td>
-<td> no </td>
+<td> yes </td>
 <td> Integer between 0 and 255 for how bright the color should be</td>
 </tr>
 <tr>
 <td> <code>flash</code> </td>
-<td> no </td>
-<td> Tell light to flash, can be either value <code>short</code> or <code>long</code></td>
+<td> yes </td>
+<td> Tell light to flash, can be either value <code>short</code> or <code>long</code>. *not supported by Wink</td>
 </tr>
 </tbody>
 </table>

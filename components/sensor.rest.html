@@ -1,0 +1,284 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+    
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>RESTful sensor support - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to integrate REST sensors into Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/sensor.rest.html">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="RESTful sensor support">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/sensor.rest.html/">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Instructions how to integrate REST sensors into Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/components/'>Component overview</a></li>
+    </ul>
+  </li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture.html">Architecture</a></li>
+      <li><a href="/developers/frontend.html">Frontend development</a></li>
+      <li><a href="/developers/creating_components.html">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform.html">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api.html">API</a></li>
+      <li><a href="/developers/credits.html">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+
+  </nav>
+</div>
+
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      RESTful Sensor Support
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p><img src='/images/supported_brands/rest.png' class='brand pull-right' />
+The rest sensor platform is consuming a give endpoint which is exposed by a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">RESTful API</a> of a device, an application, or a web service. The sensor has support for GET and POST requests.</p>
+
+<p>To enable this sensor, add the following lines to your <code>configuration.yaml</code> for a GET request:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADDRESS/ENDPOINT</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">method</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">GET</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">REST GET sensor</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;return_value&#39;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;°C&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">correction_factor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.01</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">decimal_places</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>or for a POST request:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADDRESS/ENDPOINT</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">method</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">POST</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">payload</span><span class="p-Indicator">:</span> <span class="s">&#39;{</span><span class="nv"> </span><span class="s">&quot;device&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;heater&quot;</span><span class="nv"> </span><span class="s">}&#39;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">REST POST sensor</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;°C&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">correction_factor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.0001</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">decimal_places</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Configuration variables:</p>
+
+<ul>
+<li><strong>resource</strong> (<em>Required</em>): The resource or endpoint that contains the value.</li>
+<li><strong>method</strong> (<em>Optional</em>): The method of the request. Default is GET.</li>
+<li><strong>variable</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
+<li><strong>payload</strong> (<em>Optional</em>): The payload to send with a POST request. Usualy formed as a dictionary-</li>
+<li><strong>name</strong> (<em>Optional</em>): Name of the REST sensor.</li>
+<li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
+<li><strong>correction_factor</strong> (<em>Optional</em>): A float value to do some basic calculations.</li>
+<li><strong>decimal_places</strong> (<em>Optional</em>): Number of decimal places of the value. Default is 0.</li>
+</ul>
+
+
+<p class='note warning'>
+Make sure that the URL matches exactly your endpoint or resource.
+</p>
+
+
+<p><code>curl</code> could help you with the identification of the variable you want to display in your Home Assistant frontend. The example below show the JSON response of a device that is running with <a href="http://arest.io/">aREST</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>curl -X GET http://192.168.1.31/temperature/
+</span><span class='line'><span class="o">{</span><span class="s2">&quot;temperature&quot;</span>: 77, <span class="s2">&quot;id&quot;</span>: <span class="s2">&quot;sensor02&quot;</span>, <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;livingroom&quot;</span>, <span class="s2">&quot;connected&quot;</span>: <span class="nb">true</span><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2><a class='title-link' name='examples' href='#examples'></a> Examples</h2>
+
+<p>In this section you find some real life examples of how to use this sensor.</p>
+
+<h3><a class='title-link' name='external-ip-address' href='#external-ip-address'></a> External IP address</h3>
+
+<p>Always want to know your external IP address. <a href="http://www.jsontest.com">JSON Test</a> will provide you this information at their <a href="http://ip.jsontest.com/">http://ip.jsontest.com/</a> endpoint.</p>
+
+<p>To display the IP address, the entry for a sensor in the <code>configuration.yaml</code> file will look like this.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://ip.jsontest.com</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">External IP</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;ip&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='single-value-from-a-local-glances-instance' href='#single-value-from-a-local-glances-instance'></a> Single value from a local Glances instance</h3>
+
+<p>The <a href="/components/sensor.glances.html">glances</a> sensor is doing a similar thing</p>
+
+<p>Add something similar to the entry below to your <code>configuration.yaml</code> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADRRESS:61208/api/2/mem/used</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Used mem</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;used&#39;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MB</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">correction_factor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.000000954</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">decimal_places</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    
+
+
+<script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+
+
+
+
+
+  </body>
+</html>

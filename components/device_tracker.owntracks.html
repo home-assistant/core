@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Getting started on Android - Home Assistant</title>
+    <title>Owntracks device tracker - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Android instructions to add Home Assistant to your homescreen.">
+    <meta name="description" content="Instructions how to use Owntracks to track devices in Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/getting-started/android.html">
+    <link rel="canonical" href="https://home-assistant.io/components/device_tracker.owntracks.html">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Getting started on Android">
+    <meta property="og:title" content="Owntracks device tracker">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/getting-started/android.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.owntracks.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Android instructions to add Home Assistant to your homescreen.">
+    <meta property="og:description" content="Instructions how to use Owntracks to track devices in Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -99,26 +99,24 @@
   
   <header>
     <h1 class="title indent">
-      Getting Started on Android
+      Owntracks Device Tracker
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p>Home Assistant is not available on the Play Store. Instead, Home Assistant leverages the new <a href="https://w3c.github.io/manifest/">manifest.json support</a> to allow Android devices to add the web application to your homescreen as if it was a native application.</p>
+  <p><img src='/images/supported_brands/owntracks.png' class='brand pull-right' />
+This platform allows you to detect presence by monitoring MQTT topics uses by <a href="http://owntracks.org/">Owntracks</a> for new locations.</p>
 
-<ol>
-<li>Open Chrome</li>
-<li>Navigate to your Home Assistant instance</li>
-<li>Click on the menu icon (three vertical dots)</li>
-<li>Click on Add to Homescreen</li>
-<li>A dialog will popup, click on Add</li>
-</ol>
+<p>To integrate Owntracks in Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
 
-
-<p class='img' style='width:500px; margin-left: auto; margin-right: auto;'>
-<img src='/images/screenshots/android-homescreen-guide.gif' />
-</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">owntracks</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 

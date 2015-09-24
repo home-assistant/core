@@ -106,7 +106,7 @@
   
 
   <p><img src='/images/supported_brands/utilities-terminal.png' class='brand pull-right' />
-A sensor platform that issues specific commands git get data. This might very well become our most platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
+A sensor platform that issues specific commands to get data. This might very well become our most powerful platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
 
 <p>To enable it, add the following lines to your <code>configuration.yaml</code>:</p>
 
@@ -117,13 +117,15 @@ A sensor platform that issues specific commands git get data. This might very we
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
+<span class='line-number'>8</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_sensor</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">command</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SENSOR_COMMAND</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Command</span><span class="nv"> </span><span class="s">sensor&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Command sensor</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;°C&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">correction_factor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.4921</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">decimal_places</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -132,8 +134,9 @@ A sensor platform that issues specific commands git get data. This might very we
 <ul>
 <li><strong>command</strong> (<em>Required</em>): The action to take to get the value.</li>
 <li><strong>name</strong> (<em>Optional</em>): Name of the command sensor.</li>
-<li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the units of measurement of the sensor, if any.</li>
+<li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
 <li><strong>correction_factor</strong> (<em>Optional</em>): A float value to do some basic calculations.</li>
+<li><strong>decimal_places</strong> (<em>Optional</em>): Number of decimal places of the value. Default is 0.</li>
 </ul>
 
 
@@ -143,7 +146,7 @@ A sensor platform that issues specific commands git get data. This might very we
 
 <h3><a class='title-link' name='hard-drive-temperature' href='#hard-drive-temperature'></a> Hard drive temperature</h3>
 
-<p>There are several days to get the temperature of your hard drive. A simple solution is to use <a href="https://savannah.nongnu.org/projects/hddtemp/">hddtemp</a>.</p>
+<p>There are several ways to get the temperature of your hard drive. A simple solution is to use <a href="https://savannah.nongnu.org/projects/hddtemp/">hddtemp</a>.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>hddtemp -n /dev/sda
@@ -169,7 +172,7 @@ A sensor platform that issues specific commands git get data. This might very we
 
 <h3><a class='title-link' name='cpu-temperature' href='#cpu-temperature'></a> CPU temperature</h3>
 
-<p>Thanks to the <a href="https://en.wikipedia.org/wiki/Procfs"><code>proc</code></a> file system various details about a system can be retrieved. Here the CPU temperature
+<p>Thanks to the <a href="https://en.wikipedia.org/wiki/Procfs"><code>proc</code></a> file system, various details about a system can be retrieved. Here the CPU temperature
 is of interest. Add something similar to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
