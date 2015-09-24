@@ -7,10 +7,21 @@ cd "$(dirname "$0")/.."
 
 script/lint
 
+LINT_STATUS=$?
+
 echo "Running tests..."
 
 if [ "$1" = "coverage" ]; then
-  py.test --cov homeassistant tests
+  py.test --cov --cov-report=
+  TEST_STATUS=$?
 else
-  py.test tests
+  py.test
+  TEST_STATUS=$?
+fi
+
+if [ $LINT_STATUS -eq 0 ]
+then
+  exit $TEST_STATUS
+else
+  exit $LINT_STATUS
 fi

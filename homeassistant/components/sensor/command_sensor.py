@@ -108,12 +108,15 @@ class CommandSensor(Entity):
         self.data.update()
         value = self.data.value
 
-        if value is not None:
-            if self._corr_factor is not None:
-                self._state = round((int(value) * self._corr_factor),
-                                    self._decimal_places)
-            else:
-                self._state = value
+        try:
+            if value is not None:
+                if self._corr_factor is not None:
+                    self._state = round((float(value) * self._corr_factor),
+                                        self._decimal_places)
+                else:
+                    self._state = value
+        except ValueError:
+            self._state = value
 
 
 # pylint: disable=too-few-public-methods
