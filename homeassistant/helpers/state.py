@@ -61,15 +61,14 @@ def reproduce_state(hass, states, blocking=False):
             service = SERVICE_MEDIA_PAUSE
         elif state.domain == 'media_player' and state == STATE_PLAYING:
             service = SERVICE_MEDIA_PLAY
+        elif state.state == STATE_ON:
+            service = SERVICE_TURN_ON
+        elif state.state == STATE_OFF:
+            service = SERVICE_TURN_OFF
         else:
-            if state.state == STATE_ON:
-                service = SERVICE_TURN_ON
-            elif state.state == STATE_OFF:
-                service = SERVICE_TURN_OFF
-            else:
-                _LOGGER.warning("reproduce_state: Unable to reproduce \
-                                state %s", state)
-                continue
+            _LOGGER.warning("reproduce_state: Unable to reproduce state %s",
+                            state)
+            continue
 
         service_data = dict(state.attributes)
         service_data[ATTR_ENTITY_ID] = state.entity_id
