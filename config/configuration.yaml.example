@@ -104,7 +104,7 @@ keyboard:
 
 automation:
   
-- alias: Sun starts shining
+- alias: 'Sun starts shining'
   platform: state
   state_entity_id: sun.sun
   state: 'above_horizon'
