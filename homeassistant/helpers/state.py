@@ -67,8 +67,8 @@ def reproduce_state(hass, states, blocking=False):
             elif state.state == STATE_OFF:
                 service = SERVICE_TURN_OFF
             else:
-                _LOGGER.warning("reproduce_state: Unable to reproduce state %s",
-                                state)
+                _LOGGER.warning("reproduce_state: Unable to reproduce \
+                                state %s", state)
                 continue
 
         service_data = dict(state.attributes)
