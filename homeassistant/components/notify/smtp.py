@@ -171,7 +171,6 @@ class MailNotificationService(BaseNotificationService):
                 self.mail.sendmail(self._sender, self.recipient,
                                    msg.as_string())
                 break
-            except smtplib.SMTPException as err:
-                _LOGGER.warning('SMTP Exception sending mail: {0}:{1}'
-                                .format(err.smtp_code, err.smtp_error))
+            except smtplib.SMTPException:
+                _LOGGER.warning('SMTPException sending mail: retrying connection')
                 self.connect()
