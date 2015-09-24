@@ -61,7 +61,7 @@ def reproduce_state(hass, states, blocking=False):
             service = SERVICE_MEDIA_PAUSE
         elif state.domain == 'media_player' and state == STATE_PLAYING:
             service = SERVICE_MEDIA_PLAY
-        else
+        else:
             if state.state == STATE_ON:
                 service = SERVICE_TURN_ON
             elif state.state == STATE_OFF:
