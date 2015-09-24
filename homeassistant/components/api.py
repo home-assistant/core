@@ -103,6 +103,10 @@ def _handle_get_api_stream(handler, path_match, data):
     write_lock = threading.Lock()
     block = threading.Event()
 
+    restrict = data.get('restrict')
+    if restrict:
+        restrict = restrict.split(',')
+
     def write_message(payload):
         """ Writes a message to the output. """
         with write_lock:
@@ -118,7 +122,8 @@ def _handle_get_api_stream(handler, path_match, data):
         """ Forwards events to the open request. """
         nonlocal gracefully_closed
 
-        if block.is_set() or event.event_type == EVENT_TIME_CHANGED:
+        if block.is_set() or event.event_type == EVENT_TIME_CHANGED or \
+           restrict and event.event_type not in restrict:
             return
         elif event.event_type == EVENT_HOMEASSISTANT_STOP:
             gracefully_closed = True
