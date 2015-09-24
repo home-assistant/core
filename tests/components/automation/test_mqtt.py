@@ -77,7 +77,7 @@ class TestAutomationState(unittest.TestCase):
                     'topic': 'test-topic'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -95,7 +95,7 @@ class TestAutomationState(unittest.TestCase):
                     'payload': 'hello'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
@@ -113,7 +113,7 @@ class TestAutomationState(unittest.TestCase):
                     'payload': 'hello'
                 },
                 'action': {
-                    'execute_service': 'test.automation'
+                    'service': 'test.automation'
                 }
             }
         }))
