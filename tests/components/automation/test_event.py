@@ -75,7 +75,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         }))
@@ -93,12 +93,13 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_data': {'some_attr': 'some_value'}
                 },
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         }))
 
-        self.hass.bus.fire('test_event', {'some_attr': 'some_value'})
+        self.hass.bus.fire('test_event', {'some_attr': 'some_value',
+                                          'another': 'value'})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -111,7 +112,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'event_data': {'some_attr': 'some_value'}
                 },
                 'action': {
-                    'execute_service': 'test.automation',
+                    'service': 'test.automation',
                 }
             }
         }))

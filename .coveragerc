@@ -49,6 +49,7 @@ omit =
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/mpd.py
+    homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/squeezebox.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/notify/file.py
@@ -69,6 +70,7 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rfxtrx.py
     homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py

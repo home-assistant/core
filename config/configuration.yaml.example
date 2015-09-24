@@ -1,7 +1,9 @@
 homeassistant:
   # Omitted values in this section will be auto detected using freegeoip.net
 
-  # Location required to calculate the time the sun rises and sets
+  # Location required to calculate the time the sun rises and sets.  
+  # Cooridinates are also used for location for weather related components. 
+  # Google Maps can be used to determine more precise GPS cooridinates.
   latitude: 32.87336
   longitude: 117.22743
 
