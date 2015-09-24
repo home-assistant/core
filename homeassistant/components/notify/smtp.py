@@ -172,5 +172,6 @@ class MailNotificationService(BaseNotificationService):
                                    msg.as_string())
                 break
             except smtplib.SMTPException:
-                _LOGGER.warning('SMTPException sending mail: retrying connection')
+                _LOGGER.warning('SMTPException sending mail: '
+                                'retrying connection')
                 self.connect()
