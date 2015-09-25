@@ -54,7 +54,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """ Four digit code required"""
-        return '[0-9]{4}'
+        return '^\\d{4}$'
 
     def update(self):
         ''' update alarm status '''
