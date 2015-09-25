@@ -21,6 +21,8 @@ CONF_HOST = "host"
 CONF_HOSTS = "hosts"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_PORT = "port"
+CONF_VERSION = "version"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
 
