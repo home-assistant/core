@@ -188,15 +188,18 @@ class Scene(ToggleEntity):
         state = self.scene_config.states.get(cur_state and cur_state.entity_id)
 
         return (cur_state is not None and state.state == cur_state.state and
-                all(self._compare_state_attribites(value, cur_state.attributes.get(key))
+                all(self._compare_state_attribites(
+                    value, cur_state.attributes.get(key))
                     for key, value in state.attributes.items()))
 
-    def _fuzzy_attribute_compare(self, a, b):
-        """ Compare the attributes passed, use fuzzy logic if they are floats. """
+    def _fuzzy_attribute_compare(self, attr_a, attr_b):
+        """
+        Compare the attributes passed, use fuzzy logic if they are floats.
+        """
 
-        if not (isinstance(a, float) and isinstance(b, float)):
+        if not (isinstance(attr_a, float) and isinstance(attr_b, float)):
             return False
-        diff = abs(a - b) / (abs(a) + abs(b))
+        diff = abs(attr_a - attr_b) / (abs(attr_a) + abs(attr_b))
         return diff <= self.scene_config.fuzzy_match
 
     def _compare_state_attribites(self, attr1, attr2):
@@ -206,7 +209,8 @@ class Scene(ToggleEntity):
         if not self.scene_config.fuzzy_match:
             return False
         if isinstance(attr1, list):
-            return all(self._fuzzy_attribute_compare(a, b) for a,b in zip(attr1,attr2))
+            return all(self._fuzzy_attribute_compare(a, b)
+                       for a, b in zip(attr1, attr2))
         return self._fuzzy_attribute_compare(attr1, attr2)
 
     def _reproduce_state(self, states):
