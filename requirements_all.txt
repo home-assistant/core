@@ -136,3 +136,6 @@ SoCo==0.11.1
 
 # PlexAPI (media_player.plex)
 https://github.com/miniconfig/python-plexapi/archive/437e36dca3b7780dc0cb73941d662302c0cd2fa9.zip#python-plexapi==1.0.2
+
+# unifi access point controller
+unifi==1.2.3
