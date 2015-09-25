@@ -192,12 +192,15 @@ class Scene(ToggleEntity):
                     for key, value in state.attributes.items()))
 
     def _fuzzy_attribute_compare(self, a, b):
+        """ Compare the attributes passed, use fuzzy logic if they are floats. """
+
         if not (isinstance(a, float) and isinstance(b, float)):
             return False
         diff = abs(a - b) / (abs(a) + abs(b))
         return diff <= self.scene_config.fuzzy_match
 
     def _compare_state_attribites(self, attr1, attr2):
+        """ Compare the attributes passed, using fuzzy logic if specified. """
         if attr1 == attr2:
             return True
         if not self.scene_config.fuzzy_match:
