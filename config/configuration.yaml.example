@@ -103,24 +103,37 @@ browser:
 keyboard:
 
 automation:
-  
-- alias: 'Sun starts shining'
-  platform: state
-  state_entity_id: sun.sun
-  state: 'above_horizon'
+- alias: 'Rule 1 Light on in the evening'
+  trigger:
+    - platform: sun
+      event: sunset
+      offset: "-01:00:00"
+    - platform: state
+      entity_id: group.all_devices
+      state: home
+  condition:
+    - platform: state
+      entity_id: group.all_devices
+      state: home
+    - platform: time
+      after: "16:00:00"
+      before: "23:00:00"
+  action:
+    service: homeassistant.turn_on
+    entity_id: group.living_room
 
-  service: light.turn_off
-  entity_id: group.living_room
+- alias: 'Rule 2 - Away Mode'
 
-- alias: 'Beer o Clock'
-  platform: time
-  hours: 16
-  minutes: 0
-  seconds: 0
+  trigger:
+   - platform: state
+     entity_id: group.all_devices
+     state: 'not_home'
 
-  service: notify.notify
-  data:
-    message: It's 4, time for beer!
+  condition: use_trigger_values
+  condition:
+  action:
+     service: light.turn_off
+     entity_id: group.all_lights
 
 sensor:
   platform: systemmonitor
