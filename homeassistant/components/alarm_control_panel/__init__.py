@@ -29,9 +29,11 @@ SERVICE_TO_METHOD = {
 }
 
 ATTR_CODE = 'code'
+ATTR_CODE_FORMAT = 'code_format'
 
 ATTR_TO_PROPERTY = [
     ATTR_CODE,
+    ATTR_CODE_FORMAT
 ]
 
 
@@ -113,3 +115,11 @@ class AlarmControlPanel(Entity):
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
         raise NotImplementedError()
+
+    @property
+    def state_attributes(self):
+        """ Return the state attributes. """
+        state_attr = {
+            ATTR_CODE_FORMAT: self.code_format,
+            }
+        return state_attr
