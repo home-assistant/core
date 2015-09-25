@@ -29,9 +29,11 @@ SERVICE_TO_METHOD = {
 }
 
 ATTR_CODE = 'code'
+ATTR_CODE_FORMAT = 'code_format'
 
 ATTR_TO_PROPERTY = [
     ATTR_CODE,
+    ATTR_CODE_FORMAT
 ]
 
 
@@ -93,16 +95,31 @@ def alarm_arm_away(hass, code, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data)
 
 
+# pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """ ABC for alarm control devices. """
-    def alarm_disarm(self, code):
+
+    @property
+    def code_format(self):
+        """ regex for code format or None if no code is required """
+        return None
+
+    def alarm_disarm(self, code=None):
         """ Send disarm command. """
         raise NotImplementedError()
 
-    def alarm_arm_home(self, code):
+    def alarm_arm_home(self, code=None):
         """ Send arm home command. """
         raise NotImplementedError()
 
-    def alarm_arm_away(self, code):
+    def alarm_arm_away(self, code=None):
         """ Send arm away command. """
         raise NotImplementedError()
+
+    @property
+    def state_attributes(self):
+        """ Return the state attributes. """
+        state_attr = {
+            ATTR_CODE_FORMAT: self.code_format,
+            }
+        return state_attr
