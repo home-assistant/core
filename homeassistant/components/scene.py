@@ -33,7 +33,7 @@ ATTR_ACTIVE_REQUESTED = "active_requested"
 
 CONF_ENTITIES = "entities"
 
-SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'read_after_set'])
+SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'fuzzy_match'])
 
 
 def setup(hass, config):
@@ -71,7 +71,15 @@ def setup(hass, config):
 def _process_config(scene_config):
     """ Process passed in config into a format to work with. """
     name = scene_config.get('name')
-    read_after_set = scene_config.get('read_after_set')
+
+    fuzzy_match = scene_config.get('fuzzy_match')
+    if fuzzy_match:
+        # default to 1%
+        if isinstance(fuzzy_match, int):
+            fuzzy_match /= 100.0
+        else:
+            fuzzy_match = 0.01
+
     states = {}
     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
 
@@ -92,7 +100,7 @@ def _process_config(scene_config):
 
         states[entity_id.lower()] = State(entity_id, state, attributes)
 
-    return SceneConfig(name, states, read_after_set)
+    return SceneConfig(name, states, fuzzy_match)
 
 
 class Scene(ToggleEntity):
@@ -179,38 +187,30 @@ class Scene(ToggleEntity):
         """ Returns if given state is as requested. """
         state = self.scene_config.states.get(cur_state and cur_state.entity_id)
 
-        ret = (cur_state is not None and state.state == cur_state.state and
-                all(value == cur_state.attributes.get(key)
+        return (cur_state is not None and state.state == cur_state.state and
+                all(self._compare_state_attribites(value, cur_state.attributes.get(key))
                     for key, value in state.attributes.items()))
 
-        print('AS REQUESTED')
-        print(ret)
-        print(self.scene_config.states)
-        return ret
+    def _fuzzy_attribute_compare(self, a, b):
+        if not (isinstance(a, float) and isinstance(b, float)):
+            return False
+        diff = abs(a - b) / (abs(a) + abs(b))
+        return diff <= self.scene_config.fuzzy_match
 
-    def _state_read_after_set(self, states):
-        """ Reads back state after setting. """
-        print('BEFORE')
-        print(self.scene_config.states)
-        target_state = self.scene_config.states
-        for key, value in target_state.items():
-            actual = self.hass.states.get(key)
-            print('ACTUAL')
-            print(actual)
-            if actual and actual != value and actual.state == value.state:
-                print('CHANGING CONFIG')
-                for k in value.attributes.keys():
-                    value.attributes[k] = actual.attributes[k]
-        print('AFTER')
-        print(self.scene_config.states)
+    def _compare_state_attribites(self, attr1, attr2):
+        if attr1 == attr2:
+            return True
+        if not self.scene_config.fuzzy_match:
+            return False
+        if isinstance(attr1, list):
+            return all(self._fuzzy_attribute_compare(a, b) for a,b in zip(attr1,attr2))
+        return self._fuzzy_attribute_compare(attr1, attr2)
 
     def _reproduce_state(self, states):
         """ Wraps reproduce state with Scence specific logic. """
         print('REPRODUCE_STATE')
         self.ignore_updates = True
         reproduce_state(self.hass, states, True)
-        if self.scene_config.read_after_set:
-            self._state_read_after_set(states)
         self.ignore_updates = False
 
         self.update_ha_state(True)
