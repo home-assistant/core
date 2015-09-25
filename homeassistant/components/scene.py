@@ -215,7 +215,6 @@ class Scene(ToggleEntity):
 
     def _reproduce_state(self, states):
         """ Wraps reproduce state with Scence specific logic. """
-        print('REPRODUCE_STATE')
         self.ignore_updates = True
         reproduce_state(self.hass, states, True)
         self.ignore_updates = False
