@@ -30,7 +30,8 @@ def get_scanner(hass, config):
     version = info.get(CONF_VERSION)
     siteid = info.get(CONF_SITEID)
 
-    scanner = UnifiDeviceScanner(host, username, password, port, version, siteid)
+    scanner = UnifiDeviceScanner(host, username, password,
+                                 port, version, siteid)
 
     return scanner if scanner.success_init else None
 
@@ -49,23 +50,21 @@ class UnifiDeviceScanner(object):
             _LOGGER.exception(
                 ("Failed to import unifi. "))
 
-
             self.success_init = False
 
             return
 
         self._api = Controller(host, username, password, port, version, siteid)
 
-
         self.lock = threading.Lock()
 
         _LOGGER.info("Unifi object created, running first device scan.")
 
-        #self.success_init = self._api.login()
+        # self.success_init = self._api.login()
         self.success_init = True
-        #if self.success_init:
+        # if self.success_init:
         self._update_info()
-        #else:
+        # else:
         #    _LOGGER.error("Failed to Login")
 
     def scan_devices(self):
@@ -84,7 +83,6 @@ class UnifiDeviceScanner(object):
                 except StopIteration:
                     return maclist["hostname"]
 
-
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """ Retrieves latest information from the Netgear router.
@@ -96,4 +94,3 @@ class UnifiDeviceScanner(object):
             _LOGGER.info("Scanning")
 
             self.last_results = self._api.get_clients() or []
-
