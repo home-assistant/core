@@ -123,9 +123,14 @@ class WemoSwitch(SwitchDevice):
 
     def update(self):
         """ Update WeMo state. """
-        self.wemo.get_state(True)
-        if self.wemo.model_name == 'Insight':
-            self.insight_params = self.wemo.insight_params
-            self.insight_params['standby_state'] = self.wemo.get_standby_state
-        elif self.wemo.model_name == 'Maker':
-            self.maker_params = self.wemo.maker_params
+        try:
+            self.wemo.get_state(True)
+            if self.wemo.model_name == 'Insight':
+                self.insight_params = self.wemo.insight_params
+                self.insight_params['standby_state'] = (
+                    self.wemo.get_standby_state)
+            elif self.wemo.model_name == 'Maker':
+                self.maker_params = self.wemo.maker_params
+        except AttributeError:
+            logging.getLogger(__name__).warning(
+                'Could not update status for %s', self.name)
