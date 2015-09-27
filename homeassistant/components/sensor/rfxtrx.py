@@ -24,6 +24,9 @@ from collections import OrderedDict
 
 from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
+import homeassistant.components.rfxtrx as rfxtrx
+from RFXtrx import SensorEvent
+from homeassistant.util import slugify
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
                 'ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip#RFXtrx==0.15']
@@ -36,7 +39,7 @@ DATA_TYPES = OrderedDict([
     ('Rain rate', '')])
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
     logger = logging.getLogger(__name__)
 
@@ -44,23 +47,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def sensor_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if event.device.id_string in sensors:
-            sensors[event.device.id_string].event = event
-        else:
-            logger.info("adding new sensor: %s", event.device.type_string)
-            new_sensor = RfxtrxSensor(event)
-            sensors[event.device.id_string] = new_sensor
-            add_devices([new_sensor])
-    try:
-        import RFXtrx as rfxtrx
-    except ImportError:
-        logger.exception(
-            "Failed to import rfxtrx")
-        return False
+        if isinstance(event.device, SensorEvent):
+            entity_id = '%s-%s' % (event.device.type_string.lower(), slugify(event.device.id_string.lower()))
+            if entity_id in rfxtrx.RFX_DEVICES:
+                rfxtrx.RFX_DEVICES[entity_id].event = event
+            else:
+                automatic_add = config.get('automatic_add', False)
+                if automatic_add:
+                    new_light = RfxtrxSensor(entity_id, False)
+                    rfxtrx.RFX_DEVICES[entity_id] = new_light
+                    add_devices_callback([new_light])
 
-    device = config.get("device", "")
-    rfxtrx.Core(device, sensor_update)
-
+    if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
+        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)
 
 class RfxtrxSensor(Entity):
     """ Represents a RFXtrx sensor. """
