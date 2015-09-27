@@ -89,7 +89,7 @@ class LimitlessLED(Light):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo light. """
+        """ No polling needed. """
         return False
 
     @property
