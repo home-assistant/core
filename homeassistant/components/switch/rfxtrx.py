@@ -36,24 +36,30 @@ DOMAIN = "rfxtrx"
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
+    logger = logging.getLogger(__name__)
+
     # Add switch from config file
+    switchs = []
     devices = config.get('devices')
     for entity_id, entity_name in devices.items():
         if entity_id not in rfxtrx.RFX_DEVICES:
+            logger.info("Add %s rfxtrx.switch" % entity_name)
             new_switch = RfxtrxSwitch(entity_name, False)
             rfxtrx.RFX_DEVICES[entity_id] = new_switch
+            switchs.append(new_switch)
 
-    add_devices_callback(rfxtrx.RFX_DEVICES.values())
+    add_devices_callback(switchs)
 
     def switch_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
         if isinstance(event.device, LightingDevice):
-            entity_id = '%s-%s' % (event.device.type_string.lower(), slugify(event.device.id_string.lower()))
+            entity_id = slugify(event.device.id_string.lower())
 
             # Add entity if not exist and the automatic_add is True
             if entity_id not in rfxtrx.RFX_DEVICES:
                 automatic_add = config.get('automatic_add', False)
                 if automatic_add:
+                    logger.info("Automatic add %s rfxtrx.switch" % entity_name)
                     new_switch = RfxtrxSwitch(entity_id, False)
                     rfxtrx.RFX_DEVICES[entity_id] = new_switch
                     add_devices_callback([new_switch])
