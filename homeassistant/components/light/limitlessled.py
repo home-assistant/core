@@ -24,6 +24,7 @@ light:
       group_1_name: Living Room
       group_2_name: Bedroom
       group_3_name: Office
+      group_3_type: white
       group_4_name: Kitchen
     - host: 192.168.1.11
       group_2_name: Basement
@@ -54,26 +55,70 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     lights = []
     for bridge in bridges:
         for i in range(1, 5):
-            if 'group_%d_name' % (i) in bridge:
-                lights.append(LimitlessLED(pool, bridge['id'], i, bridge['group_%d_name' % (i)]))
+            name_key = 'group_%d_name' % i
+            if name_key in bridge:
+                group_type = bridge.get('group_%d_type' % i, 'rgbw')
+                lights.append(LimitlessLED.factory(pool, bridge['id'], i,
+                                                   bridge[name_key],
+                                                   group_type))
 
     add_devices_callback(lights)
 
 
-# pylint: disable=too-many-instance-attributes
 class LimitlessLED(Light):
     """ Represents a LimitlessLED light """
 
-    def __init__(self, pool, controller_id, group, name):
+    @staticmethod
+    def factory(pool, controller_id, group, name, group_type):
+        ''' Construct a Limitless LED of the appropriate type '''
+        if group_type == 'white':
+            return WhiteLimitlessLED(pool, controller_id, group, name)
+        elif group_type == 'rgbw':
+            return RGBWLimitlessLED(pool, controller_id, group, name)
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, pool, controller_id, group, name, group_type):
         self.pool = pool
         self.controller_id = controller_id
         self.group = group
+
+        self.pool.execute(self.controller_id, "set_group_type", self.group,
+                          group_type)
 
         # LimitlessLEDs don't report state, we have track it ourselves.
         self.pool.execute(self.controller_id, "off", self.group)
 
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = False
+
+    @property
+    def should_poll(self):
+        """ No polling needed. """
+        return False
+
+    @property
+    def name(self):
+        """ Returns the name of the device if any. """
+        return self._name
+
+    @property
+    def is_on(self):
+        """ True if device is on. """
+        return self._state
+
+    def turn_off(self, **kwargs):
+        """ Turn the device off. """
+        self._state = False
+        self.pool.execute(self.controller_id, "off", self.group)
+        self.update_ha_state()
+
+
+class RGBWLimitlessLED(LimitlessLED):
+    """ Represents a RGBW LimitlessLED light """
+
+    def __init__(self, pool, controller_id, group, name):
+        super().__init__(pool, controller_id, group, name, 'rgbw')
+
         self._brightness = 100
         self._xy_color = color_RGB_to_xy(255, 255, 255)
 
@@ -100,16 +145,6 @@ class LimitlessLED(Light):
         ]]
 
     @property
-    def should_poll(self):
-        """ No polling needed. """
-        return False
-
-    @property
-    def name(self):
-        """ Returns the name of the device if any. """
-        return self._name
-
-    @property
     def brightness(self):
         return self._brightness
 
@@ -129,11 +164,6 @@ class LimitlessLED(Light):
         # First candidate in the sorted list is closest to desired color:
         return sorted(candidates)[0][1]
 
-    @property
-    def is_on(self):
-        """ True if device is on. """
-        return self._state
-
     def turn_on(self, **kwargs):
         """ Turn the device on. """
         self._state = True
@@ -150,8 +180,15 @@ class LimitlessLED(Light):
                           self._brightness / 255.0, self.group)
         self.update_ha_state()
 
-    def turn_off(self, **kwargs):
-        """ Turn the device off. """
-        self._state = False
-        self.pool.execute(self.controller_id, "off", self.group)
+
+class WhiteLimitlessLED(LimitlessLED):
+    """ Represents a White LimitlessLED light """
+
+    def __init__(self, pool, controller_id, group, name):
+        super().__init__(pool, controller_id, group, name, 'white')
+
+    def turn_on(self, **kwargs):
+        """ Turn the device on. """
+        self._state = True
+        self.pool.execute(self.controller_id, "on", self.group)
         self.update_ha_state()
