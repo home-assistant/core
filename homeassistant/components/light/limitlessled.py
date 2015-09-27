@@ -19,11 +19,14 @@ configuration.yaml file.
 
 light:
   platform: limitlessled
-  host: 192.168.1.10
-  group_1_name: Living Room
-  group_2_name: Bedroom
-  group_3_name: Office
-  group_4_name: Kitchen
+  bridges:
+    - host: 192.168.1.10
+      group_1_name: Living Room
+      group_2_name: Bedroom
+      group_3_name: Office
+      group_4_name: Kitchen
+    - host: 192.168.1.11
+      group_2_name: Basement
 """
 import logging
 
@@ -40,12 +43,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the LimitlessLED lights. """
     import ledcontroller
 
-    pool = ledcontroller.LedControllerPool([config['host']])
+    for bridge_id, bridge in enumerate(bridges):
+        bridge['id'] = bridge_id
+
+    pool = ledcontroller.LedControllerPool([x['host'] for x in bridges])
 
     lights = []
-    for i in range(1, 5):
-        if 'group_%d_name' % (i) in config:
-            lights.append(LimitlessLED(pool, 0, i, config['group_%d_name' % (i)]))
+    for bridge in bridges:
+        for i in range(1, 5):
+            if 'group_%d_name' % (i) in bridge:
+                lights.append(LimitlessLED(pool, bridge['id'], i, bridge['group_%d_name' % (i)]))
 
     add_devices_callback(lights)
 
