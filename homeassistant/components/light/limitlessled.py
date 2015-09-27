@@ -33,32 +33,34 @@ from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
 from homeassistant.util.color import color_RGB_to_xy
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['ledcontroller==1.0.7']
+REQUIREMENTS = ['ledcontroller==1.1.0']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the LimitlessLED lights. """
     import ledcontroller
 
-    led = ledcontroller.LedController(config['host'])
+    pool = ledcontroller.LedControllerPool([config['host']])
 
     lights = []
     for i in range(1, 5):
         if 'group_%d_name' % (i) in config:
-            lights.append(LimitlessLED(led, i, config['group_%d_name' % (i)]))
+            lights.append(LimitlessLED(pool, 0, i, config['group_%d_name' % (i)]))
 
     add_devices_callback(lights)
 
 
+# pylint: disable=too-many-instance-attributes
 class LimitlessLED(Light):
     """ Represents a LimitlessLED light """
 
-    def __init__(self, led, group, name):
-        self.led = led
+    def __init__(self, pool, controller_id, group, name):
+        self.pool = pool
+        self.controller_id = controller_id
         self.group = group
 
         # LimitlessLEDs don't report state, we have track it ourselves.
-        self.led.off(self.group)
+        self.pool.execute(self.controller_id, "off", self.group)
 
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = False
@@ -132,12 +134,14 @@ class LimitlessLED(Light):
         if ATTR_XY_COLOR in kwargs:
             self._xy_color = kwargs[ATTR_XY_COLOR]
 
-        self.led.set_color(self._xy_to_led_color(self._xy_color), self.group)
-        self.led.set_brightness(self._brightness / 255.0, self.group)
+        self.pool.execute(self.controller_id, "set_color",
+                          self._xy_to_led_color(self._xy_color), self.group)
+        self.pool.execute(self.controller_id, "set_brightness",
+                          self._brightness / 255.0, self.group)
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
         self._state = False
-        self.led.off(self.group)
+        self.pool.execute(self.controller_id, "off", self.group)
         self.update_ha_state()
