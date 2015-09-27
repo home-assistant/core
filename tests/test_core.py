@@ -441,7 +441,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         expected = {
-            'test_domain': ['test_service']
+            'test_domain': {'test_service': {'description': '', 'fields': {}}}
         }
         self.assertEqual(expected, self.services.services)
 
