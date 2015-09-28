@@ -166,3 +166,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
                          self._payload_arm_away, self._qos)
         else:
             _LOGGER.warning("Wrong code entered while arming away!")
+
+    def alarm_trigger(self, code=None):
+        """ Send alarm trigger command. No code needed. """
+        return
