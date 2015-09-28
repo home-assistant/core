@@ -60,7 +60,7 @@ def setup(hass, config):
         {'camera': {
             'platform': 'generic',
             'name': 'IP Camera',
-            'still_image_url': 'http://194.218.96.92/jpg/image.jpg',
+            'still_image_url': 'http://home-assistant.io/demo/webcam.jpg',
         }})
 
     # Setup scripts

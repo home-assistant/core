@@ -52,14 +52,14 @@ import logging
 import os
 import csv
 
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
-
-import homeassistant.util as util
-import homeassistant.util.color as color_util
+from homeassistant.components import group, discovery, wink, isy994
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.components import group, discovery, wink, isy994
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
+import homeassistant.util as util
+import homeassistant.util.color as color_util
 
 
 DOMAIN = "light"
@@ -275,11 +275,13 @@ def setup(hass, config):
                 light.update_ha_state(True)
 
     # Listen for light on and light off service calls
-    hass.services.register(DOMAIN, SERVICE_TURN_ON,
-                           handle_light_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_light_service,
+                           descriptions.get(SERVICE_TURN_ON))
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF,
-                           handle_light_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_light_service,
+                           descriptions.get(SERVICE_TURN_OFF))
 
     return True
 
