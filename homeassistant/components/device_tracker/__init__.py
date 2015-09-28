@@ -175,7 +175,10 @@ def setup(hass, config):
                  ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY)}
         tracker.see(**args)
 
-    hass.services.register(DOMAIN, SERVICE_SEE, see_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_SEE, see_service,
+                           descriptions.get(SERVICE_SEE))
 
     return True
 
