@@ -228,16 +228,18 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
+<span class='line-number'>11</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Post a tweet when fire alarm is triggered</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Post a tweet when fire alarm is triggered</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">mqtt_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home/alarm/fire</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">mqtt_payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home/alarm/fire</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">mqtt_payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;HA_FIRE_ALARM&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;value1&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">fire</span><span class="nv"> </span><span class="s">alarm</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">triggered!&quot;</span><span class="p-Indicator">}</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;HA_FIRE_ALARM&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;value1&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">fire</span><span class="nv"> </span><span class="s">alarm</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">triggered!&quot;</span><span class="p-Indicator">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

@@ -110,7 +110,12 @@ routers, Belkin WeMo switches, Philips Hue bridges and Sonos speakers in your ne
 <a href="/components/discovery.html">the discovery component</a> enabled (which is by default).</p>
 
 <p>See the <a href="/components/">components overview page</a> to find installation instructions for your devices
-and services.</p>
+and services.  Many components use the <code>sensor</code> platform.  Sensors need to be added into the <code>configuration.yaml</code> as <code>sensor:</code>, <code>sensor 2:</code>, <code>sensor 3:</code>, etc.  There should not be gaps in the sequence or your sensors might not load correctly.</p>
+
+<p class='note'>
+Most components that support multiple entries within the <code>configuration.yaml</code> follow the <code>component:</code>, <code>component 2:</code> format.
+</p>
+
 
 <p>To get the most out of automation, it is useful to setup the following things:</p>
 
@@ -159,10 +164,12 @@ of these parameters. This can be done by adding the following config to the <cod
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
+<span class='line-number'>10</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="c1"># Add this to your existing configuration</span>
+</span><span class='line'>    <span class="c1"># Only the `entity_id` is required.  All other options are optional.</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
 </span><span class='line'>        <span class="l-Scalar-Plain">some.entity_id</span><span class="p-Indicator">:</span>
 </span><span class='line'>            <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>

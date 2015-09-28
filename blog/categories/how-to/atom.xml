@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-25T07:45:15-07:00</updated>
+  <updated>2015-09-27T20:26:14-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -162,14 +162,15 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 
 <pre><code class="yaml"># Configuration.yaml entry
 automation:
-  alias: Post a tweet when fire alarm is triggered
+- alias: Post a tweet when fire alarm is triggered
+  trigger:
+    platform: mqtt
+    mqtt_topic: home/alarm/fire
+    mqtt_payload: 'on'
 
-  platform: mqtt
-  mqtt_topic: home/alarm/fire
-  mqtt_payload: 'on'
-
-  execute_service: ifttt.trigger
-  service_data: {"event":"HA_FIRE_ALARM", "value1":"The fire alarm just triggered!"}
+  action:
+    service: ifttt.trigger
+    data: {"event":"HA_FIRE_ALARM", "value1":"The fire alarm just triggered!"}
 </code></pre>
 
 <h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home </h2>
