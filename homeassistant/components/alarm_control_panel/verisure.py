@@ -91,3 +91,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             code,
             verisure.MY_PAGES.ALARM_ARMED_AWAY)
         _LOGGER.warning('arming away')
+
+    def alarm_trigger(self, code=None):
+        """ Send alarm trigger command. No code needed. """
+        return
