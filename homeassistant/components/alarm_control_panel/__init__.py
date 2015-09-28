@@ -4,12 +4,15 @@ homeassistant.components.alarm_control_panel
 Component to interface with a alarm control panel.
 """
 import logging
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
+import os
+
 from homeassistant.components import verisure
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
+from homeassistant.config import load_yaml_config_file
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 
 DOMAIN = 'alarm_control_panel'
 DEPENDENCIES = []
@@ -59,8 +62,12 @@ def setup(hass, config):
         for alarm in target_alarms:
             getattr(alarm, method)(code)
 
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
     for service in SERVICE_TO_METHOD:
-        hass.services.register(DOMAIN, service, alarm_service_handler)
+        hass.services.register(DOMAIN, service, alarm_service_handler,
+                               descriptions.get(service))
 
     return True
 
