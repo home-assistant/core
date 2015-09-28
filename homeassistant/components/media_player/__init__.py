@@ -5,8 +5,10 @@ homeassistant.components.media_player
 Component to interface with various media players.
 """
 import logging
+import os
 
 from homeassistant.components import discovery
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
@@ -186,6 +188,9 @@ def setup(hass, config):
 
     component.setup(config)
 
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
     def media_player_service_handler(service):
         """ Maps services to methods on MediaPlayerDevice. """
         target_players = component.extract_from_service(service)
@@ -199,7 +204,8 @@ def setup(hass, config):
                 player.update_ha_state(True)
 
     for service in SERVICE_TO_METHOD:
-        hass.services.register(DOMAIN, service, media_player_service_handler)
+        hass.services.register(DOMAIN, service, media_player_service_handler,
+                               descriptions.get(service))
 
     def volume_set_service(service):
         """ Set specified volume on the media player. """
@@ -216,7 +222,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service)
+    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service,
+                           descriptions.get(SERVICE_VOLUME_SET))
 
     def volume_mute_service(service):
         """ Mute (true) or unmute (false) the media player. """
@@ -233,7 +240,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service)
+    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service,
+                           descriptions.get(SERVICE_VOLUME_MUTE))
 
     def media_seek_service(service):
         """ Seek to a position. """
@@ -250,7 +258,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service)
+    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
+                           descriptions.get(SERVICE_MEDIA_SEEK))
 
     def play_youtube_video_service(service, media_id=None):
         """ Plays specified media_id on the media player. """
@@ -268,14 +277,17 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, "start_fireplace",
-        lambda service: play_youtube_video_service(service, "eyU3bRy2x44"))
+        lambda service: play_youtube_video_service(service, "eyU3bRy2x44"),
+        descriptions.get('start_fireplace'))
 
     hass.services.register(
         DOMAIN, "start_epic_sax",
-        lambda service: play_youtube_video_service(service, "kxopViU98Xo"))
+        lambda service: play_youtube_video_service(service, "kxopViU98Xo"),
+        descriptions.get('start_epic_sax'))
 
     hass.services.register(
-        DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service)
+        DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service,
+        descriptions.get(SERVICE_YOUTUBE_VIDEO))
 
     return True
 

@@ -6,7 +6,9 @@ Provides functionality to notify people.
 """
 from functools import partial
 import logging
+import os
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform
 
@@ -35,6 +37,9 @@ def send_message(hass, message):
 def setup(hass, config):
     """ Sets up notify services. """
     success = False
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     for platform, p_config in config_per_platform(config, DOMAIN, _LOGGER):
         # get platform
@@ -69,7 +74,8 @@ def setup(hass, config):
         # register service
         service_call_handler = partial(notify_message, notify_service)
         service_notify = p_config.get(CONF_NAME, SERVICE_NOTIFY)
-        hass.services.register(DOMAIN, service_notify, service_call_handler)
+        hass.services.register(DOMAIN, service_notify, service_call_handler,
+                               descriptions.get(service_notify))
         success = True
 
     return success
