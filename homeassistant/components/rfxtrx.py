@@ -14,12 +14,11 @@ DOMAIN = "rfxtrx"
 CONF_DEVICE = 'device'
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass, config):
     """ Setup the Rfxtrx component. """
-
-    # Init logger
-    logger = logging.getLogger(__name__)
 
     # Declare the Handle event
     def handle_receive(event):
@@ -31,7 +30,7 @@ def setup(hass, config):
     try:
         import RFXtrx as rfxtrxmod
     except ImportError:
-        logger.exception("Failed to import rfxtrx")
+        _LOGGER.exception("Failed to import rfxtrx")
         return False
 
     # Init the rfxtrx module
