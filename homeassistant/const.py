@@ -101,6 +101,10 @@ ATTR_LAST_TRIP_TIME = "last_tripped_time"
 # For all entity's, this hold whether or not it should be hidden
 ATTR_HIDDEN = "hidden"
 
+# Location of the entity
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
