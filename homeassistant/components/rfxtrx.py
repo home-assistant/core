@@ -15,7 +15,7 @@ CONF_DEVICE = 'device'
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
-
+RFXOBJECT = None
 
 def setup(hass, config):
     """ Setup the Rfxtrx component. """
@@ -34,7 +34,8 @@ def setup(hass, config):
         return False
 
     # Init the rfxtrx module
+    global RFXOBJECT
     device = config[DOMAIN][CONF_DEVICE]
-    rfxtrxmod.Core(device, handle_receive)
+    RFXOBJECT = rfxtrxmod.Core(device, handle_receive)
 
     return True
