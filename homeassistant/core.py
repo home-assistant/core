@@ -446,9 +446,8 @@ class StateMachine(object):
 
         domain_filter = domain_filter.lower()
 
-        return [state.entity_id for key, state
-                in self._states.items()
-                if util.split_entity_id(key)[0] == domain_filter]
+        return [state.entity_id for state in self._states.values()
+                if state.domain == domain_filter]
 
     def all(self):
         """ Returns a list of all states. """
