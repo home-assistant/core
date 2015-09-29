@@ -37,29 +37,31 @@ DATA_TYPES = OrderedDict([
     ('Barometer', ''),
     ('Wind direction', ''),
     ('Rain rate', '')])
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
-    logger = logging.getLogger(__name__)
-
-    sensors = {}    # keep track of sensors added to HA
 
     def sensor_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
         if isinstance(event.device, SensorEvent):
-            entity_id = '%s-%s' % (event.device.type_string.lower(), slugify(event.device.id_string.lower()))
-            if entity_id in rfxtrx.RFX_DEVICES:
-                rfxtrx.RFX_DEVICES[entity_id].event = event
-            else:
+            entity_id = slugify(event.device.id_string.lower())
+
+            # Add entity if not exist and the automatic_add is True
+            if entity_id not in rfxtrx.RFX_DEVICES:
                 automatic_add = config.get('automatic_add', False)
                 if automatic_add:
-                    new_light = RfxtrxSensor(entity_id, False)
-                    rfxtrx.RFX_DEVICES[entity_id] = new_light
-                    add_devices_callback([new_light])
+                    _LOGGER.info("Automatic add %s rfxtrx.light", entity_id)
+                    new_sensor = RfxtrxSensor(event)
+                    rfxtrx.RFX_DEVICES[entity_id] = new_sensor
+                    add_devices_callback([new_sensor])
+            else:
+                rfxtrx.RFX_DEVICES[entity_id].event = event
 
     if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)
+
 
 class RfxtrxSensor(Entity):
     """ Represents a RFXtrx sensor. """

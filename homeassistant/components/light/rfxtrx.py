@@ -33,17 +33,18 @@ REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
                 'ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip#RFXtrx==0.15']
 
 DOMAIN = "rfxtrx"
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
-    logger = logging.getLogger(__name__)
 
     # Add light from config file
     lights = []
     devices = config.get('devices')
     for entity_id, entity_name in devices.items():
         if entity_id not in rfxtrx.RFX_DEVICES:
-            logger.info("Add %s rfxtrx.light" % entity_name)
+            _LOGGER.info("Add %s rfxtrx.light", entity_name)
             new_light = RfxtrxLight(entity_name, False)
             rfxtrx.RFX_DEVICES[entity_id] = new_light
             lights.append(new_light)
@@ -59,14 +60,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if entity_id not in rfxtrx.RFX_DEVICES:
                 automatic_add = config.get('automatic_add', False)
                 if automatic_add:
-                    logger.info("Automatic add %s rfxtrx.light" % entity_name)
+                    _LOGGER.info("Automatic add %s rfxtrx.light", entity_id)
                     new_light = RfxtrxLight(entity_id, False)
                     rfxtrx.RFX_DEVICES[entity_id] = new_light
                     add_devices_callback([new_light])
 
             # Check if entity exists (previous automatic added)
             if entity_id in rfxtrx.RFX_DEVICES:
-                if event.values['Command'] == 'On' or event.values['Command'] == 'Off':
+                if event.values['Command'] == 'On'\
+                        or event.values['Command'] == 'Off':
                     if event.values['Command'] == 'On':
                         rfxtrx.RFX_DEVICES[entity_id].turn_on()
                     else:
