@@ -105,6 +105,9 @@ ATTR_HIDDEN = "hidden"
 ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
 
+# Accuracy of location in meters
+ATTR_GPS_ACCURACY = 'gps_accuracy'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 

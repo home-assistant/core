@@ -40,8 +40,8 @@ import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE, ATTR_LATITUDE, ATTR_LONGITUDE, DEVICE_DEFAULT_NAME,
-    STATE_HOME, STATE_NOT_HOME)
+    ATTR_ENTITY_PICTURE, ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
+    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
 DOMAIN = "device_tracker"
 DEPENDENCIES = ['zone']
@@ -76,7 +76,6 @@ ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
-ATTR_GPS_ACCURACY = 'gps_accuracy'
 ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
