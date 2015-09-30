@@ -23,6 +23,7 @@ mqtt:
   keepalive: 60
   username: your_username
   password: your_secret_password
+  certificate: path_to_certificate
 
 Variables:
 
@@ -44,6 +45,7 @@ keepalive
 The keep alive in seconds for this client. Default is 60.
 """
 import logging
+import os
 import socket
 
 from homeassistant.exceptions import HomeAssistantError
@@ -74,6 +76,7 @@ CONF_CLIENT_ID = 'client_id'
 CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
+CONF_CERTIFICATE = 'certificate'
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
@@ -119,11 +122,12 @@ def setup(hass, config):
     keepalive = util.convert(conf.get(CONF_KEEPALIVE), int, DEFAULT_KEEPALIVE)
     username = util.convert(conf.get(CONF_USERNAME), str)
     password = util.convert(conf.get(CONF_PASSWORD), str)
+    certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
 
     global MQTT_CLIENT
     try:
         MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password)
+                           password, certificate)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -161,7 +165,7 @@ def setup(hass, config):
 class MQTT(object):  # pragma: no cover
     """ Implements messaging service for MQTT. """
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password):
+                 password, certificate):
         import paho.mqtt.client as mqtt
 
         self.hass = hass
@@ -172,8 +176,12 @@ class MQTT(object):  # pragma: no cover
             self._mqttc = mqtt.Client()
         else:
             self._mqttc = mqtt.Client(client_id)
+
         if username is not None:
             self._mqttc.username_pw_set(username, password)
+        if certificate is not None:
+            self._mqttc.tls_set(certificate)
+
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
         self._mqttc.on_connect = self._mqtt_on_connect
