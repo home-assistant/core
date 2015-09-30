@@ -209,6 +209,17 @@ class MQTT(object):  # pragma: no cover
 
     def _mqtt_on_connect(self, mqttc, obj, flags, result_code):
         """ On connect, resubscribe to all topics we were subscribed to. """
+        if result_code != 0:
+            _LOGGER.error('Unable to connect to the MQTT broker: %s', {
+                1: 'Incorrect protocol version',
+                2: 'Invalid client identifier',
+                3: 'Server unavailable',
+                4: 'Bad username or password',
+                5: 'Not authorised'
+            }.get(result_code))
+            self._mqttc.disconnect()
+            return
+
         old_topics = self.topics
         self._progress = {}
         self.topics = {}
