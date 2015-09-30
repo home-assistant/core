@@ -124,6 +124,12 @@ def setup(hass, config):
     password = util.convert(conf.get(CONF_PASSWORD), str)
     certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
 
+    # For cloudmqtt.com, secured connection, auto fill in certificate
+    if certificate is None and 19999 < port < 30000 and \
+       broker.endswith('.cloudmqtt.com'):
+        certificate = os.path.join(os.path.dirname(__file__),
+                                   'addtrustexternalcaroot.crt')
+
     global MQTT_CLIENT
     try:
         MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
