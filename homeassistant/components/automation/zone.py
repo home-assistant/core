@@ -8,7 +8,8 @@ import logging
 
 from homeassistant.components import zone
 from homeassistant.helpers.event import track_state_change
-from homeassistant.const import MATCH_ALL, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import (
+    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
 
 
 CONF_ENTITY_ID = "entity_id"
@@ -42,16 +43,8 @@ def trigger(hass, config, action):
                     to_s.attributes.get(ATTR_LONGITUDE)):
             return
 
-        if from_s:
-            from_zone = zone.in_zone(
-                hass, from_s.attributes.get(ATTR_LATITUDE),
-                from_s.attributes.get(ATTR_LONGITUDE))
-        else:
-            from_zone = None
-
-        to_zone = zone.in_zone(hass, to_s.attributes.get(ATTR_LATITUDE),
-                               to_s.attributes.get(ATTR_LONGITUDE))
-
+        from_zone = _in_zone(hass, from_s) if from_s else None
+        to_zone = _in_zone(hass, to_s)
         from_match = from_zone and from_zone.entity_id == zone_entity_id
         to_match = to_zone and to_zone.entity_id == zone_entity_id
 
@@ -80,13 +73,20 @@ def if_action(hass, config):
         """ Test if condition. """
         state = hass.states.get(entity_id)
 
-        if None in (state.attributes.get(ATTR_LATITUDE),
-                    state.attributes.get(ATTR_LONGITUDE)):
+        if not state or None in (state.attributes.get(ATTR_LATITUDE),
+                                 state.attributes.get(ATTR_LONGITUDE)):
             return
 
-        cur_zone = zone.in_zone(hass, state.attributes.get(ATTR_LATITUDE),
-                                state.attributes.get(ATTR_LONGITUDE))
+        cur_zone = _in_zone(hass, state)
 
         return cur_zone and cur_zone.entity_id == zone_entity_id
 
     return if_in_zone
+
+
+def _in_zone(hass, state):
+    """ Check if state is in zone. """
+    return zone.in_zone(
+        hass, state.attributes.get(ATTR_LATITUDE),
+        state.attributes.get(ATTR_LONGITUDE),
+        state.attributes.get(ATTR_GPS_ACCURACY, 0))
