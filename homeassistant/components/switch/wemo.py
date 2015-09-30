@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
-REQUIREMENTS = ['pywemo==0.3']
+REQUIREMENTS = ['pywemo==0.3.1']
 
 
 # pylint: disable=unused-argument
