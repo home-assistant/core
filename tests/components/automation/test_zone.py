@@ -17,7 +17,8 @@ class TestAutomationEvent(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = get_test_home_assistant()
         zone.setup(self.hass, {
-            'zone test': {
+            'zone': {
+                'name': 'test',
                 'latitude': 32.880837,
                 'longitude': -117.237561,
                 'radius': 250,
