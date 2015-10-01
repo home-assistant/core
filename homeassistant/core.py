@@ -14,7 +14,7 @@ import threading
 import enum
 import re
 import functools as ft
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
@@ -707,6 +707,8 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = get_default_config_dir()
 
+        self.scan_intervals = defaultdict(dict)
+
     def distance(self, lat, lon):
         """ Calculate distance from Home Assistant in meters. """
         return location.distance(self.latitude, self.longitude, lat, lon)
@@ -729,6 +731,20 @@ class Config(object):
         return (
             round(temp_helper.convert(temp, unit, self.temperature_unit), 1),
             self.temperature_unit)
+
+    def overwrite_scan_interval(self, scan_interval, component=None):
+        """ Overwrites the scan interval of a component """
+        if component is None:
+            component = ''
+        self.scan_intervals[component] = scan_interval
+
+    def scan_interval(self, component, default):
+        """ Returns the scan interval to use for a given component """
+        if component in self.scan_intervals:
+            return self.scan_intervals[component]
+        elif '' in self.scan_intervals:
+            return self.scan_intervals['']
+        return default
 
     def as_dict(self):
         """ Converts config to a dictionary. """

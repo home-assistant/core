@@ -115,10 +115,12 @@ class EntityComponent(object):
             return
 
         self.is_polling = True
+        scan_interval = self.hass.config.scan_interval(self.domain,
+                                                       self.scan_interval)
 
         track_utc_time_change(
             self.hass, self._update_entity_states,
-            second=range(0, 60, self.scan_interval))
+            second=range(0, 60, scan_interval))
 
     def _setup_platform(self, platform_type, platform_config,
                         discovery_info=None):

@@ -16,6 +16,7 @@ CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_NAME = "name"
 CONF_TIME_ZONE = "time_zone"
 CONF_CUSTOMIZE = "customize"
+CONF_SCAN_INTERVAL = "scan_interval"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
