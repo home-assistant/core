@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get('resource', None)
     method = config.get('method', DEFAULT_METHOD)
     payload = config.get('payload', None)
-    verify_ssl = config.get('verify_ssl', False)
+    verify_ssl = config.get('verify_ssl', True)
 
     if method == 'GET':
         use_get = True
