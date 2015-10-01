@@ -33,6 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get('resource', None)
     method = config.get('method', DEFAULT_METHOD)
     payload = config.get('payload', None)
+    verify_ssl = config.get('verify_ssl', False)
 
     if method == 'GET':
         use_get = True
@@ -41,9 +42,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         if use_get:
-            response = requests.get(resource, timeout=10)
+            response = requests.get(resource, timeout=10, verify=verify_ssl)
         elif use_post:
-            response = requests.post(resource, data=payload, timeout=10)
+            response = requests.post(resource, data=payload, timeout=10,
+                                     verify=verify_ssl)
         if not response.ok:
             _LOGGER.error('Response status is "%s"', response.status_code)
             return False
@@ -63,16 +65,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     try:
-        data[config.get('variable')]
+        RestSensor.extract_value(data, config.get('variable'))
     except KeyError:
         _LOGGER.error('Variable "%s" not found in response: "%s"',
                       config.get('variable'), data)
         return False
 
     if use_get:
-        rest = RestDataGet(resource)
+        rest = RestDataGet(resource, verify_ssl)
     elif use_post:
-        rest = RestDataPost(resource, payload)
+        rest = RestDataPost(resource, payload, verify_ssl)
 
     add_devices([RestSensor(rest,
                             config.get('name', DEFAULT_NAME),
@@ -96,6 +98,16 @@ class RestSensor(Entity):
         self._corr_factor = corr_factor
         self._decimal_places = decimal_places
         self.update()
+
+    @classmethod
+    def extract_value(cls, data, variable):
+        """ Extracts the value using a key name or a path. """
+        if isinstance(variable, list):
+            for variable_item in variable:
+                data = data[variable_item]
+            return data
+        else:
+            return data[variable]
 
     @property
     def name(self):
@@ -122,35 +134,38 @@ class RestSensor(Entity):
         else:
             try:
                 if value is not None:
+                    value = RestSensor.extract_value(value, self._variable)
                     if self._corr_factor is not None \
                             and self._decimal_places is not None:
                         self._state = round(
-                            (float(value[self._variable]) *
+                            (float(value) *
                              float(self._corr_factor)),
                             self._decimal_places)
                     elif self._corr_factor is not None \
                             and self._decimal_places is None:
-                        self._state = round(float(value[self._variable]) *
+                        self._state = round(float(value) *
                                             float(self._corr_factor))
                     else:
-                        self._state = value[self._variable]
+                        self._state = value
             except ValueError:
-                self._state = value[self._variable]
+                self._state = RestSensor.extract_value(value, self._variable)
 
 
 # pylint: disable=too-few-public-methods
 class RestDataGet(object):
     """ Class for handling the data retrieval with GET method. """
 
-    def __init__(self, resource):
+    def __init__(self, resource, verify_ssl):
         self._resource = resource
+        self._verify_ssl = verify_ssl
         self.data = dict()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from REST service with GET method. """
         try:
-            response = requests.get(self._resource, timeout=10)
+            response = requests.get(self._resource, timeout=10,
+                                    verify=self._verify_ssl)
             if 'error' in self.data:
                 del self.data['error']
             self.data = response.json()
@@ -163,9 +178,10 @@ class RestDataGet(object):
 class RestDataPost(object):
     """ Class for handling the data retrieval with POST method. """
 
-    def __init__(self, resource, payload):
+    def __init__(self, resource, payload, verify_ssl):
         self._resource = resource
         self._payload = payload
+        self._verify_ssl = verify_ssl
         self.data = dict()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -173,7 +189,7 @@ class RestDataPost(object):
         """ Gets the latest data from REST service with POST method. """
         try:
             response = requests.post(self._resource, data=self._payload,
-                                     timeout=10)
+                                     timeout=10, verify=self._verify_ssl)
             if 'error' in self.data:
                 del self.data['error']
             self.data = response.json()
