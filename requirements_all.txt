@@ -137,3 +137,6 @@ SoCo==0.11.1
 
 # PlexAPI (media_player.plex)
 https://github.com/miniconfig/python-plexapi/archive/437e36dca3b7780dc0cb73941d662302c0cd2fa9.zip#python-plexapi==1.0.2
+
+# FritzconnectionAPI (device_tracker.fritz)
+https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
