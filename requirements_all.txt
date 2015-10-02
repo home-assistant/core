@@ -14,7 +14,7 @@ astral==0.8.1
 phue==0.8
 
 # Limitlessled/Easybulb/Milight library (lights.limitlessled)
-ledcontroller==1.0.7
+ledcontroller==1.1.0
 
 # Chromecast bindings (media_player.cast)
 pychromecast==0.6.12
