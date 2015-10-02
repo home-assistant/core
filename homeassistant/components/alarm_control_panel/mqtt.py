@@ -1,5 +1,6 @@
 """
 homeassistant.components.alarm_control_panel.mqtt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This platform enables the possibility to control a MQTT alarm.
 In this platform, 'state_topic' and 'command_topic' are required.
@@ -56,9 +57,7 @@ The payload to set armed-away mode. Default is "ARM_AWAY".
 code
 *Optional
 If defined, specifies a code to enable or disable the alarm in the frontend.
-
 """
-
 import logging
 import homeassistant.components.mqtt as mqtt
 import homeassistant.components.alarm_control_panel as alarm
