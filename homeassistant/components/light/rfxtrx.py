@@ -24,7 +24,7 @@ light:
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
-from RFXtrx import LightingDevice
+import RFXtrx as rfxtrxmod
 
 from homeassistant.components.light import Light
 from homeassistant.util import slugify
@@ -38,22 +38,23 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
-
     # Add light from config file
     lights = []
-    devices = config.get('devices')
-    for entity_id, entity_info in devices.items():
-        if entity_id not in rfxtrx.RFX_DEVICES:
-            _LOGGER.info("Add %s rfxtrx.light", entity_info['name'])
-            new_light = RfxtrxLight(entity_info['name'], None, False)
-            rfxtrx.RFX_DEVICES[entity_id] = new_light
-            lights.append(new_light)
+    devices = config.get('devices', None)
+    if devices:
+        for entity_id, entity_info in devices.items():
+            if entity_id not in rfxtrx.RFX_DEVICES:
+                _LOGGER.info("Add %s rfxtrx.light", entity_info['name'])
+                rfxobject = rfxtrx.getRFXObject(entity_info['packetid'])
+                new_light = RfxtrxLight(entity_info['name'], rfxobject, False)
+                rfxtrx.RFX_DEVICES[entity_id] = new_light
+                lights.append(new_light)
 
     add_devices_callback(lights)
 
     def light_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if isinstance(event.device, LightingDevice):
+        if isinstance(event.device, rfxtrxmod.LightingDevice):
             entity_id = slugify(event.device.id_string.lower())
 
             # Add entity if not exist and the automatic_add is True
@@ -65,7 +66,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                  event.device.__class__.__name__,
                                  event.device.subtype
                     )
-                    new_light = RfxtrxLight(entity_id, event, False)
+                    packet_id = "".join("{0:02x}".format(x) for x in event.data)
+                    entity_name = "%(entity_id)s : %(packet_id)s" % locals()
+                    new_light = RfxtrxLight(entity_name, event, False)
                     rfxtrx.RFX_DEVICES[entity_id] = new_light
                     add_devices_callback([new_light])
 
@@ -107,7 +110,8 @@ class RfxtrxLight(Light):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
 
-        self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
+        if self._event:
+            self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
 
         self._state = True
         self.update_ha_state()
@@ -115,7 +119,8 @@ class RfxtrxLight(Light):
     def turn_off(self, **kwargs):
         """ Turn the device off. """
 
-        self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
+        if self._event:
+            self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
         self._state = False
         self.update_ha_state()
