@@ -339,7 +339,7 @@ class Device(Entity):
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
-        self.gps_accuracy = gps_accuracy
+        self.gps_accuracy = gps_accuracy or 0
         self.battery = battery
         if gps is None:
             self.gps = None
