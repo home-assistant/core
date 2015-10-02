@@ -42,12 +42,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # Add switch from config file
     switchs = []
     devices = config.get('devices')
-    for entity_id, entity_info in devices.items():
-        if entity_id not in rfxtrx.RFX_DEVICES:
-            _LOGGER.info("Add %s rfxtrx.switch", entity_info['name'])
-            new_switch = RfxtrxSwitch(entity_info['name'], None, False)
-            rfxtrx.RFX_DEVICES[entity_id] = new_switch
-            switchs.append(new_switch)
+    if devices:
+        for entity_id, entity_info in devices.items():
+            if entity_id not in rfxtrx.RFX_DEVICES:
+                _LOGGER.info("Add %s rfxtrx.switch", entity_info['name'])
+                rfxobject = rfxtrx.getRFXObject(entity_info['packetid'])
+                new_switch = RfxtrxSwitch(entity_info['name'], rfxobject, False)
+                rfxtrx.RFX_DEVICES[entity_id] = new_switch
+                switchs.append(new_switch)
 
     add_devices_callback(switchs)
 
@@ -65,7 +67,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                  event.device.__class__.__name__,
                                  event.device.subtype
                     )
-                    new_switch = RfxtrxSwitch(entity_id, event, False)
+                    packet_id = "".join("{0:02x}".format(x) for x in event.data)
+                    entity_name = "%(entity_id)s : %(packet_id)s" % locals()
+                    new_switch = RfxtrxSwitch(entity_name, event, False)
                     rfxtrx.RFX_DEVICES[entity_id] = new_switch
                     add_devices_callback([new_switch])
 
@@ -106,14 +110,16 @@ class RfxtrxSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
+        if self._event:
+            self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
 
         self._state = True
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
+        if self._event:
+            self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
         self._state = False
         self.update_ha_state()

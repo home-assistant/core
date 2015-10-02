@@ -4,6 +4,24 @@ homeassistant.components.rfxtrx
 Connects Home Assistant to a RFXtrx device.
 """
 
+"""
+homeassistant.components.rfxtrx
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Connects Home Assistant to a RFXtrx device.
+
+Configuration:
+
+To use Rfxtrx device you will need to add the following to your
+configuration.yaml file.
+
+rfxtrx:
+  device: /dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1YVC1P0-if00-port0
+
+*Optional*
+
+  debug: True
+
+"""
 import logging
 
 DEPENDENCIES = []
@@ -12,6 +30,7 @@ REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
 
 DOMAIN = "rfxtrx"
 CONF_DEVICE = 'device'
+CONF_DEBUG = 'debug'
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +42,7 @@ def setup(hass, config):
     # Declare the Handle event
     def handle_receive(event):
         """ Callback all subscribers for RFXtrx gateway. """
+
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
@@ -35,7 +55,30 @@ def setup(hass, config):
 
     # Init the rfxtrx module
     global RFXOBJECT
+
     device = config[DOMAIN][CONF_DEVICE]
-    RFXOBJECT = rfxtrxmod.Core(device, handle_receive)
+    try:
+        debug = config[DOMAIN][CONF_DEBUG]
+    except KeyError:
+        debug = False
+
+    RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
 
     return True
+
+def getRFXObject(packetid):
+    """ return the RFXObject with the packetid"""
+    binarypacket = bytearray.fromhex(packetid)
+
+    pkt = rfxtrxmod.lowlevel.parse(binarypacket)
+    if pkt is not None:
+        if isinstance(pkt, rfxtrxmod.lowlevel.SensorPacket):
+            obj = rfxtrxmod.SensorEvent(pkt)
+        elif isinstance(pkt, rfxtrxmod.lowlevel.Status):
+            obj = rfxtrxmod.StatusEvent(pkt)
+        else:
+            obj = rfxtrxmod.ControlEvent(pkt)
+
+        return obj
+
+    return None
