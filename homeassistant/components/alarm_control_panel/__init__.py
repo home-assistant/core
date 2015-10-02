@@ -1,6 +1,6 @@
 """
 homeassistant.components.alarm_control_panel
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with a alarm control panel.
 """
 import logging
@@ -108,7 +108,7 @@ class AlarmControlPanel(Entity):
 
     @property
     def code_format(self):
-        """ regex for code format or None if no code is required """
+        """ regex for code format or None if no code is required. """
         return None
 
     def alarm_disarm(self, code=None):
