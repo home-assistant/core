@@ -44,8 +44,8 @@ ATTR_ICON = 'icon'
 ICON_HOME = 'home'
 
 
-def in_zone(hass, latitude, longitude, radius=0):
-    """ Find the zone for given latitude, longitude. """
+def active_zone(hass, latitude, longitude, radius=0):
+    """ Find the active zone for given latitude, longitude. """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     zones = (hass.states.get(entity_id) for entity_id
              in sorted(hass.states.entity_ids(DOMAIN)))
@@ -54,16 +54,30 @@ def in_zone(hass, latitude, longitude, radius=0):
     closest = None
 
     for zone in zones:
-        zone_dist = distance(latitude, longitude,
-                             zone.attributes[ATTR_LATITUDE],
-                             zone.attributes[ATTR_LONGITUDE])
+        zone_dist = distance(
+            latitude, longitude,
+            zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
 
-        if zone_dist - radius < zone.attributes[ATTR_RADIUS] and \
-           (closest is None or zone_dist < min_dist):
+        within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
+        closer_zone = closest is None or zone_dist < min_dist
+        smaller_zone = (zone_dist == min_dist and
+                        zone.attributes[ATTR_RADIUS] <
+                        closest.attributes[ATTR_RADIUS])
+
+        if within_zone and (closer_zone or smaller_zone):
             min_dist = zone_dist
             closest = zone
 
     return closest
+
+
+def in_zone(zone, latitude, longitude, radius=0):
+    """ Test if given latitude, longitude is in given zone. """
+    zone_dist = distance(
+        latitude, longitude,
+        zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
+
+    return zone_dist - radius < zone.attributes[ATTR_RADIUS]
 
 
 def setup(hass, config):

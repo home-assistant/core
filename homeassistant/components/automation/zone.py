@@ -36,17 +36,13 @@ def trigger(hass, config, action):
     def zone_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
         if from_s and None in (from_s.attributes.get(ATTR_LATITUDE),
-                               from_s.attributes.get(ATTR_LONGITUDE)):
+                               from_s.attributes.get(ATTR_LONGITUDE)) or \
+            None in (to_s.attributes.get(ATTR_LATITUDE),
+                     to_s.attributes.get(ATTR_LONGITUDE)):
             return
 
-        if None in (to_s.attributes.get(ATTR_LATITUDE),
-                    to_s.attributes.get(ATTR_LONGITUDE)):
-            return
-
-        from_zone = _in_zone(hass, from_s) if from_s else None
-        to_zone = _in_zone(hass, to_s)
-        from_match = from_zone and from_zone.entity_id == zone_entity_id
-        to_match = to_zone and to_zone.entity_id == zone_entity_id
+        from_match = _in_zone(hass, zone_entity_id, from_s) if from_s else None
+        to_match = _in_zone(hass, zone_entity_id, to_s)
 
         if event == EVENT_ENTER and not from_match and to_match or \
            event == EVENT_LEAVE and from_match and not to_match:
@@ -71,22 +67,19 @@ def if_action(hass, config):
 
     def if_in_zone():
         """ Test if condition. """
-        state = hass.states.get(entity_id)
-
-        if not state or None in (state.attributes.get(ATTR_LATITUDE),
-                                 state.attributes.get(ATTR_LONGITUDE)):
-            return
-
-        cur_zone = _in_zone(hass, state)
-
-        return cur_zone and cur_zone.entity_id == zone_entity_id
+        return _in_zone(hass, zone_entity_id, hass.states.get(entity_id))
 
     return if_in_zone
 
 
-def _in_zone(hass, state):
+def _in_zone(hass, zone_entity_id, state):
     """ Check if state is in zone. """
-    return zone.in_zone(
-        hass, state.attributes.get(ATTR_LATITUDE),
+    if not state or None in (state.attributes.get(ATTR_LATITUDE),
+                             state.attributes.get(ATTR_LONGITUDE)):
+        return False
+
+    zone_state = hass.states.get(zone_entity_id)
+    return zone_state and zone.in_zone(
+        zone_state, state.attributes.get(ATTR_LATITUDE),
         state.attributes.get(ATTR_LONGITUDE),
         state.attributes.get(ATTR_GPS_ACCURACY, 0))
