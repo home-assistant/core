@@ -3,7 +3,8 @@
 homeassistant.components.sensor.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a binary state sensor using RPi GPIO.
-Note: To use RPi GPIO, Home Assistant must be run as root.
+To avoid having to run Home Assistant as root when using this component,
+run a Raspbian version released at or after September 29, 2015.
 
 sensor:
   platform: rpi_gpio

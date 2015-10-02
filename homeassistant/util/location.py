@@ -2,6 +2,7 @@
 import collections
 
 import requests
+from vincenty import vincenty
 
 
 LocationInfo = collections.namedtuple(
@@ -28,3 +29,8 @@ def detect_location_info():
         'BS', 'BZ', 'KY', 'PW', 'US', 'AS', 'VI')
 
     return LocationInfo(**data)
+
+
+def distance(lon1, lat1, lon2, lat2):
+    """ Calculate the distance in meters between two points. """
+    return vincenty((lon1, lat1), (lon2, lat2)) * 1000
