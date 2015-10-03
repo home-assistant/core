@@ -2,7 +2,7 @@ sudo: false
 language: python
 cache:
   directories:
-    - $VIRTUAL_ENV/lib
+    - $HOME/virtualenv/python3.4.2/
 python:
   - "3.4"
 install:
