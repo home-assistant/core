@@ -23,6 +23,7 @@ rfxtrx:
 
 """
 import logging
+from homeassistant.util import slugify
 
 DEPENDENCIES = []
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
@@ -43,6 +44,13 @@ def setup(hass, config):
     def handle_receive(event):
         """ Callback all subscribers for RFXtrx gateway. """
 
+        # Log RFXCOM event
+        entity_id = slugify(event.device.id_string.lower())
+        packet_id = "".join("{0:02x}".format(x) for x in event.data)
+        entity_name = "%(entity_id)s : %(packet_id)s" % locals()
+        _LOGGER.info("Receive RFXCOM event from %s => %s" % (event.device, entity_name))
+
+        # Callback to HA registered components
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
@@ -68,6 +76,12 @@ def setup(hass, config):
 
 def getRFXObject(packetid):
     """ return the RFXObject with the packetid"""
+    try:
+        import RFXtrx as rfxtrxmod
+    except ImportError:
+        _LOGGER.exception("Failed to import rfxtrx")
+        return False
+
     binarypacket = bytearray.fromhex(packetid)
 
     pkt = rfxtrxmod.lowlevel.parse(binarypacket)
