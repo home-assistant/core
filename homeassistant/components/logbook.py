@@ -220,6 +220,7 @@ def humanify(events):
 def _entry_message_from_state(domain, state):
     """ Convert a state to a message for the logbook. """
     # We pass domain in so we don't have to split entity_id again
+    # pylint: disable=too-many-return-statements
 
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
