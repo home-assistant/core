@@ -11,7 +11,7 @@ import homeassistant.components.automation as automation
 from tests.common import mock_mqtt_component, fire_mqtt_message
 
 
-class TestAutomationState(unittest.TestCase):
+class TestAutomationMQTT(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
