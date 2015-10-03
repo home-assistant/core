@@ -11,7 +11,7 @@ from homeassistant.components import automation, zone
 from tests.common import get_test_home_assistant
 
 
-class TestAutomationEvent(unittest.TestCase):
+class TestAutomationZone(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
