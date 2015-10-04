@@ -130,7 +130,6 @@ automation:
      state: 'not_home'
 
   condition: use_trigger_values
-  condition:
   action:
      service: light.turn_off
      entity_id: group.all_lights
