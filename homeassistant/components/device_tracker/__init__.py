@@ -17,7 +17,12 @@ device_tracker:
 
   # New found devices auto found
   track_new_devices: yes
+
+  # Maximum distance from home we consider people home
+  range_home: 100
 """
+# pylint: disable=too-many-instance-attributes, too-many-arguments
+# pylint: disable=too-many-locals
 import csv
 from datetime import timedelta
 import logging
@@ -25,7 +30,7 @@ import os
 import threading
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.components import discovery, group
+from homeassistant.components import discovery, group, zone
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
@@ -35,10 +40,11 @@ import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE, DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
+    ATTR_ENTITY_PICTURE, ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
+    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
 DOMAIN = "device_tracker"
-DEPENDENCIES = []
+DEPENDENCIES = ['zone']
 
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
@@ -52,7 +58,7 @@ CONF_TRACK_NEW = "track_new_devices"
 DEFAULT_CONF_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
-DEFAULT_CONF_CONSIDER_HOME = 180  # seconds
+DEFAULT_CONSIDER_HOME = 180  # seconds
 
 CONF_SCAN_INTERVAL = "interval_seconds"
 DEFAULT_SCAN_INTERVAL = 12
@@ -60,15 +66,17 @@ DEFAULT_SCAN_INTERVAL = 12
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
 
+CONF_HOME_RANGE = 'home_range'
+DEFAULT_HOME_RANGE = 100
+
 SERVICE_SEE = 'see'
 
-ATTR_LATITUDE = 'latitude'
-ATTR_LONGITUDE = 'longitude'
 ATTR_MAC = 'mac'
 ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
+ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
     discovery.SERVICE_NETGEAR: 'netgear',
@@ -86,7 +94,7 @@ def is_on(hass, entity_id=None):
 
 
 def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
-        gps=None):
+        gps=None, gps_accuracy=None, battery=None):
     """ Call service to notify you see device. """
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -106,13 +114,17 @@ def setup(hass, config):
         os.remove(csv_path)
 
     conf = config.get(DOMAIN, {})
-    consider_home = util.convert(conf.get(CONF_CONSIDER_HOME), int,
-                                 DEFAULT_CONF_CONSIDER_HOME)
+    consider_home = timedelta(
+        seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
+                             DEFAULT_CONSIDER_HOME))
     track_new = util.convert(conf.get(CONF_TRACK_NEW), bool,
                              DEFAULT_CONF_TRACK_NEW)
+    home_range = util.convert(conf.get(CONF_HOME_RANGE), int,
+                              DEFAULT_HOME_RANGE)
 
-    devices = load_config(yaml_path, hass, timedelta(seconds=consider_home))
-    tracker = DeviceTracker(hass, consider_home, track_new, devices)
+    devices = load_config(yaml_path, hass, consider_home, home_range)
+    tracker = DeviceTracker(hass, consider_home, track_new, home_range,
+                            devices)
 
     def setup_platform(p_type, p_config, disc_info=None):
         """ Setup a device tracker platform. """
@@ -158,22 +170,26 @@ def setup(hass, config):
         """ Service to see a device. """
         args = {key: value for key, value in call.data.items() if key in
                 (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS)}
+                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY)}
         tracker.see(**args)
 
-    hass.services.register(DOMAIN, SERVICE_SEE, see_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_SEE, see_service,
+                           descriptions.get(SERVICE_SEE))
 
     return True
 
 
 class DeviceTracker(object):
     """ Track devices """
-    def __init__(self, hass, consider_home, track_new, devices):
+    def __init__(self, hass, consider_home, track_new, home_range, devices):
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
-        self.consider_home = timedelta(seconds=consider_home)
+        self.consider_home = consider_home
         self.track_new = track_new
+        self.home_range = home_range
         self.lock = threading.Lock()
 
         for device in devices:
@@ -183,7 +199,7 @@ class DeviceTracker(object):
         self.group = None
 
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
-            gps=None):
+            gps=None, gps_accuracy=None, battery=None):
         """ Notify device tracker that you see a device. """
         with self.lock:
             if mac is None and dev_id is None:
@@ -198,20 +214,21 @@ class DeviceTracker(object):
                 device = self.devices.get(dev_id)
 
             if device:
-                device.seen(host_name, location_name, gps)
+                device.seen(host_name, location_name, gps, gps_accuracy,
+                            battery)
                 if device.track:
                     device.update_ha_state()
                 return
 
             # If no device can be found, create it
             device = Device(
-                self.hass, self.consider_home, self.track_new, dev_id, mac,
-                (host_name or dev_id).replace('_', ' '))
+                self.hass, self.consider_home, self.home_range, self.track_new,
+                dev_id, mac, (host_name or dev_id).replace('_', ' '))
             self.devices[dev_id] = device
             if mac is not None:
                 self.mac_to_dev[mac] = device
 
-            device.seen(host_name, location_name, gps)
+            device.seen(host_name, location_name, gps, gps_accuracy, battery)
             if device.track:
                 device.update_ha_state()
 
@@ -239,19 +256,20 @@ class DeviceTracker(object):
 
 class Device(Entity):
     """ Tracked device. """
-    # pylint: disable=too-many-instance-attributes, too-many-arguments
 
     host_name = None
     location_name = None
     gps = None
+    gps_accuracy = 0
     last_seen = None
+    battery = None
 
     # Track if the last update of this device was HOME
     last_update_home = False
     _state = STATE_NOT_HOME
 
-    def __init__(self, hass, consider_home, track, dev_id, mac, name=None,
-                 picture=None, away_hide=False):
+    def __init__(self, hass, consider_home, home_range, track, dev_id, mac,
+                 name=None, picture=None, away_hide=False):
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
 
@@ -259,6 +277,8 @@ class Device(Entity):
         # detected anymore.
         self.consider_home = consider_home
 
+        # Distance in meters
+        self.home_range = home_range
         # Device ID
         self.dev_id = dev_id
         self.mac = mac
@@ -272,6 +292,13 @@ class Device(Entity):
         # Configured picture
         self.config_picture = picture
         self.away_hide = away_hide
+
+    @property
+    def gps_home(self):
+        """ Return if device is within range of home. """
+        distance = max(
+            0, self.hass.config.distance(*self.gps) - self.gps_accuracy)
+        return self.gps is not None and distance <= self.home_range
 
     @property
     def name(self):
@@ -292,8 +319,12 @@ class Device(Entity):
             attr[ATTR_ENTITY_PICTURE] = self.config_picture
 
         if self.gps:
-            attr[ATTR_LATITUDE] = self.gps[0],
-            attr[ATTR_LONGITUDE] = self.gps[1],
+            attr[ATTR_LATITUDE] = self.gps[0]
+            attr[ATTR_LONGITUDE] = self.gps[1]
+            attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
+
+        if self.battery:
+            attr[ATTR_BATTERY] = self.battery
 
         return attr
 
@@ -302,12 +333,23 @@ class Device(Entity):
         """ If device should be hidden. """
         return self.away_hide and self.state != STATE_HOME
 
-    def seen(self, host_name=None, location_name=None, gps=None):
+    def seen(self, host_name=None, location_name=None, gps=None,
+             gps_accuracy=0, battery=None):
         """ Mark the device as seen. """
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
-        self.gps = gps
+        self.gps_accuracy = gps_accuracy or 0
+        self.battery = battery
+        if gps is None:
+            self.gps = None
+        else:
+            try:
+                self.gps = tuple(float(val) for val in gps)
+            except ValueError:
+                _LOGGER.warning('Could not parse gps value for %s: %s',
+                                self.dev_id, gps)
+                self.gps = None
         self.update()
 
     def stale(self, now=None):
@@ -321,6 +363,16 @@ class Device(Entity):
             return
         elif self.location_name:
             self._state = self.location_name
+        elif self.gps is not None:
+            zone_state = zone.active_zone(self.hass, self.gps[0], self.gps[1],
+                                          self.gps_accuracy)
+            if zone_state is None:
+                self._state = STATE_NOT_HOME
+            elif zone_state.entity_id == zone.ENTITY_ID_HOME:
+                self._state = STATE_HOME
+            else:
+                self._state = zone_state.name
+
         elif self.stale():
             self._state = STATE_NOT_HOME
             self.last_update_home = False
@@ -338,18 +390,18 @@ def convert_csv_config(csv_path, yaml_path):
                 (util.slugify(row['name']) or DEVICE_DEFAULT_NAME).lower(),
                 used_ids)
             used_ids.add(dev_id)
-            device = Device(None, None, row['track'] == '1', dev_id,
+            device = Device(None, None, None, row['track'] == '1', dev_id,
                             row['device'], row['name'], row['picture'])
             update_config(yaml_path, dev_id, device)
     return True
 
 
-def load_config(path, hass, consider_home):
+def load_config(path, hass, consider_home, home_range):
     """ Load devices from YAML config file. """
     if not os.path.isfile(path):
         return []
     return [
-        Device(hass, consider_home, device.get('track', False),
+        Device(hass, consider_home, home_range, device.get('track', False),
                str(dev_id).lower(), str(device.get('mac')).upper(),
                device.get('name'), device.get('picture'),
                device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))

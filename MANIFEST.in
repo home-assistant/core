@@ -1,1 +1,2 @@
 recursive-exclude tests *
+recursive-include homeassistant services.yaml

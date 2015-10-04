@@ -33,7 +33,7 @@ ATTR_ACTIVE_REQUESTED = "active_requested"
 
 CONF_ENTITIES = "entities"
 
-SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
+SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'fuzzy_match'])
 
 
 def setup(hass, config):
@@ -71,6 +71,15 @@ def setup(hass, config):
 def _process_config(scene_config):
     """ Process passed in config into a format to work with. """
     name = scene_config.get('name')
+
+    fuzzy_match = scene_config.get('fuzzy_match')
+    if fuzzy_match:
+        # default to 1%
+        if isinstance(fuzzy_match, int):
+            fuzzy_match /= 100.0
+        else:
+            fuzzy_match = 0.01
+
     states = {}
     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
 
@@ -91,7 +100,7 @@ def _process_config(scene_config):
 
         states[entity_id.lower()] = State(entity_id, state, attributes)
 
-    return SceneConfig(name, states)
+    return SceneConfig(name, states, fuzzy_match)
 
 
 class Scene(ToggleEntity):
@@ -179,8 +188,30 @@ class Scene(ToggleEntity):
         state = self.scene_config.states.get(cur_state and cur_state.entity_id)
 
         return (cur_state is not None and state.state == cur_state.state and
-                all(value == cur_state.attributes.get(key)
+                all(self._compare_state_attribites(
+                    value, cur_state.attributes.get(key))
                     for key, value in state.attributes.items()))
+
+    def _fuzzy_attribute_compare(self, attr_a, attr_b):
+        """
+        Compare the attributes passed, use fuzzy logic if they are floats.
+        """
+
+        if not (isinstance(attr_a, float) and isinstance(attr_b, float)):
+            return False
+        diff = abs(attr_a - attr_b) / (abs(attr_a) + abs(attr_b))
+        return diff <= self.scene_config.fuzzy_match
+
+    def _compare_state_attribites(self, attr1, attr2):
+        """ Compare the attributes passed, using fuzzy logic if specified. """
+        if attr1 == attr2:
+            return True
+        if not self.scene_config.fuzzy_match:
+            return False
+        if isinstance(attr1, list):
+            return all(self._fuzzy_attribute_compare(a, b)
+                       for a, b in zip(attr1, attr2))
+        return self._fuzzy_attribute_compare(attr1, attr2)
 
     def _reproduce_state(self, states):
         """ Wraps reproduce state with Scence specific logic. """

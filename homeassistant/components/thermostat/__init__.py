@@ -5,9 +5,11 @@ homeassistant.components.thermostat
 Provides functionality to interact with thermostats.
 """
 import logging
+import os
 
 from homeassistant.helpers.entity_component import EntityComponent
 
+from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
@@ -101,11 +103,16 @@ def setup(hass, config):
         for thermostat in target_thermostats:
             thermostat.update_ha_state(True)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service)
+        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service,
+        descriptions.get(SERVICE_SET_AWAY_MODE))
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service,
+        descriptions.get(SERVICE_SET_TEMPERATURE))
 
     return True
 
