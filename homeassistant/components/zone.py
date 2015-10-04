@@ -12,10 +12,10 @@ zone:
   radius: 250
   # Optional icon to show instead of name
   # See https://www.google.com/design/icons/
-  # Example: home, work, group-work, shopping-cart
+  # Example: home, work, group-work, shopping-cart, social:people
   icon: group-work
 
-zone:
+zone 2:
   name: Work
   latitude: 32.8753367
   longitude: -117.2474053
