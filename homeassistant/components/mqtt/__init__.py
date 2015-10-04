@@ -23,6 +23,7 @@ mqtt:
   keepalive: 60
   username: your_username
   password: your_secret_password
+  certificate: /home/paulus/dev/addtrustexternalcaroot.crt
 
 Variables:
 
@@ -42,8 +43,13 @@ Default is a random generated one.
 keepalive
 *Optional
 The keep alive in seconds for this client. Default is 60.
+
+certificate
+*Optional
+Certificate to use for encrypting the connection to the broker.
 """
 import logging
+import os
 import socket
 
 from homeassistant.exceptions import HomeAssistantError
@@ -74,6 +80,7 @@ CONF_CLIENT_ID = 'client_id'
 CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
+CONF_CERTIFICATE = 'certificate'
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
@@ -119,11 +126,18 @@ def setup(hass, config):
     keepalive = util.convert(conf.get(CONF_KEEPALIVE), int, DEFAULT_KEEPALIVE)
     username = util.convert(conf.get(CONF_USERNAME), str)
     password = util.convert(conf.get(CONF_PASSWORD), str)
+    certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
+
+    # For cloudmqtt.com, secured connection, auto fill in certificate
+    if certificate is None and 19999 < port < 30000 and \
+       broker.endswith('.cloudmqtt.com'):
+        certificate = os.path.join(os.path.dirname(__file__),
+                                   'addtrustexternalcaroot.crt')
 
     global MQTT_CLIENT
     try:
         MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password)
+                           password, certificate)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -161,7 +175,7 @@ def setup(hass, config):
 class MQTT(object):  # pragma: no cover
     """ Implements messaging service for MQTT. """
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password):
+                 password, certificate):
         import paho.mqtt.client as mqtt
 
         self.hass = hass
@@ -172,8 +186,12 @@ class MQTT(object):  # pragma: no cover
             self._mqttc = mqtt.Client()
         else:
             self._mqttc = mqtt.Client(client_id)
+
         if username is not None:
             self._mqttc.username_pw_set(username, password)
+        if certificate is not None:
+            self._mqttc.tls_set(certificate)
+
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
         self._mqttc.on_connect = self._mqtt_on_connect
@@ -209,6 +227,17 @@ class MQTT(object):  # pragma: no cover
 
     def _mqtt_on_connect(self, mqttc, obj, flags, result_code):
         """ On connect, resubscribe to all topics we were subscribed to. """
+        if result_code != 0:
+            _LOGGER.error('Unable to connect to the MQTT broker: %s', {
+                1: 'Incorrect protocol version',
+                2: 'Invalid client identifier',
+                3: 'Server unavailable',
+                4: 'Bad username or password',
+                5: 'Not authorised'
+            }.get(result_code))
+            self._mqttc.disconnect()
+            return
+
         old_topics = self.topics
         self._progress = {}
         self.topics = {}

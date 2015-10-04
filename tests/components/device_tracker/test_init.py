@@ -103,12 +103,12 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_reading_yaml_config(self):
         dev_id = 'test'
         device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, dev_id, 'AB:CD:EF:GH:IJ',
-            'Test name', 'http://test.picture', True)
+            self.hass, timedelta(seconds=180), 0, True, dev_id,
+            'AB:CD:EF:GH:IJ', 'Test name', 'http://test.picture', True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
         self.assertTrue(device_tracker.setup(self.hass, {}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            device.consider_home)[0]
+                                            device.consider_home, 0)[0]
         self.assertEqual(device.dev_id, config.dev_id)
         self.assertEqual(device.track, config.track)
         self.assertEqual(device.mac, config.mac)
@@ -126,7 +126,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertTrue(device_tracker.setup(self.hass, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))[0]
+                                            timedelta(seconds=0), 0)[0]
         self.assertEqual('dev1', config.dev_id)
         self.assertEqual(True, config.track)
 
@@ -176,7 +176,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         picture = 'http://placehold.it/200x200'
 
         device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, dev_id, None,
+            self.hass, timedelta(seconds=180), 0, True, dev_id, None,
             friendly_name, picture, away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
@@ -191,7 +191,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         dev_id = 'test_entity'
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, dev_id, None,
+            self.hass, timedelta(seconds=180), 0, True, dev_id, None,
             away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
@@ -208,7 +208,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         dev_id = 'test_entity'
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, dev_id, None,
+            self.hass, timedelta(seconds=180), 0, True, dev_id, None,
             away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
