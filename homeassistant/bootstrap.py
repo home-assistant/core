@@ -186,8 +186,8 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
         dict, {key: value or {} for key, value in config.items()})
 
     # Filter out the repeating and common config section [homeassistant]
-    components = (key for key in config.keys()
-                  if ' ' not in key and key != core.DOMAIN)
+    components = set(key.split(' ')[0] for key in config.keys()
+                     if key != core.DOMAIN)
 
     if not core_components.setup(hass, config):
         _LOGGER.error('Home Assistant core failed to initialize. '
@@ -297,11 +297,15 @@ def process_ha_core_config(hass, config):
         else:
             _LOGGER.error('Received invalid time zone %s', time_zone_str)
 
-    for key, attr in ((CONF_LATITUDE, 'latitude'),
-                      (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name')):
+    for key, attr, typ in ((CONF_LATITUDE, 'latitude', float),
+                           (CONF_LONGITUDE, 'longitude', float),
+                           (CONF_NAME, 'location_name', str)):
         if key in config:
-            setattr(hac, attr, config[key])
+            try:
+                setattr(hac, attr, typ(config[key]))
+            except ValueError:
+                _LOGGER.error('Received invalid %s value for %s: %s',
+                              typ.__name__, key, attr)
 
     set_time_zone(config.get(CONF_TIME_ZONE))
 

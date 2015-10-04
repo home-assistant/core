@@ -140,13 +140,19 @@ class MailNotificationService(BaseNotificationService):
         self.username = username
         self.password = password
         self.recipient = recipient
+        self.tries = 2
+        self.mail = None
+
+        self.connect()
+
+    def connect(self):
+        """ Connect/Authenticate to SMTP Server """
 
         self.mail = smtplib.SMTP(self._server, self._port)
         self.mail.ehlo_or_helo_if_needed()
         if self.starttls == 1:
             self.mail.starttls()
             self.mail.ehlo()
-
         self.mail.login(self.username, self.password)
 
     def send_message(self, message="", **kwargs):
@@ -160,4 +166,12 @@ class MailNotificationService(BaseNotificationService):
         msg['From'] = self._sender
         msg['X-Mailer'] = 'HomeAssistant'
 
-        self.mail.sendmail(self._sender, self.recipient, msg.as_string())
+        for _ in range(self.tries):
+            try:
+                self.mail.sendmail(self._sender, self.recipient,
+                                   msg.as_string())
+                break
+            except smtplib.SMTPException:
+                _LOGGER.warning('SMTPException sending mail: '
+                                'retrying connection')
+                self.connect()

@@ -33,10 +33,10 @@ def setup(hass, config):
 
     # Setup sun
     if not hass.config.latitude:
-        hass.config.latitude = '32.87336'
+        hass.config.latitude = 32.87336
 
     if not hass.config.longitude:
-        hass.config.longitude = '117.22743'
+        hass.config.longitude = 117.22743
 
     bootstrap.setup_component(hass, 'sun')
 
@@ -60,7 +60,7 @@ def setup(hass, config):
         {'camera': {
             'platform': 'generic',
             'name': 'IP Camera',
-            'still_image_url': 'http://194.218.96.92/jpg/image.jpg',
+            'still_image_url': 'http://home-assistant.io/demo/webcam.jpg',
         }})
 
     # Setup scripts
@@ -108,7 +108,9 @@ def setup(hass, config):
                      "http://graph.facebook.com/297400035/picture",
                      ATTR_FRIENDLY_NAME: 'Paulus'})
     hass.states.set("device_tracker.anne_therese", "not_home",
-                    {ATTR_FRIENDLY_NAME: 'Anne Therese'})
+                    {ATTR_FRIENDLY_NAME: 'Anne Therese',
+                     'latitude': hass.config.latitude + 0.002,
+                     'longitude': hass.config.longitude + 0.002})
 
     hass.states.set("group.all_devices", "home",
                     {
