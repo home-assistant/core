@@ -3,6 +3,7 @@ requests>=2,<3
 pyyaml>=3.11,<4
 pytz>=2015.4
 pip>=7.0.0
+vincenty==0.1.2
 
 # Optional, needed for specific components
 
@@ -13,7 +14,7 @@ astral==0.8.1
 phue==0.8
 
 # Limitlessled/Easybulb/Milight library (lights.limitlessled)
-ledcontroller==1.0.7
+ledcontroller==1.1.0
 
 # Chromecast bindings (media_player.cast)
 pychromecast==0.6.12
@@ -22,7 +23,7 @@ pychromecast==0.6.12
 pyuserinput==0.1.9
 
 # Tellstick bindings (*.tellstick)
-tellcore-py==1.0.4
+tellcore-py==1.1.2
 
 # Nmap bindings (device_tracker.nmap)
 python-nmap==0.4.3
@@ -86,10 +87,10 @@ https://github.com/theolind/pymysensors/archive/35b87d880147a34107da0d40cb815d75
 pynetgear==0.3
 
 # Netdisco (discovery)
-netdisco==0.4
+netdisco==0.4.2
 
 # Wemo (switch.wemo)
-pywemo==0.3
+pywemo==0.3.1
 
 # Wink (*.wink)
 https://github.com/balloob/python-wink/archive/c2b700e8ca866159566ecf5e644d9c297f69f257.zip#python-wink==0.1
@@ -133,3 +134,6 @@ https://github.com/balloob/home-assistant-vera-api/archive/a8f823066ead6c7da6fb5
 
 # Sonos bindings (media_player.sonos)
 SoCo==0.11.1
+
+# PlexAPI (media_player.plex)
+https://github.com/adrienbrault/python-plexapi/archive/df2d0847e801d6d5cda920326d693cf75f304f1a.zip#python-plexapi==1.0.2

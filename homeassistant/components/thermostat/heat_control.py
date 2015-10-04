@@ -190,6 +190,13 @@ class HeatControl(ThermostatDevice):
         if self._heater_manual_changed:
             self.set_temperature(None)
 
+    @property
+    def is_away_mode_on(self):
+        """
+        Returns if away mode is on.
+        """
+        return self._away
+
     def turn_away_mode_on(self):
         """ Turns away mode on. """
         self._away = True
