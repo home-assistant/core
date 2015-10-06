@@ -10,7 +10,7 @@ from collections import defaultdict
 from homeassistant.exceptions import NoEntitySpecifiedError
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_LOGBOOK_HIDDEN, ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME, STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
@@ -23,7 +23,6 @@ class Entity(object):
     # pylint: disable=no-self-use
 
     _hidden = False
-
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inherting this
     # class. These may be used to customize the behavior of the entity.
@@ -79,6 +78,7 @@ class Entity(object):
     entity_id = None
 
     def update_ha_state(self, force_refresh=False):
+
         """
         Updates Home Assistant with current state of entity.
         If force_refresh == True will update entity before setting state.
@@ -95,7 +95,7 @@ class Entity(object):
 
         state = str(self.state)
         attr = self.state_attributes or {}
-
+        
         if ATTR_FRIENDLY_NAME not in attr and self.name:
             attr[ATTR_FRIENDLY_NAME] = self.name
 
@@ -104,6 +104,7 @@ class Entity(object):
 
         if self.hidden:
             attr[ATTR_HIDDEN] = self.hidden
+    
 
         # overwrite properties that have been set in the config file
         attr.update(_OVERWRITE.get(self.entity_id, {}))
