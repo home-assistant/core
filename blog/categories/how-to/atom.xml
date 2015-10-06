@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-27T20:28:26-07:00</updated>
+  <updated>2015-10-05T23:19:53-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -156,7 +156,7 @@ host address and api password.</p>
 </p>
 
 
-<p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
+<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered.
 Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
 <code>value1</code>.</p>
 

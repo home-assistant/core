@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -110,7 +111,7 @@ The rpi_gpio sensor platform allows you to read sensor values of the GPIOs of yo
 
 <p>To use your Raspberry Pi&rsquo;s GPIO in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -119,21 +120,22 @@ The rpi_gpio sensor platform allows you to read sensor values of the GPIOs of yo
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
-</span><span class='line'>sensor:
-</span><span class='line'>  platform: rpi_gpio
-</span><span class='line'>  pull_mode: "UP"
-</span><span class='line'>  value_high: "Active"
-</span><span class='line'>  value_low: "Inactive"
-</span><span class='line'>  ports:
-</span><span class='line'>    11: PIR Office
-</span><span class='line'>    12: PIR Bedroom</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rpi_gpio</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">pull_mode</span><span class="p-Indicator">:</span> <span class="s">&quot;UP&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">value_high</span><span class="p-Indicator">:</span> <span class="s">&quot;Active&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">value_low</span><span class="p-Indicator">:</span> <span class="s">&quot;Inactive&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">ports</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">11</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PIR Office</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">12</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PIR Bedroom</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>For more details about the GPIO layout, visit the Wikipedia <a href="https://en.wikipedia.org/wiki/Raspberry_Pi#GPIO_connector">article</a> about the Raspberry Pi.</p>
 
 <p class='note warning'>
-As this requires access to the GPIO, you will need to run Home Assistant as root.
+If you are not running Raspbian Jessie, you will need to run Home Assistant as root.
 </p>
 
 

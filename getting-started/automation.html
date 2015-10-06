@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -348,7 +349,14 @@ go automate!</p>
 <li>Learn about the available <a href="/components/automation.html#conditions">automation conditions</a></li>
 <li>Learn about <a href="/components/script.html">scripts</a> to help you trigger multiple actions and delays</li>
 <li>Learn about <a href="/components/scene.html">scenes</a> to help you set many entities at once to your liking</li>
+<li>Setup the <a href="/components/#notify-service">notification component</a> to sent yourself messages</li>
 </ul>
+
+
+<p class='note warning'>
+  Whenever you write the value <code>on</code> or <code>off</code>, surround it with quotes to avoid
+  the YAML parser interpreting the values as booleans.
+</p>
 
 
 

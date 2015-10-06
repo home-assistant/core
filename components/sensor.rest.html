@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -151,7 +152,7 @@ The rest sensor platform is consuming a give endpoint which is exposed by a <a h
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADDRESS/ENDPOINT</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">method</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">POST</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span> <span class="l-Scalar-Plain">or [&#39;Temperatures&#39;, 0, &#39;CurrentReading&#39;]</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">payload</span><span class="p-Indicator">:</span> <span class="s">&#39;{</span><span class="nv"> </span><span class="s">&quot;device&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;heater&quot;</span><span class="nv"> </span><span class="s">}&#39;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">REST POST sensor</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;°C&quot;</span>
@@ -165,7 +166,7 @@ The rest sensor platform is consuming a give endpoint which is exposed by a <a h
 <ul>
 <li><strong>resource</strong> (<em>Required</em>): The resource or endpoint that contains the value.</li>
 <li><strong>method</strong> (<em>Optional</em>): The method of the request. Default is GET.</li>
-<li><strong>variable</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
+<li><strong>variable</strong> (<em>Optional</em>): Defines the variable or a list of element for complex responses to extract, if any.</li>
 <li><strong>payload</strong> (<em>Optional</em>): The payload to send with a POST request. Usualy formed as a dictionary-</li>
 <li><strong>name</strong> (<em>Optional</em>): Name of the REST sensor.</li>
 <li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>

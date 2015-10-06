@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -110,20 +111,21 @@ This edimax switch platform allows you to control the state of your <a href="htt
 
 <p>To use your Edimax switch in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
-</span><span class='line'>switch:
-</span><span class='line'>  platform: edimax
-</span><span class='line'>  host: 192.168.1.32
-</span><span class='line'>  username: YOUR_USERNAME
-</span><span class='line'>  password: YOUR_PASSWORD
-</span><span class='line'>  name: Edimax Smart Plug</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">edimax</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.32</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Edimax Smart Plug</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Configuration variables:</p>

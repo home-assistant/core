@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -112,14 +113,15 @@ is easy to built your own. If you are the kind of person that likes to learn fro
 
 <p>If you want to load these components in Home Assistant, add the following lines to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>hello_world:
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">hello_world</span><span class="p-Indicator">:</span>
 </span><span class='line'>
-</span><span class='line'>example:
-</span><span class='line'>  target: TARGET_ENTITY</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="l-Scalar-Plain">example</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">target</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">TARGET_ENTITY</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><code>TARGET_ENTITY</code> should be one of your devices that can be turned on and off, ie a light or a switch. Example value could be <code>light.Ceiling</code> or <code>switch.AC</code> (if you have these devices with those names).</p>
@@ -154,7 +156,7 @@ Home Assistant will use the directory that contains your config file as the dire
 <code>DEPENDENCIES</code> and <code>REQUIREMENTS</code>. Both are lists that contain strings.</p>
 
 <p>Dependencies are other Home Assistant components that should be setup before the platform is loaded.
-An example is the MQTT sensor component, which requires an active connection to a MQTT broker. If
+An example is the MQTT sensor component, which requires an active connection to an MQTT broker. If
 Home Assistant is unable to load and setup the MQTT component, it will not setup the MQTT sensor
 component.</p>
 
@@ -178,11 +180,11 @@ load.</p>
 <tbody>
 <tr>
 <td> <code>hass</code> </td>
-<td> The Home Assistant object. Call its methods to track time, register services, listen for events or track states: <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L38">Overview of available methods.</a> </td>
+<td> The Home Assistant object. Call its methods to track time, register services, listen for events or track states: <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/core.py#L55">Overview of available methods.</a> </td>
 </tr>
 <tr>
 <td> <code>config</code> </td>
-<td> A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with the component configuration. </td>
+<td> A dict containing the configuration. The keys of the config-dict are component names and the value is another dict with the component configuration.: <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/core.py#L687">Details</a> </td>
 </tr>
 </tbody>
 </table>
@@ -202,15 +204,15 @@ load.</p>
 <tbody>
 <tr>
 <td> <code>hass.states</code> </td>
-<td> This is the StateMachine. It allows you to set states and track when they are changed. <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L589">See available methods</a>. </td>
+<td> This is the StateMachine. It allows you to set states and track when they are changed. <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/core.py#L434">See available methods</a>. </td>
 </tr>
 <tr>
 <td> <code>hass.bus</code> </td>
-<td> This is the EventBus. It allows you to trigger and listen for events.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L387">See available methods</a>. </td>
+<td> This is the EventBus. It allows you to trigger and listen for events.<br><a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/core.py#L229">See available methods</a>. </td>
 </tr>
 <tr>
 <td> <code>hass.services</code> </td>
-<td> This is the ServiceRegistry. It allows you to register services.<br><a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/__init__.py#L738">See available methods</a>. </td>
+<td> This is the ServiceRegistry. It allows you to register services.<br><a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/core.py#L568">See available methods</a>. </td>
 </tr>
 </tbody>
 </table>
@@ -220,10 +222,11 @@ load.</p>
 
 <p>If your configuration file contains the following lines:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>example:
-</span><span class='line'>  host: paulusschoutsen.nl</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">example</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">paulusschoutsen.nl</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Then in the setup-method of your component you will be able to refer to <code>config['example']['host']</code> to get the value <code>paulusschoutsen.nl</code>.</p>

@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -105,25 +106,29 @@
   <hr class="divider">
   
 
-  <p>The <code>sun</code> component will use your current location to track if the sun is above or below the horizon. This is a common ingredient within Home Automation.</p>
+  <p>The <code>sun</code> component will use your current location to track if the sun is above or below the horizon.
+The sun can be used within automation as <a href="/components/automation.html#sun-trigger">a trigger with an optional offset to simulate dawn/dusk</a>.</p>
 
-<p>To set it up, add the following lines to your <code>configuration.yaml</code>:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>homeassistant:
-</span><span class='line'>  latitude: 32.87336
-</span><span class='line'>  longitude: -117.22743
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">latitude</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">32.87336</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">longitude</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">-117.22743</span>
 </span><span class='line'>
-</span><span class='line'>sun:
-</span><span class='line'>  elevation: 123</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="l-Scalar-Plain">sun</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="c1"># Optional. If ommitted will be retrieved from Google Maps</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">elevation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">123</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-<p><code>elevation</code> is optional. If not given, it will be queried from Google Maps using the specified location.</p>
+
 
 <p class='img'>
 <img src='/images/screenshots/more-info-dialog-sun.png' />

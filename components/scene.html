@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -105,8 +106,18 @@
   <hr class="divider">
   
 
-  <p>A user can create scenes that capture the states you want certain entities to be. For example a scene can contain that light A should be turned on and light B should be bright red. Deactivating a scene will restore the previous state from before the scene was activated. Just like scripts, scenes have their own separate page to see which scenes are on.
-Scenes can be activated using the service scene.turn_on and deactivated using the service scene.turn_off.</p>
+  <p>A user can create scenes that capture the states you want certain entities to be. For example a scene
+can contain that light A should be turned on and light B should be bright red.</p>
+
+<p>A scene is active if all states of the scene match the actual states. An optional <code>fuzzy_match</code> option
+can be given to allow entities to match if attributes are not exact but are in range of the preferred
+state.</p>
+
+<p>If a scene is manually activated it will store the previous state of the entities. These will be
+restored when the state is deactivated manually. If one of the enties that are being tracked change
+state on its own, the old state will not be restored when it is being deactivated.</p>
+
+<p>Scenes can be activated using the service <code>scene.turn_on</code> and deactivated using the service <code>scene.turn_off</code>.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -126,10 +137,11 @@ Scenes can be activated using the service scene.turn_on and deactivated using th
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 <span class='line-number'>18</span>
-<span class='line-number'>19</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">scene</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Romantic</span>
+</span><span class='line'>    <span class="c1"># Optional, allow fuzzy matching number atttributes to check if scene is on</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">fuzzy_match</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.2</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">light.tv_back_light</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">light.ceiling</span><span class="p-Indicator">:</span>
@@ -137,15 +149,12 @@ Scenes can be activated using the service scene.turn_on and deactivated using th
 </span><span class='line'>        <span class="l-Scalar-Plain">color</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.33</span><span class="p-Indicator">,</span> <span class="nv">0.66</span><span class="p-Indicator">]</span>
 </span><span class='line'>        <span class="l-Scalar-Plain">brightness</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">200</span>
 </span><span class='line'>
-</span><span class='line'><span class="-Error"> </span><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all_lights_on</span>
-</span><span class='line'>   <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">group.all_lights</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Movies</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">light.tv_back_light</span><span class="p-Indicator">:</span>
 </span><span class='line'>        <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
-</span><span class='line'>
-</span><span class='line'> <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all_lights_off</span>
-</span><span class='line'>   <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">group.all_lights</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">off</span>
+</span><span class='line'>        <span class="l-Scalar-Plain">brightness</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">100</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">light.ceiling</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">off</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

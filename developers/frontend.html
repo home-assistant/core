@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -124,10 +125,11 @@ Do not use development mode in production. Home Assistant uses aggressive cachin
 
 <p>Home Assistant will by default serve the compiled version of the frontend. To change it so that each component and JavaScript are served separately, update your <code>configuration.yaml</code> to have these lines:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>http:
-</span><span class='line'>  development: 1</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">http</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">development</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Next step is to get the frontend code. When you clone the Home Assistant repository, the frontend

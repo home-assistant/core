@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -145,47 +146,76 @@ full configuration but only the relevant part.</p>
 <span class='line-number'>31</span>
 <span class='line-number'>32</span>
 <span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example of entry in configuration.yaml</span>
 </span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'><span class="c1"># Turns on lights 1 hour before sunset if people are home</span>
+</span><span class='line'><span class="c1"># and if people get home between 16:00-23:00</span>
 </span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;Rule</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">Light</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">evening&#39;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="c1"># Prefix the first line of each trigger configuration</span>
+</span><span class='line'>    <span class="c1"># with a &#39;-&#39; to enter multiple</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-01:00:00&quot;</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&#39;-01:00:00&#39;</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;home&#39;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="c1"># Prefix the first line of each condition configuration</span>
+</span><span class='line'>    <span class="c1"># with a &#39;-&#39;&#39; to enter multiple</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;home&#39;</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;16:00:00&quot;</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00:00&quot;</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&#39;16:00:00&#39;</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&#39;23:00:00&#39;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
 </span><span class='line'>
+</span><span class='line'><span class="c1"># Turn off lights when everybody leaves the house</span>
 </span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;Rule</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">Away</span><span class="nv"> </span><span class="s">Mode&#39;</span>
-</span><span class='line'>
 </span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>   <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;not_home&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">use_trigger_values</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;not_home&#39;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_off</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_lights</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_off</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_lights</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># Notify when Paulus leaves the house in the evening</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;Leave</span><span class="nv"> </span><span class="s">Home</span><span class="nv"> </span><span class="s">notification&#39;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">zone</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">leave</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">zone</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">zone.home</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&#39;20:00&#39;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">notify.notify</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">message</span><span class="p-Indicator">:</span> <span class="s">&#39;Paulus</span><span class="nv"> </span><span class="s">left</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">house&#39;</span>
 </span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<p class='note'>
-With the updated automation layout, you are now able to list all rules under on a single `automation:` entry.  Use `-alias` to define the start of each rule.
-</p>
 
 
 <ul>
@@ -281,14 +311,14 @@ is above and/or below a threshold.</p>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
 </span><span class='line'>    <span class="c1"># Optional</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">from</span><span class="p-Indicator">:</span> <span class="s">&quot;not_home&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">to</span><span class="p-Indicator">:</span> <span class="s">&quot;home&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">from</span><span class="p-Indicator">:</span> <span class="s">&#39;not_home&#39;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">to</span><span class="p-Indicator">:</span> <span class="s">&#39;home&#39;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 
 
-<p class='note'>
+<p class='note warning'>
   Use quotes around your values for <code>from</code> and <code>to</code> to avoid the YAML parser
   interpreting some values as booleans.
 </p>
@@ -296,7 +326,8 @@ is above and/or below a threshold.</p>
 
 <h4><a class='title-link' name='sun-trigger' href='#sun-trigger'></a> Sun trigger</h4>
 
-<p>Triggers based on sunrise and sunset, both with an optional offset.</p>
+<p>Trigger when the sun is setting or rising. An optional time offset can be given to have it trigger for
+example 45 minutes before sunset, when dusk is setting in.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -310,8 +341,8 @@ is above and/or below a threshold.</p>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
 </span><span class='line'>    <span class="c1"># Possible values: sunset, sunrise</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
-</span><span class='line'>    <span class="c1"># Optional time offset</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">-00:45:00</span>
+</span><span class='line'>    <span class="c1"># Optional time offset. This example is 45 minutes.</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&#39;-00:45:00&#39;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -341,7 +372,7 @@ hour when it is 5 minutes past whole.  You cannot use <code>after</code> togethe
 </span><span class='line'>    <span class="c1"># All following are optional.</span>
 </span><span class='line'>    <span class="c1"># When &#39;after&#39; is used, you cannot also match on hour, minute, seconds.</span>
 </span><span class='line'>    <span class="c1"># Military time format.</span>
-</span><span class='line'>    <span class="c1"># after: &quot;15:32:00&quot;</span>
+</span><span class='line'>    <span class="c1"># after: &#39;15:32:00&#39;</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">hours</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">minutes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">seconds</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
@@ -355,6 +386,29 @@ hour when it is 5 minutes past whole.  You cannot use <code>after</code> togethe
 Valid values for <code>weekday</code> are (<code>sun</code>, <code>mon</code>, <code>tue</code>, <code>wed</code>, <code>thu</code>, <code>fri</code> &amp; <code>sat</code>)</p>
 
 <p>The above example will trigger on Saturday and Sunday every hour on the 5 (2:05, 3:05, 4:05, etc).</p>
+
+<h4><a class='title-link' name='zone-trigger' href='#zone-trigger'></a> Zone trigger</h4>
+
+<p>Zone triggers can trigger when an entity is entering or leaving the zone. For zone automation to work,
+you need to have setup a device tracker platform that supports reporting GPS coordinates. Currently
+this is limited to the <a href="/components/device_tracker.owntracks.html">OwnTracks platform</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">zone</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">zone</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">zone.home</span>
+</span><span class='line'>    <span class="c1"># Event is either enter or leave</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">enter</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <h2><a class='title-link' name='conditions' href='#conditions'></a> Conditions</h2>
 
@@ -443,8 +497,8 @@ certain day of the week</p>
 </span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
 </span><span class='line'>    <span class="c1"># At least one of the following is required.</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;15:00:00&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00:00&quot;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&#39;15:00:00&#39;</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&#39;23:00:00&#39;</span>
 </span><span class='line'>    <span class="l-Scalar-Plain">weekday</span><span class="p-Indicator">:</span>
 </span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mon</span>
 </span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">wed</span>
@@ -453,6 +507,25 @@ certain day of the week</p>
 
 
 <p>Valid values for <code>weekday</code> are (sun, mon, tue, wed, thu, fri &amp; sat)</p>
+
+<h4><a class='title-link' name='zone-condition' href='#zone-condition'></a> Zone condition</h4>
+
+<p>Zone conditions test if an entity is in a certain zone. For zone automation to work,
+you need to have setup a device tracker platform that supports reporting GPS coordinates. Currently
+this is limited to the <a href="/components/device_tracker.owntracks.html">OwnTracks platform</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">zone</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">device_tracker.paulus</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">zone</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">zone.home</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <h2><a class='title-link' name='actions' href='#actions'></a> Actions</h2>
 

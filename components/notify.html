@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -126,7 +127,7 @@
 
 <p>Notifications are great to be used within Home Automation. Below is a an example configuration that you can add to your <code>configuration.yaml</code> to be notified when the sun sets.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -136,16 +137,17 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>automation:
-</span><span class='line'>  alias: Sun set notification
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Sun set notification</span>
 </span><span class='line'>
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: sun.sun
-</span><span class='line'>  state_from: above_horizon
-</span><span class='line'>  state_to: below_horizon
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">state_entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun.sun</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">state_from</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">above_horizon</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">state_to</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">below_horizon</span>
 </span><span class='line'>
-</span><span class='line'>  execute_service: notify.NOTIFIER_NAME
-</span><span class='line'>  service_data: {"message":"YAY"}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">notify.NOTIFIER_NAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;message&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;YAY&quot;</span><span class="p-Indicator">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>For more automation examples, see the <a href="/components/automation.html">getting started with automation page</a>.</p>

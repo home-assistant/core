@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -117,14 +118,6 @@ Most components that support multiple entries within the <code>configuration.yam
 </p>
 
 
-<p>To get the most out of automation, it is useful to setup the following things:</p>
-
-<ul>
-<li><a href="/components/#presence">Presence Detection</a></li>
-<li><a href="/components/#notify-service">Notification service</a></li>
-</ul>
-
-
 <p>If you can&rsquo;t find support for your favorite device or service,
 <a href="/developers/add_new_platform.html">consider adding support</a></p>
 
@@ -168,17 +161,17 @@ of these parameters. This can be done by adding the following config to the <cod
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="c1"># Add this to your existing configuration</span>
-</span><span class='line'>    <span class="c1"># Only the `entity_id` is required.  All other options are optional.</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">some.entity_id</span><span class="p-Indicator">:</span>
-</span><span class='line'>            <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
-</span><span class='line'>            <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://placehold.it/200x200</span>
-</span><span class='line'>            <span class="l-Scalar-Plain">friendly_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My better name</span>
+</span><span class='line'>  <span class="c1"># Add this to your existing configuration</span>
+</span><span class='line'>  <span class="c1"># Only the `entity_id` is required.  All other options are optional.</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">some.entity_id</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://placehold.it/200x200</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">friendly_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My better name</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h3><a href="/getting-started/automation.html">Next step: Setting up automation &raquo;</a></h3>
+<h3><a href="/getting-started/presence-detection.html">Next step: Setting up presence detection &raquo;</a></h3>
 
 
 </article>

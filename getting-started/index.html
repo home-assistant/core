@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -113,8 +114,6 @@
 <label class='menu-selector raspberry' for='raspberry-install'>Install on a Raspberry Pi</label>
 <label class='menu-selector docker' for='docker-install'>Install using Docker</label></p>
 
-<p><h3>Installation</h3></p>
-
 <p><div class='install-instructions normal'>
 Installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/' target="_blank">Python 3.4</a> installed and execute the following code in a console:</p>
 
@@ -128,42 +127,52 @@ Installing and running Home Assistant on your local machine is easy. Make sure y
 <p>Running these commands will:</p>
 <ol>
 <li>Install Home Assistant</li>
-<li>Launch Home Assistant and serve web interface on <a href='http://localhost:8123' target="_blank"><a href="http://localhost:8123">http://localhost:8123</a></a></li>
+<li>Launch Home Assistant and serve web interface on
+<a href='http://localhost:8123' target="_blank"><a href="http://localhost:8123">http://localhost:8123</a></a></li>
 </ol>
 </div> <!-- INSTALL-INSTRUCTIONS NORMAL --></p>
 
-<p><div class='install-instructions docker'>
-<p>Installation with Docker is straightforward. Adjust the following command so that <code>/path/to/your/config/</code> points at the folder where you want to store your config and run it:</p></p>
+<p><div class='install-instructions docker'></p>
+
+<p>Installation with Docker is straightforward. Adjust the following command so that <code>/path/to/your/config/</code>
+points at the folder where you want to store your config and run it:</p>
 
 <p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d <span class="se">--</span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/your/config:/config -v /etc/localtime:/etc/localtime:ro <span class="se">--</span><span class="nv">net</span><span class="o">=</span>host balloob/home-assistant
 </span></code></pre></td></tr></table></div></figure></p>
 
-<p><p>This will launch Home Assistant and serve its web interface from port 8123 on your Docker host.</p></p>
+<p>This will launch Home Assistant and serve its web interface from port 8123 on your Docker host.</p>
 
 <p><p class='note'>
-When using boot2docker on OS X you are unable to map the local time to your Docker container. Replace <code>-v /etc/localtime:/etc/localtime:ro</code> with <code>-e &ldquo;TZ=America/Los_Angeles&rdquo;</code> (replacing America/Los_Angeles with <a href='http://en.wikipedia.org/wiki/List_of_tz_database_time_zones' target="_blank">your timezone</a>)
-</p>
-</div> <!-- INSTALL-INSTRUCTIONS DOCKER --></p>
+When using boot2docker on OS X you are unable to map the local time to your Docker container. Replace
+<code>-v /etc/localtime:/etc/localtime:ro</code> with <code>-e &ldquo;TZ=America/Los_Angeles&rdquo;</code>
+(replacing America/Los_Angeles with <a href='http://en.wikipedia.org/wiki/List_of_tz_database_time_zones' target="_blank">your timezone</a>)
+</p></p>
 
-<p><div class='install-instructions raspberry'>
-<p>Home Assistant uses Python 3.4 which is not shipped with the current Raspbian distibution for the Raspberry Pi. Before installing Home Assistant, you will have to <a href="https://www.raspberrypi.org/forums/viewtopic.php?f=32&t=113961#p779265" target="_blank">install Python 3.4</a>.</p>
+<p></div> <!-- INSTALL-INSTRUCTIONS DOCKER --></p>
 
-<p>Once that is complete, installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/' target="_blank">Python 3.4</a> installed and execute the following code in a console:</p>
+<p><div class='install-instructions raspberry'></p>
 
-<p><p>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<p>Home Assistant requires the Raspberry Pi to run <a href='https://www.raspberrypi.org/downloads/raspbian/'>Raspbian Jessie</a>.
+This version has been released on September 24, 2015 and comes by default with Python 3.4 which is required for Home Assistant.</p>
+
+<p>Execute the following code in a console:</p>
+
+<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install homeassistant
 </span><span class='line'>hass <span class="se">--</span>open-ui
-</span></code></pre></td></tr></table></div></figure>
-</p>
+</span></code></pre></td></tr></table></div></figure></p>
+
 <p>Running these commands will:</p>
-<ol>
+
+<ul>
 <li>Install Home Assistant</li>
-<li>Launch Home Assistant and serve web interface on <a href='http://localhost:8123' target="_blank"><a href="http://localhost:8123">http://localhost:8123</a></a></li>
-</ol>
-</div> <!-- INSTALL-INSTRUCTIONS RASPBERRY --></p>
+<li>Launch Home Assistant and serve web interface on <a href="http://localhost:8123">http://localhost:8123</a></li>
+</ul>
+
+
+<p></div> <!-- INSTALL-INSTRUCTIONS RASPBERRY --></p>
 
 <h3><a class='title-link' name='troubleshooting' href='#troubleshooting'></a> Troubleshooting</h3>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-27T20:28:26-07:00</updated>
+  <updated>2015-10-05T23:19:53-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,51 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Home Assistant goes geo with OwnTracks]]></title>
+    <link href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"/>
+    <updated>2015-10-05T07:49:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks</id>
+    <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we&rsquo;re very
+glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map.
+The geo support consists of three different parts:</p>
+
+<ul>
+<li><a href="https://home-assistant.io/components/device_tracker.owntracks.html">OwnTracks platform for the device tracker</a> to get locations for devices</li>
+<li>Brand new <a href="https://home-assistant.io/components/zone.html">zone component</a> to define zones to identify locations and <a href="https://home-assistant.io/components/automation.html#zone-trigger">trigger automation</a></li>
+<li>A map in the UI to see all this (<a href="https://home-assistant.io/demo/">see it in action in the demo</a>)</li>
+</ul>
+
+
+<p>We have added a new <a href="https://home-assistant.io/getting-started/presence-detection.html">getting started section</a> to get up and running.</p>
+
+<p class='img'>
+<img src='https://home-assistant.io/images/screenshots/map.png' />
+Map in Home Assistant showing two people and three zones (home, school, work)
+</p>
+
+
+<p>Ofcourse more things happened in the last three weeks. I&rsquo;m moving away from my usual long post to a
+short summary of highlights:</p>
+
+<p><a href='https://home-assistant.io/components/media_player.plex.html'>
+<img src='https://home-assistant.io/images/supported_brands/plex.png' style='border:none; box-shadow: none; float: right;' height='50' />
+</a></p>
+
+<ul>
+<li>Sensor: <a href="https://home-assistant.io/components/sensor.rest.html">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+<li>Alarm Control Panel: <a href="https://home-assistant.io/components/alarm_control_panel.mqtt.html">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+<li>Media Player: <a href="https://home-assistant.io/components/media_player.plex.html">Plex platform</a> added (<a href="https://github.com/miniconfig,%20[@adrienbrault](https://github.com/adrienbrault">@miniconfig</a>)</li>
+<li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>Light: <a href="https://home-assistant.io/components/light.limitlessled.html">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
+<li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+<li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Alarms, Sonos and iTunes now supported]]></title>
@@ -37,18 +82,19 @@ playing on your Sonos and change the volume.</p>
 <a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will
 have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
-</span><span class='line'>media_player:
-</span><span class='line'>  platform: itunes
-</span><span class='line'>  name: iTunes
-</span><span class='line'>  host: http://192.168.1.50
-</span><span class='line'>  port: 8181</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">media_player</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">itunes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">iTunes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://192.168.1.50</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8181</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -273,7 +319,7 @@ host address and api password.</p>
 </p>
 
 
-<p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
+<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered.
 Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
 <code>value1</code>.</p>
 
@@ -2462,39 +2508,6 @@ Events are saved in a local database. Google Graphs is used to draw the graph. D
 <li>Summarize usage of the different components of your house</li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for January 24, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/01/24/release-notes/"/>
-    <updated>2015-01-24T18:36:00-08:00</updated>
-    <id>https://home-assistant.io/blog/2015/01/24/release-notes</id>
-    <content type="html"><![CDATA[<p>I have just merged the latest version of the development branch into master. Here are some of the highlights of this release:</p>
-
-<p><strong>Configuration via the frontend</strong><br>
-Phliips Hue will now be auto discovered and uses the new <code>configurator</code> component to interact with the user to finish the setup process.</p>
-
-<p><strong>Wink Hub support</strong><br>
-Thanks to the work done by John McLaughlin and Geoff Norton we now support the lights, switches and sensors that are connected to the Wink hub.</p>
-
-<p><strong>The getting started guide and component page have been reorganized</strong><br>
-The getting started instructions have been split into separate pages per component and a general overview page. The goal is to have a page per component that describes:</p>
-
-<ul>
-<li>What it does</li>
-<li>How to set it up</li>
-<li>Which states it maintains</li>
-<li>Which services it provides</li>
-<li>Additional development tips</li>
-</ul>
-
-
-<p><strong>More reasonable errors</strong><br>
-Home Assistant should now throw better errors and offer solutions if you do not have the right version of Python 3, forgot to clone the git submodules or install the dependencies.</p>
-
-<p><strong>Streamlined first launch</strong><br>
-Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
 ]]></content>
   </entry>
   

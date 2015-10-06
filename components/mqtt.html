@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -106,9 +107,8 @@
   
 
   <p><img src='/images/supported_brands/mqtt.png' class='brand pull-right' />
-MQTT (aka MQ Telemetry Transport) is a machine-to-machine or &ldquo;Internet of Things&rdquo; connectivity protocol on top of TCP/IP. It allows extremely lightweight publish/subscribe messaging transport.</p>
-
-<p>The MQTT component needs an MQTT broker like <a href="http://mosquitto.org/">Mosquitto</a> or <a href="http://www.mosca.io/">Mosca</a>. The Eclipse Foundation is running a public MQTT broker at <a href="http://iot.eclipse.org/getting-started">iot.eclipse.org</a> or the Mosquitto Project under <a href="http://test.mosquitto.org">test.mosquitto.org</a>. If you prefer to use a public, keep in mind to adjust the topic and that your messages may be publicly accessible.</p>
+MQTT (aka MQ Telemetry Transport) is a machine-to-machine or &ldquo;Internet of Things&rdquo; connectivity protocol
+on top of TCP/IP. It allows extremely lightweight publish/subscribe messaging transport.</p>
 
 <p>To integrate MQTT into Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
 
@@ -120,6 +120,7 @@ MQTT (aka MQ Telemetry Transport) is a machine-to-machine or &ldquo;Internet of 
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
+<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IP_ADDRESS_BROKER</span>
@@ -128,6 +129,7 @@ MQTT (aka MQ Telemetry Transport) is a machine-to-machine or &ldquo;Internet of 
 </span><span class='line'>  <span class="l-Scalar-Plain">keepalive</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">60</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">USERNAME</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">certificate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/paulus/dev/addtrustexternalcaroot.crt</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -140,26 +142,130 @@ MQTT (aka MQ Telemetry Transport) is a machine-to-machine or &ldquo;Internet of 
 <li><strong>keepalive</strong> (<em>Optional</em>): The keep alive in seconds for this client. Default is 60.</li>
 <li><strong>username</strong> (<em>Optional</em>): The username to use with your MQTT broker.</li>
 <li><strong>password</strong> (<em>Optional</em>): The corresponding password for the username to use with your MQTT broker.</li>
+<li><strong>certificate</strong> (<em>Optional</em>): Certificate to use to encrypt communication with the broker.</li>
 </ul>
 
 
+<h2><a class='title-link' name='picking-a-broker' href='#picking-a-broker'></a> Picking a broker</h2>
+
+<p>The MQTT component needs you to run an MQTT broker for Home Assistant to connect to.</p>
+
+<p>There are three options, each with various degrees of ease of setup and privacy.</p>
+
+<h4><a class='title-link' name='run-your-own' href='#run-your-own'></a> Run your own</h4>
+
+<p>Most private option but requires a bit more work. There are two free and open-source brokers to pick
+from: <a href="http://mosquitto.org/">Mosquitto</a> and <a href="http://www.mosca.io/">Mosca</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.100</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1883</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">client_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home-assistant-1</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">keepalive</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">60</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PASSWORD</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='public-mqtt' href='#public-mqtt'></a> Public MQTT</h4>
+
+<p>The Mosquitto project runs a <a href="http://test.mosquitto.org">public broker</a>. Easiest to setup but there
+is 0 privacy as all messages are public. Use this only for testing purposes and not for real tracking
+of your devices.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">test.mosquitto.org</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1883</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># Optional, if you want encryption</span>
+</span><span class='line'>  <span class="c1"># (doesn&#39;t really matter because broker is public)</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8883</span>
+</span><span class='line'>  <span class="c1"># Download certificate from http://test.mosquitto.org/ssl/mosquitto.org.crt</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">certificate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home/paulus/downloads/mosquitto.org.crt</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4><a class='title-link' name='cloudmqtt' href='#cloudmqtt'></a> CloudMQTT</h4>
+
+<p><a href="https://www.cloudmqtt.com">CloudMQTT</a> is a hosted private MQTT instance that is free up to 10
+connected devices. This is enough to get started with for example
+<a href="/components/device_tracker.owntracks.html">OwnTracks</a> and give you a taste of what is possible.</p>
+
 <p class='note'>
-The MQTT component has no TLS support at the moment. This means that only plain-text communication is possible.
+Home Assistant is not affiliated with CloudMQTT nor will receive any kickbacks.
 </p>
 
 
-<h2>Building on top of MQTT</h2>
+<ol>
+<li><a href="https://customer.cloudmqtt.com/login">Create an account</a> (no payment details needed)</li>
+<li><a href="https://customer.cloudmqtt.com/subscription/create">Create a new CloudMQTT instance</a>
+(Cute Cat is the free plan)</li>
+<li>From the control panel, click on the <em>Details</em> button.</li>
+<li>Create unique users for Home Assistant and each phone to connect<br>(CloudMQTT does not allow two
+connections from the same user)
+
+<ol type="a">
+<li> Under manage users, fill in username, password and click add</li>
+<li> Under ACLs, select user, topic <code>#</code>, check &lsquo;read access&rsquo; and &lsquo;write access&rsquo;</li>
+</ol>
+</li>
+<li>Copy the instance info to your configuration.yaml:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;Server&gt;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;SSL Port&gt;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;User&gt;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;Password&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note'>
+Home Assistant will automatically load the correct certificate if you connect to an encrypted channel
+of CloudMQTT (port range 20 000 - 30 000).
+</p>
+
+
+<h2><a class='title-link' name='building-on-top-of-mqtt' href='#building-on-top-of-mqtt'></a> Building on top of MQTT</h2>
 
 <ul>
 <li><a href="/components/sensor.mqtt.html">MQTT Sensor</a></li>
 <li><a href="/components/switch.mqtt.html">MQTT Switch</a></li>
 <li><a href="/components/device_tracker.mqtt.html">MQTT Device Tracker</a></li>
-<li><a href="/components/automation.html#mqtt-based-automation">MQTT-automation rule</a></li>
+<li><a href="/components/device_tracker.owntracks.html">OwnTracks Device Tracker</a></li>
+<li><a href="/components/automation.html#mqtt-based-automation">MQTT automation rule</a></li>
+<li><a href="/components/alarm_control_panel.mqtt.html">MQTT alarm</a></li>
 <li>Integrating it into a component. See the <a href="https://github.com/balloob/home-assistant/blob/dev/config/custom_components/mqtt_example.py">MQTT example component</a> how to do this.</li>
 </ul>
 
 
-<h2>Testing</h2>
+<h2><a class='title-link' name='testing-your-setup' href='#testing-your-setup'></a> Testing your setup</h2>
 
 <p>For debugging purposes <code>mosquitto</code> is shipping commandline tools to send and recieve MQTT messages. For sending test messages to a broker running on localhost:</p>
 

@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -327,6 +328,11 @@
 <table>
 
 <tr>
+  <td><a href='/components/media_player.denon.html'><img src='/images/supported_brands/denon.png' class='brand overview' /></a></td>
+  <td><a href='/components/media_player.denon.html'>Denon Network Receivers</a></td>
+</tr>
+
+<tr>
   <td><a href='/components/media_player.cast.html'><img src='/images/supported_brands/google_cast.png' class='brand overview' /></a></td>
   <td><a href='/components/media_player.cast.html'>Google Cast</a></td>
 </tr>
@@ -342,18 +348,18 @@
 </tr>
 
 <tr>
-  <td><a href='/components/media_player.mpd.html'><img src='/images/supported_brands/mpd.png' class='brand overview' /></a></td>
-  <td><a href='/components/media_player.mpd.html'>Music Player Daemon (MPD)</a></td>
-</tr>
-
-<tr>
   <td><a href='/components/media_player.squeezebox.html'><img src='/images/supported_brands/logitech.png' class='brand overview' /></a></td>
   <td><a href='/components/media_player.squeezebox.html'>Logitech Squeezebox</a></td>
 </tr>
 
 <tr>
-  <td><a href='/components/media_player.denon.html'><img src='/images/supported_brands/denon.png' class='brand overview' /></a></td>
-  <td><a href='/components/media_player.denon.html'>Denon Network Receivers</a></td>
+  <td><a href='/components/media_player.mpd.html'><img src='/images/supported_brands/mpd.png' class='brand overview' /></a></td>
+  <td><a href='/components/media_player.mpd.html'>Music Player Daemon (MPD)</a></td>
+</tr>
+
+<tr>
+  <td><a href='/components/media_player.plex.html'><img src='/images/supported_brands/plex.png' class='brand overview' /></a></td>
+  <td><a href='/components/media_player.plex.html'>Plex</a></td>
 </tr>
 
 <tr>
@@ -432,28 +438,6 @@ the manufacturers of these devices.
 </p>
 
 
-<h2><a class='title-link' name='organization' href='#organization'></a> Organization</h2>
-
-<table>
-<thead>
-<tr>
-<th> Type </th>
-<th> Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> <a href="/components/group.html">Group</a> </td>
-<td> Allows grouping of entities</td>
-</tr>
-<tr>
-<td> <a href="/components/scene.html">Scene</a> </td>
-<td> Allow defining preferred state of a set of entities</td>
-</tr>
-</tbody>
-</table>
-
-
 <h2><a class='title-link' name='hubs' href='#hubs'></a> Hubs</h2>
 
 <p>Home Assistant integrates with a variety of third party Home Automation hubs and networks. It allows you to control the connected switches, lights and sensors via Home Assistant. Click on the following logos for setup instructions:</p>
@@ -524,7 +508,7 @@ the manufacturers of these devices.
 
 <tr>
   <td><a href='/components/sensor.time_date.html'><img src='/images/supported_brands/clock.png' class='brand overview' /></a></td>
-  <td><a href='/components/sensor.time_date.html'>Time & Date</a> displays the time and the date.</td>
+  <td><a href='/components/sensor.time_date.html'>Time & Date</a> displays the time and the date and <a href='/components/sensor.worldclock.html'>Worldclock</a> from a different time zone.</td>
 </tr>
 
 </table>
@@ -643,6 +627,28 @@ the service providers.
 </p>
 
 
+<h2><a class='title-link' name='organization' href='#organization'></a> Organization</h2>
+
+<table>
+<thead>
+<tr>
+<th> Type </th>
+<th> Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <a href="/components/group.html">Group</a> </td>
+<td> Allows grouping of entities</td>
+</tr>
+<tr>
+<td> <a href="/components/scene.html">Scene</a> </td>
+<td> Allow defining preferred state of a set of entities</td>
+</tr>
+</tbody>
+</table>
+
+
 <h2><a class='title-link' name='automation' href='#automation'></a> Automation</h2>
 
 <table>
@@ -660,6 +666,10 @@ the service providers.
 <tr>
 <td> <a href="/components/script.html">Script</a> </td>
 <td> Allow user to define scripts to run from within Home Assistant</td>
+</tr>
+<tr>
+<td> <a href="/components/zone.html">Zone</a> </td>
+<td> Allow user to define zones within Home Assistant</td>
 </tr>
 <tr>
 <td> <a href="/components/device_sun_light_trigger.html">Device sun light trigger</a> </td>

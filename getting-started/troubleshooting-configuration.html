@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -114,15 +115,78 @@ Home Assistant will print out the configuration directory it is using when start
 <p>Whenever a component or configuration option results in a warning, it will be stored in
 <code>home-assistant.log</code>. This file is reset on start of Home Assistant.</p>
 
+<h3><a class='title-link' name='yaml' href='#yaml'></a> YAML</h3>
+
+<p>Home Assistant uses the YAML syntax for configuration. YAML can be confusing at start but it is really
+powerful in allowing you to express complex configurations.</p>
+
+<p>The basics of YAML are lists and lookup tables containing key-value pairs. Lists will have each item
+start with a <code>-</code> while lookup tables will have the format <code>key: value</code>. The last value for a key is
+used in case you specify a duplicate key.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># A list</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">hello</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">how</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">are</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">you</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># Lookup table</span>
+</span><span class='line'><span class="l-Scalar-Plain">beer</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ice cold</span>  <span class="c1"># &lt;-- will be ignored because key specified twice</span>
+</span><span class='line'><span class="l-Scalar-Plain">beer</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">warm</span>
+</span><span class='line'><span class="l-Scalar-Plain">wine</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">room temperature</span>
+</span><span class='line'><span class="l-Scalar-Plain">water</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cold</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># Nesting tables</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># Nesting a list of tables in a table</span>
+</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor/topic</span>
+</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor2/topic</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Indentation is used to specify which objects are nested under one anohter. Getting the right indentation
+can be tricky if you&rsquo;re not using an editor with a fixed width font. You can test your
+configuration using <a href="http://yaml-online-parser.appspot.com/">this online YAML parser</a>.</p>
+
+<p>To learn more about the quirks of YAML, read
+<a href="https://docs.saltstack.com/en/latest/topics/troubleshooting/yaml_idiosyncrasies.html">YAML IDIOSYNCRASIES</a>
+by SaltStack.</p>
+
 <h3><a class='title-link' name='my-component-does-not-show-up' href='#my-component-does-not-show-up'></a> My component does not show up</h3>
 
 <p>When a component does not show up, many different things can be the case. Before you try any of
 these steps, make sure to look at the <code>home-assistant.log</code> file and see if there are any errors
 related to your component you are trying to set up.</p>
 
-<p><strong>Problems with the configuration<br></strong></p>
-
-<p><code>configuration.yaml</code> does not allow multiple sections to have the same name. If you want a
+<p><strong>Problems with the configuration<br></strong>
+<code>configuration.yaml</code> does not allow multiple sections to have the same name. If you want a
  specific component to be loaded twice, append a number to the name.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -144,8 +208,9 @@ related to your component you are trying to set up.</p>
 
 <p>Another common problem is that a required configuration setting is missing. If this is the
 case, the component will report this to <code>home-assistant.log</code>. You can have a look at
-<a href="/components/">the component page</a> for instructions how to setup the components. If you find any
-errors or want to expand the documentation, please
+<a href="/components/">the component page</a> for instructions how to setup the components.</p>
+
+<p>If you find any errors or want to expand the documentation, please
 <a href="https://github.com/balloob/home-assistant.io/issues">let us know</a>.</p>
 
 <p><strong>Problems with dependencies<br></strong>

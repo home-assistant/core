@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -106,7 +107,12 @@
   
 
   <p><img src='/images/supported_brands/owntracks.png' class='brand pull-right' />
-This platform allows you to detect presence by monitoring MQTT topics uses by <a href="http://owntracks.org/">Owntracks</a> for new locations.</p>
+This platform allows you to detect presence using <a href="http://owntracks.org/">Owntracks</a>. OwnTracks allows
+users to track their location on Android and iOS phones and publish it to an MQTT broker. This platform
+will connect to the broker and monitor for new locations.</p>
+
+<p>This component requires <a href="/components/mqtt.html">the MQTT component</a> to be set up and works very well
+together with <a href="/components/zone.html">the zone component</a>.</p>
 
 <p>To integrate Owntracks in Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
 

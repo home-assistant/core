@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-09-27T20:28:26-07:00</updated>
+  <updated>2015-10-05T23:19:53-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,51 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Home Assistant goes geo with OwnTracks]]></title>
+    <link href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"/>
+    <updated>2015-10-05T07:49:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks</id>
+    <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we&rsquo;re very
+glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map.
+The geo support consists of three different parts:</p>
+
+<ul>
+<li><a href="/components/device_tracker.owntracks.html">OwnTracks platform for the device tracker</a> to get locations for devices</li>
+<li>Brand new <a href="/components/zone.html">zone component</a> to define zones to identify locations and <a href="/components/automation.html#zone-trigger">trigger automation</a></li>
+<li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
+</ul>
+
+
+<p>We have added a new <a href="/getting-started/presence-detection.html">getting started section</a> to get up and running.</p>
+
+<p class='img'>
+<img src='https://home-assistant.io/images/screenshots/map.png' />
+Map in Home Assistant showing two people and three zones (home, school, work)
+</p>
+
+
+<p>Ofcourse more things happened in the last three weeks. I&rsquo;m moving away from my usual long post to a
+short summary of highlights:</p>
+
+<p><a href='https://home-assistant.io/components/media_player.plex.html'>
+<img src='https://home-assistant.io/images/supported_brands/plex.png' style='border:none; box-shadow: none; float: right;' height='50' />
+</a></p>
+
+<ul>
+<li>Sensor: <a href="/components/sensor.rest.html">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+<li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt.html">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+<li>Media Player: <a href="/components/media_player.plex.html">Plex platform</a> added (<a href="https://github.com/miniconfig,%20[@adrienbrault](https://github.com/adrienbrault">@miniconfig</a>)</li>
+<li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>Light: <a href="/components/light.limitlessled.html">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
+<li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+<li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Alarms, Sonos and iTunes now supported]]></title>
@@ -37,7 +82,7 @@ playing on your Sonos and change the volume.</p>
 <a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will
 have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
 
-<pre><code># Example configuration.yaml entry
+<pre><code class="yaml"># Example configuration.yaml entry
 media_player:
   platform: itunes
   name: iTunes
@@ -153,7 +198,7 @@ host address and api password.</p>
 </p>
 
 
-<p>This will tweet a message when a MQTT message is received that the smoke alarm has been triggered.
+<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered.
 Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
 <code>value1</code>.</p>
 
@@ -341,7 +386,7 @@ mqtt:
 <img src='https://home-assistant.io/images/supported_brands/raspberry-pi.png' style='border:none; box-shadow: none; float: right;' height='50' />
 <a href="https://github.com/gbarba">@gbarba</a> has contributed support to use the general purpose input and output pins on a Raspberry PI as switches inside Home Assistant.</p>
 
-<pre><code># Example configuration.yaml entry
+<pre><code class="yaml"># Example configuration.yaml entry
 switch:
   platform: rpi_gpio
   ports:
@@ -365,7 +410,7 @@ device_tracker:
 <img src='https://home-assistant.io/images/supported_brands/logitech.png' style='border:none; box-shadow: none; float: right;' height='50' />
 <a href="https://github.com/persandstrom">@persandstrom</a> also contributed support for the Logitech Squeezebox media player. This allows you to control your Logitech Squeezebox from Home Assistant.</p>
 
-<pre><code># Example configuration.yaml entry
+<pre><code class="yaml"># Example configuration.yaml entry
 media_player:
   platform: squeezebox
   host: 192.168.1.21
@@ -389,7 +434,7 @@ notify:
 <img src='https://home-assistant.io/images/supported_brands/edimax.png' style='border:none; box-shadow: none; float: right;' height='50' />
 <a href="https://github.com/rkabadi">@rkabadi</a> has contributed support for integrating Edimax Smart Switches into Home Assistant.</p>
 
-<pre><code># Example configuration.yaml entry
+<pre><code class="yaml"># Example configuration.yaml entry
 switch:
   platform: edimax
   host: 192.168.1.32
@@ -412,134 +457,9 @@ sensor:
 <p><strong>TEMPer temperature sensor support</strong><br>
 Support for Temper temperature sensors has been contributed by <a href="https://github.com/rkabadi">@rkabadi</a>.</p>
 
-<pre><code># Example configuration.yaml entry
+<pre><code class="yaml"># Example configuration.yaml entry
 sensor:
   platform: temper
-</code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported]]></title>
-    <link href="https://home-assistant.io/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/"/>
-    <updated>2015-07-11T01:37:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support</id>
-    <content type="html"><![CDATA[<p>Another month has passed and some great new features have landed in Home Assistant. This month release has been made possible by <a href="https://github.com/balloob">balloob</a>, <a href="https://github.com/ettisan">ettisan</a>, <a href="https://github.com/fabaff">fabaff</a>, <a href="https://github.com/gyran">gyran</a>, <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/michaelarnauts">michaelarnauts</a>, <a href="https://github.com/miniconfig">miniconfig</a> and <a href="https://github.com/rmkraus">rmkraus</a>.</p>
-
-<p>This release includes some architectural changes by me. The first is that the frontend is now based on a <a href="http://optimizely.github.io/nuclear-js/">NuclearJS</a> JavaScript backend. This has greatly helped to organize and optimize the frontend code. Another change is that Home Assistant will now install dependencies on-demand instead of installing dependencies for all supported devices.</p>
-
-<p><strong>IP Camera Support</strong><br>
-James has worked very hard to add support for IP cameras to Home Assistant which is included in this release. The initial release focusses on providing generic IP camera support. This means that any webcam that can exposes a JPEG image via a url can be integrated.</p>
-
-<p>Home Assistant will route the requests to your camera via the server allowing you to expose IP camera&rsquo;s inside your network via the Home Assistant app.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-camera:
-  platform: generic
-  name: my sample camera
-  username: MY_USERNAME
-  password: MY_PASSWORD
-  still_image_url: http://194.218.96.92/jpg/image.jpg
-</code></pre>
-
-<p class='note'>
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
-</p>
-
-
-
-
-<!--more-->
-
-
-<p><strong>Arduino</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/arduino.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Fabian has contributed support for interfacing with Arduinos. This makes it possible to connect your Arduino via USB and expose pins as sensor data and write to pins via switches. Have a look at <a href="/components/arduino.html">the docs</a> for an extensive guide to get started.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-switch:
-  platform: arduino
-  pins:
-    11:
-      name: Fan Office
-      type: digital
-    12:
-      name: Light Desk
-      type: digital
-
-sensor:
-  platform: arduino
-  pins:
-    1:
-      name: Door switch
-      type: analog
-    0:
-      name: Brightness
-      type: analog
-</code></pre>
-
-<p><strong>Kodi (XBMC)</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/kodi.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Ettisan has contributed a Kodi (XBMC) platform for the media player component. This allows you to track all the media that you are playing and allow you to control it.</p>
-
-<pre><code># Example configuration.yaml entry
-media_player:
-  platform: kodi
-  name: Kodi
-  url: http://192.168.0.123/jsonrpc
-  user: kodi
-  password: my_secure_password
-</code></pre>
-
-<p><strong>TP-Link</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/tp-link.png' style='border:none; box-shadow: none; float: right;' width='150' />
-Michael has added TP-Link support to the device tracker. This allows you to now detect presence if you have a TP-Link router.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-device_tracker:
-  platform: tplink
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-</code></pre>
-
-<p><strong>Efergy energy monitor</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/efergy.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Miniconfig has contributed support for the <a href="https://efergy.com">Efergy energy meters</a>. To get an app token, log in to your efergy account, go to the Settings page, click on App tokens, and click &ldquo;Add token&rdquo;.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: efergy
-  app_token: APP_TOKEN
-  utc_offset: UTC_OFFSET
-  monitored_variables:
-    - type: instant_readings
-    - type: budget
-    - type: cost
-      period: day
-      currency: $
-</code></pre>
-
-<p><strong>Forecast.io</strong><br>
-Fabian has added support for <a href="https://forecast.io/">Forecast.io</a> to get weather forecasts for Home Assistant. You need an API key which is free but requires a <a href="https://developer.forecast.io/register">registration</a>. To add Forecast.io to your installation, add the following to your <code>configuration.yaml</code> file:</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: forecast
-  api_key: YOUR_APP_KEY
-  monitored_conditions:
-    - summary
-    - precip_type
-    - precip_intensity
-    - temperature
-    - dew_point
-    - wind_speed
-    - wind_bearing
-    - cloud_cover
-    - humidity
-    - pressure
-    - visibility
-    - ozone
 </code></pre>
 ]]></content>
   </entry>

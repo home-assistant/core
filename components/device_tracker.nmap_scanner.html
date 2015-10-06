@@ -55,6 +55,7 @@
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
       <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
@@ -113,16 +114,17 @@ including the network-prefix notation (<code>192.168.1.1/24</code>) and the rang
 <p>If you&rsquo;re on Debian or Ubuntu, you might have to install the packages for arp and nmap. Do so by
 running <code>apt-get install net-tools nmap</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># Example configuration.yaml entry
-</span><span class='line'>device_tracker:
-</span><span class='line'>  platform: nmap_tracker
-</span><span class='line'>  hosts: 192.168.1.1/24
-</span><span class='line'>  home_interval: 10</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">nmap_tracker</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">hosts</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.1/24</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">home_interval</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><code>home_interval</code> is an optional value set in minutes.  This will be the number of minutes nmap will not
