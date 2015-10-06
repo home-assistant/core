@@ -104,7 +104,6 @@ class Entry(object):
             'entity_id': self.entity_id,
         }
 
-
 def humanify(events):
     """
     Generator that converts a list of events into Entry objects.
@@ -114,7 +113,6 @@ def humanify(events):
      - if home assistant stop and start happen in same minute call it restarted
     """
     # pylint: disable=too-many-branches
-
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
@@ -132,8 +130,9 @@ def humanify(events):
         # Process events
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
+                
                 entity_id = event.data.get('entity_id')
-
+                
                 if entity_id is None:
                     continue
 
@@ -155,13 +154,17 @@ def humanify(events):
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
-
-                # Do not report on new entities
+                #print(event.data.get('new_state').get('attributes').get('hidden_logbook'))
+                print(event.data.get('new_state').get('attributes').get('hidden_logbook'))
+		#Do not report on hidden_logbook enabled
+                if(event.data.get('new_state').get('attributes').get('hidden_logbook')==True):
+                    continue
+		# Do not report on new entities
                 if 'old_state' not in event.data:
                     continue
-
+                #print(event.data.get('old_state'))
+                #print(event.data.get('new_state').get('attributes').get('hidden_logbook'))
                 to_state = State.from_dict(event.data.get('new_state'))
-
                 # if last_changed != last_updated only attributes have changed
                 # we do not report on that yet. Also filter auto groups.
                 if not to_state or \
@@ -201,7 +204,6 @@ def humanify(events):
                 yield Entry(
                     event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
-
             elif event.event_type == EVENT_LOGBOOK_ENTRY:
                 domain = event.data.get(ATTR_DOMAIN)
                 entity_id = event.data.get(ATTR_ENTITY_ID)
