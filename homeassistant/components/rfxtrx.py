@@ -2,12 +2,6 @@
 homeassistant.components.rfxtrx
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects Home Assistant to a RFXtrx device.
-"""
-
-"""
-homeassistant.components.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connects Home Assistant to a RFXtrx device.
 
 Configuration:
 
@@ -37,6 +31,7 @@ RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = None
 
+
 def setup(hass, config):
     """ Setup the Rfxtrx component. """
 
@@ -47,8 +42,9 @@ def setup(hass, config):
         # Log RFXCOM event
         entity_id = slugify(event.device.id_string.lower())
         packet_id = "".join("{0:02x}".format(x) for x in event.data)
-        entity_name = "%(entity_id)s : %(packet_id)s" % locals()
-        _LOGGER.info("Receive RFXCOM event from %s => %s" % (event.device, entity_name))
+        entity_name = "%s : %s" % (entity_id, packet_id)
+        _LOGGER.info("Receive RFXCOM event from %s => %s",
+                     event.device, entity_name)
 
         # Callback to HA registered components
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
@@ -74,7 +70,8 @@ def setup(hass, config):
 
     return True
 
-def getRFXObject(packetid):
+
+def get_rfx_object(packetid):
     """ return the RFXObject with the packetid"""
     try:
         import RFXtrx as rfxtrxmod
