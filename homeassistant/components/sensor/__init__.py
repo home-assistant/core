@@ -10,7 +10,7 @@ from homeassistant.components import wink, zwave, isy994, verisure
 
 DOMAIN = 'sensor'
 DEPENDENCIES = []
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = 3
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
