@@ -53,6 +53,9 @@ ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
 MEDIA_TYPE_VIDEO = 'movie'
+MEDIA_TYPE_EPISODE = 'episode'
+MEDIA_TYPE_CHANNEL = 'channel'
+MEDIA_TYPE_PLAYLIST = 'playlist'
 
 SUPPORT_PAUSE = 1
 SUPPORT_SEEK = 2
