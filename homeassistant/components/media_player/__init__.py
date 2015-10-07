@@ -83,6 +83,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PAUSE: 'media_pause',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
+    SERVICE_PLAY_MEDIA: 'play_media',
 }
 
 ATTR_TO_PROPERTY = [
@@ -284,6 +285,23 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
+    def play_media_service(service):
+        """ Plays specified media_id on the media player. """
+        media_type = service.data['media_type']
+        media_id = service.data['media_id']
+
+        if media_type is None:
+            return
+
+        if media_id is None:
+            return
+
+        for player in component.extract_from_service(service):
+            player.play_media(media_type, media_id)
+
+            if player.should_poll:
+                player.update_ha_state(True)
+
     hass.services.register(
         DOMAIN, "start_fireplace",
         lambda service: play_youtube_video_service(service, "eyU3bRy2x44"),
@@ -297,6 +315,10 @@ def setup(hass, config):
     hass.services.register(
         DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service,
         descriptions.get(SERVICE_YOUTUBE_VIDEO))
+
+    hass.services.register(
+        DOMAIN, SERVICE_PLAY_MEDIA, play_media_service,
+        descriptions.get(SERVICE_PLAY_MEDIA))
 
     return True
 
