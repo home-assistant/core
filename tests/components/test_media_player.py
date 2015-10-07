@@ -12,8 +12,8 @@ from homeassistant.const import (
     STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_PLAY_MEDIA,
-    ATTR_ENTITY_ID)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, ATTR_ENTITY_ID)
+from homeassistant.components.media_player import (SERVICE_PLAY_MEDIA)
 import homeassistant.components.media_player as media_player
 from tests.common import mock_service
 
