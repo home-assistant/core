@@ -47,7 +47,7 @@ from homeassistant.components.device_tracker import DOMAIN
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pysnmp']
+REQUIREMENTS = ['pysnmp<=4.2.5']
 
 
 # pylint: disable=unused-argument
@@ -124,10 +124,12 @@ class SnmpScanner(object):
             _LOGGER.exception("SNMPLIB error: {}".format(errIndication))
             return
         if errStatus:
-            _LOGGER.exception("SNMP error: {} at {}".format(errStatus.prettyPrint(), errIndex and varBindTable[-1][int(errIndex)-1] or '?'))
+            _LOGGER.exception("SNMP error: {} at {}".format(
+                              errStatus.prettyPrint(),
+                              errIndex and varBindTable[-1][int(errIndex)-1] or '?'))
             return
         for varBindTableRow in varBindTable:
-            for _,val in varBindTableRow:
+            for _, val in varBindTableRow:
                 mac = binascii.hexlify(val.asOctets()).decode('utf-8')
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})

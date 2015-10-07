@@ -139,5 +139,5 @@ SoCo==0.11.1
 https://github.com/adrienbrault/python-plexapi/archive/df2d0847e801d6d5cda920326d693cf75f304f1a.zip#python-plexapi==1.0.2
 
 # python-pysnmp (device_tracker.snmp)
-pysnmp
+pysnmp>=4.2.5
 
