@@ -118,6 +118,16 @@ class Itunes(object):
         """ Skips back and returns the current state. """
         return self._command('previous')
 
+    def play_playlist(self, playlist_id_or_name):
+        """ Sets a playlist to be current and returns the current state. """
+        response = self._request('GET', '/playlists')
+        playlists = response.get('playlists', [])
+
+        found_playlists = [playlist for playlist in playlists if playlist["name"] == playlist_id_or_name or playlist["id"] == playlist_id_or_name]
+        if len(found_playlists) > 0:
+            playlist = found_playlists[0]
+            return self._request('PUT', '/playlists/' + playlist['id'] + '/play')
+
     def artwork_url(self):
         """ Returns a URL of the current track's album art. """
         return self._base_url + '/artwork'
