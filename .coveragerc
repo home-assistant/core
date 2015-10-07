@@ -39,6 +39,7 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
+    homeassistant/components/device_tracker/snmp.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/keyboard.py
