@@ -450,6 +450,10 @@ class MediaPlayerDevice(Entity):
         """ Plays a YouTube media. """
         raise NotImplementedError()
 
+    def play_media(self, media_type, media_id):
+        """ Plays a piece of media. """
+        raise NotImplementedError()
+
     # No need to overwrite these.
     @property
     def support_pause(self):
