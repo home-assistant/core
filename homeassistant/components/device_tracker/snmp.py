@@ -1,8 +1,12 @@
 """
-homeassistant.components.device_tracker.demo
+homeassistant.components.device_tracker.snmp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Device tracker platform that supports fetching WiFi assiciations
+through SNMP
 
-Fetch wifi associations through snmp
+This device tracker needs SNMP to be enabled on the WRT or WAP
+
+Configuration:
 
 device_tracker:
   platform: snmp
@@ -10,10 +14,22 @@ device_tracker:
   community: SNMP_COMMUNITY
   baseoid: BASE_OID
 
+Variables:
+    Host
+    *required
+    The IP address of the router, e.g. 192.168.1.1
 
-Little help with base oids:
-    Microtik: 1.3.6.1.4.1.14988.1.1.1.2.1.1 (confirmed)
-    Aruba: 1.3.6.1.4.1.14823.2.3.3.1.2.4.1.2 (untested)
+    community
+    *Required
+    The SNMP community. Read-only is fine
+
+    baseoid
+    *Required
+    The OID at which WiFi associations can be found
+
+    Little help with base oids:
+        Microtik: 1.3.6.1.4.1.14988.1.1.1.2.1.1 (confirmed)
+        Aruba: 1.3.6.1.4.1.14823.2.3.3.1.2.4.1.2 (untested)
 
 """
 import logging
@@ -26,18 +42,19 @@ from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
+# Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pysnmp']
 
-def setup_scanner(hass, config, see):
-    """ Setup snmp scanning """
-    #if not validate_config(config, {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]}, _LOGGER):
-    #    return None
+# pylint: disable=unused-argument
+def get_scanner(hass, config):
+    """ Validates config and returns an snmp scanner """
+    if not validate_config(config, {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]}, _LOGGER):
+        return None
 
-    #scanner = SnmpScanner(config[DOMAIN])
-    scanner = SnmpScanner(config)
+    scanner = SnmpScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -63,6 +80,7 @@ class SnmpScanner(object):
         """
 
         self._update_info()
+        _LOGGER.error( self.last_results )
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
@@ -90,7 +108,7 @@ class SnmpScanner(object):
         """ Fetch mac addresses from WAP via SNMP. """
         from pysnmp.entity.rfc3413.oneliner import cmdgen
 
-        devices = {}
+        devices = []
 
         cmdGen = cmdgen.CommandGenerator()
         errorIndication, errorStatus, errorIndex, varBindTable = cmdGen.nextCmd(
@@ -108,6 +126,6 @@ class SnmpScanner(object):
             for key,val in varBindTableRow:
                 mac = binascii.hexlify( val.asOctets() ).decode('utf-8')
                 mac = ':'.join( [ mac[i:i+2] for i in range( 0, len(mac), 2 ) ] )
-                devices[mac] = { 'mac' : mac }
+                devices.append( { 'mac' : mac } )
         return devices
 
