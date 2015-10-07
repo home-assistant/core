@@ -20,7 +20,8 @@ import logging
 from homeassistant.util import slugify
 
 DEPENDENCIES = []
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip#RFXtrx==0.2']
+REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip' +
+                '#RFXtrx==0.2']
 
 DOMAIN = "rfxtrx"
 CONF_DEVICE = 'device'
@@ -59,11 +60,15 @@ def setup(hass, config):
     # Init the rfxtrx module
     global RFXOBJECT
 
+    if CONF_DEVICE not in config[DOMAIN]:
+        _LOGGER.exception(
+            "can found device parameter in %s YAML configuration section",
+            DOMAIN
+        )
+        return False
+
     device = config[DOMAIN][CONF_DEVICE]
-    try:
-        debug = config[DOMAIN][CONF_DEBUG]
-    except KeyError:
-        debug = False
+    debug = config[DOMAIN].get(CONF_DEBUG, False)
 
     RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
 
