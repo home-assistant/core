@@ -287,8 +287,8 @@ def setup(hass, config):
 
     def play_media_service(service):
         """ Plays specified media_id on the media player. """
-        media_type = service.data['media_type']
-        media_id = service.data['media_id']
+        media_type = service.data.get('media_type')
+        media_id = service.data.get('media_id')
 
         if media_type is None:
             return
