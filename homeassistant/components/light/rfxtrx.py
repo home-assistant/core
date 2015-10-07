@@ -53,34 +53,36 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def light_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if isinstance(event.device, rfxtrxmod.LightingDevice):
-            entity_id = slugify(event.device.id_string.lower())
+        if not isinstance(event.device, rfxtrxmod.LightingDevice):
+            return
 
-            # Add entity if not exist and the automatic_add is True
-            if entity_id not in rfxtrx.RFX_DEVICES:
-                automatic_add = config.get('automatic_add', False)
-                if automatic_add:
-                    _LOGGER.info(
-                        "Automatic add %s rfxtrx.light (Class: %s Sub: %s)",
-                        entity_id,
-                        event.device.__class__.__name__,
-                        event.device.subtype
-                    )
-                    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
-                    entity_name = "%s : %s" % (entity_id, pkt_id)
-                    new_light = RfxtrxLight(entity_name, event, False)
-                    rfxtrx.RFX_DEVICES[entity_id] = new_light
-                    add_devices_callback([new_light])
+        # Add entity if not exist and the automatic_add is True
+        entity_id = slugify(event.device.id_string.lower())
+        if entity_id not in rfxtrx.RFX_DEVICES:
+            automatic_add = config.get('automatic_add', False)
+            if automatic_add:
+                _LOGGER.info(
+                    "Automatic add %s rfxtrx.light (Class: %s Sub: %s)",
+                    entity_id,
+                    event.device.__class__.__name__,
+                    event.device.subtype
+                )
+                pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+                entity_name = "%s : %s" % (entity_id, pkt_id)
+                new_light = RfxtrxLight(entity_name, event, False)
+                rfxtrx.RFX_DEVICES[entity_id] = new_light
+                add_devices_callback([new_light])
 
-            # Check if entity exists (previous automatic added)
-            if entity_id in rfxtrx.RFX_DEVICES:
-                if event.values['Command'] == 'On'\
-                        or event.values['Command'] == 'Off':
-                    if event.values['Command'] == 'On':
-                        rfxtrx.RFX_DEVICES[entity_id].turn_on()
-                    else:
-                        rfxtrx.RFX_DEVICES[entity_id].turn_off()
+        # Check if entity exists (previous automatic added)
+        if entity_id in rfxtrx.RFX_DEVICES:
+            if event.values['Command'] == 'On'\
+                    or event.values['Command'] == 'Off':
+                if event.values['Command'] == 'On':
+                    rfxtrx.RFX_DEVICES[entity_id].turn_on()
+                else:
+                    rfxtrx.RFX_DEVICES[entity_id].turn_off()
 
+    # Subscribe to main rfxtrx events
     if light_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(light_update)
 
