@@ -125,13 +125,14 @@ class Itunes(object):
         response = self._request('GET', '/playlists')
         playlists = response.get('playlists', [])
 
-        found_playlists = [playlist for playlist in \
-            playlists if playlist["name"] == playlist_id_or_name or \
+        found_playlists = [playlist for playlist in
+            playlists if playlist["name"] == playlist_id_or_name or
                 playlist["id"] == playlist_id_or_name]
-                
+
         if len(found_playlists) > 0:
             playlist = found_playlists[0]
-            return self._request('PUT', '/playlists/' + playlist['id'] + '/play')
+            path = '/playlists/' + playlist['id'] + '/play'
+            return self._request('PUT', path)
 
     def artwork_url(self):
         """ Returns a URL of the current track's album art. """
@@ -351,8 +352,9 @@ class ItunesDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id):
         """ play_media media player. """
-        response = self.client.play_playlist(media_id)
-        self.update_state(response)
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            response = self.client.play_playlist(media_id)
+            self.update_state(response)
 
 
 class AirPlayDevice(MediaPlayerDevice):
