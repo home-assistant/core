@@ -31,6 +31,7 @@ DISCOVERY_PLATFORMS = {
 }
 
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
+SERVICE_PLAY_MEDIA = 'play_media'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -68,6 +69,7 @@ SUPPORT_NEXT_TRACK = 32
 SUPPORT_YOUTUBE = 64
 SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
+SUPPORT_PLAY_MEDIA = 512
 
 YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
 
@@ -489,6 +491,11 @@ class MediaPlayerDevice(Entity):
     def support_youtube(self):
         """ Boolean if YouTube is supported. """
         return bool(self.supported_media_commands & SUPPORT_YOUTUBE)
+
+    @property
+    def support_play_media(self):
+        """ Boolean if play media command supported. """
+        return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
 
     def volume_up(self):
         """ volume_up media player. """
