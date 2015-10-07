@@ -38,6 +38,9 @@ ATTR_ENTITY_ID = 'entity_id'
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """ Adds an entry to the logbook. """
+    print(1+'\n')
+   # print(hass.states.get(entity_id))
+
     data = {
         ATTR_NAME: name,
         ATTR_MESSAGE: message
@@ -53,7 +56,6 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 def setup(hass, config):
     """ Listens for download events to download files. """
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
-
     return True
 
 
@@ -93,7 +95,7 @@ class Entry(object):
         self.message = message
         self.domain = domain
         self.entity_id = entity_id
-
+       # print('1'+'\n')
     def as_dict(self):
         """ Convert Entry to a dict to be used within JSON. """
         return {
@@ -113,13 +115,13 @@ def humanify(events):
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
      - if home assistant stop and start happen in same minute call it restarted
     """
+    n = 0
     # pylint: disable=too-many-branches
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
             lambda event: event.time_fired.minute // GROUP_BY_MINUTES):
-
         events_batch = list(g_events)
 
         # Keep track of last sensor states
@@ -155,11 +157,14 @@ def humanify(events):
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
-
-                # Do not report on new entities
+                
+        	#Collects the hidden attribute in the event data.       
+                hidden_attr = event.data.get('new_state').get('attributes').get('hidden')
+	
+        	# Do not report on new entities
                 if 'old_state' not in event.data:
                     continue
-
+                print(hidden_attr)
                 to_state = State.from_dict(event.data.get('new_state'))
 
                 # if last_changed != last_updated only attributes have changed

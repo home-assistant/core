@@ -15,8 +15,12 @@ import homeassistant.util.location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
 
-YAML_CONFIG_FILE = 'configuration.yaml'
-CONFIG_DIR_NAME = '.homeassistant'
+YAML_CONFIG_FILE = 'devConf.yaml'
+CONFIG_DIR_NAME = 'pontus'
+
+#Original conf 
+#YAML_CONFIG_FILE = 'configuration.yaml'
+#CONFIG_DIR_NAME = '.homeassistant'
 
 DEFAULT_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
