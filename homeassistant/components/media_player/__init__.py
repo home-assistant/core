@@ -189,6 +189,15 @@ def media_previous_track(hass, entity_id=None):
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
+def play_media(hass, media_type, media_id, entity_id=None):
+    """ Send the media player the command for playing media. """
+    data = {"media_type": media_type, "media_id": media_id}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
+
 
 def setup(hass, config):
     """ Track states and offer events for media_players. """
