@@ -339,7 +339,7 @@ class Device(Entity):
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
-        self.gps_accuracy = gps_accuracy
+        self.gps_accuracy = gps_accuracy or 0
         self.battery = battery
         if gps is None:
             self.gps = None
@@ -364,7 +364,8 @@ class Device(Entity):
         elif self.location_name:
             self._state = self.location_name
         elif self.gps is not None:
-            zone_state = zone.in_zone(self.hass, self.gps[0], self.gps[1])
+            zone_state = zone.active_zone(self.hass, self.gps[0], self.gps[1],
+                                          self.gps_accuracy)
             if zone_state is None:
                 self._state = STATE_NOT_HOME
             elif zone_state.entity_id == zone.ENTITY_ID_HOME:

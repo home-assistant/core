@@ -23,7 +23,7 @@ mqtt:
   keepalive: 60
   username: your_username
   password: your_secret_password
-  certificate: path_to_certificate
+  certificate: /home/paulus/dev/addtrustexternalcaroot.crt
 
 Variables:
 
@@ -43,6 +43,10 @@ Default is a random generated one.
 keepalive
 *Optional
 The keep alive in seconds for this client. Default is 60.
+
+certificate
+*Optional
+Certificate to use for encrypting the connection to the broker.
 """
 import logging
 import os

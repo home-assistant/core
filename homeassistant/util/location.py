@@ -31,6 +31,6 @@ def detect_location_info():
     return LocationInfo(**data)
 
 
-def distance(lon1, lat1, lon2, lat2):
+def distance(lat1, lon1, lat2, lon2):
     """ Calculate the distance in meters between two points. """
-    return vincenty((lon1, lat1), (lon2, lat2)) * 1000
+    return vincenty((lat1, lon1), (lat2, lon2)) * 1000

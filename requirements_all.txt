@@ -14,7 +14,7 @@ astral==0.8.1
 phue==0.8
 
 # Limitlessled/Easybulb/Milight library (lights.limitlessled)
-ledcontroller==1.0.7
+ledcontroller==1.1.0
 
 # Chromecast bindings (media_player.cast)
 pychromecast==0.6.12
@@ -87,7 +87,7 @@ https://github.com/theolind/pymysensors/archive/35b87d880147a34107da0d40cb815d75
 pynetgear==0.3
 
 # Netdisco (discovery)
-netdisco==0.4.1
+netdisco==0.4.2
 
 # Wemo (switch.wemo)
 pywemo==0.3.1

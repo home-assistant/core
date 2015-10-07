@@ -10,7 +10,7 @@ import re
 
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_HOME, STATE_ON, STATE_OFF,
+    EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
 from homeassistant import util
 import homeassistant.util.dt as dt_util
@@ -221,10 +221,13 @@ def humanify(events):
 def _entry_message_from_state(domain, state):
     """ Convert a state to a message for the logbook. """
     # We pass domain in so we don't have to split entity_id again
+    # pylint: disable=too-many-return-statements
 
     if domain == 'device_tracker':
-        return '{} home'.format(
-            'arrived' if state.state == STATE_HOME else 'left')
+        if state.state == STATE_NOT_HOME:
+            return 'is away'
+        else:
+            return 'is at {}'.format(state.state)
 
     elif domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
