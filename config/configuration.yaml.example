@@ -134,6 +134,9 @@ automation:
      service: light.turn_off
      entity_id: group.all_lights
 
+# Sensors need to be added into the configuration.yaml as sensor:, sensor 2:, sensor 3:, etc. 
+# Each sensor label should be unique or your sensors might not load correctly.
+
 sensor:
   platform: systemmonitor
   resources:
