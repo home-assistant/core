@@ -36,6 +36,7 @@ import logging
 from datetime import timedelta
 import threading
 import binascii
+from pysnmp.entity.rfc3413.oneliner import cmdgen
 
 from homeassistant.const import CONF_HOST, CONF_COMMUNITY, CONF_BASEOID
 from homeassistant.helpers import validate_config
@@ -48,10 +49,13 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pysnmp']
 
+
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns an snmp scanner """
-    if not validate_config(config, {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]}, _LOGGER):
+    if not validate_config(config,
+                           {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]},
+                           _LOGGER):
         return None
 
     scanner = SnmpScanner(config[DOMAIN])
@@ -60,7 +64,9 @@ def get_scanner(hass, config):
 
 
 class SnmpScanner(object):
-    """ This class queries any SNMP capable Acces Point for connected devices. """
+    """
+    This class queries any SNMP capable Acces Point for connected devices.
+    """
     def __init__(self, config):
         self.host = config[CONF_HOST]
         self.community = config[CONF_COMMUNITY]
@@ -105,26 +111,24 @@ class SnmpScanner(object):
 
     def get_snmp_data(self):
         """ Fetch mac addresses from WAP via SNMP. """
-        from pysnmp.entity.rfc3413.oneliner import cmdgen
 
         devices = []
 
         cmdGen = cmdgen.CommandGenerator()
-        errorIndication, errorStatus, errorIndex, varBindTable = cmdGen.nextCmd(
-            cmdgen.CommunityData( self.community ),
-            cmdgen.UdpTransportTarget( ( self.host , 161) ),
-            cmdgen.MibVariable( self.baseoid )
+        errIndication, errStatus, errIndex, varBindTable = cmdGen.nextCmd(
+            cmdgen.CommunityData(self.community),
+            cmdgen.UdpTransportTarget((self.host, 161)),
+            cmdgen.MibVariable(self.baseoid)
         )
-        if errorIndication:
-            _LOGGER.exception( "SNMPLIB error: {}".format( errorIndication ) )
+        if errIndication:
+            _LOGGER.exception("SNMPLIB error: {}".format(errIndication))
             return
-        if errorStatus:
-            _LOGGER.exception( "SNMP error: {} at {}".format( errorStatus.prettyPrint(), errorIndex and varBindTable[-1][int(errorIndex)-1] or '?' ) )
+        if errStatus:
+            _LOGGER.exception("SNMP error: {} at {}".format(errStatus.prettyPrint(), errIndex and varBindTable[-1][int(errIndex)-1] or '?'))
             return
         for varBindTableRow in varBindTable:
-            for key,val in varBindTableRow:
-                mac = binascii.hexlify( val.asOctets() ).decode('utf-8')
-                mac = ':'.join( [ mac[i:i+2] for i in range( 0, len(mac), 2 ) ] )
-                devices.append( { 'mac' : mac } )
+            for val in varBindTableRow.values():
+                mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
+                devices.append({'mac': mac})
         return devices
-
