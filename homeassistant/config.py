@@ -18,10 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 YAML_CONFIG_FILE = 'configuration.yaml'
 CONFIG_DIR_NAME = '.homeassistant'
 
-#Original conf 
-#YAML_CONFIG_FILE = 'configuration.yaml'
-#CONFIG_DIR_NAME = '.homeassistant'
-
 DEFAULT_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
