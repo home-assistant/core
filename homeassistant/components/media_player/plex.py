@@ -141,15 +141,8 @@ class PlexClient(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the state of the device. """
-<<<<<<< HEAD
-        if self._media is None:
-            return STATE_IDLE
-        else:
-            state = self._media.get('state')
-=======
         if self.session:
             state = self.session.player.state
->>>>>>> upstream/dev
             if state == 'playing':
                 return STATE_PLAYING
             elif state == 'paused':

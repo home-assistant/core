@@ -38,8 +38,6 @@ ATTR_ENTITY_ID = 'entity_id'
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """ Adds an entry to the logbook. """
-    print(1+'\n')
-   # print(hass.states.get(entity_id))
 
     data = {
         ATTR_NAME: name,
@@ -95,7 +93,7 @@ class Entry(object):
         self.message = message
         self.domain = domain
         self.entity_id = entity_id
-       # print('1'+'\n')
+    
     def as_dict(self):
         """ Convert Entry to a dict to be used within JSON. """
         return {
@@ -114,8 +112,8 @@ def humanify(events):
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
      - if home assistant stop and start happen in same minute call it restarted
     """
-    n = 0
     # pylint: disable=too-many-branches
+    
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
