@@ -46,6 +46,8 @@ ATTR_MEDIA_TRACK = 'media_track'
 ATTR_MEDIA_SERIES_TITLE = 'media_series_title'
 ATTR_MEDIA_SEASON = 'media_season'
 ATTR_MEDIA_EPISODE = 'media_episode'
+ATTR_MEDIA_CHANNEL = 'media_channel'
+ATTR_MEDIA_PLAYLIST = 'media_playlist'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
@@ -95,6 +97,8 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_PLAYLIST,
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
@@ -374,6 +378,16 @@ class MediaPlayerDevice(Entity):
     @property
     def media_episode(self):
         """ Episode of current playing media. (TV Show only) """
+        return None
+
+    @property
+    def media_channel(self):
+        """ Channel currently playing. """
+        return None
+
+    @property
+    def media_playlist(self):
+        """ Title of Playlist currently playing. """
         return None
 
     @property
