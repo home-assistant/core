@@ -31,7 +31,6 @@ from homeassistant.util import slugify
 
 DEPENDENCIES = ['rfxtrx']
 
-DOMAIN = "rfxtrx"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -60,20 +59,22 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         entity_id = slugify(event.device.id_string.lower())
         if entity_id not in rfxtrx.RFX_DEVICES:
             automatic_add = config.get('automatic_add', False)
-            if automatic_add:
-                _LOGGER.info(
-                    "Automatic add %s rfxtrx.light (Class: %s Sub: %s)",
-                    entity_id,
-                    event.device.__class__.__name__,
-                    event.device.subtype
-                )
-                pkt_id = "".join("{0:02x}".format(x) for x in event.data)
-                entity_name = "%s : %s" % (entity_id, pkt_id)
-                new_light = RfxtrxLight(entity_name, event, False)
-                rfxtrx.RFX_DEVICES[entity_id] = new_light
-                add_devices_callback([new_light])
+            if not automatic_add:
+                return
 
-        # Check if entity exists (previous automatic added)
+            _LOGGER.info(
+                "Automatic add %s rfxtrx.light (Class: %s Sub: %s)",
+                entity_id,
+                event.device.__class__.__name__,
+                event.device.subtype
+            )
+            pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+            entity_name = "%s : %s" % (entity_id, pkt_id)
+            new_light = RfxtrxLight(entity_name, event, False)
+            rfxtrx.RFX_DEVICES[entity_id] = new_light
+            add_devices_callback([new_light])
+
+        # Check if entity exists or previously added automatically
         if entity_id in rfxtrx.RFX_DEVICES:
             if event.values['Command'] == 'On'\
                     or event.values['Command'] == 'Off':
@@ -112,7 +113,7 @@ class RfxtrxLight(Light):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
 
-        if self._event:
+        if hasattr(self, '_event') and self._event:
             self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
 
         self._state = True
@@ -121,7 +122,7 @@ class RfxtrxLight(Light):
     def turn_off(self, **kwargs):
         """ Turn the device off. """
 
-        if self._event:
+        if hasattr(self, '_event') and self._event:
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
         self._state = False
