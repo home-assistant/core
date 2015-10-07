@@ -52,7 +52,7 @@ class TestMediaPlayer(unittest.TestCase):
             SERVICE_MEDIA_PLAY: media_player.media_play,
             SERVICE_MEDIA_PAUSE: media_player.media_pause,
             SERVICE_MEDIA_NEXT_TRACK: media_player.media_next_track,
-            SERVICE_MEDIA_PREVIOUS_TRACK: media_player.media_previous_track
+            SERVICE_MEDIA_PREVIOUS_TRACK: media_player.media_previous_track,
             SERVICE_PLAY_MEDIA: media_player.play_media
         }
 
