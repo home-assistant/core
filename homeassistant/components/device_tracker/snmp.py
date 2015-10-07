@@ -127,7 +127,7 @@ class SnmpScanner(object):
             _LOGGER.exception("SNMP error: {} at {}".format(errStatus.prettyPrint(), errIndex and varBindTable[-1][int(errIndex)-1] or '?'))
             return
         for varBindTableRow in varBindTable:
-            for val in varBindTableRow.values():
+            for _,val in varBindTableRow:
                 mac = binascii.hexlify(val.asOctets()).decode('utf-8')
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
