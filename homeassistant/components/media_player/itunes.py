@@ -346,7 +346,7 @@ class ItunesDevice(MediaPlayerDevice):
         response = self.client.previous()
         self.update_state(response)
 
-    def play_media(self, media_type:None, media_id:None):
+    def play_media(self, media_type, media_id):
         """ play_media media player. """
         response = self.client.play_playlist(media_id)
         self.update_state(response)
