@@ -71,7 +71,3 @@ nosetests.xml
 # venv stuff
 pyvenv.cfg
 pip-selfcheck.json
-
-
-#Local ignore
-getUpdate.sh
