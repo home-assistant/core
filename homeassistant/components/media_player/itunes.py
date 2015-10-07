@@ -305,6 +305,11 @@ class ItunesDevice(MediaPlayerDevice):
         return self.current_album
 
     @property
+    def media_playlist(self):
+        """ Title of the currently playing playlist. """
+        return self.current_playlist
+
+    @property
     def supported_media_commands(self):
         """ Flags of media commands that are supported. """
         return SUPPORT_ITUNES
