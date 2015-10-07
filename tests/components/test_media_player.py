@@ -12,7 +12,8 @@ from homeassistant.const import (
     STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, ATTR_ENTITY_ID)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_PLAY_MEDIA,
+    ATTR_ENTITY_ID)
 import homeassistant.components.media_player as media_player
 from tests.common import mock_service
 
@@ -52,6 +53,7 @@ class TestMediaPlayer(unittest.TestCase):
             SERVICE_MEDIA_PAUSE: media_player.media_pause,
             SERVICE_MEDIA_NEXT_TRACK: media_player.media_next_track,
             SERVICE_MEDIA_PREVIOUS_TRACK: media_player.media_previous_track
+            SERVICE_PLAY_MEDIA: media_player.play_media
         }
 
         for service_name, service_method in services.items():
