@@ -20,8 +20,7 @@ import logging
 from homeassistant.util import slugify
 
 DEPENDENCIES = []
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
-                'ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip#RFXtrx==0.15']
+REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip#RFXtrx==0.2']
 
 DOMAIN = "rfxtrx"
 CONF_DEVICE = 'device'

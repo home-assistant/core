@@ -28,8 +28,7 @@ import homeassistant.components.rfxtrx as rfxtrx
 from RFXtrx import SensorEvent
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/' +
-                'ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip#RFXtrx==0.15']
+DEPENDENCIES = ['rfxtrx']
 
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELCIUS),
