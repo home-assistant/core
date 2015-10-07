@@ -344,6 +344,11 @@ class ItunesDevice(MediaPlayerDevice):
         response = self.client.previous()
         self.update_state(response)
 
+    def play_media(self, media_type:None, media_id:None):
+        """ play_media media player. """
+        response = self.client.play_playlist(media_id)
+        self.update_state(response)
+
 
 class AirPlayDevice(MediaPlayerDevice):
     """ Represents an AirPlay device via an iTunes-API instance. """
