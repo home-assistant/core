@@ -106,7 +106,6 @@ class Entry(object):
             'entity_id': self.entity_id,
         }
 
-
 def humanify(events):
     """
     Generator that converts a list of events into Entry objects.
@@ -117,7 +116,6 @@ def humanify(events):
     """
     n = 0
     # pylint: disable=too-many-branches
-
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
@@ -134,8 +132,9 @@ def humanify(events):
         # Process events
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
+                
                 entity_id = event.data.get('entity_id')
-
+                
                 if entity_id is None:
                     continue
 
@@ -157,16 +156,14 @@ def humanify(events):
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
-                
-        	#Collects the hidden attribute in the event data.       
-                hidden_attr = event.data.get('new_state').get('attributes').get('hidden')
-	
-        	# Do not report on new entities
+		#Do not report on hidden_logbook enabled
+                if(event.data.get('new_state').get('attributes').get('hidden_logbook')):
+                    continue
+		# Do not report on new entities
                 if 'old_state' not in event.data:
                     continue
-                print(hidden_attr)
+                
                 to_state = State.from_dict(event.data.get('new_state'))
-
                 # if last_changed != last_updated only attributes have changed
                 # we do not report on that yet. Also filter auto groups.
                 if not to_state or \
@@ -206,7 +203,6 @@ def humanify(events):
                 yield Entry(
                     event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
-
             elif event.event_type == EVENT_LOGBOOK_ENTRY:
                 domain = event.data.get(ATTR_DOMAIN)
                 entity_id = event.data.get(ATTR_ENTITY_ID)
