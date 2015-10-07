@@ -26,19 +26,18 @@ from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pysnmp']
 
-def setup_scanner(hass, config):
+def setup_scanner(hass, config, see):
     """ Setup snmp scanning """
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]},
-                           _LOGGER):
-        return None
+    #if not validate_config(config, {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]}, _LOGGER):
+    #    return None
 
-    scanner = SnmpScanner(config[DOMAIN])
+    #scanner = SnmpScanner(config[DOMAIN])
+    scanner = SnmpScanner(config)
 
     return scanner if scanner.success_init else None
 
@@ -47,12 +46,12 @@ class SnmpScanner(object):
     """ This class queries any SNMP capable Acces Point for connected devices. """
     def __init__(self, config):
         self.host = config[CONF_HOST]
-        self.community = config[CONF_USERNAME]
+        self.community = config[CONF_COMMUNITY]
         self.baseoid = config[CONF_BASEOID]
 
         self.lock = threading.Lock()
 
-        self.last_results = []
+        self.last_results = {}
 
         # Test the router is accessible
         data = self.get_snmp_data()
@@ -64,7 +63,7 @@ class SnmpScanner(object):
         """
 
         self._update_info()
-        return self.last_results
+        return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
         """ Returns the name of the given device or None if we don't know. """
@@ -89,37 +88,26 @@ class SnmpScanner(object):
 
     def get_snmp_data(self):
         """ Fetch mac addresses from WAP via SNMP. """
-        devices = []
-
-
         from pysnmp.entity.rfc3413.oneliner import cmdgen
 
-        oid='1.3.6.1.4.1.14988.1.1.1.2.1.1'
-        cmdGen = cmdgen.CommandGenerator()
+        devices = {}
 
+        cmdGen = cmdgen.CommandGenerator()
         errorIndication, errorStatus, errorIndex, varBindTable = cmdGen.nextCmd(
             cmdgen.CommunityData( self.community ),
             cmdgen.UdpTransportTarget( ( self.host , 161) ),
             cmdgen.MibVariable( self.baseoid )
         )
-
         if errorIndication:
             _LOGGER.exception( "SNMPLIB error: {}".format( errorIndication ) )
             return
-        else:
-            if errorStatus:
-                _LOGGER.exception( "SNMP error: {} at {}".format( errorStatus.prettyPrint(), errorIndex and varBindTable[-1][int(errorIndex)-1] or '?' ) )
-                return
-            else:
-                for varBindTableRow in varBindTable:
-                    for val in varBindTableRow.values():
-                        devices.append( convertMac( val ) )
+        if errorStatus:
+            _LOGGER.exception( "SNMP error: {} at {}".format( errorStatus.prettyPrint(), errorIndex and varBindTable[-1][int(errorIndex)-1] or '?' ) )
+            return
+        for varBindTableRow in varBindTable:
+            for key,val in varBindTableRow:
+                mac = binascii.hexlify( val.asOctets() ).decode('utf-8')
+                mac = ':'.join( [ mac[i:i+2] for i in range( 0, len(mac), 2 ) ] )
+                devices[mac] = { 'mac' : mac }
         return devices
-
-    def convertMac(octect):
-        ''' Convert a binary mac address to a string '''
-        mac = []
-        for x in list(octet):
-            mac.append(binascii.b2a_hex(x))
-        return ":".join(mac)
 
