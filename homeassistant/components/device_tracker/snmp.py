@@ -80,7 +80,6 @@ class SnmpScanner(object):
         """
 
         self._update_info()
-        _LOGGER.error( self.last_results )
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
