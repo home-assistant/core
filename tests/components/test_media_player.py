@@ -40,7 +40,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_services(self):
         """
-        Test if the call service methods conver to correct service calls.
+        Test if the call service methods convert to correct service calls.
         """
         services = {
             SERVICE_TURN_ON: media_player.turn_on,
