@@ -36,9 +36,8 @@ import logging
 from datetime import timedelta
 import threading
 import binascii
-from pysnmp.entity.rfc3413.oneliner import cmdgen
 
-from homeassistant.const import CONF_HOST, CONF_COMMUNITY, CONF_BASEOID
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
@@ -47,7 +46,10 @@ from homeassistant.components.device_tracker import DOMAIN
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pysnmp<=4.2.5']
+REQUIREMENTS = ['pysnmp==4.2.5']
+
+CONF_COMMUNITY = "community"
+CONF_BASEOID = "baseoid"
 
 
 # pylint: disable=unused-argument
@@ -90,6 +92,7 @@ class SnmpScanner(object):
 
     def get_device_name(self, device):
         """ Returns the name of the given device or None if we don't know. """
+        # We have no names
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -111,25 +114,30 @@ class SnmpScanner(object):
 
     def get_snmp_data(self):
         """ Fetch mac addresses from WAP via SNMP. """
+        from pysnmp.entity.rfc3413.oneliner import cmdgen
 
         devices = []
 
-        cmdGen = cmdgen.CommandGenerator()
-        errIndication, errStatus, errIndex, varBindTable = cmdGen.nextCmd(
+        snmp = cmdgen.CommandGenerator()
+        errindication, errstatus, errindex, restable = snmp.nextCmd(
             cmdgen.CommunityData(self.community),
             cmdgen.UdpTransportTarget((self.host, 161)),
             cmdgen.MibVariable(self.baseoid)
         )
-        if errIndication:
-            _LOGGER.exception("SNMPLIB error: {}".format(errIndication))
+
+        if errindication:
+            _LOGGER.error("SNMPLIB error: {}".format(errindication))
             return
-        if errStatus:
-            _LOGGER.exception("SNMP error: {} at {}".format(
-                              errStatus.prettyPrint(),
-                              errIndex and varBindTable[-1][int(errIndex)-1] or '?'))
+        if errstatus:
+            err = "SNMP error: {} at {}"
+            _LOGGER.error(err.format(errstatus.prettyPrint(),
+                                     errindex and
+                                     restable[-1][int(errindex)-1]
+                                     or '?'))
             return
-        for varBindTableRow in varBindTable:
-            for _, val in varBindTableRow:
+
+        for resrow in restable:
+            for _, val in resrow:
                 mac = binascii.hexlify(val.asOctets()).decode('utf-8')
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
