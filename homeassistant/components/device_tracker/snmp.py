@@ -90,7 +90,7 @@ class SnmpScanner(object):
         self._update_info()
         return [client['mac'] for client in self.last_results]
 
-    # Ignoring no-self-use warning
+    # Supressing no-self-use warning
     # pylint: disable=R0201
     def get_device_name(self, device):
         """ Returns the name of the given device or None if we don't know. """
@@ -128,12 +128,14 @@ class SnmpScanner(object):
         )
 
         if errindication:
-            #pylint: disable=W1202
+            # Supressing logging-format-interpolation
+            # pylint: disable=W1202
             _LOGGER.error("SNMPLIB error: {}".format(errindication))
             return
         if errstatus:
             err = "SNMP error: {} at {}"
-            #pylint: disable=W1202
+            # Supressing logging-format-interpolation
+            # pylint: disable=W1202
             _LOGGER.error(err.format(errstatus.prettyPrint(),
                                      errindex and
                                      restable[-1][int(errindex)-1]
