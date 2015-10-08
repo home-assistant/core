@@ -11,6 +11,7 @@ import logging
 from . import version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
+from homeassistant.config import get_default_config_dir
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
@@ -18,7 +19,6 @@ DEPENDENCIES = ['api']
 INDEX_PATH = os.path.join(os.path.dirname(__file__), 'index.html.template')
 
 _LOGGER = logging.getLogger(__name__)
-
 
 FRONTEND_URLS = [
     URL_ROOT, '/logbook', '/history', '/map', '/devService', '/devState',
@@ -44,6 +44,9 @@ def setup(hass, config):
     hass.http.register_path(
         'HEAD', re.compile(r'/static/(?P<file>[a-zA-Z\._\-0-9/]+)'),
         _handle_get_static, False)
+    hass.http.register_path(
+        'GET', re.compile(r'/local/(?P<file>[a-zA-Z\._\-0-9/]+)'),
+        _handle_get_local, False)
 
     return True
 
@@ -82,5 +85,18 @@ def _handle_get_static(handler, path_match, data):
         req_file = "frontend.html"
 
     path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
+
+    handler.write_file(path)
+
+
+def _handle_get_local(handler, path_match, data):
+    """
+    Returns a static file from the hass.config.path/www for the frontend.
+    """
+    req_file = util.sanitize_path(path_match.group('file'))
+
+    path = os.path.join(get_default_config_dir(), 'www', req_file)
+    if not os.path.isfile(path):
+        return False
 
     handler.write_file(path)
