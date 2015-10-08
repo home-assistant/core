@@ -166,7 +166,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """ Content ID of current playing media. """
-        _LOGGER.debug(self._item)
+        _LOGGER.info(self._item)
         if self._item is not None:
             return self._item.get('uniqueid', None)
 
