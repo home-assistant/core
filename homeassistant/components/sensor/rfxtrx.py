@@ -3,21 +3,8 @@ homeassistant.components.sensor.rfxtrx
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Shows sensor values from RFXtrx sensors.
 
-Configuration:
-
-To use the rfxtrx sensors you will need to add something like the following to
-your configuration.yaml file.
-
-sensor:
-    platform: rfxtrx
-    device: PATH_TO_DEVICE
-
-Variables:
-
-device
-*Required
-Path to your RFXtrx device.
-E.g. /dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.rfxtrx.html
 """
 import logging
 from collections import OrderedDict
@@ -51,7 +38,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if entity_id not in rfxtrx.RFX_DEVICES:
                 automatic_add = config.get('automatic_add', True)
                 if automatic_add:
-                    _LOGGER.info("Automatic add %s rfxtrx.light", entity_id)
+                    _LOGGER.info("Automatic add %s rfxtrx.sensor", entity_id)
                     new_sensor = RfxtrxSensor(event)
                     rfxtrx.RFX_DEVICES[entity_id] = new_sensor
                     add_devices_callback([new_sensor])
@@ -67,7 +54,6 @@ class RfxtrxSensor(Entity):
 
     def __init__(self, event):
         self.event = event
-
         self._unit_of_measurement = None
         self._data_type = None
         for data_type in DATA_TYPES:
@@ -86,13 +72,14 @@ class RfxtrxSensor(Entity):
 
     @property
     def state(self):
+        """ Returns the state of the device. """
         if self._data_type:
             return self.event.values[self._data_type]
         return None
 
     @property
     def name(self):
-        """ Get the mame of the sensor. """
+        """ Get the name of the sensor. """
         return self._name
 
     @property
