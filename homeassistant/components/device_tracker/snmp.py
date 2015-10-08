@@ -128,18 +128,12 @@ class SnmpScanner(object):
         )
 
         if errindication:
-            # Supressing logging-format-interpolation
-            # pylint: disable=W1202
-            _LOGGER.error("SNMPLIB error: {}".format(errindication))
+            _LOGGER.error("SNMPLIB error: %s", errindication)
             return
         if errstatus:
-            err = "SNMP error: {} at {}"
-            # Supressing logging-format-interpolation
-            # pylint: disable=W1202
-            _LOGGER.error(err.format(errstatus.prettyPrint(),
-                                     errindex and
-                                     restable[-1][int(errindex)-1]
-                                     or '?'))
+            _LOGGER.error('SNMP error: %s at %s', errstatus.prettyPrint(),
+                          errindex and restable[-1][int(errindex)-1]
+                          or '?')
             return
 
         for resrow in restable:
