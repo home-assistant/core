@@ -246,6 +246,7 @@ def setup(hass, config):
                 rgb_color = dat.get(ATTR_RGB_COLOR)
 
                 if len(rgb_color) == 3:
+                    params[ATTR_RGB_COLOR] = [int(val) for val in rgb_color]
                     params[ATTR_XY_COLOR] = \
                         color_util.color_RGB_to_xy(int(rgb_color[0]),
                                                    int(rgb_color[1]),
