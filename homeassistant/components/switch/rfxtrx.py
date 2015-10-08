@@ -1,26 +1,10 @@
 """
 homeassistant.components.switch.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for Rfxtrx switch.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for RFXtrx switches.
 
-Configuration:
-
-To use Rfxtrx switchs you will need to add the following to your
-configuration.yaml file.
-
-switch:
-  platform: rfxtrx
-
-  devices:
-    ac09c4f1: Bedroom Door
-    ac09c4f2: Kitchen Door
-    ac09c4f3: Bathroom Door
-
-*Optional*
-
-  # Automatic add new switch
-  automatic_add: True
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.rfxtrx.html
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
@@ -90,7 +74,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class RfxtrxSwitch(SwitchDevice):
-    """ Provides a demo switch. """
+    """ Provides a RFXtrx switch. """
     def __init__(self, name, event, state):
         self._name = name
         self._event = event
@@ -98,7 +82,7 @@ class RfxtrxSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo switch. """
+        """ No polling needed for a RFXtrx switch. """
         return False
 
     @property
