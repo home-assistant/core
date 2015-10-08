@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if entity_id not in rfxtrx.RFX_DEVICES:
                 automatic_add = config.get('automatic_add', True)
                 if automatic_add:
-                    _LOGGER.info("Automatic add %s rfxtrx.light", entity_id)
+                    _LOGGER.info("Automatic add %s rfxtrx.sensor", entity_id)
                     new_sensor = RfxtrxSensor(event)
                     rfxtrx.RFX_DEVICES[entity_id] = new_sensor
                     add_devices_callback([new_sensor])
