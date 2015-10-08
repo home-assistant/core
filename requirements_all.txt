@@ -138,5 +138,8 @@ SoCo==0.11.1
 # PlexAPI (media_player.plex)
 https://github.com/adrienbrault/python-plexapi/archive/df2d0847e801d6d5cda920326d693cf75f304f1a.zip#python-plexapi==1.0.2
 
+# python-pysnmp (device_tracker.snmp)
+pysnmp==4.2.5
+
 # Blinkstick
 blinkstick==1.1.7
