@@ -1,26 +1,10 @@
 """
 homeassistant.components.light.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for Rfxtrx lights.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for RFXtrx lights.
 
-Configuration:
-
-To use Rfxtrx lights you will need to add the following to your
-configuration.yaml file.
-
-light:
-  platform: rfxtrx
-
-  devices:
-    ac09c4f1: Bedroom Light
-    ac09c4f2: Kitchen Light
-    ac09c4f3: Bathroom Light
-
-*Optional*
-
-  # Automatic add new light
-  automatic_add: True
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.rfxtrx.html
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
@@ -36,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
-    # Add light from config file
     lights = []
     devices = config.get('devices', None)
     if devices:
@@ -51,7 +34,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(lights)
 
     def light_update(event):
-        """ Callback for sensor updates from the RFXtrx gateway. """
+        """ Callback for light updates from the RFXtrx gateway. """
         if not isinstance(event.device, rfxtrxmod.LightingDevice):
             return
 
@@ -89,7 +72,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class RfxtrxLight(Light):
-    """ Provides a demo switch. """
+    """ Provides a RFXtrx light. """
     def __init__(self, name, event, state):
         self._name = name
         self._event = event
@@ -97,21 +80,21 @@ class RfxtrxLight(Light):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo light. """
+        """ No polling needed for a light. """
         return False
 
     @property
     def name(self):
-        """ Returns the name of the device if any. """
+        """ Returns the name of the light if any. """
         return self._name
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """ True if light is on. """
         return self._state
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """ Turn the light on. """
 
         if hasattr(self, '_event') and self._event:
             self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
@@ -120,7 +103,7 @@ class RfxtrxLight(Light):
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """ Turn the light off. """
 
         if hasattr(self, '_event') and self._event:
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)

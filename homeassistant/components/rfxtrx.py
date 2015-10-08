@@ -1,6 +1,6 @@
 """
 homeassistant.components.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects Home Assistant to a RFXtrx device.
 
 Configuration:
@@ -33,7 +33,7 @@ RFXOBJECT = None
 
 
 def setup(hass, config):
-    """ Setup the Rfxtrx component. """
+    """ Setup the RFXtrx component. """
 
     # Declare the Handle event
     def handle_receive(event):
@@ -76,7 +76,7 @@ def setup(hass, config):
 
 
 def get_rfx_object(packetid):
-    """ return the RFXObject with the packetid"""
+    """ Return the RFXObject with the packetid. """
     try:
         import RFXtrx as rfxtrxmod
     except ImportError:
