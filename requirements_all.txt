@@ -141,3 +141,5 @@ https://github.com/adrienbrault/python-plexapi/archive/df2d0847e801d6d5cda920326
 # python-pysnmp (device_tracker.snmp)
 pysnmp==4.2.5
 
+# Blinkstick
+blinkstick==1.1.7
