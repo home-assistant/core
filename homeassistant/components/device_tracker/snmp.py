@@ -1,36 +1,11 @@
 """
 homeassistant.components.device_tracker.snmp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports fetching WiFi assiciations
-through SNMP
+Device tracker platform that supports fetching WiFi associations
+through SNMP.
 
-This device tracker needs SNMP to be enabled on the WRT or WAP
-
-Configuration:
-
-device_tracker:
-  platform: snmp
-  host: YOUR_WAP_IP
-  community: SNMP_COMMUNITY
-  baseoid: BASE_OID
-
-Variables:
-    Host
-    *required
-    The IP address of the router, e.g. 192.168.1.1
-
-    community
-    *Required
-    The SNMP community. Read-only is fine
-
-    baseoid
-    *Required
-    The OID at which WiFi associations can be found
-
-    Little help with base oids:
-        Microtik: 1.3.6.1.4.1.14988.1.1.1.2.1.1 (confirmed)
-        Aruba: 1.3.6.1.4.1.14823.2.3.3.1.2.4.1.2 (untested)
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.snmp.html
 """
 import logging
 from datetime import timedelta
