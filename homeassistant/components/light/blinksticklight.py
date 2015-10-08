@@ -1,34 +1,36 @@
 """
 homeassistant.components.light.blinksticklight
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Blinkstick lights.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.blinksticklight.html
 """
+import logging
 
 from blinkstick import blinkstick
-import logging
+
+from homeassistant.components.light import (Light, ATTR_RGB_COLOR)
 
 _LOGGER = logging.getLogger(__name__)
 
-from homeassistant.components.light import (Light, ATTR_RGB_COLOR)
 
 REQUIREMENTS = ["blinkstick==1.1.7"]
 DEPENDENCIES = []
 
+
 # pylint: disable=unused-argument
-
-
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add device specified by serial number """
+    """ Add device specified by serial number. """
     stick = blinkstick.find_by_serial(config['serial'])
 
     add_devices_callback([BlinkStickLight(stick, config['name'])])
 
 
 class BlinkStickLight(Light):
-    """ Represents a BlinkStick light """
+    """ Represents a BlinkStick light. """
 
     def __init__(self, stick, name):
-        """ Initialise """
         self._stick = stick
         self._name = name
         self._serial = stick.get_serial()
@@ -36,20 +38,22 @@ class BlinkStickLight(Light):
 
     @property
     def should_poll(self):
+        """ Polling needed. """
         return True
 
     @property
     def name(self):
+        """ The name of the light. """
         return self._name
 
     @property
     def rgb_color(self):
-        """ Read back the color of the light """
+        """ Read back the color of the light. """
         return self._rgb_color
 
     @property
     def is_on(self):
-        """ Check whether any of the LEDs colors are non-zero """
+        """ Check whether any of the LEDs colors are non-zero. """
         return sum(self._rgb_color) > 0
 
     def update(self):
