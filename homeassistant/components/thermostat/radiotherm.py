@@ -10,8 +10,7 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
 from homeassistant.const import (CONF_HOST, CONF_NAME, TEMP_FAHRENHEIT)
 from urllib.error import URLError
 
-#TODO: investigate why this fails
-# REQUIREMENTS = ['radiotherm-1.2']
+REQUIREMENTS = ['radiotherm']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
