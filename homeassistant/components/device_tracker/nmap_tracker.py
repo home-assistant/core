@@ -117,15 +117,18 @@ class NmapDeviceScanner(object):
         scanner = PortScanner()
 
         options = "-F --host-timeout 5"
-        exclude_targets = set()
+
         if self.home_interval:
-            now = dt_util.now()
-            for host in self.last_results:
-                if host.last_update + self.home_interval > now:
-                    exclude_targets.add(host)
-            if exclude_targets:
-                options += " --exclude {}".format(",".join(t.ip for t
-                                                           in exclude_targets))
+            boundary = dt_util.now() - self.home_interval
+            last_results = [device for device in self.last_results
+                            if device.last_update > boundary]
+            if last_results:
+                # Pylint is confused here.
+                # pylint: disable=no-member
+                options += " --exclude {}".format(",".join(device.ip for device
+                                                           in last_results))
+        else:
+            last_results = []
 
         try:
             result = scanner.scan(hosts=self.hosts, arguments=options)
@@ -133,7 +136,6 @@ class NmapDeviceScanner(object):
             return False
 
         now = dt_util.now()
-        self.last_results = []
         for ipv4, info in result['scan'].items():
             if info['status']['state'] != 'up':
                 continue
@@ -142,9 +144,9 @@ class NmapDeviceScanner(object):
             mac = info['addresses'].get('mac') or _arp(ipv4)
             if mac is None:
                 continue
-            device = Device(mac.upper(), name, ipv4, now)
-            self.last_results.append(device)
-        self.last_results.extend(exclude_targets)
+            last_results.append(Device(mac.upper(), name, ipv4, now))
+
+        self.last_results = last_results
 
         _LOGGER.info("nmap scan successful")
         return True
