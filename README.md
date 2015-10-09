@@ -30,7 +30,7 @@ Built home automation on top of your devices:
  * Turn on lights slowly during sun set to compensate for less light
  * Turn off all lights and devices when everybody leaves the house
  * Offers a [REST API](https://home-assistant.io/developers/api.html) and can interface with MQTT for easy integration with other projects
- * Allow sending notifications using [Instapush](https://instapush.im), [Notify My Android (NMA)](http://www.notifymyandroid.com/), [PushBullet](https://www.pushbullet.com/), [PushOver](https://pushover.net/), [Slack](https://slack.com/), and [Jabber (XMPP)](http://xmpp.org)
+ * Allow sending notifications using [Instapush](https://instapush.im), [Notify My Android (NMA)](http://www.notifymyandroid.com/), [PushBullet](https://www.pushbullet.com/), [PushOver](https://pushover.net/), [Slack](https://slack.com/), [Telegram](https://telegram.org/), and [Jabber (XMPP)](http://xmpp.org)
 
 The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](https://home-assistant.io/developers/architecture.html) and the [section on creating your own components](https://home-assistant.io/developers/creating_components.html).
 
