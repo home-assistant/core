@@ -123,9 +123,9 @@ class NmapDeviceScanner(object):
             for host in self.last_results:
                 if host.last_update + self.home_interval > now:
                     exclude_targets.add(host)
-            if len(exclude_targets) > 0:
-                target_list = [t.ip for t in exclude_targets]
-                options += " --exclude {}".format(",".join(target_list))
+            if exclude_targets:
+                options += " --exclude {}".format(",".join(t.ip for t
+                                                           in exclude_targets))
 
         try:
             result = scanner.scan(hosts=self.hosts, arguments=options)
@@ -137,7 +137,7 @@ class NmapDeviceScanner(object):
         for ipv4, info in result['scan'].items():
             if info['status']['state'] != 'up':
                 continue
-            name = info['hostnames'][0] if info['hostnames'] else ipv4
+            name = info['hostnames'][0]['name'] if info['hostnames'] else ipv4
             # Mac address only returned if nmap ran as root
             mac = info['addresses'].get('mac') or _arp(ipv4)
             if mac is None:
