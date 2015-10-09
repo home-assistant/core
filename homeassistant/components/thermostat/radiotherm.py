@@ -33,8 +33,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         tstat = radiotherm.get_thermostat(host)
-    except URLError as err:
-        logger.Exception(
+    except URLError:
+        logger.exception(
             "Unable to connect to Radio Thermostat")
         return
 
@@ -103,7 +103,7 @@ class RadioThermostat(ThermostatDevice):
         if self.operation == STATE_COOL:
             self.device.t_cool = temperature
         elif self.operation == STATE_HEAT:
-            self.device.t_heat
+            self.device.t_heat = temperature
 
     def set_name(self, name):
         """ Set thermostat name """
