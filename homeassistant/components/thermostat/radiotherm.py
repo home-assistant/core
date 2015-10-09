@@ -70,7 +70,6 @@ class RadioThermostat(ThermostatDevice):
             "mode": self.device.tmode['human']
         }
 
-
     @property
     def current_temperature(self):
         """ Returns the current temperature. """
@@ -97,7 +96,6 @@ class RadioThermostat(ThermostatDevice):
 
         return round(temp, 1)
 
-
     def set_temperature(self, temperature):
         """ Set new target temperature """
         if self.operation == STATE_COOL:
@@ -108,6 +106,3 @@ class RadioThermostat(ThermostatDevice):
     def set_name(self, name):
         """ Set thermostat name """
         self.device.name = name
-
-
-
