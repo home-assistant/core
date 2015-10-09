@@ -1,20 +1,10 @@
 """
 homeassistant.components.rfxtrx
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connects Home Assistant to a RFXtrx device.
+Provides support for RFXtrx components.
 
-Configuration:
-
-To use Rfxtrx device you will need to add the following to your
-configuration.yaml file.
-
-rfxtrx:
-  device: /dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1YVC1P0-if00-port0
-
-*Optional*
-
-  debug: True
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.rfxtrx.html
 """
 import logging
 from homeassistant.util import slugify
