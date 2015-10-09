@@ -4,7 +4,7 @@ homeassistant.components.rfxtrx
 Provides support for RFXtrx components.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rfxtrx.html
+https://home-assistant.io/components/rfxtrx.html
 """
 import logging
 from homeassistant.util import slugify
