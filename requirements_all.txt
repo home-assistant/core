@@ -143,3 +143,6 @@ pysnmp==4.2.5
 
 # Blinkstick
 blinkstick==1.1.7
+
+# Telegram (notify.telegram)
+python-telegram-bot==2.8.7
