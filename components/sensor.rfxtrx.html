@@ -57,6 +57,7 @@
       <li><a href='/getting-started/devices.html'>Adding devices</a></li>
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
       <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
@@ -108,23 +109,30 @@
 
   <p>The rfxtrx platform support sensors that communicate in the frequency range of 433.92 MHz.</p>
 
-<p>To enable the RFXtrx sensors in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+<p>To enable RFXtrx sensors in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
 </span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rfxtrx</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">device</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">PATH_TO_DEVICE</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">devices</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">ac09c4f1</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Temperature</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">ac09c4f2</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Humidity</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">automatic_add</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 <p>Configuration variables:</p>
 
 <ul>
-<li><strong>device</strong> (<em>Required</em>): The path to your device, e.g. <code>/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0</code></li>
+<li><strong>devices</strong> (<em>Required</em>): A list of devices with their name to use in the frontend.</li>
+<li><strong>automatic_add</strong> (<em>Optional</em>): To enable the automatic addition of new sensors.</li>
 </ul>
 
 
