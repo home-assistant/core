@@ -3,38 +3,9 @@ homeassistant.components.switch.arest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The arest switch can control the digital pins of a device running with the
 aREST RESTful framework for Arduino, the ESP8266, and the Raspberry Pi.
-Only tested with Arduino boards so far.
 
-Configuration:
-
-To use the arest switch you will need to add something like the following
-to your configuration.yaml file.
-
-sensor:
-  platform: arest
-  resource: http://IP_ADDRESS
-  pins:
-    11:
-      name: Fan Office
-    12:
-      name: Light Desk
-
-Variables:
-
-resource:
-*Required
-IP address of the device that is exposing an aREST API.
-
-pins:
-The number of the digital pin to switch.
-
-These are the variables for the pins array:
-
-name
-*Required
-The name for the pin that will be used in the frontend.
-
-Details for the API: http://arest.io
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.arest.html
 """
 import logging
 from requests import get, exceptions
