@@ -27,6 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     host = config.get(CONF_HOST)
+    name = config.get(CONF_NAME)
     if host is None:
         logger.error("host not defined in config.")
         return
@@ -38,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Unable to connect to Radio Thermostat")
         return
 
-    add_devices([RadioThermostat(tstat)])
+    add_devices([RadioThermostat(tstat, name)])
 
 
 class RadioThermostat(ThermostatDevice):
@@ -46,13 +47,13 @@ class RadioThermostat(ThermostatDevice):
 
     def __init__(self, device, name=None):
         self.device = device
-        self._name = name
+        if name:
+            self.set_name(name)
 
     @property
     def name(self):
         """ Returns the name of the Radio Thermostat. """
-        return 'radiothermostat'
-        #return self.device.name
+        return self.device.name['raw']
 
     @property
     def unit_of_measurement(self):
@@ -98,12 +99,16 @@ class RadioThermostat(ThermostatDevice):
         return round(temp, 1)
 
 
-    def set_temperate(self, temperature):
+    def set_temperature(self, temperature):
         """ Set new target temperature """
         if self.operation == STATE_COOL:
             self.device.t_cool = temperature
         elif self.operation == STATE_HEAT:
             self.device.t_heat
+
+    def set_name(self, name):
+        """ Set thermostat name """
+        self.device.name = name
 
 
 
