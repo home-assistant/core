@@ -3,48 +3,8 @@ homeassistant.components.sensor.arest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The arest sensor will consume an exposed aREST API of a device.
 
-Configuration:
-
-To use the arest sensor you will need to add something like the following
-to your configuration.yaml file.
-
-sensor:
-  platform: arest
-  resource: http://IP_ADDRESS
-  monitored_variables:
-    - name: temperature
-      unit: '°C'
-    - name: humidity
-      unit: '%'
-
-Variables:
-
-resource:
-*Required
-IP address of the device that is exposing an aREST API.
-
-These are the variables for the monitored_variables array:
-
-name
-*Required
-The name of the variable you wish to monitor.
-
-unit
-*Optional
-Defines the units of measurement of the sensor, if any.
-
-Details for the API: http://arest.io
-
-Format of a default JSON response by aREST:
-{
-   "variables":{
-      "temperature":21,
-      "humidity":89
-   },
-   "id":"device008",
-   "name":"Bedroom",
-   "connected":true
-}
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.arest.html
 """
 import logging
 import requests
