@@ -16,10 +16,12 @@ Check out [the website](https://home-assistant.io) for [a demo][demo], installat
 
 Examples of devices it can interface it:
 
- * Monitoring connected devices to a wireless router: [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), [DD-WRT](http://www.dd-wrt.com/site/index), [TPLink](http://www.tp-link.us/), [ASUSWRT](http://event.asus.com/2013/nw/ASUSWRT/) and any SNMP capable WAP/WRT
+ * Monitoring connected devices to a wireless router: [OpenWrt](https://openwrt.org/), [Tomato](http://www.polarcloud.com/tomato), [Netgear](http://netgear.com), [DD-WRT](http://www.dd-wrt.com/site/index), [TPLink](http://www.tp-link.us/), [ASUSWRT](http://event.asus.com/2013/nw/ASUSWRT/) and any SNMP capable Linksys WAP/WRT
+ * 
  * [Philips Hue](http://meethue.com) lights, [WeMo](http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/) switches, [Edimax](http://www.edimax.com/) switches, [Efergy](https://efergy.com) energy monitoring, RFXtrx sensors, and [Tellstick](http://www.telldus.se/products/tellstick) devices and sensors
- * [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast), [Music Player Daemon](http://www.musicpd.org/), [Logitech Squeezebox](https://en.wikipedia.org/wiki/Squeezebox_%28network_music_player%29), [Kodi (XBMC)](http://kodi.tv/), iTunes (by way of [itunes-api](https://github.com/maddox/itunes-api)), and Amazon Fire TV (by way of [python-firetv](https://github.com/happyleavesaoc/python-firetv))
- * Support for [ISY994](https://www.universal-devices.com/residential/isy994i-series/) (Insteon and X10 devices), [Z-Wave](http://www.z-wave.com/), [Nest Thermostats](https://nest.com/), [Arduino](https://www.arduino.cc/), [Raspberry Pi](https://www.raspberrypi.org/), and [Modbus](http://www.modbus.org/)
+ * [Google Chromecasts](http://www.google.com/intl/en/chrome/devices/chromecast), [Music Player Daemon](http://www.musicpd.org/), [Logitech Squeezebox](https://en.wikipedia.org/wiki/Squeezebox_%28network_music_player%29), [Plex](https://plex.tv/), [Kodi (XBMC)](http://kodi.tv/), iTunes (by way of [itunes-api](https://github.com/maddox/itunes-api)), and Amazon Fire TV (by way of [python-firetv](https://github.com/happyleavesaoc/python-firetv))
+ * Support for [ISY994](https://www.universal-devices.com/residential/isy994i-series/) (Insteon and X10 devices), [Z-Wave](http://www.z-wave.com/), [Nest Thermostats](https://nest.com/), [RFXtrx](http://www.rfxcom.com/), [Arduino](https://www.arduino.cc/), [Raspberry Pi](https://www.raspberrypi.org/), and [Modbus](http://www.modbus.org/)
+ * Interaction with [IFTTT](https://ifttt.com/)
  * Integrate data from the [Bitcoin](https://bitcoin.org) network, meteorological data from [OpenWeatherMap](http://openweathermap.org/) and [Forecast.io](https://forecast.io/), [Transmission](http://www.transmissionbt.com/), or [SABnzbd](http://sabnzbd.org).
  * [See full list of supported devices](https://home-assistant.io/components/)
 
@@ -29,8 +31,8 @@ Built home automation on top of your devices:
  * Turn on the lights when people get home after sun set
  * Turn on lights slowly during sun set to compensate for less light
  * Turn off all lights and devices when everybody leaves the house
- * Offers a [REST API](https://home-assistant.io/developers/api.html) and can interface with MQTT for easy integration with other projects
- * Allow sending notifications using [Instapush](https://instapush.im), [Notify My Android (NMA)](http://www.notifymyandroid.com/), [PushBullet](https://www.pushbullet.com/), [PushOver](https://pushover.net/), [Slack](https://slack.com/), and [Jabber (XMPP)](http://xmpp.org)
+ * Offers a [REST API](https://home-assistant.io/developers/api.html) and can interface with MQTT for easy integration with other projects like [OwnTracks](http://owntracks.org/)
+ * Allow sending notifications using [Instapush](https://instapush.im), [Notify My Android (NMA)](http://www.notifymyandroid.com/), [PushBullet](https://www.pushbullet.com/), [PushOver](https://pushover.net/), [Slack](https://slack.com/), [Telegram](https://telegram.org/), and [Jabber (XMPP)](http://xmpp.org)
 
 The system is built modular so support for other devices or actions can be implemented easily. See also the [section on architecture](https://home-assistant.io/developers/architecture.html) and the [section on creating your own components](https://home-assistant.io/developers/creating_components.html).
 
