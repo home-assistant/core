@@ -35,9 +35,10 @@ URL of your running version of iTunes-API. Example: http://192.168.1.50:8181
 import logging
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_TYPE_MUSIC, SUPPORT_PAUSE, SUPPORT_SEEK,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
+    MediaPlayerDevice, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_PAUSE,
+    SUPPORT_SEEK, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK, SUPPORT_TURN_ON,
+    SUPPORT_TURN_OFF, SUPPORT_PLAY_MEDIA,
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_MEDIA_COMMANDS)
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_ON)
@@ -47,7 +48,8 @@ import requests
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
+    SUPPORT_PLAY_MEDIA
 
 SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
@@ -117,6 +119,20 @@ class Itunes(object):
     def previous(self):
         """ Skips back and returns the current state. """
         return self._command('previous')
+
+    def play_playlist(self, playlist_id_or_name):
+        """ Sets a playlist to be current and returns the current state. """
+        response = self._request('GET', '/playlists')
+        playlists = response.get('playlists', [])
+
+        found_playlists = \
+            [playlist for playlist in playlists if
+             (playlist_id_or_name in [playlist["name"], playlist["id"]])]
+
+        if len(found_playlists) > 0:
+            playlist = found_playlists[0]
+            path = '/playlists/' + playlist['id'] + '/play'
+            return self._request('PUT', path)
 
     def artwork_url(self):
         """ Returns a URL of the current track's album art. """
@@ -295,6 +311,11 @@ class ItunesDevice(MediaPlayerDevice):
         return self.current_album
 
     @property
+    def media_playlist(self):
+        """ Title of the currently playing playlist. """
+        return self.current_playlist
+
+    @property
     def supported_media_commands(self):
         """ Flags of media commands that are supported. """
         return SUPPORT_ITUNES
@@ -328,6 +349,12 @@ class ItunesDevice(MediaPlayerDevice):
         """ media_previous media player. """
         response = self.client.previous()
         self.update_state(response)
+
+    def play_media(self, media_type, media_id):
+        """ play_media media player. """
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            response = self.client.play_playlist(media_id)
+            self.update_state(response)
 
 
 class AirPlayDevice(MediaPlayerDevice):

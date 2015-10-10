@@ -1,15 +1,15 @@
 """
-homeassistant.components.notify.mail
+homeassistant.components.notify.smtp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Mail (SMTP) notification service.
 
 Configuration:
 
-To use the Mail notifier you will need to add something like the following
+To use the smtp notifier you will need to add something like the following
 to your configuration.yaml file.
 
 notify:
-  platform: mail
+  platform: smtp
   server: MAIL_SERVER
   port: YOUR_SMTP_PORT
   sender: SENDER_EMAIL_ADDRESS
