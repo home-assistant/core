@@ -1,34 +1,11 @@
 """
 homeassistant.components.media_player.plex
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Provides an interface to the Plex API.
 
-Provides an interface to the Plex API
-
-Configuration:
-
-To use Plex add something like this to your configuration:
-
-media_player:
-  platform: plex
-  name: plex_server
-  user: plex
-  password: my_secure_password
-
-Variables:
-
-name
-*Required
-The name of the backend device (Under Plex Media Server > settings > server).
-
-user
-*Required
-The Plex username
-
-password
-*Required
-The Plex password
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.plex.html
 """
-
 import logging
 from datetime import timedelta
 
@@ -49,10 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
-# pylint: disable=abstract-method
-# pylint: disable=unused-argument
 
-
+# pylint: disable=abstract-method, unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the plex platform. """
     from plexapi.myplex import MyPlexUser
@@ -68,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
-        """ Updates the devices objects """
+        """ Updates the devices objects. """
         try:
             devices = plexuser.devices()
         except BadRequest:
@@ -94,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
-        """ Updates the sessions objects """
+        """ Updates the sessions objects. """
         try:
             sessions = plexserver.sessions()
         except BadRequest:
@@ -113,7 +88,6 @@ class PlexClient(MediaPlayerDevice):
     """ Represents a Plex device. """
 
     # pylint: disable=too-many-public-methods
-
     def __init__(self, device, plex_sessions, update_devices, update_sessions):
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
@@ -121,12 +95,12 @@ class PlexClient(MediaPlayerDevice):
         self.set_device(device)
 
     def set_device(self, device):
-        """ Sets the device property """
+        """ Sets the device property. """
         self.device = device
 
     @property
     def session(self):
-        """ Returns the session, if any """
+        """ Returns the session, if any. """
         if self.device.clientIdentifier not in self.plex_sessions:
             return None
 
@@ -196,21 +170,21 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def media_season(self):
-        """ Season of curent playing media. (TV Show only) """
+        """ Season of curent playing media (TV Show only). """
         from plexapi.video import Show
         if isinstance(self.session, Show):
             return self.session.seasons()[0].index
 
     @property
     def media_series_title(self):
-        """ Series title of current playing media. (TV Show only)"""
+        """ Series title of current playing media (TV Show only). """
         from plexapi.video import Show
         if isinstance(self.session, Show):
             return self.session.grandparentTitle
 
     @property
     def media_episode(self):
-        """ Episode of current playing media. (TV Show only) """
+        """ Episode of current playing media (TV Show only). """
         from plexapi.video import Show
         if isinstance(self.session, Show):
             return self.session.index
