@@ -114,6 +114,8 @@ def setup(hass, config):
         os.remove(csv_path)
 
     conf = config.get(DOMAIN, {})
+    if isinstance(conf, list):
+        conf = conf[0]
     consider_home = timedelta(
         seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
                              DEFAULT_CONSIDER_HOME))
