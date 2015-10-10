@@ -4,13 +4,14 @@ homeassistant.components.thermostat.radiotherm
 Adds support for Radio Thermostat wifi-enabled home thermostats
 """
 import logging
+import datetime
+from urllib.error import URLError
 
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (CONF_HOST, CONF_NAME, TEMP_FAHRENHEIT)
-from urllib.error import URLError
 
-REQUIREMENTS = ['radiotherm']
+REQUIREMENTS = ['radiotherm==1.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -24,6 +25,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Error while importing dependency radiotherm. "
             "Did you maybe not install the radiotherm dependency?")
         return
+
+    hosts = []
+    logger.info(discovery_info)
+
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -48,6 +53,7 @@ class RadioThermostat(ThermostatDevice):
         self.device = device
         if name:
             self.set_name(name)
+        self.set_time()
 
     @property
     def name(self):
@@ -106,3 +112,9 @@ class RadioThermostat(ThermostatDevice):
     def set_name(self, name):
         """ Set thermostat name """
         self.device.name = name
+
+    def set_time(self):
+        """ Set device time """
+        now = datetime.datetime.now()
+        self.device.time = {'day': now.weekday(),
+                            'hour': now.hour, 'minute': now.minute}
