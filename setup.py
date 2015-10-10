@@ -9,11 +9,12 @@ DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
-PACKAGE_DATA = \
-    {'homeassistant.components.frontend': ['index.html.template'],
-     'homeassistant.components.frontend.www_static': ['*.*'],
-     'homeassistant.components.frontend.www_static.images': ['*.*'],
-     'homeassistant.startup': ['*.*']}
+# PACKAGE_DATA = \
+#     {'homeassistant.components.frontend': ['index.html.template'],
+#      'homeassistant.components.frontend.www_static': ['*.*'],
+#      'homeassistant.components.frontend.www_static.images': ['*.*'],
+#      'homeassistant.components.mqtt': ['*.crt'],
+#      'homeassistant.startup': ['*.*']}
 
 REQUIRES = [
     'requests>=2,<3',
@@ -23,6 +24,7 @@ REQUIRES = [
     'vincenty==0.1.2'
 ]
 
+    # package_data=PACKAGE_DATA,
 setup(
     name=PACKAGE_NAME,
     version=__version__,
@@ -34,7 +36,6 @@ setup(
     description='Open-source home automation platform running on Python 3.',
     packages=PACKAGES,
     include_package_data=True,
-    package_data=PACKAGE_DATA,
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
