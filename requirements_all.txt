@@ -10,77 +10,77 @@ vincenty==0.1.2
 # Sun (sun)
 astral==0.8.1
 
-# Philips Hue library (lights.hue)
+# Philips Hue (lights.hue)
 phue==0.8
 
-# Limitlessled/Easybulb/Milight library (lights.limitlessled)
+# Limitlessled/Easybulb/Milight (lights.limitlessled)
 ledcontroller==1.1.0
 
-# Chromecast bindings (media_player.cast)
+# Chromecast (media_player.cast)
 pychromecast==0.6.12
 
 # Keyboard (keyboard)
 pyuserinput==0.1.9
 
-# Tellstick bindings (*.tellstick)
+# Tellstick (*.tellstick)
 tellcore-py==1.1.2
 
-# Nmap bindings (device_tracker.nmap)
+# Nmap (device_tracker.nmap)
 python-nmap==0.4.3
 
-# PushBullet bindings (notify.pushbullet)
+# PushBullet (notify.pushbullet)
 pushbullet.py==0.7.1
 
-# Nest Thermostat bindings (thermostat.nest)
+# Nest Thermostat (thermostat.nest)
 python-nest==2.6.0
 
 # Z-Wave (*.zwave)
 pydispatcher==2.0.5
 
-# ISY994 bindings (*.isy994)
+# ISY994 (isy994)
 PyISY==1.0.5
 
 # PSutil (sensor.systemmonitor)
 psutil==3.0.0
 
-# Pushover bindings (notify.pushover)
+# Pushover (notify.pushover)
 python-pushover==0.2
 
 # Transmission Torrent Client (*.transmission)
 transmissionrpc==0.11
 
-# OpenWeatherMap Web API (sensor.openweathermap)
+# OpenWeatherMap (sensor.openweathermap)
 pyowm==2.2.1
 
-# XMPP Bindings (notify.xmpp)
+# XMPP (notify.xmpp)
 sleekxmpp==1.3.1
 dnspython3==1.12.0
 
 # Blockchain (sensor.bitcoin)
 blockchain==1.1.2
 
-# MPD Bindings (media_player.mpd)
+# Music Player Daemon (media_player.mpd)
 python-mpd2==0.5.4
 
 # Hikvision (switch.hikvisioncam)
 hikvision==0.4
 
-# console log coloring
+# Console log coloring
 colorlog==2.6.0
 
 # JSON-RPC interface (media_player.kodi)
 jsonrpc-requests==0.1
 
-# Forecast.io Bindings (sensor.forecast)
+# Forecast.io (sensor.forecast)
 python-forecastio==1.3.3
 
-# Firmata Bindings (*.arduino)
+# Firmata (*.arduino)
 PyMata==2.07a
 
-# Rfxtrx sensor (sensor.rfxtrx)
+# Rfxtrx (rfxtrx)
 https://github.com/Danielhiversen/pyRFXtrx/archive/ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip#RFXtrx==0.15
 
-# Mysensors
+# Mysensors (sensor.mysensors)
 https://github.com/theolind/pymysensors/archive/35b87d880147a34107da0d40cb815d75e6cb4af7.zip#pymysensors==0.2
 
 # Netgear (device_tracker.netgear)
@@ -101,18 +101,18 @@ slacker==0.6.8
 # Temper sensors (sensor.temper)
 https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip#temperusb==1.2.3
 
-# PyEdimax
+# PyEdimax (switch.edimax)
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
 
 # RPI-GPIO platform (*.rpi_gpio)
 # Uncomment for Raspberry Pi
 # RPi.GPIO==0.5.11
 
-# Adafruit temperature/humidity sensor
-# uncomment on a Raspberry Pi / Beaglebone
+# Adafruit temperature/humidity sensor (sensor.dht)
+# Uncomment on a Raspberry Pi / Beaglebone
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
 
-# PAHO MQTT Binding (mqtt)
+# PAHO MQTT (mqtt)
 paho-mqtt==1.1
 
 # PyModbus (modbus)
@@ -121,19 +121,26 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 # Verisure (verisure)
 https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60f7f35854390d59be.zip#python-verisure==0.2.6
 
-# Python tools for interacting with IFTTT Maker Channel (ifttt)
+# IFTTT Maker Channel (ifttt)
 pyfttt==0.3
 
-# sensor.sabnzbd
+# SABnzbd (sensor.sabnzbd)
 https://github.com/balloob/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
-# switch.vera
-# sensor.vera
-# light.vera
+# Vera (*.vera)
 https://github.com/balloob/home-assistant-vera-api/archive/a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip#python-vera==0.1
 
-# Sonos bindings (media_player.sonos)
+# Sonos (media_player.sonos)
 SoCo==0.11.1
 
 # PlexAPI (media_player.plex)
 https://github.com/adrienbrault/python-plexapi/archive/df2d0847e801d6d5cda920326d693cf75f304f1a.zip#python-plexapi==1.0.2
+
+# SNMP (device_tracker.snmp)
+pysnmp==4.2.5
+
+# Blinkstick (light.blinksticklight)
+blinkstick==1.1.7
+
+# Telegram (notify.telegram)
+python-telegram-bot==2.8.7

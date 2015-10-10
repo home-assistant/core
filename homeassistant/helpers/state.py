@@ -13,6 +13,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     STATE_PLAYING, STATE_PAUSED, ATTR_ENTITY_ID)
 
+from homeassistant.components.media_player import (SERVICE_PLAY_MEDIA)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -57,7 +59,11 @@ def reproduce_state(hass, states, blocking=False):
                             state.entity_id)
             continue
 
-        if state.domain == 'media_player' and state.state == STATE_PAUSED:
+        if state.domain == 'media_player' and state.attributes and \
+            'media_type' in state.attributes and \
+                'media_id' in state.attributes:
+            service = SERVICE_PLAY_MEDIA
+        elif state.domain == 'media_player' and state.state == STATE_PAUSED:
             service = SERVICE_MEDIA_PAUSE
         elif state.domain == 'media_player' and state.state == STATE_PLAYING:
             service = SERVICE_MEDIA_PLAY
