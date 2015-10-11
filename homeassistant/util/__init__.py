@@ -236,11 +236,18 @@ class Throttle(object):
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
 
-        # We want to be able to differentiate between function and method calls
+        # Different methods that can be passed in:
+        #  - a function
+        #  - an unbound function on a class
+        #  - a method (bound function on a class)
+
+        # We want to be able to differentiate between function and unbound
+        # methods (which are considered functions).
         # All methods have the classname in their qualname seperated by a '.'
         # Functions have a '.' in their qualname if defined inline, but will
         # be prefixed by '.<locals>.' so we strip that out.
-        is_func = '.' not in method.__qualname__.split('.<locals>.')[-1]
+        is_func = (not hasattr(method, '__self__') and
+                   '.' not in method.__qualname__.split('.<locals>.')[-1])
 
         @wraps(method)
         def wrapper(*args, **kwargs):
@@ -248,8 +255,13 @@ class Throttle(object):
             Wrapper that allows wrapped to be called only once per min_time.
             If we cannot acquire the lock, it is running so return None.
             """
-            # pylint: disable=protected-access
-            host = wrapper if is_func else args[0]
+            if hasattr(method, '__self__'):
+                host = method.__self__
+            elif is_func:
+                host = wrapper
+            else:
+                host = args[0] if args else wrapper
+
             if not hasattr(host, '_throttle_lock'):
                 host._throttle_lock = threading.Lock()
 
