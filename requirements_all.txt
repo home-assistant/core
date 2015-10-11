@@ -81,7 +81,7 @@ PyMata==2.07a
 https://github.com/Danielhiversen/pyRFXtrx/archive/ec7a1aaddf8270db6e5da1c13d58c1547effd7cf.zip#RFXtrx==0.15
 
 # Mysensors (sensor.mysensors)
-https://github.com/theolind/pymysensors/archive/35b87d880147a34107da0d40cb815d75e6cb4af7.zip#pymysensors==0.2
+https://github.com/theolind/pymysensors/archive/d4b809c2167650691058d1e29bfd2c4b1792b4b0.zip#pymysensors==0.3
 
 # Netgear (device_tracker.netgear)
 pynetgear==0.3
