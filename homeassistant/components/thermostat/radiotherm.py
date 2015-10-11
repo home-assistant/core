@@ -26,24 +26,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Did you maybe not install the radiotherm dependency?")
         return
 
+    # Detect hosts with hass discovery, config or radiotherm discovery
     hosts = []
-    logger.info(discovery_info)
+    if discovery_info:
+        logger.info('hass radiotherm discovery', discovery_info)
+    elif CONF_HOST in config:
+        hosts = [config[CONF_HOST]]
+    else:
+        hosts.append(radiotherm.discover.discover_address())
 
-
-    host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
-    if host is None:
-        logger.error("host not defined in config.")
+    if hosts is None:
+        logger.error("no radiotherm thermostats detected")
         return
 
-    try:
-        tstat = radiotherm.get_thermostat(host)
-    except URLError:
-        logger.exception(
-            "Unable to connect to Radio Thermostat")
-        return
+    tstats = []
 
-    add_devices([RadioThermostat(tstat, name)])
+    for host in hosts:
+        try:
+            tstat = radiotherm.get_thermostat(host)
+            tstats.append(RadioThermostat(tstat))
+        except (URLError, OSError):
+            logger.exception(
+                "Unable to connect to Radio Thermostat @{}".format(host))
+
+    add_devices(tstats)
 
 
 class RadioThermostat(ThermostatDevice):
