@@ -9,7 +9,7 @@ from urllib.error import URLError
 
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
-from homeassistant.const import (CONF_HOST, CONF_NAME, TEMP_FAHRENHEIT)
+from homeassistant.const import (CONF_HOST, TEMP_FAHRENHEIT)
 
 REQUIREMENTS = ['radiotherm==1.2']
 
@@ -29,13 +29,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Detect hosts with hass discovery, config or radiotherm discovery
     hosts = []
     if discovery_info:
-        logger.info('hass radiotherm discovery', discovery_info)
+        logger.info('hass radiotherm discovery: %s', discovery_info)
     elif CONF_HOST in config:
         hosts = [config[CONF_HOST]]
     else:
         hosts.append(radiotherm.discover.discover_address())
 
-    name = config.get(CONF_NAME)
     if hosts is None:
         logger.error("no radiotherm thermostats detected")
         return
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             tstats.append(RadioThermostat(tstat))
         except (URLError, OSError):
             logger.exception(
-                "Unable to connect to Radio Thermostat @{}".format(host))
+                "Unable to connect to Radio Thermostat: %s", host)
 
     add_devices(tstats)
 
@@ -61,11 +60,18 @@ class RadioThermostat(ThermostatDevice):
         if name:
             self.set_name(name)
         self.set_time()
+        self._away = False
+        self._away_cool = 82
+        self._away_heat = 70
 
     @property
     def name(self):
         """ Returns the name of the Radio Thermostat. """
         return self.device.name['raw']
+
+    def set_name(self, name):
+        """ Set thermostat name """
+        self.device.name = name
 
     @property
     def unit_of_measurement(self):
@@ -116,9 +122,18 @@ class RadioThermostat(ThermostatDevice):
         elif self.operation == STATE_HEAT:
             self.device.t_heat = temperature
 
-    def set_name(self, name):
-        """ Set thermostat name """
-        self.device.name = name
+    @property
+    def is_away_mode_on(self):
+        """ Returns away mode """
+        return self._away
+
+    def turn_away_mode_on(self):
+        """ Turns away mode on. """
+        self._away = True
+
+    def turn_away_mode_off(self):
+        """ Turns away mode off. """
+        self._away = False
 
     def set_time(self):
         """ Set device time """
