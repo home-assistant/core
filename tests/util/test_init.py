@@ -229,3 +229,16 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(Tester().hello())
         self.assertTrue(Tester().hello())
+
+    def test_throttle_on_method(self):
+        """ Test that throttle works when wrapping a method. """
+
+        class Tester(object):
+            def hello(self):
+                return True
+
+        tester = Tester()
+        throttled = util.Throttle(timedelta(seconds=1))(tester.hello)
+
+        self.assertTrue(throttled())
+        self.assertIsNone(throttled())
