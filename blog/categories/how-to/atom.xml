@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-11T13:16:06-07:00</updated>
+  <updated>2015-10-11T13:17:35-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -28,6 +28,11 @@ report it to MQTT where Home Asssistant can pick it up.</p>
 <img src='https://home-assistant.io/images/blog/2015-10-esp8266-temp/ha-sensor.png' />
 Home Assistant will keep track of historical values and allow you to integrate it into automation.
 </p>
+
+
+
+
+<!--more-->
 
 
 <h3>Components</h3>
