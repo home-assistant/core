@@ -255,6 +255,7 @@ class Throttle(object):
             Wrapper that allows wrapped to be called only once per min_time.
             If we cannot acquire the lock, it is running so return None.
             """
+            # pylint: disable=protected-access
             if hasattr(method, '__self__'):
                 host = method.__self__
             elif is_func:
