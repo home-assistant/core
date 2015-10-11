@@ -161,9 +161,10 @@ class AsusWrtDeviceScanner(object):
             # For leases where the client doesn't set a hostname, ensure
             # it is blank and not '*', which breaks the entity_id down
             # the line
-            host = match.group('host')
-            if host == '*':
-                host = ''
+            if match:
+                host = match.group('host')
+                if host == '*':
+                    host = ''
 
             devices[match.group('ip')] = {
                 'host': host,
@@ -174,6 +175,6 @@ class AsusWrtDeviceScanner(object):
 
         for neighbor in neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
-            if match.group('ip') in devices:
+            if match and match.group('ip') in devices:
                 devices[match.group('ip')]['status'] = match.group('status')
         return devices
