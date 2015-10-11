@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Home Assistant moving to YAML - Home Assistant</title>
+    <title>0.7.5: Blinkstick, SNMP, Telegram - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Configuration will now be more flexible">
+    <meta name="description" content="Home Assistant 0.7.5 has been released with support for RFXtrx, Blinkstick, SNMP and Telegram.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml">
+    <link rel="canonical" href="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Home Assistant moving to YAML">
+    <meta property="og:title" content="0.7.5: Blinkstick, SNMP, Telegram">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Configuration will now be more flexible">
+    <meta property="og:description" content="Home Assistant 0.7.5 has been released with support for RFXtrx, Blinkstick, SNMP and Telegram.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -99,7 +99,7 @@
           <article class="post">
   <header>
   
-  <h1 class="title indent">Home Assistant moving to YAML</h1>
+  <h1 class="title indent">0.7.5: Blinkstick, SNMP, Telegram</h1>
   
 
   
@@ -116,11 +116,11 @@
   
 
 
-<time datetime="2015-03-01T11:38:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 1, 2015</time>
+<time datetime="2015-10-11T10:10:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 11, 2015</time>
     
   
 
-<span class="byline author vcard"><i class='icon-user'></i> Theodor Lindquist</span>
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
 
     <span><i class='icon-time'></i> less than one minute reading time</span>
     
@@ -130,7 +130,7 @@
     <ul class="tags unstyled">
     
       
-        <li><a class='category' href='/blog/categories/core/'>core</a></li>
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
       
     
     </ul>
@@ -148,14 +148,31 @@
 
 
 
-  <p>Home Assistant is now using <a href="http://yaml.org/">YAML</a> for it&rsquo;s configuration file.
-YAML allows the use of lists, which should make the configuration file a bit more flexible and useful. The new configuration file format is backwards compatible with existing components. Because of this, there is no need for component developers to update their components.</p>
+  <p>We discovered two issues annoying enough to warrent the release of 0.7.5:</p>
 
-<p>The new file is named configuration.yaml and if it can&rsquo;t be found in your config directory, Home Assistant will instead try to find the old configuration file, home-assistant.conf.</p>
+<ul>
+<li>Home Assistant package did not include the CloudMQTT certificate.</li>
+<li>A bug in the core caused issues when some platforms are loaded twice.</li>
+</ul>
 
-<p>The home-assistant.conf.example has been replaced with an updated <a href="https://github.com/balloob/home-assistant/blob/dev/config/configuration.yaml.example">configuration.yaml.example</a>.</p>
 
-<p>Users of Home Assistant should migrate as the old configuration format is deprecated.</p>
+<p>This release also includes some new platforms (because they keep coming!):</p>
+
+<p><img src='/images/supported_brands/blinkstick.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<img src='/images/supported_brands/rfxtrx.png' style='border:none; box-shadow: none; float: right; clear: right;' height='50' />
+<img src='/images/supported_brands/telegram.png' style='border:none; box-shadow: none; float: right; clear: right;' height='50' /></p>
+
+<ul>
+<li>Light: <a href="/components/light.blinksticklight.html">blinkstick platform</a> added (<a href="https://github.com/alanbowman">@alanbowman</a>)</li>
+<li>Device Tracker: <a href="/components/device_tracker.snmp.html">SNMP platform</a> added (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+<li>Light: <a href="/components/light.rfxtrx.html">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
+<li>Switch: <a href="/components/switch.rfxtrx.html">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
+<li>Notify: <a href="/components/notify.telegram.html">telegram platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+</ul>
+
+
+<p>Also, the media player was extended by <a href="https://github.com/maddox">@maddox</a> to support the play media command.
+This has been implemented for the <a href="/components/media_player.itunes.html">iTunes platform</a>.</p>
 
 
 </article>
@@ -182,15 +199,15 @@ YAML allows the use of lists, which should make the configuration file a bit mor
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/"
-     data-counturl="https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/"
+     data-counturl="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/"
+         data-href="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/"
          data-layout="button_count">
     </div>
   
@@ -221,10 +238,6 @@ YAML allows the use of lists, which should make the configuration file a bit mor
   <h1 class="title delta">Other Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/">0.7.5: Blinkstick, SNMP, Telegram</a>
-        </li>
       
     
       
@@ -298,8 +311,8 @@ YAML allows the use of lists, which should make the configuration file a bit mor
   
     
     // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/';
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/';
     var disqus_script = 'embed.js';
   
   (function () {

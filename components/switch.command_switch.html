@@ -147,6 +147,12 @@ A switch platform that issues specific commands when it is turned on and off. Th
 </ul>
 
 
+<h2><a class='title-link' name='examples' href='#examples'></a> Examples</h2>
+
+<p>In this section you find some real life examples of how to use this switch.</p>
+
+<h3><a class='title-link' name='arest-device' href='#arest-device'></a> aREST device</h3>
+
 <p>The example below is doing the same as the <a href="/components/switch.arest.html">aREST switch</a>. The commandline tool <code>[curl](http://curl.haxx.se/)</code> is used to toogle a pin which is controllable through REST.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -163,6 +169,32 @@ A switch platform that issues specific commands when it is turned on and off. Th
 </span><span class='line'>    <span class="l-Scalar-Plain">arest_pin4</span><span class="p-Indicator">:</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">oncmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/bin/curl</span><span class="nv"> </span><span class="s">-X</span><span class="nv"> </span><span class="s">GET</span><span class="nv"> </span><span class="s">http://192.168.1.10/digital/4/1&quot;</span>
 </span><span class='line'>      <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/bin/curl</span><span class="nv"> </span><span class="s">-X</span><span class="nv"> </span><span class="s">GET</span><span class="nv"> </span><span class="s">http://192.168.1.10/digital/4/0&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='shutdown-your-local-host' href='#shutdown-your-local-host'></a> Shutdown your local host</h3>
+
+<p>This switch will shutdown your system that is hosting Home Assistant.</p>
+
+<p class='note warning'>
+This switch will shudown your host immediately, there will be no confirmation.
+</p>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_switch</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">switches</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">Home Assistant system shutdown</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/sbin/poweroff&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

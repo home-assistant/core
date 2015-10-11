@@ -22,7 +22,7 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/posts/2/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Release notes for June 10, 2015 June 10, 2015 Paulus Schoutsen seven minutes reading time release-notes Comments Wow, almost a month has gone by since the last release and this release is packed. &hellip;">
+    <meta property="og:description" content="IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported July 11, 2015 Paulus Schoutsen five minutes reading time release-notes Comments Another month has passed and some great new &hellip;">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -97,6 +97,104 @@
         
 
             
+  
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/">IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-07-11T01:37:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> July 11, 2015</time>
+    
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> five minutes reading time</span>
+    
+
+  <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+
+    
+      <a class='comments'
+         href="/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+
+
+<div class="entry-content clearfix">
+  <p>Another month has passed and some great new features have landed in Home Assistant. This month release has been made possible by <a href="https://github.com/balloob">balloob</a>, <a href="https://github.com/ettisan">ettisan</a>, <a href="https://github.com/fabaff">fabaff</a>, <a href="https://github.com/gyran">gyran</a>, <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/michaelarnauts">michaelarnauts</a>, <a href="https://github.com/miniconfig">miniconfig</a> and <a href="https://github.com/rmkraus">rmkraus</a>.</p>
+
+<p>This release includes some architectural changes by me. The first is that the frontend is now based on a <a href="http://optimizely.github.io/nuclear-js/">NuclearJS</a> JavaScript backend. This has greatly helped to organize and optimize the frontend code. Another change is that Home Assistant will now install dependencies on-demand instead of installing dependencies for all supported devices.</p>
+
+<p><strong>IP Camera Support</strong><br>
+James has worked very hard to add support for IP cameras to Home Assistant which is included in this release. The initial release focusses on providing generic IP camera support. This means that any webcam that can exposes a JPEG image via a url can be integrated.</p>
+
+<p>Home Assistant will route the requests to your camera via the server allowing you to expose IP camera&rsquo;s inside your network via the Home Assistant app.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">camera</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">generic</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">my sample camera</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MY_USERNAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MY_PASSWORD</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">still_image_url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://194.218.96.92/jpg/image.jpg</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<p class='note'>
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
+</p>
+
+
+
+
+
+  <a class="btn pull-right" href="/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/#read-more">Read on &rarr;</a>
+</div>
+
+  </article>
+  <hr>
   
   
   <article class="listing">
@@ -877,101 +975,6 @@ YAML allows the use of lists, which should make the configuration file a bit mor
 
 
   <a class="btn pull-right" href="/blog/2015/02/24/streaming-updates/#read-more">Read on &rarr;</a>
-</div>
-
-  </article>
-  <hr>
-  
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/02/08/looking-at-the-past/">Looking at the past</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-02-08T09:01:23-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> February 8, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-        <li><a class='category' href='/blog/categories/frontend/'>frontend</a></li>
-      
-    
-    </ul>
-  </span>
-
-    
-      <a class='comments'
-         href="/blog/2015/02/08/looking-at-the-past/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-
-
-<div class="entry-content clearfix">
-  <p>Ever since the launch of Home Assistant you have been able to track the state of your house. But the view has always been limited to what the current state is. Not what it was. Today we are going to change that by introducing two brand new components:</p>
-
-<ul>
-<li>Recorder component that will record every event to a SQLite database</li>
-<li>History component that will query and aggregate the recorded events</li>
-</ul>
-
-
-<p>By adding this view into the past, we are adding an extra dimension into the state of your house. This brings great new possibilities for future features. The focus of todays release is on getting the recording component to you to start recording and getting some data. To show what is being recorded a view has been added that shows the last 24 hours of your house. Expect more extensive tools to explore your history in the future.</p>
-
-<p>Adding history to the UI was a challenge on itself because the old UI did not support easy navigation. So to add to the awesomeness of this release, Home Assistant also got a face lift.</p>
-
-<p>The history component will be enabled for new users by default. For current users, run <code>scripts/update</code> to upgrade to the latest version and add <code>[history]</code> to your <code>home-assistant.conf</code> file.</p>
-
-<p class='img'>
-  <a href='/images/screenshots/component_history_24h.png'>
-    <img src='/images/screenshots/component_history_24h.png' />
-  </a>
-</p>
-
-
-
-
-<p class='note'>
-Events are saved in a local database. Google Graphs is used to draw the graph. Drawing is happening 100% in your browser - no data is transfered to anyone at any time.
-</p>
-
-
-
-
-
-  <a class="btn pull-right" href="/blog/2015/02/08/looking-at-the-past/#read-more">Read on &rarr;</a>
 </div>
 
   </article>

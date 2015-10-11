@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Plex - Home Assistant</title>
+    <title>Telegram notification support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate Plex into Home Assistant.">
+    <meta name="description" content="Instructions how to add Telegram notifications to Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/media_player.plex.html">
+    <link rel="canonical" href="https://home-assistant.io/components/notify.telegram.html">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Plex">
+    <meta property="og:title" content="Telegram notification support">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/media_player.plex.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/notify.telegram.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to integrate Plex into Home Assistant.">
+    <meta property="og:description" content="Instructions how to add Telegram notifications to Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -101,16 +101,37 @@
   
   <header>
     <h1 class="title indent">
-      Plex
+      Telegram Notification Support
     </h1>
   </header>
   <hr class="divider">
   
 
-  <p><img src='/images/supported_brands/plex.png' class='brand pull-right' />
-The Plex platform allows you to connect a <a href="https://plex.tv">Plex Media Server</a> to Home Assistant. It will allow you to control media playback and see the current playing item.</p>
+  <p><img src='/images/supported_brands/telegram.png' class='brand pull-right' />
+The telegram platform uses <a href="https://web.telegram.org">Telegram</a> to delivery notifications from Home Assistant to your Android device, your Windows phone, or your iOS device.</p>
 
-<p>To add Plex to your installation, add the following to your <code>configuration.yaml</code> file:</p>
+<p>The requirement are:</p>
+
+<ul>
+<li>You need a <a href="https://core.telegram.org/bots">Telegram bot</a>. Please follow those <a href="https://core.telegram.org/bots#botfather">instructions</a> to create one and get the token. Keep in mind that bots are not allowed to contact users. You need to make the first contactwith your user.</li>
+<li>The chat ID of an user</li>
+</ul>
+
+
+<p>An easy way to get your chat ID is described below:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">telegram</span>
+</span><span class='line'><span class="n">bot</span> <span class="o">=</span> <span class="n">telegram</span><span class="o">.</span><span class="n">Bot</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s">&#39;YOUR_API_TOKEN&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">chat_id</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">getUpdates</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">chat_id</span>
+</span><span class='line'><span class="k">print</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To enable Telegram notifications in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -118,23 +139,29 @@ The Plex platform allows you to connect a <a href="https://plex.tv">Plex Media S
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">media_player</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">plex</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">plex_server</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">user</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
+</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">NOTIFIER_NAME</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">telegram</span>
+</span><span class='line'>  <span class="c1"># Get those by creating a new bot on https://core.telegram.org/bots</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">chat_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_CHAT_ID</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
 <p>Configuration variables:</p>
 
 <ul>
-<li><strong>name</strong> <em>Required</em>: The name of the backend device (Under Plex Media Server > settings > server)</li>
-<li><strong>user</strong> <em>Required</em>: The username for your Pley server.</li>
-<li><strong>password</strong> <em>Required</em>: The password for your Plex server.</li>
+<li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created.
+The default value is <code>notify</code>. The notifier will bind to the service
+<code>notify.NOTIFIER_NAME</code>.</li>
+<li><strong>api_key</strong> (<em>Required</em>): The API token of your bot.</li>
+<li><strong>chat_id</strong> (<em>Required</em>: The chat ID of your user.</li>
 </ul>
 
+
+<p>To use notifications, please see the <a href="/components/automation.html">getting started with automation page</a>.</p>
 
 
 </article>

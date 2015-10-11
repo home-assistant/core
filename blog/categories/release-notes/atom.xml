@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-08T19:19:50-07:00</updated>
+  <updated>2015-10-11T11:39:41-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -14,9 +14,42 @@
 
   
   <entry>
+    <title type="html"><![CDATA[0.7.5: Blinkstick, SNMP, Telegram]]></title>
+    <link href="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/"/>
+    <updated>2015-10-11T10:10:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support</id>
+    <content type="html"><![CDATA[<p>We discovered two issues annoying enough to warrent the release of 0.7.5:</p>
+
+<ul>
+<li>Home Assistant package did not include the CloudMQTT certificate.</li>
+<li>A bug in the core caused issues when some platforms are loaded twice.</li>
+</ul>
+
+
+<p>This release also includes some new platforms (because they keep coming!):</p>
+
+<p><img src='https://home-assistant.io/images/supported_brands/blinkstick.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<img src='https://home-assistant.io/images/supported_brands/rfxtrx.png' style='border:none; box-shadow: none; float: right; clear: right;' height='50' />
+<img src='https://home-assistant.io/images/supported_brands/telegram.png' style='border:none; box-shadow: none; float: right; clear: right;' height='50' /></p>
+
+<ul>
+<li>Light: <a href="/components/light.blinksticklight.html">blinkstick platform</a> added (<a href="https://github.com/alanbowman">@alanbowman</a>)</li>
+<li>Device Tracker: <a href="/components/device_tracker.snmp.html">SNMP platform</a> added (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+<li>Light: <a href="/components/light.rfxtrx.html">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
+<li>Switch: <a href="/components/switch.rfxtrx.html">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
+<li>Notify: <a href="/components/notify.telegram.html">telegram platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+</ul>
+
+
+<p>Also, the media player was extended by <a href="https://github.com/maddox">@maddox</a> to support the play media command.
+This has been implemented for the <a href="/components/media_player.itunes.html">iTunes platform</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Home Assistant goes geo with OwnTracks]]></title>
     <link href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"/>
-    <updated>2015-10-05T07:49:00-07:00</updated>
+    <updated>2015-10-05T21:49:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks</id>
     <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we&rsquo;re very
 glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map.
@@ -61,7 +94,7 @@ short summary of highlights:</p>
   <entry>
     <title type="html"><![CDATA[Alarms, Sonos and iTunes now supported]]></title>
     <link href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"/>
-    <updated>2015-09-19T07:47:00-07:00</updated>
+    <updated>2015-09-19T21:47:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support</id>
     <content type="html"><![CDATA[<p>It&rsquo;s like someone opened a can of rock solid developers and emptied it above our
 <a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with
@@ -353,113 +386,6 @@ verisure:
   hygrometers: 0
   smartplugs: 1
   thermometers: 0
-</code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported]]></title>
-    <link href="https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/"/>
-    <updated>2015-08-09T18:01:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support</id>
-    <content type="html"><![CDATA[<p>It&rsquo;s time for the August release and there is some serious good stuff this time. The core of Home Assistant has gone some serious clean up and a bump in test coverage thanks to <a href="https://github.com/balloob">@balloob</a>. If you&rsquo;re a developer, make sure you read up on <a href="https://github.com/balloob/home-assistant/pull/251">the deprecation notices</a>. <a href="https://github.com/fabaff">@fabaff</a> did another great round of documentating all the various components.</p>
-
-<p><strong>MQTT Support</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='50' />
-The big new addition in this release is the support for the MQTT protocol by <a href="https://github.com/fabaff">@fabaff</a> with some help from <a href="https://github.com/balloob">@balloob</a>. It will now be possible to integrate any IoT device that talks via MQTT. For the initial release we support connecting Home Assistant to a broker (no TLS yet). Components can now subscribe and publish to MQTT topics (<a href="https://github.com/balloob/home-assistant/blob/dev/config/custom_components/mqtt_example.py">see the example</a>) and also support for the automation component <a href="/components/automation.html#mqtt-based-automation">has been added</a>. For more information, see <a href="/components/mqtt.html">the MQTT component page</a>.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-mqtt:
-  broker: IP_ADDRESS_BROKER
-  # All the other options are optional:
-  port: 1883
-  keepalive: 60
-  qos: 0
-  username: your_username
-  password: your_secret_password
-</code></pre>
-
-<!--more-->
-
-
-<p><strong>Raspberry PI GPIO Support</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/raspberry-pi.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/gbarba">@gbarba</a> has contributed support to use the general purpose input and output pins on a Raspberry PI as switches inside Home Assistant.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-switch:
-  platform: rpi_gpio
-  ports:
-    11: Fan Office
-    12: Light Desk
-</code></pre>
-
-<p><strong>ASUSWRT based routers</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/asus.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/persandstrom">@persandstrom</a> has contributed support to do prescence detection using ASUSWRT based routers.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-device_tracker:
-  platform: asuswrt
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-</code></pre>
-
-<p><strong>Logitech Squeezebox media player support</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/logitech.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/persandstrom">@persandstrom</a> also contributed support for the Logitech Squeezebox media player. This allows you to control your Logitech Squeezebox from Home Assistant.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-media_player:
-  platform: squeezebox
-  host: 192.168.1.21
-  port: 9090
-  username: user
-  password: password
-</code></pre>
-
-<p><strong>Slack notification support</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/slack.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/jamespcole">@jamespcole</a> has contributed a Slack platform for the notification platform. This allows you to deliver messages to any channel.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-notify:
-  platform: slack
-  api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-  default_channel: '#general'
-</code></pre>
-
-<p><strong>Edimax Smart Switches support</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/edimax.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/rkabadi">@rkabadi</a> has contributed support for integrating Edimax Smart Switches into Home Assistant.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-switch:
-  platform: edimax
-  host: 192.168.1.32
-  username: YOUR_USERNAME
-  password: YOUR_PASSWORD
-  name: Edimax Smart Plug
-</code></pre>
-
-<p><strong>RFXtrx sensor support</strong><br>
-<a href="https://github.com/danielhiversen">@danielhiversen</a> has contributed support for RFXtrx sensors. It supports sensors that communicate in the frequency range of 433.92 MHz.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  - platform: rfxtrx
-    device: PATH_TO_DEVICE
-</code></pre>
-
-<p>The path to your device, e.g. <code>/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0</code></p>
-
-<p><strong>TEMPer temperature sensor support</strong><br>
-Support for Temper temperature sensors has been contributed by <a href="https://github.com/rkabadi">@rkabadi</a>.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: temper
 </code></pre>
 ]]></content>
   </entry>
