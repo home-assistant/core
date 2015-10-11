@@ -9,21 +9,21 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Home Assistant goes geo with OwnTracks - Home Assistant</title>
+    <title>Category: esp8266 - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Home Assistant 0.7.4 has been released with support for OwnTracks and geofencing.">
+    <meta name="description" content="Category: esp8266">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks">
+    <link rel="canonical" href="https://home-assistant.io/blog/categories/esp8266">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Home Assistant goes geo with OwnTracks">
+    <meta property="og:title" content="Category: esp8266">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/">
-    <meta property="og:type" content="article">
-    <meta property="og:description" content="Home Assistant 0.7.4 has been released with support for OwnTracks and geofencing.">
-    <meta property="og:image" content="https://home-assistant.io/images/screenshots/map.png">
+    <meta property="og:url" content="https://home-assistant.io/blog/categories/esp8266/">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Category: esp8266">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
     <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
@@ -96,105 +96,67 @@
         <div class="grid__item two-thirds lap-one-whole palm-one-whole">
         
 
-          <article class="post">
+          <article class="page">
+
+  
   <header>
-  
-  <h1 class="title indent">Home Assistant goes geo with OwnTracks</h1>
+    <h1 class="title indent">
+      Category: Esp8266
+    </h1>
+  </header>
+  <hr class="divider">
   
 
+  <div id="archive-list">
   
-  <div class="meta clearfix">
+  
+  
     
-
-
-
-
-
-
-
-
+    <h2>2015</h2>
   
+    <article>
+      
 
+<div class="grid">
 
-<time datetime="2015-10-05T21:49:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 5, 2015</time>
+  <div class="grid__item one-fifth palm-one-whole">
+    <time datetime="2015-10-11T12:10:00-07:00" pubdate>
+      <span class='month'>Oct</span> <span class='day'>11</span>
+    </time>
+  </div>
+  <div class="grid__item four-fifths palm-one-whole">
+    <h1 class="gamma"><a href="/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/">Report the temperature with ESP8266 to MQTT</a></h1>
     
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    
+    <footer class="meta">
+      
 
   <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
       
-        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+        <li><a class='category' href='/blog/categories/esp8266/'>esp8266</a></li>
+      
+        <li><a class='category' href='/blog/categories/how-to/'>how-to</a></li>
+      
+        <li><a class='category' href='/blog/categories/mqtt/'>mqtt</a></li>
       
     
     </ul>
   </span>
 
+    </footer>
     
-      <a class='comments'
-         href="#disqus_thread"
-         >Comments</a>
-    
+    <hr class="divider">
   </div>
+
+</div>
+    </article>
   
-</header>
-
-
-
-
-  <p>A few weeks have past and it is time again for another release: version 0.7.4. This time we&rsquo;re very
-glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map.
-The geo support consists of three different parts:</p>
-
-<ul>
-<li><a href="/components/device_tracker.owntracks.html">OwnTracks platform for the device tracker</a> to get locations for devices</li>
-<li>Brand new <a href="/components/zone.html">zone component</a> to define zones to identify locations and <a href="/components/automation.html#zone-trigger">trigger automation</a></li>
-<li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
-</ul>
-
-
-<p>We have added a new <a href="/getting-started/presence-detection.html">getting started section</a> to get up and running.</p>
-
-<p class='img'>
-<img src='/images/screenshots/map.png' />
-Map in Home Assistant showing two people and three zones (home, school, work)
-</p>
-
-
-<p>Ofcourse more things happened in the last three weeks. I&rsquo;m moving away from my usual long post to a
-short summary of highlights:</p>
-
-<p><a href='/components/media_player.plex.html'>
-<img src='/images/supported_brands/plex.png' style='border:none; box-shadow: none; float: right;' height='50' />
-</a></p>
-
-<ul>
-<li>Sensor: <a href="/components/sensor.rest.html">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
-<li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt.html">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-<li>Media Player: <a href="/components/media_player.plex.html">Plex platform</a> added (<a href="https://github.com/miniconfig,%20[@adrienbrault](https://github.com/adrienbrault">@miniconfig</a>)</li>
-<li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Light: <a href="/components/light.limitlessled.html">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
-<li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
-<li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
-</ul>
-
+</div>
 
 
 </article>
-
- 
-<section id="disqus">
-  <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
-</section>
 
 
         </div>
@@ -211,15 +173,15 @@ short summary of highlights:</p>
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"
-     data-counturl="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/categories/esp8266/index.html"
+     data-counturl="https://home-assistant.io/blog/categories/esp8266/index.html" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"
+         data-href="https://home-assistant.io/blog/categories/esp8266/index.html"
          data-layout="button_count">
     </div>
   
@@ -262,6 +224,10 @@ short summary of highlights:</p>
         </li>
       
     
+      
+        <li class="post">
+          <a href="/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/">Home Assistant goes geo with OwnTracks</a>
+        </li>
       
     
       
@@ -322,10 +288,7 @@ short summary of highlights:</p>
   var disqus_shortname = 'home-assistant';
   
     
-    // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/';
-    var disqus_script = 'embed.js';
+    var disqus_script = 'count.js';
   
   (function () {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

@@ -22,7 +22,7 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/posts/2/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported July 11, 2015 Paulus Schoutsen five minutes reading time release-notes Comments Another month has passed and some great new &hellip;">
+    <meta property="og:description" content="MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported August 9, 2015 Paulus Schoutsen four minutes reading time release-notes Comments It&rsquo;s time for the August release and &hellip;">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -97,6 +97,98 @@
         
 
             
+  
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/">MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-08-09T18:01:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 9, 2015</time>
+    
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+
+    <span><i class='icon-time'></i> four minutes reading time</span>
+    
+
+  <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+
+    
+      <a class='comments'
+         href="/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+
+
+<div class="entry-content clearfix">
+  <p>It&rsquo;s time for the August release and there is some serious good stuff this time. The core of Home Assistant has gone some serious clean up and a bump in test coverage thanks to <a href="https://github.com/balloob">@balloob</a>. If you&rsquo;re a developer, make sure you read up on <a href="https://github.com/balloob/home-assistant/pull/251">the deprecation notices</a>. <a href="https://github.com/fabaff">@fabaff</a> did another great round of documentating all the various components.</p>
+
+<p><strong>MQTT Support</strong><br>
+<img src='/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='50' />
+The big new addition in this release is the support for the MQTT protocol by <a href="https://github.com/fabaff">@fabaff</a> with some help from <a href="https://github.com/balloob">@balloob</a>. It will now be possible to integrate any IoT device that talks via MQTT. For the initial release we support connecting Home Assistant to a broker (no TLS yet). Components can now subscribe and publish to MQTT topics (<a href="https://github.com/balloob/home-assistant/blob/dev/config/custom_components/mqtt_example.py">see the example</a>) and also support for the automation component <a href="/components/automation.html#mqtt-based-automation">has been added</a>. For more information, see <a href="/components/mqtt.html">the MQTT component page</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
+</span><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">IP_ADDRESS_BROKER</span>
+</span><span class='line'>  <span class="c1"># All the other options are optional:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1883</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">keepalive</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">60</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_username</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_secret_password</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+
+  <a class="btn pull-right" href="/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/#read-more">Read on &rarr;</a>
+</div>
+
+  </article>
+  <hr>
   
   
   <article class="listing">
@@ -904,78 +996,6 @@ YAML allows the use of lists, which should make the configuration file a bit mor
 
 <p>Users of Home Assistant should migrate as the old configuration format is deprecated.</p>
 
-
-  </article>
-  <hr>
-  
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/02/24/streaming-updates/">Streaming updates</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-02-24T22:41:27-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> February 24, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/frontend/'>frontend</a></li>
-      
-    
-    </ul>
-  </span>
-
-    
-      <a class='comments'
-         href="/blog/2015/02/24/streaming-updates/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-
-
-<div class="entry-content clearfix">
-  <p>Home Assistant has learned a new trick to get the latest information from the server: streaming updates. No longer will the frontend poll every 30 seconds for updates but instead it will keep a connection open and get the latest changes pushed as soon as they happen.</p>
-
-<p>A new toggle has been added ot the sidebar to turn streaming updates on and off. This preference will be saved on a per-browser basis using local storage. The toggle will also indicate when there is an error setting up a stream after which it will fall back to use polling.</p>
-
-<p class='img'><img src='/images/screenshots/streaming-updates.png' /></p>
-
-
-
-
-
-  <a class="btn pull-right" href="/blog/2015/02/24/streaming-updates/#read-more">Read on &rarr;</a>
-</div>
 
   </article>
   <hr>
