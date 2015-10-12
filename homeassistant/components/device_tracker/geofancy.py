@@ -9,12 +9,13 @@ device_tracker:
 """
 
 from homeassistant.const import (
-    URL_API_GEOFANCY_ENDPOINT,
     HTTP_UNPROCESSABLE_ENTITY, HTTP_INTERNAL_SERVER_ERROR)
 
 DEPENDENCIES = ['http']
 
 _SEE = 0
+
+URL_API_GEOFANCY_ENDPOINT = "/api/geofancy"
 
 
 def setup_scanner(hass, config, see):
@@ -66,12 +67,6 @@ def _handle_get_api_geofancy(handler, path_match, data):
     device_uuid = data['device']
     device_entity_id = device_uuid.replace('-', '')
 
-    kwargs = {
-        'dev_id': device_entity_id,
-        'gps': gps_coords,
-        'location_name': data['id']
-    }
-
-    _SEE(**kwargs)
+    _SEE(dev_id=device_entity_id, gps=gps_coords, location_name=data['id'])
 
     handler.write_json_message("Geofancy message processed")
