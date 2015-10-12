@@ -233,10 +233,21 @@ class Throttle(object):
         self.limit_no_throttle = limit_no_throttle
 
     def __call__(self, method):
-        lock = threading.Lock()
-
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
+
+        # Different methods that can be passed in:
+        #  - a function
+        #  - an unbound function on a class
+        #  - a method (bound function on a class)
+
+        # We want to be able to differentiate between function and unbound
+        # methods (which are considered functions).
+        # All methods have the classname in their qualname seperated by a '.'
+        # Functions have a '.' in their qualname if defined inline, but will
+        # be prefixed by '.<locals>.' so we strip that out.
+        is_func = (not hasattr(method, '__self__') and
+                   '.' not in method.__qualname__.split('.<locals>.')[-1])
 
         @wraps(method)
         def wrapper(*args, **kwargs):
@@ -244,24 +255,33 @@ class Throttle(object):
             Wrapper that allows wrapped to be called only once per min_time.
             If we cannot acquire the lock, it is running so return None.
             """
-            if not lock.acquire(False):
+            # pylint: disable=protected-access
+            if hasattr(method, '__self__'):
+                host = method.__self__
+            elif is_func:
+                host = wrapper
+            else:
+                host = args[0] if args else wrapper
+
+            if not hasattr(host, '_throttle_lock'):
+                host._throttle_lock = threading.Lock()
+
+            if not host._throttle_lock.acquire(False):
                 return None
+
+            last_call = getattr(host, '_throttle_last_call', None)
+            # Check if method is never called or no_throttle is given
+            force = not last_call or kwargs.pop('no_throttle', False)
+
             try:
-                last_call = wrapper.last_call
-
-                # Check if method is never called or no_throttle is given
-                force = not last_call or kwargs.pop('no_throttle', False)
-
                 if force or utcnow() - last_call > self.min_time:
                     result = method(*args, **kwargs)
-                    wrapper.last_call = utcnow()
+                    host._throttle_last_call = utcnow()
                     return result
                 else:
                     return None
             finally:
-                lock.release()
-
-        wrapper.last_call = None
+                host._throttle_lock.release()
 
         return wrapper
 

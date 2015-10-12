@@ -90,6 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CastDevice(MediaPlayerDevice):
     """ Represents a Cast device on the network. """
 
+    # pylint: disable=abstract-method
     # pylint: disable=too-many-public-methods
 
     def __init__(self, host):

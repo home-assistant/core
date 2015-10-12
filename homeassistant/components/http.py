@@ -232,7 +232,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, fmt, *arguments):
         """ Redirect built-in log to HA logging """
-        _LOGGER.info(fmt, *arguments)
+        if self.server.no_password_set:
+            _LOGGER.info(fmt, *arguments)
+        else:
+            _LOGGER.info(
+                fmt, *(arg.replace(self.server.api_password, '*******')
+                       if isinstance(arg, str) else arg for arg in arguments))
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """

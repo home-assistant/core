@@ -186,8 +186,8 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
         dict, {key: value or {} for key, value in config.items()})
 
     # Filter out the repeating and common config section [homeassistant]
-    components = (key for key in config.keys()
-                  if ' ' not in key and key != core.DOMAIN)
+    components = set(key.split(' ')[0] for key in config.keys()
+                     if key != core.DOMAIN)
 
     if not core_components.setup(hass, config):
         _LOGGER.error('Home Assistant core failed to initialize. '

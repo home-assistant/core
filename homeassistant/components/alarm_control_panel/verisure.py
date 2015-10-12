@@ -1,6 +1,6 @@
 """
 homeassistant.components.alarm_control_panel.verisure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Verisure alarm control panel.
 """
 import logging
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class VerisureAlarm(alarm.AlarmControlPanel):
-    """ represents a Verisure alarm status within home assistant. """
+    """ Represents a Verisure alarm status. """
 
     def __init__(self, alarm_status):
         self._id = alarm_status.id
@@ -51,8 +51,13 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         """ Returns the state of the device. """
         return self._state
 
+    @property
+    def code_format(self):
+        """ Four digit code required. """
+        return '^\\d{4}$'
+
     def update(self):
-        ''' update alarm status '''
+        """ Update alarm status """
         verisure.update()
 
         if verisure.STATUS[self._device][self._id].status == 'unarmed':
@@ -66,21 +71,21 @@ class VerisureAlarm(alarm.AlarmControlPanel):
                 'Unknown alarm state %s',
                 verisure.STATUS[self._device][self._id].status)
 
-    def alarm_disarm(self, code):
+    def alarm_disarm(self, code=None):
         """ Send disarm command. """
         verisure.MY_PAGES.set_alarm_status(
             code,
             verisure.MY_PAGES.ALARM_DISARMED)
         _LOGGER.warning('disarming')
 
-    def alarm_arm_home(self, code):
+    def alarm_arm_home(self, code=None):
         """ Send arm home command. """
         verisure.MY_PAGES.set_alarm_status(
             code,
             verisure.MY_PAGES.ALARM_ARMED_HOME)
         _LOGGER.warning('arming home')
 
-    def alarm_arm_away(self, code):
+    def alarm_arm_away(self, code=None):
         """ Send arm away command. """
         verisure.MY_PAGES.set_alarm_status(
             code,

@@ -10,7 +10,7 @@ import re
 
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_HOME, STATE_ON, STATE_OFF,
+    EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
 from homeassistant import util
 import homeassistant.util.dt as dt_util
@@ -162,10 +162,12 @@ def humanify(events):
 
                 to_state = State.from_dict(event.data.get('new_state'))
 
-                # if last_changed == last_updated only attributes have changed
-                # we do not report on that yet.
+                # if last_changed != last_updated only attributes have changed
+                # we do not report on that yet. Also filter auto groups.
                 if not to_state or \
-                   to_state.last_changed != to_state.last_updated:
+                   to_state.last_changed != to_state.last_updated or \
+                   to_state.domain == 'group' and \
+                   to_state.attributes.get('auto', False):
                     continue
 
                 domain = to_state.domain
@@ -218,10 +220,13 @@ def humanify(events):
 def _entry_message_from_state(domain, state):
     """ Convert a state to a message for the logbook. """
     # We pass domain in so we don't have to split entity_id again
+    # pylint: disable=too-many-return-statements
 
     if domain == 'device_tracker':
-        return '{} home'.format(
-            'arrived' if state.state == STATE_HOME else 'left')
+        if state.state == STATE_NOT_HOME:
+            return 'is away'
+        else:
+            return 'is at {}'.format(state.state)
 
     elif domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
