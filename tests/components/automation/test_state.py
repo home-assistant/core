@@ -8,6 +8,7 @@ import unittest
 
 import homeassistant.core as ha
 import homeassistant.components.automation as automation
+import homeassistant.components.automation.state as state
 
 
 class TestAutomationState(unittest.TestCase):
@@ -334,3 +335,19 @@ class TestAutomationState(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
+
+    def test_if_fails_setup_if_to_boolean_value(self):
+        self.assertFalse(state.trigger(
+            self.hass, {
+                'platform': 'state',
+                'entity_id': 'test.entity',
+                'to': True,
+            }, lambda x: x))
+
+    def test_if_fails_setup_if_from_boolean_value(self):
+        self.assertFalse(state.trigger(
+            self.hass, {
+                'platform': 'state',
+                'entity_id': 'test.entity',
+                'from': True,
+            }, lambda x: x))

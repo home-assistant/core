@@ -6,10 +6,11 @@ Support for Tellstick lights.
 import logging
 # pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
+                                 ATTR_FRIENDLY_NAME)
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
-REQUIREMENTS = ['tellcore-py==1.0.4']
+REQUIREMENTS = ['tellcore-py==1.1.2']
 
 
 # pylint: disable=unused-argument
@@ -23,12 +24,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             "Failed to import tellcore")
         return []
 
-    # pylint: disable=no-member
-    if telldus.TelldusCore.callback_dispatcher is None:
-        dispatcher = DirectCallbackDispatcher()
-        core = telldus.TelldusCore(callback_dispatcher=dispatcher)
-    else:
-        core = telldus.TelldusCore()
+    core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
 
     switches_and_lights = core.devices()
     lights = []
@@ -41,9 +37,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         """ Called from the TelldusCore library to update one device """
         for light_device in lights:
             if light_device.tellstick_device.id == id_:
+                # Execute the update in another thread
                 light_device.update_ha_state(True)
+                break
 
-    core.register_device_event(_device_event_callback)
+    callback_id = core.register_device_event(_device_event_callback)
+
+    def unload_telldus_lib(event):
+        """ Un-register the callback bindings """
+        if callback_id is not None:
+            core.unregister_callback(callback_id)
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, unload_telldus_lib)
 
     add_devices_callback(lights)
 

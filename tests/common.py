@@ -124,14 +124,17 @@ def mock_http_component(hass):
     hass.config.components.append('http')
 
 
-def mock_mqtt_component(hass):
-    with mock.patch('homeassistant.components.mqtt.MQTT'):
-        mqtt.setup(hass, {
-            mqtt.DOMAIN: {
-                mqtt.CONF_BROKER: 'mock-broker',
-            }
-        })
-        hass.config.components.append(mqtt.DOMAIN)
+@mock.patch('homeassistant.components.mqtt.MQTT')
+@mock.patch('homeassistant.components.mqtt.MQTT.publish')
+def mock_mqtt_component(hass, mock_mqtt, mock_mqtt_publish):
+    mqtt.setup(hass, {
+        mqtt.DOMAIN: {
+            mqtt.CONF_BROKER: 'mock-broker',
+        }
+    })
+    hass.config.components.append(mqtt.DOMAIN)
+
+    return mock_mqtt_publish
 
 
 class MockHTTP(object):

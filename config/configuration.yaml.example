@@ -1,7 +1,9 @@
 homeassistant:
   # Omitted values in this section will be auto detected using freegeoip.net
 
-  # Location required to calculate the time the sun rises and sets
+  # Location required to calculate the time the sun rises and sets.  
+  # Cooridinates are also used for location for weather related components. 
+  # Google Maps can be used to determine more precise GPS cooridinates.
   latitude: 32.87336
   longitude: 117.22743
 
@@ -68,11 +70,18 @@ device_sun_light_trigger:
 
 # A comma separated list of states that have to be tracked as a single group
 # Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
+# You can also have groups within groups.
 group:
+  Home:
+    - group.living_room
+    - group.kitchen
   living_room:
     - light.Bowl
     - light.Ceiling
     - light.TV_back_light
+  kitchen:
+    - light.fan_bulb_1
+    - light.fan_bulb_2
   children:
    - device_tracker.child_1
    - device_tracker.child_2
@@ -94,28 +103,39 @@ browser:
 keyboard:
 
 automation:
-  platform: state
-  alias: Sun starts shining
+- alias: 'Rule 1 Light on in the evening'
+  trigger:
+    - platform: sun
+      event: sunset
+      offset: "-01:00:00"
+    - platform: state
+      entity_id: group.all_devices
+      state: home
+  condition:
+    - platform: state
+      entity_id: group.all_devices
+      state: home
+    - platform: time
+      after: "16:00:00"
+      before: "23:00:00"
+  action:
+    service: homeassistant.turn_on
+    entity_id: group.living_room
 
-  state_entity_id: sun.sun
-  # Next two are optional, omit to match all
-  state_from: below_horizon
-  state_to: above_horizon
+- alias: 'Rule 2 - Away Mode'
 
-  execute_service: light.turn_off
-  service_entity_id: group.living_room
+  trigger:
+   - platform: state
+     entity_id: group.all_devices
+     state: 'not_home'
 
-automation 2:
-  platform: time
-  alias: Beer o Clock
+  condition: use_trigger_values
+  action:
+     service: light.turn_off
+     entity_id: group.all_lights
 
-  time_hours: 16
-  time_minutes: 0
-  time_seconds: 0
-
-  execute_service: notify.notify
-  service_data:
-    message: It's 4, time for beer!
+# Sensors need to be added into the configuration.yaml as sensor:, sensor 2:, sensor 3:, etc. 
+# Each sensor label should be unique or your sensors might not load correctly.
 
 sensor:
   platform: systemmonitor
@@ -134,6 +154,23 @@ sensor:
     - type: 'processor_use'
     - type: 'process'
       arg: 'octave-cli'
+
+sensor 2:
+  platform: forecast
+  api_key: <register on Forecast.io for your PRIVATE API>
+  monitored_conditions:
+    - summary
+    - precip_type
+    - precip_intensity
+    - temperature
+    - dew_point
+    - wind_speed
+    - wind_bearing
+    - cloud_cover
+    - humidity
+    - pressure
+    - visibility
+    - ozone
 
 script:
   # Turns on the bedroom lights and then the living room lights 1 minute later
