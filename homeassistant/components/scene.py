@@ -36,6 +36,16 @@ CONF_ENTITIES = "entities"
 SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'fuzzy_match'])
 
 
+def activate(hass, entity_id=None):
+    """ Activate a scene. """
+    data = {}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
+
 def setup(hass, config):
     """ Sets up scenes. """
 
@@ -43,8 +53,9 @@ def setup(hass, config):
 
     scene_configs = config.get(DOMAIN)
 
-    if not isinstance(scene_configs, list):
-        logger.error('Scene config should be a list of scenes')
+    if not isinstance(scene_configs, list) or \
+       any(not isinstance(item, dict) for item in scene_configs):
+        logger.error('Scene config should be a list of dictionaries')
         return False
 
     component = EntityComponent(logger, DOMAIN, hass)
