@@ -3,9 +3,11 @@ homeassistant.components.switch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various switches that can be controlled remotely.
 """
-import logging
 from datetime import timedelta
+import logging
+import os
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 
@@ -83,8 +85,12 @@ def setup(hass, config):
             if switch.should_poll:
                 switch.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_switch_service)
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_switch_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_switch_service,
+                           descriptions.get(SERVICE_TURN_OFF))
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_switch_service,
+                           descriptions.get(SERVICE_TURN_ON))
 
     return True
 

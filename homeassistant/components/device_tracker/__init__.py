@@ -30,7 +30,7 @@ import os
 import threading
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.components import discovery, group
+from homeassistant.components import discovery, group, zone
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
@@ -40,10 +40,11 @@ import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE, DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
+    ATTR_ENTITY_PICTURE, ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
+    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
 DOMAIN = "device_tracker"
-DEPENDENCIES = []
+DEPENDENCIES = ['zone']
 
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
@@ -70,14 +71,11 @@ DEFAULT_HOME_RANGE = 100
 
 SERVICE_SEE = 'see'
 
-ATTR_LATITUDE = 'latitude'
-ATTR_LONGITUDE = 'longitude'
 ATTR_MAC = 'mac'
 ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
-ATTR_GPS_ACCURACY = 'gps_accuracy'
 ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
@@ -116,6 +114,8 @@ def setup(hass, config):
         os.remove(csv_path)
 
     conf = config.get(DOMAIN, {})
+    if isinstance(conf, list):
+        conf = conf[0]
     consider_home = timedelta(
         seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
                              DEFAULT_CONSIDER_HOME))
@@ -175,7 +175,10 @@ def setup(hass, config):
                  ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY)}
         tracker.see(**args)
 
-    hass.services.register(DOMAIN, SERVICE_SEE, see_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_SEE, see_service,
+                           descriptions.get(SERVICE_SEE))
 
     return True
 
@@ -338,7 +341,7 @@ class Device(Entity):
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
-        self.gps_accuracy = gps_accuracy
+        self.gps_accuracy = gps_accuracy or 0
         self.battery = battery
         if gps is None:
             self.gps = None
@@ -363,7 +366,15 @@ class Device(Entity):
         elif self.location_name:
             self._state = self.location_name
         elif self.gps is not None:
-            self._state = STATE_HOME if self.gps_home else STATE_NOT_HOME
+            zone_state = zone.active_zone(self.hass, self.gps[0], self.gps[1],
+                                          self.gps_accuracy)
+            if zone_state is None:
+                self._state = STATE_NOT_HOME
+            elif zone_state.entity_id == zone.ENTITY_ID_HOME:
+                self._state = STATE_HOME
+            else:
+                self._state = zone_state.name
+
         elif self.stale():
             self._state = STATE_NOT_HOME
             self.last_update_home = False

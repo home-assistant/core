@@ -1,5 +1,8 @@
 sudo: false
 language: python
+cache:
+  directories:
+    - $HOME/virtualenv/python3.4.2/
 python:
   - "3.4"
 install:

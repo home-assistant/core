@@ -218,3 +218,27 @@ class TestUtil(unittest.TestCase):
 
         self.assertEqual(3, len(calls1))
         self.assertEqual(2, len(calls2))
+
+    def test_throttle_per_instance(self):
+        """ Test that the throttle method is done per instance of a class. """
+
+        class Tester(object):
+            @util.Throttle(timedelta(seconds=1))
+            def hello(self):
+                return True
+
+        self.assertTrue(Tester().hello())
+        self.assertTrue(Tester().hello())
+
+    def test_throttle_on_method(self):
+        """ Test that throttle works when wrapping a method. """
+
+        class Tester(object):
+            def hello(self):
+                return True
+
+        tester = Tester()
+        throttled = util.Throttle(timedelta(seconds=1))(tester.hello)
+
+        self.assertTrue(throttled())
+        self.assertIsNone(throttled())

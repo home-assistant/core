@@ -8,9 +8,8 @@ Tests component helpers.
 import unittest
 
 import homeassistant.core as ha
-import homeassistant.loader as loader
+from homeassistant import loader, helpers
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
-from homeassistant.helpers import extract_entity_ids
 
 from tests.common import get_test_home_assistant
 
@@ -39,10 +38,22 @@ class TestComponentsCore(unittest.TestCase):
                               {ATTR_ENTITY_ID: 'light.Bowl'})
 
         self.assertEqual(['light.bowl'],
-                         extract_entity_ids(self.hass, call))
+                         helpers.extract_entity_ids(self.hass, call))
 
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'group.test'})
 
         self.assertEqual(['light.ceiling', 'light.kitchen'],
-                         extract_entity_ids(self.hass, call))
+                         helpers.extract_entity_ids(self.hass, call))
+
+    def test_extract_domain_configs(self):
+        config = {
+            'zone': None,
+            'zoner': None,
+            'zone ': None,
+            'zone Hallo': None,
+            'zone 100': None,
+        }
+
+        self.assertEqual(set(['zone', 'zone Hallo', 'zone 100']),
+                         set(helpers.extract_domain_configs(config, 'zone')))

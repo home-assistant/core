@@ -46,6 +46,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
+_MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 
 # pylint: disable=unused-argument
@@ -77,7 +78,7 @@ class DdWrtDeviceScanner(object):
 
         self.last_results = {}
 
-        self.mac2name = None
+        self.mac2name = {}
 
         # Test the router is accessible
         url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
@@ -98,30 +99,33 @@ class DdWrtDeviceScanner(object):
 
         with self.lock:
             # if not initialised and not already scanned and not found
-            if self.mac2name is None or device not in self.mac2name:
+            if device not in self.mac2name:
                 url = 'http://{}/Status_Lan.live.asp'.format(self.host)
                 data = self.get_ddwrt_data(url)
 
                 if not data:
-                    return
+                    return None
 
                 dhcp_leases = data.get('dhcp_leases', None)
-                if dhcp_leases:
-                    # remove leading and trailing single quotes
-                    cleaned_str = dhcp_leases.strip().strip('"')
-                    elements = cleaned_str.split('","')
-                    num_clients = int(len(elements)/5)
-                    self.mac2name = {}
-                    for idx in range(0, num_clients):
-                        # this is stupid but the data is a single array
-                        # every 5 elements represents one hosts, the MAC
-                        # is the third element and the name is the first
-                        mac_index = (idx * 5) + 2
-                        if mac_index < len(elements):
-                            mac = elements[mac_index]
-                            self.mac2name[mac] = elements[idx * 5]
 
-            return self.mac2name.get(device, None)
+                if not dhcp_leases:
+                    return None
+
+                # remove leading and trailing single quotes
+                cleaned_str = dhcp_leases.strip().strip('"')
+                elements = cleaned_str.split('","')
+                num_clients = int(len(elements)/5)
+                self.mac2name = {}
+                for idx in range(0, num_clients):
+                    # this is stupid but the data is a single array
+                    # every 5 elements represents one hosts, the MAC
+                    # is the third element and the name is the first
+                    mac_index = (idx * 5) + 2
+                    if mac_index < len(elements):
+                        mac = elements[mac_index]
+                        self.mac2name[mac] = elements[idx * 5]
+
+            return self.mac2name.get(device)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
@@ -141,29 +145,25 @@ class DdWrtDeviceScanner(object):
             if not data:
                 return False
 
-            if data:
-                self.last_results = []
-                active_clients = data.get('active_wireless', None)
-                if active_clients:
-                    # This is really lame, instead of using JSON the DD-WRT UI
-                    # uses its own data format for some reason and then
-                    # regex's out values so I guess I have to do the same,
-                    # LAME!!!
+            self.last_results = []
 
-                    # remove leading and trailing single quotes
-                    clean_str = active_clients.strip().strip("'")
-                    elements = clean_str.split("','")
+            active_clients = data.get('active_wireless', None)
+            if not active_clients:
+                return False
 
-                    num_clients = int(len(elements)/9)
-                    for idx in range(0, num_clients):
-                        # get every 9th element which is the MAC address
-                        index = idx * 9
-                        if index < len(elements):
-                            self.last_results.append(elements[index])
+            # This is really lame, instead of using JSON the DD-WRT UI
+            # uses its own data format for some reason and then
+            # regex's out values so I guess I have to do the same,
+            # LAME!!!
 
-                    return True
+            # remove leading and trailing single quotes
+            clean_str = active_clients.strip().strip("'")
+            elements = clean_str.split("','")
 
-            return False
+            self.last_results.extend(item for item in elements
+                                     if _MAC_REGEX.match(item))
+
+            return True
 
     def get_ddwrt_data(self, url):
         """ Retrieve data from DD-WRT and return parsed result. """
