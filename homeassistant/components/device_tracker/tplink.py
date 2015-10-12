@@ -82,9 +82,6 @@ class TplinkDeviceScanner(object):
         self.username = username
         self.password = password
 
-        self.stok = ''
-        self.sysauth = ''
-
         self.last_results = {}
         self.lock = threading.Lock()
         self.success_init = self._update_info()
@@ -162,7 +159,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
         with self.lock:
             _LOGGER.info("Loading wireless clients...")
 
-            url = 'http://{}/data/map_access_wireless_client_grid.json'\
+            url = 'http://{}/data/map_access_wireless_client_grid.json' \
                 .format(self.host)
             referer = 'http://{}'.format(self.host)
 
@@ -172,7 +169,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
             b64_encoded_username_password = base64.b64encode(
                 username_password.encode('ascii')
             ).decode('ascii')
-            cookie = 'Authorization=Basic {}'\
+            cookie = 'Authorization=Basic {}' \
                 .format(b64_encoded_username_password)
 
             response = requests.post(url, headers={'referer': referer,
@@ -189,16 +186,22 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
                 self.last_results = {
                     device['mac_addr'].replace('-', ':'): device['name']
                     for device in result
-                }
+                    }
                 return True
 
             return False
+
 
 class Tplink3DeviceScanner(TplinkDeviceScanner):
     """
     This class queries the Archer C9 router running version 150811 or higher
     of TP-Link firmware for connected devices.
     """
+
+    def __init__(self, config):
+        super(Tplink3DeviceScanner, self).__init__(config)
+        self.stok = ''
+        self.sysauth = ''
 
     def scan_devices(self):
         """
@@ -224,29 +227,29 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
 
         _LOGGER.info("Retrieving auth tokens...")
 
-        url = 'http://{}/cgi-bin/luci/;stok=/login?form=login'\
+        url = 'http://{}/cgi-bin/luci/;stok=/login?form=login' \
             .format(self.host)
         referer = 'http://{}/webpages/login.html'.format(self.host)
 
         # if possible implement rsa encryption of password here
 
-        response = requests.post(url, params={'operation': 'login',
-                                              'username': self.username,
-                                              'password': self.password},
-                                      headers={'referer': referer})
+        response = requests.post(url,
+                                 params={'operation': 'login',
+                                         'username': self.username,
+                                         'password': self.password},
+                                 headers={'referer': referer})
 
         try:
             self.stok = response.json().get('data').get('stok')
             _LOGGER.info(self.stok)
-            regex_result = re.search('sysauth=(.*);', response.headers['set-cookie'])
+            regex_result = re.search('sysauth=(.*);',
+                                     response.headers['set-cookie'])
             self.sysauth = regex_result.group(1)
             _LOGGER.info(self.sysauth)
             return True
-        except:
+        except ValueError:
             _LOGGER.error("Couldn't fetch auth tokens!")
             return False
-
-        return False
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
@@ -261,11 +264,14 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
 
             _LOGGER.info("Loading wireless clients...")
 
-            url = 'http://{}/cgi-bin/luci/;stok={}/admin/wireless?form=statistics'\
+            url = 'http://{}/cgi-bin/luci/;stok={}/admin/wireless?form=statistics' \
                 .format(self.host, self.stok)
             referer = 'http://{}/webpages/index.html'.format(self.host)
 
-            response = requests.post(url, params={'operation': 'load'}, headers={'referer': referer}, cookies={'sysauth': self.sysauth})
+            response = requests.post(url,
+                                     params={'operation': 'load'},
+                                     headers={'referer': referer},
+                                     cookies={'sysauth': self.sysauth})
 
             try:
                 json_response = response.json()
@@ -274,12 +280,14 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                     result = response.json().get('data')
                 else:
                     if json_response.get('errorcode') == 'timeout':
-                        _LOGGER.info("Token timed out. Relogging on next scan.")
+                        _LOGGER.info("Token timed out. "
+                                     "Relogging on next scan.")
                         self.stok = ''
                         self.sysauth = ''
                         return False
                     else:
-                        _LOGGER.error("An unknown error happened while fetching data.")
+                        _LOGGER.error("An unknown error happened "
+                                      "while fetching data.")
                         return False
             except ValueError:
                 _LOGGER.error("Router didn't respond with JSON. "
@@ -290,7 +298,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                 self.last_results = {
                     device['mac'].replace('-', ':'): device['mac']
                     for device in result
-                }
+                    }
                 return True
 
             return False
