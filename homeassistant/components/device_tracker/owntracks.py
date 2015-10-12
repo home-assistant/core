@@ -33,7 +33,7 @@ def setup_scanner(hass, config, see):
                 'Unable to parse payload as JSON: %s', payload)
             return
 
-        if data.get('_type') != 'location':
+        if not isinstance(data, dict) or data.get('_type') != 'location':
             return
 
         parts = topic.split('/')

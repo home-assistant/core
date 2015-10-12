@@ -446,9 +446,8 @@ class StateMachine(object):
 
         domain_filter = domain_filter.lower()
 
-        return [state.entity_id for key, state
-                in self._states.items()
-                if util.split_entity_id(key)[0] == domain_filter]
+        return [state.entity_id for state in self._states.values()
+                if state.domain == domain_filter]
 
     def all(self):
         """ Returns a list of all states. """
@@ -526,6 +525,28 @@ class StateMachine(object):
 
 
 # pylint: disable=too-few-public-methods
+class Service(object):
+    """ Represents a service. """
+
+    __slots__ = ['func', 'description', 'fields']
+
+    def __init__(self, func, description, fields):
+        self.func = func
+        self.description = description or ''
+        self.fields = fields or {}
+
+    def as_dict(self):
+        """ Return dictionary representation of this service. """
+        return {
+            'description': self.description,
+            'fields': self.fields,
+        }
+
+    def __call__(self, call):
+        self.func(call)
+
+
+# pylint: disable=too-few-public-methods
 class ServiceCall(object):
     """ Represents a call to a service. """
 
@@ -559,20 +580,29 @@ class ServiceRegistry(object):
     def services(self):
         """ Dict with per domain a list of available services. """
         with self._lock:
-            return {domain: list(self._services[domain].keys())
+            return {domain: {key: value.as_dict() for key, value
+                             in self._services[domain].items()}
                     for domain in self._services}
 
     def has_service(self, domain, service):
         """ Returns True if specified service exists. """
         return service in self._services.get(domain, [])
 
-    def register(self, domain, service, service_func):
-        """ Register a service. """
+    def register(self, domain, service, service_func, description=None):
+        """
+        Register a service.
+
+        Description is a dict containing key 'description' to describe
+        the service and a key 'fields' to describe the fields.
+        """
+        description = description or {}
+        service_obj = Service(service_func, description.get('description'),
+                              description.get('fields', {}))
         with self._lock:
             if domain in self._services:
-                self._services[domain][service] = service_func
+                self._services[domain][service] = service_obj
             else:
-                self._services[domain] = {service: service_func}
+                self._services[domain] = {service: service_obj}
 
             self._bus.fire(
                 EVENT_SERVICE_REGISTERED,

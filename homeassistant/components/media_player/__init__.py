@@ -5,8 +5,10 @@ homeassistant.components.media_player
 Component to interface with various media players.
 """
 import logging
+import os
 
 from homeassistant.components import discovery
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
@@ -29,6 +31,7 @@ DISCOVERY_PLATFORMS = {
 }
 
 SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
+SERVICE_PLAY_MEDIA = 'play_media'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -44,6 +47,8 @@ ATTR_MEDIA_TRACK = 'media_track'
 ATTR_MEDIA_SERIES_TITLE = 'media_series_title'
 ATTR_MEDIA_SEASON = 'media_season'
 ATTR_MEDIA_EPISODE = 'media_episode'
+ATTR_MEDIA_CHANNEL = 'media_channel'
+ATTR_MEDIA_PLAYLIST = 'media_playlist'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
@@ -51,6 +56,9 @@ ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
 MEDIA_TYPE_VIDEO = 'movie'
+MEDIA_TYPE_EPISODE = 'episode'
+MEDIA_TYPE_CHANNEL = 'channel'
+MEDIA_TYPE_PLAYLIST = 'playlist'
 
 SUPPORT_PAUSE = 1
 SUPPORT_SEEK = 2
@@ -61,6 +69,7 @@ SUPPORT_NEXT_TRACK = 32
 SUPPORT_YOUTUBE = 64
 SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
+SUPPORT_PLAY_MEDIA = 512
 
 YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
 
@@ -74,6 +83,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PAUSE: 'media_pause',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
+    SERVICE_PLAY_MEDIA: 'play_media',
 }
 
 ATTR_TO_PROPERTY = [
@@ -90,6 +100,8 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_PLAYLIST,
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
@@ -178,6 +190,16 @@ def media_previous_track(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
 
+def play_media(hass, media_type, media_id, entity_id=None):
+    """ Send the media player the command for playing media. """
+    data = {"media_type": media_type, "media_id": media_id}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
+
+
 def setup(hass, config):
     """ Track states and offer events for media_players. """
     component = EntityComponent(
@@ -185,6 +207,9 @@ def setup(hass, config):
         DISCOVERY_PLATFORMS)
 
     component.setup(config)
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     def media_player_service_handler(service):
         """ Maps services to methods on MediaPlayerDevice. """
@@ -199,7 +224,8 @@ def setup(hass, config):
                 player.update_ha_state(True)
 
     for service in SERVICE_TO_METHOD:
-        hass.services.register(DOMAIN, service, media_player_service_handler)
+        hass.services.register(DOMAIN, service, media_player_service_handler,
+                               descriptions.get(service))
 
     def volume_set_service(service):
         """ Set specified volume on the media player. """
@@ -216,7 +242,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service)
+    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service,
+                           descriptions.get(SERVICE_VOLUME_SET))
 
     def volume_mute_service(service):
         """ Mute (true) or unmute (false) the media player. """
@@ -233,7 +260,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service)
+    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service,
+                           descriptions.get(SERVICE_VOLUME_MUTE))
 
     def media_seek_service(service):
         """ Seek to a position. """
@@ -250,7 +278,8 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service)
+    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
+                           descriptions.get(SERVICE_MEDIA_SEEK))
 
     def play_youtube_video_service(service, media_id=None):
         """ Plays specified media_id on the media player. """
@@ -266,16 +295,40 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
+    def play_media_service(service):
+        """ Plays specified media_id on the media player. """
+        media_type = service.data.get('media_type')
+        media_id = service.data.get('media_id')
+
+        if media_type is None:
+            return
+
+        if media_id is None:
+            return
+
+        for player in component.extract_from_service(service):
+            player.play_media(media_type, media_id)
+
+            if player.should_poll:
+                player.update_ha_state(True)
+
     hass.services.register(
         DOMAIN, "start_fireplace",
-        lambda service: play_youtube_video_service(service, "eyU3bRy2x44"))
+        lambda service: play_youtube_video_service(service, "eyU3bRy2x44"),
+        descriptions.get('start_fireplace'))
 
     hass.services.register(
         DOMAIN, "start_epic_sax",
-        lambda service: play_youtube_video_service(service, "kxopViU98Xo"))
+        lambda service: play_youtube_video_service(service, "kxopViU98Xo"),
+        descriptions.get('start_epic_sax'))
 
     hass.services.register(
-        DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service)
+        DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service,
+        descriptions.get(SERVICE_YOUTUBE_VIDEO))
+
+    hass.services.register(
+        DOMAIN, SERVICE_PLAY_MEDIA, play_media_service,
+        descriptions.get(SERVICE_PLAY_MEDIA))
 
     return True
 
@@ -362,6 +415,16 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def media_channel(self):
+        """ Channel currently playing. """
+        return None
+
+    @property
+    def media_playlist(self):
+        """ Title of Playlist currently playing. """
+        return None
+
+    @property
     def app_id(self):
         """  ID of the current running app. """
         return None
@@ -421,6 +484,10 @@ class MediaPlayerDevice(Entity):
         """ Plays a YouTube media. """
         raise NotImplementedError()
 
+    def play_media(self, media_type, media_id):
+        """ Plays a piece of media. """
+        raise NotImplementedError()
+
     # No need to overwrite these.
     @property
     def support_pause(self):
@@ -456,6 +523,11 @@ class MediaPlayerDevice(Entity):
     def support_youtube(self):
         """ Boolean if YouTube is supported. """
         return bool(self.supported_media_commands & SUPPORT_YOUTUBE)
+
+    @property
+    def support_play_media(self):
+        """ Boolean if play media command supported. """
+        return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
 
     def volume_up(self):
         """ volume_up media player. """

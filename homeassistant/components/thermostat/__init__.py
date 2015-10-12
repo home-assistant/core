@@ -5,9 +5,11 @@ homeassistant.components.thermostat
 Provides functionality to interact with thermostats.
 """
 import logging
+import os
 
 from homeassistant.helpers.entity_component import EntityComponent
 
+from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
@@ -101,11 +103,16 @@ def setup(hass, config):
         for thermostat in target_thermostats:
             thermostat.update_ha_state(True)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service)
+        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service,
+        descriptions.get(SERVICE_SET_AWAY_MODE))
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service,
+        descriptions.get(SERVICE_SET_TEMPERATURE))
 
     return True
 
@@ -129,22 +136,16 @@ class ThermostatDevice(Entity):
     def state_attributes(self):
         """ Returns optional state attributes. """
 
-        thermostat_unit = self.unit_of_measurement
-        user_unit = self.hass.config.temperature_unit
-
         data = {
-            ATTR_CURRENT_TEMPERATURE: round(convert(
-                self.current_temperature, thermostat_unit, user_unit), 1),
-            ATTR_MIN_TEMP: round(convert(
-                self.min_temp, thermostat_unit, user_unit), 0),
-            ATTR_MAX_TEMP: round(convert(
-                self.max_temp, thermostat_unit, user_unit), 0),
-            ATTR_TEMPERATURE: round(convert(
-                self.target_temperature, thermostat_unit, user_unit), 0),
-            ATTR_TEMPERATURE_LOW: round(convert(
-                self.target_temperature_low, thermostat_unit, user_unit), 0),
-            ATTR_TEMPERATURE_HIGH: round(convert(
-                self.target_temperature_high, thermostat_unit, user_unit), 0),
+            ATTR_CURRENT_TEMPERATURE:
+            self._convert(self.current_temperature, 1),
+            ATTR_MIN_TEMP: self._convert(self.min_temp, 0),
+            ATTR_MAX_TEMP: self._convert(self.max_temp, 0),
+            ATTR_TEMPERATURE: self._convert(self.target_temperature, 0),
+            ATTR_TEMPERATURE_LOW:
+            self._convert(self.target_temperature_low, 0),
+            ATTR_TEMPERATURE_HIGH:
+            self._convert(self.target_temperature_high, 0),
         }
 
         operation = self.operation
@@ -221,3 +222,14 @@ class ThermostatDevice(Entity):
     def max_temp(self):
         """ Return maxmum temperature. """
         return convert(35, TEMP_CELCIUS, self.unit_of_measurement)
+
+    def _convert(self, temp, round_dec=None):
+        """ Convert temperature from this thermost into user preferred
+            temperature. """
+        if temp is None:
+            return None
+
+        value = convert(temp, self.unit_of_measurement,
+                        self.hass.config.temperature_unit)
+
+        return value if round_dec is None else round(value, round_dec)

@@ -26,6 +26,9 @@ omit =
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
+    homeassistant/components/rfxtrx.py
+    homeassistant/components/*/rfxtrx.py
+
     homeassistant/components/ifttt.py
     homeassistant/components/browser.py
     homeassistant/components/camera/*
@@ -39,16 +42,20 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
+    homeassistant/components/device_tracker/snmp.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/limitlessled.py
+    homeassistant/components/light/blinksticklight.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/denon.py
+    homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/mpd.py
+    homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/squeezebox.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/notify/file.py
@@ -59,6 +66,7 @@ omit =
     homeassistant/components/notify/slack.py
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/syslog.py
+    homeassistant/components/notify/telegram.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
@@ -69,7 +77,7 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
-    homeassistant/components/sensor/rfxtrx.py
+    homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/swiss_public_transport.py
@@ -77,6 +85,7 @@ omit =
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/worldclock.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/command_switch.py
     homeassistant/components/switch/edimax.py
