@@ -145,7 +145,6 @@ URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
 URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
 URL_API_BOOTSTRAP = "/api/bootstrap"
-URL_API_GEOFANCY_ENDPOINT = '/api/geofancy'
 
 HTTP_OK = 200
 HTTP_CREATED = 201
