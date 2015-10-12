@@ -199,9 +199,9 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
     """
 
     def __init__(self, config):
-        super(Tplink3DeviceScanner, self).__init__(config)
         self.stok = ''
         self.sysauth = ''
+        super(Tplink3DeviceScanner, self).__init__(config)
 
     def scan_devices(self):
         """
