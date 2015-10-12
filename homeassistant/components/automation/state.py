@@ -28,6 +28,11 @@ def trigger(hass, config, action):
     from_state = config.get(CONF_FROM, MATCH_ALL)
     to_state = config.get(CONF_TO) or config.get(CONF_STATE) or MATCH_ALL
 
+    if isinstance(from_state, bool) or isinstance(to_state, bool):
+        logging.getLogger(__name__).error(
+            'Config error. Surround to/from values with quotes.')
+        return False
+
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
         action()
