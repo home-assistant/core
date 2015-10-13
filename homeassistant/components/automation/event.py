@@ -1,8 +1,10 @@
 """
 homeassistant.components.automation.event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Offers event listening automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/components/automation.html#event-trigger
 """
 import logging
 
