@@ -3,35 +3,8 @@ homeassistant.components.notify.pushover
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Pushover platform for notify component.
 
-Configuration:
-
-To use the Pushover notifier you will need to add something like the following
-to your configuration.yaml file.
-
-notify:
-  platform: pushover
-  api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-  user_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-
-Variables:
-
-api_key
-*Required
-This parameter is optional but should be configured, in order to get an API
-key you should go to https://pushover.net and register a new application.
-
-This is a quote from the pushover website regarding free/open source apps:
-"If you are creating a client-side library, application, or open source project
-that will be redistributed and installed by end-users, you may want to require
-each of your users to register their own application rather than including your
-own API token with the software."
-
-When setting up the application I recommend using the icon located here:
-https://home-assistant.io/images/favicon-192x192.png
-
-user_key
-*Required
-To retrieve this value log into your account at https://pushover.net
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.pushover.html
 """
 import logging
 
