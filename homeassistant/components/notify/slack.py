@@ -3,27 +3,8 @@ homeassistant.components.notify.slack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Slack platform for notify component.
 
-Configuration:
-
-To use the Slack notifier you will need to add something like the following
-to your configuration.yaml file.
-
-notify:
-    platform: slack
-    api_key: ABCDEFGHJKLMNOPQRSTUVXYZ
-    default_channel: '#general'
-
-Variables:
-
-api_key
-*Required
-The slack API token to use for sending slack messages.
-You can get your slack API token here https://api.slack.com/web?sudo=1
-
-default_channel
-*Required
-The default channel to post to if no channel is explicitly specified when
-sending the notification message.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.slack.html
 """
 import logging
 
