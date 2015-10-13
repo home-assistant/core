@@ -1,8 +1,10 @@
 """
 homeassistant.components.automation.numeric_state
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Offers numeric state listening automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/components/automation.html#numeric-state-trigger
 """
 import logging
 
