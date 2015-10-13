@@ -33,6 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(alarms)
 
 
+# pylint: disable=abstract-method
 class VerisureAlarm(alarm.AlarmControlPanel):
     """ represents a Verisure alarm status within home assistant. """
 
@@ -91,7 +92,3 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             code,
             verisure.MY_PAGES.ALARM_ARMED_AWAY)
         _LOGGER.warning('arming away')
-
-    def alarm_trigger(self, code=None):
-        """ Send alarm trigger command. No code needed. """
-        return
