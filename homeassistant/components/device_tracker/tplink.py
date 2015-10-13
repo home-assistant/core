@@ -4,30 +4,8 @@ homeassistant.components.device_tracker.tplink
 Device tracker platform that supports scanning a TP-Link router for device
 presence.
 
-Configuration:
-
-To use the TP-Link tracker you will need to add something like the following
-to your configuration.yaml file.
-
-device_tracker:
-  platform: tplink
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.tplink.html
 """
 import base64
 import logging
