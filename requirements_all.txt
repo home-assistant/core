@@ -41,7 +41,7 @@ pydispatcher==2.0.5
 PyISY==1.0.5
 
 # PSutil (sensor.systemmonitor)
-psutil==3.0.0
+psutil==3.2.2
 
 # Pushover (notify.pushover)
 python-pushover==0.2
