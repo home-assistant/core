@@ -16,9 +16,7 @@ from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_UNKNOWN)
 import homeassistant.util as util
 
-REQUIREMENTS = ['https://github.com/adrienbrault/python-plexapi/archive/'
-                'df2d0847e801d6d5cda920326d693cf75f304f1a.zip'
-                '#python-plexapi==1.0.2']
+REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
@@ -45,24 +43,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def update_devices():
         """ Updates the devices objects. """
         try:
-            devices = plexuser.devices()
+            devices = plexserver.clients()
         except BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
 
         new_plex_clients = []
         for device in devices:
-            if (all(x not in ['client', 'player'] for x in device.provides)
-                    or 'PlexAPI' == device.product):
+            # For now, let's allow all deviceClass types
+            if device.deviceClass in []:
                 continue
 
-            if device.clientIdentifier not in plex_clients:
+            if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(device, plex_sessions, update_devices,
                                         update_sessions)
-                plex_clients[device.clientIdentifier] = new_client
+                plex_clients[device.machineIdentifier] = new_client
                 new_plex_clients.append(new_client)
             else:
-                plex_clients[device.clientIdentifier].set_device(device)
+                plex_clients[device.machineIdentifier].set_device(device)
 
         if new_plex_clients:
             add_devices(new_plex_clients)
@@ -101,10 +99,10 @@ class PlexClient(MediaPlayerDevice):
     @property
     def session(self):
         """ Returns the session, if any. """
-        if self.device.clientIdentifier not in self.plex_sessions:
+        if self.device.machineIdentifier not in self.plex_sessions:
             return None
 
-        return self.plex_sessions[self.device.clientIdentifier]
+        return self.plex_sessions[self.device.machineIdentifier]
 
     @property
     def name(self):
@@ -120,7 +118,8 @@ class PlexClient(MediaPlayerDevice):
                 return STATE_PLAYING
             elif state == 'paused':
                 return STATE_PAUSED
-        elif self.device.isReachable:
+        # This is nasty. Need ti find a way to determine alive
+        elif self.device:
             return STATE_IDLE
         else:
             return STATE_OFF
@@ -196,16 +195,16 @@ class PlexClient(MediaPlayerDevice):
 
     def media_play(self):
         """ media_play media player. """
-        self.device.play({'type': 'video'})
+        self.device.play()
 
     def media_pause(self):
         """ media_pause media player. """
-        self.device.pause({'type': 'video'})
+        self.device.pause()
 
     def media_next_track(self):
         """ Send next track command. """
-        self.device.skipNext({'type': 'video'})
+        self.device.skipNext()
 
     def media_previous_track(self):
         """ Send previous track command. """
-        self.device.skipPrevious({'type': 'video'})
+        self.device.skipPrevious()
