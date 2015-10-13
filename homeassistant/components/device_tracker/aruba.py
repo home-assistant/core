@@ -4,34 +4,8 @@ homeassistant.components.device_tracker.aruba
 Device tracker platform that supports scanning a Aruba Access Point for device
 presence.
 
-This device tracker needs telnet to be enabled on the router.
-
-Configuration:
-
-To use the Aruba tracker you will need to add something like the following
-to your configuration.yaml file. You also need to enable Telnet in the
-configuration page of your router.
-
-device_tracker:
-  platform: aruba
-  host: YOUR_ACCESS_POINT_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
-"""
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.aruba.html"""
 import logging
 from datetime import timedelta
 import re
