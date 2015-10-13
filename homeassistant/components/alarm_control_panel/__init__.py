@@ -73,40 +73,44 @@ def setup(hass, config):
     return True
 
 
-def alarm_disarm(hass, code, entity_id=None):
+def alarm_disarm(hass, code=None, entity_id=None):
     """ Send the alarm the command for disarm. """
-    data = {ATTR_CODE: code}
-
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_ALARM_DISARM, data)
 
 
-def alarm_arm_home(hass, code, entity_id=None):
+def alarm_arm_home(hass, code=None, entity_id=None):
     """ Send the alarm the command for arm home. """
-    data = {ATTR_CODE: code}
-
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_HOME, data)
 
 
-def alarm_arm_away(hass, code, entity_id=None):
+def alarm_arm_away(hass, code=None, entity_id=None):
     """ Send the alarm the command for arm away. """
-    data = {ATTR_CODE: code}
-
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data)
 
 
-def alarm_trigger(hass, code, entity_id=None):
+def alarm_trigger(hass, code=None, entity_id=None):
     """ Send the alarm the command for trigger. """
-    data = {ATTR_CODE: code}
-
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 

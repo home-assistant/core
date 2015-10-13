@@ -100,6 +100,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
+# pylint: disable=abstract-method
 class MqttAlarm(alarm.AlarmControlPanel):
     """ represents a MQTT alarm status within home assistant. """
 
@@ -166,7 +167,3 @@ class MqttAlarm(alarm.AlarmControlPanel):
                          self._payload_arm_away, self._qos)
         else:
             _LOGGER.warning("Wrong code entered while arming away!")
-
-    def alarm_trigger(self, code=None):
-        """ Send alarm trigger command. No code needed. """
-        return
