@@ -64,7 +64,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
 
-REQUIREMENTS = ['psutil==3.0.0']
+REQUIREMENTS = ['psutil==3.2.2']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
     'disk_use': ['Disk Use', 'GiB'],
