@@ -1,37 +1,11 @@
 """
 homeassistant.components.alarm_control_panel.manual
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for manual alarms.
 
-Configuration:
-
-alarm_control_panel:
-  platform: manual
-  name: "HA Alarm"
-  code: "mySecretCode"
-  pending_time: 60
-  trigger_time: 120
-
-Variables:
-
-name
-*Optional
-The name of the alarm. Default is 'HA Alarm'.
-
-code
-*Optional
-If defined, specifies a code to arm or disarm the alarm in the frontend.
-
-pending_time
-*Optional
-The time in seconds of the pending time before arming the alarm.
-Default is 60 seconds.
-
-trigger_time
-*Optional
-The time in seconds of the trigger time in which the alarm is firing.
-Default is 120 seconds.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/alarm_control_panel.manual.html
 """
-
 import logging
 import datetime
 import homeassistant.components.alarm_control_panel as alarm
@@ -66,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 # pylint: disable=abstract-method
 class ManualAlarm(alarm.AlarmControlPanel):
-    """ represents an alarm status within home assistant. """
+    """ Represents an alarm status. """
 
     def __init__(self, hass, name, code, pending_time, trigger_time):
         self._state = STATE_ALARM_DISARMED
@@ -80,7 +54,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
-        """ No polling needed """
+        """ No polling needed. """
         return False
 
     @property
@@ -95,11 +69,11 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """ One or more characters """
+        """ One or more characters. """
         return None if self._code is None else '.+'
 
     def update_state(self, state, pending_to):
-        """ changes between state with delay """
+        """ Changes between state with delay. """
         self._state = state
         self._state_ts = dt_util.utcnow()
         self._pending_to = pending_to
@@ -118,7 +92,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
             self.update_state(STATE_ALARM_PENDING, STATE_ALARM_ARMED_HOME)
 
             def delayed_alarm_arm_home(event_time):
-                """ callback for delayed action """
+                """ Callback for delayed action. """
                 if self._pending_to == STATE_ALARM_ARMED_HOME and \
                    dt_util.utcnow() - self._state_ts >= self._pending_time:
                     self.update_state(STATE_ALARM_ARMED_HOME, None)
@@ -134,7 +108,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
             self.update_state(STATE_ALARM_PENDING, STATE_ALARM_ARMED_AWAY)
 
             def delayed_alarm_arm_away(event_time):
-                """ callback for delayed action """
+                """ Callback for delayed action. """
                 if self._pending_to == STATE_ALARM_ARMED_AWAY and \
                    dt_util.utcnow() - self._state_ts >= self._pending_time:
                     self.update_state(STATE_ALARM_ARMED_AWAY, None)
@@ -155,7 +129,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 self.update_state(STATE_ALARM_TRIGGERED, STATE_ALARM_DISARMED)
 
                 def delayed_alarm_disarm(event_time):
-                    """ callback for delayed action """
+                    """ Callback for delayed action. """
                     if self._pending_to == STATE_ALARM_DISARMED and \
                        dt_util.utcnow() - self._state_ts >= self._trigger_time:
                         self.update_state(STATE_ALARM_DISARMED, None)
