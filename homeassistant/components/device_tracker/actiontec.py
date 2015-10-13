@@ -4,41 +4,8 @@ homeassistant.components.device_tracker.actiontec
 Device tracker platform that supports scanning an Actiontec MI424WR
 (Verizon FIOS) router for device presence.
 
-This device tracker needs telnet to be enabled on the router.
-
-Configuration:
-
-To use the Actiontec tracker you will need to add something like the
-following to your configuration.yaml file. If you experience disconnects
-you can modify the home_interval variable.
-
-device_tracker:
-  platform: actiontec
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-  # optional:
-  home_interval: 10
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
-
-home_interval
-*Optional
-If the home_interval is set then the component will not let a device
-be AWAY if it has been HOME in the last home_interval minutes. This is
-in addition to the 3 minute wait built into the device_tracker component.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.actiontec.html
 """
 import logging
 from datetime import timedelta
@@ -56,7 +23,7 @@ from homeassistant.components.device_tracker import DOMAIN
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-# interval in minutes to exclude devices from a scan while they are home
+# Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
 
 _LOGGER = logging.getLogger(__name__)
