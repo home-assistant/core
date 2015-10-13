@@ -1,12 +1,10 @@
 """
 homeassistant.components.shell_command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Exposes regular shell commands as services.
 
-Component to expose shell commands as services.
-
-shell_command:
-  restart_pow: touch ~/.pow/restart.txt
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/shell_command.html
 """
 import logging
 import subprocess
