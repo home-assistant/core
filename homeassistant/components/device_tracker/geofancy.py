@@ -1,11 +1,10 @@
 """
 homeassistant.components.device_tracker.geofancy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Geofancy platform for the device tracker.
 
-device_tracker:
-  platform: geofancy
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.geofancy.html
 """
 
 from homeassistant.const import (
