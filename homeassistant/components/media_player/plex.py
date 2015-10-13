@@ -50,8 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         new_plex_clients = []
         for device in devices:
-            #if (all(x not in ['client', 'boe.deviceClass'] for x in device.deviceClass)
-            #        or device.product == 'PlexAPI'):
+            # Perhaps more deviceClasses can be added?
             if device.deviceClass != 'HTPC':
                 continue
 
@@ -119,6 +118,7 @@ class PlexClient(MediaPlayerDevice):
                 return STATE_PLAYING
             elif state == 'paused':
                 return STATE_PAUSED
+        # This is nasty. Need ti find a way to determine alive
         elif self.device:
             return STATE_IDLE
         else:
