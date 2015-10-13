@@ -3,26 +3,8 @@ homeassistant.components.device_tracker.nmap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Device tracker platform that supports scanning a network with nmap.
 
-Configuration:
-
-To use the nmap tracker you will need to add something like the following
-to your configuration.yaml file.
-
-device_tracker:
-  platform: nmap_tracker
-  hosts: 192.168.1.1/24
-
-Variables:
-
-hosts
-*Required
-The IP addresses to scan in the network-prefix notation (192.168.1.1/24) or
-the range notation (192.168.1.1-255).
-
-home_interval
-*Optional
-Number of minutes it will not scan devices that it found in previous results.
-This is to save battery.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.nmap_scanner.html
 """
 import logging
 from datetime import timedelta
