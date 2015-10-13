@@ -6,34 +6,34 @@ Allows users to set and activate scenes within Home Assistant.
 
 A scene is a set of states that describe how you want certain entities to be.
 For example, light A should be red with 100 brightness. Light B should be on.
-
-A scene is active if all states of the scene match the real states.
-
-If a scene is manually activated it will store the previous state of the
-entities. These will be restored when the state is deactivated manually.
-
-If one of the enties that are being tracked change state on its own, the
-old state will not be restored when it is being deactivated.
 """
 import logging
 from collections import namedtuple
 
 from homeassistant.core import State
-from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import reproduce_state
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, SERVICE_TURN_ON)
 
 DOMAIN = 'scene'
 DEPENDENCIES = ['group']
-
-ATTR_ACTIVE_REQUESTED = "active_requested"
+STATE = 'scening'
 
 CONF_ENTITIES = "entities"
 
-SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'fuzzy_match'])
+SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
+
+
+def activate(hass, entity_id=None):
+    """ Activate a scene. """
+    data = {}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def setup(hass, config):
@@ -43,8 +43,9 @@ def setup(hass, config):
 
     scene_configs = config.get(DOMAIN)
 
-    if not isinstance(scene_configs, list):
-        logger.error('Scene config should be a list of scenes')
+    if not isinstance(scene_configs, list) or \
+       any(not isinstance(item, dict) for item in scene_configs):
+        logger.error('Scene config should be a list of dictionaries')
         return False
 
     component = EntityComponent(logger, DOMAIN, hass)
@@ -57,12 +58,8 @@ def setup(hass, config):
         target_scenes = component.extract_from_service(service)
 
         for scene in target_scenes:
-            if service.service == SERVICE_TURN_ON:
-                scene.turn_on()
-            else:
-                scene.turn_off()
+            scene.activate()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_scene_service)
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service)
 
     return True
@@ -71,14 +68,6 @@ def setup(hass, config):
 def _process_config(scene_config):
     """ Process passed in config into a format to work with. """
     name = scene_config.get('name')
-
-    fuzzy_match = scene_config.get('fuzzy_match')
-    if fuzzy_match:
-        # default to 1%
-        if isinstance(fuzzy_match, int):
-            fuzzy_match /= 100.0
-        else:
-            fuzzy_match = 0.01
 
     states = {}
     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
@@ -100,22 +89,15 @@ def _process_config(scene_config):
 
         states[entity_id.lower()] = State(entity_id, state, attributes)
 
-    return SceneConfig(name, states, fuzzy_match)
+    return SceneConfig(name, states)
 
 
-class Scene(ToggleEntity):
+class Scene(Entity):
     """ A scene is a group of entities and the states we want them to be. """
 
     def __init__(self, hass, scene_config):
         self.hass = hass
         self.scene_config = scene_config
-
-        self.is_active = False
-        self.prev_states = None
-        self.ignore_updates = False
-
-        track_state_change(
-            self.hass, self.entity_ids, self.entity_state_changed)
 
         self.update()
 
@@ -128,8 +110,8 @@ class Scene(ToggleEntity):
         return self.scene_config.name
 
     @property
-    def is_on(self):
-        return self.is_active
+    def state(self):
+        return STATE
 
     @property
     def entity_ids(self):
@@ -141,82 +123,8 @@ class Scene(ToggleEntity):
         """ Scene state attributes. """
         return {
             ATTR_ENTITY_ID: list(self.entity_ids),
-            ATTR_ACTIVE_REQUESTED: self.prev_states is not None,
         }
 
-    def turn_on(self):
+    def activate(self):
         """ Activates scene. Tries to get entities into requested state. """
-        self.prev_states = tuple(self.hass.states.get(entity_id)
-                                 for entity_id in self.entity_ids)
-
-        self._reproduce_state(self.scene_config.states.values())
-
-    def turn_off(self):
-        """ Deactivates scene and restores old states. """
-        if self.prev_states:
-            self._reproduce_state(self.prev_states)
-            self.prev_states = None
-
-    def entity_state_changed(self, entity_id, old_state, new_state):
-        """ Called when an entity part of this scene changes state. """
-        if self.ignore_updates:
-            return
-
-        # If new state is not what we expect, it can never be active
-        if self._state_as_requested(new_state):
-            self.update()
-        else:
-            self.is_active = False
-            self.prev_states = None
-
-        self.update_ha_state()
-
-    def update(self):
-        """
-        Update if the scene is active.
-
-        Will look at each requested state and see if the current entity
-        has the same state and has at least the same attributes with the
-        same values. The real state can have more attributes.
-        """
-        self.is_active = all(
-            self._state_as_requested(self.hass.states.get(entity_id))
-            for entity_id in self.entity_ids)
-
-    def _state_as_requested(self, cur_state):
-        """ Returns if given state is as requested. """
-        state = self.scene_config.states.get(cur_state and cur_state.entity_id)
-
-        return (cur_state is not None and state.state == cur_state.state and
-                all(self._compare_state_attribites(
-                    value, cur_state.attributes.get(key))
-                    for key, value in state.attributes.items()))
-
-    def _fuzzy_attribute_compare(self, attr_a, attr_b):
-        """
-        Compare the attributes passed, use fuzzy logic if they are floats.
-        """
-
-        if not (isinstance(attr_a, float) and isinstance(attr_b, float)):
-            return False
-        diff = abs(attr_a - attr_b) / (abs(attr_a) + abs(attr_b))
-        return diff <= self.scene_config.fuzzy_match
-
-    def _compare_state_attribites(self, attr1, attr2):
-        """ Compare the attributes passed, using fuzzy logic if specified. """
-        if attr1 == attr2:
-            return True
-        if not self.scene_config.fuzzy_match:
-            return False
-        if isinstance(attr1, list):
-            return all(self._fuzzy_attribute_compare(a, b)
-                       for a, b in zip(attr1, attr2))
-        return self._fuzzy_attribute_compare(attr1, attr2)
-
-    def _reproduce_state(self, states):
-        """ Wraps reproduce state with Scence specific logic. """
-        self.ignore_updates = True
-        reproduce_state(self.hass, states, True)
-        self.ignore_updates = False
-
-        self.update_ha_state(True)
+        reproduce_state(self.hass, self.scene_config.states.values(), True)
