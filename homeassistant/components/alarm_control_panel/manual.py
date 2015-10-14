@@ -46,11 +46,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
         self._name = name
-        self._code = code
+        self._code = str(code) if code else None
         self._pending_time = datetime.timedelta(seconds=pending_time)
         self._trigger_time = datetime.timedelta(seconds=trigger_time)
         self._state_ts = None
-        self._pending_to = None
 
     @property
     def should_poll(self):
@@ -65,6 +64,15 @@ class ManualAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """ Returns the state of the device. """
+        if self._state in (STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY) and \
+           self._pending_time and self._state_ts + self._pending_time > \
+           dt_util.utcnow():
+            return STATE_ALARM_PENDING
+
+        if self._state == STATE_ALARM_TRIGGERED and self._trigger_time and \
+           self._state_ts + self._trigger_time > dt_util.utcnow():
+            return STATE_ALARM_PENDING
+
         return self._state
 
     @property
@@ -72,70 +80,57 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """ One or more characters. """
         return None if self._code is None else '.+'
 
-    def update_state(self, state, pending_to):
-        """ Changes between state with delay. """
-        self._state = state
-        self._state_ts = dt_util.utcnow()
-        self._pending_to = pending_to
-        self.update_ha_state()
-
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
-        if code == str(self._code) or self.code_format is None:
-            self.update_state(STATE_ALARM_DISARMED, None)
-        else:
-            _LOGGER.warning("Wrong code entered while disarming!")
+        if not self._validate_code(code, STATE_ALARM_DISARMED):
+            return
+
+        self._state = STATE_ALARM_DISARMED
+        self._state_ts = dt_util.utcnow()
+        self.update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
-        if code == str(self._code) or self.code_format is None:
-            self.update_state(STATE_ALARM_PENDING, STATE_ALARM_ARMED_HOME)
+        if not self._validate_code(code, STATE_ALARM_ARMED_HOME):
+            return
 
-            def delayed_alarm_arm_home(event_time):
-                """ Callback for delayed action. """
-                if self._pending_to == STATE_ALARM_ARMED_HOME and \
-                   dt_util.utcnow() - self._state_ts >= self._pending_time:
-                    self.update_state(STATE_ALARM_ARMED_HOME, None)
+        self._state = STATE_ALARM_ARMED_HOME
+        self._state_ts = dt_util.utcnow()
+        self.update_ha_state()
+
+        if self._pending_time:
             track_point_in_time(
-                self._hass, delayed_alarm_arm_home,
-                dt_util.utcnow() + self._pending_time)
-        else:
-            _LOGGER.warning("Wrong code entered while arming home!")
+                self._hass, self.update_ha_state,
+                self._state_ts + self._pending_time)
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
-        if code == str(self._code) or self.code_format is None:
-            self.update_state(STATE_ALARM_PENDING, STATE_ALARM_ARMED_AWAY)
+        if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
+            return
 
-            def delayed_alarm_arm_away(event_time):
-                """ Callback for delayed action. """
-                if self._pending_to == STATE_ALARM_ARMED_AWAY and \
-                   dt_util.utcnow() - self._state_ts >= self._pending_time:
-                    self.update_state(STATE_ALARM_ARMED_AWAY, None)
+        self._state = STATE_ALARM_ARMED_AWAY
+        self._state_ts = dt_util.utcnow()
+        self.update_ha_state()
+
+        if self._pending_time:
             track_point_in_time(
-                self._hass, delayed_alarm_arm_away,
-                dt_util.utcnow() + self._pending_time)
-        else:
-            _LOGGER.warning("Wrong code entered while arming away!")
+                self._hass, self.update_ha_state,
+                self._state_ts + self._pending_time)
 
     def alarm_trigger(self, code=None):
         """ Send alarm trigger command. No code needed. """
-        self.update_state(STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+        self._state = STATE_ALARM_TRIGGERED
+        self._state_ts = dt_util.utcnow()
+        self.update_ha_state()
 
-        def delayed_alarm_trigger(event_time):
-            """ callback for delayed action """
-            if self._pending_to == STATE_ALARM_TRIGGERED and \
-               dt_util.utcnow() - self._state_ts >= self._pending_time:
-                self.update_state(STATE_ALARM_TRIGGERED, STATE_ALARM_DISARMED)
+        if self._trigger_time:
+            track_point_in_time(
+                self._hass, self.update_ha_state,
+                self._state_ts + self._trigger_time)
 
-                def delayed_alarm_disarm(event_time):
-                    """ Callback for delayed action. """
-                    if self._pending_to == STATE_ALARM_DISARMED and \
-                       dt_util.utcnow() - self._state_ts >= self._trigger_time:
-                        self.update_state(STATE_ALARM_DISARMED, None)
-                track_point_in_time(
-                    self._hass, delayed_alarm_disarm,
-                    dt_util.utcnow() + self._trigger_time)
-        track_point_in_time(
-            self._hass, delayed_alarm_trigger,
-            dt_util.utcnow() + self._pending_time)
+    def _validate_code(self, code, state):
+        """ Validate given code. """
+        check = self._code is None or code == self._code
+        if not check:
+            _LOGGER.warning('Invalid code given for %s', state)
+        return check
