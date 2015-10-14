@@ -10,7 +10,9 @@ import logging
 import homeassistant.components.mqtt as mqtt
 import homeassistant.components.alarm_control_panel as alarm
 
-from homeassistant.const import (STATE_UNKNOWN)
+from homeassistant.const import (
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,10 +64,15 @@ class MqttAlarm(alarm.AlarmControlPanel):
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
-        self._code = code
+        self._code = str(code) if code else None
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
+            if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
+                               STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
+                               STATE_ALARM_TRIGGERED):
+                _LOGGER.warning('Received unexpected payload: %s', payload)
+                return
             self._state = payload
             self.update_ha_state()
 
@@ -93,24 +100,28 @@ class MqttAlarm(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
-        if code == str(self._code) or self.code_format is None:
-            mqtt.publish(self.hass, self._command_topic,
-                         self._payload_disarm, self._qos)
-        else:
-            _LOGGER.warning("Wrong code entered while disarming!")
+        if not self._validate_code(code, 'disarming'):
+            return
+        mqtt.publish(self.hass, self._command_topic,
+                     self._payload_disarm, self._qos)
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
-        if code == str(self._code) or self.code_format is None:
-            mqtt.publish(self.hass, self._command_topic,
-                         self._payload_arm_home, self._qos)
-        else:
-            _LOGGER.warning("Wrong code entered while arming home!")
+        if not self._validate_code(code, 'arming home'):
+            return
+        mqtt.publish(self.hass, self._command_topic,
+                     self._payload_arm_home, self._qos)
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
-        if code == str(self._code) or self.code_format is None:
-            mqtt.publish(self.hass, self._command_topic,
-                         self._payload_arm_away, self._qos)
-        else:
-            _LOGGER.warning("Wrong code entered while arming away!")
+        if not self._validate_code(code, 'arming away'):
+            return
+        mqtt.publish(self.hass, self._command_topic,
+                     self._payload_arm_away, self._qos)
+
+    def _validate_code(self, code, state):
+        """ Validate given code. """
+        check = self._code is None or code == self._code
+        if not check:
+            _LOGGER.warning('Wrong code entered for %s', state)
+        return check
