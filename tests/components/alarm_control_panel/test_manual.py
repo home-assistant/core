@@ -21,7 +21,7 @@ CODE = 'HELLO_CODE'
 
 
 class TestAlarmControlPanelManual(unittest.TestCase):
-    """ Test the demo module. """
+    """ Test the manual alarm module. """
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
