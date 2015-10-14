@@ -256,3 +256,38 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
+
+    def test_disarm_during_trigger_with_invalid_code(self):
+        self.assertTrue(alarm_control_panel.setup(self.hass, {
+            'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'trigger_time': 5,
+                'code': CODE + '2'
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_disarm(self.hass, entity_id=entity_id)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.pool.block_till_done()
+
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         self.hass.states.get(entity_id).state)
