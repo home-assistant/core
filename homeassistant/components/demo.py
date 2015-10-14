@@ -63,6 +63,14 @@ def setup(hass, config):
             'still_image_url': 'http://home-assistant.io/demo/webcam.jpg',
         }})
 
+    # Setup alarm_control_panel
+    bootstrap.setup_component(
+        hass, 'alarm_control_panel',
+        {'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'Test Alarm',
+        }})
+
     # Setup scripts
     bootstrap.setup_component(
         hass, 'script',
