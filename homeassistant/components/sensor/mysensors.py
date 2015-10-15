@@ -17,6 +17,26 @@ Variables:
 port
 *Required
 Port of your connection to your MySensors device.
+
+debug
+*Optional
+Enable or disable verbose debug logging.
+
+persistence
+*Optional
+Enable or disable local persistence of sensor information.
+Note: If this is disabled, then each sensor will need to send presentation
+      messages after Home Assistant starts
+
+persistence_file
+*Optional
+Path to a file to save sensor information.
+Note: The file extension determines the file type.  Currently supported file
+      types are 'pickle' and 'json'.
+
+version
+*Optional
+Specifies the MySensors protocol version to use (ex. 1.4, 1.5).
 """
 import logging
 
@@ -30,14 +50,16 @@ from homeassistant.const import (
 CONF_PORT = "port"
 CONF_DEBUG = "debug"
 CONF_PERSISTENCE = "persistence"
+CONF_PERSISTENCE_FILE = "persistence_file"
+CONF_VERSION = "version"
 
 ATTR_NODE_ID = "node_id"
 ATTR_CHILD_ID = "child_id"
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/'
-                '35b87d880147a34107da0d40cb815d75e6cb4af7.zip'
-                '#pymysensors==0.2']
+                'd4b809c2167650691058d1e29bfd2c4b1792b4b0.zip'
+                '#pymysensors==0.3']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -86,9 +108,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     persistence = config.get(CONF_PERSISTENCE, True)
+    persistence_file = config.get(CONF_PERSISTENCE_FILE, 'mysensors.pickle')
+    version = config.get(CONF_VERSION, '1.4')
 
     gateway = mysensors.SerialGateway(port, sensor_update,
-                                      persistence=persistence)
+                                      persistence=persistence,
+                                      persistence_file=persistence_file,
+                                      protocol_version=version)
     gateway.metric = is_metric
     gateway.debug = config.get(CONF_DEBUG, False)
     gateway.start()

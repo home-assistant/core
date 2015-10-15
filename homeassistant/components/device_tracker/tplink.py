@@ -4,30 +4,8 @@ homeassistant.components.device_tracker.tplink
 Device tracker platform that supports scanning a TP-Link router for device
 presence.
 
-Configuration:
-
-To use the TP-Link tracker you will need to add something like the following
-to your configuration.yaml file.
-
-device_tracker:
-  platform: tplink
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.tplink.html
 """
 import base64
 import logging
@@ -54,10 +32,13 @@ def get_scanner(hass, config):
                            _LOGGER):
         return None
 
-    scanner = Tplink2DeviceScanner(config[DOMAIN])
+    scanner = Tplink3DeviceScanner(config[DOMAIN])
 
     if not scanner.success_init:
-        scanner = TplinkDeviceScanner(config[DOMAIN])
+        scanner = Tplink2DeviceScanner(config[DOMAIN])
+
+        if not scanner.success_init:
+            scanner = TplinkDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -156,7 +137,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
         with self.lock:
             _LOGGER.info("Loading wireless clients...")
 
-            url = 'http://{}/data/map_access_wireless_client_grid.json'\
+            url = 'http://{}/data/map_access_wireless_client_grid.json' \
                 .format(self.host)
             referer = 'http://{}'.format(self.host)
 
@@ -166,7 +147,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
             b64_encoded_username_password = base64.b64encode(
                 username_password.encode('ascii')
             ).decode('ascii')
-            cookie = 'Authorization=Basic {}'\
+            cookie = 'Authorization=Basic {}' \
                 .format(b64_encoded_username_password)
 
             response = requests.post(url, headers={'referer': referer,
@@ -183,7 +164,119 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
                 self.last_results = {
                     device['mac_addr'].replace('-', ':'): device['name']
                     for device in result
-                }
+                    }
+                return True
+
+            return False
+
+
+class Tplink3DeviceScanner(TplinkDeviceScanner):
+    """
+    This class queries the Archer C9 router running version 150811 or higher
+    of TP-Link firmware for connected devices.
+    """
+
+    def __init__(self, config):
+        self.stok = ''
+        self.sysauth = ''
+        super(Tplink3DeviceScanner, self).__init__(config)
+
+    def scan_devices(self):
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
+
+        self._update_info()
+        return self.last_results.keys()
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """
+        The TP-Link firmware doesn't save the name of the wireless device.
+        We are forced to use the MAC address as name here.
+        """
+
+        return self.last_results.get(device)
+
+    def _get_auth_tokens(self):
+        """
+        Retrieves auth tokens from the router.
+        """
+
+        _LOGGER.info("Retrieving auth tokens...")
+
+        url = 'http://{}/cgi-bin/luci/;stok=/login?form=login' \
+            .format(self.host)
+        referer = 'http://{}/webpages/login.html'.format(self.host)
+
+        # if possible implement rsa encryption of password here
+
+        response = requests.post(url,
+                                 params={'operation': 'login',
+                                         'username': self.username,
+                                         'password': self.password},
+                                 headers={'referer': referer})
+
+        try:
+            self.stok = response.json().get('data').get('stok')
+            _LOGGER.info(self.stok)
+            regex_result = re.search('sysauth=(.*);',
+                                     response.headers['set-cookie'])
+            self.sysauth = regex_result.group(1)
+            _LOGGER.info(self.sysauth)
+            return True
+        except ValueError:
+            _LOGGER.error("Couldn't fetch auth tokens!")
+            return False
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """
+        Ensures the information from the TP-Link router is up to date.
+        Returns boolean if scanning successful.
+        """
+
+        with self.lock:
+            if (self.stok == '') or (self.sysauth == ''):
+                self._get_auth_tokens()
+
+            _LOGGER.info("Loading wireless clients...")
+
+            url = 'http://{}/cgi-bin/luci/;stok={}/admin/wireless?form=statistics' \
+                .format(self.host, self.stok)
+            referer = 'http://{}/webpages/index.html'.format(self.host)
+
+            response = requests.post(url,
+                                     params={'operation': 'load'},
+                                     headers={'referer': referer},
+                                     cookies={'sysauth': self.sysauth})
+
+            try:
+                json_response = response.json()
+
+                if json_response.get('success'):
+                    result = response.json().get('data')
+                else:
+                    if json_response.get('errorcode') == 'timeout':
+                        _LOGGER.info("Token timed out. "
+                                     "Relogging on next scan.")
+                        self.stok = ''
+                        self.sysauth = ''
+                        return False
+                    else:
+                        _LOGGER.error("An unknown error happened "
+                                      "while fetching data.")
+                        return False
+            except ValueError:
+                _LOGGER.error("Router didn't respond with JSON. "
+                              "Check if credentials are correct.")
+                return False
+
+            if result:
+                self.last_results = {
+                    device['mac'].replace('-', ':'): device['mac']
+                    for device in result
+                    }
                 return True
 
             return False
