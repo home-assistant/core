@@ -149,4 +149,4 @@ python-telegram-bot==2.8.7
 py-cpuinfo==0.1.6
 
 # Radio Thermostat (thermostat.radiotherm)
-radiotherm=1.2
+radiotherm==1.2
