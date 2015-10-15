@@ -3,65 +3,8 @@ homeassistant.components.sensor.bitcoin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Bitcoin information service that uses blockchain.info and its online wallet.
 
-Configuration:
-
-You need to enable the API access for your online wallet to get the balance.
-To do that log in and move to 'Account Setting', choose 'IP Restrictions', and
-check 'Enable Api Access'. You will get an email message from blockchain.info
-where you must authorize the API access.
-
-To use the Bitcoin sensor you will need to add something like the following
-to your configuration.yaml file.
-
-sensor:
-  platform: bitcoin
-  wallet: 'YOUR WALLET_ID'
-  password: YOUR_ACCOUNT_PASSWORD
-  currency: YOUR CURRENCY
-  display_options:
-    - exchangerate
-    - trade_volume_btc
-    - miners_revenue_usd
-    - btc_mined
-    - trade_volume_usd
-    - difficulty
-    - minutes_between_blocks
-    - number_of_transactions
-    - hash_rate
-    - timestamp
-    - mined_blocks
-    - blocks_size
-    - total_fees_btc
-    - total_btc_sent
-    - estimated_btc_sent
-    - total_btc
-    - total_blocks
-    - next_retarget
-    - estimated_transaction_volume_usd
-    - miners_revenue_btc
-    - market_price_usd
-
-Variables:
-
-wallet
-*Optional
-This is your wallet identifier from https://blockchain.info to access the
-online wallet.
-
-password
-*Optional
-Password your your online wallet.
-
-currency
-*Optional
-The currency to exchange to, eg. CHF, USD, EUR,etc. Default is USD.
-
-display_options
-*Optional
-An array specifying the variables to display.
-
-These are the variables for the display_options array. See the configuration
-example above for a list of all available variables.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.bitcoin.html
 """
 import logging
 from datetime import timedelta
