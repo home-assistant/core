@@ -5,4 +5,4 @@
 
 cd "$(dirname "$0")/.."
 
-python3 -m homeassistant -c config
+python -m homeassistant -c config
