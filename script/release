@@ -18,4 +18,4 @@ then
   exit 1
 fi
 
-python3 setup.py sdist bdist_wheel upload
+python setup.py sdist bdist_wheel upload
