@@ -200,7 +200,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
-                'trigger_time': 1
+                'pending_time': 2,
+                'trigger_time': 3
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -214,7 +215,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
-        future = dt_util.utcnow() + timedelta(seconds=1)
+        future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
@@ -223,7 +224,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
 
-        future = dt_util.utcnow() + timedelta(seconds=2)
+        future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
@@ -271,7 +272,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
-                'trigger_time': 5,
+                'pending_time': 5,
                 'code': CODE + '2'
             }}))
 
