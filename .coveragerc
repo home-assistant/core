@@ -72,6 +72,7 @@ omit =
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/command_sensor.py
     homeassistant/components/sensor/cpuinfo.py
+    homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/forecast.py
