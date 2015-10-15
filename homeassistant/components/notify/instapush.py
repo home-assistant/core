@@ -3,52 +3,8 @@ homeassistant.components.notify.instapush
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Instapush notification service.
 
-Configuration:
-
-To use the Instapush notifier you will need to add something like the following
-to your configuration.yaml file.
-
-notify:
-  platform: instapush
-  api_key: YOUR_APP_KEY
-  app_secret: YOUR_APP_SECRET
-  event: YOUR_EVENT
-  tracker: YOUR_TRACKER
-
-Variables:
-
-api_key
-*Required
-To retrieve this value log into your account at https://instapush.im and go
-to 'APPS', choose an app, and check 'Basic Info'.
-
-app_secret
-*Required
-To get this value log into your account at https://instapush.im and go to
-'APPS'. The 'Application ID' can be found under 'Basic Info'.
-
-event
-*Required
-To retrieve a valid event log into your account at https://instapush.im and go
-to 'APPS'. If you have no events to use with Home Assistant, create one event
-for your app.
-
-tracker
-*Required
-To retrieve the tracker value log into your account at https://instapush.im and
-go to 'APPS', choose the app, and check the event entries.
-
-Example usage of Instapush if you have an event 'notification' and a tracker
-'home-assistant'.
-
-curl -X POST \
-    -H "x-instapush-appid: YOUR_APP_KEY" \
-    -H "x-instapush-appsecret: YOUR_APP_SECRET" \
-    -H "Content-Type: application/json" \
-      -d '{"event":"notification","trackers":{"home-assistant":"Switch 1"}}' \
-    https://api.instapush.im/v1/post
-
-Details for the API : https://instapush.im/developer/rest
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.instapush.html
 """
 import logging
 import json
