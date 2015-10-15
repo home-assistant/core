@@ -95,6 +95,7 @@ omit =
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/nest.py
+    homeassistant/components/thermostat/radiotherm.py
 
 
 [report]
