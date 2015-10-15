@@ -4,36 +4,8 @@ homeassistant.components.device_tracker.tomato
 Device tracker platform that supports scanning a Tomato router for device
 presence.
 
-Configuration:
-
-To use the Tomato tracker you will need to add something like the following
-to your configuration.yaml file.
-
-device_tracker:
-  platform: tomato
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-  http_id: ABCDEFG
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
-
-http_id
-*Required
-The value can be obtained by logging in to the Tomato admin interface and
-search for http_id in the page source code.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.tomato.html
 """
 import logging
 import json
