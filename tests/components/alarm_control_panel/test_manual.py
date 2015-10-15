@@ -223,6 +223,15 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
 
+        future = dt_util.utcnow() + timedelta(seconds=2)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.pool.block_till_done()
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
     def test_disarm_while_pending_trigger(self):
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
