@@ -40,7 +40,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 # pylint: disable=abstract-method
 class ManualAlarm(alarm.AlarmControlPanel):
-    """ Represents an alarm status. """
+    """
+    Represents an alarm status.
+
+    When armed, will be pending for 'pending_time', after that armed.
+    When triggered, will be pending for 'trigger_time'. After that will be
+    triggered for 'trigger_time', after that we return to disarmed.
+    """
 
     def __init__(self, hass, name, code, pending_time, trigger_time):
         self._state = STATE_ALARM_DISARMED
@@ -69,9 +75,11 @@ class ManualAlarm(alarm.AlarmControlPanel):
            dt_util.utcnow():
             return STATE_ALARM_PENDING
 
-        if self._state == STATE_ALARM_TRIGGERED and self._trigger_time and \
-           self._state_ts + self._trigger_time > dt_util.utcnow():
-            return STATE_ALARM_PENDING
+        if self._state == STATE_ALARM_TRIGGERED and self._trigger_time:
+            if self._state_ts + self._trigger_time > dt_util.utcnow():
+                return STATE_ALARM_PENDING
+            elif dt_util.utcnow() >= self._state_ts + (2 * self._trigger_time):
+                return STATE_ALARM_DISARMED
 
         return self._state
 
@@ -127,6 +135,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
             track_point_in_time(
                 self._hass, self.update_ha_state,
                 self._state_ts + self._trigger_time)
+
+            track_point_in_time(
+                self._hass, self.update_ha_state,
+                self._state_ts + 2 * self._trigger_time)
 
     def _validate_code(self, code, state):
         """ Validate given code. """
