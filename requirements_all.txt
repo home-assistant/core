@@ -134,7 +134,7 @@ https://github.com/balloob/home-assistant-vera-api/archive/a8f823066ead6c7da6fb5
 SoCo==0.11.1
 
 # PlexAPI (media_player.plex)
-https://github.com/adrienbrault/python-plexapi/archive/df2d0847e801d6d5cda920326d693cf75f304f1a.zip#python-plexapi==1.0.2
+plexapi==1.1.0
 
 # SNMP (device_tracker.snmp)
 pysnmp==4.2.5
