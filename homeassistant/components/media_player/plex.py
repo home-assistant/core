@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         new_plex_clients = []
         for device in devices:
             # For now, let's allow all deviceClass types
-            if device.deviceClass in []:
+            if device.deviceClass in ['badClient']:
                 continue
 
             if device.machineIdentifier not in plex_clients:
