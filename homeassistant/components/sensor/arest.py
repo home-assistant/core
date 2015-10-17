@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 CONF_RESOURCE = 'resource'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
@@ -52,7 +52,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error('Variable: "%s" does not exist', variable['name'])
             continue
 
-        dev.append(ArestSensor(arest, response['name'], variable['name'],
+        dev.append(ArestSensor(arest,
+                               config.get('name', response['name']),
+                               variable['name'],
                                variable.get('unit')))
 
     add_devices(dev)
