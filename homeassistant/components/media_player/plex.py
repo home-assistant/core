@@ -20,6 +20,8 @@ REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
+PLEX_CONFIG_FILE = 'plex.conf'
+
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
@@ -28,14 +30,73 @@ SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 # pylint: disable=abstract-method, unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the plex platform. """
+    try:
+        # pylint: disable=unused-variable
+        from plexapi.myplex import MyPlexUser
+        from plexapi.exceptions import BadRequest
+    except ImportError:
+        _LOGGER.exception("Error while importing dependency plexapi.")
+        return
+
+    if discovery_info is not None:
+        host = urlparse(discovery_info[1]).url
+        _LOGGER.error('Discovered PLEX server: %s'%host)
+    else:
+        # 'name' is currently used for plexserver
+        # This indicates old config method
+        host = config.get('name','')
+
+    if host in _CONFIGURING:
+        return
+
+    setup_plexserver(host, hass, add_devices)
+
+
+def setup_plexserver(host, hass, add_devices):
+    ''' Setup a plexserver based on host parameter'''
     from plexapi.myplex import MyPlexUser
+    from plexapi.server import PlexServer
     from plexapi.exceptions import BadRequest
 
-    name = config.get('name', '')
-    user = config.get('user', '')
-    password = config.get('password', '')
-    plexuser = MyPlexUser.signin(user, password)
-    plexserver = plexuser.getResource(name).connect()
+    conf_file = hass.config.path(PHUE_CONFIG_FILE))
+
+    # Compatability mode. If there's name, user, etc set in
+    # configuration, let's use those, not to break anything
+    # We may want to use this method as option when HA's
+    # configuration options increase
+    if config.get('name', ''):
+        name = config.get('name', '')
+        user = config.get('user', '')
+        password = config.get('password', '')
+        plexuser = MyPlexUser.signin(user, password)
+        plexserver = plexuser.getResource(name).connect()
+
+    # Discovery mode. Parse config file, attempt conenction
+    # Request configuration on connect fail
+    else:
+
+        try:
+            # Get configuration from config file
+            # FIXME unauthenticated plex servers dont require
+            # a token, so config file isn't mandatory
+            with open(conf_file,'r') as f:
+                conf_dict = eval(f.read())
+
+            plexserver = PlexServer(
+                host,
+                conf_dict.get(host)['token'])
+        except IOError: # File not found
+
+        except NotFound:  # Wrong host was given or need token?
+            _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
+            return
+
+        except phue.PhueRegistrationException:
+            _LOGGER.warning("Connected to Hue at %s but not registered.", host)
+
+            request_configuration(host, hass, add_devices_callback)
+            return
+
     plex_clients = {}
     plex_sessions = {}
 
