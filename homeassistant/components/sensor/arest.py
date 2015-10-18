@@ -12,6 +12,7 @@ from datetime import timedelta
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,36 +41,67 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       "Add http:// to your URL.")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to device. "
-                      "Please check the IP address in the configuration file.")
+        _LOGGER.error("No route to device at %s. "
+                      "Please check the IP address in the configuration file.",
+                      resource)
         return False
 
     arest = ArestData(resource)
 
     dev = []
+    pins = config.get('pins', None)
+
     for variable in config['monitored_variables']:
         if variable['name'] not in response['variables']:
             _LOGGER.error('Variable: "%s" does not exist', variable['name'])
             continue
 
         dev.append(ArestSensor(arest,
+                               resource,
                                config.get('name', response['name']),
                                variable['name'],
-                               variable.get('unit')))
+                               variable=variable['name'],
+                               unit_of_measurement=variable.get(
+                                   'unit_of_measurement')))
+
+    for pinnum, pin in pins.items():
+        dev.append(ArestSensor(ArestData(resource, pinnum),
+                               resource,
+                               config.get('name', response['name']),
+                               pin.get('name'),
+                               pin=pinnum,
+                               unit_of_measurement=pin.get(
+                                   'unit_of_measurement'),
+                               corr_factor=pin.get('correction_factor', None),
+                               decimal_places=pin.get('decimal_places', None)))
 
     add_devices(dev)
 
 
+# pylint: disable=too-many-instance-attributes, too-many-arguments
 class ArestSensor(Entity):
-    """ Implements an aREST sensor. """
+    """ Implements an aREST sensor for exposed variables. """
 
-    def __init__(self, arest, location, variable, unit_of_measurement):
+    def __init__(self, arest, resource, location, name, variable=None,
+                 pin=None, unit_of_measurement=None, corr_factor=None,
+                 decimal_places=None):
         self.arest = arest
-        self._name = '{} {}'.format(location.title(), variable.title())
+        self._resource = resource
+        self._name = '{} {}'.format(location.title(), name.title()) \
+                     or DEVICE_DEFAULT_NAME
         self._variable = variable
+        self._pin = pin
         self._state = 'n/a'
         self._unit_of_measurement = unit_of_measurement
+        self._corr_factor = corr_factor
+        self._decimal_places = decimal_places
         self.update()
+
+        if self._pin is not None:
+            request = requests.get('{}/mode/{}/i'.format
+                                   (self._resource, self._pin), timeout=10)
+            if request.status_code is not 200:
+                _LOGGER.error("Can't set mode. Is device offline?")
 
     @property
     def name(self):
@@ -88,6 +120,16 @@ class ArestSensor(Entity):
 
         if 'error' in values:
             return values['error']
+        elif 'value' in values:
+            if self._corr_factor is not None \
+                    and self._decimal_places is not None:
+                return round((float(values['value']) *
+                              float(self._corr_factor)), self._decimal_places)
+            elif self._corr_factor is not None \
+                    and self._decimal_places is None:
+                return round(float(values['value']) * float(self._corr_factor))
+            else:
+                return values['value']
         else:
             return values.get(self._variable, 'n/a')
 
@@ -98,18 +140,34 @@ class ArestSensor(Entity):
 
 # pylint: disable=too-few-public-methods
 class ArestData(object):
-    """ Class for handling the data retrieval. """
+    """ Class for handling the data retrieval for variables. """
 
-    def __init__(self, resource):
-        self.resource = resource
+    def __init__(self, resource, pin=None):
+        self._resource = resource
+        self._pin = pin
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from aREST device. """
         try:
-            response = requests.get(self.resource, timeout=10)
-            self.data = response.json()['variables']
+            if self._pin is None:
+                response = requests.get(self._resource, timeout=10)
+                self.data = response.json()['variables']
+            else:
+                try:
+                    if str(self._pin[0]) == 'A':
+                        response = requests.get('{}/analog/{}'.format(
+                            self._resource, self._pin[1:]), timeout=10)
+                        self.data = {'value': response.json()['return_value']}
+                    else:
+                        _LOGGER.error("Wrong pin naming. "
+                                      "Please check your configuration file.")
+                except TypeError:
+                    response = requests.get('{}/digital/{}'.format(
+                        self._resource, self._pin), timeout=10)
+                    self.data = {'value': response.json()['return_value']}
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to device. Is device offline?")
+            _LOGGER.error("No route to device %s. Is device offline?",
+                          self._resource)
             self.data = {'error': 'error fetching'}
