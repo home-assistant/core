@@ -22,8 +22,8 @@ import json
 from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (Light, ATTR_XY_COLOR,
                                             ATTR_BRIGHTNESS)
-from homeassistant.util.color import color_RGB_to_xy, \
-                                     color_xy_brightness_to_RGB
+from homeassistant.util.color import (color_RGB_to_xy,
+                                      color_xy_brightness_to_RGB)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = []
