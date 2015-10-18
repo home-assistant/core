@@ -291,7 +291,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def media_pause(self):
         """ media_pause media player. """
-        self._lms.query(self._id, 'pause', '0')
+        self._lms.query(self._id, 'pause', '1')
         self.update_ha_state()
 
     def media_next_track(self):
