@@ -192,9 +192,7 @@ class HeatControl(ThermostatDevice):
 
     @property
     def is_away_mode_on(self):
-        """
-        Returns if away mode is on.
-        """
+        """ Returns if away mode is on. """
         return self._away
 
     def turn_away_mode_on(self):
@@ -212,5 +210,5 @@ class HeatControl(ThermostatDevice):
 
     @property
     def max_temp(self):
-        """ Return maxmum temperature. """
+        """ Return maximum temperature. """
         return self._max_temp
