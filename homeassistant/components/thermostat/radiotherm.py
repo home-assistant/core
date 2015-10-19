@@ -4,15 +4,23 @@ homeassistant.components.thermostat.radiotherm
 Adds support for Radio Thermostat wifi-enabled home thermostats
 
 Config:
+thermostat:
+    platform: radiotherm
+    hold_temp: boolean to control if hass temp adjustments hold(True) or are temporary(False)
+    host: list of thermostat host/ips to control
 
 Example:
 thermostat:
     platform: radiotherm
+    hold_temp: True
     host:
         - 192.168.99.137
         - 192.168.99.202
 
-Configure two thermostats via the configuration.yaml
+Configure two thermostats via the configuration.yaml.  Temperature settings sent from
+hass will be sent to thermostat and then hold at that temp.  Set to False if you set
+a thermostat schedule on the tstat itself and just want hass to send temporary temp
+changes.
 
 """
 import logging
@@ -24,6 +32,8 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
 from homeassistant.const import (CONF_HOST, TEMP_FAHRENHEIT)
 
 REQUIREMENTS = ['radiotherm==1.2']
+
+HOLD_TEMP = 'hold_temp'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -42,12 +52,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         logger.error("no radiotherm thermostats detected")
         return
 
+    hold_temp = config.get(HOLD_TEMP, False)
     tstats = []
 
     for host in hosts:
         try:
             tstat = radiotherm.get_thermostat(host)
-            tstats.append(RadioThermostat(tstat))
+            tstats.append(RadioThermostat(tstat, hold_temp))
         except (URLError, OSError):
             logger.exception(
                 "Unable to connect to Radio Thermostat: %s", host)
@@ -58,13 +69,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RadioThermostat(ThermostatDevice):
     """ Represent a Radio Thermostat. """
 
-    def __init__(self, device):
+    def __init__(self, device, hold_temp):
         self.device = device
         self.set_time()
         self._target_temperature = None
         self._current_temperature = None
         self._operation = STATE_IDLE
         self._name = None
+        self.hold_temp = hold_temp
         self.update()
 
     @property
@@ -119,7 +131,10 @@ class RadioThermostat(ThermostatDevice):
             self.device.t_cool = temperature
         elif self._operation == STATE_HEAT:
             self.device.t_heat = temperature
-        self.device.hold = 1
+        if self.hold_temp:
+            self.device.hold = 1
+        else:
+            self.device.hold = 0
 
     def set_time(self):
         """ Set device time """
