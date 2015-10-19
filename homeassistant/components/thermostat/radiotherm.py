@@ -2,6 +2,18 @@
 homeassistant.components.thermostat.radiotherm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for Radio Thermostat wifi-enabled home thermostats
+
+Config:
+
+Example:
+thermostat:
+    platform: radiotherm
+    host:
+        - 192.168.99.137
+        - 192.168.99.202
+
+Configure two thermostats via the configuration.yaml
+
 """
 import logging
 import datetime
@@ -22,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hosts = []
     if CONF_HOST in config:
-        hosts = [config[CONF_HOST]]
+        hosts = config[CONF_HOST]
     else:
         hosts.append(radiotherm.discover.discover_address())
 
