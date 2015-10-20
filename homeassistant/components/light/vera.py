@@ -1,52 +1,10 @@
 """
 homeassistant.components.light.vera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for Vera lights. This component is useful if you wish for switches
-connected to your Vera controller to appear as lights in Home Assistant.
-All switches will be added as a light unless you exclude them in the config.
+Support for Vera lights.
 
-Configuration:
-
-To use the Vera lights you will need to add something like the following to
-your configuration.yaml file.
-
-light:
-  platform: vera
-  vera_controller_url: http://YOUR_VERA_IP:3480/
-  device_data:
-    12:
-      name: My awesome switch
-      exclude: true
-    13:
-      name: Another switch
-
-Variables:
-
-vera_controller_url
-*Required
-This is the base URL of your vera controller including the port number if not
-running on 80. Example: http://192.168.1.21:3480/
-
-device_data
-*Optional
-This contains an array additional device info for your Vera devices. It is not
-required and if not specified all lights configured in your Vera controller
-will be added with default values. You should use the id of your vera device
-as the key for the device within device_data.
-
-These are the variables for the device_data array:
-
-name
-*Optional
-This parameter allows you to override the name of your Vera device in the HA
-interface, if not specified the value configured for the device in your Vera
-will be used.
-
-exclude
-*Optional
-This parameter allows you to exclude the specified device from Home Assistant,
-it should be set to "true" if you want this device excluded.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.vera.html
 """
 import logging
 from requests.exceptions import RequestException
