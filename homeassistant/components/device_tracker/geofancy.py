@@ -7,12 +7,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.geofancy.html
 """
 
+import logging
+
 from homeassistant.const import (
     HTTP_UNPROCESSABLE_ENTITY, HTTP_INTERNAL_SERVER_ERROR)
-
-DEPENDENCIES = ['http']
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE)
+    
+DEPENDENCIES = ['http', 'zone']
 
 _SEE = 0
+_HASS = None
 
 URL_API_GEOFANCY_ENDPOINT = "/api/geofancy"
 
@@ -23,6 +27,9 @@ def setup_scanner(hass, config, see):
     # Use a global variable to keep setup_scanner compact when using a callback
     global _SEE
     _SEE = see
+    
+    global _HASS
+    _HASS = hass
 
     # POST would be semantically better, but that currently does not work
     # since Geofancy sends the data as key1=value1&key2=value2
@@ -34,6 +41,16 @@ def setup_scanner(hass, config, see):
     return True
 
 
+def available_zones():
+    """ Returns a string with available zone names. """
+    available_zones = ""
+    zone_ids = _HASS.states.entity_ids("zone")
+    if(len(zone_ids) == 0):
+        return "None. No zones have been configured."
+    
+    return ", ".join(zone_ids).replace("zone.", "")
+
+
 def _handle_get_api_geofancy(handler, path_match, data):
     """ Geofancy message received. """
 
@@ -42,23 +59,20 @@ def _handle_get_api_geofancy(handler, path_match, data):
             "Error while parsing Geofancy message.",
             HTTP_INTERNAL_SERVER_ERROR)
         return
-    if 'latitude' not in data or 'longitude' not in data:
+    if ('latitude' not in data or 'longitude' not in data) and 'zone' not in data and 'away' not in data:
         handler.write_json_message(
-            "Location not specified.",
+            "Location not specified. Either use the latitude & longtitude, the zone or the away parameter.",
             HTTP_UNPROCESSABLE_ENTITY)
         return
-    if 'device' not in data or 'id' not in data:
+    if 'device' not in data:
         handler.write_json_message(
-            "Device id or location id not specified.",
+            "Please specify the device parameter.",
             HTTP_UNPROCESSABLE_ENTITY)
         return
 
-    try:
-        gps_coords = (float(data['latitude']), float(data['longitude']))
-    except ValueError:
-        # If invalid latitude / longitude format
+    if 'id' not in data and ('latitude' in data or 'longitude' in data):
         handler.write_json_message(
-            "Invalid latitude / longitude format.",
+            "Please specify the id parameter to set the location name.",
             HTTP_UNPROCESSABLE_ENTITY)
         return
 
@@ -66,6 +80,31 @@ def _handle_get_api_geofancy(handler, path_match, data):
     device_uuid = data['device']
     device_entity_id = device_uuid.replace('-', '')
 
-    _SEE(dev_id=device_entity_id, gps=gps_coords, location_name=data['id'])
+    gps_coords = None
+    location_name = None
+    if 'zone' in data:
+        zone_id = "zone." + data['zone']
+        zone = _HASS.states.get(zone_id)
+        if(zone == None):
+            handler.write_json_message("The zone you specified is invalid. Available zones: %s" % available_zones(), HTTP_UNPROCESSABLE_ENTITY)
+            return
+        gps_coords = (zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
+        message = "Set %s's location to zone %s." % (device_uuid, zone.name)
+    elif 'away' in data:
+        gps_coords = None
+        message = "Set %s's location to away." % device_uuid
+    else:
+        try:
+            gps_coords = (float(data['latitude']), float(data['longitude']))
+            location_name = data['id']
+            message = "Set %s's location to %f / %f (%s)." % (device_uuid, gps_coords[0], gps_coords[1], location_name)
+        except ValueError:
+            # If invalid latitude / longitude format
+            handler.write_json_message(
+                "Invalid latitude / longitude format.",
+                HTTP_UNPROCESSABLE_ENTITY)
+            return
 
-    handler.write_json_message("Geofancy message processed")
+    _SEE(dev_id=device_entity_id, gps=gps_coords, location_name=location_name)
+
+    handler.write_json_message(message)
