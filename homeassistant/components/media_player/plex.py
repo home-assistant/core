@@ -8,6 +8,7 @@ https://home-assistant.io/components/media_player.plex.html
 """
 import logging
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
@@ -22,6 +23,8 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 PLEX_CONFIG_FILE = 'plex.conf'
 
+# Map ip to request id for configuring
+_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
@@ -39,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     if discovery_info is not None:
-        host = urlparse(discovery_info[1]).url
+        host = urlparse(discovery_info[1]).netloc
         _LOGGER.error('Discovered PLEX server: %s'%host)
     else:
         # 'name' is currently used for plexserver
@@ -49,16 +52,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if host in _CONFIGURING:
         return
 
-    setup_plexserver(host, hass, add_devices)
+    setup_plexserver(host, config, hass, add_devices)
 
 
 def setup_plexserver(host, hass, add_devices):
     ''' Setup a plexserver based on host parameter'''
-    from plexapi.myplex import MyPlexUser
     from plexapi.server import PlexServer
     from plexapi.exceptions import BadRequest
 
-    conf_file = hass.config.path(PHUE_CONFIG_FILE))
+    conf_file = hass.config.path(PLEX_CONFIG_FILE)
 
     # Compatability mode. If there's name, user, etc set in
     # configuration, let's use those, not to break anything
@@ -75,6 +77,7 @@ def setup_plexserver(host, hass, add_devices):
     # Request configuration on connect fail
     else:
 
+        print('WEEEEJ, host: %s'%host)
         try:
             # Get configuration from config file
             # FIXME unauthenticated plex servers dont require
@@ -83,18 +86,14 @@ def setup_plexserver(host, hass, add_devices):
                 conf_dict = eval(f.read())
 
             plexserver = PlexServer(
-                host,
+                'http://%s'%host,
                 conf_dict.get(host)['token'])
         except IOError: # File not found
+            request_configuration(host, hass, add_devices_callback)
+            return
 
         except NotFound:  # Wrong host was given or need token?
             _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
-            return
-
-        except phue.PhueRegistrationException:
-            _LOGGER.warning("Connected to Hue at %s but not registered.", host)
-
-            request_configuration(host, hass, add_devices_callback)
             return
 
     plex_clients = {}
@@ -141,6 +140,30 @@ def setup_plexserver(host, hass, add_devices):
 
     update_devices()
     update_sessions()
+
+
+def request_configuration(host, hass, add_devices_callback):
+    """ Request configuration steps from the user. """
+    configurator = get_component('configurator')
+
+    # We got an error if this method is called while we are configuring
+    if host in _CONFIGURING:
+        configurator.notify_errors(
+            _CONFIGURING[host], "Failed to register, please try again.")
+
+        return
+
+    def plex_configuration_callback(data):
+        """ Actions to do when our configuration callback is called. """
+        setup_plexserrver(host, hass, add_devices_callback)
+
+    _CONFIGURING[host] = configurator.request_config(
+        hass, "Plex Media Server", plex_configuration_callback,
+        description=("Enter the X-Plex-Token as descrobed here<BR>"
+            '<A HREF="https://support.plex.tv/hc/en-us/articles/204059436-Finding-your-account-token-X-Plex-Token" TARGET="_new">Plex documentation</A>'),
+        description_image="/static/images/config_plexserver.jpg",
+        submit_caption="I have pressed the button"
+    )
 
 
 class PlexClient(MediaPlayerDevice):
