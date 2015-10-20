@@ -4,47 +4,8 @@ homeassistant.components.sensor.efergy
 Monitors home energy use as measured by an efergy engage hub using its
 (unofficial, undocumented) API.
 
-Configuration:
-
-To use the efergy sensor you will need to add something like the following
-to your configuration.yaml file.
-
-sensor:
-  platform: efergy
-  app_token: APP_TOKEN
-  utc_offset: UTC_OFFSET
-  monitored_variables:
-    - type: instant_readings
-    - type: budget
-    - type: cost
-      period: day
-      currency: $
-
-Variables:
-
-api_key
-*Required
-To get a new App Token, log in to your efergy account, go
-to the Settings page, click on App tokens, and click "Add token".
-
-utc_offset
-*Required for some variables
-Some variables (currently only the daily_cost) require that the
-negative number of minutes your timezone is ahead/behind UTC time.
-
-monitored_variables
-*Required
-An array specifying the variables to monitor.
-
-period
-*Optional
-Some variables take a period argument. Valid options are "day", "week",
-"month", and "year".
-
-currency
-*Optional
-This is used to display the cost/period as the unit when monitoring the
-cost. It should correspond to the actual currency used in your dashboard.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.efergy.html
 """
 import logging
 from requests import get
