@@ -24,6 +24,7 @@ sensor:
     - pressure
     - visibility
     - ozone
+  units: si, us, ca, uk, uk2 or auto(default)
 
 Variables:
 
@@ -35,12 +36,13 @@ one.
 
 monitored_conditions
 *Required
-An array specifying the conditions to monitor.
-
-monitored_conditions
-*Required
 Conditions to monitor. See the configuration example above for a
 list of all available conditions to monitor.
+
+units
+*Optional
+Specify the unit system.  Default to 'auto' which is based on location.
+Other options are us, si, ca, uk, and uk2. For more info see API link below.
 
 Details for the API : https://developer.forecast.io/docs/v2
 """
@@ -55,23 +57,26 @@ except ImportError:
     forecastio = None
 
 from homeassistant.util import Throttle
-from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (CONF_API_KEY)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
+
+# Sensor types are defined like so:
+# Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', ''],
-    'precip_type': ['Precip', ''],
-    'precip_intensity': ['Precip intensity', 'mm'],
-    'temperature': ['Temperature', ''],
-    'dew_point': ['Dew point', '°C'],
-    'wind_speed': ['Wind Speed', 'm/s'],
-    'wind_bearing': ['Wind Bearing', '°'],
-    'cloud_cover': ['Cloud coverage', '%'],
-    'humidity': ['Humidity', '%'],
-    'pressure': ['Pressure', 'mBar'],
-    'visibility': ['Visibility', 'km'],
-    'ozone': ['Ozone', 'DU'],
+    'summary': ['Summary', '', '', '', '', ''],
+    'precip_type': ['Precip', '', '', '', '', ''],
+    'precip_intensity': ['Precip intensity', 'mm', 'in', 'mm', 'mm', 'mm'],
+    'temperature': ['Temperature', '°C', '°F', '°C', '°C', '°C'],
+    'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C'],
+    'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph'],
+    'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°'],
+    'cloud_cover': ['Cloud coverage', '%', '%', '%', '%', '%'],
+    'humidity': ['Humidity', '%', '%', '%', '%', '%'],
+    'pressure': ['Pressure', 'mBar', 'mBar', 'mBar', 'mBar', 'mBar'],
+    'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
+    'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
 }
 
 # Return cached results if last scan was less then this time ago
@@ -90,9 +95,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
-    unit = hass.config.temperature_unit
-
     try:
         forecast = forecastio.load_forecast(config.get(CONF_API_KEY, None),
                                             hass.config.latitude,
@@ -104,16 +106,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Please check your settings for Forecast.io.")
         return False
 
+    units = config.get('units')
+    if units is None:
+        units = 'auto'
+
     data = ForeCastData(config.get(CONF_API_KEY, None),
                         hass.config.latitude,
-                        hass.config.longitude)
+                        hass.config.longitude,
+                        units)
 
     dev = []
     for variable in config['monitored_conditions']:
         if variable not in SENSOR_TYPES:
             _LOGGER.error('Sensor type: "%s" does not exist', variable)
         else:
-            dev.append(ForeCastSensor(data, variable, unit))
+            dev.append(ForeCastSensor(data, variable))
 
     add_devices(dev)
 
@@ -122,14 +129,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ForeCastSensor(Entity):
     """ Implements an Forecast.io sensor. """
 
-    def __init__(self, weather_data, sensor_type, unit):
+    def __init__(self, weather_data, sensor_type):
         self.client_name = 'Weather'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_client = weather_data
-        self._unit = unit
         self.type = sensor_type
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_system = self.forecast_client.unit_system
+        if self._unit_system == 'si':
+            self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        elif self._unit_system == 'us':
+            self._unit_of_measurement = SENSOR_TYPES[self.type][2]
+        elif self._unit_system == 'ca':
+            self._unit_of_measurement = SENSOR_TYPES[self.type][3]
+        elif self._unit_system == 'uk':
+            self._unit_of_measurement = SENSOR_TYPES[self.type][4]
+        elif self._unit_system == 'uk2':
+            self._unit_of_measurement = SENSOR_TYPES[self.type][5]
         self.update()
 
     @property
@@ -145,6 +161,11 @@ class ForeCastSensor(Entity):
     def unit_of_measurement(self):
         """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
+
+    @property
+    def unit_system(self):
+        """ Unit system of this entity. """
+        return self._unit_system
 
     # pylint: disable=too-many-branches
     def update(self):
@@ -169,19 +190,9 @@ class ForeCastSensor(Entity):
                 else:
                     self._state = data.precipType
             elif self.type == 'dew_point':
-                if self._unit == TEMP_CELCIUS:
-                    self._state = round(data.dewPoint, 1)
-                elif self._unit == TEMP_FAHRENHEIT:
-                    self._state = round(data.dewPoint * 1.8 + 32.0, 1)
-                else:
-                    self._state = round(data.dewPoint, 1)
+                self._state = round(data.dewPoint, 1)
             elif self.type == 'temperature':
-                if self._unit == TEMP_CELCIUS:
-                    self._state = round(data.temperature, 1)
-                elif self._unit == TEMP_FAHRENHEIT:
-                    self._state = round(data.temperature * 1.8 + 32.0, 1)
-                else:
-                    self._state = round(data.temperature, 1)
+                self._state = round(data.temperature, 1)
             elif self.type == 'wind_speed':
                 self._state = data.windSpeed
             elif self.type == 'wind_bearing':
@@ -196,6 +207,7 @@ class ForeCastSensor(Entity):
                 self._state = data.visibility
             elif self.type == 'ozone':
                 self._state = round(data.ozone, 1)
+
         except forecastio.utils.PropertyUnavailable:
             pass
 
@@ -203,11 +215,14 @@ class ForeCastSensor(Entity):
 class ForeCastData(object):
     """ Gets the latest data from Forecast.io. """
 
-    def __init__(self, api_key, latitude, longitude):
+    def __init__(self, api_key, latitude, longitude, units):
         self._api_key = api_key
         self.latitude = latitude
         self.longitude = longitude
         self.data = None
+        self.unit_system = None
+        self.units = units
+        self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -216,5 +231,6 @@ class ForeCastData(object):
         forecast = forecastio.load_forecast(self._api_key,
                                             self.latitude,
                                             self.longitude,
-                                            units='si')
+                                            units=self.units)
         self.data = forecast.currently()
+        self.unit_system = forecast.json['flags']['units']
