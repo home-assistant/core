@@ -28,7 +28,7 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_CAST = 'google_cast'
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_SONOS = 'sonos'
-SERVICE_PLEX = 'plex'
+SERVICE_PLEX = 'plex_mediaserver'
 
 SERVICE_HANDLERS = {
     SERVICE_WEMO: "switch",
