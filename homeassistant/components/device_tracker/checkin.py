@@ -1,10 +1,10 @@
 """
-homeassistant.components.device_tracker.geofancy
+homeassistant.components.device_tracker.checkin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Geofancy platform for the device tracker.
+Checkin platform for the device tracker.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.geofancy.html
+https://home-assistant.io/components/device_tracker.checkin.html
 """
 
 import logging
@@ -18,11 +18,11 @@ DEPENDENCIES = ['http', 'zone']
 _SEE = 0
 _HASS = None
 
-URL_API_GEOFANCY_ENDPOINT = "/api/geofancy"
+URL_API_CHECKIN_ENDPOINT = "/api/checkin"
 
 
 def setup_scanner(hass, config, see):
-    """ Set up an endpoint for the Geofancy app. """
+    """ Set up an endpoint for the checkin app. """
 
     # Use a global variable to keep setup_scanner compact when using a callback
     global _SEE
@@ -36,7 +36,7 @@ def setup_scanner(hass, config, see):
     # in the request body, while Home Assistant expects json there.
 
     hass.http.register_path(
-        'GET', URL_API_GEOFANCY_ENDPOINT, _handle_get_api_geofancy)
+        'GET', URL_API_CHECKIN_ENDPOINT, _handle_get_api_checkin)
 
     return True
 
@@ -51,12 +51,12 @@ def available_zones():
     return ", ".join(zone_ids).replace("zone.", "")
 
 
-def _handle_get_api_geofancy(handler, path_match, data):
-    """ Geofancy message received. """
+def _handle_get_api_checkin(handler, path_match, data):
+    """ Checkin message received. """
 
     if not isinstance(data, dict):
         handler.write_json_message(
-            "Error while parsing Geofancy message.",
+            "Error while parsing Checkin message.",
             HTTP_INTERNAL_SERVER_ERROR)
         return
     if ('latitude' not in data or 'longitude' not in data) and 'zone' not in data and 'away' not in data:
