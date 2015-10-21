@@ -2,4 +2,4 @@ cd "$(dirname "$0")/.."
 
 git submodule init
 script/bootstrap
-python setup.py develop
+python3 setup.py develop
