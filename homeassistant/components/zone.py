@@ -1,25 +1,10 @@
 """
 homeassistant.components.zone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Allows defintion of zones in Home Assistant.
 
-zone:
-  name: School
-  latitude: 32.8773367
-  longitude: -117.2494053
-  # Optional radius in meters (default: 100)
-  radius: 250
-  # Optional icon to show instead of name
-  # See https://www.google.com/design/icons/
-  # Example: home, work, group-work, shopping-cart, social:people
-  icon: group-work
-
-zone 2:
-  name: Work
-  latitude: 32.8753367
-  longitude: -117.2474053
-
+For configuration details please visit the documentation for this component at
+https://home-assistant.io/components/zone.html
 """
 import logging
 
