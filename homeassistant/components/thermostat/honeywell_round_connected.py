@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
 REQUIREMENTS = ['evohomeclient']
 
-from . import ATTR_CURRENT_TEMPERATURE,ATTR_TEMPERATURE
+# from . import ATTR_CURRENT_TEMPERATURE,ATTR_TEMPERATURE
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     try:
-        from evohomeclient import EvohomeClient
+        from evohomeclient2 import EvohomeClient
     except ImportError:
         logger.exception(
             "Error while importing dependency nest. "
@@ -55,6 +55,9 @@ class RoundThermostat(ThermostatDevice):
     def __init__(self, device):
         #self.structure = structure
         self.device = device
+        self._current_temperature=None
+        self._target_temperature=None
+        self.update()
 
 
     @property
@@ -71,18 +74,20 @@ class RoundThermostat(ThermostatDevice):
     def device_state_attributes(self):
         """ Returns device specific state attributes. """
         # Move these to Thermostat Device and make them global
-        data = self.device.temperatures(force_refresh=True)[0]
-        return {
-            ATTR_CURRENT_TEMPERATURE: data['temp'],
-            ATTR_TEMPERATURE: data['setpoint']
-        }
+        return {}
 
 
 
-    # @property
-    # def current_temperature(self):
-    #     """ Returns the current temperature. """
-    #     return round(self.device.temperature, 1)
+
+    @property
+    def current_temperature(self):
+        """ Returns the current temperature. """
+        return self._current_temperature
+        #return round(self.device.temperature, 1)
+
+    @current_temperature.setter
+    def current_temparature(self,value):
+        self._current_temperature=value
 
     # @property
     # def operation(self):
@@ -94,10 +99,16 @@ class RoundThermostat(ThermostatDevice):
     #     else:
     #         return STATE_IDLE
 
-    # @property
-    # def target_temperature(self):
-    #     """ Returns the temperature we try to reach. """
-    #     target = self.device.target
+    @property
+    def target_temperature(self):
+        """ Returns the temperature we try to reach. """
+        return self._target_temperature
+
+    @target_temperature.setter
+    def target_temperature(self,value):
+        self._target_temperature=value
+
+    #    target = self.device.target
     #
     #     if self.device.mode == 'range':
     #         low, high = target
@@ -170,6 +181,12 @@ class RoundThermostat(ThermostatDevice):
     #     else:
     #         return temp
 
+    @property
+    def should_poll(self):
+        """ No polling needed for a demo thermostat. """
+        return True
+
     def update(self):
-        """ Python-nest has its own mechanism for staying up to date. """
-        pass
+        for dev in self.device.temperatures():
+            self._current_temperature=dev['temp']
+            self._target_temperature=dev['setpoint']
