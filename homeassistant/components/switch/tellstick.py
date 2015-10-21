@@ -3,11 +3,8 @@ homeassistant.components.switch.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Tellstick switches.
 
-Because the tellstick sends its actions via radio and from most
-receivers it's impossible to know if the signal was received or not.
-Therefore you can configure the switch to try to send each signal repeatedly
-with the config parameter signal_repetitions (default is 1).
-signal_repetitions: 3
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.tellstick.html
 """
 import logging
 
