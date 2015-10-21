@@ -59,7 +59,7 @@ def setup(hass, config):
 
 
 class WinkToggleDevice(ToggleEntity):
-    """ Represents a Wink switch within Home Assistant. """
+    """ Represents a Wink toogle (switch) device. """
 
     def __init__(self, wink):
         self.wink = wink
