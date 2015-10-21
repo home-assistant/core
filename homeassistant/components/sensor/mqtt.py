@@ -6,7 +6,6 @@ Allows to configure a MQTT sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt.html
 """
-
 import logging
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
