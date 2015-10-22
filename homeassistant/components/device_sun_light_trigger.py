@@ -24,6 +24,7 @@ LIGHT_PROFILE = 'relax'
 CONF_LIGHT_PROFILE = 'light_profile'
 CONF_LIGHT_GROUP = 'light_group'
 CONF_DEVICE_GROUP = 'device_group'
+CONF_DEVICES_AS_GROUP = 'devices_as_group'
 
 
 # pylint: disable=too-many-branches
@@ -39,6 +40,8 @@ def setup(hass, config):
 
     device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
                                       device_tracker.ENTITY_ID_ALL_DEVICES)
+
+    devices_as_group = config[DOMAIN].get(CONF_DEVICES_AS_GROUP, False)
 
     logger = logging.getLogger(__name__)
 
@@ -157,9 +160,9 @@ def setup(hass, config):
 
             light.turn_off(hass, light_ids)
 
-    # Track home coming of each device
+    # Track when devices (separately or as group) come home
     track_state_change(
-        hass, device_entity_ids, check_light_on_dev_state_change,
+        hass, device_entity_ids if devices_as_group else device_group, check_light_on_dev_state_change,
         STATE_NOT_HOME, STATE_HOME)
 
     # Track when all devices are gone to shut down lights
