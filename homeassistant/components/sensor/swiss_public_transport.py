@@ -38,8 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception(
             "Unable to determine stations. "
             "Check your settings and/or the availability of opendata.ch")
-
-        return None
+        return False
 
     dev = []
     data = PublicTransportData(journey)
