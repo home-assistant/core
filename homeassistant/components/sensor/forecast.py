@@ -13,9 +13,14 @@ sensor:
   api_key: YOUR_APP_KEY
   monitored_conditions:
     - summary
+    - icon
+    - nearest_storm_distance
+    - nearest_storm_bearing
     - precip_type
     - precip_intensity
+    - precip_probability
     - temperature
+    - apparent_temperature
     - dew_point
     - wind_speed
     - wind_bearing
@@ -24,7 +29,8 @@ sensor:
     - pressure
     - visibility
     - ozone
-  units: si, us, ca, uk, uk2 or auto(default)
+  # Optional: specify which unit system to use.
+  units: si, us, ca, uk2 or auto
 
 Variables:
 
@@ -41,8 +47,10 @@ list of all available conditions to monitor.
 
 units
 *Optional
-Specify the unit system.  Default to 'auto' which is based on location.
-Other options are us, si, ca, uk, and uk2. For more info see API link below.
+Specify the unit system.  Default to 'si' or 'us' based on the temperature
+preference in Home Assistant.  Other options are auto, us, si, ca, and uk2.
+'auto' will let forecast.io decide the unit system based on location.
+For more information see the API url below.
 
 Details for the API : https://developer.forecast.io/docs/v2
 """
@@ -57,7 +65,7 @@ except ImportError:
     forecastio = None
 
 from homeassistant.util import Throttle
-from homeassistant.const import (CONF_API_KEY)
+from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,13 +74,21 @@ _LOGGER = logging.getLogger(__name__)
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
     'summary': ['Summary', '', '', '', '', ''],
+    'icon': ['Icon', '', '', '', '', ''],
+    'nearest_storm_distance': ['Nearest Storm Distance',
+                               'km', 'm', 'km', 'km', 'm'],
+    'nearest_storm_bearing': ['Nearest Storm Bearing',
+                              '°', '°', '°', '°', '°'],
     'precip_type': ['Precip', '', '', '', '', ''],
-    'precip_intensity': ['Precip intensity', 'mm', 'in', 'mm', 'mm', 'mm'],
+    'precip_intensity': ['Precip Intensity', 'mm', 'in', 'mm', 'mm', 'mm'],
+    'precip_probability': ['Precip Probability', '%', '%', '%', '%', '%'],
     'temperature': ['Temperature', '°C', '°F', '°C', '°C', '°C'],
+    'apparent_temperature': ['Apparent Temperature',
+                             '°C', '°F', '°C', '°C', '°C'],
     'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C'],
     'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph'],
     'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°'],
-    'cloud_cover': ['Cloud coverage', '%', '%', '%', '%', '%'],
+    'cloud_cover': ['Cloud Coverage', '%', '%', '%', '%', '%'],
     'humidity': ['Humidity', '%', '%', '%', '%', '%'],
     'pressure': ['Pressure', 'mBar', 'mBar', 'mBar', 'mBar', 'mBar'],
     'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
@@ -106,9 +122,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Please check your settings for Forecast.io.")
         return False
 
-    units = config.get('units')
-    if units is None:
-        units = 'auto'
+    if 'units' in config:
+        units = config['units']
+    elif hass.config.temperature_unit == TEMP_CELCIUS:
+        units = 'si'
+    else:
+        units = 'us'
 
     data = ForeCastData(config.get(CONF_API_KEY, None),
                         hass.config.latitude,
@@ -177,7 +196,14 @@ class ForeCastSensor(Entity):
         try:
             if self.type == 'summary':
                 self._state = data.summary
+            elif self.type == 'icon':
+                self._state = data.icon
+            elif self.type == 'nearest_storm_distance':
+                self._state = data.nearestStormDistance
+            elif self.type == 'nearest_storm_bearing':
+                self._state = data.nearestStormBearing
             elif self.type == 'precip_intensity':
+                self._state = data.precipIntensity
                 if data.precipIntensity == 0:
                     self._state = 'None'
                     self._unit_of_measurement = ''
@@ -189,10 +215,14 @@ class ForeCastSensor(Entity):
                     self._unit_of_measurement = ''
                 else:
                     self._state = data.precipType
+            elif self.type == 'precip_probability':
+                self._state = round(data.precipProbability * 100, 1)
             elif self.type == 'dew_point':
                 self._state = round(data.dewPoint, 1)
             elif self.type == 'temperature':
                 self._state = round(data.temperature, 1)
+            elif self.type == 'apparent_temperature':
+                self._state = round(data.apparentTemperature, 1)
             elif self.type == 'wind_speed':
                 self._state = data.windSpeed
             elif self.type == 'wind_bearing':
