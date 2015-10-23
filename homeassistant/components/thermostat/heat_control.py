@@ -150,4 +150,5 @@ class HeatControl(ThermostatDevice):
 
     @property
     def _is_heating(self):
+        """ If the heater is currently heating. """
         return switch.is_on(self.hass, self.heater_entity_id)
