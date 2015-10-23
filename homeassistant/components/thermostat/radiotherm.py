@@ -1,7 +1,7 @@
 """
 homeassistant.components.thermostat.radiotherm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds support for Radio Thermostat wifi-enabled home thermostats.    
+Adds support for Radio Thermostat wifi-enabled home thermostats.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.radiotherm.html
@@ -15,15 +15,13 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
 from homeassistant.const import (CONF_HOST, TEMP_FAHRENHEIT)
 
 REQUIREMENTS = ['radiotherm==1.2']
-
 HOLD_TEMP = 'hold_temp'
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Radio Thermostat. """
     import radiotherm
-
-    logger = logging.getLogger(__name__)
 
     hosts = []
     if CONF_HOST in config:
@@ -32,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts.append(radiotherm.discover.discover_address())
 
     if hosts is None:
-        logger.error("no radiotherm thermostats detected")
+        _LOGGER.error("No radiotherm thermostats detected")
         return
 
     hold_temp = config.get(HOLD_TEMP, False)
@@ -43,8 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             tstat = radiotherm.get_thermostat(host)
             tstats.append(RadioThermostat(tstat, hold_temp))
         except (URLError, OSError):
-            logger.exception(
-                "Unable to connect to Radio Thermostat: %s", host)
+            _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
+                              host)
 
     add_devices(tstats)
 
