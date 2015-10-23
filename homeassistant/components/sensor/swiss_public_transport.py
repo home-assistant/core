@@ -4,30 +4,8 @@ homeassistant.components.sensor.swiss_public_transport
 The Swiss public transport sensor will give you the next two departure times
 from a given location to another one. This sensor is limited to Switzerland.
 
-Configuration:
-
-To use the Swiss public transport sensor you will need to add something like
-the following to your configuration.yaml file.
-
-sensor:
-  platform: swiss_public_transport
-  from: STATION_ID
-  to: STATION_ID
-
-Variables:
-
-from
-*Required
-Start station/stop of your trip. To search for the ID of the station, use the
-an URL like this: http://transport.opendata.ch/v1/locations?query=Wankdorf
-to query for the station. If the score is 100 ("score":"100" in the response),
-it is a perfect match.
-
-to
-*Required
-Destination station/stop of the trip. Same procedure as for the start station.
-
-Details for the API : http://transport.opendata.ch
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.swiss_public_transport.html
 """
 import logging
 from datetime import timedelta
