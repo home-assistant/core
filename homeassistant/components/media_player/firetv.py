@@ -150,7 +150,7 @@ class FireTVDevice(MediaPlayerDevice):
         self._firetv.action('turn_off')
 
     def media_play(self):
-        """ Send play commmand. """
+        """ Send play command. """
         self._firetv.action('media_play')
 
     def media_pause(self):
