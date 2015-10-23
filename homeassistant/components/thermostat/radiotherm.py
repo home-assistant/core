@@ -1,28 +1,10 @@
 """
 homeassistant.components.thermostat.radiotherm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds support for Radio Thermostat wifi-enabled home thermostats
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adds support for Radio Thermostat wifi-enabled home thermostats.
 
-Config:
-thermostat:
-    platform: radiotherm
-    hold_temp: boolean to control if hass temp adjustments hold(True) or are
-    temporary(False)
-    host: list of thermostat host/ips to control
-
-Example:
-thermostat:
-    platform: radiotherm
-    hold_temp: True
-    host:
-        - 192.168.99.137
-        - 192.168.99.202
-
-Configure two thermostats via the configuration.yaml.  Temperature settings
-sent from hass will be sent to thermostat and then hold at that temp.  Set
-to False if you set a thermostat schedule on the tstat itself and just want
-hass to send temporary temp changes.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/thermostat.radiotherm.html
 """
 import logging
 import datetime
