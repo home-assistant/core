@@ -13,9 +13,10 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
 from homeassistant.helpers.entity import ToggleEntity
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
-SINGAL_REPETITIONS = 1
 
+SINGAL_REPETITIONS = 1
 REQUIREMENTS = ['tellcore-py==1.1.2']
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
@@ -24,8 +25,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     try:
         import tellcore.telldus as telldus
     except ImportError:
-        logging.getLogger(__name__).exception(
-            "Failed to import tellcore")
+        _LOGGER.exception("Failed to import tellcore")
         return
 
     core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
