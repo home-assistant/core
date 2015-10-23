@@ -4,7 +4,7 @@ components.arduino
 Arduino component that connects to a directly attached Arduino board which
 runs with the Firmata firmware.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/arduino.html
 """
 import logging
