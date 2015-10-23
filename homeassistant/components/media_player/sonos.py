@@ -1,17 +1,11 @@
 """
 homeassistant.components.media_player.sonos
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides an interface to Sonos players (via SoCo)
 
-Configuration:
-
-To use SoCo, add something like this to your configuration:
-
-media_player:
-  platform: sonos
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.sonos.html
 """
-
 import logging
 import datetime
 
@@ -56,8 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-instance-attributes, too-many-public-methods
 # pylint: disable=abstract-method
 class SonosDevice(MediaPlayerDevice):
     """ Represents a Sonos device. """
@@ -74,7 +67,7 @@ class SonosDevice(MediaPlayerDevice):
         return True
 
     def update_sonos(self, now):
-        """ Updates state, called by track_utc_time_change """
+        """ Updates state, called by track_utc_time_change. """
         self.update_ha_state(True)
 
     @property
@@ -162,31 +155,31 @@ class SonosDevice(MediaPlayerDevice):
         return SUPPORT_SONOS
 
     def turn_off(self):
-        """ turn_off media player. """
+        """ Turn off media player. """
         self._player.pause()
 
     def volume_up(self):
-        """ volume_up media player. """
+        """ Volume up media player. """
         self._player.volume += 1
 
     def volume_down(self):
-        """ volume_down media player. """
+        """ Volume down media player. """
         self._player.volume -= 1
 
     def set_volume_level(self, volume):
-        """ set volume level, range 0..1. """
+        """ Set volume level, range 0..1. """
         self._player.volume = str(int(volume * 100))
 
     def mute_volume(self, mute):
-        """ mute (true) or unmute (false) media player. """
+        """ Mute (true) or unmute (false) media player. """
         self._player.mute = mute
 
     def media_play(self):
-        """ media_play media player. """
+        """ Send paly command. """
         self._player.play()
 
     def media_pause(self):
-        """ media_pause media player. """
+        """ Send pause command. """
         self._player.pause()
 
     def media_next_track(self):
@@ -202,5 +195,5 @@ class SonosDevice(MediaPlayerDevice):
         self._player.seek(str(datetime.timedelta(seconds=int(position))))
 
     def turn_on(self):
-        """ turn the media player on. """
+        """ Turn the media player on. """
         self._player.play()
