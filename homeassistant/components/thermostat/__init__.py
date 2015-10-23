@@ -14,7 +14,8 @@ import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, TEMP_CELCIUS)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
+    TEMP_CELCIUS)
 
 DOMAIN = "thermostat"
 DEPENDENCIES = []
@@ -125,7 +126,7 @@ class ThermostatDevice(Entity):
     @property
     def state(self):
         """ Returns the current state. """
-        return self.target_temperature
+        return self.target_temperature or STATE_UNKNOWN
 
     @property
     def device_state_attributes(self):
