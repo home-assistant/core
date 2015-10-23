@@ -84,7 +84,7 @@ class SwissPublicTransportSensor(Entity):
                 ATTR_TARGET: self._to,
                 ATTR_REMAINING_TIME: '{}'.format(
                     ':'.join(str(self._times[2]).split(':')[:2]))
-             }
+            }
 
     # pylint: disable=too-many-branches
     def update(self):
