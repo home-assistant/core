@@ -7,12 +7,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.geofancy.html
 """
 
-import logging
-
 from homeassistant.const import (
     HTTP_UNPROCESSABLE_ENTITY, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE)
-    
+
 DEPENDENCIES = ['http', 'zone']
 
 _SEE = 0
@@ -27,7 +25,7 @@ def setup_scanner(hass, config, see):
     # Use a global variable to keep setup_scanner compact when using a callback
     global _SEE
     _SEE = see
-    
+
     global _HASS
     _HASS = hass
 
@@ -43,12 +41,7 @@ def setup_scanner(hass, config, see):
 
 def available_zones():
     """ Returns a string with available zone names. """
-    available_zones = ""
-    zone_ids = _HASS.states.entity_ids("zone")
-    if(len(zone_ids) == 0):
-        return "None. No zones have been configured."
-    
-    return ", ".join(zone_ids).replace("zone.", "")
+    return ", ".join(_HASS.states.entity_ids('zone')).replace("zone.", "")
 
 
 def _handle_get_api_geofancy(handler, path_match, data):
@@ -59,10 +52,11 @@ def _handle_get_api_geofancy(handler, path_match, data):
             "Error while parsing Geofancy message.",
             HTTP_INTERNAL_SERVER_ERROR)
         return
-    if ('latitude' not in data or 'longitude' not in data) and 'zone' not in data and 'away' not in data:
+    if ('latitude' not in data or 'longitude' not in data) and \
+            'zone' not in data and 'away' not in data:
         handler.write_json_message(
-            "Location not specified. Either use the latitude & longtitude, the zone or the away parameter.",
-            HTTP_UNPROCESSABLE_ENTITY)
+            "Location not specified. Either use the latitude & longtitude, "
+            "the zone or the away parameter.", HTTP_UNPROCESSABLE_ENTITY)
         return
     if 'device' not in data:
         handler.write_json_message(
@@ -85,10 +79,13 @@ def _handle_get_api_geofancy(handler, path_match, data):
     if 'zone' in data:
         zone_id = "zone." + data['zone']
         zone = _HASS.states.get(zone_id)
-        if(zone == None):
-            handler.write_json_message("The zone you specified is invalid. Available zones: %s" % available_zones(), HTTP_UNPROCESSABLE_ENTITY)
+        if zone is None:
+            handler.write_json_message(
+                "The zone you specified is invalid. Available zones: %s" %
+                available_zones(), HTTP_UNPROCESSABLE_ENTITY)
             return
-        gps_coords = (zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
+        gps_coords = (zone.attributes[ATTR_LATITUDE],
+                      zone.attributes[ATTR_LONGITUDE])
         message = "Set %s's location to zone %s." % (device_uuid, zone.name)
     elif 'away' in data:
         gps_coords = None
@@ -97,7 +94,8 @@ def _handle_get_api_geofancy(handler, path_match, data):
         try:
             gps_coords = (float(data['latitude']), float(data['longitude']))
             location_name = data['id']
-            message = "Set %s's location to %f / %f (%s)." % (device_uuid, gps_coords[0], gps_coords[1], location_name)
+            message = "Set %s's location to %f / %f (%s)."\
+                % (device_uuid, gps_coords[0], gps_coords[1], location_name)
         except ValueError:
             # If invalid latitude / longitude format
             handler.write_json_message(
