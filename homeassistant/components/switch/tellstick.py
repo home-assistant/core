@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import ToggleEntity
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 
-SINGAL_REPETITIONS = 1
+SIGNAL_REPETITIONS = 1
 REQUIREMENTS = ['tellcore-py==1.1.2']
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
 
-    signal_repetitions = config.get('signal_repetitions', SINGAL_REPETITIONS)
+    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
 
     switches_and_lights = core.devices()
 
