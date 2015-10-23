@@ -36,8 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts.append(radiotherm.discover.discover_address())
 
     if hosts is None:
-        _LOGGER.error("No radiotherm thermostats detected")
-        return
+        _LOGGER.error("No radiotherm thermostats detected.")
+        return False
 
     hold_temp = config.get(HOLD_TEMP, False)
     tstats = []
