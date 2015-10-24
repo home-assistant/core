@@ -30,7 +30,7 @@ class TestShellCommand(unittest.TestCase):
             path = os.path.join(tempdirname, 'called.txt')
             self.assertTrue(shell_command.setup(self.hass, {
                 'shell_command': {
-                    'test_service': "touch {}".format(path)
+                    'test_service': "date > {}".format(path)
                 }
             }))
 
