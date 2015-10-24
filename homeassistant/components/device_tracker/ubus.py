@@ -46,13 +46,14 @@ class UbusDeviceScanner(object):
     Configure your routers' ubus ACL based on following instructions:
 
     http://wiki.openwrt.org/doc/techref/ubus
-    
+
     Read only access will be fine.
-    
-    To use this class you have to install rpcd-mod-file package in your OpenWrt router:
-    
+
+    To use this class you have to install rpcd-mod-file package
+    in your OpenWrt router:
+
     opkg install rpcd-mod-file
-    
+
     """
 
     def __init__(self, config):
@@ -64,9 +65,9 @@ class UbusDeviceScanner(object):
         self.last_results = {}
         self.url = 'http://{}/ubus'.format(host)
 
-        self.session_id= _get_session_id(self.url, username, password)
+        self.session_id = _get_session_id(self.url, username, password)
         self.hostapd = []
-        self.leasefile = None        
+        self.leasefile = None
         self.mac2name = None
         self.success_init = self.session_id is not None
 
@@ -84,24 +85,28 @@ class UbusDeviceScanner(object):
 
         with self.lock:
             if self.leasefile is None:
-                result = _req_json_rpc(self.url, self.session_id, 'call', 'uci', 'get', config="dhcp", type="dnsmasq")   
+                result = _req_json_rpc(self.url, self.session_id,
+                                       'call', 'uci', 'get',
+                                       config="dhcp", type="dnsmasq")
                 if result:
-                    self.leasefile=next (iter (result["values"].values()))["leasefile"]
+                    self.leasefile = next(iter(result["values"].
+                                          values()))["leasefile"]
                 else:
-                    return    
-                            
+                    return
+
             if self.mac2name is None:
-                result = _req_json_rpc(self.url, self.session_id, 'call', 'file', 'read', path=self.leasefile) 
-                        
+                result = _req_json_rpc(self.url, self.session_id,
+                                       'call', 'file', 'read',
+                                       path=self.leasefile)
                 if result:
                     self.mac2name = dict()
                     for line in result["data"].splitlines():
                         [time, mac, ip, name, lid] = line.split(" ")
-                        self.mac2name[mac.upper()] = name                    
+                        self.mac2name[mac.upper()] = name
                 else:
                     # Error, handled in the _req_json_rpc
                     return
-            
+
             return self.mac2name.get(device.upper(), None)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -115,57 +120,60 @@ class UbusDeviceScanner(object):
 
         with self.lock:
             _LOGGER.info("Checking ARP")
-            
+
             if not self.hostapd:
-                hostapd = _req_json_rpc(self.url, self.session_id, 'list', 'hostapd.*', '')
+                hostapd = _req_json_rpc(self.url, self.session_id,
+                                        'list', 'hostapd.*', '')
                 for key in hostapd.keys():
                     self.hostapd.append(key)
-            
+
             self.last_results = []
-            results = 0        
+            results = 0
             for hostapd in self.hostapd:
-                result = _req_json_rpc(self.url, self.session_id, 'call', hostapd, 'get_clients')
-                
+                result = _req_json_rpc(self.url, self.session_id,
+                                       'call', hostapd, 'get_clients')
+
                 if result:
-                    results = results + 1 
+                    results = results + 1
                     for key in result["clients"].keys():
                         self.last_results.append(key)
-            
-            if results:    
+
+            if results:
                 return True
             else:
                 return False
 
+
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     """ Perform one JSON RPC operation. """
-    
-    data = json.dumps({   "jsonrpc": "2.0",
-               "id": 1,
-               "method": rpcmethod,
-               "params": [ session_id, 
-                           subsystem, 
-                           method,
-                           params] 
-            })
+
+    data = json.dumps({"jsonrpc": "2.0",
+                       "id": 1,
+                       "method": rpcmethod,
+                       "params": [session_id,
+                                  subsystem,
+                                  method,
+                                  params]
+                       })
 
     try:
         res = requests.post(url, data=data, timeout=5)
-        
+
     except requests.exceptions.Timeout:
         return
-    
+
     if res.status_code == 200:
         response = res.json()
-        
+
         if (rpcmethod == "call"):
             return response["result"][1]
         else:
             return response["result"]
 
+
 def _get_session_id(url, username, password):
     """ Get authentication token for the given host+username+password. """
-    res = _req_json_rpc(url, "00000000000000000000000000000000", 'call', 'session', 'login', username=username, password=password)
+    res = _req_json_rpc(url, "00000000000000000000000000000000", 'call',
+                        'session', 'login', username=username,
+                        password=password)
     return res["ubus_rpc_session"]
-    
-    
-# root@dom:~# ubus call uci get '{ "config": "dhcp", "type": "dnsmasq" }'
