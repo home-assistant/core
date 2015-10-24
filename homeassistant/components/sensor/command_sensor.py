@@ -98,7 +98,7 @@ class CommandSensorData(object):
         _LOGGER.info('Running command: %s', self.command)
 
         try:
-            return_value = subprocess.check_output(self.command.split())
+            return_value = subprocess.check_output(self.command, shell=True)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
             _LOGGER.error('Command failed: %s', self.command)
