@@ -2,41 +2,9 @@
 homeassistant.components.media_player.denon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides an interface to Denon Network Receivers.
-Developed for a Denon DRA-N5, see
-http://www.denon.co.uk/chg/product/compactsystems/networkmusicsystems/ceolpiccolo
 
-A few notes:
-    - The receiver handles only one telnet connection and refuses others.
-
-    - Be careful with the volume. 50% or even 100% are very loud.
-
-    - To be able to wake up the receiver, activate the "remote" setting
-      in the receiver's settings.
-
-    - Play and pause are supported, toggling is not possible.
-
-    - Seeking cannot be implemented as the UI sends absolute positions.
-      Only seeking via simulated button presses is possible.
-
-Configuration:
-
-To use your Denon you will need to add something like the following to
-your config/configuration.yaml:
-
-media_player:
-  platform: denon
-  name: Music station
-  host: 192.168.0.123
-
-Variables:
-
-host
-*Required
-The ip of the player. Example: 192.168.0.123
-
-name
-*Optional
-The name of the device.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.denon.html
 """
 import telnetlib
 import logging
