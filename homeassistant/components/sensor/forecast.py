@@ -3,56 +3,8 @@ homeassistant.components.sensor.forecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Forecast.io weather service.
 
-Configuration:
-
-To use the Forecast sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: forecast
-  api_key: YOUR_APP_KEY
-  monitored_conditions:
-    - summary
-    - icon
-    - nearest_storm_distance
-    - nearest_storm_bearing
-    - precip_type
-    - precip_intensity
-    - precip_probability
-    - temperature
-    - apparent_temperature
-    - dew_point
-    - wind_speed
-    - wind_bearing
-    - cloud_cover
-    - humidity
-    - pressure
-    - visibility
-    - ozone
-  # Optional: specify which unit system to use.
-  units: si, us, ca, uk2 or auto
-
-Variables:
-
-api_key
-*Required
-To retrieve this value log into your account at http://forecast.io/. You can
-make 1000 requests per day. This means that you could create every 1.4 minute
-one.
-
-monitored_conditions
-*Required
-Conditions to monitor. See the configuration example above for a
-list of all available conditions to monitor.
-
-units
-*Optional
-Specify the unit system.  Default to 'si' or 'us' based on the temperature
-preference in Home Assistant.  Other options are auto, us, si, ca, and uk2.
-'auto' will let forecast.io decide the unit system based on location.
-For more information see the API url below.
-
-Details for the API : https://developer.forecast.io/docs/v2
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.forecast.html
 """
 import logging
 from datetime import timedelta
