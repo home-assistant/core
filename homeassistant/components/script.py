@@ -1,9 +1,11 @@
 """
 homeassistant.components.script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-entity_id
 Scripts are a sequence of actions that can be triggered manually
 by the user or automatically based upon automation events, etc.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/script.html
 """
 import logging
 from datetime import timedelta
