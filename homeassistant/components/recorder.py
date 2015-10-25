@@ -1,9 +1,11 @@
 """
 homeassistant.components.recorder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Component that records all events and state changes. Allows other components
+to query this database.
 
-Component that records all events and state changes.
-Allows other components to query this database.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/recorder.html
 """
 import logging
 import threading
