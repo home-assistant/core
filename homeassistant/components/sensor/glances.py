@@ -3,51 +3,6 @@ homeassistant.components.sensor.glances
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Gathers system information of hosts which running glances.
 
-Configuration:
-
-To use the glances sensor you will need to add something like the following
-to your configuration.yaml file.
-
-sensor:
-  platform: glances
-  name: Glances sensor
-  host: IP_ADDRESS
-  port: 61208
-  resources:
-    - 'disk_use_percent'
-    - 'disk_use'
-    - 'disk_free'
-    - 'memory_use_percent'
-    - 'memory_use'
-    - 'memory_free'
-    - 'swap_use_percent'
-    - 'swap_use'
-    - 'swap_free'
-    - 'processor_load'
-    - 'process_running'
-    - 'process_total'
-    - 'process_thread'
-    - 'process_sleeping'
-
-Variables:
-
-name
-*Optional
-The name of the sensor. Default is 'Glances Sensor'.
-
-host
-*Required
-The IP address of your host, e.g. 192.168.1.32.
-
-port
-*Optional
-The network port to connect to. Default is 61208.
-
-resources
-*Required
-Resources to monitor on the host. See the configuration example above for a
-list of all available conditions to monitor.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.glances.html
 """

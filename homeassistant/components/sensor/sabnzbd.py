@@ -4,7 +4,7 @@ homeassistant.components.sensor.sabnzbd
 Monitors SABnzbd NZB client API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.sabnzbd.html
+https://home-assistant.io/components/sensor.sabnzbd.html
 """
 from homeassistant.util import Throttle
 from datetime import timedelta

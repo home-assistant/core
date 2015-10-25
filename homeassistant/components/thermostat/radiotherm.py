@@ -1,7 +1,10 @@
 """
 homeassistant.components.thermostat.radiotherm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds support for Radio Thermostat wifi-enabled home thermostats
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adds support for Radio Thermostat wifi-enabled home thermostats.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/thermostat.radiotherm.html
 """
 import logging
 import datetime
@@ -12,33 +15,40 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
 from homeassistant.const import (CONF_HOST, TEMP_FAHRENHEIT)
 
 REQUIREMENTS = ['radiotherm==1.2']
+HOLD_TEMP = 'hold_temp'
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Radio Thermostat. """
-    import radiotherm
-
-    logger = logging.getLogger(__name__)
+    try:
+        import radiotherm
+    except ImportError:
+        _LOGGER.exception(
+            "Unable to import radiotherm. "
+            "Did you maybe not install the 'radiotherm' package?")
+        return False
 
     hosts = []
     if CONF_HOST in config:
-        hosts = [config[CONF_HOST]]
+        hosts = config[CONF_HOST]
     else:
         hosts.append(radiotherm.discover.discover_address())
 
     if hosts is None:
-        logger.error("no radiotherm thermostats detected")
-        return
+        _LOGGER.error("No radiotherm thermostats detected.")
+        return False
 
+    hold_temp = config.get(HOLD_TEMP, False)
     tstats = []
 
     for host in hosts:
         try:
             tstat = radiotherm.get_thermostat(host)
-            tstats.append(RadioThermostat(tstat))
+            tstats.append(RadioThermostat(tstat, hold_temp))
         except (URLError, OSError):
-            logger.exception(
-                "Unable to connect to Radio Thermostat: %s", host)
+            _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
+                              host)
 
     add_devices(tstats)
 
@@ -46,13 +56,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RadioThermostat(ThermostatDevice):
     """ Represent a Radio Thermostat. """
 
-    def __init__(self, device):
+    def __init__(self, device, hold_temp):
         self.device = device
         self.set_time()
         self._target_temperature = None
         self._current_temperature = None
         self._operation = STATE_IDLE
         self._name = None
+        self.hold_temp = hold_temp
         self.update()
 
     @property
@@ -107,7 +118,10 @@ class RadioThermostat(ThermostatDevice):
             self.device.t_cool = temperature
         elif self._operation == STATE_HEAT:
             self.device.t_heat = temperature
-        self.device.hold = 1
+        if self.hold_temp:
+            self.device.hold = 1
+        else:
+            self.device.hold = 0
 
     def set_time(self):
         """ Set device time """
