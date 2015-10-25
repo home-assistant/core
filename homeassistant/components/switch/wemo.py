@@ -1,8 +1,10 @@
 """
 homeassistant.components.switch.wemo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Support for WeMo switches.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/switch.wemo.html
 """
 import logging
 
@@ -10,6 +12,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
 REQUIREMENTS = ['pywemo==0.3.1']
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
@@ -26,7 +29,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         return
 
-    logging.getLogger(__name__).info("Scanning for WeMo devices")
+    _LOGGER.info("Scanning for WeMo devices.")
     switches = pywemo.discover_devices()
 
     # Filter out the switches and wrap in WemoSwitch object
@@ -132,5 +135,4 @@ class WemoSwitch(SwitchDevice):
             elif self.wemo.model_name == 'Maker':
                 self.maker_params = self.wemo.maker_params
         except AttributeError:
-            logging.getLogger(__name__).warning(
-                'Could not update status for %s', self.name)
+            _LOGGER.warning('Could not update status for %s', self.name)

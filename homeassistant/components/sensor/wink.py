@@ -2,6 +2,9 @@
 homeassistant.components.sensor.wink
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Wink sensors.
+
+For more details about the wink component, please refer to the documentation
+at https://home-assistant.io/components/sensor.wink.html
 """
 import logging
 
@@ -22,8 +25,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if token is None:
             logging.getLogger(__name__).error(
-                "Missing wink access_token - "
-                "get one at https://winkbearertoken.appspot.com/")
+                "Missing wink access_token. "
+                "Get one at https://winkbearertoken.appspot.com/")
             return
 
         pywink.set_bearer_token(token)
@@ -32,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WinkSensorDevice(Entity):
-    """ Represents a wink sensor. """
+    """ Represents a Wink sensor. """
 
     def __init__(self, wink):
         self.wink = wink

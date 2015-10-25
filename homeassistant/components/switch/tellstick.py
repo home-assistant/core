@@ -3,11 +3,8 @@ homeassistant.components.switch.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Tellstick switches.
 
-Because the tellstick sends its actions via radio and from most
-receivers it's impossible to know if the signal was received or not.
-Therefore you can configure the switch to try to send each signal repeatedly
-with the config parameter signal_repetitions (default is 1).
-signal_repetitions: 3
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.tellstick.html
 """
 import logging
 
@@ -16,9 +13,10 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
 from homeassistant.helpers.entity import ToggleEntity
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
-SINGAL_REPETITIONS = 1
 
+SIGNAL_REPETITIONS = 1
 REQUIREMENTS = ['tellcore-py==1.1.2']
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
@@ -27,13 +25,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     try:
         import tellcore.telldus as telldus
     except ImportError:
-        logging.getLogger(__name__).exception(
-            "Failed to import tellcore")
+        _LOGGER.exception("Failed to import tellcore")
         return
 
     core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
 
-    signal_repetitions = config.get('signal_repetitions', SINGAL_REPETITIONS)
+    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
 
     switches_and_lights = core.devices()
 

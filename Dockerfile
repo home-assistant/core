@@ -10,11 +10,10 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends nmap net-tools && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Open Z-Wave disabled because broken
-#RUN apt-get update && \
-#    apt-get install -y cython3 libudev-dev && \
-#    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-#    pip3 install cython && \
-#    scripts/build_python_openzwave
+RUN apt-get update && \
+   apt-get install -y cython3 libudev-dev && \
+   apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+   pip3 install "cython<0.23" && \
+   script/build_python_openzwave
 
 CMD [ "python", "-m", "homeassistant", "--config", "/config" ]

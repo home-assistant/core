@@ -3,35 +3,8 @@ homeassistant.components.media_player.mpd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides functionality to interact with a Music Player Daemon.
 
-Configuration:
-
-To use MPD you will need to add something like the following to your
-configuration.yaml file.
-
-media_player:
-  platform: mpd
-  server: 127.0.0.1
-  port: 6600
-  location: bedroom
-  password: superSecretPassword123
-
-Variables:
-
-server
-*Required
-IP address of the Music Player Daemon. Example: 192.168.1.32
-
-port
-*Optional
-Port of the Music Player Daemon, defaults to 6600. Example: 6600
-
-location
-*Optional
-Location of your Music Player Daemon.
-
-password
-*Optional
-Password for your Music Player Daemon.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.mpd.html
 """
 import logging
 import socket
