@@ -1,8 +1,10 @@
 """
 homeassistant.components.downloader
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to download files.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/downloader.html
 """
 import os
 import logging
