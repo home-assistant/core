@@ -12,11 +12,16 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
                 'c2b700e8ca866159566ecf5e644d9c297f69f257.zip'
                 '#python-wink==0.1']
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Wink lights. """
     import pywink
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     token = config.get(CONF_ACCESS_TOKEN)
 

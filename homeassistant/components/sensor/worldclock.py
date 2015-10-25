@@ -39,6 +39,10 @@ DEFAULT_NAME = "Worldclock Sensor"
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Worldclock sensor. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     try:
         time_zone = dt_util.get_time_zone(config.get('time_zone'))
     except AttributeError:

@@ -18,6 +18,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import pywemo
     import pywemo.discovery as discovery
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if discovery_info is not None:
         device = discovery.device_from_description(discovery_info[2])
 

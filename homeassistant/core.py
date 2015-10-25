@@ -64,6 +64,7 @@ class HomeAssistant(object):
 
     def start(self):
         """ Start home assistant. """
+
         _LOGGER.info(
             "Starting Home Assistant (%d threads)", self.pool.worker_count)
 
@@ -694,6 +695,7 @@ class Config(object):
         self.temperature_unit = None
         self.location_name = None
         self.time_zone = None
+        self.logseverity = None
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False
@@ -738,6 +740,7 @@ class Config(object):
             'latitude': self.latitude,
             'longitude': self.longitude,
             'temperature_unit': self.temperature_unit,
+            'logseverity': self.logseverity,
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,

@@ -18,6 +18,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
     import pywink
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if discovery_info is None:
         token = config.get(CONF_ACCESS_TOKEN)
 

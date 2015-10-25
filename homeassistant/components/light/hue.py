@@ -30,6 +30,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     try:
         # pylint: disable=unused-variable
         import phue  # noqa

@@ -64,6 +64,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
     import pyvera as veraApi
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     base_url = config.get('vera_controller_url')
     if not base_url:
         _LOGGER.error(

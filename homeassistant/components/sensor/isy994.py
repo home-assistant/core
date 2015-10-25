@@ -24,15 +24,21 @@ DEFAULT_HIDDEN_WEATHER = ['Temperature_High', 'Temperature_Low', 'Feels_Like',
                           'Forecast_Low_Temperature', 'Forecast_Humidity',
                           'Forecast_Rain', 'Forecast_Snow']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the ISY994 platform. """
     # pylint: disable=protected-access
-    logger = logging.getLogger(__name__)
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     devs = []
     # verify connection
     if ISY is None or not ISY.connected:
-        logger.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
 
     # import weather

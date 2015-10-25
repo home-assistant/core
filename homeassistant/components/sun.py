@@ -101,6 +101,10 @@ def setup(hass, config):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     latitude = util.convert(hass.config.latitude, float)
     longitude = util.convert(hass.config.longitude, float)
     errors = []

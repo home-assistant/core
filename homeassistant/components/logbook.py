@@ -7,6 +7,7 @@ Parses events and generates a human log.
 from datetime import timedelta
 from itertools import groupby
 import re
+import logging
 
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
@@ -35,6 +36,7 @@ ATTR_MESSAGE = 'message'
 ATTR_DOMAIN = 'domain'
 ATTR_ENTITY_ID = 'entity_id'
 
+_LOGGER = logging.getLogger(__name__)
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """ Adds an entry to the logbook. """
@@ -52,6 +54,10 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 def setup(hass, config):
     """ Listens for download events to download files. """
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
 
     return True

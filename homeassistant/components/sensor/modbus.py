@@ -63,6 +63,11 @@ DEPENDENCIES = ['modbus']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Read config and create Modbus devices. """
     sensors = []
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     slave = config.get("slave", None)
     if modbus.TYPE == "serial" and not slave:
         _LOGGER.error("No slave number provided for serial Modbus")

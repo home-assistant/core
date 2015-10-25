@@ -33,7 +33,7 @@ import logging
 from datetime import timedelta
 import threading
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_LOGSEVERITY
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
@@ -54,6 +54,16 @@ def get_scanner(hass, config):
     if password is not None and host is None:
         _LOGGER.warning('Found username or password but no host')
         return None
+
+    # Set log level
+    logseverity = hass.config.logseverity
+    if CONF_LOGSEVERITY in config[DOMAIN]:
+        try:
+            logseverity = config[DOMAIN][CONF_LOGSEVERITY].upper()
+        except AttributeError:
+            pass
+
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     scanner = NetgearDeviceScanner(host, username, password)
 

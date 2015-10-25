@@ -75,6 +75,10 @@ PRIORITIES = {5: syslog.LOG_EMERG,
 def get_service(hass, config):
     """ Get the mail notification service. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if not validate_config(config,
                            {DOMAIN: ['facility',
                                      'option',

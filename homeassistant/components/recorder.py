@@ -180,6 +180,9 @@ class Recorder(threading.Thread):
 
     def run(self):
         """ Start processing events to save. """
+        # Set log level
+        _LOGGER.setLevel(eval('logging.%s' % self.hass.config.logseverity.upper()))
+
         self._setup_connection()
         self._setup_run()
 

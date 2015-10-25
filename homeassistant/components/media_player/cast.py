@@ -40,6 +40,7 @@ SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
 KNOWN_HOSTS = []
+_LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
 cast = None
@@ -52,14 +53,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pychromecast
     cast = pychromecast
 
-    logger = logging.getLogger(__name__)
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     # import CEC IGNORE attributes
     ignore_cec = config.get(CONF_IGNORE_CEC, [])
     if isinstance(ignore_cec, list):
         cast.IGNORE_CEC += ignore_cec
     else:
-        logger.error('Chromecast conig, %s must be a list.', CONF_IGNORE_CEC)
+        _LOGGER.error('Chromecast conig, %s must be a list.', CONF_IGNORE_CEC)
 
     hosts = []
 

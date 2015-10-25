@@ -66,6 +66,13 @@ def setup(hass, config):
 def _setup_automation(hass, config_block, name, config):
     """ Setup one instance of automation """
 
+    # Set log level
+    logseverity = config_block.get('logseverity', None)
+    if not logseverity:
+        logseverity = hass.config.logseverity
+
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
 
     if action is None:

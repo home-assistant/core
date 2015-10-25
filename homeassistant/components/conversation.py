@@ -21,15 +21,15 @@ ATTR_TEXT = "text"
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 
+_LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Registers the process service. """
-    logger = logging.getLogger(__name__)
 
     def process(service):
         """ Parses text into commands for Home Assistant. """
         if ATTR_TEXT not in service.data:
-            logger.error("Received process service call without a text")
+            _LOGGER.error("Received process service call without a text")
             return
 
         text = service.data[ATTR_TEXT].lower()
@@ -37,7 +37,7 @@ def setup(hass, config):
         match = REGEX_TURN_COMMAND.match(text)
 
         if not match:
-            logger.error("Unable to process: %s", text)
+            _LOGGER.error("Unable to process: %s", text)
             return
 
         name, command = match.groups()
@@ -47,7 +47,7 @@ def setup(hass, config):
             if state.name.lower() == name]
 
         if not entity_ids:
-            logger.error(
+            _LOGGER.error(
                 "Could not find entity id %s from text %s", name, text)
             return
 
@@ -62,8 +62,12 @@ def setup(hass, config):
             }, blocking=True)
 
         else:
-            logger.error(
+            _LOGGER.error(
                 'Got unsupported command %s from text %s', command, text)
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     hass.services.register(DOMAIN, SERVICE_PROCESS, process)
 

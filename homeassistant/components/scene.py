@@ -35,19 +35,19 @@ CONF_ENTITIES = "entities"
 
 SceneConfig = namedtuple('SceneConfig', ['name', 'states', 'fuzzy_match'])
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass, config):
     """ Sets up scenes. """
 
-    logger = logging.getLogger(__name__)
-
     scene_configs = config.get(DOMAIN)
 
     if not isinstance(scene_configs, list):
-        logger.error('Scene config should be a list of scenes')
+        _LOGGER.error('Scene config should be a list of scenes')
         return False
 
-    component = EntityComponent(logger, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     component.add_entities(Scene(hass, _process_config(scene_config))
                            for scene_config in scene_configs)

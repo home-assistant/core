@@ -43,6 +43,7 @@ DEFAULT_RADIUS = 100
 ATTR_ICON = 'icon'
 ICON_HOME = 'home'
 
+_LOGGER = logging.getLogger(__name__)
 
 def active_zone(hass, latitude, longitude, radius=0):
     """ Find the active zone for given latitude, longitude. """
@@ -84,6 +85,10 @@ def setup(hass, config):
     """ Setup zone. """
     entities = set()
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     for key in extract_domain_configs(config, DOMAIN):
         entries = config[key]
         if not isinstance(entries, list):
@@ -97,7 +102,7 @@ def setup(hass, config):
             icon = entry.get(ATTR_ICON)
 
             if None in (latitude, longitude):
-                logging.getLogger(__name__).error(
+                _LOGGER.getLogger(__name__).error(
                     'Each zone needs a latitude and longitude.')
                 continue
 

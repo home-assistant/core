@@ -4,6 +4,7 @@ homeassistant.helpers.entity_component
 
 Provides helpers for components that manage entities.
 """
+import logging
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.helpers import (
     generate_entity_id, config_per_platform, extract_entity_ids)
@@ -44,6 +45,10 @@ class EntityComponent(object):
          - Loads the platforms from the config
          - Will listen for supported discovered platforms
         """
+        # Set log level
+        logseverity = config.get('logseverity', self.hass.config.logseverity)
+        self.logger.setLevel(eval('logging.%s' % logseverity.upper()))
+
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them

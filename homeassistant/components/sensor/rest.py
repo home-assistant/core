@@ -27,6 +27,10 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the REST sensor. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     use_get = False
     use_post = False
 

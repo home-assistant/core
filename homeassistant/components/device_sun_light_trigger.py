@@ -25,10 +25,15 @@ CONF_LIGHT_PROFILE = 'light_profile'
 CONF_LIGHT_GROUP = 'light_group'
 CONF_DEVICE_GROUP = 'device_group'
 
+_LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
     """ Triggers to turn lights on or off based on device precense. """
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     disable_turn_off = 'disable_turn_off' in config[DOMAIN]
 
@@ -40,13 +45,11 @@ def setup(hass, config):
     device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
                                       device_tracker.ENTITY_ID_ALL_DEVICES)
 
-    logger = logging.getLogger(__name__)
-
     device_entity_ids = group.get_entity_ids(hass, device_group,
                                              device_tracker.DOMAIN)
 
     if not device_entity_ids:
-        logger.error("No devices found to track")
+        _LOGGER.error("No devices found to track")
 
         return False
 
@@ -54,7 +57,7 @@ def setup(hass, config):
     light_ids = group.get_entity_ids(hass, light_group, light.DOMAIN)
 
     if not light_ids:
-        logger.error("No lights found to turn on ")
+        _LOGGER.error("No lights found to turn on ")
 
         return False
 
@@ -123,7 +126,7 @@ def setup(hass, config):
             # Do we need lights?
             if light_needed:
 
-                logger.info(
+                _LOGGER.info(
                     "Home coming event for %s. Turning lights on", entity)
 
                 light.turn_on(hass, light_ids, profile=light_profile)
@@ -152,7 +155,7 @@ def setup(hass, config):
               new_state.state == STATE_NOT_HOME and lights_are_on and
               not disable_turn_off):
 
-            logger.info(
+            _LOGGER.info(
                 "Everyone has left but there are lights on. Turning them off")
 
             light.turn_off(hass, light_ids)

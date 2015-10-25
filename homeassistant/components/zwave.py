@@ -3,6 +3,7 @@ homeassistant.components.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects Home Assistant to a Z-Wave network.
 """
+import logging
 from pprint import pprint
 
 from homeassistant import bootstrap
@@ -35,6 +36,7 @@ ATTR_VALUE_ID = "value_id"
 
 NETWORK = None
 
+_LOGGER = logging.getLogger(__name__)
 
 def _obj_to_dict(obj):
     """ Converts an obj into a hash for debug. """
@@ -66,6 +68,10 @@ def setup(hass, config):
     from pydispatch import dispatcher
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
 

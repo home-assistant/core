@@ -65,6 +65,10 @@ _RESOURCE = 'https://api.instapush.im/v1/'
 def get_service(hass, config):
     """ Get the instapush notification service. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if not validate_config(config,
                            {DOMAIN: [CONF_API_KEY,
                                      'app_secret',

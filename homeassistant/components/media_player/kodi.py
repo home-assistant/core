@@ -58,6 +58,10 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     global jsonrpc_requests    # pylint: disable=invalid-name
     if jsonrpc_requests is None:
         import jsonrpc_requests as jsonrpc_requests_

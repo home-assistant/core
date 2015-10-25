@@ -16,6 +16,7 @@ DOMAIN = "keyboard"
 DEPENDENCIES = []
 REQUIREMENTS = ['pyuserinput==0.1.9']
 
+_LOGGER = logging.getLogger(__name__)
 
 def volume_up(hass):
     """ Press the keyboard button for volume up. """
@@ -49,10 +50,15 @@ def media_prev_track(hass):
 
 def setup(hass, config):
     """ Listen for keyboard events. """
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     try:
         import pykeyboard
     except ImportError:
-        logging.getLogger(__name__).exception(
+        _LOGGER.exception(
             "Error while importing dependency PyUserInput.")
 
         return False

@@ -68,13 +68,16 @@ from homeassistant.const import TEMP_CELCIUS, STATE_ON, STATE_OFF
 
 TOL_TEMP = 0.3
 
+_LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the heat control thermostat. """
-    logger = logging.getLogger(__name__)
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
-    add_devices([HeatControl(hass, config, logger)])
+    add_devices([HeatControl(hass, config, _LOGGER)])
 
 
 # pylint: disable=too-many-instance-attributes

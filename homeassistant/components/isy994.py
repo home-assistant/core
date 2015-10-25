@@ -38,6 +38,10 @@ def setup(hass, config):
     Setup ISY994 component.
     This will automatically import associated lights, switches, and sensors.
     """
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     try:
         import PyISY
     except ImportError:

@@ -36,6 +36,9 @@ def prepare(hass):
     """ Prepares the loading of components. """
     global PREPARED  # pylint: disable=global-statement
 
+    # Set log level
+    _LOGGER.setLevel(eval('logging.%s' % hass.config.logseverity.upper()))
+
     # Load the built-in components
     import homeassistant.components as components
 

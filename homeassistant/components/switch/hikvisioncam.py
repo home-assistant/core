@@ -57,6 +57,10 @@ REQUIREMENTS = ['hikvision==0.4']
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup Hikvision Camera config. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     host = config.get(CONF_HOST, None)
     port = config.get('port', "80")
     name = config.get('name', "Hikvision Camera Motion Detection")

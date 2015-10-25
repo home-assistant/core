@@ -33,6 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Load the scripts from the configuration. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     scripts = []
     for name, cfg in config[DOMAIN].items():
         if CONF_SEQUENCE not in cfg:

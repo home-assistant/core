@@ -4,16 +4,22 @@ homeassistant.components.introduction
 
 Component that will help guide the user taking its first steps.
 """
+
 import logging
 
 DOMAIN = 'introduction'
 DEPENDENCIES = []
 
+_LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config=None):
     """ Setup the introduction component. """
-    log = logging.getLogger(__name__)
-    log.info("""
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
+    _LOGGER.info("""
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

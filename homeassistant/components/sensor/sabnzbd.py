@@ -73,6 +73,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the SABnzbd sensors. """
     from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     api_key = config.get("api_key")
     base_url = config.get("base_url")
     name = config.get("name", "SABnzbd")

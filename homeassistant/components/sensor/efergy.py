@@ -62,6 +62,10 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Efergy sensor. """
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     app_token = config.get("app_token")
     if not app_token:
         _LOGGER.error(

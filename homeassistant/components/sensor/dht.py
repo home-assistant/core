@@ -61,6 +61,10 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the DHT sensor. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     try:
         import Adafruit_DHT
 

@@ -165,6 +165,10 @@ class Itunes(object):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the itunes platform. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     add_devices([
         ItunesDevice(
             config.get('name', 'iTunes'),

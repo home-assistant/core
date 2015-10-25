@@ -81,6 +81,10 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Forecast.io sensor. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     global forecastio  # pylint: disable=invalid-name
     if forecastio is None:
         import forecastio as forecastio_

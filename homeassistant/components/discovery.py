@@ -37,6 +37,7 @@ SERVICE_HANDLERS = {
     SERVICE_SONOS: 'media_player',
 }
 
+_LOGGER = logging.getLogger(__name__)
 
 def listen(hass, service, callback):
     """
@@ -59,7 +60,9 @@ def listen(hass, service, callback):
 
 def setup(hass, config):
     """ Starts a discovery service. """
-    logger = logging.getLogger(__name__)
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     from netdisco.service import DiscoveryService
 
@@ -71,7 +74,7 @@ def setup(hass, config):
     def new_service_listener(service, info):
         """ Called when a new service is found. """
         with lock:
-            logger.info("Found new service: %s %s", service, info)
+            _LOGGER.info("Found new service: %s %s", service, info)
 
             component = SERVICE_HANDLERS.get(service)
 

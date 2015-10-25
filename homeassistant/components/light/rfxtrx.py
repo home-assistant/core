@@ -20,18 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
-    lights = []
-    devices = config.get('devices', None)
-    if devices:
-        for entity_id, entity_info in devices.items():
-            if entity_id not in rfxtrx.RFX_DEVICES:
-                _LOGGER.info("Add %s rfxtrx.light", entity_info['name'])
-                rfxobject = rfxtrx.get_rfx_object(entity_info['packetid'])
-                new_light = RfxtrxLight(entity_info['name'], rfxobject, False)
-                rfxtrx.RFX_DEVICES[entity_id] = new_light
-                lights.append(new_light)
-
-    add_devices_callback(lights)
 
     def light_update(event):
         """ Callback for light updates from the RFXtrx gateway. """
@@ -65,6 +53,23 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     rfxtrx.RFX_DEVICES[entity_id].turn_on()
                 else:
                     rfxtrx.RFX_DEVICES[entity_id].turn_off()
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
+    lights = []
+    devices = config.get('devices', None)
+    if devices:
+        for entity_id, entity_info in devices.items():
+            if entity_id not in rfxtrx.RFX_DEVICES:
+                _LOGGER.info("Add %s rfxtrx.light", entity_info['name'])
+                rfxobject = rfxtrx.get_rfx_object(entity_info['packetid'])
+                new_light = RfxtrxLight(entity_info['name'], rfxobject, False)
+                rfxtrx.RFX_DEVICES[entity_id] = new_light
+                lights.append(new_light)
+
+    add_devices_callback(lights)
 
     # Subscribe to main rfxtrx events
     if light_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:

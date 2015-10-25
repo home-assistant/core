@@ -98,6 +98,11 @@ def get_devices(hass, config):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return Vera lights. """
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     add_devices(get_devices(hass, config))
 
 

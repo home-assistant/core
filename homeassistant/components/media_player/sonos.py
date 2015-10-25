@@ -45,6 +45,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
     import soco
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     players = soco.discover()
     if not players:
         _LOGGER.warning('No Sonos speakers found. Disabling: %s', __name__)

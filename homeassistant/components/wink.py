@@ -38,12 +38,16 @@ DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
 
+_LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Sets up the Wink component. """
-    logger = logging.getLogger(__name__)
 
-    if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, logger):
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
+    if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, _LOGGER):
         return False
 
     import pywink

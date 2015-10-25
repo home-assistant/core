@@ -60,6 +60,10 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add the Command Sensor. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if config.get('command') is None:
         _LOGGER.error('Missing required variable: "command"')
         return False

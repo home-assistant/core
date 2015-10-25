@@ -16,6 +16,8 @@ DEPENDENCIES = ['mqtt']
 
 LOCATION_TOPIC = 'owntracks/+/+'
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_scanner(hass, config, see):
     """ Set up a OwnTracksks tracker. """
@@ -48,6 +50,10 @@ def setup_scanner(hass, config, see):
             kwargs['battery'] = data['batt']
 
         see(**kwargs)
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
 

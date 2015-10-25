@@ -38,6 +38,10 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(hass, config):
     """ Get the file notification service. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if not validate_config(config,
                            {DOMAIN: ['filename',
                                      'timestamp']},

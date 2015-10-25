@@ -89,6 +89,10 @@ MIN_TIME_BETWEEN_REQUESTS = timedelta(seconds=5)
 def setup(hass, config):
     """ Setup the Verisure component. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if not validate_config(config,
                            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):

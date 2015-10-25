@@ -11,17 +11,21 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.1.2']
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick lights. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     try:
         import tellcore.telldus as telldus
     except ImportError:
-        logging.getLogger(__name__).exception(
-            "Failed to import tellcore")
+        _LOGGER.exception("Failed to import tellcore")
         return []
 
     core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())

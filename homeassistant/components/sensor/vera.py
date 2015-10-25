@@ -100,6 +100,10 @@ def get_devices(hass, config):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Performs setup for Vera controller devices. """
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     add_devices(get_devices(hass, config))
 
 

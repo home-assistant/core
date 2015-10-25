@@ -22,17 +22,20 @@ ATTR_SUBDIR = "subdir"
 
 CONF_DOWNLOAD_DIR = 'download_dir'
 
+_LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
     """ Listens for download events to download files. """
 
-    logger = logging.getLogger(__name__)
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     try:
         import requests
     except ImportError:
-        logger.exception(("Failed to import requests. "
+        _LOGGER.exception(("Failed to import requests. "
                           "Did you maybe not execute 'pip install requests'?"))
 
         return False
@@ -44,7 +47,7 @@ def setup(hass, config):
 
     if not os.path.isdir(download_path):
 
-        logger.error(
+        _LOGGER.error(
             "Download path %s does not exist. File Downloader not active.",
             download_path)
 
@@ -54,7 +57,7 @@ def setup(hass, config):
         """ Starts thread to download file specified in the url. """
 
         if ATTR_URL not in service.data:
-            logger.error("Service called but 'url' parameter not specified.")
+            _LOGGER.error("Service called but 'url' parameter not specified.")
             return
 
         def do_download():
@@ -115,16 +118,16 @@ def setup(hass, config):
 
                         final_path = "{}_{}.{}".format(path, tries, ext)
 
-                    logger.info("%s -> %s", url, final_path)
+                    _LOGGER.info("%s -> %s", url, final_path)
 
                     with open(final_path, 'wb') as fil:
                         for chunk in req.iter_content(1024):
                             fil.write(chunk)
 
-                    logger.info("Downloading of %s done", url)
+                    _LOGGER.info("Downloading of %s done", url)
 
             except requests.exceptions.ConnectionError:
-                logger.exception("ConnectionError occured for %s", url)
+                _LOGGER.exception("ConnectionError occured for %s", url)
 
                 # Remove file if we started downloading but failed
                 if final_path and os.path.isfile(final_path):

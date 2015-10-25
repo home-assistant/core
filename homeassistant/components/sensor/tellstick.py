@@ -40,6 +40,10 @@ REQUIREMENTS = ['tellcore-py==1.1.2']
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Tellstick sensors. """
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE:
         DatatypeDescription(

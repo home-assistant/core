@@ -16,6 +16,11 @@ from homeassistant.const import (
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Z-Wave sensors. """
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
 

@@ -43,7 +43,7 @@ import threading
 
 import requests
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_LOGSEVERITY
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
@@ -63,6 +63,16 @@ def get_scanner(hass, config):
                                      CONF_PASSWORD, CONF_HTTP_ID]},
                            _LOGGER):
         return None
+
+    # Set log level
+    logseverity = hass.config.logseverity
+    if CONF_LOGSEVERITY in config[DOMAIN]:
+        try:
+            logseverity = config[DOMAIN][CONF_LOGSEVERITY].upper()
+        except AttributeError:
+            pass
+
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     return TomatoDeviceScanner(config[DOMAIN])
 

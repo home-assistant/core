@@ -17,6 +17,10 @@ homeassistant:
   # Name of the location where Home Assistant is running
   name: Home
 
+  # Active the log system for all components and other features
+  # Choice : critical, error, warning, info, debug
+  logseverity: debug
+
 http:
   api_password: mypass
   # Set to 1 to enable development mode

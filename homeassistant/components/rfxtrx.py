@@ -40,6 +40,10 @@ def setup(hass, config):
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     # Try to load the RFXtrx module
     try:
         import RFXtrx as rfxtrxmod

@@ -33,6 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Register the API with the HTTP interface. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if 'http' not in hass.config.components:
         _LOGGER.error('Dependency http is not loaded')
         return False

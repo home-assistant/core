@@ -54,6 +54,10 @@ def trigger(hass, event, value1=None, value2=None, value3=None):
 def setup(hass, config):
     """ Setup the ifttt service component """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if not validate_config(config, {DOMAIN: ['key']}, _LOGGER):
         return False
 

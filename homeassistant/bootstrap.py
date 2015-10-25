@@ -25,7 +25,7 @@ import homeassistant.components as core_components
 import homeassistant.components.group as group
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
+    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,CONF_LOGSEVERITY,
     CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
@@ -169,6 +169,10 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
+    # Set log level for homeassistant core
+    _LOGGER.setLevel(eval('logging.%s' % hass.config.logseverity.upper()))
+    core._LOGGER.setLevel(eval('logging.%s' % hass.config.logseverity.upper()))
+
     if enable_log:
         enable_logging(hass, verbose, daemon, log_rotate_days)
 
@@ -299,6 +303,7 @@ def process_ha_core_config(hass, config):
 
     for key, attr, typ in ((CONF_LATITUDE, 'latitude', float),
                            (CONF_LONGITUDE, 'longitude', float),
+                           (CONF_LOGSEVERITY, 'logseverity', str),
                            (CONF_NAME, 'location_name', str)):
         if key in config:
             try:
@@ -306,6 +311,13 @@ def process_ha_core_config(hass, config):
             except ValueError:
                 _LOGGER.error('Received invalid %s value for %s: %s',
                               typ.__name__, key, attr)
+
+    # Set log
+    hac.logseverity = 'debug'
+    if CONF_LOGSEVERITY in config:
+        hac.logseverity = config[CONF_LOGSEVERITY]
+
+    _LOGGER.setLevel(eval('logging.%s' % hac.logseverity.upper()))
 
     set_time_zone(config.get(CONF_TIME_ZONE))
 

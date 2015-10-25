@@ -22,6 +22,10 @@ DEPENDENCIES = []
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add device specified by serial number. """
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     stick = blinkstick.find_by_serial(config['serial'])
 
     add_devices_callback([BlinkStickLight(stick, config['name'])])

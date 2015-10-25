@@ -21,6 +21,10 @@ REQUIREMENTS = ['python-telegram-bot==2.8.7']
 def get_service(hass, config):
     """ Get the Telegram notification service. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if not validate_config(config,
                            {DOMAIN: [CONF_API_KEY, 'chat_id']},
                            _LOGGER):

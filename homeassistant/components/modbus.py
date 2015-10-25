@@ -69,6 +69,10 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global NETWORK
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if TYPE == "serial":
         from pymodbus.client.sync import ModbusSerialClient as ModbusClient
         NETWORK = ModbusClient(method=config[DOMAIN][METHOD],

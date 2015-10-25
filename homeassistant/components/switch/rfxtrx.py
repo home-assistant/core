@@ -21,20 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
 
-    # Add switch from config file
-    switchs = []
-    devices = config.get('devices')
-    if devices:
-        for entity_id, entity_info in devices.items():
-            if entity_id not in rfxtrx.RFX_DEVICES:
-                _LOGGER.info("Add %s rfxtrx.switch", entity_info['name'])
-                rfxobject = rfxtrx.get_rfx_object(entity_info['packetid'])
-                newswitch = RfxtrxSwitch(entity_info['name'], rfxobject, False)
-                rfxtrx.RFX_DEVICES[entity_id] = newswitch
-                switchs.append(newswitch)
-
-    add_devices_callback(switchs)
-
     def switch_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
         if isinstance(event.device, LightingDevice):
@@ -67,6 +53,24 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     rfxtrx.RFX_DEVICES[entity_id].turn_on()
                 else:
                     rfxtrx.RFX_DEVICES[entity_id].turn_off()
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
+    # Add switch from config file
+    switchs = []
+    devices = config.get('devices')
+    if devices:
+        for entity_id, entity_info in devices.items():
+            if entity_id not in rfxtrx.RFX_DEVICES:
+                _LOGGER.info("Add %s rfxtrx.switch", entity_info['name'])
+                rfxobject = rfxtrx.get_rfx_object(entity_info['packetid'])
+                newswitch = RfxtrxSwitch(entity_info['name'], rfxobject, False)
+                rfxtrx.RFX_DEVICES[entity_id] = newswitch
+                switchs.append(newswitch)
+
+    add_devices_callback(switchs)
 
     # Subscribe to main rfxtrx events
     if switch_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:

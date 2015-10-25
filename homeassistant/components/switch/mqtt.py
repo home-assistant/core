@@ -84,6 +84,10 @@ DEPENDENCIES = ['mqtt']
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Switch """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
         return False

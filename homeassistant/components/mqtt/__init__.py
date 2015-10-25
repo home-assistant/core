@@ -115,6 +115,10 @@ def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
 def setup(hass, config):
     """ Get the MQTT protocol service. """
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     if not validate_config(config, {DOMAIN: ['broker']}, _LOGGER):
         return False
 

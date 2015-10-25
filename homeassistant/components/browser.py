@@ -17,6 +17,10 @@ def setup(hass, config):
 
     import webbrowser
 
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     hass.services.register(DOMAIN, SERVICE_BROWSE_URL,
                            lambda service:
                            webbrowser.open(

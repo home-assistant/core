@@ -28,10 +28,13 @@ CONF_UNKNOWN_LIGHT = "unknown_light"
 SERVICE_TEST_KNOWN_ALARM = "test_known"
 SERVICE_TEST_UNKNOWN_ALARM = "test_unknown"
 
+_LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Sets up the simple alarms. """
-    logger = logging.getLogger(__name__)
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
 
     device_tracker = loader.get_component('device_tracker')
     light = loader.get_component('light')
@@ -43,7 +46,7 @@ def setup(hass, config):
         light_id = config[DOMAIN].get(conf_key) or light.ENTITY_ID_ALL_LIGHTS
 
         if hass.states.get(light_id) is None:
-            logger.error(
+            _LOGGER.error(
                 'Light id %s could not be found in state machine', light_id)
 
             return False
@@ -55,7 +58,7 @@ def setup(hass, config):
     known_light_id, unknown_light_id = light_ids
 
     if hass.states.get(device_tracker.ENTITY_ID_ALL_DEVICES) is None:
-        logger.error('No devices are being tracked, cannot setup alarm')
+        _LOGGER.error('No devices are being tracked, cannot setup alarm')
 
         return False
 

@@ -73,6 +73,11 @@ def request_done(request_id):
 
 def setup(hass, config):
     """ Set up Configurator. """
+
+    # Set log level
+    logseverity = config.get('logseverity', hass.config.logseverity)
+    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
     return True
 
 
