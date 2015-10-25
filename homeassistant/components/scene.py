@@ -1,11 +1,10 @@
 """
 homeassistant.components.scene
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Allows users to set and activate scenes.
 
-Allows users to set and activate scenes within Home Assistant.
-
-A scene is a set of states that describe how you want certain entities to be.
-For example, light A should be red with 100 brightness. Light B should be on.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/scene.html
 """
 import logging
 from collections import namedtuple
