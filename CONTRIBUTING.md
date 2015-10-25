@@ -20,8 +20,8 @@ After you finish adding support for your device:
  - Update the supported devices in the `README.md` file.
  - Add any new dependencies to `requirements_all.txt`. There is no ordering right now, so just add it to the end.
  - Update the `.coveragerc` file.
- - Provide some documentation for [home-assistant.io](https://home-assistant.io/). The documentation is handled in a separate [git repository](https://github.com/balloob/home-assistant.io).
- - Make sure all your code passes Pylint and flake8 (PEP8 and some more) validation. To generate reports, run `pylint homeassistant > pylint.txt` and `flake8 homeassistant --exclude bower_components,external > flake8.txt`.
+ - Provide some documentation for [home-assistant.io](https://home-assistant.io/). The documentation is handled in a separate [git repository](https://github.com/balloob/home-assistant.io). It's OK to add a docstring with configuration details to the file header.
+ - Make sure all your code passes ``pylint`` and ``flake8`` (PEP8 and some more) validation. To check your repository, run `./script/lint`.
  - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
  - Check for comments and suggestions on your Pull Request and keep an eye on the [Travis output](https://travis-ci.org/balloob/home-assistant/).
 
