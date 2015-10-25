@@ -33,6 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     device = Hyperion(host, port)
     if device.setup():
         add_devices_callback([device])
+        return True
     else:
         return False
 
@@ -97,10 +98,12 @@ class Hyperion(Light):
         try:
             sock.connect((self._host, self._port))
         except OSError:
+            sock.close()
             return False
 
         if not request:
             # no communication needed, simple presence detection returns True
+            sock.close()
             return True
 
         sock.send(bytearray(json.dumps(request) + "\n", "utf-8"))
@@ -108,6 +111,7 @@ class Hyperion(Light):
             buf = sock.recv(4096)
         except socket.timeout:
             # something is wrong, assume it's offline
+            sock.close()
             return False
 
         # read until a newline or timeout
