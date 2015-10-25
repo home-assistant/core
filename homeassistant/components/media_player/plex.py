@@ -53,6 +53,7 @@ def config_from_file(filename, config=None):
                     return json.loads(fdesc.read())
             except IOError as error:
                 _LOGGER.error('Reading config file failed: %s', error)
+                # This won't work yet
                 return False
         else:
             return {}
@@ -62,8 +63,13 @@ def config_from_file(filename, config=None):
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Sets up the plex platform. """
 
+    config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
+    if len(config):
+        # Setup a configured PlexServer
+        host, token = config.popitem()
+        token = token['token']
     # Via discovery
-    if discovery_info is not None:
+    elif discovery_info is not None:
         # Parse discovery data
         host = urlparse(discovery_info[1]).netloc
         _LOGGER.info('Discovered PLEX server: %s', host)
@@ -71,16 +77,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if host in _CONFIGURING:
             return
         token = None
-
     else:
-        # Setup a configured PlexServer
-        config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
-        if len(config):
-            host, token = config.popitem()
-            token = token['token']
-        else:
-            # Empty config file?
-            return
+        return
 
     setup_plexserver(host, token, hass, add_devices_callback)
 
@@ -88,19 +86,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 # pylint: disable=too-many-branches
 def setup_plexserver(host, token, hass, add_devices_callback):
     ''' Setup a plexserver based on host parameter'''
-    import plexapi
+    import plexapi.server
+    import plexapi.exceptions
 
     try:
         plexserver = plexapi.server.PlexServer('http://%s' % host, token)
     except (plexapi.exceptions.BadRequest,
-            plexapi.exceptions.Unauthorized) as error:
+            plexapi.exceptions.Unauthorized,
+            plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
         # No token or wrong token
         request_configuration(host, hass, add_devices_callback)
-        return
-    except plexapi.exceptions.NotFound:
-        # Host not found. Maybe it's off. Just log it and stop
-        _LOGGER.info(error)
         return
 
     # If we came here and configuring this host, mark as done
