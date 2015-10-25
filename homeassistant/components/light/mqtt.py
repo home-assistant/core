@@ -86,21 +86,21 @@ class MqttLight(Light):
             """ A new MQTT message has been received. """
             if payload == self._payload_on:
                 self._state = True
-                self._hass.update_ha_state()
+                self.update_ha_state()
             elif payload == self._payload_off:
                 self._state = False
-                self._hass.update_ha_state()
+                self.update_ha_state()
 
         def brightness_received(topic, payload, qos):
             """ A new MQTT message has been received. """
             self._brightness = int(payload)
-            self._hass.update_ha_state()
+            self.update_ha_state()
 
         def rgb_received(topic, payload, qos):
             """ A new MQTT message has been received. """
             rgb = payload.split(",")
             self._rgb = list(map(int, rgb))
-            self._hass.update_ha_state()
+            self.update_ha_state()
 
         # subscribe the state_topic
         mqtt.subscribe(self._hass, self._state_topic,
@@ -157,11 +157,11 @@ class MqttLight(Light):
             self._state = True
             mqtt.publish(self._hass, self._command_topic,
                          self._payload_on, self._qos)
-            self._hass.update_ha_state()
+            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
         self._state = False
         mqtt.publish(self._hass, self._command_topic,
                      self._payload_off, self._qos)
-        self._hass.update_ha_state()
+        self.update_ha_state()
