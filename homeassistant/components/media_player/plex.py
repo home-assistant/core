@@ -6,7 +6,7 @@ Provides an interface to the Plex API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.plex.html
 """
-import logging
+import logging, json, os
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -31,59 +31,90 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
+def config_from_file(filename, config=None):
+    ''' Small configuration file management function'''
+    if config:
+        # We're writing configuration
+        try:
+            with open(filename,'w') as f:
+                f.write(json.dumps(config))
+        except IOError as e:
+            _LOGGER.error('Saving config file failed: %s'%e)
+            return False
+        return True
+    else:
+        # We're reading config
+        if os.path.isfile(filename):
+            try:
+                with open(filename,'r') as f:
+                    return json.loads(f.read())
+            except IOError as e:
+                _LOGGER.error('Reading config file failed: %s'%e)
+                return False
+        else:
+            return {}
+    
 
 # pylint: disable=abstract-method, unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Sets up the plex platform. """
 
+    # Via discovery
     if discovery_info is not None:
         # Parse discovery data
         host = urlparse(discovery_info[1]).netloc
         _LOGGER.info('Discovered PLEX server: %s'%host)
-    else:
-        host = config.get(CONF_HOST, None)
 
-    if host in _CONFIGURING:
-        return
-
-    setup_plexserver(host, hass, add_devices_callback)
-
-
-def setup_plexserver(host, hass, add_devices_callback):
-    ''' Setup a plexserver based on host parameter'''
-    import plexapi
-
-    # Config parsing & discovery mix
-    conf_file = hass.config.path(PLEX_CONFIG_FILE)
-    try:
-        with open(conf_file,'r') as f:
-            conf_dict = eval(f.read())
-    except IOError: # File not found
-        if host == None:
-            # No discovery, no config, quit here
+        if host in _CONFIGURING:
             return
-        conf_dict = {}
-
-    if host == None:
-        # Called by module inclusion, let's only use config
-        host,token = conf_dict.popitem()
-        token = token['token']
-    elif host not in conf_dict.keys():
-        # Not in config
-        conf_dict[host] = { 'token' : '' }
         token = None
+
+    else:
+        # Setup a configured PlexServer
+        config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
+        if len(config):
+            host,token = config.popitem()
+            token = token['token']
+        else:
+            # Empty config file?
+            return
+
+    setup_plexserver(host, token, hass, add_devices_callback)
+
+
+def setup_plexserver(host, token, hass, add_devices_callback):
+    ''' Setup a plexserver based on host parameter'''
+    from plexapi.server import PlexServer
+    from plexapi.exceptions import BadRequest
+    import plexapi
 
     _LOGGER.info('Connecting to: htts://%s using token: %s' %
             (host, token))
     try:
-        plexserver = plexapi.PlexServer('http://%s'%host, token)
-    except Exception:
+        plexserver = plexapi.server.PlexServer('http://%s'%host, token)
+    except (plexapi.exceptions.BadRequest,
+            plexapi.exceptions.Unauthorized,
+            plexapi.exceptions.NotFound) as e:
+        _LOGGER.info(e)
+        # No token or wrong token
         request_configuration(host, hass, add_devices_callback)
         return
-    except plexapi.exceptions.BadRequest as e:
-        _LOGGER.error('BLABLA1')
-        request_configuration(host, hass, add_devices_callback)
+    except Exception as e:
+        _LOGGER.error('Misc Exception : %s'%e)
         return
+
+    # If we came here and configuring this host, mark as done
+    if host in _CONFIGURING:
+        request_id = _CONFIGURING.pop(host)
+        configurator = get_component('configurator')
+        configurator.request_done(request_id)
+        _LOGGER.info('Discovery configuration done!')
+
+    # Save config
+    if not config_from_file(
+            hass.config.path(PLEX_CONFIG_FILE),
+            {host: {'token': token}}):
+        _LOGGER.error('failed to save config file')
 
     _LOGGER.info('Connected to: htts://%s using token: %s' %
             (host, token))
@@ -96,7 +127,7 @@ def setup_plexserver(host, hass, add_devices_callback):
         """ Updates the devices objects. """
         try:
             devices = plexserver.clients()
-        except BadRequest:
+        except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
 
@@ -115,14 +146,14 @@ def setup_plexserver(host, hass, add_devices_callback):
                 plex_clients[device.machineIdentifier].set_device(device)
 
         if new_plex_clients:
-            add_devices(new_plex_clients)
+            add_devices_callback(new_plex_clients)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
         """ Updates the sessions objects. """
         try:
             sessions = plexserver.sessions()
-        except BadRequest:
+        except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex sessions")
             return
 
@@ -147,14 +178,14 @@ def request_configuration(host, hass, add_devices_callback):
 
     def plex_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
-        setup_plexserver(host, hass, add_devices_callback)
+        setup_plexserver(host, data.get('token'), hass, add_devices_callback)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, "Plex Media Server", plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
         description_image="/static/images/config_plex_mediaserver.png",
         submit_caption="Confirm",
-        fields=[{'Token':'token'}]
+        fields=[{'id': 'token', 'name':'X-Plex-Token', 'type':''}]
     )
 
 
@@ -173,17 +204,23 @@ class PlexClient(MediaPlayerDevice):
         self.device = device
 
     @property
+    def unique_id(self):
+        """ Returns the id of this plex client """
+        return "{}.{}".format(
+            self.__class__, self.device.machineIdentifier or self.device.name )
+
+    @property
+    def name(self):
+        """ Returns the name of the device. """
+        return self.device.name or self.device.product or self.device.deviceClass
+
+    @property
     def session(self):
         """ Returns the session, if any. """
         if self.device.machineIdentifier not in self.plex_sessions:
             return None
 
         return self.plex_sessions[self.device.machineIdentifier]
-
-    @property
-    def name(self):
-        """ Returns the name of the device. """
-        return self.device.name or self.device.product or self.device.device
 
     @property
     def state(self):
@@ -194,7 +231,7 @@ class PlexClient(MediaPlayerDevice):
                 return STATE_PLAYING
             elif state == 'paused':
                 return STATE_PAUSED
-        # This is nasty. Need ti find a way to determine alive
+        # This is nasty. Need to find a way to determine alive
         elif self.device:
             return STATE_IDLE
         else:
