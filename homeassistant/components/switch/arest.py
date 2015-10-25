@@ -28,8 +28,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       "Add http:// to your URL.")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to device. "
-                      "Please check the IP address in the configuration file.")
+        _LOGGER.error("No route to device at %s. "
+                      "Please check the IP address in the configuration file.",
+                      resource)
         return False
 
     dev = []

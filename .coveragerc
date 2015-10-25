@@ -92,6 +92,7 @@ omit =
     homeassistant/components/switch/command_switch.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
+    homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py

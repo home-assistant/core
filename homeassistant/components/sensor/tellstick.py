@@ -3,24 +3,8 @@ homeassistant.components.sensor.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Shows sensor values from Tellstick sensors.
 
-Possible config keys:
-
-id of the sensor: Name the sensor with ID
-135=Outside
-
-only_named: Only show the named sensors
-only_named=1
-
-temperature_scale: The scale of the temperature value
-temperature_scale=°C
-
-datatype_mask: mask to determine which sensor values to show based on
-https://tellcore-py.readthedocs.org
-    /en/v1.0.4/constants.html#module-tellcore.constants
-
-datatype_mask=1   # only show temperature
-datatype_mask=12  # only show rain rate and rain total
-datatype_mask=127 # show all sensor values
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.tellstick.html
 """
 import logging
 from collections import namedtuple
