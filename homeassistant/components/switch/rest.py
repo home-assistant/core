@@ -1,37 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 homeassistant.components.switch.rest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a REST switch.
 
-Configuration:
-
-switch:
-  platform: rest
-  name: "Bedroom Switch"
-  resource: "http://IP_ADDRESS/ENDPOINT"
-  body_on: "ON"
-  body_off: "OFF"
-
-Variables:
-
-resource
-*Required*
-
-name
-*Optional
-The name of the switch. Default is 'REST Switch'.
-
-body_on
-*Optional
-The body that represents enabled state. Default is "ON".
-
-body_off
-*Optional
-The body that represents disabled state. Default is "OFF".
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.rest.html
 """
-
 import logging
 import requests
 
@@ -46,7 +20,7 @@ DEFAULT_BODY_OFF = "OFF"
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add REST Switch """
+    """ Get REST switch. """
 
     resource = config.get('resource')
 
@@ -61,7 +35,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                       "Add http:// to your URL.")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to device. "
+        _LOGGER.error("No route to resource/endpoint. "
                       "Please check the IP address in the configuration file.")
         return False
 
@@ -75,7 +49,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class RestSwitch(SwitchDevice):
-    """ Represents a switch that can be togggled using REST """
+    """ Represents a switch that can be toggled using REST. """
     def __init__(self, hass, name, resource, body_on, body_off):
         self._state = None
         self._hass = hass
@@ -102,7 +76,7 @@ class RestSwitch(SwitchDevice):
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error("Can't turn on %s. Is device offline?",
+            _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
                           self._resource)
 
     def turn_off(self, **kwargs):
@@ -113,7 +87,7 @@ class RestSwitch(SwitchDevice):
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error("Can't turn off %s. Is device offline?",
+            _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
                           self._resource)
 
     def update(self):
