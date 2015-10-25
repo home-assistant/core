@@ -3,44 +3,8 @@ components.verisure
 ~~~~~~~~~~~~~~~~~~~
 Provides support for verisure components.
 
-Configuration:
-
-To use the Verisure component you will need to add something like the
-following to your configuration.yaml file.
-
-verisure:
-  username: user@example.com
-  password: password
-  alarm: 1
-  hygrometers: 0
-  smartplugs: 1
-  thermometers: 0
-
-Variables:
-
-username
-*Required
-Username to Verisure mypages.
-
-password
-*Required
-Password to Verisure mypages.
-
-alarm
-*Optional
-Set to 1 to show alarm, 0 to disable. Default 1.
-
-hygrometers
-*Optional
-Set to 1 to show hygrometers, 0 to disable. Default 1.
-
-smartplugs
-*Optional
-Set to 1 to show smartplugs, 0 to disable. Default 1.
-
-thermometers
-*Optional
-Set to 1 to show thermometers, 0 to disable. Default 1.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/verisure.html
 """
 import logging
 from datetime import timedelta

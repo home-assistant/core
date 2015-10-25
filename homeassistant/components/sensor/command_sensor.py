@@ -3,41 +3,6 @@ homeassistant.components.sensor.command_sensor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure custom shell commands to turn a value for a sensor.
 
-Configuration:
-
-To use the command_line sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: command_sensor
-  name: "Command sensor"
-  command: sensor_command
-  unit_of_measurement: "°C"
-  correction_factor: 0.0001
-  decimal_places: 0
-
-Variables:
-
-name
-*Optional
-Name of the command sensor.
-
-command
-*Required
-The action to take to get the value.
-
-unit_of_measurement
-*Optional
-Defines the units of measurement of the sensor, if any.
-
-correction_factor
-*Optional
-A float value to do some basic calculations.
-
-decimal_places
-*Optional
-Number of decimal places of the value. Default is 0.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_sensor.html
 """
@@ -133,7 +98,7 @@ class CommandSensorData(object):
         _LOGGER.info('Running command: %s', self.command)
 
         try:
-            return_value = subprocess.check_output(self.command.split())
+            return_value = subprocess.check_output(self.command, shell=True)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
             _LOGGER.error('Command failed: %s', self.command)

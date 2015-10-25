@@ -87,7 +87,7 @@ https://github.com/theolind/pymysensors/archive/d4b809c2167650691058d1e29bfd2c4b
 pynetgear==0.3
 
 # Netdisco (discovery)
-netdisco==0.4.2
+netdisco==0.5
 
 # Wemo (switch.wemo)
 pywemo==0.3.1

@@ -34,7 +34,7 @@ def setup(hass, config):
     def service_handler(call):
         """ Execute a shell command service. """
         try:
-            subprocess.call(conf[call.service].split(' '),
+            subprocess.call(conf[call.service], shell=True,
                             stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL)
         except subprocess.SubprocessError:

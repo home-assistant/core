@@ -1,36 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 homeassistant.components.switch.command_switch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure custom shell commands to turn a switch on/off.
-
-Configuration:
-
-To use the command_line switch you will need to add something like the
-following to your configuration.yaml file.
-
-switch:
-  platform: command_switch
-  switches:
-    name_of_the_switch:
-      oncmd: switch_command on for name_of_the_switch
-      offcmd: switch_command off for name_of_the_switch
-
-Variables:
-
-These are the variables for the switches array:
-
-name_of_the_switch
-*Required
-Name of the command switch. Multiple entries are possible.
-
-oncmd
-*Required
-The action to take for on.
-
-offcmd
-*Required
-The action to take for off.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.command_switch.html
