@@ -30,6 +30,8 @@ DEFAULT_COMMAND_RGB = "homeassistant/light/rgb/set"
 DEPENDENCIES = ['mqtt']
 
 # pylint: disable=unused-argument
+
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Light. """
 
@@ -52,10 +54,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('payload_off', DEFAULT_PAYLOAD_OFF),
         config.get('brightness', DEFAULT_BRIGHTNESS))])
 
+
 class MqttLight(Light):
     """ Provides a demo switch. """
 
-    # pylint: disable=too-many-instance-attributes,too-many-arguments,too-many-locals,bad-builtin
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments,too-many-locals,bad-builtin
     # Eight is reasonable in this case.
 
     def __init__(self, hass, name,
