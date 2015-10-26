@@ -24,7 +24,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if discovery_info is not None:
         location = discovery_info[2]
         mac = discovery_info[3]
-        # pylint: disable=too-many-function-args
         device = discovery.device_from_description(location, mac)
 
         if device:
