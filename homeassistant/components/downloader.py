@@ -44,7 +44,7 @@ def setup(hass, config):
 
     # If path is relative, we assume relative to HASS config dir
     if not os.path.isabs(download_path):
-            download_path = hass.config.path(download_path)
+        download_path = hass.config.path(download_path)
 
     if not os.path.isdir(download_path):
 
