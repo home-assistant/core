@@ -124,8 +124,7 @@ class UbusDeviceScanner(object):
             if not self.hostapd:
                 hostapd = _req_json_rpc(self.url, self.session_id,
                                         'list', 'hostapd.*', '')
-                for key in hostapd.keys():
-                    self.hostapd.append(key)
+                self.hostapd.extend(hostapd.keys())
 
             self.last_results = []
             results = 0
@@ -135,14 +134,9 @@ class UbusDeviceScanner(object):
 
                 if result:
                     results = results + 1
-                    for key in result["clients"].keys():
-                        self.last_results.append(key)
+                    self.last_results.extend(result['clients'].keys())
 
-            if results:
-                return True
-            else:
-                return False
-
+            return bool(results)
 
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     """ Perform one JSON RPC operation. """
