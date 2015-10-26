@@ -15,6 +15,14 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
+
+try:
+    import telegram
+except ImportError:
+    _LOGGER.exception(
+        "Unable to import python-telegram-bot. "
+        "Did you maybe not install the 'python-telegram-bot' package?")
+
 REQUIREMENTS = ['python-telegram-bot==2.8.7']
 
 
@@ -27,17 +35,9 @@ def get_service(hass, config):
         return None
 
     try:
-        import telegram
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import python-telegram-bot. "
-            "Did you maybe not install the 'python-telegram-bot' package?")
-        return None
-
-    try:
         bot = telegram.Bot(token=config[DOMAIN][CONF_API_KEY])
         username = bot.getMe()['username']
-        _LOGGER.info("Telegram bot is' %s'", username)
+        _LOGGER.info("Telegram bot is '%s'.", username)
     except urllib.error.HTTPError:
         _LOGGER.error("Please check your access token.")
         return None
@@ -52,7 +52,6 @@ class TelegramNotificationService(BaseNotificationService):
     """ Implements notification service for Telegram. """
 
     def __init__(self, api_key, chat_id):
-        import telegram
         self._api_key = api_key
         self._chat_id = chat_id
         self.bot = telegram.Bot(token=self._api_key)
@@ -62,5 +61,8 @@ class TelegramNotificationService(BaseNotificationService):
 
         title = kwargs.get(ATTR_TITLE)
 
-        self.bot.sendMessage(chat_id=self._chat_id,
-                             text=title + "  " + message)
+        try:
+            self.bot.sendMessage(chat_id=self._chat_id,
+                                 text=title + "  " + message)
+        except telegram.error.TelegramError:
+            _LOGGER.error("Your chat id '%s' is not valid.", self._chat_id)
