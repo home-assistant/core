@@ -3,17 +3,7 @@ homeassistant.components.light.hyperion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Hyperion remotes.
 
-Configuration:
-
-To connect to [a Hyperion server](https://github.com/tvdzwan/hyperion) you
-will need to add something like the following to your configuration.yaml file:
-
-light:
-    platform: hyperion
-    host: 192.168.1.98
-    port: 19444
-
-The JSON server port is 19444 by default.
+https://home-assistant.io/components/light.hyperion.html
 """
 import logging
 import socket
