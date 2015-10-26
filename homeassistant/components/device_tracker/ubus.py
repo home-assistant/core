@@ -89,8 +89,8 @@ class UbusDeviceScanner(object):
                                        'call', 'uci', 'get',
                                        config="dhcp", type="dnsmasq")
                 if result:
-                    self.leasefile = next(iter(result["values"].
-                                          values()))["leasefile"]
+                    values = result["values"].values()
+                    self.leasefile = next(iter(values))["leasefile"]
                 else:
                     return
 
@@ -101,8 +101,8 @@ class UbusDeviceScanner(object):
                 if result:
                     self.mac2name = dict()
                     for line in result["data"].splitlines():
-                        [time, mac, ip, name, lid] = line.split(" ")
-                        self.mac2name[mac.upper()] = name
+                        hosts = line.split(" ")
+                        self.mac2name[hosts[1].upper()] = hosts[3]
                 else:
                     # Error, handled in the _req_json_rpc
                     return
@@ -138,6 +138,7 @@ class UbusDeviceScanner(object):
 
             return bool(results)
 
+
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     """ Perform one JSON RPC operation. """
 
@@ -147,8 +148,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
                        "params": [session_id,
                                   subsystem,
                                   method,
-                                  params]
-                       })
+                                  params]})
 
     try:
         res = requests.post(url, data=data, timeout=5)
@@ -159,7 +159,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     if res.status_code == 200:
         response = res.json()
 
-        if (rpcmethod == "call"):
+        if rpcmethod == "call":
             return response["result"][1]
         else:
             return response["result"]
