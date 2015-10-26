@@ -12,22 +12,7 @@ Support for LimitlessLED bulbs, also known as...
 - dekolight
 - iLight
 
-Configuration:
-
-To use limitlessled you will need to add the following to your
-configuration.yaml file.
-
-light:
-  platform: limitlessled
-  bridges:
-    - host: 192.168.1.10
-      group_1_name: Living Room
-      group_2_name: Bedroom
-      group_3_name: Office
-      group_3_type: white
-      group_4_name: Kitchen
-    - host: 192.168.1.11
-      group_2_name: Basement
+https://home-assistant.io/components/light.limitlessled.html
 """
 import logging
 
