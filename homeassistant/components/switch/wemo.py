@@ -11,7 +11,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
-REQUIREMENTS = ['pywemo==0.3.1']
+REQUIREMENTS = ['pywemo==0.3.2']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
-        device = discovery.device_from_description(discovery_info[2])
+        device = discovery.device_from_description(discovery_info[2], discovery_info[3])
 
         if device:
             add_devices_callback([WemoSwitch(device)])
