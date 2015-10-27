@@ -1,8 +1,10 @@
 """
 homeassistant.components.downloader
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to download files.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/downloader.html
 """
 import os
 import logging
@@ -41,6 +43,10 @@ def setup(hass, config):
         return False
 
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
+
+    # If path is relative, we assume relative to HASS config dir
+    if not os.path.isabs(download_path):
+        download_path = hass.config.path(download_path)
 
     if not os.path.isdir(download_path):
 
