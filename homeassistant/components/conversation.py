@@ -1,9 +1,10 @@
 """
 homeassistant.components.conversation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to have conversations with Home Assistant.
-This is more a proof of concept.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/conversation.html
 """
 import logging
 import re
