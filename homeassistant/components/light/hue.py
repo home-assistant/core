@@ -14,9 +14,9 @@ from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
-    ATTR_FLASH, FLASH_LONG, FLASH_SHORT, ATTR_EFFECT,
-    EFFECT_COLORLOOP)
+    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_CT_COLOR,
+    ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
+    ATTR_EFFECT, EFFECT_COLORLOOP)
 
 REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -147,6 +147,16 @@ class HueLight(Light):
         self.bridge = bridge
         self.update_lights = update_lights
 
+        # Hue can control multiple type of lights
+        capability_map = {
+            'Dimmable light': ['bri'],
+            'Dimmable plug-in unit': ['bri'],
+            'Color light': ['bri', 'xy'],
+            'Extended color light': ['bri', 'xy', 'ct'],
+            'unknown': []}
+        self.capabilities = capability_map.get(
+            self.info['type'], 'unknown')
+
     @property
     def unique_id(self):
         """ Returns the id of this Hue light """
@@ -161,12 +171,26 @@ class HueLight(Light):
     @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
-        return self.info['state']['bri']
+        if 'bri' in self.capabilities:
+            return self.info['state']['bri']
+        else:
+            return None
 
     @property
     def color_xy(self):
         """ XY color value. """
-        return self.info['state'].get('xy')
+        if 'xy' in self.capabilities:
+            return self.info['state'].get('xy')
+        else:
+            return None
+
+    @property
+    def color_ct(self):
+        """ CT color value. """
+        if 'ct' in self.capabilities:
+            return self.info['state'].get('ct')
+        else:
+            return None
 
     @property
     def is_on(self):
@@ -189,6 +213,9 @@ class HueLight(Light):
 
         if ATTR_XY_COLOR in kwargs:
             command['xy'] = kwargs[ATTR_XY_COLOR]
+
+        if ATTR_CT_COLOR in kwargs:
+            command['ct'] = kwargs[ATTR_CT_COLOR]
 
         flash = kwargs.get(ATTR_FLASH)
 
