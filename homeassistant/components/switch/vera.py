@@ -15,9 +15,9 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
 
-REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
-                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
-                '#python-vera==0.1']
+REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
+                '90e203b58c5897930a9567252943b7c96c39652b.zip'
+                '#python-vera==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
