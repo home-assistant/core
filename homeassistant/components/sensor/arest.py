@@ -28,10 +28,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     resource = config.get(CONF_RESOURCE)
     var_conf = config.get(CONF_MONITORED_VARIABLES)
+    pins = config.get('pins', None)
 
-    if None in (resource, var_conf):
+
+    if resource is None:
         _LOGGER.error('Not all required config keys present: %s',
-                      ', '.join((CONF_RESOURCE, CONF_MONITORED_VARIABLES)))
+                      CONF_RESOURCE)
         return False
 
     try:
@@ -49,31 +51,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     arest = ArestData(resource)
 
     dev = []
-    pins = config.get('pins', None)
 
-    for variable in config['monitored_variables']:
-        if variable['name'] not in response['variables']:
-            _LOGGER.error('Variable: "%s" does not exist', variable['name'])
-            continue
+    if var_conf is not None:
+        for variable in config['monitored_variables']:
+            if variable['name'] not in response['variables']:
+                _LOGGER.error('Variable: "%s" does not exist',
+                              variable['name'])
+                continue
 
-        dev.append(ArestSensor(arest,
-                               resource,
-                               config.get('name', response['name']),
-                               variable['name'],
-                               variable=variable['name'],
-                               unit_of_measurement=variable.get(
-                                   'unit_of_measurement')))
+            dev.append(ArestSensor(arest,
+                                   resource,
+                                   config.get('name', response['name']),
+                                   variable['name'],
+                                   variable=variable['name'],
+                                   unit_of_measurement=variable.get(
+                                       'unit_of_measurement')))
 
-    for pinnum, pin in pins.items():
-        dev.append(ArestSensor(ArestData(resource, pinnum),
-                               resource,
-                               config.get('name', response['name']),
-                               pin.get('name'),
-                               pin=pinnum,
-                               unit_of_measurement=pin.get(
-                                   'unit_of_measurement'),
-                               corr_factor=pin.get('correction_factor', None),
-                               decimal_places=pin.get('decimal_places', None)))
+    if pins is not None:
+        for pinnum, pin in pins.items():
+            dev.append(ArestSensor(ArestData(resource, pinnum),
+                                   resource,
+                                   config.get('name', response['name']),
+                                   pin.get('name'),
+                                   pin=pinnum,
+                                   unit_of_measurement=pin.get(
+                                       'unit_of_measurement'),
+                                   corr_factor=pin.get('correction_factor',
+                                                       None),
+                                   decimal_places=pin.get('decimal_places',
+                                                          None)))
 
     add_devices(dev)
 
