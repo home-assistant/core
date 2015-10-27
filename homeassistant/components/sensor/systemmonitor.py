@@ -3,60 +3,8 @@ homeassistant.components.sensor.systemmonitor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Shows system monitor values such as: disk, memory, and processor use.
 
-Configuration:
-
-To use the System monitor sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: systemmonitor
-  resources:
-    - type: 'disk_use_percent'
-      arg: '/'
-    - type: 'disk_use'
-      arg: '/home'
-    - type: 'disk_free'
-      arg: '/'
-    - type: 'memory_use_percent'
-    - type: 'memory_use'
-    - type: 'memory_free'
-    - type: 'swap_use_percent'
-    - type: 'swap_use'
-    - type: 'swap_free'
-    - type: 'network_in'
-      arg: 'eth0'
-    - type: 'network_out'
-      arg: 'eth0'
-    - type: 'packets_in'
-      arg: 'eth0'
-    - type: 'packets_out'
-      arg: 'eth0'
-    - type: 'ipv4_address'
-      arg: 'eth0'
-    - type: 'ipv6_address'
-      arg: 'eth0'
-    - type: 'processor_use'
-    - type: 'process'
-      arg: 'octave-cli'
-    - type: 'last_boot'
-    - type: 'since_last_boot'
-
-Variables:
-
-resources
-*Required
-An array specifying the variables to monitor.
-
-These are the variables for the resources array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
-sample list of variables.
-
-arg
-*Optional
-Additional details for the type, eg. path, binary name, etc.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.systemmonitor.html
 """
 import logging
 
@@ -64,7 +12,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
 
-REQUIREMENTS = ['psutil==3.0.0']
+REQUIREMENTS = ['psutil==3.2.2']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
     'disk_use': ['Disk Use', 'GiB'],

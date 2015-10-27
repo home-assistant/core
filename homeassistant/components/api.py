@@ -1,8 +1,10 @@
 """
 homeassistant.components.api
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides a Rest API for Home Assistant.
+
+For more details about the RESTful API, please refer to the documentation at
+https://home-assistant.io/developers/api.html
 """
 import re
 import logging

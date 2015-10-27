@@ -3,31 +3,8 @@ homeassistant.components.notify.syslog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Syslog notification service.
 
-Configuration:
-
-To use the Syslog notifier you will need to add something like the following
-to your configuration.yaml file.
-
-notify:
-  platform: syslog
-  facility: SYSLOG_FACILITY
-  option: SYSLOG_LOG_OPTION
-  priority: SYSLOG_PRIORITY
-
-Variables:
-
-facility
-*Optional
-Facility according to RFC 3164 (http://tools.ietf.org/html/rfc3164). Default
-is 'syslog' if no value is given.
-
-option
-*Option
-Log option. Default is 'pid' if no value is given.
-
-priority
-*Optional
-Priority of the messages. Default is 'info' if no value is given.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.syslog.html
 """
 import logging
 import syslog

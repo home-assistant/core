@@ -3,20 +3,8 @@ homeassistant.components.sensor.mysensors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors sensors.
 
-Configuration:
-
-To use the MySensors sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: mysensors
-  port: '/dev/ttyACM0'
-
-Variables:
-
-port
-*Required
-Port of your connection to your MySensors device.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.mysensors.html
 """
 import logging
 
@@ -30,14 +18,16 @@ from homeassistant.const import (
 CONF_PORT = "port"
 CONF_DEBUG = "debug"
 CONF_PERSISTENCE = "persistence"
+CONF_PERSISTENCE_FILE = "persistence_file"
+CONF_VERSION = "version"
 
 ATTR_NODE_ID = "node_id"
 ATTR_CHILD_ID = "child_id"
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/'
-                '35b87d880147a34107da0d40cb815d75e6cb4af7.zip'
-                '#pymysensors==0.2']
+                'd4b809c2167650691058d1e29bfd2c4b1792b4b0.zip'
+                '#pymysensors==0.3']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -86,9 +76,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     persistence = config.get(CONF_PERSISTENCE, True)
+    persistence_file = config.get(CONF_PERSISTENCE_FILE, 'mysensors.pickle')
+    version = config.get(CONF_VERSION, '1.4')
 
     gateway = mysensors.SerialGateway(port, sensor_update,
-                                      persistence=persistence)
+                                      persistence=persistence,
+                                      persistence_file=persistence_file,
+                                      protocol_version=version)
     gateway.metric = is_metric
     gateway.debug = config.get(CONF_DEBUG, False)
     gateway.start()

@@ -3,26 +3,8 @@ homeassistant.components.notify.file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 File notification service.
 
-Configuration:
-
-To use the File notifier you will need to add something like the following
-to your configuration.yaml file.
-
-notify:
-  platform: file
-  filename: FILENAME
-  timestamp: 1 or 0
-
-Variables:
-
-filename
-*Required
-Name of the file to use. The file will be created if it doesn't exist and saved
-in your config/ folder.
-
-timestamp
-*Required
-Add a timestamp to the entry, valid entries are 1 or 0.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.file.html
 """
 import logging
 import os
