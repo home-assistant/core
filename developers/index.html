@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -107,9 +107,7 @@
   <hr class="divider">
   
 
-  <p>Home Assistant is build from the ground-up to be easily extensible by other developers using
-components. It uses <a href="https://www.python.org/">Python 3</a> for the backend and
-<a href="https://www.polymer-project.org/">Polymer (Webcomponents)</a> for the frontend.</p>
+  <p>Home Assistant is build from the ground-up to be easily extensible by other developers using components. It uses <a href="https://www.python.org/">Python 3</a> for the backend and <a href="https://www.polymer-project.org/">Polymer (Webcomponents)</a> for the frontend.</p>
 
 <p>Home Assistant is open-source and MIT licensed. The source can be found here:</p>
 
@@ -122,8 +120,7 @@ components. It uses <a href="https://www.python.org/">Python 3</a> for the backe
 
 <h3><a class='title-link' name='starting-development' href='#starting-development'></a> Starting development</h3>
 
-<p>You will need to setup a development environment if you want to start developing a new feature or
-component for Home Assistant perform theses steps</p>
+<p>You will need to setup a development environment if you want to start developing a new feature or component for Home Assistant perform theses steps</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -142,12 +139,13 @@ component for Home Assistant perform theses steps</p>
 requests.</p>
 
 <ol>
-<li>Go to <a href="https://github.com/balloob/home-assistant">the Home Assistant repository</a>
-and click fork in the top right.</li>
+<li>Go to <a href="https://github.com/balloob/home-assistant">the Home Assistant repository</a> and click fork in the top right.</li>
 <li>Follow steps in the previous section but with your forked repository.</li>
 <li>Create a new branch to hold your changes<br>
 <code>git checkout -b some-feature</code></li>
 <li>Make the changes you want</li>
+<li>Check your changes for style violations<br>
+<code>./script/lint</code></li>
 <li>Commit the changes<br>
 <code>git add .</code><br>
 <code>git commit -m "Added some-feature"</code></li>
@@ -161,18 +159,12 @@ pull request.</li>
 <h3><a class='title-link' name='further-reading' href='#further-reading'></a> Further reading</h3>
 
 <ul>
-  <li><a href="/developers/architecture.html">
-    Home Assistant Architecture
-  </a></li>
-  <li><a href="/developers/frontend.html">Frontend development</a></li>
-  <li><a href="/developers/creating_components.html">
-    Creating a custom component
-  </a></li>
-  <li><a href="/developers/add_new_platform.html">
-    Adding support for a new platform
-  </a></li>
-  <li><a href="/developers/api.html">Rest API</a></li>
-  <li><a href="/developers/website.html">Website </a></li>
+<li><a href="/developers/architecture.html">Home Assistant Architecture</a></li>
+<li><a href="/developers/frontend.html">Frontend development</a></li>
+<li><a href="/developers/creating_components.html">Creating a custom component</a></li>
+<li><a href="/developers/add_new_platform.html">Adding support for a new platform</a></li>
+<li><a href="/developers/api.html">Rest API</a></li>
+<li><a href="/developers/website.html">Website</a></li>
 </ul>
 
 

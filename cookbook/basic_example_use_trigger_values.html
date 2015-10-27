@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -111,58 +111,32 @@
 
 <p>Turn on lights during daytime when it&rsquo;s dark enough &lt; 200 lux.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">numeric_state</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor.sensor_luminance</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">below</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">200</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;08:00&quot;</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">use_trigger_values</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.basic_lights</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">automation 2</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">numeric_state</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor.sensor_luminance</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">above</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">200</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;23:00&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_off</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.basic_lights</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre><code class="yaml">automation:
+  - alias: 
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.sensor_luminance
+        below: 200
+      - platform: time
+        after: "08:00"
+        before: "23:00"
+    condition: use_trigger_values
+    action:
+      service: homeassistant.turn_on
+      entity_id: group.basic_lights
 
+automation 2:
+  - alias: 
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.sensor_luminance
+        above: 200
+      - platform: time
+        after: "23:00"
+    action:
+      service: homeassistant.turn_off
+      entity_id: group.basic_lights
+</code></pre>
 
 
 </article>

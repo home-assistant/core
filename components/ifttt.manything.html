@@ -9,7 +9,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>IFTTT - ManyThing Channel - Home Assistant</title>
+    <title>ManyThing - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Instructions how to setup ManyThing support with IFTTT.">
@@ -18,7 +18,7 @@
     <link rel="canonical" href="https://home-assistant.io/components/ifttt.manything.html">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="IFTTT - ManyThing Channel">
+    <meta property="og:title" content="ManyThing">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/ifttt.manything.html/">
     <meta property="og:type" content="website">
@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -97,18 +97,14 @@
         
 
           <article class="page">
-
-  
   <header>
     <h1 class="title indent">
-      IFTTT - ManyThing Channel
+      ManyThing
     </h1>
   </header>
   <hr class="divider">
-  
 
-  <p><img src='/images/supported_brands/manything.png' class='brand pull-right' />
-<a href="https://manything.com">Manything</a> is a smart app that turns your iPhone, iPod, or iPad into a wifi
+  <p><a href="https://manything.com">Manything</a> is a smart app that turns your iPhone, iPod, or iPad into a wifi
 camera for monitoring your home, your pets, anything! Comes with live streaming, motion activated alerts, cloud video recording, and more.</p>
 
 <p>To get manything support, HA will use IFTTT&rsquo;s <a href="https://ifttt.com/maker">Maker Channel</a> and the <a href="https://ifttt.com/manything">ManyThing Channel</a>.
@@ -116,78 +112,42 @@ Use the <a href="/components/ifttt.html">IFTTT Setup instructions</a> to activat
 
 <p>After setting up IFTTT, Maker Channel and ManyThing Channel, you can use the following examples to configure Home Assistant.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;ManyThing</span><span class="nv"> </span><span class="s">Recording</span><span class="nv"> </span><span class="s">ON&#39;</span>
-</span><span class='line'>  <span class="c1"># This calls an IFTTT recipe to turn on recording of the ManyThing Camera</span>
-</span><span class='line'>  <span class="c1"># if we leave the house during the day.</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>   <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;not_home&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
-</span><span class='line'>   <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun.sun</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;above_horizon&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;manything_on&quot;</span><span class="p-Indicator">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;ManyThing</span><span class="nv"> </span><span class="s">Recording</span><span class="nv"> </span><span class="s">OFF&#39;</span>
-</span><span class='line'>  <span class="c1"># This calls an IFTTT recipe to turn off recording of the ManyThing Camera</span>
-</span><span class='line'>  <span class="c1"># when we are home unless it&#39;s nighttime.</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>   <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;home&#39;</span>
-</span><span class='line'>   <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun.sun</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;above_horizon&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">use_trigger_values</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
-</span><span class='line'>     <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;manything_off&quot;</span><span class="p-Indicator">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre><code class="yaml"># Example configuration.yaml entry
+automation:
+- alias: 'ManyThing Recording ON'
+  # This calls an IFTTT recipe to turn on recording of the ManyThing Camera
+  # if we leave the house during the day.
+  trigger:
+   - platform: state
+     entity_id: group.all_devices
+     state: 'not_home'
 
+  condition:
+   - platform: state
+     entity_id: sun.sun
+     state: 'above_horizon'
+
+  action:
+     service: ifttt.trigger
+     data: {"event":"manything_on"}
+
+- alias: 'ManyThing Recording OFF'
+  # This calls an IFTTT recipe to turn off recording of the ManyThing Camera
+  # when we are home unless it's nighttime.
+  trigger:
+   - platform: state
+     entity_id: group.all_devices
+     state: 'home'
+   - platform: state
+     entity_id: sun.sun
+     state: 'above_horizon'
+
+  condition: use_trigger_values
+
+  action:
+     service: ifttt.trigger
+     data: {"event":"manything_off"}
+</code></pre>
 
 <h3><a class='title-link' name='setting-up-a-recipe' href='#setting-up-a-recipe'></a> Setting up a recipe</h3>
 
@@ -226,12 +186,1488 @@ For ManyThing support, you need to set up an <code>on</code> and <code>off</code
 </table>
 
 
-
 </article>
 
 
         </div>
 
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    
+<section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+    
+      <img src='/images/supported_brands/manything.png' />
+    
+  </div>
+
+  
+  
+    
+    
+    
+    
+    
+  
+
+  
+    <div class='section'>
+      This is a platform for
+      <a href='/components/ifttt.html'>the IFTTT component</a>.
+    </div>
+
+  
+
+
+  
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+
+  
+
+
+
+  
+    <div class='section'>
+    <h1 class="title delta">Category Camera</h1>
+    <ul class='divided'>
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/camera.foscam.html'>Foscam IP camera</a>
+          
+        </li>
+      
+    
+      
+        <li>
+          
+            <a href='/components/camera.generic.html'>Generic IP Camera</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.hikvision.html'>Hikvision camera</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            ManyThing
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+    </ul>
+    </div>
+  
+</section>
+
+  
+</div>
+
+        </aside>
         
       </div>
     </div>
@@ -262,6 +1698,11 @@ For ManyThing support, you need to set up an <code>on</code> and <code>off</code
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
+
+
+
+
+
 
 
 

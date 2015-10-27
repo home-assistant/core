@@ -9,7 +9,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Bitcoin support - Home Assistant</title>
+    <title>Bitcoin - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Instructions how to integrate Bitcoin data within Home Assistant.">
@@ -18,7 +18,7 @@
     <link rel="canonical" href="https://home-assistant.io/components/sensor.bitcoin.html">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Bitcoin support">
+    <meta property="og:title" content="Bitcoin">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/sensor.bitcoin.html/">
     <meta property="og:type" content="website">
@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -97,18 +97,14 @@
         
 
           <article class="page">
-
-  
   <header>
     <h1 class="title indent">
-      Bitcoin Support
+      Bitcoin
     </h1>
   </header>
   <hr class="divider">
-  
 
-  <p><img src='/images/supported_brands/bitcoin.png' class='brand pull-right' />
-The bitcoin platform displays various details about the <a href="https://bitcoin.org">Bitcoin</a> network.</p>
+  <p>The bitcoin platform displays various details about the <a href="https://bitcoin.org">Bitcoin</a> network.</p>
 
 <p>If you have an online wallet from <a href="https://blockchain.info/">Blockchain.info</a> the sensor is capable to show your current balance.</p>
 
@@ -116,64 +112,35 @@ The bitcoin platform displays various details about the <a href="https://bitcoin
 
 <p>To add the Bitcoin sensor to your installation, add a selection of the available display options to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">bitcoin</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">wallet</span><span class="p-Indicator">:</span> <span class="s">&#39;YOUR</span><span class="nv"> </span><span class="s">WALLET_ID&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ACCOUNT_PASSWORD</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">currency</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR CURRENCY</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">display_options</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">exchangerate</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">trade_volume_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">miners_revenue_usd</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">btc_mined</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">trade_volume_usd</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">difficulty</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">minutes_between_blocks</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">number_of_transactions</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">hash_rate</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">timestamp</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mined_blocks</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">blocks_size</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_fees_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_btc_sent</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">estimated_btc_sent</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_blocks</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">next_retarget</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">estimated_transaction_volume_usd</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">miners_revenue_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">market_price_usd</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="yaml"># Example configuration.yaml entry
+sensor:
+  platform: bitcoin
+  wallet: 'YOUR WALLET_ID'
+  password: YOUR_ACCOUNT_PASSWORD
+  currency: YOUR CURRENCY
+  display_options:
+    - exchangerate
+    - trade_volume_btc
+    - miners_revenue_usd
+    - btc_mined
+    - trade_volume_usd
+    - difficulty
+    - minutes_between_blocks
+    - number_of_transactions
+    - hash_rate
+    - timestamp
+    - mined_blocks
+    - blocks_size
+    - total_fees_btc
+    - total_btc_sent
+    - estimated_btc_sent
+    - total_btc
+    - total_blocks
+    - next_retarget
+    - estimated_transaction_volume_usd
+    - miners_revenue_btc
+    - market_price_usd
+</code></pre>
 
 <p>Configuration variables:</p>
 
@@ -210,12 +177,1584 @@ The bitcoin platform displays various details about the <a href="https://bitcoin
 </ul>
 
 
-
 </article>
 
 
         </div>
 
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    
+<section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+    
+      <img src='/images/supported_brands/bitcoin.png' />
+    
+  </div>
+
+  
+  
+    
+    
+    
+    
+    
+  
+
+  
+
+
+  
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+
+  
+
+
+
+  
+    <div class='section'>
+    <h1 class="title delta">Category Sensor</h1>
+    <ul class='divided'>
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            Bitcoin
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.cpuspeed.html'>CPU speed</a>
+          
+        </li>
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.command_sensor.html'>Command line sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.efergy.html'>Efergy sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.glances.html'>Glances</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.mqtt.html'>MQTT sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.modbus.html'>Modbus sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.mysensors.html'>MySensors sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.rest.html'>RESTful sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.rfxtrx.html'>RFXtrx sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.sabnzbd.html'>SABnzbd</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.swiss_public_transport.html'>Swiss Public Transport</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.systemmonitor.html'>System Monitor</a>
+          
+        </li>
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.temper.html'>TEMPer sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.tellstick.html'>TellStick sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.time_date.html'>Time & Date</a>
+          
+        </li>
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.transmission.html'>Transmission sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.vera.html'>Vera sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.wink.html'>Wink sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.worldclock.html'>Worldclock</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.arest.html'>aREST sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+    </ul>
+    </div>
+  
+</section>
+
+  
+</div>
+
+        </aside>
         
       </div>
     </div>
@@ -246,6 +1785,11 @@ The bitcoin platform displays various details about the <a href="https://bitcoin
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
+
+
+
+
+
 
 
 

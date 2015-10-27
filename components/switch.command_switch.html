@@ -9,20 +9,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Command line switches support - Home Assistant</title>
+    <title>Command line switch - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to have a switch call command line commands.">
+    <meta name="description" content="Instructions how to have switches call command line commands.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io/components/switch.command_switch.html">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Command line switches support">
+    <meta property="og:title" content="Command line switch">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/switch.command_switch.html/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Instructions how to have a switch call command line commands.">
+    <meta property="og:description" content="Instructions how to have switches call command line commands.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -97,37 +97,25 @@
         
 
           <article class="page">
-
-  
   <header>
     <h1 class="title indent">
-      Command Line Switches Support
+      Command line switch
     </h1>
   </header>
   <hr class="divider">
-  
 
-  <p><img src='/images/supported_brands/utilities-terminal.png' class='brand pull-right' />
-A switch platform that issues specific commands when it is turned on and off. This might very well become our most platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
+  <p>The switch platform that issues specific commands when it is turned on and off. This might very well become our most platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
 
 <p>To enable it, add the following lines to your <code>configuration.yaml</code>:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_switch</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">switches</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">kitchen_light</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">oncmd</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">switch_command on kitchen</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">switch_command off kitchen</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="yaml"># Example configuration.yaml entry
+switch:
+  platform: command_switch
+  switches:
+    kitchen_light:
+      oncmd: switch_command on kitchen
+      offcmd: switch_command off kitchen
+</code></pre>
 
 <p>Configuration variables:</p>
 
@@ -155,22 +143,14 @@ A switch platform that issues specific commands when it is turned on and off. Th
 
 <p>The example below is doing the same as the <a href="/components/switch.arest.html">aREST switch</a>. The commandline tool <code>[curl](http://curl.haxx.se/)</code> is used to toogle a pin which is controllable through REST.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_switch</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">switches</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">arest_pin4</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">oncmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/bin/curl</span><span class="nv"> </span><span class="s">-X</span><span class="nv"> </span><span class="s">GET</span><span class="nv"> </span><span class="s">http://192.168.1.10/digital/4/1&quot;</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/bin/curl</span><span class="nv"> </span><span class="s">-X</span><span class="nv"> </span><span class="s">GET</span><span class="nv"> </span><span class="s">http://192.168.1.10/digital/4/0&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="yaml"># Example configuration.yaml entry
+switch:
+  platform: command_switch
+  switches:
+    arest_pin4:
+      oncmd: "/usr/bin/curl -X GET http://192.168.1.10/digital/4/1"
+      offcmd: "/usr/bin/curl -X GET http://192.168.1.10/digital/4/0"
+</code></pre>
 
 <h3><a class='title-link' name='shutdown-your-local-host' href='#shutdown-your-local-host'></a> Shutdown your local host</h3>
 
@@ -181,31 +161,1542 @@ This switch will shudown your host immediately, there will be no confirmation.
 </p>
 
 
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_switch</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">switches</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">Home Assistant system shutdown</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="s">&quot;/usr/sbin/poweroff&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-
+<pre><code class="yaml"># Example configuration.yaml entry
+switch:
+  platform: command_switch
+  switches:
+    Home Assistant system shutdown:
+      offcmd: "/usr/sbin/poweroff"
+</code></pre>
 
 </article>
 
 
         </div>
 
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    
+<section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+    
+  </div>
+
+  
+  
+    
+    
+    
+    
+    
+  
+
+  
+    <div class='section'>
+      This is a platform for
+      <a href='/components/switch.html'>the Switches component</a>.
+    </div>
+
+  
+
+
+  
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+
+  
+
+
+
+  
+    <div class='section'>
+    <h1 class="title delta">Category Switch</h1>
+    <ul class='divided'>
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.wemo.html'>Belkin WeMo switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            Command line switch
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.edimax.html'>Edimax switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.mqtt.html'>MQTT switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.modbus.html'>Modbus switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.rest.html'>RESTful switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.rfxtrx.html'>RFXtrx switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.tellstick.html'>TellStick switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.transmission.html'>Transmission switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.vera.html'>Vera switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.wink.html'>Wink switch</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/switch.arest.html'>aREST switch</a>
+          
+        </li>
+      
+    
+      
+    
+    </ul>
+    </div>
+  
+</section>
+
+  
+</div>
+
+        </aside>
         
       </div>
     </div>
@@ -236,6 +1727,11 @@ This switch will shudown your host immediately, there will be no confirmation.
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
+
+
+
+
+
 
 
 

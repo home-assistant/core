@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -111,76 +111,41 @@
 
 <p>This recipe will turn on a light when there is motion and turn off the light when ten minutes has passed without any motion events .</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Turn on kitchen lights when there is movement</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor.motion_sensor</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">to</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">script.timed_lamp</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">script</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">timed_lamp</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&quot;Turn</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">lamp</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">set</span><span class="nv"> </span><span class="s">timer&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">sequence</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="c1"># Cancel ev. old timers </span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">script.turn_off</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>           <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">script.timer_off</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.kitchen</span>
-</span><span class='line'>      <span class="c1"># Set new timer </span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">script.turn_on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">script.timer_off</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">timer_off</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&quot;Turn</span><span class="nv"> </span><span class="s">off</span><span class="nv"> </span><span class="s">lamp</span><span class="nv"> </span><span class="s">after</span><span class="nv"> </span><span class="s">10</span><span class="nv"> </span><span class="s">minutes&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">sequence</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">delay</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">minutes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_off</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.kitchen</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre><code class="yaml">automation:
+  alias: Turn on kitchen lights when there is movement 
+  trigger:
+    - platform: state
+      entity_id: sensor.motion_sensor
+      to: 'on'
+  action:
+    service: homeassistant.turn_on
+    entity_id: script.timed_lamp
 
+script:
+  timed_lamp:
+    alias: "Turn on lamp and set timer"
+    sequence:
+      # Cancel ev. old timers 
+      - execute_service: script.turn_off
+        service_data: 
+           entity_id: script.timer_off
+      - execute_service: light.turn_on
+        service_data:
+          entity_id: light.kitchen
+      # Set new timer 
+      - execute_service: script.turn_on
+        service_data:
+          entity_id: script.timer_off
+
+  timer_off:
+    alias: "Turn off lamp after 10 minutes"
+    sequence:
+      - delay:
+          minutes: 10
+      - execute_service: light.turn_off
+        service_data: 
+          entity_id: light.kitchen
+</code></pre>
 
 
 </article>

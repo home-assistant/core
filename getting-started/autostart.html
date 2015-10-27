@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -161,6 +161,9 @@ Newer linux distributions are trending towards using systemd for managing daemon
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>su -c <span class="s1">&#39;cat &lt;&lt;EOF &gt;&gt; /lib/systemd/system/home-assistant.service</span>
 </span><span class='line'><span class="s1">[Unit]</span>
 </span><span class='line'><span class="s1">Description=Home Assistant</span>
@@ -168,7 +171,10 @@ Newer linux distributions are trending towards using systemd for managing daemon
 </span><span class='line'>
 </span><span class='line'><span class="s1">[Service]</span>
 </span><span class='line'><span class="s1">Type=simple</span>
-</span><span class='line'><span class="s1">ExecStart=hass</span>
+</span><span class='line'><span class="s1">ExecStart=/usr/local/bin/hass</span>
+</span><span class='line'><span class="s1"># Next line is to run as a specific user</span>
+</span><span class='line'><span class="s1"># for Raspberry Pi users, keep it at &#39;</span>pi<span class="s1">&#39;</span>
+</span><span class='line'><span class="s1">User=pi</span>
 </span><span class='line'>
 </span><span class='line'><span class="s1">[Install]</span>
 </span><span class='line'><span class="s1">WantedBy=multi-user.target</span>
@@ -180,7 +186,7 @@ Newer linux distributions are trending towards using systemd for managing daemon
 <p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo systemctl &ndash;system daemon-reload
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo systemctl <span class="se">--</span>system daemon-reload
 </span><span class='line'>sudo systemctl <span class="nb">enable </span>home-assistant
 </span><span class='line'>sudo systemctl start home-assistant
 </span></code></pre></td></tr></table></div></figure></p>

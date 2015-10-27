@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -124,19 +124,30 @@ by some distributions. If you are unable to run <code>python3 -m pip --version</
 <a href="https://bootstrap.pypa.io/get-pip.py">downloading the installer</a> and run it with Python 3:
 <code>python3 get-pip.py</code>.</p>
 
+<p><strong>distutils.errors.DistutilsOptionError: must supply either home or prefix/exec-prefix &ndash; not both</strong><br>
+This is a known issue if you&rsquo;re on a Mac using Homebrew to install Python. Please follow
+<a href="https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/Homebrew-and-Python.md#note-on-pip-install---user">these instructions</a>
+to resolve it.</p>
+
 <p><strong>CentOS and Python 3</strong><br>
 To run Python 3.x on <a href="https://www.centos.org/">CentOS</a> or RHEL, <a href="https://www.softwarecollections.org/en/scls/rhscl/rh-python34/">Software Collections</a> needs to be activated.</p></p>
 
 <p><strong>Run the development version</strong><br>
-If you want to stay on top of the development of Home Assistant then you can upgrade to the latest stuff what is available in the dev branch <code>pip3 install --upgrade git+git://github.com/balloob/home-assistant.git@dev</code>. Keep in mind, that stable releases of Home Assistant are published often.</p>
+If you want to stay on top of the development of Home Assistant then you can upgrade to the dev branch using
+<code>pip3 install --upgrade git+git://github.com/balloob/home-assistant.git@dev</code>. Keep in mind, that stable releases
+of Home Assistant are published often.</p>
 
 <p><strong>No access to the frontend</strong><br>
 In newer Linux distributions (at least Fedora 22/CentOS 7) the access to a host is very limited.
-This means that you can&rsquo;t access the Home Assistant Frontend that is running on a host outside of the host machine. Windows and OSX machines may also have issues with this.</p>
+This means that you can&rsquo;t access the Home Assistant Frontend that is running on a host outside of the
+host machine. Windows and OSX machines may also have issues with this.</p>
 
-<p>To fix this you will need to open your machine&rsquo;s firewall for TCP traffic over port 8123. The method for doing this will vary depending on your operating system and the firewall you have installed. Below are some suggestions to try. Google is your friend here.</p>
+<p>To fix this you will need to open your machine&rsquo;s firewall for TCP traffic over port 8123. The method
+for doing this will vary depending on your operating system and the firewall you have installed.
+Below are some suggestions to try. Google is your friend here.</p>
 
-<p><a href="http://windows.microsoft.com/en-us/windows/open-port-windows-firewall#1TC=windows-7">Windows</a> and <a href="https://support.apple.com/en-us/HT201642">Mac OSX</a> have good instructions posted.</p>
+<p><a href="http://windows.microsoft.com/en-us/windows/open-port-windows-firewall#1TC=windows-7">Windows instructions</a><br>
+<a href="https://support.apple.com/en-us/HT201642">Mac OSX instructions</a></p>
 
 <p>For firewalld systems (Fedora, RHEL, etc.):</p>
 

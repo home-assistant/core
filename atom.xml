@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-12T21:34:48-07:00</updated>
+  <updated>2015-10-26T21:58:24-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,67 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.7.6: Amazon FireTV, Radiotherm thermostats]]></title>
+    <link href="https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported/"/>
+    <updated>2015-10-26T18:10:00-07:00</updated>
+    <id>https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported</id>
+    <content type="html"><![CDATA[<p>After two weeks of hard work I&rsquo;m proud to announce the release of Home Assistant v0.7.6. For this release the main
+focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been
+squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by
+<a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="https://home-assistant.io/components/">component section</a> on the website has gotten a
+complete revamp.</p>
+
+<h4>Changes</h4>
+
+<p><img src='https://home-assistant.io/images/supported_brands/radiotherm.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px;' height='50' />
+<img src='https://home-assistant.io/images/supported_brands/firetv.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;' height='50' />
+<img src='https://home-assistant.io/images/supported_brands/geofancy.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;' height='50' /></p>
+
+<ul>
+<li>Device tracker: Newer <a href="https://home-assistant.io/components/device_tracker.tplink.html">TP-Link routers</a> now supported (<a href="https://github.com/mKeRix">@mKeRix</a>)</li>
+<li>Alarm Control Panel: <a href="https://home-assistant.io/components/alarm_control_panel.manual.html">Manual alarm</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+<li>Thermostat: <a href="https://home-assistant.io/components/thermostat.radiotherm.html">Radiotherm</a> now supported (<a href="https://github.com/toddeye">@toddeye</a>)</li>
+<li>Media Player: <a href="https://home-assistant.io/components/media_player.firetv.html">Amazon FireTV</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+<li>Device Tracker: <a href="https://home-assistant.io/components/device_tracker.geofancy.html">Geofancy</a> now supported (<a href="https://github.com/wind-rider">@wind-rider</a>)</li>
+<li>New component <a href="https://home-assistant.io/components/shell_command.html">Shell Command</a> can expose shell commands as services (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li><a href="https://home-assistant.io/components/script.html">Scripts</a> can now be customized using <code>customize</code> key in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>Light: <a href="https://home-assistant.io/components/light.hyperion.html">Hyperion</a> now supported (<a href="https://github.com/MakeMeASandwich">@MakeMeASandwich</a>)</li>
+<li>Sensor: <a href="https://home-assistant.io/components/sensor.arest.html">aRest</a> can now also read out pins (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>Sensor: <a href="https://home-assistant.io/components/sensor.forecast.html">Forecast.io</a> now supports specifying units in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>Thermostat: <a href="https://home-assistant.io/components/thermostat.heat_control.html">Heat Control</a> has been completely rewritten (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>Switch: <a href="https://home-assistant.io/components/switch.rest.html">Rest</a> now supported (<a href="https://github.com/bachp">@bachp</a>)</li>
+<li>Media Player: <a href="https://home-assistant.io/components/media_player.plex.html">Plex</a> can now be auto discovered and configure itself (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+<li><a href="https://home-assistant.io/components/downloader.html">Downloader</a> will now treat relative paths based on config dir (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+<li>Line Charts will use interpolation for sensor data and show current and target temperature for thermostats (<a href="https://github.com/balloob">@balloob</a>)</li>
+<li>Device Tracker: <a href="https://home-assistant.io/components/device_tracker.ubus.html">OpenWRT via ubus</a> now supported (<a href="https://github.com/krzynio">@krzynio</a>)</li>
+</ul>
+
+
+<!--more-->
+
+
+<h4>Breaking changes</h4>
+
+<p>As part of this release we did some cleanup which introduced backwards incompatible changes:</p>
+
+<p><strong>Heat Control thermostat no longer includes scheduling features.</strong><br>
+This feature has been removed completely. Use the <a href="https://home-assistant.io/components/automation.html">automation component</a>
+instead to control target temperature.</p>
+
+<p><strong>Config changed for calling a service from a script.</strong><br>
+<code>execute_service:</code> has been replaced with <code>service:</code>. See <a href="https://home-assistant.io/components/script.html">component page</a>
+for example. The old method will continue working for some time.</p>
+
+<p><strong>Scenes can no longer be turned off.</strong><br>
+It is no longer possible to turn a scene off after it has been activated. The way it worked was unpredictable
+and causes a lot of confusion.</p>
+
+<p><strong>Downloader treats relative paths now relative to the config dir instead of the current working dir.</strong><br>
+This makes more sense as most people run Home Assistant as a daemon</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Report the temperature with ESP8266 to MQTT]]></title>
@@ -2828,22 +2889,6 @@ An initial version of voice control for Home Assistant has landed. The current i
 The old logo, the new detailed logo and the new simple logo.
 </p>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Home Assistant moving to YAML]]></title>
-    <link href="https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/"/>
-    <updated>2015-03-01T11:38:00-08:00</updated>
-    <id>https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml</id>
-    <content type="html"><![CDATA[<p>Home Assistant is now using <a href="http://yaml.org/">YAML</a> for it&rsquo;s configuration file.
-YAML allows the use of lists, which should make the configuration file a bit more flexible and useful. The new configuration file format is backwards compatible with existing components. Because of this, there is no need for component developers to update their components.</p>
-
-<p>The new file is named configuration.yaml and if it can&rsquo;t be found in your config directory, Home Assistant will instead try to find the old configuration file, home-assistant.conf.</p>
-
-<p>The home-assistant.conf.example has been replaced with an updated <a href="https://github.com/balloob/home-assistant/blob/dev/config/configuration.yaml.example">configuration.yaml.example</a>.</p>
-
-<p>Users of Home Assistant should migrate as the old configuration format is deprecated.</p>
 ]]></content>
   </entry>
   

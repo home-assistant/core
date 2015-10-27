@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -113,79 +113,43 @@
 
 <p>Turn on a light in the living room when it starts raining, someone is home, and it&rsquo;s afternoon or later.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;Rainy</span><span class="nv"> </span><span class="s">Day&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>       <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor.weather_precip</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;rain&#39;</span>
-</span><span class='line'>       <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;home&#39;</span>
-</span><span class='line'>       <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&#39;14:00&#39;</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">before</span><span class="p-Indicator">:</span> <span class="s">&#39;23:00&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">use_trigger_values</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">service_entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.couch_lamp</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre><code class="yaml">automation:
+  alias: 'Rainy Day'
 
+  trigger:
+       - platform: state
+         entity_id: sensor.weather_precip
+         state: 'rain'
+       - platform: state
+         entity_id: group.all_devices
+         state: 'home'
+       - platform: time
+         after: '14:00'
+         before: '23:00'
+
+  condition: use_trigger_values
+
+  action:
+    execute_service: light.turn_on
+    service_entity_id: light.couch_lamp
+</code></pre>
 
 <p>And then of course turn off the lamp when it stops raining but only if it&rsquo;s within an hour before sunset.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'>  <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="s">&#39;Rain</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">over&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>       <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sensor.weather_precip</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="s">&#39;None&#39;</span>
-</span><span class='line'>       <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="s">&#39;sunset&#39;</span>
-</span><span class='line'>         <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&#39;-01:00:00&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">use_trigger_values</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_off</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">service_entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.couch_lamp</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre><code class="yaml">  alias: 'Rain is over'
+  trigger:
+       - platform: state
+         entity_id: sensor.weather_precip
+         state: 'None'
+       - platform: sun
+         event: 'sunset'
+         offset: '-01:00:00'
 
-
-
+  condition: use_trigger_values
+  action:
+    execute_service: light.turn_off
+    service_entity_id: light.couch_lamp
+</code></pre>
 
 
 </article>

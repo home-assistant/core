@@ -9,7 +9,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>RESTful sensor support - Home Assistant</title>
+    <title>RESTful sensor - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Instructions how to integrate REST sensors into Home Assistant.">
@@ -18,7 +18,7 @@
     <link rel="canonical" href="https://home-assistant.io/components/sensor.rest.html">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="RESTful sensor support">
+    <meta property="og:title" content="RESTful sensor">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/sensor.rest.html/">
     <meta property="og:type" content="website">
@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -97,70 +97,43 @@
         
 
           <article class="page">
-
-  
   <header>
     <h1 class="title indent">
-      RESTful Sensor Support
+      RESTful sensor
     </h1>
   </header>
   <hr class="divider">
-  
 
-  <p><img src='/images/supported_brands/rest.png' class='brand pull-right' />
-The rest sensor platform is consuming a give endpoint which is exposed by a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">RESTful API</a> of a device, an application, or a web service. The sensor has support for GET and POST requests.</p>
+  <p>The rest sensor platform is consuming a given endpoint which is exposed by a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">RESTful API</a> of a device, an application, or a web service. The sensor has support for GET and POST requests.</p>
 
-<p>To enable this sensor, add the following lines to your <code>configuration.yaml</code> for a GET request:</p>
+<p>To enable this sensor, add the following lines to your <code>configuration.yaml</code> file for a GET request:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADDRESS/ENDPOINT</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">method</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">GET</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">REST GET sensor</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;return_value&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;°C&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">correction_factor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.01</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">decimal_places</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="yaml"># Example configuration.yaml entry
+sensor:
+  platform: rest
+  resource: http://IP_ADDRESS/ENDPOINT
+  method: GET
+  name: REST GET sensor
+  variable: 'return_value'
+  unit_of_measurement: "°C"
+  correction_factor: 0.01
+  decimal_places: 0
+</code></pre>
 
 <p>or for a POST request:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADDRESS/ENDPOINT</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">method</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">POST</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span> <span class="l-Scalar-Plain">or [&#39;Temperatures&#39;, 0, &#39;CurrentReading&#39;]</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">payload</span><span class="p-Indicator">:</span> <span class="s">&#39;{</span><span class="nv"> </span><span class="s">&quot;device&quot;</span><span class="nv"> </span><span class="s">:</span><span class="nv"> </span><span class="s">&quot;heater&quot;</span><span class="nv"> </span><span class="s">}&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">REST POST sensor</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;°C&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">correction_factor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.0001</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">decimal_places</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="yaml"># Example configuration.yaml entry
+sensor:
+  platform: rest
+  resource: http://IP_ADDRESS/ENDPOINT
+  method: POST
+  variable: 'temperature' or ['Temperatures', 0, 'CurrentReading']
+  payload: '{ "device" : "heater" }'
+  name: REST POST sensor
+  unit_of_measurement: "°C"
+  correction_factor: 0.0001
+  decimal_places: 0
+</code></pre>
 
 <p>Configuration variables:</p>
 
@@ -183,12 +156,9 @@ Make sure that the URL matches exactly your endpoint or resource.
 
 <p><code>curl</code> could help you with the identification of the variable you want to display in your Home Assistant frontend. The example below show the JSON response of a device that is running with <a href="http://arest.io/">aREST</a>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>curl -X GET http://192.168.1.31/temperature/
-</span><span class='line'><span class="o">{</span><span class="s2">&quot;temperature&quot;</span>: 77, <span class="s2">&quot;id&quot;</span>: <span class="s2">&quot;sensor02&quot;</span>, <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;livingroom&quot;</span>, <span class="s2">&quot;connected&quot;</span>: <span class="nb">true</span><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="bash">$ curl -X GET http://192.168.1.31/temperature/
+{"temperature": 77, "id": "sensor02", "name": "livingroom", "connected": true}
+</code></pre>
 
 <h2><a class='title-link' name='examples' href='#examples'></a> Examples</h2>
 
@@ -200,52 +170,1618 @@ Make sure that the URL matches exactly your endpoint or resource.
 
 <p>To display the IP address, the entry for a sensor in the <code>configuration.yaml</code> file will look like this.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://ip.jsontest.com</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">External IP</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;ip&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="yaml"># Example configuration.yaml entry
+  - platform: rest
+    resource: http://ip.jsontest.com
+    name: External IP
+    variable: 'ip'
+</code></pre>
 
 <h3><a class='title-link' name='single-value-from-a-local-glances-instance' href='#single-value-from-a-local-glances-instance'></a> Single value from a local Glances instance</h3>
 
-<p>The <a href="/components/sensor.glances.html">glances</a> sensor is doing a similar thing</p>
+<p>The <a href="/components/sensor.glances.html">glances</a> sensor is doing the exact same thing for all exposed values.</p>
 
 <p>Add something similar to the entry below to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rest</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">resource</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://IP_ADRRESS:61208/api/2/mem/used</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Used mem</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">variable</span><span class="p-Indicator">:</span> <span class="s">&#39;used&#39;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MB</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">correction_factor</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0.000000954</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">decimal_places</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-
+<pre><code class="yaml"># Example configuration.yaml entry
+  - platform: rest
+    resource: http://IP_ADRRESS:61208/api/2/mem/used
+    name: Used mem
+    variable: 'used'
+    unit_of_measurement: MB
+    correction_factor: 0.000000954
+    decimal_places: 0
+</code></pre>
 
 </article>
 
 
         </div>
 
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    
+<section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+    
+  </div>
+
+  
+  
+    
+    
+    
+    
+    
+  
+
+  
+
+
+  
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+  
+    
+      
+      
+        
+      
+
+      
+        
+          
+          <div class='section'>
+          <h1 class='title delta'>Related components</h1>
+          <ul class='divided'>
+        
+        <li><a href='/components/switch.rest.html'>
+          RESTful switch
+        </a></li>
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+    
+      
+      
+        
+      
+
+      
+    
+  
+
+  
+    </ul>
+    </div>
+  
+
+
+
+  
+    <div class='section'>
+    <h1 class="title delta">Category Sensor</h1>
+    <ul class='divided'>
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.bitcoin.html'>Bitcoin</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.cpuspeed.html'>CPU speed</a>
+          
+        </li>
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.command_sensor.html'>Command line sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.efergy.html'>Efergy sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.glances.html'>Glances</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.mqtt.html'>MQTT sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.modbus.html'>Modbus sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.mysensors.html'>MySensors sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            RESTful sensor
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.rfxtrx.html'>RFXtrx sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.sabnzbd.html'>SABnzbd</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.swiss_public_transport.html'>Swiss Public Transport</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.systemmonitor.html'>System Monitor</a>
+          
+        </li>
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.temper.html'>TEMPer sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.tellstick.html'>TellStick sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.time_date.html'>Time & Date</a>
+          
+        </li>
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.transmission.html'>Transmission sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.vera.html'>Vera sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.wink.html'>Wink sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.worldclock.html'>Worldclock</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+      
+        <li>
+          
+            <a href='/components/sensor.arest.html'>aREST sensor</a>
+          
+        </li>
+      
+    
+      
+    
+      
+    
+    </ul>
+    </div>
+  
+</section>
+
+  
+</div>
+
+        </aside>
         
       </div>
     </div>
@@ -276,6 +1812,11 @@ Make sure that the URL matches exactly your endpoint or resource.
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
+
+
+
+
+
 
 
 

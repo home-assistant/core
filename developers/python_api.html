@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -143,7 +143,7 @@
 
 <h3><a class='title-link' name='get-details-about-servies-and-events' href='#get-details-about-servies-and-events'></a> Get details about servies and events</h3>
 
-<p>Similar to the output in the &ldquo;Developer Tools&rdquo; of the frontend</p>
+<p>Similar to the output in the &ldquo;Developer Tools&rdquo; of the frontend.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -236,9 +236,11 @@
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
+<span class='line-number'>6</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.remote</span> <span class="kn">as</span> <span class="nn">remote</span>
 </span><span class='line'><span class="kn">from</span> <span class="nn">homeassistant.const</span> <span class="kn">import</span> <span class="n">STATE_ON</span>
 </span><span class='line'>
+</span><span class='line'><span class="n">api</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">API</span><span class="p">(</span><span class="s">&#39;host&#39;</span><span class="p">,</span> <span class="s">&#39;password&#39;</span><span class="p">)</span>
 </span><span class='line'><span class="n">remote</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="s">&#39;sensor.office_temperature&#39;</span><span class="p">,</span> <span class="n">new_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
 </span><span class='line'><span class="n">remote</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="s">&#39;switch.livingroom_pin_2&#39;</span><span class="p">,</span> <span class="n">new_state</span><span class="o">=</span><span class="n">STATE_ON</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure>
@@ -258,9 +260,11 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
+<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">time</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.remote</span> <span class="kn">as</span> <span class="nn">remote</span>
 </span><span class='line'>
+</span><span class='line'><span class="n">api</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">API</span><span class="p">(</span><span class="s">&#39;host&#39;</span><span class="p">,</span> <span class="s">&#39;password&#39;</span><span class="p">)</span>
 </span><span class='line'><span class="n">domain</span> <span class="o">=</span> <span class="s">&#39;switch&#39;</span>
 </span><span class='line'>
 </span><span class='line'><span class="n">remote</span><span class="o">.</span><span class="n">call_service</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="s">&#39;turn_on&#39;</span><span class="p">)</span>
@@ -271,7 +275,7 @@
 
 <h3><a class='title-link' name='control-a-single-entity' href='#control-a-single-entity'></a> Control a single entity</h3>
 
-<p>To turn on or off a single switch, the ID of the entity is needed as attribute.</p>
+<p>To turn on or off a single switch. The ID of the entity is needed as attribute.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -282,15 +286,38 @@
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
+<span class='line-number'>10</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">time</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.remote</span> <span class="kn">as</span> <span class="nn">remote</span>
 </span><span class='line'>
+</span><span class='line'><span class="n">api</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">API</span><span class="p">(</span><span class="s">&#39;host&#39;</span><span class="p">,</span> <span class="s">&#39;password&#39;</span><span class="p">)</span>
 </span><span class='line'><span class="n">domain</span> <span class="o">=</span> <span class="s">&#39;switch&#39;</span>
 </span><span class='line'><span class="n">switch_name</span> <span class="o">=</span> <span class="s">&#39;switch.livingroom_pin_2&#39;</span>
 </span><span class='line'>
 </span><span class='line'><span class="n">remote</span><span class="o">.</span><span class="n">call_service</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="s">&#39;turn_on&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;entity_id&#39;</span><span class="p">:</span> <span class="s">&#39;{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">switch_name</span><span class="p">)})</span>
 </span><span class='line'><span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </span><span class='line'><span class="n">remote</span><span class="o">.</span><span class="n">call_service</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="s">&#39;turn_off&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;entity_id&#39;</span><span class="p">:</span> <span class="s">&#39;{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">switch_name</span><span class="p">)})</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><a class='title-link' name='send-a-notification' href='#send-a-notification'></a> Send a notification</h3>
+
+<p>The example uses the jabber notification platform to send a single message to the given recipient in the <code>configuration.yaml</code> file.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">homeassistant.remote</span> <span class="kn">as</span> <span class="nn">remote</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">api</span> <span class="o">=</span> <span class="n">remote</span><span class="o">.</span><span class="n">API</span><span class="p">(</span><span class="s">&#39;host&#39;</span><span class="p">,</span> <span class="s">&#39;password&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">domain</span> <span class="o">=</span> <span class="s">&#39;notify&#39;</span>
+</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span><span class="s">&quot;Test&quot;</span><span class="p">,</span> <span class="s">&quot;message&quot;</span><span class="p">:</span><span class="s">&quot;A simple test message from HA.&quot;</span><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">remote</span><span class="o">.</span><span class="n">call_service</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="s">&#39;jabber&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

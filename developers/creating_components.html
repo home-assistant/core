@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -107,8 +107,7 @@
   <hr class="divider">
   
 
-  <p>Home Assistant offers <a href="/components/">built-in components</a> but it
-is easy to built your own. If you are the kind of person that likes to learn from code rather then guide then head over to the <a href="https://github.com/balloob/home-assistant/tree/master/config/custom_components"><code>config/custom_components</code></a> folder in the repository for two example components.</p>
+  <p>Home Assistant offers <a href="/components/">built-in components</a> but it is easy to built your own. If you are the kind of person that likes to learn from code rather then guide then head over to the <a href="https://github.com/balloob/home-assistant/tree/master/config/custom_components"><code>config/custom_components</code></a> folder in the repository for two example components.</p>
 
 <p>The first is <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/hello_world.py">hello_world.py</a>, which is the classic Hello World example for Home Assistant. The second one is <a href="https://github.com/balloob/home-assistant/blob/master/config/custom_components/example.py">example.py</a> which showcases various ways you can tap into Home Assistant to be notified when certain events occur.</p>
 
@@ -153,18 +152,11 @@ Home Assistant will use the directory that contains your config file as the dire
 
 <h2><a class='title-link' name='dependencies' href='#dependencies'></a> Dependencies</h2>
 
-<p>Home Assistant allows components and platforms to specify their dependencies and requirements using the variables
-<code>DEPENDENCIES</code> and <code>REQUIREMENTS</code>. Both are lists that contain strings.</p>
+<p>Home Assistant allows components and platforms to specify their dependencies and requirements using the variables <code>DEPENDENCIES</code> and <code>REQUIREMENTS</code>. Both are lists that contain strings.</p>
 
-<p>Dependencies are other Home Assistant components that should be setup before the platform is loaded.
-An example is the MQTT sensor component, which requires an active connection to an MQTT broker. If
-Home Assistant is unable to load and setup the MQTT component, it will not setup the MQTT sensor
-component.</p>
+<p>Dependencies are other Home Assistant components that should be setup before the platform is loaded. An example is the MQTT sensor component, which requires an active connection to an MQTT broker. If Home Assistant is unable to load and setup the MQTT component, it will not setup the MQTT sensor component.</p>
 
-<p>Requirements are Python libraries that you would normally install using <code>pip</code>. Each entry in a
-requirement list is a pip compatible string. For example, the media player Cast platform depends
-on the Python package PyChromecast thus <code>REQUIREMENTS = ['pychromecast==0.6.12']</code>. If Home
-Assistant is unable to install the package or verify it is installed, the component will fail to
+<p>Requirements are Python libraries that you would normally install using <code>pip</code>. Each entry in a requirement list is a pip compatible string. For example, the media player Cast platform depends on the Python package PyChromecast thus <code>REQUIREMENTS = ['pychromecast==0.6.12']</code>. If Home Assistant is unable to install the package or verify it is installed, the component will fail to
 load.</p>
 
 <h2><a class='title-link' name='initializing-components' href='#initializing-components'></a> Initializing components</h2>
@@ -230,7 +222,7 @@ load.</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Then in the setup-method of your component you will be able to refer to <code>config['example']['host']</code> to get the value <code>paulusschoutsen.nl</code>.</p>
+<p>Then in the setup method of your component you will be able to refer to <code>config['example']['host']</code> to get the value <code>paulusschoutsen.nl</code>.</p>
 
 
 </article>

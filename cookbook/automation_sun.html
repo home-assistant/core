@@ -58,9 +58,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -109,59 +109,35 @@
 
   <h4>Turn on the living room lights 45 minutes before sunset if anyone home</h4>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sun</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sunset</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">offset</span><span class="p-Indicator">:</span> <span class="s">&quot;-00:45:00&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">condition</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">state</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.all_devices</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">homeassistant.turn_on</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room_lights</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<pre><code class="yaml">automation:
+  trigger:
+    platform: sun
+    event: sunset
+    offset: "-00:45:00"
+  condition:
+    platform: state
+    entity_id: group.all_devices
+    state: home
+  action:
+    service: homeassistant.turn_on
+    entity_id: group.living_room_lights
+</code></pre>
 
 <h4>Natural wake up light</h4>
 
-<p><em>Note, Philips Hue is currently the only light platform that support transitions.</em></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">after</span><span class="p-Indicator">:</span> <span class="s">&quot;07:15:00&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.bedroom</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="c1"># 900 seconds = 15 minutes</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">transition</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">900</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<p><em>Note, Philips Hue is currently the only light platform that support transitions.</em>
+<code>yaml
+automation:
+  trigger:
+    platform: time
+    after: "07:15:00"
+  action:
+    service: light.turn_on
+    entity_id: light.bedroom
+    data:
+      # 900 seconds = 15 minutes
+      transition: 900
+</code></p>
 
 
 </article>

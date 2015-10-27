@@ -22,7 +22,8 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/posts/3/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Streaming updates February 24, 2015 Paulus Schoutsen 1 minute reading time frontend Comments Home Assistant has learned a new trick to get the latest information from the server: streaming updates. &hellip;">
+    <meta property="og:description" content="Home Assistant moving to YAML March 1, 2015 Theodor Lindquist less than one minute reading time core Comments Home Assistant is now using YAML for it&rsquo;s configuration file.
+YAML allows the use &hellip;">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -58,9 +59,9 @@
       <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
       <li><a href='/getting-started/automation.html'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
-      <li><a href='/components/'>Component overview</a></li>
     </ul>
   </li>
+  <li><a href='/components/'>Components</a></li>
   <li>
     <a href="/developers/">Developers</a>
     <ul>
@@ -97,6 +98,74 @@
         
 
             
+  
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/03/01/home-assistant-migrating-to-yaml/">Home Assistant moving to YAML</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-01T11:38:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 1, 2015</time>
+    
+  
+
+<span class="byline author vcard"><i class='icon-user'></i> Theodor Lindquist</span>
+
+    <span><i class='icon-time'></i> less than one minute reading time</span>
+    
+
+  <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/core/'>core</a></li>
+      
+    
+    </ul>
+  </span>
+
+    
+      <a class='comments'
+         href="/blog/2015/03/01/home-assistant-migrating-to-yaml/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+
+
+  <p>Home Assistant is now using <a href="http://yaml.org/">YAML</a> for it&rsquo;s configuration file.
+YAML allows the use of lists, which should make the configuration file a bit more flexible and useful. The new configuration file format is backwards compatible with existing components. Because of this, there is no need for component developers to update their components.</p>
+
+<p>The new file is named configuration.yaml and if it can&rsquo;t be found in your config directory, Home Assistant will instead try to find the old configuration file, home-assistant.conf.</p>
+
+<p>The home-assistant.conf.example has been replaced with an updated <a href="https://github.com/balloob/home-assistant/blob/dev/config/configuration.yaml.example">configuration.yaml.example</a>.</p>
+
+<p>Users of Home Assistant should migrate as the old configuration format is deprecated.</p>
+
+
+  </article>
+  <hr>
   
   
   <article class="listing">
