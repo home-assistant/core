@@ -2,6 +2,9 @@
 homeassistant.components.sensor.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Z-Wave sensors.
+
+For more details about the zwave component, please refer to the documentation
+at https://home-assistant.io/components/zwave.html
 """
 # pylint: disable=import-error
 from openzwave.network import ZWaveNetwork

@@ -1,47 +1,10 @@
 """
 homeassistant.components.sensor.sabnzbd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Monitors SABnzbd NZB client API
+Monitors SABnzbd NZB client API.
 
-Configuration:
-
-To use the SABnzbd sensor you will need to add something like the following to
-your configuration.yaml file.
-
-sensor:
-    platform: sabnzbd
-    name: SAB
-    api_key: YOUR_API_KEY
-    base_url: YOUR_SABNZBD_BASE_URL
-    monitored_variables:
-        - type: 'current_status'
-        - type: 'speed'
-        - type: 'queue_size'
-        - type: 'queue_remaining'
-        - type: 'disk_size'
-        - type: 'disk_free'
-
-Variables:
-
-base_url
-*Required
-This is the base URL of your SABnzbd instance including the port number if not
-running on 80, e.g. http://192.168.1.32:8124/
-
-name
-*Optional
-The name to use when displaying this SABnzbd instance.
-
-monitored_variables
-*Required
-An array specifying the variables to monitor.
-
-These are the variables for the monitored_variables array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
-list of all available variables.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.sabnzbd.html
 """
 from homeassistant.util import Throttle
 from datetime import timedelta

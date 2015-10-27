@@ -1,39 +1,11 @@
 """
 homeassistant.components.media_player.squeezebox
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides an interface to the Logitech SqueezeBox API
 
-Configuration:
-
-To use SqueezeBox add something something like the following to your
-configuration.yaml file.
-
-media_player:
-  platform: squeezebox
-  host: 192.168.1.21
-  port: 9090
-  username: user
-  password: password
-
-Variables:
-
-host
-*Required
-The host name or address of the Logitech Media Server.
-
-port
-*Optional
-Telnet port to Logitech Media Server, default 9090.
-
-usermame
-*Optional
-Username, if password protection is enabled.
-
-password
-*Optional
-Password, if password protection is enabled.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.squeezebox.html
 """
-
 import logging
 import telnetlib
 import urllib.parse
@@ -291,7 +263,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def media_pause(self):
         """ media_pause media player. """
-        self._lms.query(self._id, 'pause', '0')
+        self._lms.query(self._id, 'pause', '1')
         self.update_ha_state()
 
     def media_next_track(self):
