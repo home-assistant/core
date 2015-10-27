@@ -4,7 +4,7 @@
   <title><![CDATA[Category: esp8266 | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/esp8266/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-26T21:58:24-07:00</updated>
+  <updated>2015-10-27T12:45:27-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -127,8 +127,7 @@ from the sensor every second. It will report it to the MQTT server if the differ
 reported value. Reports to the MQTT broker are sent with retain set to <code>True</code>. This means that anyone
 connecting to the MQTT topic will automatically be notified of the last reported value.</p>
 
-<pre><code class="cpp">
-#include &lt;ESP8266WiFi.h&gt;
+<pre><code class="cpp">#include &lt;ESP8266WiFi.h&gt;
 #include &lt;Wire.h&gt;
 #include &lt;PubSubClient.h&gt;
 #include &lt;Adafruit_HDC1000.h&gt;

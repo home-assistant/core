@@ -5,6 +5,7 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
+
     
   <head>
     <meta charset="utf-8">
@@ -20,7 +21,7 @@
     <meta property="fb:app_id" content="338291289691179">
     <meta property="og:title" content="Plex">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/media_player.plex.html/">
+    <meta property="og:url" content="https://home-assistant.io/components/media_player.plex.html">
     <meta property="og:type" content="website">
     <meta property="og:description" content="Instructions how to integrate Plex into Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
@@ -109,21 +110,24 @@ The preferred way to setup the Plex platform is by enabling the the <a href="/co
 
 <p>If local authentication is enabled or multiple users are defined, HASS requires an authentication token to be entered in the webinterface. See <A TARGET="_new" HREF=https://support.plex.tv/hc/en-us/articles/204059436>Finding your account token / X-Plex-Token</A>.</p>
 
-<p>If you want to enable the plex platform directly, add the following lines to your <code>configuration.yaml</code>:
-```yaml</p>
+<p>If you want to enable the plex platform directly, add the following lines to your <code>configuration.yaml</code>:</p>
 
-<h1>Example configuration.yaml entry</h1>
-
-<p>media_player:
+<pre><code class="yaml"># Example configuration.yaml entry
+media_player:
   - platform: plex
-<code>
-You may also need to create the file `plex.conf`.
-</code>
-{&lsquo;IP_ADDRESS:PORT&rsquo;: {&lsquo;token&rsquo;: &lsquo;TOKEN&rsquo;}}
-<code>``
-- **IP_ADDRESS** *Required*: IP address of the Plex Media Server
-- **PORT** *required*: Default is 32400
-- **TOKEN** *Optional*: Only is authentication is required. Set to</code>None` (without quotes) otherwise.</p>
+</code></pre>
+
+<p>You may also need to create the file <code>plex.conf</code>.</p>
+
+<pre><code>{'IP_ADDRESS:PORT': {'token': 'TOKEN'}}
+</code></pre>
+
+<ul>
+<li><strong>IP_ADDRESS</strong> <em>Required</em>: IP address of the Plex Media Server</li>
+<li><strong>PORT</strong> <em>required</em>: Default is 32400</li>
+<li><strong>TOKEN</strong> <em>Optional</em>: Only is authentication is required. Set to <code>None</code> (without quotes) otherwise.</li>
+</ul>
+
 
 <p>At this moment, the Plex platform only supports one Plex Media Server.</p>
 
