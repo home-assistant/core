@@ -1,76 +1,11 @@
 """
-homeassistant.components.httpinterface
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+homeassistant.components.http
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This module provides an API and a HTTP interface for debug purposes.
 
-By default it will run on port 8123.
-
-All API calls have to be accompanied by an 'api_password' parameter and will
-return JSON. If successful calls will return status code 200 or 201.
-
-Other status codes that can occur are:
- - 400 (Bad Request)
- - 401 (Unauthorized)
- - 404 (Not Found)
- - 405 (Method not allowed)
-
-The api supports the following actions:
-
-/api - GET
-Returns message if API is up and running.
-Example result:
-{
-  "message": "API running."
-}
-
-/api/states - GET
-Returns a list of entities for which a state is available
-Example result:
-[
-    { .. state object .. },
-    { .. state object .. }
-]
-
-/api/states/<entity_id> - GET
-Returns the current state from an entity
-Example result:
-{
-    "attributes": {
-        "next_rising": "07:04:15 29-10-2013",
-        "next_setting": "18:00:31 29-10-2013"
-    },
-    "entity_id": "weather.sun",
-    "last_changed": "23:24:33 28-10-2013",
-    "state": "below_horizon"
-}
-
-/api/states/<entity_id> - POST
-Updates the current state of an entity. Returns status code 201 if successful
-with location header of updated resource and as body the new state.
-parameter: new_state - string
-optional parameter: attributes - JSON encoded object
-Example result:
-{
-    "attributes": {
-        "next_rising": "07:04:15 29-10-2013",
-        "next_setting": "18:00:31 29-10-2013"
-    },
-    "entity_id": "weather.sun",
-    "last_changed": "23:24:33 28-10-2013",
-    "state": "below_horizon"
-}
-
-/api/events/<event_type> - POST
-Fires an event with event_type
-optional parameter: event_data - JSON encoded object
-Example result:
-{
-    "message": "Event download_file fired."
-}
-
+For more details about the RESTful API, please refer to the documentation at
+https://home-assistant.io/developers/api.html
 """
-
 import json
 import threading
 import logging

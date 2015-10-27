@@ -3,21 +3,8 @@ homeassistant.components.notify.pushbullet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PushBullet platform for notify component.
 
-Configuration:
-
-To use the PushBullet notifier you will need to add something like the
-following to your configuration.yaml file.
-
-notify:
-  platform: pushbullet
-  api_key: YOUR_API_KEY
-
-Variables:
-
-api_key
-*Required
-Enter the API key for PushBullet. Go to https://www.pushbullet.com/ to retrieve
-your API key.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.pushbullet.html
 """
 import logging
 

@@ -1,15 +1,10 @@
 """
 homeassistant.components.device_tracker.mqtt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 MQTT platform for the device tracker.
 
-device_tracker:
-  platform: mqtt
-  qos: 1
-  devices:
-    paulus_oneplus: /location/paulus
-    annetherese_n4: /location/annetherese
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.mqtt.html
 """
 import logging
 from homeassistant import util

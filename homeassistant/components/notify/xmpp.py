@@ -3,31 +3,8 @@ homeassistant.components.notify.xmpp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Jabber (XMPP) notification service.
 
-Configuration:
-
-To use the Jabber notifier you will need to add something like the following
-to your configuration.yaml file.
-
-notify:
-  platform: xmpp
-  sender: YOUR_JID
-  password: YOUR_JABBER_ACCOUNT_PASSWORD
-  recipient: YOUR_RECIPIENT
-
-Variables:
-
-sender
-*Required
-The Jabber ID (JID) that will act as origin of the messages. Add your JID
-including the domain, e.g. your_name@jabber.org.
-
-password
-*Required
-The password for your given Jabber account.
-
-recipient
-*Required
-The Jabber ID (JID) that will receive the messages.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.xmpp.html
 """
 import logging
 

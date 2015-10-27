@@ -1,23 +1,10 @@
 """
 homeassistant.components.sun
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to keep track of the sun.
 
-Event listener
---------------
-The suns event listener will call the service when the sun rises or sets with
-an offset.
-
-The sun event need to have the type 'sun', which service to call, which event
-(sunset or sunrise) and the offset.
-
-{
-    "type": "sun",
-    "service": "switch.turn_on",
-    "event": "sunset",
-    "offset": "-01:00:00"
-}
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sun.html
 """
 import logging
 from datetime import timedelta
