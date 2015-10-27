@@ -1,8 +1,10 @@
 """
 homeassistant.components.logbook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Parses events and generates a human log.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/logbook.html
 """
 from datetime import timedelta
 from itertools import groupby

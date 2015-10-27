@@ -21,7 +21,7 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
@@ -555,6 +555,7 @@ class TestConfig(unittest.TestCase):
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
+            'version': __version__,
         }
 
         self.assertEqual(expected, self.config.as_dict())
