@@ -30,7 +30,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     var_conf = config.get(CONF_MONITORED_VARIABLES)
     pins = config.get('pins', None)
 
-
     if resource is None:
         _LOGGER.error('Not all required config keys present: %s',
                       CONF_RESOURCE)
