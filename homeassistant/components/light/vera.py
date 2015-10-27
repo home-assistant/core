@@ -12,11 +12,11 @@ import time
 from requests.exceptions import RequestException
 from homeassistant.components.switch.vera import VeraSwitch
 
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS
 
-REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
-                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
-                '#python-vera==0.1']
+REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
+                '90e203b58c5897930a9567252943b7c96c39652b.zip'
+                '#python-vera==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     controller = veraApi.VeraController(base_url)
     devices = []
     try:
-        devices = controller.get_devices(['Switch', 'On/Off Switch', 'Dimmable Switch'])
+        devices = controller.get_devices([
+            'Switch',
+            'On/Off Switch',
+            'Dimmable Switch'])
     except RequestException:
         # There was a network related error connecting to the vera controller
         _LOGGER.exception("Error communicating with Vera API")
@@ -55,6 +58,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     add_devices_callback(lights)
 
+
 class VeraLight(VeraSwitch):
     """ Represents a Vera Light, including dimmable. """
 
@@ -67,7 +71,6 @@ class VeraLight(VeraSwitch):
 
         return attr
 
-
     def turn_on(self, **kwargs):
         if ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
             self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
@@ -76,4 +79,3 @@ class VeraLight(VeraSwitch):
 
         self.last_command_send = time.time()
         self.is_on_status = True
-
