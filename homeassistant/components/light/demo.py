@@ -30,6 +30,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class DemoLight(Light):
     """ Provides a demo switch. """
+    # pylint: disable=too-many-arguments
     def __init__(self, name, state, xy=None, ct=None, brightness=180):
         self._name = name
         self._state = state
