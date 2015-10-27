@@ -3,23 +3,8 @@ homeassistant.components.notify.nma
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 NMA (Notify My Android) notification service.
 
-Configuration:
-
-To use the NMA notifier you will need to add something like the following
-to your configuration.yaml file.
-
-notify:
-  platform: nma
-  api_key: YOUR_API_KEY
-
-Variables:
-
-api_key
-*Required
-Enter the API key for NMA. Go to https://www.notifymyandroid.com and create a
-new API key to use with Home Assistant.
-
-Details for the API : https://www.notifymyandroid.com/api.jsp
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.nma.html
 """
 import logging
 import xml.etree.ElementTree as ET

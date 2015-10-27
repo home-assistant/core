@@ -1,11 +1,10 @@
 """
 homeassistant.components.device_tracker.owntracks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 OwnTracks platform for the device tracker.
 
-device_tracker:
-  platform: owntracks
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.owntracks.html
 """
 import json
 import logging

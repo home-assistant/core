@@ -3,42 +3,6 @@ homeassistant.components.camera.foscam
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This component provides basic support for Foscam IP cameras.
 
-As part of the basic support the following features will be provided:
--MJPEG video streaming
-
-To use this component, add the following to your configuration.yaml file.
-
-camera:
-  platform: foscam
-  name: Door Camera
-  ip: 192.168.0.123
-  port: 88
-  username: YOUR_USERNAME
-  password: YOUR_PASSWORD
-
-Variables:
-
-ip
-*Required
-The IP address of your Foscam device.
-
-username
-*Required
-The username of a visitor or operator of your camera. Oddly admin accounts
-don't seem to have access to take snapshots.
-
-password
-*Required
-The password for accessing your camera.
-
-name
-*Optional
-This parameter allows you to override the name of your camera in homeassistant.
-
-port
-*Optional
-The port that the camera is running on. The default is 88.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.foscam.html
 """

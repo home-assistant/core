@@ -1,8 +1,10 @@
 """
 homeassistant.components.keyboard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to emulate keyboard presses on host machine.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/keyboard.html
 """
 import logging
 

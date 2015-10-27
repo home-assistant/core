@@ -1,10 +1,10 @@
 """
 homeassistant.components.simple_alarm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Intruder alerts component.
 
-Provides a simple alarm feature:
- - flash a light when a known device comes home
- - flash a light red if a light turns on while there is no one home.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/simple_alarm.html
 """
 import logging
 
@@ -17,7 +17,7 @@ DOMAIN = "simple_alarm"
 DEPENDENCIES = ['group', 'device_tracker', 'light']
 
 # Attribute to tell which light has to flash whem a known person comes home
-# If ommitted will flash all.
+# If omitted will flash all.
 CONF_KNOWN_LIGHT = "known_light"
 
 # Attribute to tell which light has to flash whem an unknown person comes home

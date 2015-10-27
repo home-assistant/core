@@ -2,6 +2,8 @@
 homeassistant.components.light.hue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Hue lights.
+
+https://home-assistant.io/components/light.hue.html
 """
 import logging
 import socket

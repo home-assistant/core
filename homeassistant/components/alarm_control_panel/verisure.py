@@ -33,6 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(alarms)
 
 
+# pylint: disable=abstract-method
 class VerisureAlarm(alarm.AlarmControlPanel):
     """ Represents a Verisure alarm status. """
 
