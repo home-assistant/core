@@ -23,9 +23,6 @@ from homeassistant.components.device_tracker import DOMAIN
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-# Interval in minutes to exclude devices from a scan while they are home
-CONF_HOME_INTERVAL = "home_interval"
-
 _LOGGER = logging.getLogger(__name__)
 
 _LEASES_REGEX = re.compile(
@@ -58,16 +55,12 @@ class ActiontecDeviceScanner(object):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
-        self.home_interval = timedelta(minutes=minutes)
         self.lock = threading.Lock()
         self.last_results = []
         # Test the router is accessible
         data = self.get_actiontec_data()
         self.success_init = data is not None
         _LOGGER.info("actiontec scanner initialized")
-        if self.home_interval:
-            _LOGGER.info("home_interval set to: %s", self.home_interval)
 
     def scan_devices(self):
         """
@@ -100,12 +93,6 @@ class ActiontecDeviceScanner(object):
             exclude_targets = set()
             exclude_target_list = []
             now = dt_util.now()
-            if self.home_interval:
-                for host in self.last_results:
-                    if host.last_update + self.home_interval > now:
-                        exclude_targets.add(host)
-                if len(exclude_targets) > 0:
-                    exclude_target_list = [t.ip for t in exclude_targets]
             actiontec_data = self.get_actiontec_data()
             if not actiontec_data:
                 return False
