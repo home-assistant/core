@@ -30,7 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 
 _LEASES_REGEX = re.compile(
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})' +
-    r'\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))')
+    r'\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))' +
+    r'\svalid\sfor:\s(?P<timevalid>(-?\d+))' +
+    r'\ssec')
 
 
 # pylint: disable=unused-argument
@@ -40,9 +42,7 @@ def get_scanner(hass, config):
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
         return None
-
     scanner = ActiontecDeviceScanner(config[DOMAIN])
-
     return scanner if scanner.success_init else None
 
 Device = namedtuple("Device", ["mac", "ip", "last_update"])
@@ -60,11 +60,8 @@ class ActiontecDeviceScanner(object):
         self.password = config[CONF_PASSWORD]
         minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
         self.home_interval = timedelta(minutes=minutes)
-
         self.lock = threading.Lock()
-
         self.last_results = []
-
         # Test the router is accessible
         data = self.get_actiontec_data()
         self.success_init = data is not None
@@ -109,7 +106,6 @@ class ActiontecDeviceScanner(object):
                         exclude_targets.add(host)
                 if len(exclude_targets) > 0:
                     exclude_target_list = [t.ip for t in exclude_targets]
-
             actiontec_data = self.get_actiontec_data()
             if not actiontec_data:
                 return False
@@ -118,8 +114,9 @@ class ActiontecDeviceScanner(object):
                 if client in actiontec_data:
                     actiontec_data.pop(client)
             for name, data in actiontec_data.items():
-                device = Device(data['mac'], name, now)
-                self.last_results.append(device)
+                if data['timevalid'] > 0:
+                    device = Device(data['mac'], name, now)
+                    self.last_results.append(device)
             self.last_results.extend(exclude_targets)
             _LOGGER.info("actiontec scan successful")
             return True
@@ -153,6 +150,7 @@ class ActiontecDeviceScanner(object):
             if match is not None:
                 devices[match.group('ip')] = {
                     'ip': match.group('ip'),
-                    'mac': match.group('mac').upper()
+                    'mac': match.group('mac').upper(),
+                    'timevalid': int(match.group('timevalid'))
                     }
         return devices
