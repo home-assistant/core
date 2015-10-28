@@ -17,7 +17,7 @@ import telnetlib
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle, convert
+from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
