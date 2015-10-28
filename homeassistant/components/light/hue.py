@@ -14,7 +14,7 @@ from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_CT_COLOR,
+    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
     ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
     ATTR_EFFECT, EFFECT_COLORLOOP)
 
@@ -124,7 +124,7 @@ def request_configuration(host, hass, add_devices_callback):
             _CONFIGURING[host], "Failed to register, please try again.")
 
         return
-
+    # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
         setup_bridge(host, hass, add_devices_callback)
@@ -147,16 +147,6 @@ class HueLight(Light):
         self.bridge = bridge
         self.update_lights = update_lights
 
-        # Hue can control multiple type of lights
-        capability_map = {
-            'Dimmable light': ['bri'],
-            'Dimmable plug-in unit': ['bri'],
-            'Color light': ['bri', 'xy'],
-            'Extended color light': ['bri', 'xy', 'ct'],
-            'unknown': []}
-        self.capabilities = capability_map.get(
-            self.info['type'], 'unknown')
-
     @property
     def unique_id(self):
         """ Returns the id of this Hue light """
@@ -171,26 +161,17 @@ class HueLight(Light):
     @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
-        if 'bri' in self.capabilities:
-            return self.info['state']['bri']
-        else:
-            return None
+        return self.info['state']['bri']
 
     @property
     def color_xy(self):
         """ XY color value. """
-        if 'xy' in self.capabilities:
-            return self.info['state'].get('xy')
-        else:
-            return None
+        return self.info['state'].get('xy')
 
     @property
-    def color_ct(self):
+    def color_temp(self):
         """ CT color value. """
-        if 'ct' in self.capabilities:
-            return self.info['state'].get('ct')
-        else:
-            return None
+        return self.info['state'].get('ct')
 
     @property
     def is_on(self):
@@ -214,8 +195,8 @@ class HueLight(Light):
         if ATTR_XY_COLOR in kwargs:
             command['xy'] = kwargs[ATTR_XY_COLOR]
 
-        if ATTR_CT_COLOR in kwargs:
-            command['ct'] = kwargs[ATTR_CT_COLOR]
+        if ATTR_COLOR_TEMP in kwargs:
+            command['ct'] = kwargs[ATTR_COLOR_TEMP]
 
         flash = kwargs.get(ATTR_FLASH)
 
