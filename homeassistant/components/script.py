@@ -75,7 +75,7 @@ def setup(hass, config):
             _LOGGER.warn("Missing key 'sequence' for script %s", name)
             continue
         alias = cfg.get(CONF_ALIAS, name)
-        script = Script(hass, alias, cfg[CONF_SEQUENCE])
+        script = Script(hass, alias, name, cfg[CONF_SEQUENCE])
         component.add_entities((script,))
         _, object_id = split_entity_id(script.entity_id)
         hass.services.register(DOMAIN, object_id, service_handler)
@@ -100,9 +100,10 @@ def setup(hass, config):
 
 class Script(ToggleEntity):
     """ Represents a script. """
-    def __init__(self, hass, name, sequence):
+    def __init__(self, hass, name, entity_id, sequence):
         self.hass = hass
         self._name = name
+        self.entity_id = entity_id
         self.sequence = sequence
         self._lock = threading.Lock()
         self._cur = -1
