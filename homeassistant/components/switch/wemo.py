@@ -15,7 +15,7 @@ REQUIREMENTS = ['pywemo==0.3.2']
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return WeMo switches. """
     import pywemo
