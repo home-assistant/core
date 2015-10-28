@@ -5,6 +5,7 @@ Support for Verisure Smartplugs.
 """
 import logging
 
+from homeassistant.helpers import set_log_severity
 import homeassistant.components.verisure as verisure
 from homeassistant.components.switch import SwitchDevice
 
@@ -14,9 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Verisure platform. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not verisure.MY_PAGES:
         _LOGGER.error('A connection has not been made to Verisure mypages.')

@@ -46,6 +46,7 @@ Details for the API : https://developer.forecast.io/docs/v2
 """
 import logging
 from datetime import timedelta
+from homeassistant.helpers import set_log_severity
 
 REQUIREMENTS = ['python-forecastio==1.3.3']
 
@@ -81,9 +82,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Forecast.io sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     global forecastio  # pylint: disable=invalid-name
     if forecastio is None:

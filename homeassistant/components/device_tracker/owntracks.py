@@ -11,6 +11,7 @@ import json
 import logging
 
 import homeassistant.components.mqtt as mqtt
+from homeassistant.helpers import set_log_severity
 
 DEPENDENCIES = ['mqtt']
 
@@ -51,9 +52,7 @@ def setup_scanner(hass, config, see):
 
         see(**kwargs)
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
 

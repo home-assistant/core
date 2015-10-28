@@ -39,6 +39,7 @@ import logging
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK)
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF)
 
@@ -58,9 +59,7 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     global jsonrpc_requests    # pylint: disable=invalid-name
     if jsonrpc_requests is None:

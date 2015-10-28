@@ -24,8 +24,9 @@ import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,CONF_LOGSEVERITY,
+    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE, CONF_LOGSEVERITY,
     CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
@@ -170,8 +171,8 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     # Set log level for homeassistant core
-    _LOGGER.setLevel(eval('logging.%s' % hass.config.logseverity.upper()))
-    core._LOGGER.setLevel(eval('logging.%s' % hass.config.logseverity.upper()))
+    set_log_severity(hass, None, _LOGGER)
+    set_log_severity(hass, None, core._LOGGER)
 
     if enable_log:
         enable_logging(hass, verbose, daemon, log_rotate_days)
@@ -317,7 +318,7 @@ def process_ha_core_config(hass, config):
     if CONF_LOGSEVERITY in config:
         hac.logseverity = config[CONF_LOGSEVERITY]
 
-    _LOGGER.setLevel(eval('logging.%s' % hac.logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     set_time_zone(config.get(CONF_TIME_ZONE))
 

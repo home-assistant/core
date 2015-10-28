@@ -8,6 +8,7 @@ https://home-assistant.io/components/light.blinksticklight.html
 """
 import logging
 
+from homeassistant.helpers import set_log_severity
 from blinkstick import blinkstick
 
 from homeassistant.components.light import (Light, ATTR_RGB_COLOR)
@@ -22,9 +23,7 @@ DEPENDENCIES = []
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add device specified by serial number. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     stick = blinkstick.find_by_serial(config['serial'])
 

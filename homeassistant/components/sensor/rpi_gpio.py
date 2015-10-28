@@ -39,6 +39,7 @@ An array specifying the GPIO ports to use and the name to use in the frontend.
 """
 import logging
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 try:
     import RPi.GPIO as GPIO
@@ -61,9 +62,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Raspberry PI GPIO ports. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if GPIO is None:
         _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')

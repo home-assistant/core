@@ -27,6 +27,7 @@ import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 DEPENDENCIES = []
 REQUIREMENTS = ['astral==0.8.1']
@@ -101,9 +102,7 @@ def setup(hass, config):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     latitude = util.convert(hass.config.latitude, float)
     longitude = util.convert(hass.config.longitude, float)

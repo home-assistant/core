@@ -7,6 +7,7 @@ import logging
 from pprint import pprint
 
 from homeassistant import bootstrap
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
@@ -37,6 +38,7 @@ ATTR_VALUE_ID = "value_id"
 NETWORK = None
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def _obj_to_dict(obj):
     """ Converts an obj into a hash for debug. """
@@ -69,9 +71,7 @@ def setup(hass, config):
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
 

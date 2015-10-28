@@ -36,6 +36,7 @@ import logging
 
 import homeassistant.components.modbus as modbus
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers import set_log_severity
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
@@ -44,9 +45,7 @@ DEPENDENCIES = ['modbus']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Read configuration and create Modbus devices. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     switches = []
     slave = config.get("slave", None)

@@ -54,7 +54,8 @@ import socket
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
+
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
@@ -115,9 +116,7 @@ def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
 def setup(hass, config):
     """ Get the MQTT protocol service. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not validate_config(config, {DOMAIN: ['broker']}, _LOGGER):
         return False

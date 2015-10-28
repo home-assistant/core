@@ -87,6 +87,7 @@ from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant.core as ha
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
@@ -122,10 +123,7 @@ def setup(hass, config=None):
     if config is None or DOMAIN not in config:
         config = {DOMAIN: {}}
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
-    logging.getLogger('requests').setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     api_password = util.convert(config[DOMAIN].get(CONF_API_PASSWORD), str)
 

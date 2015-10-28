@@ -9,7 +9,7 @@ import logging
 import re
 import threading
 
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
 from homeassistant.util import sanitize_filename
 
 DOMAIN = "downloader"
@@ -24,23 +24,24 @@ CONF_DOWNLOAD_DIR = 'download_dir'
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=too-many-branches
 def setup(hass, config):
     """ Listens for download events to download files. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         import requests
     except ImportError:
-        _LOGGER.exception(("Failed to import requests. "
-                          "Did you maybe not execute 'pip install requests'?"))
+        _LOGGER.exception(
+            ("Failed to import requests. "
+             "Did you maybe not execute 'pip install requests'?")
+        )
 
         return False
 
-    if not validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
+    if not validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, _LOGGER):
         return False
 
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]

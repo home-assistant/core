@@ -4,22 +4,24 @@ homeassistant.components.sensor.zwave
 Interfaces with Z-Wave sensors.
 """
 # pylint: disable=import-error
+import logging
 from openzwave.network import ZWaveNetwork
 from pydispatch import dispatcher
 
 import homeassistant.components.zwave as zwave
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_ON, STATE_OFF,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Z-Wave sensors. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]

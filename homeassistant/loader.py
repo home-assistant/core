@@ -20,6 +20,7 @@ import importlib
 import logging
 
 from homeassistant.util import OrderedSet
+# from homeassistant.helpers import set_log_severity
 
 PREPARED = False
 
@@ -36,8 +37,7 @@ def prepare(hass):
     """ Prepares the loading of components. """
     global PREPARED  # pylint: disable=global-statement
 
-    # Set log level
-    _LOGGER.setLevel(eval('logging.%s' % hass.config.logseverity.upper()))
+    # set_log_severity(hass, None, _LOGGER)
 
     # Load the built-in components
     import homeassistant.components as components

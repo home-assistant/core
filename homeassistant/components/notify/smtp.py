@@ -56,7 +56,7 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
 from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
 
@@ -66,9 +66,7 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(hass, config):
     """ Get the mail notification service. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not validate_config(config,
                            {DOMAIN: ['server',

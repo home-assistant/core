@@ -11,6 +11,7 @@ import json
 
 import homeassistant.core as ha
 from homeassistant.helpers.state import TrackStates
+from homeassistant.helpers import set_log_severity
 import homeassistant.remote as rem
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
@@ -33,9 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Register the API with the HTTP interface. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if 'http' not in hass.config.components:
         _LOGGER.error('Dependency http is not loaded')

@@ -64,18 +64,18 @@ import homeassistant.components as core
 import homeassistant.util as util
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import TEMP_CELCIUS, STATE_ON, STATE_OFF
 
 TOL_TEMP = 0.3
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the heat control thermostat. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     add_devices([HeatControl(hass, config, _LOGGER)])
 

@@ -40,6 +40,7 @@ import logging
 import homeassistant.components.arduino as arduino
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.helpers import set_log_severity
 
 DEPENDENCIES = ['arduino']
 
@@ -49,9 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Arduino platform. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     # Verify that Arduino board is present
     if arduino.BOARD is None:

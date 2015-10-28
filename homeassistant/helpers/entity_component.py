@@ -4,15 +4,19 @@ homeassistant.helpers.entity_component
 
 Provides helpers for components that manage entities.
 """
-import logging
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.helpers import (
     generate_entity_id, config_per_platform, extract_entity_ids)
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers import set_log_severity
 from homeassistant.components import group, discovery
 from homeassistant.const import ATTR_ENTITY_ID
 
 DEFAULT_SCAN_INTERVAL = 15
+
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EntityComponent(object):
@@ -45,9 +49,7 @@ class EntityComponent(object):
          - Loads the platforms from the config
          - Will listen for supported discovered platforms
         """
-        # Set log level
-        logseverity = config.get('logseverity', self.hass.config.logseverity)
-        self.logger.setLevel(eval('logging.%s' % logseverity.upper()))
+        set_log_severity(self.hass, config, _LOGGER)
 
         self.config = config
 

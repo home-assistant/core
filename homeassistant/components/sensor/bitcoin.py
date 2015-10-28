@@ -68,6 +68,7 @@ from datetime import timedelta
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 
 REQUIREMENTS = ['blockchain==1.1.2']
@@ -104,9 +105,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Bitcoin sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         from blockchain.wallet import Wallet

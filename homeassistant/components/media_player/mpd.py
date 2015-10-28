@@ -35,6 +35,7 @@ Password for your Music Player Daemon.
 """
 import logging
 import socket
+from homeassistant.helpers import set_log_severity
 
 try:
     import mpd
@@ -62,9 +63,7 @@ SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the MPD platform. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     daemon = config.get('server', None)
     port = config.get('port', 6600)

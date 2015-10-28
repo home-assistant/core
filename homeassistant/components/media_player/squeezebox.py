@@ -44,6 +44,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     MEDIA_TYPE_MUSIC, DOMAIN)
 
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_UNKNOWN)
@@ -58,9 +59,7 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the squeezebox platform. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not config.get(CONF_HOST):
         _LOGGER.error(

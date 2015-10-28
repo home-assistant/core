@@ -7,6 +7,7 @@ import logging
 
 from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
                                              HIDDEN_STRING)
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_HOME,
                                  STATE_NOT_HOME, STATE_ON, STATE_OFF)
 
@@ -31,9 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the ISY994 platform. """
     # pylint: disable=protected-access
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     devs = []
     # verify connection

@@ -10,6 +10,7 @@ import re
 import logging
 
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
@@ -38,6 +39,7 @@ ATTR_ENTITY_ID = 'entity_id'
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """ Adds an entry to the logbook. """
     data = {
@@ -54,9 +56,7 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 def setup(hass, config):
     """ Listens for download events to download files. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
 

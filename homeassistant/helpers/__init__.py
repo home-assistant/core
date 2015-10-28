@@ -9,6 +9,18 @@ from homeassistant.const import (
 from homeassistant.util import ensure_unique_string, slugify
 
 
+LOGSEVERITY = {
+    'CRITICAL': 50,
+    'FATAL': 50,
+    'ERROR': 40,
+    'WARNING': 30,
+    'WARN': 30,
+    'INFO': 20,
+    'DEBUG': 10,
+    'NOTSET': 0
+}
+
+
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
     """ Generate a unique entity ID based on given entity IDs or used ids. """
     name = name.lower() or DEVICE_DEFAULT_NAME.lower()
@@ -97,3 +109,14 @@ def extract_domain_configs(config, domain):
     """ Extract keys from config for given domain name. """
     pattern = re.compile(r'^{}(| .+)$'.format(domain))
     return (key for key in config.keys() if pattern.match(key))
+
+
+def set_log_severity(hass, config, logger):
+    """ Set logseverity level """
+
+    if config is None:
+        logseverity = hass.config.logseverity
+    else:
+        logseverity = config.get('logseverity', hass.config.logseverity)
+
+    logger.setLevel(LOGSEVERITY[logseverity.upper()])

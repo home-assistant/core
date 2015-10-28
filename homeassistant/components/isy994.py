@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, EVENT_PLATFORM_DISCOVERED,
@@ -38,9 +38,8 @@ def setup(hass, config):
     Setup ISY994 component.
     This will automatically import associated lights, switches, and sensors.
     """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         import PyISY

@@ -6,10 +6,13 @@ Support for WeMo switches.
 """
 import logging
 
+from homeassistant.helpers import set_log_severity
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
 REQUIREMENTS = ['pywemo==0.3.1']
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
@@ -18,9 +21,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import pywemo
     import pywemo.discovery as discovery
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if discovery_info is not None:
         device = discovery.device_from_description(discovery_info[2])

@@ -47,6 +47,7 @@ from datetime import timedelta
 from homeassistant.util import Throttle
 from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 REQUIREMENTS = ['pyowm==2.2.1']
 _LOGGER = logging.getLogger(__name__)
@@ -68,9 +69,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the OpenWeatherMap sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")

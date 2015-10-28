@@ -14,20 +14,21 @@ import logging
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
                                  ATTR_FRIENDLY_NAME)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers import set_log_severity
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 SINGAL_REPETITIONS = 1
 
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick switches. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         import tellcore.telldus as telldus

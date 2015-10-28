@@ -10,6 +10,7 @@ import logging
 import homeassistant.components.rfxtrx as rfxtrx
 import RFXtrx as rfxtrxmod
 
+from homeassistant.helpers import set_log_severity
 from homeassistant.components.light import Light
 from homeassistant.util import slugify
 
@@ -54,9 +55,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 else:
                     rfxtrx.RFX_DEVICES[entity_id].turn_off()
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     lights = []
     devices = config.get('devices', None)

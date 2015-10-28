@@ -30,19 +30,20 @@ import tellcore.constants as tellcore_constants
 
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Tellstick sensors. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE:

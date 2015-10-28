@@ -11,6 +11,7 @@ from collections import OrderedDict
 
 from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 import homeassistant.components.rfxtrx as rfxtrx
 from RFXtrx import SensorEvent
 from homeassistant.util import slugify
@@ -45,9 +46,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             else:
                 rfxtrx.RFX_DEVICES[entity_id].event = event
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)

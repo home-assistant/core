@@ -8,26 +8,26 @@ import logging
 
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
 REQUIREMENTS = ['python-nest==2.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the nest thermostat. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     if username is None or password is None:
         _LOGGER.error("Missing required configuration items %s or %s",
-                     CONF_USERNAME, CONF_PASSWORD)
+                      CONF_USERNAME, CONF_PASSWORD)
         return
 
     try:

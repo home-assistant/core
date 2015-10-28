@@ -12,6 +12,7 @@ from RFXtrx import LightingDevice
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.util import slugify
+from homeassistant.helpers import set_log_severity
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -54,9 +55,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 else:
                     rfxtrx.RFX_DEVICES[entity_id].turn_off()
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     # Add switch from config file
     switchs = []

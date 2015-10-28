@@ -36,6 +36,7 @@ import requests
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://transport.opendata.ch/v1/'
@@ -47,9 +48,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Swiss public transport sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     # journal contains [0] Station ID start, [1] Station ID destination
     # [2] Station name start, and [3] Station name destination

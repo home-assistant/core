@@ -9,6 +9,7 @@ import logging
 import re
 
 from homeassistant import core
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
@@ -22,6 +23,7 @@ ATTR_TEXT = "text"
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass, config):
     """ Registers the process service. """
@@ -65,9 +67,7 @@ def setup(hass, config):
             _LOGGER.error(
                 'Got unsupported command %s from text %s', command, text)
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     hass.services.register(DOMAIN, SERVICE_PROCESS, process)
 

@@ -39,6 +39,7 @@ import logging
 import subprocess
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers import set_log_severity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return switches controlled by shell commands. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     switches = config.get('switches', {})
     devices = []

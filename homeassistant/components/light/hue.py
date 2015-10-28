@@ -9,6 +9,7 @@ from datetime import timedelta
 from urllib.parse import urlparse
 
 from homeassistant.loader import get_component
+from homeassistant.helpers import set_log_severity
 import homeassistant.util as util
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
@@ -30,9 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         # pylint: disable=unused-variable

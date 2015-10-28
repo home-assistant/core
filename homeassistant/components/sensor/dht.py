@@ -42,6 +42,7 @@ from datetime import timedelta
 from homeassistant.util import Throttle
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 # update this requirement to upstream as soon as it supports python3
 REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
@@ -61,9 +62,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the DHT sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         import Adafruit_DHT

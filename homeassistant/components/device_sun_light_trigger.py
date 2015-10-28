@@ -9,6 +9,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.helpers.event import track_point_in_time, track_state_change
+from homeassistant.helpers import set_log_severity
 import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from . import light, sun, device_tracker, group
@@ -27,13 +28,12 @@ CONF_DEVICE_GROUP = 'device_group'
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=too-many-branches
 def setup(hass, config):
     """ Triggers to turn lights on or off based on device precense. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     disable_turn_off = 'disable_turn_off' in config[DOMAIN]
 

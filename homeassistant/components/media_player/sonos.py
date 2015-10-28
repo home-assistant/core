@@ -15,6 +15,7 @@ media_player:
 import logging
 import datetime
 
+from homeassistant.helpers import set_log_severity
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
@@ -45,9 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
     import soco
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     players = soco.discover()
     if not players:

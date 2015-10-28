@@ -68,6 +68,7 @@ Flag that defines if switch works in optimistic mode. Default is false.
 import logging
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers import set_log_severity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,9 +85,7 @@ DEPENDENCIES = ['mqtt']
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Switch """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")

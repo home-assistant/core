@@ -10,6 +10,7 @@ from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.components import logbook
+from homeassistant.helpers import set_log_severity
 
 DOMAIN = 'automation'
 
@@ -66,12 +67,7 @@ def setup(hass, config):
 def _setup_automation(hass, config_block, name, config):
     """ Setup one instance of automation """
 
-    # Set log level
-    logseverity = config_block.get('logseverity', None)
-    if not logseverity:
-        logseverity = hass.config.logseverity
-
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config_block, _LOGGER)
 
     action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
 

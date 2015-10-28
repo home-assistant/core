@@ -47,6 +47,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     DOMAIN)
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 
@@ -60,9 +61,7 @@ SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Denon platform. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not config.get(CONF_HOST):
         _LOGGER.error(

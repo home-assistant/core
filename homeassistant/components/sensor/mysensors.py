@@ -21,6 +21,7 @@ Port of your connection to your MySensors device.
 import logging
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
@@ -43,9 +44,7 @@ REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the mysensors platform. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     import mysensors.mysensors as mysensors
     import mysensors.const_14 as const

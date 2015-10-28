@@ -42,6 +42,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers import set_log_severity
 # pylint: disable=no-name-in-module, import-error
 import transmissionrpc
 from transmissionrpc.error import TransmissionError
@@ -50,14 +51,14 @@ import logging
 _LOGGING = logging.getLogger(__name__)
 REQUIREMENTS = ['transmissionrpc==0.11']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Sets up the transmission sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)

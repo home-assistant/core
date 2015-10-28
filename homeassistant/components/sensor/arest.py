@@ -12,6 +12,8 @@ from datetime import timedelta
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +27,7 @@ CONF_MONITORED_VARIABLES = 'monitored_variables'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the aREST sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     resource = config.get(CONF_RESOURCE)
     var_conf = config.get(CONF_MONITORED_VARIABLES)

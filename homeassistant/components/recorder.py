@@ -14,6 +14,7 @@ import json
 import atexit
 
 from homeassistant.core import Event, EventOrigin, State
+from homeassistant.helpers import set_log_severity
 import homeassistant.util.dt as date_util
 from homeassistant.remote import JSONEncoder
 from homeassistant.const import (
@@ -180,8 +181,7 @@ class Recorder(threading.Thread):
 
     def run(self):
         """ Start processing events to save. """
-        # Set log level
-        _LOGGER.setLevel(eval('logging.%s' % self.hass.config.logseverity.upper()))
+        set_log_severity(self.hass, None, _LOGGER)
 
         self._setup_connection()
         self._setup_run()

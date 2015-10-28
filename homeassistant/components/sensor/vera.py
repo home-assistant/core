@@ -51,6 +51,7 @@ from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
@@ -100,9 +101,7 @@ def get_devices(hass, config):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Performs setup for Vera controller devices. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     add_devices(get_devices(hass, config))
 

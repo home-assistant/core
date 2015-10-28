@@ -48,7 +48,7 @@ from datetime import timedelta
 from homeassistant import bootstrap
 from homeassistant.loader import get_component
 
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
 from homeassistant.util import Throttle
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED,
@@ -89,9 +89,7 @@ MIN_TIME_BETWEEN_REQUESTS = timedelta(seconds=5)
 def setup(hass, config):
     """ Setup the Verisure component. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not validate_config(config,
                            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},

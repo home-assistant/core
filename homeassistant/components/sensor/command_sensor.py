@@ -47,6 +47,7 @@ from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.helpers import set_log_severity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +61,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add the Command Sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if config.get('command') is None:
         _LOGGER.error('Missing required variable: "command"')

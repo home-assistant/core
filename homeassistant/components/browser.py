@@ -5,10 +5,15 @@ homeassistant.components.browser
 Provides functionality to launch a webbrowser on the host machine.
 """
 
+import logging
+from homeassistant.helpers import set_log_severity
+
 DOMAIN = "browser"
 DEPENDENCIES = []
 
 SERVICE_BROWSE_URL = "browse_url"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
@@ -17,9 +22,7 @@ def setup(hass, config):
 
     import webbrowser
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     hass.services.register(DOMAIN, SERVICE_BROWSE_URL,
                            lambda service:

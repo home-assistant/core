@@ -5,6 +5,7 @@ homeassistant.components.keyboard
 Provides functionality to emulate keyboard presses on host machine.
 """
 import logging
+from homeassistant.helpers import set_log_severity
 
 from homeassistant.const import (
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
@@ -17,6 +18,7 @@ DEPENDENCIES = []
 REQUIREMENTS = ['pyuserinput==0.1.9']
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def volume_up(hass):
     """ Press the keyboard button for volume up. """
@@ -51,9 +53,7 @@ def media_prev_track(hass):
 def setup(hass, config):
     """ Listen for keyboard events. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         import pykeyboard

@@ -52,6 +52,7 @@ from datetime import timedelta
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 # pylint: disable=no-name-in-module, import-error
 import transmissionrpc
 
@@ -75,9 +76,7 @@ _THROTTLED_REFRESH = None
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Transmission sensors. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)

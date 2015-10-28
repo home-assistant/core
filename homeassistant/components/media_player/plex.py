@@ -12,6 +12,7 @@ from datetime import timedelta
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_NEXT_TRACK, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_UNKNOWN)
 import homeassistant.util as util
@@ -33,9 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from plexapi.myplex import MyPlexUser
     from plexapi.exceptions import BadRequest
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     name = config.get('name', '')
     user = config.get('user', '')

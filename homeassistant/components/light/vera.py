@@ -51,6 +51,7 @@ it should be set to "true" if you want this device excluded.
 import logging
 from requests.exceptions import RequestException
 from homeassistant.components.switch.vera import VeraSwitch
+from homeassistant.helpers import set_log_severity
 
 REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
                 'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
@@ -64,9 +65,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Vera lights. """
     import pyvera as veraApi
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     base_url = config.get('vera_controller_url')
     if not base_url:

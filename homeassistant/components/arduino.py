@@ -32,7 +32,7 @@ try:
 except ImportError:
     PyMata = None
 
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
@@ -46,9 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Setup the Arduino component. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     global PyMata  # pylint: disable=invalid-name
     if PyMata is None:

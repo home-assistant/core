@@ -39,6 +39,7 @@ Defines the units of measurement of the sensor, if any.
 import logging
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
+from homeassistant.helpers import set_log_severity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,9 +53,7 @@ DEPENDENCIES = ['mqtt']
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Sensor """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if config.get('state_topic') is None:
         _LOGGER.error("Missing required variable: state_topic")

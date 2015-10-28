@@ -13,6 +13,7 @@ sensor:
 """
 import logging
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,9 +26,7 @@ REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Temper sensors. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         # pylint: disable=no-name-in-module, import-error

@@ -13,6 +13,7 @@ import logging
 import threading
 
 from homeassistant import bootstrap
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_PLATFORM_DISCOVERED,
     ATTR_SERVICE, ATTR_DISCOVERED)
@@ -39,6 +40,7 @@ SERVICE_HANDLERS = {
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def listen(hass, service, callback):
     """
     Setup listener for discovery of specific service.
@@ -60,9 +62,7 @@ def listen(hass, service, callback):
 
 def setup(hass, config):
     """ Starts a discovery service. """
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     from netdisco.service import DiscoveryService
 

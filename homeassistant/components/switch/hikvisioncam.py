@@ -38,6 +38,7 @@ name
 The name to use when displaying this switch instance.
 """
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 import logging
@@ -53,13 +54,13 @@ REQUIREMENTS = ['hikvision==0.4']
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-instance-attributes
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup Hikvision Camera config. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     host = config.get(CONF_HOST, None)
     port = config.get('port', "80")

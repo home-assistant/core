@@ -8,6 +8,7 @@ https://home-assistant.io/components/rfxtrx.html
 """
 import logging
 from homeassistant.util import slugify
+from homeassistant.helpers import set_log_severity
 
 DEPENDENCIES = []
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip' +
@@ -40,9 +41,7 @@ def setup(hass, config):
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     # Try to load the RFXtrx module
     try:

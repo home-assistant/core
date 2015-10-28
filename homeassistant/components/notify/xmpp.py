@@ -30,6 +30,8 @@ recipient
 The Jabber ID (JID) that will receive the messages.
 """
 import logging
+from homeassistant.helpers import set_log_severity
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,9 +53,7 @@ REQUIREMENTS = ['sleekxmpp==1.3.1', 'dnspython3==1.12.0']
 def get_service(hass, config):
     """ Get the Jabber (XMPP) notification service. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not validate_config(config,
                            {DOMAIN: ['sender',

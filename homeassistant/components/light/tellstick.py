@@ -8,6 +8,7 @@ import logging
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
                                  ATTR_FRIENDLY_NAME)
+from homeassistant.helpers import set_log_severity
 import tellcore.constants as tellcore_constants
 from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.1.2']
@@ -18,9 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick lights. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         import tellcore.telldus as telldus

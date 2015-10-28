@@ -19,7 +19,7 @@ import logging
 
 import homeassistant.core as ha
 import homeassistant.util as util
-from homeassistant.helpers import extract_entity_ids
+from homeassistant.helpers import extract_entity_ids, set_log_severity
 from homeassistant.loader import get_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -97,9 +97,7 @@ def setup(hass, config):
 
             hass.services.call(domain, service.service, data, True)
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)

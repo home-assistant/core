@@ -35,7 +35,7 @@ The name to use when displaying this switch instance.
 """
 import logging
 
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
 from homeassistant.components.switch import SwitchDevice, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD,\
     CONF_NAME
@@ -55,9 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Edimax Smart Plugs. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     try:
         # pylint: disable=no-name-in-module, import-error

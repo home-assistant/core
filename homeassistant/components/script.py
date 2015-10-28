@@ -11,6 +11,7 @@ import homeassistant.util.dt as date_util
 import threading
 
 from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers import set_log_severity
 from homeassistant.util import split_entity_id
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, EVENT_TIME_CHANGED)
@@ -33,9 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Load the scripts from the configuration. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     scripts = []
     for name, cfg in config[DOMAIN].items():

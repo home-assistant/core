@@ -32,6 +32,7 @@ light:
 import logging
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.helpers import set_log_severity
 from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
                                             ATTR_XY_COLOR)
 from homeassistant.util.color import color_RGB_to_xy
@@ -44,9 +45,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the LimitlessLED lights. """
     import ledcontroller
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     # Handle old configuration format:
     bridges = config.get('bridges', [config])

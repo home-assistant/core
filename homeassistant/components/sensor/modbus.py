@@ -52,6 +52,7 @@ import logging
 
 import homeassistant.components.modbus as modbus
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     TEMP_CELCIUS, TEMP_FAHRENHEIT,
     STATE_ON, STATE_OFF)
@@ -64,9 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Read config and create Modbus devices. """
     sensors = []
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     slave = config.get("slave", None)
     if modbus.TYPE == "serial" and not slave:

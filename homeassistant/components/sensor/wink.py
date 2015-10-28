@@ -6,20 +6,21 @@ Support for Wink sensors.
 import logging
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_OPEN, STATE_CLOSED
 
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
                 'c2b700e8ca866159566ecf5e644d9c297f69f257.zip'
                 '#python-wink==0.1']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
     import pywink
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if discovery_info is None:
         token = config.get(CONF_ACCESS_TOKEN)

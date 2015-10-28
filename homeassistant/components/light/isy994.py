@@ -7,6 +7,7 @@ import logging
 
 from homeassistant.components.isy994 import (ISYDeviceABC, ISY, SENSOR_STRING,
                                              HIDDEN_STRING)
+from homeassistant.helpers import set_log_severity
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_ON, STATE_OFF
 
@@ -17,9 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the ISY994 platform. """
     devs = []
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     # verify connection
     if ISY is None or not ISY.connected:

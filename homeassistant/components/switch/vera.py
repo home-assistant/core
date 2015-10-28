@@ -50,6 +50,7 @@ from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
 
@@ -99,9 +100,7 @@ def get_devices(hass, config):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return Vera lights. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     add_devices(get_devices(hass, config))
 

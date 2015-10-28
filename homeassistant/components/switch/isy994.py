@@ -8,19 +8,20 @@ import logging
 
 from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
                                              HIDDEN_STRING)
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import STATE_ON, STATE_OFF  # STATE_OPEN, STATE_CLOSED
 # The frontend doesn't seem to fully support the open and closed states yet.
 # Once it does, the HA.doors programs should report open and closed instead of
 # off and on. It appears that on should be open and off should be closed.
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the ISY994 platform. """
     # pylint: disable=too-many-locals
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     logger = logging.getLogger(__name__)
     devs = []

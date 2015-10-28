@@ -57,6 +57,7 @@ from datetime import timedelta
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import set_log_severity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,9 +89,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the Glances sensor. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not config.get('host'):
         _LOGGER.error('"host:" is missing your configuration')

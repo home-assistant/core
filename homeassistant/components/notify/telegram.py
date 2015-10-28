@@ -9,7 +9,7 @@ https://home-assistant.io/components/notify.telegram.html
 import logging
 import urllib
 
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, set_log_severity
 from homeassistant.components.notify import (
     DOMAIN, ATTR_TITLE, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
@@ -21,9 +21,7 @@ REQUIREMENTS = ['python-telegram-bot==2.8.7']
 def get_service(hass, config):
     """ Get the Telegram notification service. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if not validate_config(config,
                            {DOMAIN: [CONF_API_KEY, 'chat_id']},

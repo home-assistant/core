@@ -27,6 +27,7 @@ modbus:
 """
 import logging
 
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
@@ -69,9 +70,7 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global NETWORK
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     if TYPE == "serial":
         from pymodbus.client.sync import ModbusSerialClient as ModbusClient

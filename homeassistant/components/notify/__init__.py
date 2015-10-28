@@ -10,7 +10,7 @@ import os
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import get_component
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, set_log_severity
 
 from homeassistant.const import CONF_NAME
 
@@ -38,9 +38,7 @@ def setup(hass, config):
     """ Sets up notify services. """
     success = False
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))

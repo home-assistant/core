@@ -40,6 +40,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, SUPPORT_PLAY_MEDIA,
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_MEDIA_COMMANDS)
+from homeassistant.helpers import set_log_severity
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_ON)
 
@@ -165,9 +166,7 @@ class Itunes(object):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the itunes platform. """
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     add_devices([
         ItunesDevice(

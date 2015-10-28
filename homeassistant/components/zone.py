@@ -25,7 +25,8 @@ import logging
 
 from homeassistant.const import (
     ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME)
-from homeassistant.helpers import extract_domain_configs, generate_entity_id
+from homeassistant.helpers import (
+    extract_domain_configs, generate_entity_id, set_log_severity)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.location import distance
 
@@ -44,6 +45,7 @@ ATTR_ICON = 'icon'
 ICON_HOME = 'home'
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def active_zone(hass, latitude, longitude, radius=0):
     """ Find the active zone for given latitude, longitude. """
@@ -85,9 +87,7 @@ def setup(hass, config):
     """ Setup zone. """
     entities = set()
 
-    # Set log level
-    logseverity = config.get('logseverity', hass.config.logseverity)
-    _LOGGER.setLevel(eval('logging.%s' % logseverity.upper()))
+    set_log_severity(hass, config, _LOGGER)
 
     for key in extract_domain_configs(config, DOMAIN):
         entries = config[key]
@@ -102,7 +102,7 @@ def setup(hass, config):
             icon = entry.get(ATTR_ICON)
 
             if None in (latitude, longitude):
-                _LOGGER.getLogger(__name__).error(
+                _LOGGER.error(
                     'Each zone needs a latitude and longitude.')
                 continue
 
