@@ -43,7 +43,7 @@ Supports following parameters:
    A list containing three integers representing the xy color you want the
    light to be.
 
- - ct_color
+ - color_temp
    An INT in mireds represending the color temperature you want the light to be
 
  - brightness
@@ -80,7 +80,7 @@ ATTR_TRANSITION = "transition"
 # lists holding color values
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
-ATTR_CT_COLOR = "ct_color"
+ATTR_COLOR_TEMP = "color_temp"
 
 # int with value 0 .. 255 representing brightness of the light
 ATTR_BRIGHTNESS = "brightness"
@@ -109,7 +109,7 @@ DISCOVERY_PLATFORMS = {
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
     'color_xy': ATTR_XY_COLOR,
-    'color_ct': ATTR_CT_COLOR,
+    'color_temp': ATTR_COLOR_TEMP,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,7 +124,7 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, ct_color=None, profile=None,
+            rgb_color=None, xy_color=None, color_temp=None, profile=None,
             flash=None, effect=None):
     """ Turns all or specified light on. """
     data = {
@@ -135,7 +135,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_BRIGHTNESS, brightness),
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
-            (ATTR_CT_COLOR, ct_color),
+            (ATTR_COLOR_TEMP, color_temp),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
         ] if value is not None
@@ -246,15 +246,15 @@ def setup(hass, config):
                 # ValueError if value could not be converted to float
                 pass
 
-        if ATTR_CT_COLOR in dat:
-            # ct_color should be an int of mirads value
-            ctcolor = dat.get(ATTR_CT_COLOR)
+        if ATTR_COLOR_TEMP in dat:
+            # color_temp should be an int of mirads value
+            colortemp = dat.get(ATTR_COLOR_TEMP)
 
             # Without this check, a ctcolor with value '99' would work
             # These values are based on Philips Hue, may need ajustment later
-            if isinstance(ctcolor, int):
-                if 154 <= ctcolor <= 500:
-                    params[ATTR_CT_COLOR] = ctcolor
+            if isinstance(colortemp, int):
+                if 154 <= colortemp <= 500:
+                    params[ATTR_COLOR_TEMP] = colortemp
 
         if ATTR_RGB_COLOR in dat:
             try:
@@ -318,7 +318,7 @@ class Light(ToggleEntity):
         return None
 
     @property
-    def color_ct(self):
+    def color_temp(self):
         """ CT color value in mirads. """
         return None
 
