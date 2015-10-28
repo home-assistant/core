@@ -8,7 +8,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.efergy.html
 """
 import logging
-from requests import get
+from requests import get, RequestException
 
 from homeassistant.helpers.entity import Entity
 
@@ -80,19 +80,22 @@ class EfergySensor(Entity):
 
     def update(self):
         """ Gets the Efergy monitor data from the web service. """
-        if self.type == 'instant_readings':
-            url_string = _RESOURCE + 'getInstant?token=' + self.app_token
-            response = get(url_string)
-            self._state = response.json()['reading'] / 1000
-        elif self.type == 'budget':
-            url_string = _RESOURCE + 'getBudget?token=' + self.app_token
-            response = get(url_string)
-            self._state = response.json()['status']
-        elif self.type == 'cost':
-            url_string = _RESOURCE + 'getCost?token=' + self.app_token \
-                + '&offset=' + self.utc_offset + '&period=' \
-                + self.period
-            response = get(url_string)
-            self._state = response.json()['sum']
-        else:
-            self._state = 'Unknown'
+        try:
+            if self.type == 'instant_readings':
+                url_string = _RESOURCE + 'getInstant?token=' + self.app_token
+                response = get(url_string)
+                self._state = response.json()['reading'] / 1000
+            elif self.type == 'budget':
+                url_string = _RESOURCE + 'getBudget?token=' + self.app_token
+                response = get(url_string)
+                self._state = response.json()['status']
+            elif self.type == 'cost':
+                url_string = _RESOURCE + 'getCost?token=' + self.app_token \
+                    + '&offset=' + self.utc_offset + '&period=' \
+                    + self.period
+                response = get(url_string)
+                self._state = response.json()['sum']
+            else:
+                self._state = 'Unknown'
+        except RequestException:
+            _LOGGER.warning('Could not update status for %s', self.name)
