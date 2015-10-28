@@ -16,7 +16,7 @@ import threading
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util import split_entity_id
+from homeassistant.util import slugify, split_entity_id
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_TIME_CHANGED, STATE_ON, SERVICE_TURN_ON,
     SERVICE_TURN_OFF)
@@ -70,14 +70,17 @@ def setup(hass, config):
         if script:
             script.turn_on()
 
-    for name, cfg in config[DOMAIN].items():
-        if not cfg.get(CONF_SEQUENCE):
-            _LOGGER.warn("Missing key 'sequence' for script %s", name)
+    for object_id, cfg in config[DOMAIN].items():
+        if object_id != slugify(object_id):
+            _LOGGER.warn("Found invalid key for script: %s. Use %s instead.",
+                         object_id, slugify(object_id))
             continue
-        alias = cfg.get(CONF_ALIAS, name)
-        script = Script(hass, alias, cfg[CONF_SEQUENCE])
+        if not cfg.get(CONF_SEQUENCE):
+            _LOGGER.warn("Missing key 'sequence' for script %s", object_id)
+            continue
+        alias = cfg.get(CONF_ALIAS, object_id)
+        script = Script(hass, object_id, alias, cfg[CONF_SEQUENCE])
         component.add_entities((script,))
-        _, object_id = split_entity_id(script.entity_id)
         hass.services.register(DOMAIN, object_id, service_handler)
 
     def turn_on_service(service):
@@ -100,8 +103,10 @@ def setup(hass, config):
 
 class Script(ToggleEntity):
     """ Represents a script. """
-    def __init__(self, hass, name, sequence):
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, hass, object_id, name, sequence):
         self.hass = hass
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self.sequence = sequence
         self._lock = threading.Lock()
