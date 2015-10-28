@@ -65,8 +65,10 @@ class EntityComponent(object):
             if entity is not None and entity not in self.entities.values():
                 entity.hass = self.hass
 
-                entity.entity_id = generate_entity_id(
-                    self.entity_id_format, entity.name, self.entities.keys())
+                if getattr(entity, 'entity_id', None) is None:
+                    entity.entity_id = generate_entity_id(
+                        self.entity_id_format, entity.name,
+                        self.entities.keys())
 
                 self.entities[entity.entity_id] = entity
 
