@@ -8,7 +8,7 @@ Demo platform that implements lights.
 import random
 
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_CT_COLOR)
+    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP)
 
 
 LIGHT_COLORS = [
@@ -59,7 +59,7 @@ class DemoLight(Light):
         return self._xy
 
     @property
-    def color_ct(self):
+    def color_temp(self):
         """ CT color temperature. """
         return self._ct
 
@@ -75,8 +75,8 @@ class DemoLight(Light):
         if ATTR_XY_COLOR in kwargs:
             self._xy = kwargs[ATTR_XY_COLOR]
 
-        if ATTR_CT_COLOR in kwargs:
-            self._ct = kwargs[ATTR_CT_COLOR]
+        if ATTR_COLOR_TEMP in kwargs:
+            self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
