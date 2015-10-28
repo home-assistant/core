@@ -75,7 +75,8 @@ def setup(hass, config):
             _LOGGER.warn("Missing key 'sequence' for script %s", name)
             continue
         alias = cfg.get(CONF_ALIAS, name)
-        script = Script(hass, alias, name, cfg[CONF_SEQUENCE])
+        entity_id = "{}.{}".format(DOMAIN, name)
+        script = Script(hass, alias, entity_id, cfg[CONF_SEQUENCE])
         component.add_entities((script,))
         _, object_id = split_entity_id(script.entity_id)
         hass.services.register(DOMAIN, object_id, service_handler)
