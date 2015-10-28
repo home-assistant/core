@@ -124,6 +124,7 @@ def request_configuration(host, hass, add_devices_callback):
             _CONFIGURING[host], "Failed to register, please try again.")
 
         return
+
     # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
