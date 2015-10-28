@@ -38,13 +38,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Check workaround mappings for specific devices
     for workaround_definition in SPECIFIC_DEVICE_MAPPINGS:
-        for workaround, sensor_specification in workaround_definition:
-            if sensor_specification == (
-                    value.command_class, value.node.manufacturer_id,
-                    value.node.manufacturer_id, value.node.manufacturer_id):
-                if workaround == WORKAROUND_NO_TRIGGER_OFF_EVENT:
-                    add_devices([ZWaveTriggerSensor(value, hass)])
-                    return
+        workaround, sensor_specification = workaround_definition
+        if sensor_specification == (
+                value.command_class, value.node.manufacturer_id,
+                value.node.manufacturer_id, value.node.manufacturer_id):
+            if workaround == WORKAROUND_NO_TRIGGER_OFF_EVENT:
+                add_devices([ZWaveTriggerSensor(value, hass)])
+                return
 
     # generic Device mappings
     if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
