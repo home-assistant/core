@@ -99,6 +99,7 @@ def setup(hass, config):
     return True
 
 
+# pylint: disable=too-many-instance-attributes
 class Script(ToggleEntity):
     """ Represents a script. """
     def __init__(self, hass, name, entity_id, sequence):
