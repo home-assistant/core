@@ -12,7 +12,7 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
 
-REQUIREMENTS = ['evohomeclient']
+REQUIREMENTS = ['evohomeclient==0.2.3']
 
 # from . import ATTR_CURRENT_TEMPERATURE,ATTR_TEMPERATURE
 
@@ -30,11 +30,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     try:
-        from evohomeclient2 import EvohomeClient
+        from evohomeclient import EvohomeClient
     except ImportError:
         logger.exception(
-            "Error while importing dependency nest. "
-            "Did you maybe not install the python-nest dependency?")
+            "Error while importing dependency evohomeclient. "
+            "Did you maybe not install the python evohomeclient dependency?")
 
         return
 
@@ -45,25 +45,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ])
     except socket.error:
         logger.error(
-            "Connection error logging into the nest web service"
+            "Connection error logging into the honeywell evohome web service"
         )
 
 
 class RoundThermostat(ThermostatDevice):
-    """ Represents a Nest thermostat. """
+    """ Represents a Honeywell Round Connected thermostat. """
 
     def __init__(self, device):
         #self.structure = structure
         self.device = device
         self._current_temperature=None
         self._target_temperature=None
+        self._name="round connected"
+        self._sensorid=None
         self.update()
 
 
     @property
     def name(self):
         """ Returns the name of the nest, if any. """
-        return 'round'
+        return self._name
+
+    @name.setter
+    def name(self,value):
+        self._name=value
 
     @property
     def unit_of_measurement(self):
@@ -77,17 +83,11 @@ class RoundThermostat(ThermostatDevice):
         return {}
 
 
-
-
     @property
     def current_temperature(self):
         """ Returns the current temperature. """
         return self._current_temperature
-        #return round(self.device.temperature, 1)
 
-    @current_temperature.setter
-    def current_temparature(self,value):
-        self._current_temperature=value
 
     # @property
     # def operation(self):
@@ -104,28 +104,7 @@ class RoundThermostat(ThermostatDevice):
         """ Returns the temperature we try to reach. """
         return self._target_temperature
 
-    @target_temperature.setter
-    def target_temperature(self,value):
-        self._target_temperature=value
 
-    #    target = self.device.target
-    #
-    #     if self.device.mode == 'range':
-    #         low, high = target
-    #         if self.operation == STATE_COOL:
-    #             temp = high
-    #         elif self.operation == STATE_HEAT:
-    #             temp = low
-    #         else:
-    #             range_average = (low + high)/2
-    #             if self.current_temperature < range_average:
-    #                 temp = low
-    #             elif self.current_temperature >= range_average:
-    #                 temp = high
-    #     else:
-    #         temp = target
-    #
-    #     return round(temp, 1)
 
     # @property
     # def target_temperature_low(self):
@@ -144,25 +123,21 @@ class RoundThermostat(ThermostatDevice):
     # @property
     # def is_away_mode_on(self):
     #     """ Returns if away mode is on. """
-    #     return self.structure.away
+    #     return True
 
-    # def set_temperature(self, temperature):
-    #     """ Set new target temperature """
-    #     if self.device.mode == 'range':
-    #         if self.target_temperature == self.target_temperature_low:
-    #             temperature = (temperature, self.target_temperature_high)
-    #         elif self.target_temperature == self.target_temperature_high:
-    #             temperature = (self.target_temperature_low, temperature)
-    #     self.device.target = temperature
-    #
-    # def turn_away_mode_on(self):
-    #     """ Turns away on. """
-    #     self.structure.away = True
-    #
-    # def turn_away_mode_off(self):
-    #     """ Turns away off. """
-    #     self.structure.away = False
-    #
+    def set_temperature(self, temperature):
+        """ Set new target temperature """
+        self.device.set_temperature(self._name,temperature)
+
+
+    def turn_away_mode_on(self):
+        """ Turns away on. """
+        self.structure.away = True
+
+    def turn_away_mode_off(self):
+        """ Turns away off. """
+        self.structure.away = False
+
     # @property
     # def min_temp(self):
     #     """ Identifies min_temp in Nest API or defaults if not available. """
@@ -183,10 +158,13 @@ class RoundThermostat(ThermostatDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo thermostat. """
+        """ Should poll the evohome cloud service """
         return True
 
     def update(self):
-        for dev in self.device.temperatures():
+        for dev in self.device.temperatures(force_refresh=True):
             self._current_temperature=dev['temp']
             self._target_temperature=dev['setpoint']
+            self._name=dev['name']
+            self._sensorid=dev['id']
+
