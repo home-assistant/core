@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Release notes for March 22, 2015</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-03-22T00:21:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 22, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> three minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-03-22T01:21:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 22, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,145 +124,96 @@
 </header>
 
 
-
-
   <p>A new version of Home Assistant has just been pushed out. It contains bugfixes contributed by <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/trainman419">trainman419</a> and <a href="https://github.com/balloob">me</a>. It also adds a bunch of great new features:</p>
 
-<p><strong>Script</strong><br>
+<p><strong>Script</strong><br />
 Andythigpen has contributed a script component. This allows users to create a sequence of service calls and delays. Scripts can be started using the service <code>script/turn_on</code> and interrupted using the service <code>script/turn_off</code>. A separate page has been added to the frontend to see the status of your scripts.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">script</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="c1"># Turns on the bedroom lights and then the living room lights 1 minute later</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">wakeup</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Wake Up</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">sequence</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Bedroom lights on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.bedroom</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">delay</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="c1"># supports seconds, milliseconds, minutes, hours, etc.</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">minutes</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Living room lights on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">execute_service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">light.turn_on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">service_data</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">entity_id</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">group.living_room</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">script</span>:
+  <span class="comment"># Turns on the bedroom lights and then the living room lights 1 minute later</span>
+  <span class="key">wakeup</span>:
+    <span class="key">alias</span>: <span class="string"><span class="content">Wake Up</span></span>
+    <span class="key">sequence</span>:
+      - <span class="string"><span class="content">alias: Bedroom lights on</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">group.bedroom</span></span>
+      - <span class="string"><span class="content">delay:</span><span class="content">
+          # supports seconds, milliseconds, minutes, hours, etc.
+          minutes: 1</span></span>
+      - <span class="string"><span class="content">alias: Living room lights on</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+</pre></div>
+</div>
+</div>
 
 <a name="read-more"></a>
 
-
-<p><strong>Scene</strong><br>
+<p><strong>Scene</strong><br />
 I (Paulus) have contributed a scene component. A user can create scenes that capture the states you want certain entities to be. For example a scene can contain that light A should be turned on and light B should be bright red. Deactivating a scene will restore the previous state from before the scene was activated. Just like scripts, scenes have their own separate page to see which scenes are on.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">scene</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Romantic</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">entities</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">light.tv_back_light</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">light.ceiling</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">state</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">on</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">color</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.33</span><span class="p-Indicator">,</span> <span class="nv">0.66</span><span class="p-Indicator">]</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">brightness</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">200</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">scene</span>:
+  - <span class="string"><span class="content">name: Romantic</span></span>
+    <span class="key">entities</span>:
+      <span class="key">light.tv_back_light</span>: <span class="string"><span class="content">on</span></span>
+      <span class="key">light.ceiling</span>:
+        <span class="key">state</span>: <span class="string"><span class="content">on</span></span>
+        <span class="key">color</span>: <span class="string"><span class="content">[0.33, 0.66]</span></span>
+        <span class="key">brightness</span>: <span class="string"><span class="content">200</span></span>
+</pre></div>
+</div>
+</div>
 
+<p><a name="sabnzbd"></a><br />
+<strong>SABnzbd</strong><br />
+<img src="/images/supported_brands/sabnzbd.png" style="border:none; box-shadow: none; float: right;" height="50" /> James Cole has contributed support to integrate SABnzbd. This will allow you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
 
-<p><a name='sabnzbd'></a>
-<strong>SABnzbd</strong><br>
-<img src='/images/supported_brands/sabnzbd.png' style='border:none; box-shadow: none; float: right;' height='50' />
-James Cole has contributed support to integrate SABnzbd. This will allow you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  - <span class="string"><span class="content">platform: sabnzbd</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">SAB</span></span>
+    <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_API_KEY</span></span>
+    <span class="comment"># Example: http://192.168.1.32:8124/</span>
+    <span class="key">base_url</span>: <span class="string"><span class="content">YOUR_SABNZBD_BASE_URL</span></span>
+    <span class="key">monitored_variables</span>:
+        - <span class="string"><span class="content">type: 'current_status'</span></span>
+        - <span class="string"><span class="content">type: 'speed'</span></span>
+        - <span class="string"><span class="content">type: 'queue_size'</span></span>
+        - <span class="string"><span class="content">type: 'queue_remaining'</span></span>
+        - <span class="string"><span class="content">type: 'disk_size'</span></span>
+        - <span class="string"><span class="content">type: 'disk_free'</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sabnzbd</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SAB</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_API_KEY</span>
-</span><span class='line'>    <span class="c1"># Example: http://192.168.1.32:8124/</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">base_url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_SABNZBD_BASE_URL</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;current_status&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;speed&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;queue_size&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;queue_remaining&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;disk_size&#39;</span>
-</span><span class='line'>        <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;disk_free&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
+<p><a name="pushover"></a><br />
+<strong>PushOver</strong><br />
+<img src="/images/supported_brands/pushover.png" style="border:none; box-shadow: none; float: right;" height="50" /> James Cole has also contributed support for <a href="https://pushover.net/">the PushOver service</a> as a platform for the notify component. This allows components to send messages to the user using PushOver.</p>
 
-
-<p><a name='pushover'></a>
-<strong>PushOver</strong><br>
-<img src='/images/supported_brands/pushover.png' style='border:none; box-shadow: none; float: right;' height='50' />
-James Cole has also contributed support for <a href='https://pushover.net/'>the PushOver service</a> as a platform for the notify component. This allows components to send messages to the user using PushOver.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pushover</span>
-</span><span class='line'>    <span class="c1"># Get this by registering a new application on https://pushover.net</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="c1"># Get this by logging into your account on https://pushover.net</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">user_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">pushover</span></span>
+    <span class="comment"># Get this by registering a new application on https://pushover.net</span>
+    <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+    <span class="comment"># Get this by logging into your account on https://pushover.net</span>
+    <span class="key">user_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+</pre></div>
+</div>
+</div>
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -297,7 +225,6 @@ James Cole has also contributed support for <a href='https://pushover.net/'>the 
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -379,7 +306,6 @@ James Cole has also contributed support for <a href='https://pushover.net/'>the 
 
   
 </div>
-
         </aside>
         
       </div>
@@ -390,30 +316,23 @@ James Cole has also contributed support for <a href='https://pushover.net/'>the 
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -429,14 +348,6 @@ James Cole has also contributed support for <a href='https://pushover.net/'>the 
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

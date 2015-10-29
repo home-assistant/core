@@ -4,7 +4,7 @@
   <title><![CDATA[Category: component | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/component/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-27T12:45:27-07:00</updated>
+  <updated>2015-10-29T00:08:34-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -21,10 +21,9 @@
     <content type="html"><![CDATA[<p>Ever since the launch of Home Assistant you have been able to track the state of your house. But the view has always been limited to what the current state is. Not what it was. Today we are going to change that by introducing two brand new components:</p>
 
 <ul>
-<li>Recorder component that will record every event to a SQLite database</li>
-<li>History component that will query and aggregate the recorded events</li>
+  <li>Recorder component that will record every event to a SQLite database</li>
+  <li>History component that will query and aggregate the recorded events</li>
 </ul>
-
 
 <p>By adding this view into the past, we are adding an extra dimension into the state of your house. This brings great new possibilities for future features. The focus of todays release is on getting the recording component to you to start recording and getting some data. To show what is being recorded a view has been added that shows the last 24 hours of your house. Expect more extensive tools to explore your history in the future.</p>
 
@@ -32,33 +31,25 @@
 
 <p>The history component will be enabled for new users by default. For current users, run <code>scripts/update</code> to upgrade to the latest version and add <code>[history]</code> to your <code>home-assistant.conf</code> file.</p>
 
-<p class='img'>
-  <a href='/images/screenshots/component_history_24h.png'>
-    <img src='/images/screenshots/component_history_24h.png' />
+<p class="img">
+  <a href="/images/screenshots/component_history_24h.png">
+    <img src="/images/screenshots/component_history_24h.png" />
   </a>
 </p>
 
-
-
-
-<p class='note'>
+<p class="note">
 Events are saved in a local database. Google Graphs is used to draw the graph. Drawing is happening 100% in your browser - no data is transfered to anyone at any time.
 </p>
 
-
-
-
 <!--more-->
-
 
 <p>Tracking history is an exciting next step for Home Assistant and will power the next generation of features. Here a list of some of the cool things that can now be build:</p>
 
 <ul>
-<li>Time Machine: explore the state of your house at any point in the past</li>
-<li>Smart Home: analyze behavior and use it to automate your house</li>
-<li>Summarize usage of the different components of your house</li>
+  <li>Time Machine: explore the state of your house at any point in the past</li>
+  <li>Smart Home: analyze behavior and use it to automate your house</li>
+  <li>Summarize usage of the different components of your house</li>
 </ul>
-
 ]]></content>
   </entry>
   
@@ -67,22 +58,24 @@ Events are saved in a local database. Google Graphs is used to draw the graph. D
     <link href="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/"/>
     <updated>2015-01-13T08:29:04-08:00</updated>
     <id>https://home-assistant.io/blog/2015/01/13/nest-in-da-house</id>
-    <content type="html"><![CDATA[<p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we&rsquo;re expanding the supported devices. Today, we&rsquo;re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
+    <content type="html"><![CDATA[<p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we’re expanding the supported devices. Today, we’re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
 
-<p class='img'>
-  <img src='/images/screenshots/nest-thermostat-card.png' />
+<p class="img">
+  <img src="/images/screenshots/nest-thermostat-card.png" />
 </p>
-
 
 <p>The new integration exists out of two parts: a generic thermostat component and a Nest platform implementation. The initial version implements provides a read-only card and services to control it. The plan is in the future to add temperature and away mode controls from the thermostat card and more info dialog. Internally, we are using the Python package <a href="https://github.com/jkoelker/python-nest">python-nest by jkoelker</a> to talk to the Nest.</p>
 
 <p>If you own a Nest thermostat, add the following lines to your <code>home-assistant.conf</code>:</p>
 
-<pre><code>[thermostat]
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>[thermostat]
 platform=nest
 username=YOUR_USERNAME
 password=YOUR_PASSWORD
-</code></pre>
+</pre></div>
+</div>
+</div>
 ]]></content>
   </entry>
   
@@ -99,10 +92,13 @@ password=YOUR_PASSWORD
 
 <p>To enable the discovery component, add the following to your <code>home-assistant.conf</code>:</p>
 
-<pre><code>[discovery]
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>[discovery]
+</pre></div>
+</div>
+</div>
 
-<p>A new <a href="/developers/add_new_platform.html#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
+<p>A new <a href="/developers/add_new_platform/#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
 ]]></content>
   </entry>
   
@@ -111,29 +107,30 @@ password=YOUR_PASSWORD
     <link href="https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/"/>
     <updated>2015-01-04T13:29:07-08:00</updated>
     <id>https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you</id>
-    <content type="html"><![CDATA[<p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn&rsquo;t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
+    <content type="html"><![CDATA[<p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn’t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
 
 <p>The new notify component will take in messages and tells them to the user. For now this will be powered by the very awesome <a href="https://www.pushbullet.com/">PushBullet</a> but any other messaging platform can be easily added.</p>
 
-<p class='img'>
-  <img src='/images/screenshots/pushbullet_moto360.png' />
+<p class="img">
+  <img src="/images/screenshots/pushbullet_moto360.png" />
   A message triggered by the simple_alarm component is shown by PushBullet on the Moto360.
 </p>
-
 
 <p>Read on to learn how to enable the notify component and integrate it with other components.</p>
 
 <!--more-->
 
-
 <h3>Enabling the notify component</h3>
 
 <p>To enable the new notify component, add the following to your <code>home-assistant.conf</code>:</p>
 
-<pre><code>[notify]
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>[notify]
 platform=pushbullet
 api_key=ABCDEFGHJKLMNOPQRSTUVXYZ
-</code></pre>
+</pre></div>
+</div>
+</div>
 
 <p>You can get your api key from <a href="https://www.pushbullet.com/account">your account page on PushBullet.com</a>.</p>
 
@@ -141,12 +138,15 @@ api_key=ABCDEFGHJKLMNOPQRSTUVXYZ
 
 <p>To be able to send messages, the notify component has to be loaded and initialized successfully.</p>
 
-<pre><code class="python">import homeassistant.loader as loader
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="keyword">import</span> <span class="include">homeassistant.loader</span> <span class="keyword">as</span> loader
 
-def setup(hass, config):
-    notify = loader.get_component('notify')
-    notify.send_message(hass, "Hello from my component!")
-</code></pre>
+<span class="keyword">def</span> <span class="function">setup</span>(hass, config):
+    notify = loader.get_component(<span class="string"><span class="delimiter">'</span><span class="content">notify</span><span class="delimiter">'</span></span>)
+    notify.send_message(hass, <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello from my component!</span><span class="delimiter">&quot;</span></span>)
+</pre></div>
+</div>
+</div>
 ]]></content>
   </entry>
   

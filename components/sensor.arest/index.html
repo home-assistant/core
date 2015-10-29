@@ -1,0 +1,363 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>aREST sensor - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to integrate aREST sensors within Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/sensor.arest/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="aREST sensor">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/sensor.arest/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to integrate aREST sensors within Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      aREST sensor
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>The arest sensor platform allows you to get all data from your devices (like Arduinos with a ethernet/wifi connection, the ESP8266, and the Raspberry Pi) running the <a href="http://arest.io/">aREST</a> RESTful framework.</p>
+
+<p>To use your aREST enabled device in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">arest</span></span>
+  <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Office</span></span>
+  <span class="key">monitored_variables</span>:
+    - <span class="string"><span class="content">name: temperature</span></span>
+      <span class="key">unit_of_measurement</span>: <span class="string"><span class="content">'°C'</span></span>
+    - <span class="string"><span class="content">name: humidity</span></span>
+      <span class="key">unit_of_measurement</span>: <span class="string"><span class="content">'%'</span></span>
+    <span class="key">pins</span>:
+      <span class="key">A0</span>:
+        <span class="key">name</span>: <span class="string"><span class="content">Pin 0 analog</span></span>
+        <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ca</span><span class="delimiter">&quot;</span></span>
+        <span class="key">correction_factor</span>: <span class="string"><span class="content">0.01</span></span>
+        <span class="key">decimal_places</span>: <span class="string"><span class="content">1</span></span>
+      <span class="key">3</span>:
+        <span class="key">name</span>: <span class="string"><span class="content">Pin 3 digital</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>resource</strong> (<em>Required</em>): IP address and schema of the device that is exposing an aREST API, e.g. http://192.168.1.10.</li>
+  <li><strong>name</strong> (<em>Optional</em>): Let you overwrite the the name of the device. By default <em>name</em> from the device is used.</li>
+  <li><strong>monitored_variables</strong> array (<em>Optional</em>): List of exposed variables.
+    <ul>
+      <li><strong>name</strong> (<em>Required</em>): The name of the variable you wish to monitor.</li>
+      <li><strong>unit</strong> (<em>Optional</em>): Defines the units of measurement of the sensor, if any.</li>
+    </ul>
+  </li>
+  <li><strong>pins</strong> array (<em>Optional</em>): List of pins to monitor. Analog pins need a leading <strong>A</strong> for the pin number.
+    <ul>
+      <li><strong>name</strong> (<em>Optional</em>): The name of the variable you wish to monitor.</li>
+      <li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
+      <li><strong>correction_factor</strong> (<em>Optional</em>): A float value to do some basic calculations.</li>
+      <li><strong>decimal_places</strong> (<em>Optional</em>): Number of decimal places of the value. Default is 0.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>The variables in the <code>monitored_variables</code> array must be available in the response of the device. As a starting point you find below a sketch for the Arduino device family. There are two variables (<code>temperature</code> and <code>humidity</code>) which will act as endpoints.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment">/*
+  This modified sketch is based on the Ethernet example of the aREST 
+  (http://arest.io/) library.
+*/</span>
+
+<span class="comment">// Libraries</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;SPI.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;Ethernet.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;aREST.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;avr/wdt.h&gt;</span>
+
+<span class="comment">// Device settings</span>
+<span class="predefined-type">char</span>* deviceId = <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor02</span><span class="delimiter">&quot;</span></span>;
+<span class="predefined-type">char</span>* deviceName = <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>;
+byte deviceMac[] = { <span class="hex">0x20</span>, <span class="hex">0xD5</span>, <span class="hex">0xD3</span>, <span class="hex">0x03</span>, <span class="hex">0xFE</span>, <span class="hex">0x31</span> };
+IPAddress deviceIp(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">1</span>, <span class="integer">12</span>);
+
+EthernetServer server(<span class="integer">80</span>);
+aREST rest = aREST();
+
+<span class="comment">// Variables to be exposed to the API</span>
+<span class="predefined-type">int</span> temperature;
+<span class="predefined-type">int</span> humidity;
+
+<span class="directive">void</span> setup(<span class="directive">void</span>) {
+  Serial.begin(<span class="integer">57600</span>);
+
+  <span class="comment">// Init variables and expose them to REST API</span>
+  temperature = <span class="integer">0</span>;
+  humidity = <span class="integer">0</span>;
+  
+  rest.variable(<span class="string"><span class="delimiter">&quot;</span><span class="content">temperature</span><span class="delimiter">&quot;</span></span>, &amp;temperature);
+  rest.variable(<span class="string"><span class="delimiter">&quot;</span><span class="content">humidity</span><span class="delimiter">&quot;</span></span>, &amp;humidity);
+
+  <span class="comment">// Give name and ID to device</span>
+  rest.set_id(deviceId);
+  rest.set_name(deviceName);
+
+  Ethernet.begin(deviceMac, deviceIp);
+ 
+  server.begin();
+  Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sensor is ready...</span><span class="delimiter">&quot;</span></span>);
+
+  <span class="comment">// Start watchdog</span>
+  wdt_enable(WDTO_4S);
+}
+
+<span class="directive">void</span> loop() {
+  EthernetClient client = server.available();
+  rest.handle(client);
+  wdt_reset();
+
+  <span class="comment">// Replace this with your actual sensor readings, like</span>
+  <span class="comment">// temperature = (((analogRead(A0) * 5.0) / 1024) - 0.5) * 10;</span>
+  temperature = random(<span class="integer">400</span>);
+  humidity = random(<span class="integer">600</span>);
+  delay(<span class="integer">500</span>);
+}
+
+</pre></div>
+</div>
+</div>
+<p>Accessing one of the endpoints (eg. http://192.168.1.10/temperature) will give you the value inside a JSON response.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">temperature</span><span class="delimiter">&quot;</span></span>: <span class="integer">23</span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor01</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>: <span class="value">true</span>}
+</pre></div>
+</div>
+</div>
+
+<p>The root will give you a JSON response that contains all variables and their current values along with some device details.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+   <span class="key"><span class="delimiter">&quot;</span><span class="content">variables</span><span class="delimiter">&quot;</span></span> : {
+      <span class="key"><span class="delimiter">&quot;</span><span class="content">temperature</span><span class="delimiter">&quot;</span></span> : <span class="integer">23</span>,
+      <span class="key"><span class="delimiter">&quot;</span><span class="content">humidity</span><span class="delimiter">&quot;</span></span> : <span class="integer">82</span>
+   },
+   <span class="key"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span> : <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor01</span><span class="delimiter">&quot;</span></span>,
+   <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span> : <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>,
+   <span class="key"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span> : <span class="value">true</span>
+}
+</pre></div>
+</div>
+</div>
+
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/arest.png' />
+  </div>
+          <div class='section'>
+          <h1 class='title delta'>Related components</h1>
+          <ul class='divided'>
+        <li><a href='/components/switch.arest/'>
+          aREST switch
+        </a></li>
+    </ul>
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Sensor</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/sensor.bitcoin/'>Bitcoin</a>
+        </li>
+        <li>
+            <a href='/components/sensor.cpuspeed/'>CPU speed</a>
+        </li>
+        <li>
+            <a href='/components/sensor.command_sensor/'>Command line sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.efergy/'>Efergy sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.glances/'>Glances</a>
+        </li>
+        <li>
+            <a href='/components/sensor.mqtt/'>MQTT sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.modbus/'>Modbus sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.mysensors/'>MySensors sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.rest/'>RESTful sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.rfxtrx/'>RFXtrx sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.sabnzbd/'>SABnzbd</a>
+        </li>
+        <li>
+            <a href='/components/sensor.swiss_public_transport/'>Swiss Public Transport</a>
+        </li>
+        <li>
+            <a href='/components/sensor.systemmonitor/'>System Monitor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.temper/'>TEMPer sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.tellstick/'>TellStick sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.time_date/'>Time & Date</a>
+        </li>
+        <li>
+            <a href='/components/sensor.transmission/'>Transmission sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.vera/'>Vera sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.wink/'>Wink sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.worldclock/'>Worldclock</a>
+        </li>
+        <li>
+            aREST sensor
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

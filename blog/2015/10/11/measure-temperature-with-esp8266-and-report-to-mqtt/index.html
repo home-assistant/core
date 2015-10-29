@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Report the temperature with ESP8266 to MQTT</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-10-11T12:10:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 11, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> nine minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-10-11T12:10:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 11, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> seven minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -140,7 +118,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -151,390 +128,370 @@
 </header>
 
 
+  
+<p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means that all your DIY projects can now be done for a fraction of the price.</p>
 
+<p>For this tutorial, I’ll walk through how to get going with ESP8266, get the temperature and humidity and report it to MQTT where Home Asssistant can pick it up.</p>
 
-  <p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means
-that all your DIY projects can now be done for a fraction of the price.</p>
-
-<p>For this tutorial, I&rsquo;ll walk through how to get going with ESP8266, get the temperature and humidity and
-report it to MQTT where Home Asssistant can pick it up.</p>
-
-<p class='img'>
-<img src='/images/blog/2015-10-esp8266-temp/setup.png' />
+<p class="img">
+<img src="/images/blog/2015-10-esp8266-temp/setup.png" />
 Picture of the final setup (+ 2 LED for decoration)
 </p>
 
-
-
-
-<p class='img'>
-<img src='/images/blog/2015-10-esp8266-temp/ha-sensor.png' />
+<p class="img">
+<img src="/images/blog/2015-10-esp8266-temp/ha-sensor.png" />
 Home Assistant will keep track of historical values and allow you to integrate it into automation.
 </p>
 
-
-
-
 <a name="read-more"></a>
-
 
 <h3>Components</h3>
 
-<p>I&rsquo;ve been using Adafruit for my shopping:</p>
+<p>I’ve been using Adafruit for my shopping:</p>
 
 <ul>
-<li><a href="http://www.adafruit.com/product/2471">Adafruit HUZZAH ESP8266 Breakout</a> (<a href="https://learn.adafruit.com/adafruit-huzzah-esp8266-breakout/assembly">assembly instructions</a>)</li>
-<li><a href="http://www.adafruit.com/product/2635">Adafruit HDC1008 Temperature &amp; Humidity Sensor Breakout Board</a> (<a href="https://learn.adafruit.com/adafruit-hdc1008-temperature-and-humidity-sensor-breakout/assembly">assembly instructions</a>)</li>
-<li><a href="/components/mqtt.html#picking-a-broker">MQTT server</a></li>
+  <li><a href="http://www.adafruit.com/product/2471">Adafruit HUZZAH ESP8266 Breakout</a> (<a href="https://learn.adafruit.com/adafruit-huzzah-esp8266-breakout/assembly">assembly instructions</a>)</li>
+  <li><a href="http://www.adafruit.com/product/2635">Adafruit HDC1008 Temperature &amp; Humidity Sensor Breakout Board</a> (<a href="https://learn.adafruit.com/adafruit-hdc1008-temperature-and-humidity-sensor-breakout/assembly">assembly instructions</a>)</li>
+  <li><a href="/components/mqtt/#picking-a-broker">MQTT server</a></li>
 </ul>
 
-
-<p><em>Besides this, you will need the usual hardware prototype equipment: a breadboard, some wires,
-soldering iron + wire, Serial USB cable.</em></p>
+<p><em>Besides this, you will need the usual hardware prototype equipment: a breadboard, some wires, soldering iron + wire, Serial USB cable.</em></p>
 
 <h3>Connections</h3>
 
 <p>On your breadboard, make the following connections from your ESP8266 to the HDC1008:</p>
 
 <table>
-<thead>
-<tr>
-<th> ESP8266 </th>
-<th> HDC1008 </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> GND </td>
-<td> GND</td>
-</tr>
-<tr>
-<td> 3V </td>
-<td> Vin</td>
-</tr>
-<tr>
-<td> 14 </td>
-<td> SCL</td>
-</tr>
-<tr>
-<td> #2 </td>
-<td> SDA</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>ESP8266</th>
+      <th>HDC1008</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GND</td>
+      <td>GND</td>
+    </tr>
+    <tr>
+      <td>3V</td>
+      <td>Vin</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>SCL</td>
+    </tr>
+    <tr>
+      <td>#2</td>
+      <td>SDA</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <p><em>I picked <code>#2</code> and <code>14</code> myself, you can configure them in the sketch.</em></p>
 
 <h3>Preparing your IDE</h3>
 
-<p>Follow <a href="https://github.com/esp8266/Arduino#installing-with-boards-manager">these instructions</a> on how
-to install and prepare the Arduino IDE for ESP8266 development.</p>
+<p>Follow <a href="https://github.com/esp8266/Arduino#installing-with-boards-manager">these instructions</a> on how to install and prepare the Arduino IDE for ESP8266 development.</p>
 
-<p>After you&rsquo;re done installing, open the Arduino IDE, in the menu click on <code>sketch</code> -> <code>include library</code> ->
-<code>manage libraries</code> and install the following libraries:</p>
+<p>After you’re done installing, open the Arduino IDE, in the menu click on <code>sketch</code> -&gt; <code>include library</code> -&gt; <code>manage libraries</code> and install the following libraries:</p>
 
 <ul>
-<li>PubSubClient by Nick &lsquo;O Leary</li>
-<li>Adafruit HDC1000</li>
+  <li>PubSubClient by Nick ‘O Leary</li>
+  <li>Adafruit HDC1000</li>
 </ul>
-
 
 <h3>Sketch</h3>
 
-<p>If you have followed the previous steps, you&rsquo;re all set.</p>
+<p>If you have followed the previous steps, you’re all set.</p>
 
 <ul>
-<li>Open Arduino IDE and create a new sketch (<code>File</code> -> <code>New</code>)</li>
-<li>Copy and paste the below sketch to the Arduino IDE</li>
-<li>Adjust the values line 6 - 14 to match your setup</li>
-<li>Optional: If you want to connect to an MQTT server without a username or password, adjust line 63.</li>
-<li>To have the ESP8266 accept our new sketch, we have to put it in upload mode. On the ESP8266 device
-keep the GPIO0 button pressed while pressing the reset button. The red led will glow half bright to
-indicate it is in upload mode.</li>
-<li>Press the upload button in Arduino IDE</li>
-<li>Open the serial monitor (<code>Tools</code> -> <code>Serial Monitor</code>) to see the output from your device</li>
+  <li>Open Arduino IDE and create a new sketch (<code>File</code> -&gt; <code>New</code>)</li>
+  <li>Copy and paste the below sketch to the Arduino IDE</li>
+  <li>Adjust the values line 6 - 14 to match your setup</li>
+  <li>Optional: If you want to connect to an MQTT server without a username or password, adjust line 63.</li>
+  <li>To have the ESP8266 accept our new sketch, we have to put it in upload mode. On the ESP8266 device keep the GPIO0 button pressed while pressing the reset button. The red led will glow half bright to indicate it is in upload mode.</li>
+  <li>Press the upload button in Arduino IDE</li>
+  <li>Open the serial monitor (<code>Tools</code> -&gt; <code>Serial Monitor</code>) to see the output from your device</li>
 </ul>
 
+<p>This sketch will connect to your WiFi network and MQTT broker. It will read the temperature and humidity from the sensor every second. It will report it to the MQTT server if the difference is &gt; 1 since last reported value. Reports to the MQTT broker are sent with retain set to <code>True</code>. This means that anyone connecting to the MQTT topic will automatically be notified of the last reported value.</p>
 
-<p>This sketch will connect to your WiFi network and MQTT broker. It will read the temperature and humidity
-from the sensor every second. It will report it to the MQTT server if the difference is > 1 since last
-reported value. Reports to the MQTT broker are sent with retain set to <code>True</code>. This means that anyone
-connecting to the MQTT topic will automatically be notified of the last reported value.</p>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+<a href="#n31" name="n31">31</a>
+<a href="#n32" name="n32">32</a>
+<a href="#n33" name="n33">33</a>
+<a href="#n34" name="n34">34</a>
+<a href="#n35" name="n35">35</a>
+<a href="#n36" name="n36">36</a>
+<a href="#n37" name="n37">37</a>
+<a href="#n38" name="n38">38</a>
+<a href="#n39" name="n39">39</a>
+<strong><a href="#n40" name="n40">40</a></strong>
+<a href="#n41" name="n41">41</a>
+<a href="#n42" name="n42">42</a>
+<a href="#n43" name="n43">43</a>
+<a href="#n44" name="n44">44</a>
+<a href="#n45" name="n45">45</a>
+<a href="#n46" name="n46">46</a>
+<a href="#n47" name="n47">47</a>
+<a href="#n48" name="n48">48</a>
+<a href="#n49" name="n49">49</a>
+<strong><a href="#n50" name="n50">50</a></strong>
+<a href="#n51" name="n51">51</a>
+<a href="#n52" name="n52">52</a>
+<a href="#n53" name="n53">53</a>
+<a href="#n54" name="n54">54</a>
+<a href="#n55" name="n55">55</a>
+<a href="#n56" name="n56">56</a>
+<a href="#n57" name="n57">57</a>
+<a href="#n58" name="n58">58</a>
+<a href="#n59" name="n59">59</a>
+<strong><a href="#n60" name="n60">60</a></strong>
+<a href="#n61" name="n61">61</a>
+<a href="#n62" name="n62">62</a>
+<a href="#n63" name="n63">63</a>
+<a href="#n64" name="n64">64</a>
+<a href="#n65" name="n65">65</a>
+<a href="#n66" name="n66">66</a>
+<a href="#n67" name="n67">67</a>
+<a href="#n68" name="n68">68</a>
+<a href="#n69" name="n69">69</a>
+<strong><a href="#n70" name="n70">70</a></strong>
+<a href="#n71" name="n71">71</a>
+<a href="#n72" name="n72">72</a>
+<a href="#n73" name="n73">73</a>
+<a href="#n74" name="n74">74</a>
+<a href="#n75" name="n75">75</a>
+<a href="#n76" name="n76">76</a>
+<a href="#n77" name="n77">77</a>
+<a href="#n78" name="n78">78</a>
+<a href="#n79" name="n79">79</a>
+<strong><a href="#n80" name="n80">80</a></strong>
+<a href="#n81" name="n81">81</a>
+<a href="#n82" name="n82">82</a>
+<a href="#n83" name="n83">83</a>
+<a href="#n84" name="n84">84</a>
+<a href="#n85" name="n85">85</a>
+<a href="#n86" name="n86">86</a>
+<a href="#n87" name="n87">87</a>
+<a href="#n88" name="n88">88</a>
+<a href="#n89" name="n89">89</a>
+<strong><a href="#n90" name="n90">90</a></strong>
+<a href="#n91" name="n91">91</a>
+<a href="#n92" name="n92">92</a>
+<a href="#n93" name="n93">93</a>
+<a href="#n94" name="n94">94</a>
+<a href="#n95" name="n95">95</a>
+<a href="#n96" name="n96">96</a>
+<a href="#n97" name="n97">97</a>
+<a href="#n98" name="n98">98</a>
+<a href="#n99" name="n99">99</a>
+<strong><a href="#n100" name="n100">100</a></strong>
+<a href="#n101" name="n101">101</a>
+<a href="#n102" name="n102">102</a>
+<a href="#n103" name="n103">103</a>
+<a href="#n104" name="n104">104</a>
+<a href="#n105" name="n105">105</a>
+<a href="#n106" name="n106">106</a>
+<a href="#n107" name="n107">107</a>
+<a href="#n108" name="n108">108</a>
+<a href="#n109" name="n109">109</a>
+</pre></td>
+  <td class="code"><pre><span class="preprocessor">#include</span> <span class="include">&lt;ESP8266WiFi.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;Wire.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;PubSubClient.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;Adafruit_HDC1000.h&gt;</span>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;ESP8266WiFi.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;Wire.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;PubSubClient.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;Adafruit_HDC1000.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define wifi_ssid &quot;YOUR WIFI SSID&quot;</span>
-</span><span class='line'><span class="cp">#define wifi_password &quot;WIFI PASSWORD&quot;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define mqtt_server &quot;YOUR_MQTT_SERVER_HOST&quot;</span>
-</span><span class='line'><span class="cp">#define mqtt_user &quot;your_username&quot;</span>
-</span><span class='line'><span class="cp">#define mqtt_password &quot;your_password&quot;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define humidity_topic &quot;sensor/humidity&quot;</span>
-</span><span class='line'><span class="cp">#define temperature_topic &quot;sensor/temperature&quot;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">WiFiClient</span> <span class="n">espClient</span><span class="p">;</span>
-</span><span class='line'><span class="n">PubSubClient</span> <span class="nf">client</span><span class="p">(</span><span class="n">espClient</span><span class="p">);</span>
-</span><span class='line'><span class="n">Adafruit_HDC1000</span> <span class="n">hdc</span> <span class="o">=</span> <span class="n">Adafruit_HDC1000</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">setup</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="mi">115200</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">setup_wifi</span><span class="p">();</span>
-</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">setServer</span><span class="p">(</span><span class="n">mqtt_server</span><span class="p">,</span> <span class="mi">1883</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// Set SDA and SDL ports</span>
-</span><span class='line'>  <span class="n">Wire</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">14</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// Start sensor</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">hdc</span><span class="p">.</span><span class="n">begin</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t find sensor!&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">setup_wifi</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">delay</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// We start by connecting to a WiFi network</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">();</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Connecting to &quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="n">wifi_ssid</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">WiFi</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="n">wifi_ssid</span><span class="p">,</span> <span class="n">wifi_password</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">while</span> <span class="p">(</span><span class="n">WiFi</span><span class="p">.</span><span class="n">status</span><span class="p">()</span> <span class="o">!=</span> <span class="n">WL_CONNECTED</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">delay</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;WiFi connected&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;IP address: &quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="n">WiFi</span><span class="p">.</span><span class="n">localIP</span><span class="p">());</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">reconnect</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">// Loop until we&#39;re reconnected</span>
-</span><span class='line'>  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">client</span><span class="p">.</span><span class="n">connected</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Attempting MQTT connection...&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// Attempt to connect</span>
-</span><span class='line'>    <span class="c1">// If you do not want to use a username and password, change next line to</span>
-</span><span class='line'>    <span class="c1">// if (client.connect(&quot;ESP8266Client&quot;)) {</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">client</span><span class="p">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&quot;ESP8266Client&quot;</span><span class="p">,</span> <span class="n">mqtt_user</span><span class="p">,</span> <span class="n">mqtt_password</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;connected&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;failed, rc=&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">client</span><span class="p">.</span><span class="n">state</span><span class="p">());</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot; try again in 5 seconds&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="c1">// Wait 5 seconds before retrying</span>
-</span><span class='line'>      <span class="n">delay</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">bool</span> <span class="nf">checkBound</span><span class="p">(</span><span class="kt">float</span> <span class="n">newValue</span><span class="p">,</span> <span class="kt">float</span> <span class="n">prevValue</span><span class="p">,</span> <span class="kt">float</span> <span class="n">maxDiff</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">newValue</span> <span class="o">&lt;</span> <span class="n">prevValue</span> <span class="o">-</span> <span class="n">maxDiff</span> <span class="o">||</span> <span class="n">newValue</span> <span class="o">&gt;</span> <span class="n">prevValue</span> <span class="o">+</span> <span class="n">maxDiff</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">long</span> <span class="n">lastMsg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="kt">float</span> <span class="n">temp</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-</span><span class='line'><span class="kt">float</span> <span class="n">hum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-</span><span class='line'><span class="kt">float</span> <span class="n">diff</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">loop</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">client</span><span class="p">.</span><span class="n">connected</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">reconnect</span><span class="p">();</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">loop</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kt">long</span> <span class="n">now</span> <span class="o">=</span> <span class="n">millis</span><span class="p">();</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="n">lastMsg</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">lastMsg</span> <span class="o">=</span> <span class="n">now</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">float</span> <span class="n">newTemp</span> <span class="o">=</span> <span class="n">hdc</span><span class="p">.</span><span class="n">readTemperature</span><span class="p">();</span>
-</span><span class='line'>    <span class="kt">float</span> <span class="n">newHum</span> <span class="o">=</span> <span class="n">hdc</span><span class="p">.</span><span class="n">readHumidity</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">checkBound</span><span class="p">(</span><span class="n">newTemp</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">diff</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">temp</span> <span class="o">=</span> <span class="n">newTemp</span><span class="p">;</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;New temperature:&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="n">temp</span><span class="p">).</span><span class="n">c_str</span><span class="p">());</span>
-</span><span class='line'>      <span class="n">client</span><span class="p">.</span><span class="n">publish</span><span class="p">(</span><span class="n">temperature_topic</span><span class="p">,</span> <span class="n">String</span><span class="p">(</span><span class="n">temp</span><span class="p">).</span><span class="n">c_str</span><span class="p">(),</span> <span class="nb">true</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">checkBound</span><span class="p">(</span><span class="n">newHum</span><span class="p">,</span> <span class="n">hum</span><span class="p">,</span> <span class="n">diff</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">hum</span> <span class="o">=</span> <span class="n">newHum</span><span class="p">;</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;New humidity:&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="n">hum</span><span class="p">).</span><span class="n">c_str</span><span class="p">());</span>
-</span><span class='line'>      <span class="n">client</span><span class="p">.</span><span class="n">publish</span><span class="p">(</span><span class="n">humidity_topic</span><span class="p">,</span> <span class="n">String</span><span class="p">(</span><span class="n">hum</span><span class="p">).</span><span class="n">c_str</span><span class="p">(),</span> <span class="nb">true</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<span class="preprocessor">#define</span> wifi_ssid <span class="string"><span class="delimiter">&quot;</span><span class="content">YOUR WIFI SSID</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> wifi_password <span class="string"><span class="delimiter">&quot;</span><span class="content">WIFI PASSWORD</span><span class="delimiter">&quot;</span></span>
 
+<span class="preprocessor">#define</span> mqtt_server <span class="string"><span class="delimiter">&quot;</span><span class="content">YOUR_MQTT_SERVER_HOST</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> mqtt_user <span class="string"><span class="delimiter">&quot;</span><span class="content">your_username</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> mqtt_password <span class="string"><span class="delimiter">&quot;</span><span class="content">your_password</span><span class="delimiter">&quot;</span></span>
+
+<span class="preprocessor">#define</span> humidity_topic <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/humidity</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> temperature_topic <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/temperature</span><span class="delimiter">&quot;</span></span>
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+Adafruit_HDC1000 hdc = Adafruit_HDC1000();
+
+<span class="directive">void</span> setup() {
+  Serial.begin(<span class="integer">115200</span>);
+  setup_wifi();
+  client.setServer(mqtt_server, <span class="integer">1883</span>);
+
+  <span class="comment">// Set SDA and SDL ports</span>
+  Wire.begin(<span class="integer">2</span>, <span class="integer">14</span>);
+
+  <span class="comment">// Start sensor</span>
+  <span class="keyword">if</span> (!hdc.begin()) {
+    Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">Couldn't find sensor!</span><span class="delimiter">&quot;</span></span>);
+    <span class="keyword">while</span> (<span class="integer">1</span>);
+  }}
+
+<span class="directive">void</span> setup_wifi() {
+  delay(<span class="integer">10</span>);
+  <span class="comment">// We start by connecting to a WiFi network</span>
+  Serial.println();
+  Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Connecting to </span><span class="delimiter">&quot;</span></span>);
+  Serial.println(wifi_ssid);
+
+  WiFi.begin(wifi_ssid, wifi_password);
+
+  <span class="keyword">while</span> (WiFi.status() != WL_CONNECTED) {
+    delay(<span class="integer">500</span>);
+    Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">.</span><span class="delimiter">&quot;</span></span>);
+  }
+
+  Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>);
+  Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">WiFi connected</span><span class="delimiter">&quot;</span></span>);
+  Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">IP address: </span><span class="delimiter">&quot;</span></span>);
+  Serial.println(WiFi.localIP());
+}
+
+<span class="directive">void</span> reconnect() {
+  <span class="comment">// Loop until we're reconnected</span>
+  <span class="keyword">while</span> (!client.connected()) {
+    Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Attempting MQTT connection...</span><span class="delimiter">&quot;</span></span>);
+    <span class="comment">// Attempt to connect</span>
+    <span class="comment">// If you do not want to use a username and password, change next line to</span>
+    <span class="comment">// if (client.connect(&quot;ESP8266Client&quot;)) {</span>
+    <span class="keyword">if</span> (client.connect(<span class="string"><span class="delimiter">&quot;</span><span class="content">ESP8266Client</span><span class="delimiter">&quot;</span></span>, mqtt_user, mqtt_password)) {
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>);
+    } <span class="keyword">else</span> {
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">failed, rc=</span><span class="delimiter">&quot;</span></span>);
+      Serial.print(client.state());
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content"> try again in 5 seconds</span><span class="delimiter">&quot;</span></span>);
+      <span class="comment">// Wait 5 seconds before retrying</span>
+      delay(<span class="integer">5000</span>);
+    }
+  }
+}
+
+<span class="predefined-type">bool</span> checkBound(<span class="predefined-type">float</span> newValue, <span class="predefined-type">float</span> prevValue, <span class="predefined-type">float</span> maxDiff) {
+  <span class="keyword">return</span> newValue &lt; prevValue - maxDiff || newValue &gt; prevValue + maxDiff;
+}
+
+<span class="predefined-type">long</span> lastMsg = <span class="integer">0</span>;
+<span class="predefined-type">float</span> temp = <span class="float">0</span><span class="float">.0</span>;
+<span class="predefined-type">float</span> hum = <span class="float">0</span><span class="float">.0</span>;
+<span class="predefined-type">float</span> diff = <span class="float">1</span><span class="float">.0</span>;
+
+<span class="directive">void</span> loop() {
+  <span class="keyword">if</span> (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  <span class="predefined-type">long</span> now = millis();
+  <span class="keyword">if</span> (now - lastMsg &gt; <span class="integer">1000</span>) {
+    lastMsg = now;
+
+    <span class="predefined-type">float</span> newTemp = hdc.readTemperature();
+    <span class="predefined-type">float</span> newHum = hdc.readHumidity();
+
+    <span class="keyword">if</span> (checkBound(newTemp, temp, diff)) {
+      temp = newTemp;
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">New temperature:</span><span class="delimiter">&quot;</span></span>);
+      Serial.println(String(temp).c_str());
+      client.publish(temperature_topic, String(temp).c_str(), <span class="predefined-constant">true</span>);
+    }
+
+    <span class="keyword">if</span> (checkBound(newHum, hum, diff)) {
+      hum = newHum;
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">New humidity:</span><span class="delimiter">&quot;</span></span>);
+      Serial.println(String(hum).c_str());
+      client.publish(humidity_topic, String(hum).c_str(), <span class="predefined-constant">true</span>);
+    }
+  }
+}
+</pre></td>
+</tr></table>
+</div>
 
 <h3>Configuring Home Assistant</h3>
 
-<p>The last step is to integrate the sensor values into Home Assistant. This can be done by setting up
-Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.</p>
+<p>The last step is to integrate the sensor values into Home Assistant. This can be done by setting up Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_MQTT_SERVER_HOST</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_username</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">your_password</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Temperature&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;sensor/temperature&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;ºC&quot;</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">sensor 2</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Humidity&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;sensor/humidity&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">qos</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">0</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;%&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+</pre></td>
+  <td class="code"><pre><span class="key">mqtt</span>:
+  <span class="key">broker</span>: <span class="string"><span class="content">YOUR_MQTT_SERVER_HOST</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">your_username</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">your_password</span></span>
 
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Temperature</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/temperature</span><span class="delimiter">&quot;</span></span>
+  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ºC</span><span class="delimiter">&quot;</span></span>
 
-
+<span class="key">sensor 2</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Humidity</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/humidity</span><span class="delimiter">&quot;</span></span>
+  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">%</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -546,7 +503,6 @@ Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -624,7 +580,6 @@ Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.
 
   
 </div>
-
         </aside>
         
       </div>
@@ -635,30 +590,23 @@ Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -674,14 +622,6 @@ Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

@@ -70,11 +70,11 @@
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/03/22/release-notes/</loc>
-    <lastmod>2015-03-22T00:21:00-08:00</lastmod>
+    <lastmod>2015-03-22T01:21:00-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/03/11/release-notes/</loc>
-    <lastmod>2015-03-11T18:36:00-08:00</lastmod>
+    <lastmod>2015-03-11T19:36:00-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/2015/03/08/new-logo/</loc>
@@ -117,37 +117,37 @@
     <lastmod>2014-12-18T23:24:45-08:00</lastmod>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/add_new_platform.html</loc>
+    <loc>https://home-assistant.io/developers/add_new_platform/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/android.html</loc>
+    <loc>https://home-assistant.io/getting-started/android/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/api.html</loc>
+    <loc>https://home-assistant.io/developers/api/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/architecture.html</loc>
+    <loc>https://home-assistant.io/developers/architecture/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/automation.html</loc>
+    <loc>https://home-assistant.io/getting-started/automation/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/autostart.html</loc>
+    <loc>https://home-assistant.io/getting-started/autostart/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/configuration.html</loc>
+    <loc>https://home-assistant.io/getting-started/configuration/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/creating_components.html</loc>
+    <loc>https://home-assistant.io/developers/creating_components/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/credits.html</loc>
+    <loc>https://home-assistant.io/developers/credits/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/devices.html</loc>
+    <loc>https://home-assistant.io/getting-started/devices/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/frontend.html</loc>
+    <loc>https://home-assistant.io/developers/frontend/</loc>
   </url>
   <url>
     <loc>https://home-assistant.io/components/</loc>
@@ -156,40 +156,40 @@
     <loc>https://home-assistant.io/blog/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/blog/archives/</loc>
-  </url>
-  <url>
     <loc>https://home-assistant.io/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/cookbook/</loc>
+    <loc>https://home-assistant.io/blog/archives/</loc>
   </url>
   <url>
     <loc>https://home-assistant.io/help/</loc>
   </url>
   <url>
+    <loc>https://home-assistant.io/cookbook/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/</loc>
+  </url>
+  <url>
     <loc>https://home-assistant.io/getting-started/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/presence-detection.html</loc>
+    <loc>https://home-assistant.io/getting-started/presence-detection/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/python_api.html</loc>
+    <loc>https://home-assistant.io/developers/python_api/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/rest_api.html</loc>
+    <loc>https://home-assistant.io/developers/rest_api/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/troubleshooting-configuration.html</loc>
+    <loc>https://home-assistant.io/getting-started/troubleshooting-configuration/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/getting-started/troubleshooting.html</loc>
+    <loc>https://home-assistant.io/getting-started/troubleshooting/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/developers/website.html</loc>
+    <loc>https://home-assistant.io/developers/website/</loc>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/categories/website/</loc>
@@ -224,418 +224,1079 @@
   <url>
     <loc>https://home-assistant.io/blog/categories/esp8266/</loc>
   </url>
+    <url>
+      <loc>https://home-assistant.io/components/automation/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_sun_light_trigger/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/isy994/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.wink/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.pushbullet/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.pushover/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.wink/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/simple_alarm/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.wink/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/thermostat/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/wink/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/browser/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/discovery/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/downloader/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/keyboard/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sun/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/conversation/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/configurator/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.luci/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.netgear/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.nmap_scanner/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.tomato/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.ubus/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/group/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/history/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.cast/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/scene/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/script/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.sabnzbd/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.systemmonitor/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.wemo/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/thermostat.heat_control/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/thermostat.nest/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/zwave/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/vera/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.hue/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/tellstick/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.forecast/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.openweathermap/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.transmission/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/modbus/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/logbook/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.instapush/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.nma/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.bitcoin/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.time_date/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.xmpp/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.ddwrt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.mysensors/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.mqtt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.mpd/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.transmission/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.swiss_public_transport/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.smtp/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.syslog/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.command_switch/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.limitlessled/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.edimax/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.hikvision/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.file/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.tplink/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.itunes/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.kodi/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/arduino/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.efergy/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/camera.generic/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.rfxtrx/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.slack/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.asuswrt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.tellstick/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.tellstick/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.temper/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.tellstick/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.rpi_gpio/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/mqtt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.squeezebox/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/verisure/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.actiontec/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.thomson/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.rpi_gpio/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.dht/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.modbus/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.modbus/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.mqtt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.aruba/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/ifttt.manything/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/ifttt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.arest/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.denon/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.arest/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.sonos/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.command_sensor/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.arduino/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.arduino/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/alarm_control_panel.mqtt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.glances/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.rest/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.rest/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/camera.foscam/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.mqtt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.owntracks/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.worldclock/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/zone/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.plex/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.blinksticklight/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.rfxtrx/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/rfxtrx/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.rfxtrx/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.snmp/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/notify.telegram/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.geofancy/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/alarm_control_panel.manual/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/alarm_control_panel/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/shell_command/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.cpuspeed/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/thermostat.radiotherm/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.vera/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/sensor.vera/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.vera/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/media_player.firetv/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/introduction/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/light.hyperion/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/cookbook/automation_for_rainy_days/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/cookbook/automation_sun/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/cookbook/basic_example_use_trigger_values/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/cookbook/turn_on_light_for_10_minutes_when_motion_detected/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/cookbook/dim_lights_when_playing_media/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2014/12/18/website-launched/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2014/12/26/home-control-home-automation-and-the-smart-home/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/01/11/bootstrapping-your-setup-with-discovery/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/01/13/nest-in-da-house/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/01/24/release-notes/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/02/08/looking-at-the-past/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/02/24/streaming-updates/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/03/01/home-assistant-migrating-to-yaml/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/03/08/new-logo/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/03/11/release-notes/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/03/22/release-notes/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/04/25/release-notes/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/05/14/release-notes/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/06/10/release-notes/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported/</loc>
+    </url>
   <url>
-    <loc>https://home-assistant.io/blog/posts/2/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/posts/3/</loc>
+    <loc>https://home-assistant.io/components/alarm_control_panel.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.manual.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/alarm_control_panel.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.mqtt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/arduino.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/automation.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/browser.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/camera.foscam.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/camera.generic.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/configurator.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/conversation.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_sun_light_trigger.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.actiontec.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.aruba.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.asuswrt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.ddwrt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.geofancy.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/device_tracker.luci.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/device_tracker.luci.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.mqtt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.netgear.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.nmap_scanner.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.owntracks.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.snmp.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.thomson.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.tomato.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.tplink.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.ubus.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/discovery.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/downloader.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/group.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/history.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/ifttt.manything.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/ifttt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/ifttt.manything.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/introduction.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/isy994.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/keyboard.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.blinksticklight.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/light.hue.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/light.hyperion.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/light.limitlessled.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/light.hue.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/light.hyperion.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/light.limitlessled.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.rfxtrx.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.tellstick.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.vera.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.wink.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/logbook.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.cast.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.denon.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.firetv.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/media_player.itunes.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/media_player.kodi.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/media_player.itunes.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/media_player.kodi.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.mpd.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.plex.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.sonos.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.squeezebox.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/modbus.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/mqtt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.file.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/components/notify.instapush.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/notify.instapush.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.nma.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.pushbullet.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.pushover.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.slack.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.smtp.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.syslog.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.telegram.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.xmpp.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/rfxtrx.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/scene.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/script.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.arduino.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.arest.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.bitcoin.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.command_sensor.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.cpuspeed.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.dht.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.efergy.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.forecast.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.glances.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.modbus.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.mqtt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.mysensors.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.openweathermap.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.rest.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.rfxtrx.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.rpi_gpio.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.sabnzbd.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.swiss_public_transport.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.systemmonitor.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.tellstick.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.temper.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.time_date.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.transmission.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.vera.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.wink.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.worldclock.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/shell_command.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/simple_alarm.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sun.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.arduino.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.arest.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.command_switch.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.edimax.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.hikvision.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.modbus.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.mqtt.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.rest.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.rfxtrx.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.rpi_gpio.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.tellstick.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.transmission.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.vera.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.wemo.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.wink.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/tellstick.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.heat_control.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.nest.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.radiotherm.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/vera.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/verisure.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/wink.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/zone.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/zwave.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/cookbook/automation_for_rainy_days.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/cookbook/automation_sun.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/cookbook/basic_example_use_trigger_values.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/cookbook/dim_lights_when_playing_media.html</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/cookbook/turn_on_light_for_10_minutes_when_motion_detected.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/demo/frontend.html</loc>
-    <lastmod>2015-10-26T23:12:39-07:00</lastmod>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/demo/index.html</loc>
     <lastmod>2015-08-31T01:01:03-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/add_new_platform.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/api.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/architecture.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/creating_components.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/credits.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/frontend.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/python_api.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/rest_api.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/developers/website.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/android.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/automation.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/autostart.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/configuration.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/devices.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/presence-detection.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/troubleshooting-configuration.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/getting-started/troubleshooting.html</loc>
+    <lastmod>2015-10-29T00:05:24-07:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/googlef4f3693c209fe788.html</loc>

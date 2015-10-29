@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Release notes for April 25, 2015</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-04-25T06:57:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> April 25, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> three minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-04-25T06:57:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> April 25, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,161 +124,107 @@
 </header>
 
 
+  <p>It’s been a month since the latest update and a lot has happened again. Here a quick overview of the new things.</p>
 
-
-  <p>It&rsquo;s been a month since the latest update and a lot has happened again. Here a quick overview of the new things.</p>
-
-<p><strong>Line Charts</strong><br>
+<p><strong>Line Charts</strong><br />
 <a href="https://github.com/jamespcole">James</a> has upgraded the history in the frontend to support line graphs. Line graphs will be shown for any entity that has a unit of measurement. The line graphs will also be shown in the more info card of an entity. <a href="/demo/">See the demo for a live example.</a></p>
 
-<p class='img'>
-<img src='/images/screenshots/history-line-graphs.png'>
+<p class="img">
+<img src="/images/screenshots/history-line-graphs.png" />
 </p>
 
+<p><strong>ISY994 hub support</strong><br />
+<img src="/images/supported_brands/universal_devices.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/rmkraus">Ryan</a> has contributed support to integrate the ISY994 hub by Universal Devices. This allows you to integrate your X10/Insteon sensors, switches and lights.</p>
 
-<p><strong>ISY994 hub support</strong><br>
-<img src='/images/supported_brands/universal_devices.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/rmkraus">Ryan</a> has contributed support to integrate the ISY994 hub by Universal Devices. This allows you to integrate your X10/Insteon sensors, switches and lights.</p>
+<p>He has created an extensive getting started guide which can be found on <a href="/components/isy994/">the ISY994 component page</a>.</p>
 
-<p>He has created an extensive getting started guide which can be found on <a href="/components/isy994.html">the ISY994 component page</a>.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">isy994</span>:
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">isy994</span><span class="p-Indicator">:</span>
-</span></code></pre></td></tr></table></div></figure>
+<p><strong>Logbook</strong><br />
+<img src="/images/screenshots/logbook.png" style="margin-left:10px; float: right;" height="100" /> I (Paulus) have added a logbook component. The logbook component provides a different perspective on the history of your house by showing all the changes that happened to your house in chronological order. <a href="/demo/">See the demo for a live example.</a><br />
+<span class="clearfix"></span></p>
 
-
-<p><strong>Logbook</strong><br>
-<img src='/images/screenshots/logbook.png' style='margin-left:10px; float: right;' height="100" />
-I (Paulus) have added a logbook component. The logbook component provides a different perspective on the history of your house by showing all the changes that happened to your house in chronological order. <a href="/demo/">See the demo for a live example.</a>
-<span class='clearfix'></span></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">logbook</span><span class="p-Indicator">:</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">logbook</span>:
+</pre></div>
+</div>
+</div>
 
 <a name="read-more"></a>
 
+<p><strong>Transmission support</strong><br />
+<img src="/images/supported_brands/transmission.png" style="border:none; box-shadow: none; float: right;" height="50" /> James has also contributed support for integrating Transmission into Home Assistant.</p>
 
-<p><strong>Transmission support</strong><br>
-<img src='/images/supported_brands/transmission.png' style='border:none; box-shadow: none; float: right;' height='50' />
-James has also contributed support for integrating Transmission into Home Assistant.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">transmission</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Transmission</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">192.168.1.26</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">9091</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">YOUR_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
+  <span class="key">monitored_variables</span>:
+    - <span class="string"><span class="content">type: 'current_status'</span></span>
+    - <span class="string"><span class="content">type: 'download_speed'</span></span>
+    - <span class="string"><span class="content">type: 'upload_speed'</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.26</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9091</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;current_status&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;download_speed&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;upload_speed&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Modbus support</strong><br>
+<p><strong>Modbus support</strong><br />
 <a href="https://github.com/kixam">Kixam</a> has contributed support for modbus, a serial communication protocol to control PLCs. It currently supports sensors and switches which can be controlled over serial, TCP and UDP connections.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">modbus</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">serial</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">method</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rtu</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/dev/ttyUSB0</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">baudrate</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9600</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">stopbits</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">bytesize</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">parity</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">N</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">modbus</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">slave</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">registers</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">16</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My integer sensor</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">unit</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">C</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">24</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">bits</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">0</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My boolean sensor</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">2</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My other boolean sensor</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">modbus</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">slave</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">registers</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">24</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">bits</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">0</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My switch</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">2</span><span class="p-Indicator">:</span>
-</span><span class='line'>          <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">My other switch</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">modbus</span>:
+  <span class="key">type</span>: <span class="string"><span class="content">serial</span></span>
+  <span class="key">method</span>: <span class="string"><span class="content">rtu</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">/dev/ttyUSB0</span></span>
+  <span class="key">baudrate</span>: <span class="string"><span class="content">9600</span></span>
+  <span class="key">stopbits</span>: <span class="string"><span class="content">1</span></span>
+  <span class="key">bytesize</span>: <span class="string"><span class="content">8</span></span>
+  <span class="key">parity</span>: <span class="string"><span class="content">N</span></span>
 
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">modbus</span></span>
+  <span class="key">slave</span>: <span class="string"><span class="content">1</span></span>
+  <span class="key">registers</span>:
+    <span class="key">16</span>:
+      <span class="key">name</span>: <span class="string"><span class="content">My integer sensor</span><span class="content">
+        unit: C</span></span>
+    <span class="key">24</span>:
+      <span class="key">bits</span>:
+        <span class="key">0</span>:
+          <span class="key">name</span>: <span class="string"><span class="content">My boolean sensor</span></span>
+        <span class="key">2</span>:
+          <span class="key">name</span>: <span class="string"><span class="content">My other boolean sensor</span></span>
 
-
+<span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">modbus</span></span>
+  <span class="key">slave</span>: <span class="string"><span class="content">1</span></span>
+  <span class="key">registers</span>:
+    <span class="key">24</span>:
+      <span class="key">bits</span>:
+        <span class="key">0</span>:
+          <span class="key">name</span>: <span class="string"><span class="content">My switch</span></span>
+        <span class="key">2</span>:
+          <span class="key">name</span>: <span class="string"><span class="content">My other switch</span></span>
+</pre></div>
+</div>
+</div>
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -313,7 +236,6 @@ James has also contributed support for integrating Transmission into Home Assist
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -395,7 +317,6 @@ James has also contributed support for integrating Transmission into Home Assist
 
   
 </div>
-
         </aside>
         
       </div>
@@ -406,30 +327,23 @@ James has also contributed support for integrating Transmission into Home Assist
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -445,14 +359,6 @@ James has also contributed support for integrating Transmission into Home Assist
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

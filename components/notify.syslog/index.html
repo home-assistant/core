@@ -1,0 +1,320 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Syslog - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to add syslog notifications to Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/notify.syslog/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Syslog">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/notify.syslog/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to add syslog notifications to Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Syslog
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>The syslog platform allows you to deliver notifications from Home Assistant to the local syslog.</p>
+
+<p>To enable syslog notifications in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+  <span class="key">name</span>: <span class="string"><span class="content">NOTIFIER_NAME</span></span>
+  <span class="key">platform</span>: <span class="string"><span class="content">syslog</span></span>
+  <span class="key">facility</span>: <span class="string"><span class="content">SYSLOG_FACILITY</span></span>
+  <span class="key">option</span>: <span class="string"><span class="content">SYSLOG_LOG_OPTION</span></span>
+  <span class="key">priority</span>: <span class="string"><span class="content">SYSLOG_PRIORITY</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service <code>notify.NOTIFIER_NAME</code>.</li>
+  <li><strong>facility</strong> (<em>Optional</em>): Facility according to RFC 3164 (http://tools.ietf.org/html/rfc3164). Default is ‘syslog’ if no value is given. Check the table below for entries.</li>
+  <li><strong>option</strong> (<em>Optional</em>): Log option. Default is ‘pid’ if no value is given. Check the table below for entries.</li>
+  <li><strong>priority</strong> (<em>Optional</em>): Priority of the messages. Default is ‘info’ if no value is given. Check the table below for entries.</li>
+</ul>
+
+<p>The table contains values to use in your <code>configuration.yaml</code> file.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">facility</th>
+      <th style="text-align: left">option</th>
+      <th style="text-align: left">priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">kernel</td>
+      <td style="text-align: left">pid</td>
+      <td style="text-align: left">5</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">user</td>
+      <td style="text-align: left">cons</td>
+      <td style="text-align: left">4</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">mail</td>
+      <td style="text-align: left">ndelay</td>
+      <td style="text-align: left">3</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">daemon</td>
+      <td style="text-align: left">nowait</td>
+      <td style="text-align: left">2</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">auth</td>
+      <td style="text-align: left">perror</td>
+      <td style="text-align: left">1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">LPR</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">0</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">news</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">-1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">uucp</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">-2</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">cron</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">syslog</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local0</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local1</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local2</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local3</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local4</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local5</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local6</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">local7</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For details about facility, option, and priority please consult the <a href="http://en.wikipedia.org/wiki/Syslog">wikpedia article</a> and <a href="http://tools.ietf.org/html/rfc3164">RFC 3164</a>.</p>
+
+<p>To use notifications, please see the <a href="/components/automation/">getting started with automation page</a>.</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+  </div>
+    <div class='section'>
+      This is a platform for
+      <a href='/components/notify/'>the Notifications component</a>.
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Notifications</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/notify.file/'>File</a>
+        </li>
+        <li>
+            <a href='/components/notify.instapush/'>Instapush</a>
+        </li>
+        <li>
+            <a href='/components/notify.xmpp/'>Jabber (XMPP)</a>
+        </li>
+        <li>
+            <a href='/components/notify.nma/'>Notify My Android</a>
+        </li>
+        <li>
+            <a href='/components/notify.pushbullet/'>PushBullet</a>
+        </li>
+        <li>
+            <a href='/components/notify.pushover/'>PushOver</a>
+        </li>
+        <li>
+            <a href='/components/notify.smtp/'>SMTP</a>
+        </li>
+        <li>
+            <a href='/components/notify.slack/'>Slack</a>
+        </li>
+        <li>
+            Syslog
+        </li>
+        <li>
+            <a href='/components/notify.telegram/'>Telegram</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,293 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>ISY994 Controller - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to setup the ISY994 controller within Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/isy994/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="ISY994 Controller">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/isy994/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to setup the ISY994 controller within Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      ISY994 Controller
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>The ISY994 is a home automation controller that is capable of controlling<br />
+Insteon and X10 devices. The controller is also capable of controlling Z-Wave<br />
+devices but that functionality has not yet been confirmed with Home Assistant.<br />
+The ISY994 controller is manufactured by <a href="https://www.universal-devices.com/residential/isy994i-series/">Universal<br />
+Devices</a>.</p>
+
+<h3><a class="title-link" name="basic-configuration" href="#basic-configuration"></a> Basic Configuration</h3>
+
+<p>Home Assistant is capable of communicating with any switch, sensor, and light<br />
+that is configured on the controller. Using the programs on the controller,<br />
+custom switches and sensors can also be created.</p>
+
+<p>To integrate your ISY994 controller with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">isy994</span>:
+  <span class="key">host</span>: <span class="string"><span class="content">ISY_ADDRESS</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">ISY_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">ISY_PASSWORD</span></span>
+  <span class="key">sensor_string</span>: <span class="string"><span class="content">SENSOR_STRING</span></span>
+  <span class="key">hidden_string</span>: <span class="string"><span class="content">HIDDEN_STRING</span></span>
+  <span class="key">tls</span>: <span class="string"><span class="content">TLS_VERSION</span></span>
+</pre></div>
+</div>
+</div>
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>host</strong> (<em>Required</em>): The host entry should be in full URL format, eg. http://192.168.10.100:80</li>
+  <li><strong>username</strong> (<em>Required</em>): The username that used to access the ISY interface.</li>
+  <li>
+    <p><strong>password</strong> (<em>Required</em>): The password that used to access the ISY interface.</p>
+  </li>
+  <li><strong>sensor_string</strong> (<em>Optional</em>): This is the string that is used to identify which devices are to be assumed to be sensors instead of lights of switches. By default, this string is ‘Sensor’. If this string is found in the device name, Home Assistant will<br />
+assume it is as a sensor.</li>
+  <li><strong>hidden_string</strong> (<em>Optional</em>): The HIDDEN_STRING is a string that is used to identify which devices are to be<br />
+hidden on Home Assistant’s front page. This string will be stripped from the<br />
+device’s name before being used. By default, this value is ‘{HIDE ME}’.</li>
+  <li><strong>tls</strong> (<em>Optional</em>): This entry should refelct the version of TLS that the ISY controller is using for HTTPS encryption. This value can be either 1.1 or 1.2. If this value is not set, it is assumed to be version 1.1. This is the default for most users.<br />
+ISY994 Pro users may likely be using 1.2. When using HTTPS in the host entry, it is best practice to set this value.</li>
+</ul>
+
+<p>Once the ISY controller is configured, it will automatically import any lights, switches, and sensors it can locate.</p>
+
+<h3><a class="title-link" name="creating-custom-switches" href="#creating-custom-switches"></a> Creating Custom Switches</h3>
+
+<p>Using the Programs tab in the controller’s Administrative Console, custom<br />
+switches can be created that will appear natively inside of Home Assistant.<br />
+Home Assistant will scan two different directories for switch configurations on<br />
+the controller. These directories must exist at the root level. The two<br />
+directories used to make switches are <em>HA.doors</em> and <em>HA.switches</em>. Currently,<br />
+the two receive identical treatment in Home Assistant.</p>
+
+<p>A switch is created by creating a directory under either of these root<br />
+dirctories with the name you would like to call the switch. Two programs are<br />
+then required in this directory: <em>status</em> and <em>actions</em>. The image below shows<br />
+a sample configuration. This sample includes an extra program called <em>auto on</em>.<br />
+This is ignored by Home Assistant.</p>
+
+<p class="img">
+  <img src="/images/isy994/isy994_SwitchExample.png" />
+</p>
+
+<p>The <em>status</em> program in this directory is what indicates if the switch is on or<br />
+off. Only the IF clause is evaluated. If the clause returns True, the switch<br />
+will be on. False will indicate the switch is off.</p>
+
+<p class="img">
+  <img src="/images/isy994/isy994_SwitchStatusExample.png" />
+</p>
+
+<p>The <em>actions</em> program indicates what should be performed to turn the switch on<br />
+or off. The THEN clause gives instructions for turning the switch on while the<br />
+ELSE clause gives instructions for turning the switch off. Below is an example.</p>
+
+<p class="img">
+  <img src="/images/isy994/isy994_SwitchActionsExample.png" />
+</p>
+
+<p>The example program above shows how to control a legacy X10 device from Home<br />
+Assistant using an ISY controller.</p>
+
+<h3><a class="title-link" name="creating-custom-sensors" href="#creating-custom-sensors"></a> Creating Custom Sensors</h3>
+
+<p>Custom sensors can also be created using the Programs tab in the ISY<br />
+controller’s Administrative Console. For programs, three different root level<br />
+folders are evaluated that are all handled a little differently inside of Home<br />
+Assistant.</p>
+
+<ul>
+  <li><em>HA.sensors</em> will have states of Open or Closed</li>
+  <li><em>HA.states</em> will have states of On or Off</li>
+  <li><em>HA.locations</em> will have states of Home or Away</li>
+</ul>
+
+<p>To create a custom sensor, create a program under any of the three root<br />
+directories. The name of the program will be the name of the sensor. An example<br />
+below shows a location indicator setup.</p>
+
+<p class="img">
+  <img src="/images/isy994/isy994_SensorExample.png" />
+</p>
+
+<p>The program created only needs an IF clause. It will be evaluated to either<br />
+Open/On/Home when it returns True and Closed/Off/Away when it returns False. An<br />
+example is below.</p>
+
+<p class="img">
+  <img src="/images/isy994/isy994_SensorStatusExample.png" />
+</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/universal_devices.png' />
+  </div>
+    <div class='section'>
+    <h1 class="title delta">Category Hub</h1>
+    <ul class='divided'>
+        <li>
+            ISY994 Controller
+        </li>
+        <li>
+            <a href='/components/mqtt/'>MQTT</a>
+        </li>
+        <li>
+            <a href='/components/modbus/'>Modbus</a>
+        </li>
+        <li>
+            <a href='/components/rfxtrx/'>RFXtrx</a>
+        </li>
+        <li>
+            <a href='/components/tellstick/'>TellStick</a>
+        </li>
+        <li>
+            <a href='/components/vera/'>Vera</a>
+        </li>
+        <li>
+            <a href='/components/verisure/'>Verisure</a>
+        </li>
+        <li>
+            <a href='/components/wink/'>Wink</a>
+        </li>
+        <li>
+            <a href='/components/zwave/'>Z-Wave</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

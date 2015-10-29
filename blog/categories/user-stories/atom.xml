@@ -4,7 +4,7 @@
   <title><![CDATA[Category: user-stories | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/user-stories/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-27T12:45:27-07:00</updated>
+  <updated>2015-10-29T00:08:34-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -18,127 +18,119 @@
     <link href="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/"/>
     <updated>2015-08-31T14:12:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution</id>
-    <content type="html"><![CDATA[<p>As Home Assistant is gaining more and more users we started to feel the pain from not having a
-proper release mechanism. We had no version numbering and required users to checkout the source
-using Git to get started. On top of that, as the number of devices that we support keeps raising, so
-did the number of dependencies that are used. That&rsquo;s why we decided to change the way we roll. From
-now on:</p>
+    <content type="html"><![CDATA[<p>As Home Assistant is gaining more and more users we started to feel the pain from not having a proper release mechanism. We had no version numbering and required users to checkout the source using Git to get started. On top of that, as the number of devices that we support keeps raising, so did the number of dependencies that are used. That’s why we decided to change the way we roll. From now on:</p>
 
 <ul>
-<li>Each release will have a version number, starting with version 0.7. This was chosen because it
-shows that we have been around for some time but are not considering ourselves to be fully
-stable.</li>
-<li>Each release will be pushed to PyPi. This will be the only supported method of distribution.</li>
-<li>Home Assistant is available after installation as a command-line utility <code>hass</code>.</li>
-<li>The default configuration location has been moved from <code>config</code> in the current working directory
-to <code>~/.homeassistant</code> (<code>%APPDATA%/.homeassistant</code> on Windows).</li>
-<li>Requirements for components and platforms are no longer installed into the current Python
-environment (being virtual or not) but will be installed in <code>&lt;config-dir&gt;/lib</code>.</li>
+  <li>Each release will have a version number, starting with version 0.7. This was chosen because it shows that we have been around for some time but are not considering ourselves to be fully stable.</li>
+  <li>Each release will be pushed to PyPi. This will be the only supported method of distribution.</li>
+  <li>Home Assistant is available after installation as a command-line utility <code>hass</code>.</li>
+  <li>The default configuration location has been moved from <code>config</code> in the current working directory to <code>~/.homeassistant</code> (<code>%APPDATA%/.homeassistant</code> on Windows).</li>
+  <li>Requirements for components and platforms are no longer installed into the current Python environment (being virtual or not) but will be installed in <code>&lt;config-dir&gt;/lib</code>.</li>
 </ul>
 
+<p>A huge shout out to <a href="https://github.com/rmkraus">Ryan Kraus</a> for making this all possible. Please make sure you read <a href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#read-more">the full blog post</a> for details on how to migrate your existing setup.</p>
 
-<p>A huge shout out to <a href="https://github.com/rmkraus">Ryan Kraus</a> for making this all possible. Please
-make sure you read <a href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#read-more">the full blog post</a> for details on how to migrate your existing setup.</p>
+<p>And while Ryan was fixing distribution, I have been hard at work in giving Home Assistant a face lift. We already looked pretty good but lacked proper form of organization for users with many devices. The new UI moves away from a card per entity and has cards per group and domain instead. <a href="/demo/">The demo</a> has been updated so give it a spin.</p>
 
-<p>And while Ryan was fixing distribution, I have been hard at work in giving Home Assistant a face
-lift. We already looked pretty good but lacked proper form of organization for users with many
-devices. The new UI moves away from a card per entity and has cards per group and domain instead.
-<a href="/demo/">The demo</a> has been updated so give it a spin.</p>
-
-<p class='img'>
-  <a href='https://home-assistant.io/demo/'>
-    <img src='https://home-assistant.io/images/screenshots/ui2015.png' />
+<p class="img">
+  <a href="https://home-assistant.io/demo/">
+    <img src="https://home-assistant.io/images/screenshots/ui2015.png" />
   </a>
   Screenshots of the new UI
 </p>
 
-
-
-
 <!--more-->
-
 
 <h3><a class='title-link' name='migration-to-version-07' href='#migration-to-version-07'></a> Migration to version 0.7 </h3>
 
-<p>For this example, let&rsquo;s say we have an old Home Assistant installation in
-<code>/home/paulus/home-assistant</code>.</p>
+<p>For this example, let’s say we have an old Home Assistant installation in <code>/home/paulus/home-assistant</code>.</p>
 
 <p>If you want to migrate your existing configuration to be used as the default configuration:</p>
 
-<pre><code class="bash">cp -r /home/paulus/home-assistant ~/.homeassistant
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ cp -r /home/paulus/home-assistant ~/.homeassistant
+</pre></div>
+</div>
+</div>
 
-<p>It If you want to have the configuration in a different location, for example
-<code>/home/paulus/home-assistant-config</code>, you will have to point Home Assistant at this configuration
-folder when launching:</p>
+<p>It If you want to have the configuration in a different location, for example <code>/home/paulus/home-assistant-config</code>, you will have to point Home Assistant at this configuration folder when launching:</p>
 
-<pre><code class="bash">hass --config /home/paulus/home-assistant-config
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ hass --config /home/paulus/home-assistant-config
+</pre></div>
+</div>
+</div>
 
 <h3><a class='title-link' name='new-platforms' href='#new-platforms'></a> New platforms </h3>
 
 <p>And last, but not least: new platforms!</p>
 
-<p><strong>MQTT Sensors and Switches</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/sfam">@sfam</a> has blessed us with two more MQTT platforms to extend our
-integration with MQTTT: <a href="/components/sensor.mqtt.html">sensor</a> and <a href="/components/switch.mqtt.html">switch</a>. Both platforms require the
-MQTT component to be connected to a broker.</p>
+<p><strong>MQTT Sensors and Switches</strong><br />
+<img src="https://home-assistant.io/images/supported_brands/mqtt.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/sfam">@sfam</a> has blessed us with two more MQTT platforms to extend our integration with MQTTT: <a href="/components/sensor.mqtt/">sensor</a> and <a href="/components/switch.mqtt/">switch</a>. Both platforms require the MQTT component to be connected to a broker.</p>
 
-<pre><code class="yaml"># Example configuration.yml entr
-sensor:
-  platform: mqtt
-  name: "MQTT Sensor"
-  state_topic: "home/bedroom/temperature"
-  unit_of_measurement: "ºC"
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yml entr</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">MQTT Sensor</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home/bedroom/temperature</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ºC</span><span class="delimiter">&quot;</span></span>
 
-switch:
-  platform: mqtt
-  name: "Bedroom Switch"
-  state_topic: "home/bedroom/switch1"
-  command_topic: "home/bedroom/switch1/set"
-  payload_on: "ON"
-  payload_off: "OFF"
-  optimistic: false
-</code></pre>
+<span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Bedroom Switch</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home/bedroom/switch1</span><span class="delimiter">&quot;</span></span>
+  <span class="key">command_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home/bedroom/switch1/set</span><span class="delimiter">&quot;</span></span>
+  <span class="key">payload_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ON</span><span class="delimiter">&quot;</span></span>
+  <span class="key">payload_off</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">OFF</span><span class="delimiter">&quot;</span></span>
+  <span class="key">optimistic</span>: <span class="string"><span class="content">false</span></span>
+</pre></div>
+</div>
+</div>
 
-<p><strong>Actiontec MI424WR Verizon FIOS Wireless router</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/actiontec.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/nkgilley">Nolan</a> has contributed support for Actiontec wireless routers.</p>
+<p><strong>Actiontec MI424WR Verizon FIOS Wireless router</strong><br />
+<img src="https://home-assistant.io/images/supported_brands/actiontec.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/nkgilley">Nolan</a> has contributed support for Actiontec wireless routers.</p>
 
-<pre><code class="yaml"># Example configuration.yaml entry
-device_tracker:
-  platform: actiontec
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">device_tracker</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">actiontec</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">YOUR_ROUTER_IP</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">YOUR_ADMIN_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_ADMIN_PASSWORD</span></span>
+</pre></div>
+</div>
+</div>
 
-<p><strong>DHT temperature and humidty sensors</strong><br>
-<a href="https://github.com/makemeasandwich">@MakeMeASandwich</a> has contributed support for DHT temperature
-and humidity sensors. It allows you to get the current temperature and humidity from a DHT11, DHT22,
-or AM2302 device.</p>
+<p><strong>DHT temperature and humidty sensors</strong><br />
+<a href="https://github.com/makemeasandwich">@MakeMeASandwich</a> has contributed support for DHT temperature and humidity sensors. It allows you to get the current temperature and humidity from a DHT11, DHT22, or AM2302 device.</p>
 
-<pre><code class="yaml"># Example configuration.yaml entry
-sensor:
-  platform: dht
-  sensor: DHT22
-  pin: 23
-  monitored_conditions:
-    - temperature
-    - humidity
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">dht</span></span>
+  <span class="key">sensor</span>: <span class="string"><span class="content">DHT22</span></span>
+  <span class="key">pin</span>: <span class="string"><span class="content">23</span></span>
+  <span class="key">monitored_conditions</span>:
+    - <span class="string"><span class="content">temperature</span></span>
+    - <span class="string"><span class="content">humidity</span></span>
+</pre></div>
+</div>
+</div>
 
-<p><strong>Aruba device tracker</strong><br>
+<p><strong>Aruba device tracker</strong><br />
 <a href="https://github.com/michaelarnauts">Michael Arnauts</a> has contributed support for Aruba wireless routers for presence detection.</p>
 
-<pre><code class="yaml"># Example configuration.yaml entry
-device_tracker:
-  platform: aruba
-  host: YOUR_ACCESS_POINT_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">device_tracker</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">aruba</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">YOUR_ACCESS_POINT_IP</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">YOUR_ADMIN_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_ADMIN_PASSWORD</span></span>
+</pre></div>
+</div>
+</div>
 ]]></content>
   </entry>
   
@@ -151,140 +143,136 @@ device_tracker:
 
 <p>In our house, laundry has been a struggle for quite some time.  Our washer and dryer both lack a buzzer which leads to forgotten laundry, and stinky mess that needs to be rewashed.  I decided to create a solution by monitoring the washer and dryer myself with some cheap electronics.</p>
 
-<p>As an avid user of Home Assistant, I decided it would be the perfect application to manage the UI and notification system.  Now all I needed was a way to monitor the washer and dryer.  I tried using sound sensors but found them unreliable.  I ended up opting for an accelerometer attached to the back of each appliance.  I also added magnetic reed switches on the doors of the washer and dryer to detect if the doors are open or closed.  I connected the accelerometers and reed switches to a <a href="https://lowpowerlab.com/moteino/">Moteino</a>, an arduino clone with an RF transceiver.  The Moteino can perform the logic to figure out which state the appliances are in and wirelessly communicate that data with another Moteino that is connected via serial to my Raspberry Pi.  The Raspberry Pi reads the serial data and repeats it over MQTT for Home Assistant to use.  This is great because I don&rsquo;t have to run Home Assistant on the Raspberry Pi.  I can run it on a faster machine and point the <a href="/components/mqtt.html">MQTT component</a> to my Raspberry Pi.</p>
+<p>As an avid user of Home Assistant, I decided it would be the perfect application to manage the UI and notification system.  Now all I needed was a way to monitor the washer and dryer.  I tried using sound sensors but found them unreliable.  I ended up opting for an accelerometer attached to the back of each appliance.  I also added magnetic reed switches on the doors of the washer and dryer to detect if the doors are open or closed.  I connected the accelerometers and reed switches to a <a href="https://lowpowerlab.com/moteino/">Moteino</a>, an arduino clone with an RF transceiver.  The Moteino can perform the logic to figure out which state the appliances are in and wirelessly communicate that data with another Moteino that is connected via serial to my Raspberry Pi.  The Raspberry Pi reads the serial data and repeats it over MQTT for Home Assistant to use.  This is great because I don’t have to run Home Assistant on the Raspberry Pi.  I can run it on a faster machine and point the <a href="/components/mqtt/">MQTT component</a> to my Raspberry Pi.</p>
 
-<p>After taking some sample data from the accelerometers while each appliance was in operation, I decided to plot the data to help determine the proper thresholds of when the devices were running or off.  I had to do this in order to get precise ranges so the dryer sensor wouldn&rsquo;t get tripped by the washer or vice versa.  In the plot below you can see the acceleration in the x direction for the accelerometer connected to the washing machine.   It&rsquo;s easy to see when the washing machine is in operation here.  I used the same technique for the dryer&rsquo;s accelerometer.</p>
+<p>After taking some sample data from the accelerometers while each appliance was in operation, I decided to plot the data to help determine the proper thresholds of when the devices were running or off.  I had to do this in order to get precise ranges so the dryer sensor wouldn’t get tripped by the washer or vice versa.  In the plot below you can see the acceleration in the x direction for the accelerometer connected to the washing machine.   It’s easy to see when the washing machine is in operation here.  I used the same technique for the dryer’s accelerometer.</p>
 
-<p class='img'>
-  <a href='https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png'>
-    <img src='https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png' />
+<p class="img">
+  <a href="https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png">
+    <img src="https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png" />
   </a>
   Graph showing the accelerometer data
 </p>
 
-
-
-
 <!--more-->
 
+<p>Next it was just a matter of integrating everything with Home Assistant.  I was able to use the <a href="/components/mqtt/">MQTT component</a> to read the washer and dryer states from the Moteino and display it in Home Assistant.</p>
 
-<p>Next it was just a matter of integrating everything with Home Assistant.  I was able to use the <a href="/components/mqtt.html">MQTT component</a> to read the washer and dryer states from the Moteino and display it in Home Assistant.</p>
-
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-08-laundry-automation/screenshot-ha.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-08-laundry-automation/screenshot-ha.png" />
   Status of the dryer and washer in Home Assistant
 </p>
 
+<p>Next I wrote <a href="/components/script/">scripts</a> that are run whenever the washer or dryer completes a load.  This is triggered by the <a href="/components/automation/">automation component</a>.  When the laundry is complete I have the lights in the house turn red and <a href="/components/notify.pushbullet/">notify me via PushBullet</a>.  Once the laundry is taken care of another script runs that sets the lights back to normal.  So far it has been very helpful and very reliable.</p>
 
-<p>Next I wrote <a href="/components/script.html">scripts</a> that are run whenever the washer or dryer completes a load.  This is triggered by the <a href="/components/automation.html">automation component</a>.  When the laundry is complete I have the lights in the house turn red and <a href="/components/notify.pushbullet.html">notify me via PushBullet</a>.  Once the laundry is taken care of another script runs that sets the lights back to normal.  So far it has been very helpful and very reliable.</p>
-
-<p class='img'>
-  <a href='https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg'>
-    <img src='https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg' />
+<p class="img">
+  <a href="https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg">
+    <img src="https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg" />
   </a>
   Top left: reed switch. Bottom left: moteino. Right: Accelerometer.
 </p>
 
-
 <p>Materials used:</p>
 
 <ul>
-<li><a href="https://lowpowerlab.com/moteino/">Moteino</a></li>
-<li><a href="http://www.amazon.com/gp/product/B008BOPN40">2 x Accelerometers</a></li>
-<li><a href="http://www.amazon.com/gp/product/B004PARDRO">2 x Reed switch</a></li>
-<li><a href="https://home-assistant.io/">Home Assistant</a></li>
+  <li><a href="https://lowpowerlab.com/moteino/">Moteino</a></li>
+  <li><a href="http://www.amazon.com/gp/product/B008BOPN40">2 x Accelerometers</a></li>
+  <li><a href="http://www.amazon.com/gp/product/B004PARDRO">2 x Reed switch</a></li>
+  <li><a href="https://home-assistant.io/">Home Assistant</a></li>
 </ul>
-
 
 <p><a href="https://codebender.cc/sketch:144743">Sketch for the Moteino is available here.</a></p>
 
 <p>Home Assistant Configuration:</p>
 
-<pre><code>mqtt:
-  broker: 192.168.1.100
-  port: 1883
-  keepalive: 60
-  qos: 0
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">mqtt</span>:
+  <span class="key">broker</span>: <span class="string"><span class="content">192.168.1.100</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">1883</span></span>
+  <span class="key">keepalive</span>: <span class="string"><span class="content">60</span></span>
+  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
 
-sensor:
-  platform: mqtt
-  name: "Dryer Status"
-  state_topic: "sensor/dryer"
-  unit_of_measurement: ""
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Dryer Status</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/dryer</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>
 
-sensor 2:
-  platform: mqtt
-  name: "Washer Status"
-  state_topic: "sensor/washer"
-  unit_of_measurement: ""
+<span class="key">sensor 2</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Washer Status</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/washer</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>
 
-automation:
-  alias: Dryer complete
+<span class="key">automation</span>:
+  <span class="key">alias</span>: <span class="string"><span class="content">Dryer complete</span></span>
 
-  platform: state
-  state_entity_id: sensor.dryer_status
-  state_from: 'Running'
-  state_to: 'Complete'
+  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sensor.dryer_status</span></span>
+  <span class="key">state_from</span>: <span class="string"><span class="content">'Running'</span></span>
+  <span class="key">state_to</span>: <span class="string"><span class="content">'Complete'</span></span>
 
-  execute_service: script.turn_on
-  service_entity_id: script.dryer_complete
+  <span class="key">execute_service</span>: <span class="string"><span class="content">script.turn_on</span></span>
+  <span class="key">service_entity_id</span>: <span class="string"><span class="content">script.dryer_complete</span></span>
 
-automation 2:
-  alias: Dryer emptied
+<span class="key">automation 2</span>:
+  <span class="key">alias</span>: <span class="string"><span class="content">Dryer emptied</span></span>
 
-  platform: state
-  state_entity_id: sensor.dryer_status
-  state_from: 'Complete'
-  state_to: 'Empty'
+  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sensor.dryer_status</span></span>
+  <span class="key">state_from</span>: <span class="string"><span class="content">'Complete'</span></span>
+  <span class="key">state_to</span>: <span class="string"><span class="content">'Empty'</span></span>
 
-  execute_service: script.turn_on
-  service_entity_id: script.dryer_cleared
+  <span class="key">execute_service</span>: <span class="string"><span class="content">script.turn_on</span></span>
+  <span class="key">service_entity_id</span>: <span class="string"><span class="content">script.dryer_cleared</span></span>
 
-script:
-  dryer_complete:
-    alias: Dryer Complete Script
-    sequence:
-      - alias: Pushbullet Notification
-        execute_service: notify.notify
-        service_data:
-          message: "The dryer has finished its cycle, please empty it!"
-      - alias: Living Room Lights Red
-        execute_service: scene.turn_on
-        service_data:
-          entity_id: scene.red
-      - delay:
-          seconds: 1
-      - alias: Living Room Lights Off
-        execute_service: light.turn_off
-        service_data:
-          entity_id: group.living_room
-      - delay:
-          seconds: 1
-      - alias: Living Room Lights Red
-        execute_service: scene.turn_on
-        service_data:
-          entity_id: scene.red
+<span class="key">script</span>:
+  <span class="key">dryer_complete</span>:
+    <span class="key">alias</span>: <span class="string"><span class="content">Dryer Complete Script</span></span>
+    <span class="key">sequence</span>:
+      - <span class="string"><span class="content">alias: Pushbullet Notification</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">notify.notify</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">message</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">The dryer has finished its cycle, please empty it!</span><span class="delimiter">&quot;</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Red</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.red</span></span>
+      - <span class="string"><span class="content">delay:</span><span class="content">
+          seconds: 1</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Off</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_off</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+      - <span class="string"><span class="content">delay:</span><span class="content">
+          seconds: 1</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Red</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.red</span></span>
 
-  dryer_cleared:
-    alias: Dryer Cleared Script
-    sequence:
-      - alias: Living Room Lights Off
-        execute_service: light.turn_off
-        service_data:
-          entity_id: group.living_room
-      - delay:
-          seconds: 1
-      - alias: Living Room Lights Normal
-        execute_service: scene.turn_on
-        service_data:
-          entity_id: scene.normal
-</code></pre>
+  <span class="key">dryer_cleared</span>:
+    <span class="key">alias</span>: <span class="string"><span class="content">Dryer Cleared Script</span></span>
+    <span class="key">sequence</span>:
+      - <span class="string"><span class="content">alias: Living Room Lights Off</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_off</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+      - <span class="string"><span class="content">delay:</span><span class="content">
+          seconds: 1</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Normal</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.normal</span></span>
+</pre></div>
+</div>
+</div>
 
 <p>Resources used:</p>
 
 <ul>
-<li><a href="http://www.instructables.com/id/Uber-Home-Automation-w-Arduino-Pi/step13/Washer-Dryer-Smartifier-Water-Leak-Sensor/">Inspiration and Help with Arduino code</a></li>
-<li><a href="https://github.com/LowPowerLab/RFM69/">Moteino Code</a></li>
+  <li><a href="http://www.instructables.com/id/Uber-Home-Automation-w-Arduino-Pi/step13/Washer-Dryer-Smartifier-Water-Leak-Sensor/">Inspiration and Help with Arduino code</a></li>
+  <li><a href="https://github.com/LowPowerLab/RFM69/">Moteino Code</a></li>
 </ul>
 
 ]]></content>

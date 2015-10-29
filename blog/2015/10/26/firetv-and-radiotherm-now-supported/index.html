@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">0.7.6: Amazon FireTV, Radiotherm thermostats</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-10-26T18:10:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 26, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-10-26T18:10:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 26, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> two minutes reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,70 +124,54 @@
 </header>
 
 
-
-
-  <p>After two weeks of hard work I&rsquo;m proud to announce the release of Home Assistant v0.7.6. For this release the main
-focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been
-squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by
-<a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="/components/">component section</a> on the website has gotten a
-complete revamp.</p>
+  <p>After two weeks of hard work I’m proud to announce the release of Home Assistant v0.7.6. For this release the main focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by <a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="/components/">component section</a> on the website has gotten a complete revamp.</p>
 
 <h4>Changes</h4>
 
-<p><img src='/images/supported_brands/radiotherm.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px;' height='50' />
-<img src='/images/supported_brands/firetv.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;' height='50' />
-<img src='/images/supported_brands/geofancy.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;' height='50' /></p>
+<p><img src="/images/supported_brands/radiotherm.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="/images/supported_brands/firetv.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;" height="50" /><img src="/images/supported_brands/geofancy.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;" height="50" /></p>
 
 <ul>
-<li>Device tracker: Newer <a href="/components/device_tracker.tplink.html">TP-Link routers</a> now supported (<a href="https://github.com/mKeRix">@mKeRix</a>)</li>
-<li>Alarm Control Panel: <a href="/components/alarm_control_panel.manual.html">Manual alarm</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-<li>Thermostat: <a href="/components/thermostat.radiotherm.html">Radiotherm</a> now supported (<a href="https://github.com/toddeye">@toddeye</a>)</li>
-<li>Media Player: <a href="/components/media_player.firetv.html">Amazon FireTV</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
-<li>Device Tracker: <a href="/components/device_tracker.geofancy.html">Geofancy</a> now supported (<a href="https://github.com/wind-rider">@wind-rider</a>)</li>
-<li>New component <a href="/components/shell_command.html">Shell Command</a> can expose shell commands as services (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li><a href="/components/script.html">Scripts</a> can now be customized using <code>customize</code> key in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Light: <a href="/components/light.hyperion.html">Hyperion</a> now supported (<a href="https://github.com/MakeMeASandwich">@MakeMeASandwich</a>)</li>
-<li>Sensor: <a href="/components/sensor.arest.html">aRest</a> can now also read out pins (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Sensor: <a href="/components/sensor.forecast.html">Forecast.io</a> now supports specifying units in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Thermostat: <a href="/components/thermostat.heat_control.html">Heat Control</a> has been completely rewritten (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Switch: <a href="/components/switch.rest.html">Rest</a> now supported (<a href="https://github.com/bachp">@bachp</a>)</li>
-<li>Media Player: <a href="/components/media_player.plex.html">Plex</a> can now be auto discovered and configure itself (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-<li><a href="/components/downloader.html">Downloader</a> will now treat relative paths based on config dir (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-<li>Line Charts will use interpolation for sensor data and show current and target temperature for thermostats (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Device Tracker: <a href="/components/device_tracker.ubus.html">OpenWRT via ubus</a> now supported (<a href="https://github.com/krzynio">@krzynio</a>)</li>
+  <li>Device tracker: Newer <a href="/components/device_tracker.tplink/">TP-Link routers</a> now supported (<a href="https://github.com/mKeRix">@mKeRix</a>)</li>
+  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.manual/">Manual alarm</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.radiotherm/">Radiotherm</a> now supported (<a href="https://github.com/toddeye">@toddeye</a>)</li>
+  <li>Media Player: <a href="/components/media_player.firetv/">Amazon FireTV</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li>Device Tracker: <a href="/components/device_tracker.geofancy/">Geofancy</a> now supported (<a href="https://github.com/wind-rider">@wind-rider</a>)</li>
+  <li>New component <a href="/components/shell_command/">Shell Command</a> can expose shell commands as services (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li><a href="/components/script/">Scripts</a> can now be customized using <code>customize</code> key in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Light: <a href="/components/light.hyperion/">Hyperion</a> now supported (<a href="https://github.com/MakeMeASandwich">@MakeMeASandwich</a>)</li>
+  <li>Sensor: <a href="/components/sensor.arest/">aRest</a> can now also read out pins (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Sensor: <a href="/components/sensor.forecast/">Forecast.io</a> now supports specifying units in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.heat_control/">Heat Control</a> has been completely rewritten (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Switch: <a href="/components/switch.rest/">Rest</a> now supported (<a href="https://github.com/bachp">@bachp</a>)</li>
+  <li>Media Player: <a href="/components/media_player.plex/">Plex</a> can now be auto discovered and configure itself (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li><a href="/components/downloader/">Downloader</a> will now treat relative paths based on config dir (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Line Charts will use interpolation for sensor data and show current and target temperature for thermostats (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Device Tracker: <a href="/components/device_tracker.ubus/">OpenWRT via ubus</a> now supported (<a href="https://github.com/krzynio">@krzynio</a>)</li>
 </ul>
 
-
 <a name="read-more"></a>
-
 
 <h4>Breaking changes</h4>
 
 <p>As part of this release we did some cleanup which introduced backwards incompatible changes:</p>
 
-<p><strong>Heat Control thermostat no longer includes scheduling features.</strong><br>
-This feature has been removed completely. Use the <a href="/components/automation.html">automation component</a>
-instead to control target temperature.</p>
+<p><strong>Heat Control thermostat no longer includes scheduling features.</strong><br />
+This feature has been removed completely. Use the <a href="/components/automation/">automation component</a> instead to control target temperature.</p>
 
-<p><strong>Config changed for calling a service from a script.</strong><br>
-<code>execute_service:</code> has been replaced with <code>service:</code>. See <a href="/components/script.html">component page</a>
-for example. The old method will continue working for some time.</p>
+<p><strong>Config changed for calling a service from a script.</strong><br />
+<code>execute_service:</code> has been replaced with <code>service:</code>. See <a href="/components/script/">component page</a> for example. The old method will continue working for some time.</p>
 
-<p><strong>Scenes can no longer be turned off.</strong><br>
-It is no longer possible to turn a scene off after it has been activated. The way it worked was unpredictable
-and causes a lot of confusion.</p>
+<p><strong>Scenes can no longer be turned off.</strong><br />
+It is no longer possible to turn a scene off after it has been activated. The way it worked was unpredictable and causes a lot of confusion.</p>
 
-<p><strong>Downloader treats relative paths now relative to the config dir instead of the current working dir.</strong><br>
+<p><strong>Downloader treats relative paths now relative to the config dir instead of the current working dir.</strong><br />
 This makes more sense as most people run Home Assistant as a daemon</p>
-
-
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -222,7 +183,6 @@ This makes more sense as most people run Home Assistant as a daemon</p>
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -300,7 +260,6 @@ This makes more sense as most people run Home Assistant as a daemon</p>
 
   
 </div>
-
         </aside>
         
       </div>
@@ -311,30 +270,23 @@ This makes more sense as most people run Home Assistant as a daemon</p>
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -350,14 +302,6 @@ This makes more sense as most people run Home Assistant as a daemon</p>
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

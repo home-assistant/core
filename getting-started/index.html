@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -108,102 +103,96 @@
   <hr class="divider">
   
 
-  <p><div class='install-instructions-container'>
-<input name='install-instructions' type='radio' id='normal-install' checked>
-<input name='install-instructions' type='radio' id='raspberry-install'>
-<input name='install-instructions' type='radio' id='docker-install'>
-<label class='menu-selector normal' for='normal-install'>Install on local machine</label>
-<label class='menu-selector raspberry' for='raspberry-install'>Install on a Raspberry Pi</label>
-<label class='menu-selector docker' for='docker-install'>Install using Docker</label></p>
+  <div class="install-instructions-container">
+<input name="install-instructions" type="radio" id="normal-install" checked="" />
+<input name="install-instructions" type="radio" id="raspberry-install" />
+<input name="install-instructions" type="radio" id="docker-install" />
+<label class="menu-selector normal" for="normal-install">Install on local machine</label>
+<label class="menu-selector raspberry" for="raspberry-install">Install on a Raspberry Pi</label>
+<label class="menu-selector docker" for="docker-install">Install using Docker</label>
 
-<p><div class='install-instructions normal'>
-Installing and running Home Assistant on your local machine is easy. Make sure you have <a href='https://www.python.org/downloads/' target="_blank">Python 3.4</a> installed and execute the following code in a console:</p>
+<div class="install-instructions normal">
+    <p>Installing and running Home Assistant on your local machine is easy. Make sure you have <a href="https://www.python.org/downloads/">Python 3.4</a> installed and execute the following code in a console:</p>
 
-<p><p>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install homeassistant
-</span><span class='line'>hass <span class="se">--</span>open-ui
-</span></code></pre></td></tr></table></div></figure>
+    <div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ pip3 install homeassistant
+$ hass --open-ui
+</pre></div>
+</div>
+    </div>
+
+    <p>Running these commands will:</p>
+
+    <ul>
+      <li>Install Home Assistant</li>
+      <li>Launch Home Assistant and serve web interface on <a href="http://localhost:8123">http://localhost:8123</a></li>
+    </ul>
+
+  </div> <!-- INSTALL-INSTRUCTIONS NORMAL -->
+
+
+<div class="install-instructions docker">
+
+    <p>Installation with Docker is straightforward. Adjust the following command so that <code>/path/to/your/config/</code> points at the folder where you want to store your config and run it:</p>
+
+    <div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ docker run -d --name=&quot;home-assistant&quot; -v /path/to/your/config:/config -v /etc/localtime:/etc/localtime:ro --net=host balloob/home-assistant
+</pre></div>
+</div>
+    </div>
+
+    <p>This will launch Home Assistant and serve its web interface from port 8123 on your Docker host.</p>
+
+    <p class="note">
+When using boot2docker on OS X you are unable to map the local time to your Docker container. Replace <code>-v /etc/localtime:/etc/localtime:ro</code> with <code>-e "TZ=America/Los_Angeles"</code> (replacing America/Los_Angeles with <a href="http://en.wikipedia.org/wiki/List_of_tz_database_time_zones">your timezone</a>)
 </p>
-<p>Running these commands will:</p>
-<ol>
-<li>Install Home Assistant</li>
-<li>Launch Home Assistant and serve web interface on
-<a href='http://localhost:8123' target="_blank"><a href="http://localhost:8123">http://localhost:8123</a></a></li>
-</ol>
-</div> <!-- INSTALL-INSTRUCTIONS NORMAL --></p>
 
-<p><div class='install-instructions docker'></p>
-
-<p>Installation with Docker is straightforward. Adjust the following command so that <code>/path/to/your/config/</code>
-points at the folder where you want to store your config and run it:</p>
-
-<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>docker run -d <span class="se">--</span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;home-assistant&quot;</span> -v /path/to/your/config:/config -v /etc/localtime:/etc/localtime:ro <span class="se">--</span><span class="nv">net</span><span class="o">=</span>host balloob/home-assistant
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>This will launch Home Assistant and serve its web interface from port 8123 on your Docker host.</p>
-
-<p><p class='note'>
-When using boot2docker on OS X you are unable to map the local time to your Docker container. Replace
-<code>-v /etc/localtime:/etc/localtime:ro</code> with <code>-e &ldquo;TZ=America/Los_Angeles&rdquo;</code>
-(replacing America/Los_Angeles with <a href='http://en.wikipedia.org/wiki/List_of_tz_database_time_zones' target="_blank">your timezone</a>)
-</p></p>
-
-<p></div> <!-- INSTALL-INSTRUCTIONS DOCKER --></p>
-
-<p><div class='install-instructions raspberry'></p>
-
-<p>Home Assistant requires the Raspberry Pi to run <a href='https://www.raspberrypi.org/downloads/raspbian/'>Raspbian Jessie</a>.
-This version has been released on September 24, 2015 and comes by default with Python 3.4 which is required for Home Assistant.</p>
-
-<p>Execute the following code in a console:</p>
-
-<p><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install homeassistant
-</span><span class='line'>hass <span class="se">--</span>open-ui
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Running these commands will:</p>
-
-<ul>
-<li>Install Home Assistant</li>
-<li>Launch Home Assistant and serve web interface on <a href="http://localhost:8123">http://localhost:8123</a></li>
-</ul>
+  </div> <!-- INSTALL-INSTRUCTIONS DOCKER -->
 
 
-<p></div> <!-- INSTALL-INSTRUCTIONS RASPBERRY --></p>
+<div class="install-instructions raspberry">
 
-<h3><a class='title-link' name='troubleshooting' href='#troubleshooting'></a> Troubleshooting</h3>
+    <p>Home Assistant requires the Raspberry Pi to run <a href="https://www.raspberrypi.org/downloads/raspbian/">Raspbian Jessie</a>. This version has been released on September 24, 2015 and comes by default with Python 3.4 which is required for Home Assistant.</p>
 
-<p>If you run into any issues, please see <a href="/getting-started/troubleshooting.html">the troubleshooting page</a>. It contains solutions to many of the more commonly encountered issues.</p>
+    <p>Execute the following code in a console:</p>
+
+    <div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ pip3 install homeassistant
+$ hass --open-ui
+</pre></div>
+</div>
+    </div>
+
+    <p>Running these commands will:</p>
+
+    <ul>
+      <li>Install Home Assistant</li>
+      <li>Launch Home Assistant and serve web interface on <a href="http://localhost:8123">http://localhost:8123</a></li>
+    </ul>
+
+  </div> <!-- INSTALL-INSTRUCTIONS RASPBERRY -->
+</div>
+
+<h3><a class="title-link" name="troubleshooting" href="#troubleshooting"></a> Troubleshooting</h3>
+
+<p>If you run into any issues, please see <a href="/getting-started/troubleshooting/">the troubleshooting page</a>. It contains solutions to many of the more commonly encountered issues.</p>
 
 <p>For additional help, in addition to this site, there are three sources:</p>
 
 <ul>
-<li><a href="https://gitter.im/balloob/home-assistant">Gitter Chatroom</a> for general Home Assistant discussions and questions.</li>
-<li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Development Mailing List</a> for development related questions and discussing new features.</li>
-<li><a href="https://github.com/balloob/home-assistant">GitHub Page</a> for issue reporting.</li>
+  <li><a href="https://gitter.im/balloob/home-assistant">Gitter Chatroom</a> for general Home Assistant discussions and questions.</li>
+  <li><a href="https://groups.google.com/forum/#!forum/home-assistant-dev">Development Mailing List</a> for development related questions and discussing new features.</li>
+  <li><a href="https://github.com/balloob/home-assistant/issues">GitHub Page</a> for issue reporting.</li>
 </ul>
 
+<h3>What’s next</h3>
+<p>If you want to have Home Assistant start on boot, <a href="/getting-started/autostart/">autostart instructions</a> can be found here.</p>
 
-<h3><a class='title-link' name='whats-next' href='#whats-next'></a> What&rsquo;s next</h3>
+<p>To see what Home Assistant can do, launch demo mode: <code>hass --demo-mode</code></p>
 
-<p>If you want to have Home Assistant start on boot, <a href="/getting-started/autostart.html">autostart instructions</a> can be found here.</p>
+<p>To update Home Assistant to the latest release: <code>pip3 install --upgrade homeassistant</code></p>
 
-<p>To see what Home Assistant can do, launch demo mode:
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>hass <span class="se">--</span>demo-mode
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>To update Home Assistant to the latest release:
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>pip3 install <span class="se">--</span>upgrade homeassistant
-</span></code></pre></td></tr></table></div></figure></p>
-
-<h3><a href="/getting-started/configuration.html">Next step: Configuring Home Assistant &raquo;</a></h3>
+<h3><a href="/getting-started/configuration/">Next step: Configuring Home Assistant »</a></h3>
 
 
 </article>
@@ -220,32 +209,23 @@ This version has been released on September 24, 2015 and comes by default with P
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
-
-
 
   </body>
 </html>

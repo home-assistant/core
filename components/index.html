@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body  id="components-page">
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -120,536 +115,68 @@ Support for these components is provided by the Home Assistant community.
   <a href='#featured' class="btn">Featured</a>
 
   
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      
-        <a href='#alarm' class="btn">Alarm</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#automation' class="btn">Automation</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#camera' class="btn">Camera</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#diy' class="btn">DIY</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#history' class="btn">History</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#hub' class="btn">Hub</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#light' class="btn">Light</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#media-player' class="btn">Media Player</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#notifications' class="btn">Notifications</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#organization' class="btn">Organization</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      
-        <a href='#presence-detection' class="btn">Presence Detection</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#sensor' class="btn">Sensor</a>
-        
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
     
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-    
-  
-    
-      
-        <a href='#switch' class="btn">Switch</a>
-        
-      
-    
-  
-    
-      
-    
   
     
-      
+      <a href='#alarm' class="btn">Alarm</a>
     
   
     
-      
+      <a href='#automation' class="btn">Automation</a>
     
   
     
-      
+      <a href='#camera' class="btn">Camera</a>
     
   
     
-      
+      <a href='#diy' class="btn">DIY</a>
     
   
     
-      
+      <a href='#history' class="btn">History</a>
     
   
     
-      
+      <a href='#hub' class="btn">Hub</a>
     
   
     
-      
+      <a href='#light' class="btn">Light</a>
     
   
     
-      
+      <a href='#media-player' class="btn">Media Player</a>
     
   
     
-      
+      <a href='#notifications' class="btn">Notifications</a>
     
   
     
-      
+      <a href='#organization' class="btn">Organization</a>
     
   
-    
-      
-        <a href='#thermostat' class="btn">Thermostat</a>
-        
-      
     
   
     
-      
+      <a href='#presence-detection' class="btn">Presence Detection</a>
     
   
     
-      
+      <a href='#sensor' class="btn">Sensor</a>
     
   
     
-      
-        <a href='#weather' class="btn">Weather</a>
-        
-      
+      <a href='#switch' class="btn">Switch</a>
     
   
     
-      
+      <a href='#thermostat' class="btn">Thermostat</a>
     
   
     
-      
+      <a href='#weather' class="btn">Weather</a>
     
   
 
@@ -659,7 +186,7 @@ Support for these components is provided by the Home Assistant community.
 <div id="componentContainer">
   
     
-      <a href='/components/device_tracker.asuswrt.html' class='presence-detection'>
+      <a href='/components/device_tracker.asuswrt/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/asus.png'>
@@ -671,7 +198,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.actiontec.html' class='presence-detection'>
+      <a href='/components/device_tracker.actiontec/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/actiontec.png'>
@@ -685,7 +212,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/arduino.html' class='diy featured'>
+      <a href='/components/arduino/' class='diy featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/arduino.png'>
@@ -697,7 +224,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.arduino.html' class='diy'>
+      <a href='/components/sensor.arduino/' class='diy'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/arduino.png'>
@@ -709,7 +236,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.arduino.html' class='diy'>
+      <a href='/components/switch.arduino/' class='diy'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/arduino.png'>
@@ -721,7 +248,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.aruba.html' class='presence-detection'>
+      <a href='/components/device_tracker.aruba/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/aruba.png'>
@@ -733,7 +260,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/automation.html' class='automation'>
+      <a href='/components/automation/' class='automation'>
         <div class='img-container'>
           
         </div>
@@ -743,7 +270,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.wemo.html' class='switch'>
+      <a href='/components/switch.wemo/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/belkin_wemo.png'>
@@ -755,7 +282,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.bitcoin.html' class='sensor'>
+      <a href='/components/sensor.bitcoin/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/bitcoin.png'>
@@ -767,7 +294,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.blinksticklight.html' class='light'>
+      <a href='/components/light.blinksticklight/' class='light'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/blinkstick.png'>
@@ -779,7 +306,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/browser.html' class='other'>
+      <a href='/components/browser/' class='other'>
         <div class='img-container'>
           
         </div>
@@ -789,7 +316,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.cpuspeed.html' class='sensor'>
+      <a href='/components/sensor.cpuspeed/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -799,7 +326,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.command_sensor.html' class='sensor'>
+      <a href='/components/sensor.command_sensor/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -809,7 +336,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.command_switch.html' class='switch'>
+      <a href='/components/switch.command_switch/' class='switch'>
         <div class='img-container'>
           
         </div>
@@ -819,7 +346,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/configurator.html' class='other'>
+      <a href='/components/configurator/' class='other'>
         <div class='img-container'>
           
         </div>
@@ -829,7 +356,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/conversation.html' class='other'>
+      <a href='/components/conversation/' class='other'>
         <div class='img-container'>
           
         </div>
@@ -839,7 +366,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.ddwrt.html' class='presence-detection'>
+      <a href='/components/device_tracker.ddwrt/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/ddwrt.png'>
@@ -851,7 +378,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.dht.html' class='diy'>
+      <a href='/components/sensor.dht/' class='diy'>
         <div class='img-container'>
           
         </div>
@@ -861,7 +388,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.denon.html' class='media-player'>
+      <a href='/components/media_player.denon/' class='media-player'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/denon.png'>
@@ -875,7 +402,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/discovery.html' class='other'>
+      <a href='/components/discovery/' class='other'>
         <div class='img-container'>
           
         </div>
@@ -885,7 +412,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/downloader.html' class='other'>
+      <a href='/components/downloader/' class='other'>
         <div class='img-container'>
           
         </div>
@@ -895,7 +422,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.edimax.html' class='switch'>
+      <a href='/components/switch.edimax/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/edimax.png'>
@@ -907,7 +434,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.efergy.html' class='sensor'>
+      <a href='/components/sensor.efergy/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/efergy.png'>
@@ -919,7 +446,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.file.html' class='notifications'>
+      <a href='/components/notify.file/' class='notifications'>
         <div class='img-container'>
           
         </div>
@@ -929,7 +456,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.firetv.html' class='media-player'>
+      <a href='/components/media_player.firetv/' class='media-player'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/firetv.png'>
@@ -941,7 +468,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.forecast.html' class='weather featured'>
+      <a href='/components/sensor.forecast/' class='weather featured'>
         <div class='img-container'>
           
         </div>
@@ -951,7 +478,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/camera.foscam.html' class='camera'>
+      <a href='/components/camera.foscam/' class='camera'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/foscam.png'>
@@ -963,7 +490,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/camera.generic.html' class='camera'>
+      <a href='/components/camera.generic/' class='camera'>
         <div class='img-container'>
           
         </div>
@@ -973,7 +500,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.geofancy.html' class='presence-detection'>
+      <a href='/components/device_tracker.geofancy/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/geofancy.png'>
@@ -985,7 +512,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.glances.html' class='sensor'>
+      <a href='/components/sensor.glances/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/glances.png'>
@@ -997,7 +524,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.cast.html' class='media-player featured'>
+      <a href='/components/media_player.cast/' class='media-player featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/google_cast.png'>
@@ -1009,7 +536,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/group.html' class='organization'>
+      <a href='/components/group/' class='organization'>
         <div class='img-container'>
           
         </div>
@@ -1019,7 +546,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/thermostat.heat_control.html' class='thermostat'>
+      <a href='/components/thermostat.heat_control/' class='thermostat'>
         <div class='img-container'>
           
         </div>
@@ -1029,7 +556,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.hikvision.html' class='camera'>
+      <a href='/components/switch.hikvision/' class='camera'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/hikvision.png'>
@@ -1041,7 +568,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/history.html' class='history'>
+      <a href='/components/history/' class='history'>
         <div class='img-container'>
           
         </div>
@@ -1051,7 +578,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.hyperion.html' class='light'>
+      <a href='/components/light.hyperion/' class='light'>
         <div class='img-container'>
           
         </div>
@@ -1061,7 +588,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/ifttt.html' class='automation featured'>
+      <a href='/components/ifttt/' class='automation featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/ifttt.png'>
@@ -1073,7 +600,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/isy994.html' class='hub'>
+      <a href='/components/isy994/' class='hub'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/universal_devices.png'>
@@ -1085,7 +612,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.instapush.html' class='notifications'>
+      <a href='/components/notify.instapush/' class='notifications'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/instapush.png'>
@@ -1097,7 +624,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/introduction.html' class='other'>
+      <a href='/components/introduction/' class='other'>
         <div class='img-container'>
           
         </div>
@@ -1107,7 +634,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/simple_alarm.html' class='alarm'>
+      <a href='/components/simple_alarm/' class='alarm'>
         <div class='img-container'>
           
         </div>
@@ -1117,7 +644,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.xmpp.html' class='notifications'>
+      <a href='/components/notify.xmpp/' class='notifications'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/xmpp.png'>
@@ -1129,7 +656,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/keyboard.html' class='automation'>
+      <a href='/components/keyboard/' class='automation'>
         <div class='img-container'>
           
         </div>
@@ -1139,7 +666,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.kodi.html' class='media-player featured'>
+      <a href='/components/media_player.kodi/' class='media-player featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/kodi.png'>
@@ -1153,7 +680,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.limitlessled.html' class='light'>
+      <a href='/components/light.limitlessled/' class='light'>
         <div class='img-container'>
           
         </div>
@@ -1163,7 +690,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/logbook.html' class='history'>
+      <a href='/components/logbook/' class='history'>
         <div class='img-container'>
           
         </div>
@@ -1173,7 +700,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.squeezebox.html' class='media-player'>
+      <a href='/components/media_player.squeezebox/' class='media-player'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/logitech.png'>
@@ -1185,7 +712,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/mqtt.html' class='hub featured'>
+      <a href='/components/mqtt/' class='hub featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/mqtt.png'>
@@ -1197,7 +724,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/alarm_control_panel.mqtt.html' class='alarm'>
+      <a href='/components/alarm_control_panel.mqtt/' class='alarm'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/mqtt.png'>
@@ -1209,7 +736,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.mqtt.html' class='presence-detection'>
+      <a href='/components/device_tracker.mqtt/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/mqtt.png'>
@@ -1221,7 +748,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.mqtt.html' class='sensor'>
+      <a href='/components/sensor.mqtt/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/mqtt.png'>
@@ -1233,7 +760,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.mqtt.html' class='switch'>
+      <a href='/components/switch.mqtt/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/mqtt.png'>
@@ -1245,7 +772,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/alarm_control_panel.manual.html' class='alarm'>
+      <a href='/components/alarm_control_panel.manual/' class='alarm'>
         <div class='img-container'>
           
         </div>
@@ -1255,7 +782,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/ifttt.manything.html' class='camera'>
+      <a href='/components/ifttt.manything/' class='camera'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/manything.png'>
@@ -1269,7 +796,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/modbus.html' class='hub'>
+      <a href='/components/modbus/' class='hub'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/modbus.png'>
@@ -1281,7 +808,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.modbus.html' class='sensor'>
+      <a href='/components/sensor.modbus/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/modbus.png'>
@@ -1293,7 +820,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.modbus.html' class='switch'>
+      <a href='/components/switch.modbus/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/modbus.png'>
@@ -1305,7 +832,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.mpd.html' class='media-player'>
+      <a href='/components/media_player.mpd/' class='media-player'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/mpd.png'>
@@ -1317,7 +844,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.mysensors.html' class='sensor featured'>
+      <a href='/components/sensor.mysensors/' class='sensor featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/mysensors.png'>
@@ -1329,7 +856,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/thermostat.nest.html' class='thermostat featured'>
+      <a href='/components/thermostat.nest/' class='thermostat featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/nest_thermostat.png'>
@@ -1341,7 +868,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.netgear.html' class='presence-detection'>
+      <a href='/components/device_tracker.netgear/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/netgear.png'>
@@ -1353,7 +880,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.nmap_scanner.html' class='presence-detection featured'>
+      <a href='/components/device_tracker.nmap_scanner/' class='presence-detection featured'>
         <div class='img-container'>
           
         </div>
@@ -1365,7 +892,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.nma.html' class='notifications'>
+      <a href='/components/notify.nma/' class='notifications'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/nma.png'>
@@ -1377,7 +904,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.luci.html' class='presence-detection'>
+      <a href='/components/device_tracker.luci/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/openwrt.png'>
@@ -1389,7 +916,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.ubus.html' class='presence-detection'>
+      <a href='/components/device_tracker.ubus/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/openwrt.png'>
@@ -1401,7 +928,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.openweathermap.html' class='weather'>
+      <a href='/components/sensor.openweathermap/' class='weather'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/openweathermap.png'>
@@ -1413,7 +940,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.owntracks.html' class='presence-detection featured'>
+      <a href='/components/device_tracker.owntracks/' class='presence-detection featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/owntracks.png'>
@@ -1425,7 +952,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.hue.html' class='light featured'>
+      <a href='/components/light.hue/' class='light featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/philips_hue.png'>
@@ -1437,7 +964,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.plex.html' class='media-player featured'>
+      <a href='/components/media_player.plex/' class='media-player featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/plex.png'>
@@ -1449,7 +976,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_sun_light_trigger.html' class='automation'>
+      <a href='/components/device_sun_light_trigger/' class='automation'>
         <div class='img-container'>
           
         </div>
@@ -1459,7 +986,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.pushbullet.html' class='notifications featured'>
+      <a href='/components/notify.pushbullet/' class='notifications featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/pushbullet.png'>
@@ -1471,7 +998,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.pushover.html' class='notifications'>
+      <a href='/components/notify.pushover/' class='notifications'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/pushover.png'>
@@ -1483,7 +1010,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.rest.html' class='sensor'>
+      <a href='/components/sensor.rest/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -1493,7 +1020,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.rest.html' class='switch'>
+      <a href='/components/switch.rest/' class='switch'>
         <div class='img-container'>
           
         </div>
@@ -1503,7 +1030,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/rfxtrx.html' class='hub'>
+      <a href='/components/rfxtrx/' class='hub'>
         <div class='img-container'>
           
         </div>
@@ -1513,7 +1040,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.rfxtrx.html' class='light'>
+      <a href='/components/light.rfxtrx/' class='light'>
         <div class='img-container'>
           
         </div>
@@ -1523,7 +1050,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.rfxtrx.html' class='sensor'>
+      <a href='/components/sensor.rfxtrx/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -1533,7 +1060,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.rfxtrx.html' class='switch'>
+      <a href='/components/switch.rfxtrx/' class='switch'>
         <div class='img-container'>
           
         </div>
@@ -1543,7 +1070,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/thermostat.radiotherm.html' class='thermostat'>
+      <a href='/components/thermostat.radiotherm/' class='thermostat'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/radiotherm.png'>
@@ -1555,7 +1082,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.rpi_gpio.html' class='diy'>
+      <a href='/components/sensor.rpi_gpio/' class='diy'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/raspberry-pi.png'>
@@ -1567,7 +1094,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.rpi_gpio.html' class='diy'>
+      <a href='/components/switch.rpi_gpio/' class='diy'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/raspberry-pi.png'>
@@ -1579,7 +1106,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.sabnzbd.html' class='sensor'>
+      <a href='/components/sensor.sabnzbd/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/sabnzbd.png'>
@@ -1591,7 +1118,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.smtp.html' class='notifications'>
+      <a href='/components/notify.smtp/' class='notifications'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/smtp.png'>
@@ -1603,7 +1130,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.snmp.html' class='presence-detection'>
+      <a href='/components/device_tracker.snmp/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/network-snmp.png'>
@@ -1615,7 +1142,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/scene.html' class='organization'>
+      <a href='/components/scene/' class='organization'>
         <div class='img-container'>
           
         </div>
@@ -1625,7 +1152,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/script.html' class='automation'>
+      <a href='/components/script/' class='automation'>
         <div class='img-container'>
           
         </div>
@@ -1637,7 +1164,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/shell_command.html' class='automation'>
+      <a href='/components/shell_command/' class='automation'>
         <div class='img-container'>
           
         </div>
@@ -1647,7 +1174,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.slack.html' class='notifications'>
+      <a href='/components/notify.slack/' class='notifications'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/slack.png'>
@@ -1659,7 +1186,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.sonos.html' class='media-player featured'>
+      <a href='/components/media_player.sonos/' class='media-player featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/sonos.png'>
@@ -1671,7 +1198,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sun.html' class='weather'>
+      <a href='/components/sun/' class='weather'>
         <div class='img-container'>
           
         </div>
@@ -1681,7 +1208,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.swiss_public_transport.html' class='sensor'>
+      <a href='/components/sensor.swiss_public_transport/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -1693,7 +1220,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.syslog.html' class='notifications'>
+      <a href='/components/notify.syslog/' class='notifications'>
         <div class='img-container'>
           
         </div>
@@ -1703,7 +1230,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.systemmonitor.html' class='sensor'>
+      <a href='/components/sensor.systemmonitor/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -1713,7 +1240,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.temper.html' class='sensor'>
+      <a href='/components/sensor.temper/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -1723,7 +1250,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.tplink.html' class='presence-detection'>
+      <a href='/components/device_tracker.tplink/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/tp-link.png'>
@@ -1735,7 +1262,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/notify.telegram.html' class='notifications'>
+      <a href='/components/notify.telegram/' class='notifications'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/telegram.png'>
@@ -1747,7 +1274,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/tellstick.html' class='hub'>
+      <a href='/components/tellstick/' class='hub'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/telldus_tellstick.png'>
@@ -1759,7 +1286,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.tellstick.html' class='light'>
+      <a href='/components/light.tellstick/' class='light'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/telldus_tellstick.png'>
@@ -1771,7 +1298,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.tellstick.html' class='sensor'>
+      <a href='/components/sensor.tellstick/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/telldus_tellstick.png'>
@@ -1783,7 +1310,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.tellstick.html' class='switch'>
+      <a href='/components/switch.tellstick/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/telldus_tellstick.png'>
@@ -1797,7 +1324,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.thomson.html' class='presence-detection'>
+      <a href='/components/device_tracker.thomson/' class='presence-detection'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/technicolor.png'>
@@ -1809,7 +1336,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.time_date.html' class='sensor'>
+      <a href='/components/sensor.time_date/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -1819,7 +1346,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/device_tracker.tomato.html' class='presence-detection'>
+      <a href='/components/device_tracker.tomato/' class='presence-detection'>
         <div class='img-container'>
           
         </div>
@@ -1829,7 +1356,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.transmission.html' class='sensor'>
+      <a href='/components/sensor.transmission/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/transmission.png'>
@@ -1841,7 +1368,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.transmission.html' class='switch'>
+      <a href='/components/switch.transmission/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/transmission.png'>
@@ -1853,7 +1380,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/vera.html' class='hub'>
+      <a href='/components/vera/' class='hub'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/vera.png'>
@@ -1865,7 +1392,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.vera.html' class='light'>
+      <a href='/components/light.vera/' class='light'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/vera.png'>
@@ -1877,7 +1404,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.vera.html' class='sensor'>
+      <a href='/components/sensor.vera/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/vera.png'>
@@ -1889,7 +1416,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.vera.html' class='switch'>
+      <a href='/components/switch.vera/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/vera.png'>
@@ -1901,7 +1428,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/verisure.html' class='hub'>
+      <a href='/components/verisure/' class='hub'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/verisure.png'>
@@ -1913,7 +1440,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/wink.html' class='hub featured'>
+      <a href='/components/wink/' class='hub featured'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/wink.png'>
@@ -1925,7 +1452,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/light.wink.html' class='light'>
+      <a href='/components/light.wink/' class='light'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/wink.png'>
@@ -1937,7 +1464,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.wink.html' class='sensor'>
+      <a href='/components/sensor.wink/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/wink.png'>
@@ -1949,7 +1476,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.wink.html' class='switch'>
+      <a href='/components/switch.wink/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/wink.png'>
@@ -1961,7 +1488,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.worldclock.html' class='sensor'>
+      <a href='/components/sensor.worldclock/' class='sensor'>
         <div class='img-container'>
           
         </div>
@@ -1971,7 +1498,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/zwave.html' class='hub'>
+      <a href='/components/zwave/' class='hub'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/z-wave.png'>
@@ -1983,7 +1510,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/zone.html' class='organization'>
+      <a href='/components/zone/' class='organization'>
         <div class='img-container'>
           
         </div>
@@ -1993,7 +1520,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/sensor.arest.html' class='sensor'>
+      <a href='/components/sensor.arest/' class='sensor'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/arest.png'>
@@ -2005,7 +1532,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/switch.arest.html' class='switch'>
+      <a href='/components/switch.arest/' class='switch'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/arest.png'>
@@ -2017,7 +1544,7 @@ Support for these components is provided by the Home Assistant community.
     
   
     
-      <a href='/components/media_player.itunes.html' class='media-player'>
+      <a href='/components/media_player.itunes/' class='media-player'>
         <div class='img-container'>
           
             <img src='/images/supported_brands/itunes.png'>
@@ -2103,32 +1630,23 @@ $(window).load(function(){
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
-
-
 
   </body>
 </html>

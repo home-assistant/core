@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-27T12:45:27-07:00</updated>
+  <updated>2015-10-29T00:08:34-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -18,250 +18,364 @@
     <link href="https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/"/>
     <updated>2015-10-11T12:10:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt</id>
-    <content type="html"><![CDATA[<p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means
-that all your DIY projects can now be done for a fraction of the price.</p>
+    <content type="html"><![CDATA[
+<p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means that all your DIY projects can now be done for a fraction of the price.</p>
 
-<p>For this tutorial, I&rsquo;ll walk through how to get going with ESP8266, get the temperature and humidity and
-report it to MQTT where Home Asssistant can pick it up.</p>
+<p>For this tutorial, I’ll walk through how to get going with ESP8266, get the temperature and humidity and report it to MQTT where Home Asssistant can pick it up.</p>
 
-<p class='img'>
-<img src='https://home-assistant.io/images/blog/2015-10-esp8266-temp/setup.png' />
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-10-esp8266-temp/setup.png" />
 Picture of the final setup (+ 2 LED for decoration)
 </p>
 
-
-
-
-<p class='img'>
-<img src='https://home-assistant.io/images/blog/2015-10-esp8266-temp/ha-sensor.png' />
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-10-esp8266-temp/ha-sensor.png" />
 Home Assistant will keep track of historical values and allow you to integrate it into automation.
 </p>
 
-
-
-
 <!--more-->
-
 
 <h3>Components</h3>
 
-<p>I&rsquo;ve been using Adafruit for my shopping:</p>
+<p>I’ve been using Adafruit for my shopping:</p>
 
 <ul>
-<li><a href="http://www.adafruit.com/product/2471">Adafruit HUZZAH ESP8266 Breakout</a> (<a href="https://learn.adafruit.com/adafruit-huzzah-esp8266-breakout/assembly">assembly instructions</a>)</li>
-<li><a href="http://www.adafruit.com/product/2635">Adafruit HDC1008 Temperature &amp; Humidity Sensor Breakout Board</a> (<a href="https://learn.adafruit.com/adafruit-hdc1008-temperature-and-humidity-sensor-breakout/assembly">assembly instructions</a>)</li>
-<li><a href="/components/mqtt.html#picking-a-broker">MQTT server</a></li>
+  <li><a href="http://www.adafruit.com/product/2471">Adafruit HUZZAH ESP8266 Breakout</a> (<a href="https://learn.adafruit.com/adafruit-huzzah-esp8266-breakout/assembly">assembly instructions</a>)</li>
+  <li><a href="http://www.adafruit.com/product/2635">Adafruit HDC1008 Temperature &amp; Humidity Sensor Breakout Board</a> (<a href="https://learn.adafruit.com/adafruit-hdc1008-temperature-and-humidity-sensor-breakout/assembly">assembly instructions</a>)</li>
+  <li><a href="/components/mqtt/#picking-a-broker">MQTT server</a></li>
 </ul>
 
-
-<p><em>Besides this, you will need the usual hardware prototype equipment: a breadboard, some wires,
-soldering iron + wire, Serial USB cable.</em></p>
+<p><em>Besides this, you will need the usual hardware prototype equipment: a breadboard, some wires, soldering iron + wire, Serial USB cable.</em></p>
 
 <h3>Connections</h3>
 
 <p>On your breadboard, make the following connections from your ESP8266 to the HDC1008:</p>
 
 <table>
-<thead>
-<tr>
-<th> ESP8266 </th>
-<th> HDC1008 </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> GND </td>
-<td> GND</td>
-</tr>
-<tr>
-<td> 3V </td>
-<td> Vin</td>
-</tr>
-<tr>
-<td> 14 </td>
-<td> SCL</td>
-</tr>
-<tr>
-<td> #2 </td>
-<td> SDA</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>ESP8266</th>
+      <th>HDC1008</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GND</td>
+      <td>GND</td>
+    </tr>
+    <tr>
+      <td>3V</td>
+      <td>Vin</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>SCL</td>
+    </tr>
+    <tr>
+      <td>#2</td>
+      <td>SDA</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <p><em>I picked <code>#2</code> and <code>14</code> myself, you can configure them in the sketch.</em></p>
 
 <h3>Preparing your IDE</h3>
 
-<p>Follow <a href="https://github.com/esp8266/Arduino#installing-with-boards-manager">these instructions</a> on how
-to install and prepare the Arduino IDE for ESP8266 development.</p>
+<p>Follow <a href="https://github.com/esp8266/Arduino#installing-with-boards-manager">these instructions</a> on how to install and prepare the Arduino IDE for ESP8266 development.</p>
 
-<p>After you&rsquo;re done installing, open the Arduino IDE, in the menu click on <code>sketch</code> -> <code>include library</code> ->
-<code>manage libraries</code> and install the following libraries:</p>
+<p>After you’re done installing, open the Arduino IDE, in the menu click on <code>sketch</code> -&gt; <code>include library</code> -&gt; <code>manage libraries</code> and install the following libraries:</p>
 
 <ul>
-<li>PubSubClient by Nick &lsquo;O Leary</li>
-<li>Adafruit HDC1000</li>
+  <li>PubSubClient by Nick ‘O Leary</li>
+  <li>Adafruit HDC1000</li>
 </ul>
-
 
 <h3>Sketch</h3>
 
-<p>If you have followed the previous steps, you&rsquo;re all set.</p>
+<p>If you have followed the previous steps, you’re all set.</p>
 
 <ul>
-<li>Open Arduino IDE and create a new sketch (<code>File</code> -> <code>New</code>)</li>
-<li>Copy and paste the below sketch to the Arduino IDE</li>
-<li>Adjust the values line 6 - 14 to match your setup</li>
-<li>Optional: If you want to connect to an MQTT server without a username or password, adjust line 63.</li>
-<li>To have the ESP8266 accept our new sketch, we have to put it in upload mode. On the ESP8266 device
-keep the GPIO0 button pressed while pressing the reset button. The red led will glow half bright to
-indicate it is in upload mode.</li>
-<li>Press the upload button in Arduino IDE</li>
-<li>Open the serial monitor (<code>Tools</code> -> <code>Serial Monitor</code>) to see the output from your device</li>
+  <li>Open Arduino IDE and create a new sketch (<code>File</code> -&gt; <code>New</code>)</li>
+  <li>Copy and paste the below sketch to the Arduino IDE</li>
+  <li>Adjust the values line 6 - 14 to match your setup</li>
+  <li>Optional: If you want to connect to an MQTT server without a username or password, adjust line 63.</li>
+  <li>To have the ESP8266 accept our new sketch, we have to put it in upload mode. On the ESP8266 device keep the GPIO0 button pressed while pressing the reset button. The red led will glow half bright to indicate it is in upload mode.</li>
+  <li>Press the upload button in Arduino IDE</li>
+  <li>Open the serial monitor (<code>Tools</code> -&gt; <code>Serial Monitor</code>) to see the output from your device</li>
 </ul>
 
+<p>This sketch will connect to your WiFi network and MQTT broker. It will read the temperature and humidity from the sensor every second. It will report it to the MQTT server if the difference is &gt; 1 since last reported value. Reports to the MQTT broker are sent with retain set to <code>True</code>. This means that anyone connecting to the MQTT topic will automatically be notified of the last reported value.</p>
 
-<p>This sketch will connect to your WiFi network and MQTT broker. It will read the temperature and humidity
-from the sensor every second. It will report it to the MQTT server if the difference is > 1 since last
-reported value. Reports to the MQTT broker are sent with retain set to <code>True</code>. This means that anyone
-connecting to the MQTT topic will automatically be notified of the last reported value.</p>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+<a href="#n31" name="n31">31</a>
+<a href="#n32" name="n32">32</a>
+<a href="#n33" name="n33">33</a>
+<a href="#n34" name="n34">34</a>
+<a href="#n35" name="n35">35</a>
+<a href="#n36" name="n36">36</a>
+<a href="#n37" name="n37">37</a>
+<a href="#n38" name="n38">38</a>
+<a href="#n39" name="n39">39</a>
+<strong><a href="#n40" name="n40">40</a></strong>
+<a href="#n41" name="n41">41</a>
+<a href="#n42" name="n42">42</a>
+<a href="#n43" name="n43">43</a>
+<a href="#n44" name="n44">44</a>
+<a href="#n45" name="n45">45</a>
+<a href="#n46" name="n46">46</a>
+<a href="#n47" name="n47">47</a>
+<a href="#n48" name="n48">48</a>
+<a href="#n49" name="n49">49</a>
+<strong><a href="#n50" name="n50">50</a></strong>
+<a href="#n51" name="n51">51</a>
+<a href="#n52" name="n52">52</a>
+<a href="#n53" name="n53">53</a>
+<a href="#n54" name="n54">54</a>
+<a href="#n55" name="n55">55</a>
+<a href="#n56" name="n56">56</a>
+<a href="#n57" name="n57">57</a>
+<a href="#n58" name="n58">58</a>
+<a href="#n59" name="n59">59</a>
+<strong><a href="#n60" name="n60">60</a></strong>
+<a href="#n61" name="n61">61</a>
+<a href="#n62" name="n62">62</a>
+<a href="#n63" name="n63">63</a>
+<a href="#n64" name="n64">64</a>
+<a href="#n65" name="n65">65</a>
+<a href="#n66" name="n66">66</a>
+<a href="#n67" name="n67">67</a>
+<a href="#n68" name="n68">68</a>
+<a href="#n69" name="n69">69</a>
+<strong><a href="#n70" name="n70">70</a></strong>
+<a href="#n71" name="n71">71</a>
+<a href="#n72" name="n72">72</a>
+<a href="#n73" name="n73">73</a>
+<a href="#n74" name="n74">74</a>
+<a href="#n75" name="n75">75</a>
+<a href="#n76" name="n76">76</a>
+<a href="#n77" name="n77">77</a>
+<a href="#n78" name="n78">78</a>
+<a href="#n79" name="n79">79</a>
+<strong><a href="#n80" name="n80">80</a></strong>
+<a href="#n81" name="n81">81</a>
+<a href="#n82" name="n82">82</a>
+<a href="#n83" name="n83">83</a>
+<a href="#n84" name="n84">84</a>
+<a href="#n85" name="n85">85</a>
+<a href="#n86" name="n86">86</a>
+<a href="#n87" name="n87">87</a>
+<a href="#n88" name="n88">88</a>
+<a href="#n89" name="n89">89</a>
+<strong><a href="#n90" name="n90">90</a></strong>
+<a href="#n91" name="n91">91</a>
+<a href="#n92" name="n92">92</a>
+<a href="#n93" name="n93">93</a>
+<a href="#n94" name="n94">94</a>
+<a href="#n95" name="n95">95</a>
+<a href="#n96" name="n96">96</a>
+<a href="#n97" name="n97">97</a>
+<a href="#n98" name="n98">98</a>
+<a href="#n99" name="n99">99</a>
+<strong><a href="#n100" name="n100">100</a></strong>
+<a href="#n101" name="n101">101</a>
+<a href="#n102" name="n102">102</a>
+<a href="#n103" name="n103">103</a>
+<a href="#n104" name="n104">104</a>
+<a href="#n105" name="n105">105</a>
+<a href="#n106" name="n106">106</a>
+<a href="#n107" name="n107">107</a>
+<a href="#n108" name="n108">108</a>
+<a href="#n109" name="n109">109</a>
+</pre></td>
+  <td class="code"><pre><span class="preprocessor">#include</span> <span class="include">&lt;ESP8266WiFi.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;Wire.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;PubSubClient.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;Adafruit_HDC1000.h&gt;</span>
 
-<pre><code class="cpp">#include &lt;ESP8266WiFi.h&gt;
-#include &lt;Wire.h&gt;
-#include &lt;PubSubClient.h&gt;
-#include &lt;Adafruit_HDC1000.h&gt;
+<span class="preprocessor">#define</span> wifi_ssid <span class="string"><span class="delimiter">&quot;</span><span class="content">YOUR WIFI SSID</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> wifi_password <span class="string"><span class="delimiter">&quot;</span><span class="content">WIFI PASSWORD</span><span class="delimiter">&quot;</span></span>
 
-#define wifi_ssid "YOUR WIFI SSID"
-#define wifi_password "WIFI PASSWORD"
+<span class="preprocessor">#define</span> mqtt_server <span class="string"><span class="delimiter">&quot;</span><span class="content">YOUR_MQTT_SERVER_HOST</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> mqtt_user <span class="string"><span class="delimiter">&quot;</span><span class="content">your_username</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> mqtt_password <span class="string"><span class="delimiter">&quot;</span><span class="content">your_password</span><span class="delimiter">&quot;</span></span>
 
-#define mqtt_server "YOUR_MQTT_SERVER_HOST"
-#define mqtt_user "your_username"
-#define mqtt_password "your_password"
-
-#define humidity_topic "sensor/humidity"
-#define temperature_topic "sensor/temperature"
+<span class="preprocessor">#define</span> humidity_topic <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/humidity</span><span class="delimiter">&quot;</span></span>
+<span class="preprocessor">#define</span> temperature_topic <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/temperature</span><span class="delimiter">&quot;</span></span>
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 Adafruit_HDC1000 hdc = Adafruit_HDC1000();
 
-void setup() {
-  Serial.begin(115200);
+<span class="directive">void</span> setup() {
+  Serial.begin(<span class="integer">115200</span>);
   setup_wifi();
-  client.setServer(mqtt_server, 1883);
+  client.setServer(mqtt_server, <span class="integer">1883</span>);
 
-  // Set SDA and SDL ports
-  Wire.begin(2, 14);
+  <span class="comment">// Set SDA and SDL ports</span>
+  Wire.begin(<span class="integer">2</span>, <span class="integer">14</span>);
 
-  // Start sensor
-  if (!hdc.begin()) {
-    Serial.println("Couldn't find sensor!");
-    while (1);
+  <span class="comment">// Start sensor</span>
+  <span class="keyword">if</span> (!hdc.begin()) {
+    Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">Couldn't find sensor!</span><span class="delimiter">&quot;</span></span>);
+    <span class="keyword">while</span> (<span class="integer">1</span>);
   }}
 
-void setup_wifi() {
-  delay(10);
-  // We start by connecting to a WiFi network
+<span class="directive">void</span> setup_wifi() {
+  delay(<span class="integer">10</span>);
+  <span class="comment">// We start by connecting to a WiFi network</span>
   Serial.println();
-  Serial.print("Connecting to ");
+  Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Connecting to </span><span class="delimiter">&quot;</span></span>);
   Serial.println(wifi_ssid);
 
   WiFi.begin(wifi_ssid, wifi_password);
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  <span class="keyword">while</span> (WiFi.status() != WL_CONNECTED) {
+    delay(<span class="integer">500</span>);
+    Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">.</span><span class="delimiter">&quot;</span></span>);
   }
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
+  Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>);
+  Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">WiFi connected</span><span class="delimiter">&quot;</span></span>);
+  Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">IP address: </span><span class="delimiter">&quot;</span></span>);
   Serial.println(WiFi.localIP());
 }
 
-void reconnect() {
-  // Loop until we're reconnected
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    // If you do not want to use a username and password, change next line to
-    // if (client.connect("ESP8266Client")) {
-    if (client.connect("ESP8266Client", mqtt_user, mqtt_password)) {
-      Serial.println("connected");
-    } else {
-      Serial.print("failed, rc=");
+<span class="directive">void</span> reconnect() {
+  <span class="comment">// Loop until we're reconnected</span>
+  <span class="keyword">while</span> (!client.connected()) {
+    Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Attempting MQTT connection...</span><span class="delimiter">&quot;</span></span>);
+    <span class="comment">// Attempt to connect</span>
+    <span class="comment">// If you do not want to use a username and password, change next line to</span>
+    <span class="comment">// if (client.connect(&quot;ESP8266Client&quot;)) {</span>
+    <span class="keyword">if</span> (client.connect(<span class="string"><span class="delimiter">&quot;</span><span class="content">ESP8266Client</span><span class="delimiter">&quot;</span></span>, mqtt_user, mqtt_password)) {
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>);
+    } <span class="keyword">else</span> {
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">failed, rc=</span><span class="delimiter">&quot;</span></span>);
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content"> try again in 5 seconds</span><span class="delimiter">&quot;</span></span>);
+      <span class="comment">// Wait 5 seconds before retrying</span>
+      delay(<span class="integer">5000</span>);
     }
   }
 }
 
-bool checkBound(float newValue, float prevValue, float maxDiff) {
-  return newValue &lt; prevValue - maxDiff || newValue &gt; prevValue + maxDiff;
+<span class="predefined-type">bool</span> checkBound(<span class="predefined-type">float</span> newValue, <span class="predefined-type">float</span> prevValue, <span class="predefined-type">float</span> maxDiff) {
+  <span class="keyword">return</span> newValue &lt; prevValue - maxDiff || newValue &gt; prevValue + maxDiff;
 }
 
-long lastMsg = 0;
-float temp = 0.0;
-float hum = 0.0;
-float diff = 1.0;
+<span class="predefined-type">long</span> lastMsg = <span class="integer">0</span>;
+<span class="predefined-type">float</span> temp = <span class="float">0</span><span class="float">.0</span>;
+<span class="predefined-type">float</span> hum = <span class="float">0</span><span class="float">.0</span>;
+<span class="predefined-type">float</span> diff = <span class="float">1</span><span class="float">.0</span>;
 
-void loop() {
-  if (!client.connected()) {
+<span class="directive">void</span> loop() {
+  <span class="keyword">if</span> (!client.connected()) {
     reconnect();
   }
   client.loop();
 
-  long now = millis();
-  if (now - lastMsg &gt; 1000) {
+  <span class="predefined-type">long</span> now = millis();
+  <span class="keyword">if</span> (now - lastMsg &gt; <span class="integer">1000</span>) {
     lastMsg = now;
 
-    float newTemp = hdc.readTemperature();
-    float newHum = hdc.readHumidity();
+    <span class="predefined-type">float</span> newTemp = hdc.readTemperature();
+    <span class="predefined-type">float</span> newHum = hdc.readHumidity();
 
-    if (checkBound(newTemp, temp, diff)) {
+    <span class="keyword">if</span> (checkBound(newTemp, temp, diff)) {
       temp = newTemp;
-      Serial.print("New temperature:");
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">New temperature:</span><span class="delimiter">&quot;</span></span>);
       Serial.println(String(temp).c_str());
-      client.publish(temperature_topic, String(temp).c_str(), true);
+      client.publish(temperature_topic, String(temp).c_str(), <span class="predefined-constant">true</span>);
     }
 
-    if (checkBound(newHum, hum, diff)) {
+    <span class="keyword">if</span> (checkBound(newHum, hum, diff)) {
       hum = newHum;
-      Serial.print("New humidity:");
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">New humidity:</span><span class="delimiter">&quot;</span></span>);
       Serial.println(String(hum).c_str());
-      client.publish(humidity_topic, String(hum).c_str(), true);
+      client.publish(humidity_topic, String(hum).c_str(), <span class="predefined-constant">true</span>);
     }
   }
 }
-</code></pre>
+</pre></td>
+</tr></table>
+</div>
 
 <h3>Configuring Home Assistant</h3>
 
-<p>The last step is to integrate the sensor values into Home Assistant. This can be done by setting up
-Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.</p>
+<p>The last step is to integrate the sensor values into Home Assistant. This can be done by setting up Home Assistant to connect to the MQTT broker and subscribe to the sensor topics.</p>
 
-<pre><code class="yaml">mqtt:
-  broker: YOUR_MQTT_SERVER_HOST
-  username: your_username
-  password: your_password
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+</pre></td>
+  <td class="code"><pre><span class="key">mqtt</span>:
+  <span class="key">broker</span>: <span class="string"><span class="content">YOUR_MQTT_SERVER_HOST</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">your_username</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">your_password</span></span>
 
-sensor:
-  platform: mqtt
-  name: "Temperature"
-  state_topic: "sensor/temperature"
-  qos: 0
-  unit_of_measurement: "ºC"
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Temperature</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/temperature</span><span class="delimiter">&quot;</span></span>
+  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ºC</span><span class="delimiter">&quot;</span></span>
 
-sensor 2:
-  platform: mqtt
-  name: "Humidity"
-  state_topic: "sensor/humidity"
-  qos: 0
-  unit_of_measurement: "%"
-</code></pre>
+<span class="key">sensor 2</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Humidity</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/humidity</span><span class="delimiter">&quot;</span></span>
+  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">%</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 ]]></content>
   </entry>
   
@@ -270,68 +384,80 @@ sensor 2:
     <link href="https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant/"/>
     <updated>2015-09-18T02:00:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant</id>
-    <content type="html"><![CDATA[<p><img src='https://home-assistant.io/images/supported_brands/glances.png' style='border:none; box-shadow: none; float: right;' height='80' />
-Inspried by a <a href="https://github.com/balloob/home-assistant/issues/310">feature requests</a> I started looking into the available options to do monitoring of remote hosts. The feature request is about displaying system information in a similar way than the <a href="/components/sensor.systemmonitor.html">systemmonitor</a> sensor does it for the local system. After a while I started to think that it would be a nice addition for a small home network where no full-blown system monitoring setup is present.</p>
+    <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/supported_brands/glances.png" style="border:none; box-shadow: none; float: right;" height="80" /><br />
+Inspried by a <a href="https://github.com/balloob/home-assistant/issues/310">feature requests</a> I started looking into the available options to do monitoring of remote hosts. The feature request is about displaying system information in a similar way than the <a href="/components/sensor.systemmonitor/">systemmonitor</a> sensor does it for the local system. After a while I started to think that it would be a nice addition for a small home network where no full-blown system monitoring setup is present.</p>
 
 <!--more-->
 
-
 <p>The basic problem is to get the data from the remote host. Starting with <a href="https://pypi.python.org/pypi/psutil">psutil</a> that is used by the systemmonitor sensor, a possible solution is only a click away and named <a href="https://github.com/nicolargo/glances">Glances</a>. Glances has a nice curses-based interface and a <a href="https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API">RESTful API</a>.</p>
 
-<p>The <a href="/components/sensor.glances.html">Glances sensor</a> sensor uses that API to get all needed data.</p>
+<p>The <a href="/components/sensor.glances/">Glances sensor</a> sensor uses that API to get all needed data.</p>
 
-<p>In this post a default Fedora 22 Workstation installation is used on the host that should be monitored. In fact, it doesn&rsquo;t matter if the system is the local one or a remote one as long as Glances is available. With some adjustments it should work on your own systems too. The difference will be the package and the firewall management tools.</p>
+<p>In this post a default Fedora 22 Workstation installation is used on the host that should be monitored. In fact, it doesn’t matter if the system is the local one or a remote one as long as Glances is available. With some adjustments it should work on your own systems too. The difference will be the package and the firewall management tools.</p>
 
 <p>First some extra packages are needed beside Glances, especially the <a href="http://bottlepy.org/docs/dev/index.html">bottle</a> webserver. I guess that Glances is available for your distribution as well. Otherwise follow those <a href="https://github.com/nicolargo/glances#installation">instructions</a>.</p>
 
-<pre><code>sudo dnf -y install glances python-bottle
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ sudo dnf -y install glances python-bottle
+</pre></div>
+</div>
+</div>
 
-<p>On Fedora the Firewall settings are strict. Let&rsquo;s open port 61208 to allow other hosts to connect to that port. This is not needed if you just want to observe your local machine.</p>
+<p>On Fedora the Firewall settings are strict. Let’s open port 61208 to allow other hosts to connect to that port. This is not needed if you just want to observe your local machine.</p>
 
-<pre><code class="bash">sudo firewall-cmd --permanent --add-port=61208/tcp
-sudo firewall-cmd --reload
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ sudo firewall-cmd --permanent --add-port=61208/tcp
+$ sudo firewall-cmd --reload
+</pre></div>
+</div>
+</div>
 
 <p>Launch <code>glances</code> and keep an eye on the output.</p>
 
-<pre><code class="bash">glances -w
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ glances -w
 Glances web server started on http://0.0.0.0:61208/
-</code></pre>
+</pre></div>
+</div>
+</div>
 
-<p>Now browse to <a href="http://IP_ADRRESS:61208/.">http://IP_ADRRESS:61208/.</a> You should see the webified view of Glances.</p>
+<p>Now browse to http://IP_ADRRESS:61208/. You should see the webified view of Glances.</p>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-glances/web-glances.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-glances/web-glances.png" />
   Glances web interface
 </p>
 
+<p>Another check is to access the API located at http://IP_ADRRESS:61208/api/2/mem/used and to confirm that a detail about your memory usage is provided as a JSON response. If so, you are good to proceed.</p>
 
-<p>Another check is to access the API located at <a href="http://IP_ADRRESS:61208/api/2/mem/used">http://IP_ADRRESS:61208/api/2/mem/used</a> and to confirm that a detail about your memory usage is provided as a JSON response. If so, you are good to proceed.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET http://IP_ADDRESS:61208/api/2/mem/used
+{&quot;used&quot;: 203943936}
+</pre></div>
+</div>
+</div>
 
-<pre><code class="bash">curl -X GET http://IP_ADDRESS:61208/api/2/mem/used
-{"used": 203943936}
-</code></pre>
+<p>Add the <a href="/components/sensor.glances/">glances sensor</a> entry to your <code>configuration.yaml</code> file and restart Home Assistant then.</p>
 
-<p>Add the <a href="/components/sensor.glances.html">glances sensor</a> entry to your <code>configuration.yaml</code> file and restart Home Assistant then.</p>
-
-<pre><code class="yaml"># Example configuration.yaml entry
-  - platform: glances
-    name: NAS
-    host: IP_ADDRESS
-    resources:
-      - 'disk_use_percent'
-      - 'disk_use'
-      - 'disk_free'
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+  - <span class="string"><span class="content">platform: glances</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">NAS</span></span>
+    <span class="key">host</span>: <span class="string"><span class="content">IP_ADDRESS</span></span>
+    <span class="key">resources</span>:
+      - <span class="string"><span class="content">'disk_use_percent'</span></span>
+      - <span class="string"><span class="content">'disk_use'</span></span>
+      - <span class="string"><span class="content">'disk_free'</span></span>
+</pre></div>
+</div>
+</div>
 
 <p>If there are no error in the log file then you should see your new sensors.</p>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-glances/sensors.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-glances/sensors.png" />
   The Glances sensors
 </p>
-
 
 <p><a href="https://github.com/nicolargo/glances">Glances</a> has a couple of optional dependencies which are extenting the range of provided information. This means that it would be possible to get details about the RAID system, HDD temperature, IP addresses, sensors, etc., please create a <a href="https://github.com/balloob/home-assistant/pulls">Pull request</a> with your additions or a <a href="https://github.com/balloob/home-assistant/issues/new">Feature request</a> if you want see more details in your Home Assistant frontend.</p>
 ]]></content>
@@ -342,195 +468,179 @@ Glances web server started on http://0.0.0.0:61208/
     <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
     <updated>2015-09-13T09:28:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
-    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
-<a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
-webservice that integrates with almost every possible webservice out there. Adding Home
-Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
+    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a webservice that integrates with almost every possible webservice out there. Adding Home Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
 
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
-if your smoke alarm goes off.</p>
+<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet if your smoke alarm goes off.</p>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/splash.png" />
 </p>
 
-
-<p>Head over to the <a href="/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
-read more button for some example recipes.</p>
+<p>Head over to the <a href="/components/ifttt/">setup instructions</a> to get started with IFTTT. Click the read more button for some example recipes.</p>
 
 <!--more-->
 
-
-<p>In each of the following examples, make sure to replace the XXX in the url with your correct
-host address and api password.</p>
+<p>In each of the following examples, make sure to replace the XXX in the url with your correct host address and api password.</p>
 
 <h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;switch.irrigation&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “switch.irrigation” }</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png" />
 </p>
 
+<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered. Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in <code>value1</code>.</p>
 
-<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered.
-Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
-<code>value1</code>.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Configuration.yaml entry</span>
+<span class="key">automation</span>:
+- <span class="string"><span class="content">alias: Post a tweet when fire alarm is triggered</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+    <span class="key">mqtt_topic</span>: <span class="string"><span class="content">home/alarm/fire</span></span>
+    <span class="key">mqtt_payload</span>: <span class="string"><span class="content">'on'</span></span>
 
-<pre><code class="yaml"># Configuration.yaml entry
-automation:
-- alias: Post a tweet when fire alarm is triggered
-  trigger:
-    platform: mqtt
-    mqtt_topic: home/alarm/fire
-    mqtt_payload: 'on'
-
-  action:
-    service: ifttt.trigger
-    data: {"event":"HA_FIRE_ALARM", "value1":"The fire alarm just triggered!"}
-</code></pre>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">ifttt.trigger</span></span>
+    <span class="key">data</span>: <span class="string"><span class="content">{&quot;event&quot;:&quot;HA_FIRE_ALARM&quot;, &quot;value1&quot;:&quot;The fire alarm just triggered!&quot;}</span></span>
+</pre></div>
+</div>
+</div>
 
 <h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;light.kitchen&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “light.kitchen” }</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;group.all_lights&rdquo;, &ldquo;flash&rdquo;:&ldquo;yes&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “group.all_lights”, “flash”:”yes” }</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+  </tbody>
 </table>
-
 ]]></content>
   </entry>
   
@@ -539,8 +649,8 @@ automation:
     <link href="https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant/"/>
     <updated>2015-09-11T02:19:38-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant</id>
-    <content type="html"><![CDATA[<p><img src='https://home-assistant.io/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='80' />
-The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt.html">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn&rsquo;t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn&rsquo;t matter if the data is coming from a human, a web service, or a device.</p>
+    <content type="html"><![CDATA[
+<p><img src="https://home-assistant.io/images/supported_brands/mqtt.png" style="border:none; box-shadow: none; float: right;" height="80" /> <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn’t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn’t matter if the data is coming from a human, a web service, or a device.</p>
 
 <p>A great example is shown in a <a href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/">Laundry Automation</a> post in this blog.</p>
 
@@ -548,34 +658,48 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 
 <!--more-->
 
-
 <h3><a class='title-link' name='manual-usage' href='#manual-usage'></a> Manual usage </h3>
 
-<p>The simplest but not the coolest way as a human to interact with a Home Assistant sensor is launching a command manually. Let&rsquo;s create a &ldquo;Mood&rdquo; sensor. For simplicity Home Assistant and the MQTT broker are both running on the same host. The needed configuration snipplets to add to the <code>configuration.yaml</code> file consists of two parts: one for the broker and one for the sensor.</p>
+<p>The simplest but not the coolest way as a human to interact with a Home Assistant sensor is launching a command manually. Let’s create a “Mood” sensor. For simplicity Home Assistant and the MQTT broker are both running on the same host. The needed configuration snipplets to add to the <code>configuration.yaml</code> file consists of two parts: one for the broker and one for the sensor.</p>
 
-<pre><code class="yaml">mqtt:
-  broker: 127.0.0.1
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+</pre></td>
+  <td class="code"><pre><span class="key">mqtt</span>:
+  <span class="key">broker</span>: <span class="string"><span class="content">127.0.0.1</span></span>
 
-sensor:
-  - platform: mqtt
-    name: "Fabian's Mood"
-    state_topic: "home-assistant/fabian/mood"
-</code></pre>
+<span class="key">sensor</span>:
+  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Fabian's Mood</span><span class="delimiter">&quot;</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/fabian/mood</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 
-<p>After a restart of Home Assistant the &ldquo;Mood&rdquo; sensor will show up in the frontend. For more details about the configuration of MQTT itself and the sensor, please refer to the <a href="https://home-assistant.io/components/mqtt.html">MQTT component</a> or the <a href="https://home-assistant.io/components/sensor.mqtt.html">MQTT sensor</a> documentation.</p>
+<p>After a restart of Home Assistant the “Mood” sensor will show up in the frontend. For more details about the configuration of MQTT itself and the sensor, please refer to the <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> or the <a href="https://home-assistant.io/components/sensor.mqtt/">MQTT sensor</a> documentation.</p>
 
 <p>Now we can set the mood. The commandline tool (<code>mosquitto_pub</code>) which is shipped with <code>mosquitto</code> is used to send an MQTT message.</p>
 
-<pre><code class="bash">mosquitto_pub  -h 127.0.0.1 -t "home-assistant/fabian/mood" -m "bad"
-</code></pre>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+</pre></td>
+  <td class="code"><pre>$ mosquitto_pub  -h 127.0.0.1 -t &quot;home-assistant/fabian/mood&quot; -m &quot;bad&quot;
+</pre></td>
+</tr></table>
+</div>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/mood.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/mood.png" />
   The Mood sensor
 </p>
 
-
-<p>This is a really bad example. Don&rsquo;t do this in the real world because you won&rsquo;t be able to create diagrams of historical data. Better use a numerical value.</p>
+<p>This is a really bad example. Don’t do this in the real world because you won’t be able to create diagrams of historical data. Better use a numerical value.</p>
 
 <h3><a class='title-link' name='python-mqtt-bindings' href='#python-mqtt-bindings'></a> Python MQTT bindings </h3>
 
@@ -583,149 +707,260 @@ sensor:
 
 <p>This example is using the <a href="https://eclipse.org/paho/clients/python/">Paho MQTT Python binding</a> because those binding should be available on the host where Home Assistant is running. If you want to use this example on another machine, please make sure that the bindings are installed (<code>pip3 install paho-mqtt</code>).</p>
 
-<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called &ldquo;Lottery&rdquo; and the unit of measurement will be &ldquo;No.&rdquo;.</p>
+<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called “Lottery” and the unit of measurement will be “No.”.</p>
 
-<pre><code class="yaml">  - platform: mqtt
-    name: "Lottery"
-    state_topic: "home-assistant/lottery/number"
-    unit_of_measurement: "No."
-</code></pre>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+</pre></td>
+  <td class="code"><pre>  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Lottery</span><span class="delimiter">&quot;</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/lottery/number</span><span class="delimiter">&quot;</span></span>
+    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">No.</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 
-<p>Don&rsquo;t forget to restart Home Assistant to make the configuration active.</p>
+<p>Don’t forget to restart Home Assistant to make the configuration active.</p>
 
 <p>To play, we need numbers from 1 to 49 which can be marked on the ticket. Those numbers should be random and displayed in the Home Assistant frontend. The Python script below is another simple example on how to send MQTT messages from the commandline; this time in a loop. For further information and examples please check the <a href="https://eclipse.org/paho/clients/python/docs/">Paho MQTT</a> documentation.</p>
 
-<pre><code class="python">#!/usr/bin/python3
-#
-import time
-import random
-import paho.mqtt.client as mqtt
-import paho.mqtt.publish as publish
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+</pre></td>
+  <td class="code"><pre><span class="comment">#!/usr/bin/python3</span>
+<span class="comment">#</span>
+<span class="keyword">import</span> <span class="include">time</span>
+<span class="keyword">import</span> <span class="include">random</span>
+<span class="keyword">import</span> <span class="include">paho.mqtt.client</span> <span class="keyword">as</span> mqtt
+<span class="keyword">import</span> <span class="include">paho.mqtt.publish</span> <span class="keyword">as</span> publish
 
-broker = '127.0.0.1'
-state_topic = 'home-assistant/lottery/number'
-delay = 5
+broker = <span class="string"><span class="delimiter">'</span><span class="content">127.0.0.1</span><span class="delimiter">'</span></span>
+state_topic = <span class="string"><span class="delimiter">'</span><span class="content">home-assistant/lottery/number</span><span class="delimiter">'</span></span>
+delay = <span class="integer">5</span>
 
-# Send a single message to set the mood
-publish.single('home-assistant/fabian/mood', 'good', hostname=broker)
+<span class="comment"># Send a single message to set the mood</span>
+publish.single(<span class="string"><span class="delimiter">'</span><span class="content">home-assistant/fabian/mood</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">good</span><span class="delimiter">'</span></span>, hostname=broker)
 
-# Send messages in a loop
-client = mqtt.Client("ha-client")
+<span class="comment"># Send messages in a loop</span>
+client = mqtt.Client(<span class="string"><span class="delimiter">&quot;</span><span class="content">ha-client</span><span class="delimiter">&quot;</span></span>)
 client.connect(broker)
 client.loop_start()
 
-while True:
-    client.publish(state_topic, random.randrange(0, 50, 1))
+<span class="keyword">while</span> <span class="predefined-constant">True</span>:
+    client.publish(state_topic, random.randrange(<span class="integer">0</span>, <span class="integer">50</span>, <span class="integer">1</span>))
     time.sleep(delay)
-</code></pre>
+</pre></td>
+</tr></table>
+</div>
 
 <p>Every 5 seconds a message with a new number is sent to the broker and picked up by Home Assistant. By the way, my mood is much better now.</p>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/lottery.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/lottery.png" />
   The Lottery sensor
 </p>
 
-
-<p>With only a few lines of Python and an MQTT broker you can create your own &ldquo;smartdevice&rdquo; or send information to Home Assistant which you haven&rsquo;t think of. Of course this is not limited to Python. If there is an MQTT library available, the device can be used with Home Assistant now.</p>
+<p>With only a few lines of Python and an MQTT broker you can create your own “smartdevice” or send information to Home Assistant which you haven’t think of. Of course this is not limited to Python. If there is an MQTT library available, the device can be used with Home Assistant now.</p>
 
 <h3><a class='title-link' name='arduino' href='#arduino'></a> Arduino </h3>
 
 <p>To get started with real hardware that is capable to send MQTT messages, the Arduino platform is an inexpensive way to do it. In this section an Arduino UNO with an Ethernet shield and a photo resistor is used. The photo resistor is connected to analog pin 0 (A0) and has an output from 0 to 1024.</p>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/arduino-shield.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/arduino-shield.png" />
   The Arduino UNO with Ethernet shield and photo resistor
 </p>
 
-
 <p>The <a href="http://knolleary.github.io/pubsubclient/">MQTT client</a> for the Arduino needs to be available in your Arduino IDE. Below you will find a sketch which could act as a starting point. Please modify the IP addresses, the MAC address, and the pin as needed and upload the sketch to your Arduino.</p>
 
-<pre><code class="c">/*
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+<a href="#n31" name="n31">31</a>
+<a href="#n32" name="n32">32</a>
+<a href="#n33" name="n33">33</a>
+<a href="#n34" name="n34">34</a>
+<a href="#n35" name="n35">35</a>
+<a href="#n36" name="n36">36</a>
+<a href="#n37" name="n37">37</a>
+<a href="#n38" name="n38">38</a>
+<a href="#n39" name="n39">39</a>
+<strong><a href="#n40" name="n40">40</a></strong>
+<a href="#n41" name="n41">41</a>
+<a href="#n42" name="n42">42</a>
+<a href="#n43" name="n43">43</a>
+<a href="#n44" name="n44">44</a>
+<a href="#n45" name="n45">45</a>
+<a href="#n46" name="n46">46</a>
+<a href="#n47" name="n47">47</a>
+<a href="#n48" name="n48">48</a>
+<a href="#n49" name="n49">49</a>
+<strong><a href="#n50" name="n50">50</a></strong>
+<a href="#n51" name="n51">51</a>
+<a href="#n52" name="n52">52</a>
+<a href="#n53" name="n53">53</a>
+<a href="#n54" name="n54">54</a>
+<a href="#n55" name="n55">55</a>
+<a href="#n56" name="n56">56</a>
+<a href="#n57" name="n57">57</a>
+<a href="#n58" name="n58">58</a>
+<a href="#n59" name="n59">59</a>
+<strong><a href="#n60" name="n60">60</a></strong>
+<a href="#n61" name="n61">61</a>
+<a href="#n62" name="n62">62</a>
+<a href="#n63" name="n63">63</a>
+<a href="#n64" name="n64">64</a>
+<a href="#n65" name="n65">65</a>
+<a href="#n66" name="n66">66</a>
+<a href="#n67" name="n67">67</a>
+<a href="#n68" name="n68">68</a>
+</pre></td>
+  <td class="code"><pre><span class="comment">/*
   This sketch is based on the basic MQTT example by
   http://knolleary.github.io/pubsubclient/
-*/
+*/</span>
 
-#include &lt;SPI.h&gt;
-#include &lt;Ethernet.h&gt;
-#include &lt;PubSubClient.h&gt;
+<span class="preprocessor">#include</span> <span class="include">&lt;SPI.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;Ethernet.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;PubSubClient.h&gt;</span>
 
-#define DEBUG 1 // Debug output to serial console
+<span class="preprocessor">#define</span> DEBUG <span class="integer">1</span> <span class="comment">// Debug output to serial console</span>
 
-// Device settings
-IPAddress deviceIp(192, 168, 0, 43);
-byte deviceMac[] = { 0xAB, 0xCD, 0xFE, 0xFE, 0xFE, 0xFE };
-char* deviceId  = "sensor01"; // Name of the sensor
-char* stateTopic = "home-assistant/sensor01/brightness"; // MQTT topic where values are published
-int sensorPin = A0; // Pin to which the sensor is connected to
-char buf[4]; // Buffer to store the sensor value
-int updateInterval = 1000; // Interval in miliseconds
+<span class="comment">// Device settings</span>
+IPAddress deviceIp(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">0</span>, <span class="integer">43</span>);
+byte deviceMac[] = { <span class="hex">0xAB</span>, <span class="hex">0xCD</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span> };
+<span class="predefined-type">char</span>* deviceId  = <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor01</span><span class="delimiter">&quot;</span></span>; <span class="comment">// Name of the sensor</span>
+<span class="predefined-type">char</span>* stateTopic = <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/sensor01/brightness</span><span class="delimiter">&quot;</span></span>; <span class="comment">// MQTT topic where values are published</span>
+<span class="predefined-type">int</span> sensorPin = A0; <span class="comment">// Pin to which the sensor is connected to</span>
+<span class="predefined-type">char</span> buf[<span class="integer">4</span>]; <span class="comment">// Buffer to store the sensor value</span>
+<span class="predefined-type">int</span> updateInterval = <span class="integer">1000</span>; <span class="comment">// Interval in miliseconds</span>
 
-// MQTT server settings
-IPAddress mqttServer(192, 168, 0, 12);
-int mqttPort = 1883;
+<span class="comment">// MQTT server settings</span>
+IPAddress mqttServer(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">0</span>, <span class="integer">12</span>);
+<span class="predefined-type">int</span> mqttPort = <span class="integer">1883</span>;
 
 EthernetClient ethClient;
 PubSubClient client(ethClient);
 
-void reconnect() {
-  while (!client.connected()) {
-#if DEBUG
-    Serial.print("Attempting MQTT connection...");
-#endif
-    if (client.connect(deviceId)) {
-#if DEBUG
-      Serial.println("connected");
-#endif
-    } else {
-#if DEBUG
-      Serial.print("failed, rc=");
+<span class="directive">void</span> reconnect() {
+  <span class="keyword">while</span> (!client.connected()) {
+<span class="preprocessor">#if</span> DEBUG
+    Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Attempting MQTT connection...</span><span class="delimiter">&quot;</span></span>);
+<span class="preprocessor">#endif</span>
+    <span class="keyword">if</span> (client.connect(deviceId)) {
+<span class="preprocessor">#if</span> DEBUG
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>);
+<span class="preprocessor">#endif</span>
+    } <span class="keyword">else</span> {
+<span class="preprocessor">#if</span> DEBUG
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">failed, rc=</span><span class="delimiter">&quot;</span></span>);
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-#endif
-      delay(5000);
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content"> try again in 5 seconds</span><span class="delimiter">&quot;</span></span>);
+<span class="preprocessor">#endif</span>
+      delay(<span class="integer">5000</span>);
     }
   }
 }
 
-void setup() {
-  Serial.begin(57600);
+<span class="directive">void</span> setup() {
+  Serial.begin(<span class="integer">57600</span>);
   client.setServer(mqttServer, mqttPort);
   Ethernet.begin(deviceMac, deviceIp);
-  delay(1500);
+  delay(<span class="integer">1500</span>);
 }
 
-void loop() {
-  if (!client.connected()) {
+<span class="directive">void</span> loop() {
+  <span class="keyword">if</span> (!client.connected()) {
     reconnect();
   }
   client.loop();
 
-  int sensorValue = analogRead(sensorPin);
-#if DEBUG
-  Serial.print("Sensor value: ");
+  <span class="predefined-type">int</span> sensorValue = analogRead(sensorPin);
+<span class="preprocessor">#if</span> DEBUG
+  Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sensor value: </span><span class="delimiter">&quot;</span></span>);
   Serial.println(sensorValue);
-#endif
-  client.publish(stateTopic, itoa(sensorValue, buf, 10));
+<span class="preprocessor">#endif</span>
+  client.publish(stateTopic, itoa(sensorValue, buf, <span class="integer">10</span>));
   delay(updateInterval);
 }
-</code></pre>
+</pre></td>
+</tr></table>
+</div>
 
 <p>The Arduino will send the value of the sensor every second. To use the data in Home Assistant, add an additional MQTT sensor to the <code>configuration.yaml</code> file.</p>
 
-<pre><code class="yaml">  - platform: mqtt
-    name: "Brightness"
-    state_topic: "home-assistant/sensor01/brightness"
-    unit_of_measurement: "cd"
-</code></pre>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+</pre></td>
+  <td class="code"><pre>  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Brightness</span><span class="delimiter">&quot;</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/sensor01/brightness</span><span class="delimiter">&quot;</span></span>
+    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">cd</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 
 <p>After a restart of Home Assistant the values of your Arduino will be available.</p>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-mqtt/arduino.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/arduino.png" />
   The Brightness sensor
 </p>
-
 
 <p>I hope that this post could give you some ideas about the usage Home Assistant and MQTT. If you are working on a cool project that includes Home Assistant, please let us now.</p>
 ]]></content>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: branding | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/branding/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-27T12:45:27-07:00</updated>
+  <updated>2015-10-29T00:08:34-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -18,15 +18,14 @@
     <link href="https://home-assistant.io/blog/2015/03/08/new-logo/"/>
     <updated>2015-03-08T23:16:10-07:00</updated>
     <id>https://home-assistant.io/blog/2015/03/08/new-logo</id>
-    <content type="html"><![CDATA[<p>It is well known that you are either a good programmer or a good designer. It&rsquo;s rare you&rsquo;ll meet someone that is both. That&rsquo;s why it wasn&rsquo;t surprising to anyone that the logo that I made was mediocre &mdash; at best. Luckily, <a href="http://jeremygeltman.com/">Jeremy Geltman</a> has come to the rescue and contributed a brand new logo for Home Assistant.</p>
+    <content type="html"><![CDATA[<p>It is well known that you are either a good programmer or a good designer. It’s rare you’ll meet someone that is both. That’s why it wasn’t surprising to anyone that the logo that I made was mediocre — at best. Luckily, <a href="http://jeremygeltman.com/">Jeremy Geltman</a> has come to the rescue and contributed a brand new logo for Home Assistant.</p>
 
 <p>The new logo follows Googles material design spec. It uses the blue color that Home Assistant uses in the interface and it comes in two versions: a high detailed version (for homescreen icon etc) and a simple version (for favicon etc).</p>
 
-<p class='img'>
-<img src='/images/blog/ha-logo-history.png' />
+<p class="img">
+<img src="/images/blog/ha-logo-history.png" />
 The old logo, the new detailed logo and the new simple logo.
 </p>
-
 ]]></content>
   </entry>
   

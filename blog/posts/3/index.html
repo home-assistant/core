@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -23,8 +21,29 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/posts/3/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Home Assistant moving to YAML March 1, 2015 Theodor Lindquist less than one minute reading time core Comments Home Assistant is now using YAML for it&rsquo;s configuration file.
-YAML allows the use &hellip;">
+    <meta property="og:description" content="  
+  
+  
+    
+  
+  
+    Home Assistant moving to YAML
+  
+  
+
+  
+  
+     March 1, 2015
+     Theodor Lindquist
+     less than one minute reading time
+    
+    
+    
+    
+      
+        core
+      
+  ...">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -32,7 +51,6 @@ YAML allows the use &hellip;">
     <link rel='shortcut icon' href='/images/favicon.ico' />
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
-
 
   <body >
 
@@ -55,10 +73,10 @@ YAML allows the use &hellip;">
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -66,25 +84,23 @@ YAML allows the use &hellip;">
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -100,7 +116,6 @@ YAML allows the use &hellip;">
 
             
   
-  
   <article class="listing">
     <header>
   
@@ -111,28 +126,10 @@ YAML allows the use &hellip;">
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-03-01T11:38:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 1, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Theodor Lindquist</span>
-
+    <time datetime="2015-03-01T11:38:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 1, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Theodor Lindquist</span>
     <span><i class='icon-time'></i> less than one minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -142,7 +139,6 @@ YAML allows the use &hellip;">
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2015/03/01/home-assistant-migrating-to-yaml/#disqus_thread"
@@ -153,21 +149,19 @@ YAML allows the use &hellip;">
 </header>
 
 
+  <div class="entry-content clearfix">
+    <p>Home Assistant is now using <a href="http://yaml.org/">YAML</a> for it’s configuration file. YAML allows the use of lists, which should make the configuration file a bit more flexible and useful. The new configuration file format is backwards compatible with existing components. Because of this, there is no need for component developers to update their components.</p>
 
-
-  <p>Home Assistant is now using <a href="http://yaml.org/">YAML</a> for it&rsquo;s configuration file.
-YAML allows the use of lists, which should make the configuration file a bit more flexible and useful. The new configuration file format is backwards compatible with existing components. Because of this, there is no need for component developers to update their components.</p>
-
-<p>The new file is named configuration.yaml and if it can&rsquo;t be found in your config directory, Home Assistant will instead try to find the old configuration file, home-assistant.conf.</p>
+<p>The new file is named configuration.yaml and if it can’t be found in your config directory, Home Assistant will instead try to find the old configuration file, home-assistant.conf.</p>
 
 <p>The home-assistant.conf.example has been replaced with an updated <a href="https://github.com/balloob/home-assistant/blob/dev/config/configuration.yaml.example">configuration.yaml.example</a>.</p>
 
 <p>Users of Home Assistant should migrate as the old configuration format is deprecated.</p>
 
-
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -179,28 +173,10 @@ YAML allows the use of lists, which should make the configuration file a bit mor
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-02-24T22:41:27-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> February 24, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-02-24T22:41:27-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> February 24, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -210,7 +186,6 @@ YAML allows the use of lists, which should make the configuration file a bit mor
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2015/02/24/streaming-updates/#disqus_thread"
@@ -221,25 +196,20 @@ YAML allows the use of lists, which should make the configuration file a bit mor
 </header>
 
 
-
-
-<div class="entry-content clearfix">
-  <p>Home Assistant has learned a new trick to get the latest information from the server: streaming updates. No longer will the frontend poll every 30 seconds for updates but instead it will keep a connection open and get the latest changes pushed as soon as they happen.</p>
+  <div class="entry-content clearfix">
+    <p>Home Assistant has learned a new trick to get the latest information from the server: streaming updates. No longer will the frontend poll every 30 seconds for updates but instead it will keep a connection open and get the latest changes pushed as soon as they happen.</p>
 
 <p>A new toggle has been added ot the sidebar to turn streaming updates on and off. This preference will be saved on a per-browser basis using local storage. The toggle will also indicate when there is an error setting up a stream after which it will fall back to use polling.</p>
 
-<p class='img'><img src='/images/screenshots/streaming-updates.png' /></p>
+<p class="img"><img src="/images/screenshots/streaming-updates.png" /></p>
 
 
-
-
-
-  <a class="btn pull-right" href="/blog/2015/02/24/streaming-updates/#read-more">Read on &rarr;</a>
-</div>
-
+    
+      <a class="btn pull-right" href="/blog/2015/02/24/streaming-updates/#read-more">Read on &rarr;</a>
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -251,28 +221,10 @@ YAML allows the use of lists, which should make the configuration file a bit mor
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-02-08T09:01:23-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> February 8, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-02-08T09:01:23-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> February 8, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -284,7 +236,6 @@ YAML allows the use of lists, which should make the configuration file a bit mor
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2015/02/08/looking-at-the-past/#disqus_thread"
@@ -295,16 +246,13 @@ YAML allows the use of lists, which should make the configuration file a bit mor
 </header>
 
 
-
-
-<div class="entry-content clearfix">
-  <p>Ever since the launch of Home Assistant you have been able to track the state of your house. But the view has always been limited to what the current state is. Not what it was. Today we are going to change that by introducing two brand new components:</p>
+  <div class="entry-content clearfix">
+    <p>Ever since the launch of Home Assistant you have been able to track the state of your house. But the view has always been limited to what the current state is. Not what it was. Today we are going to change that by introducing two brand new components:</p>
 
 <ul>
-<li>Recorder component that will record every event to a SQLite database</li>
-<li>History component that will query and aggregate the recorded events</li>
+  <li>Recorder component that will record every event to a SQLite database</li>
+  <li>History component that will query and aggregate the recorded events</li>
 </ul>
-
 
 <p>By adding this view into the past, we are adding an extra dimension into the state of your house. This brings great new possibilities for future features. The focus of todays release is on getting the recording component to you to start recording and getting some data. To show what is being recorded a view has been added that shows the last 24 hours of your house. Expect more extensive tools to explore your history in the future.</p>
 
@@ -312,29 +260,23 @@ YAML allows the use of lists, which should make the configuration file a bit mor
 
 <p>The history component will be enabled for new users by default. For current users, run <code>scripts/update</code> to upgrade to the latest version and add <code>[history]</code> to your <code>home-assistant.conf</code> file.</p>
 
-<p class='img'>
-  <a href='/images/screenshots/component_history_24h.png'>
-    <img src='/images/screenshots/component_history_24h.png' />
+<p class="img">
+  <a href="/images/screenshots/component_history_24h.png">
+    <img src="/images/screenshots/component_history_24h.png" />
   </a>
 </p>
 
-
-
-
-<p class='note'>
+<p class="note">
 Events are saved in a local database. Google Graphs is used to draw the graph. Drawing is happening 100% in your browser - no data is transfered to anyone at any time.
 </p>
 
 
-
-
-
-  <a class="btn pull-right" href="/blog/2015/02/08/looking-at-the-past/#read-more">Read on &rarr;</a>
-</div>
-
+    
+      <a class="btn pull-right" href="/blog/2015/02/08/looking-at-the-past/#read-more">Read on &rarr;</a>
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -346,28 +288,10 @@ Events are saved in a local database. Google Graphs is used to draw the graph. D
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-24T18:36:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 24, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-01-24T18:36:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 24, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -377,7 +301,6 @@ Events are saved in a local database. Google Graphs is used to draw the graph. D
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2015/01/24/release-notes/#disqus_thread"
@@ -388,38 +311,36 @@ Events are saved in a local database. Google Graphs is used to draw the graph. D
 </header>
 
 
+  <div class="entry-content clearfix">
+    <p>I have just merged the latest version of the development branch into master. Here are some of the highlights of this release:</p>
 
-
-  <p>I have just merged the latest version of the development branch into master. Here are some of the highlights of this release:</p>
-
-<p><strong>Configuration via the frontend</strong><br>
+<p><strong>Configuration via the frontend</strong><br /><br />
 Phliips Hue will now be auto discovered and uses the new <code>configurator</code> component to interact with the user to finish the setup process.</p>
 
-<p><strong>Wink Hub support</strong><br>
+<p><strong>Wink Hub support</strong><br /><br />
 Thanks to the work done by John McLaughlin and Geoff Norton we now support the lights, switches and sensors that are connected to the Wink hub.</p>
 
-<p><strong>The getting started guide and component page have been reorganized</strong><br>
+<p><strong>The getting started guide and component page have been reorganized</strong><br /><br />
 The getting started instructions have been split into separate pages per component and a general overview page. The goal is to have a page per component that describes:</p>
 
 <ul>
-<li>What it does</li>
-<li>How to set it up</li>
-<li>Which states it maintains</li>
-<li>Which services it provides</li>
-<li>Additional development tips</li>
+  <li>What it does</li>
+  <li>How to set it up</li>
+  <li>Which states it maintains</li>
+  <li>Which services it provides</li>
+  <li>Additional development tips</li>
 </ul>
 
-
-<p><strong>More reasonable errors</strong><br>
+<p><strong>More reasonable errors</strong><br /><br />
 Home Assistant should now throw better errors and offer solutions if you do not have the right version of Python 3, forgot to clone the git submodules or install the dependencies.</p>
 
-<p><strong>Streamlined first launch</strong><br>
+<p><strong>Streamlined first launch</strong><br /><br />
 Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
 
-
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -431,28 +352,10 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-13T08:29:04-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 13, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-01-13T08:29:04-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 13, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> less than one minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -462,7 +365,6 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2015/01/13/nest-in-da-house/#disqus_thread"
@@ -473,33 +375,30 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 </header>
 
 
+  <div class="entry-content clearfix">
+    <p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we’re expanding the supported devices. Today, we’re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
 
-
-  <p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we&rsquo;re expanding the supported devices. Today, we&rsquo;re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
-
-<p class='img'>
-  <img src='/images/screenshots/nest-thermostat-card.png' />
+<p class="img">
+  <img src="/images/screenshots/nest-thermostat-card.png" />
 </p>
-
 
 <p>The new integration exists out of two parts: a generic thermostat component and a Nest platform implementation. The initial version implements provides a read-only card and services to control it. The plan is in the future to add temperature and away mode controls from the thermostat card and more info dialog. Internally, we are using the Python package <a href="https://github.com/jkoelker/python-nest">python-nest by jkoelker</a> to talk to the Nest.</p>
 
 <p>If you own a Nest thermostat, add the following lines to your <code>home-assistant.conf</code>:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[thermostat]
-</span><span class='line'>platform=nest
-</span><span class='line'>username=YOUR_USERNAME
-</span><span class='line'>password=YOUR_PASSWORD</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>[thermostat]
+platform=nest
+username=YOUR_USERNAME
+password=YOUR_PASSWORD
+</pre></div>
+</div>
+</div>
 
-
-
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -511,28 +410,10 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-11T21:49:08-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 11, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-01-11T21:49:08-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 11, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> less than one minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -542,7 +423,6 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/#disqus_thread"
@@ -553,9 +433,8 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 </header>
 
 
-
-
-  <p>Most people do not like configuring things. Things just have to work, out of the box. Reaching this scenario is the goal of what we are about to introduce: our new discovery component.</p>
+  <div class="entry-content clearfix">
+    <p>Most people do not like configuring things. Things just have to work, out of the box. Reaching this scenario is the goal of what we are about to introduce: our new discovery component.</p>
 
 <p>The discovery component will scan the WiFi network from time to time for connected zeroconf/mDNS and uPnP devices. The intial introduction is mainly focussed on getting the right architecture in place and discovers Belkin WeMo switches and Google Chromecasts connected to your network. When found, it will load and notify the appropritate component and it will be ready to use within seconds.</p>
 
@@ -563,16 +442,18 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 
 <p>To enable the discovery component, add the following to your <code>home-assistant.conf</code>:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[discovery]</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>[discovery]
+</pre></div>
+</div>
+</div>
 
+<p>A new <a href="/developers/add_new_platform/#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
 
-<p>A new <a href="/developers/add_new_platform.html#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
-
-
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -584,28 +465,10 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-01-04T13:29:07-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 4, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-01-04T13:29:07-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 4, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -615,7 +478,6 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/#disqus_thread"
@@ -626,28 +488,25 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 </header>
 
 
-
-
-<div class="entry-content clearfix">
-  <p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn&rsquo;t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
+  <div class="entry-content clearfix">
+    <p>One of the things that was missing in Home Assistant for a while was a way to communicate with users. Wouldn’t it be nice to get a message when important events happen like the lights being turned on while no one is home? Since the Home Assistant frontend runs as a web application on the phone, we have no way to bring ourselves to the front. This is where the new notify component comes in, powered by PushBullet.</p>
 
 <p>The new notify component will take in messages and tells them to the user. For now this will be powered by the very awesome <a href="https://www.pushbullet.com/">PushBullet</a> but any other messaging platform can be easily added.</p>
 
-<p class='img'>
-  <img src='/images/screenshots/pushbullet_moto360.png' />
+<p class="img">
+  <img src="/images/screenshots/pushbullet_moto360.png" />
   A message triggered by the simple_alarm component is shown by PushBullet on the Moto360.
 </p>
-
 
 <p>Read on to learn how to enable the notify component and integrate it with other components.</p>
 
 
-  <a class="btn pull-right" href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/#read-more">Read on &rarr;</a>
-</div>
-
+    
+      <a class="btn pull-right" href="/blog/2015/01/04/hey-pushbullet-nice-talking-to-you/#read-more">Read on &rarr;</a>
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -659,28 +518,10 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-12-26T10:23:13-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 26, 2014</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2014-12-26T10:23:13-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 26, 2014</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> four minutes reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -690,7 +531,6 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2014/12/26/home-control-home-automation-and-the-smart-home/#disqus_thread"
@@ -701,10 +541,8 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
 </header>
 
 
-
-
-<div class="entry-content clearfix">
-  <p>The internet has been buzzing over the last year about home automation. A lot of different terms fly around like the internet of things, home automation and the smart home.
+  <div class="entry-content clearfix">
+    <p>The internet has been buzzing over the last year about home automation. A lot of different terms fly around like the internet of things, home automation and the smart home.<br />
 This article will try to explain how they all relate.</p>
 
 <p>The first thing to introduce is the <strong>Internet of Things</strong> (IoT). This refers to a new generation of devices that cannot only be controlled by humans via buttons or remotes but also provide an interface to communicate with other devices and applications. For example, an IoT-capable coffee machine could receive commands to create different types of coffee and be able to broadcast the amount of water left in its resevoir.</p>
@@ -713,22 +551,20 @@ This article will try to explain how they all relate.</p>
 
 <p>As a bare minimum a hub has to keep track of the state of each device and should be able to control them if possible. For example, it has to know which lights are on or off and offer a way to control the lights. For a sensor it only has to know the value. A hub with these capabilities offers <strong>home control</strong>.</p>
 
-<p class='img'>
-  <a href='/images/screenshots/nexus_7_dashboard.png'>
-    <img alt='Hub dashboard example'
-         src='/images/screenshots/nexus_7_dashboard.png' />
+<p class="img">
+  <a href="/images/screenshots/nexus_7_dashboard.png">
+    <img alt="Hub dashboard example" src="/images/screenshots/nexus_7_dashboard.png" />
   </a>
-  Example of a hub&#8217;s dashboard. Showing the state of 2 persons, 4 lights and the sun.
+  Example of a hub’s dashboard. Showing the state of 2 persons, 4 lights and the sun.
 </p>
 
 
-
-  <a class="btn pull-right" href="/blog/2014/12/26/home-control-home-automation-and-the-smart-home/#read-more">Read on &rarr;</a>
-</div>
-
+    
+      <a class="btn pull-right" href="/blog/2014/12/26/home-control-home-automation-and-the-smart-home/#read-more">Read on &rarr;</a>
+    
+  </div>
   </article>
   <hr>
-  
   
   <article class="listing">
     <header>
@@ -740,28 +576,10 @@ This article will try to explain how they all relate.</p>
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-12-18T23:24:45-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 18, 2014</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2014-12-18T23:24:45-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 18, 2014</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> less than one minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -771,7 +589,6 @@ This article will try to explain how they all relate.</p>
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="/blog/2014/12/18/website-launched/#disqus_thread"
@@ -782,11 +599,11 @@ This article will try to explain how they all relate.</p>
 </header>
 
 
+  <div class="entry-content clearfix">
+    <p>I finally took the time to setup a simple website to help people getting started with Home Assistant. The process was super smooth thanks to the great tools <a href="http://jekyllrb.com">Jekyll</a> and <a href="http://octopress.org">Octopress</a> and the great services <a href="https://pages.github.com">GitHub Pages</a> and <a href="https://cloudflare.com">CloudFlare</a>.</p>
 
-
-  <p>I finally took the time to setup a simple website to help people getting started with Home Assistant. The process was super smooth thanks to the great tools <a href="http://jekyllrb.com">Jekyll</a> and <a href="http://octopress.org">Octopress</a> and the great services <a href="https://pages.github.com">GitHub Pages</a> and <a href="https://cloudflare.com">CloudFlare</a>.</p>
-
-
+    
+  </div>
   </article>
   <hr>
   
@@ -811,30 +628,23 @@ This article will try to explain how they all relate.</p>
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -847,9 +657,6 @@ This article will try to explain how they all relate.</p>
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
 
   </body>
 </html>

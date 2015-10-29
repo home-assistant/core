@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Release notes for March 11, 2015</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-03-11T18:36:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 11, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-03-11T19:36:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 11, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> two minutes reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,72 +124,59 @@
 </header>
 
 
-
-
   <p>It has only been a little over a week since Theodor introduced YAML support for Home Assistant but so much has already happened that it is time for a summary of recent changes. Before mentioning the highlights I want to thank <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/jamespcole">jamespcole</a> and <a href="https://github.com/theolind">theolind</a> for numerous bug fixes, enhancements and new contributions. Thanks!</p>
 
-<p><strong>Monitor local resources.</strong><br>
+<p><strong>Monitor local resources.</strong><br /><br />
 Theodor has contributed a new sensor platform to allow you to monitor disk usage, memory usage, CPU usage and running processes. This platform has superseded the process component which is now considered deprecated.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">systemmonitor</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">resources</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">disk_use_percent</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">arg</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/home</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">memory_free</span>
-</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">process</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">arg</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodi</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  - <span class="string"><span class="content">platform: systemmonitor</span></span>
+    <span class="key">resources</span>:
+      - <span class="string"><span class="content">type: disk_use_percent</span></span>
+        <span class="key">arg</span>: <span class="string"><span class="content">/home</span></span>
+      - <span class="string"><span class="content">type: memory_free</span></span>
+      - <span class="string"><span class="content">type: process</span></span>
+        <span class="key">arg</span>: <span class="string"><span class="content">kodi</span></span>
+</pre></div>
+</div>
+</div>
 
-
-<p><strong>Experimental Z-Wave support</strong><br>
+<p><strong>Experimental Z-Wave support</strong><br /><br />
 There is now experimental support for connecting Z-Wave networks using a Z-Wave USB stick. Right now it only integrates Z-Wave sensors into Home Assistant. Our goal is to get this tested by more people before adding support for other Z-Wave devices.</p>
 
-<p>The new component is built on top of <a href="https://code.google.com/p/python-openzwave/">python-openzwave</a>. This package is currently not distributed on PyPi so we&rsquo;ve added a script <code>scripts/build_python_openzwave</code> to install it on your machine. Alternatively you can use the Docker image which is ready to go.</p>
+<p>The new component is built on top of <a href="https://code.google.com/p/python-openzwave/">python-openzwave</a>. This package is currently not distributed on PyPi so we’ve added a script <code>scripts/build_python_openzwave</code> to install it on your machine. Alternatively you can use the Docker image which is ready to go.</p>
 
 <p>The development was done using an AEON Z-Wave USB stick and an AEON Z-Wave MultiSensor.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">zwave</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">usb_path</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/dev/ttyUSB0</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">zwave</span>:
+  <span class="key">usb_path</span>: <span class="string"><span class="content">/dev/ttyUSB0</span></span>
+</pre></div>
+</div>
+</div>
 
-
-<p><strong>Voice control</strong><br>
+<p><strong>Voice control</strong><br /><br />
 An initial version of voice control for Home Assistant has landed. The current implementation consists of two parts.</p>
 
 <p>The first part is a component called <code>conversation</code> that exposes the service <code>conversation/process</code>. This service is capable of processing text and translating them into commands for devices. For now it will only support commands in the format of <code>Turn &lt;Friendly Name&gt; &lt;on/off&gt;</code>.</p>
 
-<p>The second part is an upgrade to the frontend to use the speech-to-text in Chrome to allow users to speak commands. If you&rsquo;re using Chrome, you can test this out in <a href="/demo/">the demo</a>.</p>
+<p>The second part is an upgrade to the frontend to use the speech-to-text in Chrome to allow users to speak commands. If you’re using Chrome, you can test this out in <a href="/demo/">the demo</a>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">conversation</span><span class="p-Indicator">:</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">conversation</span>:
+</pre></div>
+</div>
+</div>
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -224,7 +188,6 @@ An initial version of voice control for Home Assistant has landed. The current i
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -306,7 +269,6 @@ An initial version of voice control for Home Assistant has landed. The current i
 
   
 </div>
-
         </aside>
         
       </div>
@@ -317,30 +279,23 @@ An initial version of voice control for Home Assistant has landed. The current i
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -356,14 +311,6 @@ An initial version of voice control for Home Assistant has landed. The current i
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

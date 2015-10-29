@@ -1,0 +1,252 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>ManyThing - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to setup ManyThing support with IFTTT.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/ifttt.manything/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="ManyThing">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/ifttt.manything/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to setup ManyThing support with IFTTT.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      ManyThing
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p><a href="https://manything.com">Manything</a> is a smart app that turns your iPhone, iPod, or iPad into a wifi  camera for monitoring your home, your pets, anything! Comes with live streaming, motion activated alerts, cloud video recording, and more.</p>
+
+<p>To get manything support, HA will use IFTTT’s <a href="https://ifttt.com/maker">Maker Channel</a> and the <a href="https://ifttt.com/manything">ManyThing Channel</a>. Use the <a href="/components/ifttt/">IFTTT Setup instructions</a> to activate the IFTTT Platform.</p>
+
+<p>After setting up IFTTT, Maker Channel and ManyThing Channel, you can use the following examples to configure Home Assistant.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">automation</span>:
+- <span class="string"><span class="content">alias: 'ManyThing Recording ON'</span></span>
+  <span class="comment"># This calls an IFTTT recipe to turn on recording of the ManyThing Camera</span>
+  <span class="comment"># if we leave the house during the day.</span>
+  <span class="key">trigger</span>:
+   - <span class="string"><span class="content">platform: state</span></span>
+     <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
+     <span class="key">state</span>: <span class="string"><span class="content">'not_home'</span></span>
+
+  <span class="key">condition</span>:
+   - <span class="string"><span class="content">platform: state</span></span>
+     <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+     <span class="key">state</span>: <span class="string"><span class="content">'above_horizon'</span></span>
+
+  <span class="key">action</span>:
+     <span class="key">service</span>: <span class="string"><span class="content">ifttt.trigger</span></span>
+     <span class="key">data</span>: <span class="string"><span class="content">{&quot;event&quot;:&quot;manything_on&quot;}</span></span>
+
+- <span class="string"><span class="content">alias: 'ManyThing Recording OFF'</span></span>
+  <span class="comment"># This calls an IFTTT recipe to turn off recording of the ManyThing Camera</span>
+  <span class="comment"># when we are home unless it's nighttime.</span>
+  <span class="key">trigger</span>:
+   - <span class="string"><span class="content">platform: state</span></span>
+     <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
+     <span class="key">state</span>: <span class="string"><span class="content">'home'</span></span>
+   - <span class="string"><span class="content">platform: state</span></span>
+     <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+     <span class="key">state</span>: <span class="string"><span class="content">'above_horizon'</span></span>
+
+  <span class="key">condition</span>: <span class="string"><span class="content">use_trigger_values</span></span>
+
+  <span class="key">action</span>:
+     <span class="key">service</span>: <span class="string"><span class="content">ifttt.trigger</span></span>
+     <span class="key">data</span>: <span class="string"><span class="content">{&quot;event&quot;:&quot;manything_off&quot;}</span></span>
+</pre></div>
+</div>
+</div>
+
+<h3><a class="title-link" name="setting-up-a-recipe" href="#setting-up-a-recipe"></a> Setting up a recipe</h3>
+
+<p class="img">
+<img src="/images/components/ifttt/IFTTT_manything_trigger.png" />
+You need to setup a unique trigger for each event you sent to IFTTT.
+For ManyThing support, you need to set up an <code>on</code> and <code>off</code> event.
+</p>
+
+<h3><a class="title-link" name="testing-your-trigger" href="#testing-your-trigger"></a> Testing your trigger</h3>
+
+<p>You can use the developer tools to test your <a href="https://ifttt.com/maker">Maker Channel</a> trigger. To do this, open the Home Assistant UI, open the sidebar, click on the first icon in the developer tools. This should get you to the ‘Call Service’ screen. Fill in the following values:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>domain</td>
+      <td><code>ifttt</code></td>
+    </tr>
+    <tr>
+      <td>service</td>
+      <td><code>trigger</code></td>
+    </tr>
+    <tr>
+      <td>Service Data</td>
+      <td><code>{"event": "manything_on"}</code></td>
+    </tr>
+  </tbody>
+</table>
+
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/manything.png' />
+  </div>
+    <div class='section'>
+      This is a platform for
+      <a href='/components/ifttt/'>the IFTTT component</a>.
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Camera</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/camera.foscam/'>Foscam IP camera</a>
+        </li>
+        <li>
+            <a href='/components/camera.generic/'>Generic IP Camera</a>
+        </li>
+        <li>
+            <a href='/components/switch.hikvision/'>Hikvision camera</a>
+        </li>
+        <li>
+            ManyThing
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

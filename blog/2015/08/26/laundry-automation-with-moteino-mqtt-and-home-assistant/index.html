@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Laundry Automation: insight and notifications</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-08-26T08:12:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 26, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> five minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-08-26T08:12:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 26, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> four minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,235 +124,147 @@
 </header>
 
 
-
-
   <p><em>This is a guest post by Home Assistant user and contributor <a href="https://github.com/nkgilley">Nolan Gilley</a>.</em></p>
 
 <p>In our house, laundry has been a struggle for quite some time.  Our washer and dryer both lack a buzzer which leads to forgotten laundry, and stinky mess that needs to be rewashed.  I decided to create a solution by monitoring the washer and dryer myself with some cheap electronics.</p>
 
-<p>As an avid user of Home Assistant, I decided it would be the perfect application to manage the UI and notification system.  Now all I needed was a way to monitor the washer and dryer.  I tried using sound sensors but found them unreliable.  I ended up opting for an accelerometer attached to the back of each appliance.  I also added magnetic reed switches on the doors of the washer and dryer to detect if the doors are open or closed.  I connected the accelerometers and reed switches to a <a href="https://lowpowerlab.com/moteino/">Moteino</a>, an arduino clone with an RF transceiver.  The Moteino can perform the logic to figure out which state the appliances are in and wirelessly communicate that data with another Moteino that is connected via serial to my Raspberry Pi.  The Raspberry Pi reads the serial data and repeats it over MQTT for Home Assistant to use.  This is great because I don&rsquo;t have to run Home Assistant on the Raspberry Pi.  I can run it on a faster machine and point the <a href="/components/mqtt.html">MQTT component</a> to my Raspberry Pi.</p>
+<p>As an avid user of Home Assistant, I decided it would be the perfect application to manage the UI and notification system.  Now all I needed was a way to monitor the washer and dryer.  I tried using sound sensors but found them unreliable.  I ended up opting for an accelerometer attached to the back of each appliance.  I also added magnetic reed switches on the doors of the washer and dryer to detect if the doors are open or closed.  I connected the accelerometers and reed switches to a <a href="https://lowpowerlab.com/moteino/">Moteino</a>, an arduino clone with an RF transceiver.  The Moteino can perform the logic to figure out which state the appliances are in and wirelessly communicate that data with another Moteino that is connected via serial to my Raspberry Pi.  The Raspberry Pi reads the serial data and repeats it over MQTT for Home Assistant to use.  This is great because I don’t have to run Home Assistant on the Raspberry Pi.  I can run it on a faster machine and point the <a href="/components/mqtt/">MQTT component</a> to my Raspberry Pi.</p>
 
-<p>After taking some sample data from the accelerometers while each appliance was in operation, I decided to plot the data to help determine the proper thresholds of when the devices were running or off.  I had to do this in order to get precise ranges so the dryer sensor wouldn&rsquo;t get tripped by the washer or vice versa.  In the plot below you can see the acceleration in the x direction for the accelerometer connected to the washing machine.   It&rsquo;s easy to see when the washing machine is in operation here.  I used the same technique for the dryer&rsquo;s accelerometer.</p>
+<p>After taking some sample data from the accelerometers while each appliance was in operation, I decided to plot the data to help determine the proper thresholds of when the devices were running or off.  I had to do this in order to get precise ranges so the dryer sensor wouldn’t get tripped by the washer or vice versa.  In the plot below you can see the acceleration in the x direction for the accelerometer connected to the washing machine.   It’s easy to see when the washing machine is in operation here.  I used the same technique for the dryer’s accelerometer.</p>
 
-<p class='img'>
-  <a href='/images/blog/2015-08-laundry-automation/data-graph.png'>
-    <img src='/images/blog/2015-08-laundry-automation/data-graph.png' />
+<p class="img">
+  <a href="/images/blog/2015-08-laundry-automation/data-graph.png">
+    <img src="/images/blog/2015-08-laundry-automation/data-graph.png" />
   </a>
   Graph showing the accelerometer data
 </p>
 
-
-
-
 <a name="read-more"></a>
 
+<p>Next it was just a matter of integrating everything with Home Assistant.  I was able to use the <a href="/components/mqtt/">MQTT component</a> to read the washer and dryer states from the Moteino and display it in Home Assistant.</p>
 
-<p>Next it was just a matter of integrating everything with Home Assistant.  I was able to use the <a href="/components/mqtt.html">MQTT component</a> to read the washer and dryer states from the Moteino and display it in Home Assistant.</p>
-
-<p class='img'>
-  <img src='/images/blog/2015-08-laundry-automation/screenshot-ha.png' />
+<p class="img">
+  <img src="/images/blog/2015-08-laundry-automation/screenshot-ha.png" />
   Status of the dryer and washer in Home Assistant
 </p>
 
+<p>Next I wrote <a href="/components/script/">scripts</a> that are run whenever the washer or dryer completes a load.  This is triggered by the <a href="/components/automation/">automation component</a>.  When the laundry is complete I have the lights in the house turn red and <a href="/components/notify.pushbullet/">notify me via PushBullet</a>.  Once the laundry is taken care of another script runs that sets the lights back to normal.  So far it has been very helpful and very reliable.</p>
 
-<p>Next I wrote <a href="/components/script.html">scripts</a> that are run whenever the washer or dryer completes a load.  This is triggered by the <a href="/components/automation.html">automation component</a>.  When the laundry is complete I have the lights in the house turn red and <a href="/components/notify.pushbullet.html">notify me via PushBullet</a>.  Once the laundry is taken care of another script runs that sets the lights back to normal.  So far it has been very helpful and very reliable.</p>
-
-<p class='img'>
-  <a href='/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg'>
-    <img src='/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg' />
+<p class="img">
+  <a href="/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg">
+    <img src="/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg" />
   </a>
   Top left: reed switch. Bottom left: moteino. Right: Accelerometer.
 </p>
 
-
 <p>Materials used:</p>
 
 <ul>
-<li><a href="https://lowpowerlab.com/moteino/">Moteino</a></li>
-<li><a href="http://www.amazon.com/gp/product/B008BOPN40">2 x Accelerometers</a></li>
-<li><a href="http://www.amazon.com/gp/product/B004PARDRO">2 x Reed switch</a></li>
-<li><a href="https://home-assistant.io/">Home Assistant</a></li>
+  <li><a href="https://lowpowerlab.com/moteino/">Moteino</a></li>
+  <li><a href="http://www.amazon.com/gp/product/B008BOPN40">2 x Accelerometers</a></li>
+  <li><a href="http://www.amazon.com/gp/product/B004PARDRO">2 x Reed switch</a></li>
+  <li><a href="https://home-assistant.io/">Home Assistant</a></li>
 </ul>
-
 
 <p><a href="https://codebender.cc/sketch:144743">Sketch for the Moteino is available here.</a></p>
 
 <p>Home Assistant Configuration:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>mqtt:
-</span><span class='line'>  broker: 192.168.1.100
-</span><span class='line'>  port: 1883
-</span><span class='line'>  keepalive: 60
-</span><span class='line'>  qos: 0
-</span><span class='line'>
-</span><span class='line'>sensor:
-</span><span class='line'>  platform: mqtt
-</span><span class='line'>  name: "Dryer Status"
-</span><span class='line'>  state_topic: "sensor/dryer"
-</span><span class='line'>  unit_of_measurement: ""
-</span><span class='line'>
-</span><span class='line'>sensor 2:
-</span><span class='line'>  platform: mqtt
-</span><span class='line'>  name: "Washer Status"
-</span><span class='line'>  state_topic: "sensor/washer"
-</span><span class='line'>  unit_of_measurement: ""
-</span><span class='line'>
-</span><span class='line'>automation:
-</span><span class='line'>  alias: Dryer complete
-</span><span class='line'>
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: sensor.dryer_status
-</span><span class='line'>  state_from: 'Running'
-</span><span class='line'>  state_to: 'Complete'
-</span><span class='line'>
-</span><span class='line'>  execute_service: script.turn_on
-</span><span class='line'>  service_entity_id: script.dryer_complete
-</span><span class='line'>
-</span><span class='line'>automation 2:
-</span><span class='line'>  alias: Dryer emptied
-</span><span class='line'>
-</span><span class='line'>  platform: state
-</span><span class='line'>  state_entity_id: sensor.dryer_status
-</span><span class='line'>  state_from: 'Complete'
-</span><span class='line'>  state_to: 'Empty'
-</span><span class='line'>
-</span><span class='line'>  execute_service: script.turn_on
-</span><span class='line'>  service_entity_id: script.dryer_cleared
-</span><span class='line'>
-</span><span class='line'>script:
-</span><span class='line'>  dryer_complete:
-</span><span class='line'>    alias: Dryer Complete Script
-</span><span class='line'>    sequence:
-</span><span class='line'>      - alias: Pushbullet Notification
-</span><span class='line'>        execute_service: notify.notify
-</span><span class='line'>        service_data:
-</span><span class='line'>          message: "The dryer has finished its cycle, please empty it!"
-</span><span class='line'>      - alias: Living Room Lights Red
-</span><span class='line'>        execute_service: scene.turn_on
-</span><span class='line'>        service_data:
-</span><span class='line'>          entity_id: scene.red
-</span><span class='line'>      - delay:
-</span><span class='line'>          seconds: 1
-</span><span class='line'>      - alias: Living Room Lights Off
-</span><span class='line'>        execute_service: light.turn_off
-</span><span class='line'>        service_data:
-</span><span class='line'>          entity_id: group.living_room
-</span><span class='line'>      - delay:
-</span><span class='line'>          seconds: 1
-</span><span class='line'>      - alias: Living Room Lights Red
-</span><span class='line'>        execute_service: scene.turn_on
-</span><span class='line'>        service_data:
-</span><span class='line'>          entity_id: scene.red
-</span><span class='line'>
-</span><span class='line'>  dryer_cleared:
-</span><span class='line'>    alias: Dryer Cleared Script
-</span><span class='line'>    sequence:
-</span><span class='line'>      - alias: Living Room Lights Off
-</span><span class='line'>        execute_service: light.turn_off
-</span><span class='line'>        service_data:
-</span><span class='line'>          entity_id: group.living_room
-</span><span class='line'>      - delay:
-</span><span class='line'>          seconds: 1
-</span><span class='line'>      - alias: Living Room Lights Normal
-</span><span class='line'>        execute_service: scene.turn_on
-</span><span class='line'>        service_data:
-</span><span class='line'>          entity_id: scene.normal</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">mqtt</span>:
+  <span class="key">broker</span>: <span class="string"><span class="content">192.168.1.100</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">1883</span></span>
+  <span class="key">keepalive</span>: <span class="string"><span class="content">60</span></span>
+  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
 
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Dryer Status</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/dryer</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>
+
+<span class="key">sensor 2</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Washer Status</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/washer</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>
+
+<span class="key">automation</span>:
+  <span class="key">alias</span>: <span class="string"><span class="content">Dryer complete</span></span>
+
+  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sensor.dryer_status</span></span>
+  <span class="key">state_from</span>: <span class="string"><span class="content">'Running'</span></span>
+  <span class="key">state_to</span>: <span class="string"><span class="content">'Complete'</span></span>
+
+  <span class="key">execute_service</span>: <span class="string"><span class="content">script.turn_on</span></span>
+  <span class="key">service_entity_id</span>: <span class="string"><span class="content">script.dryer_complete</span></span>
+
+<span class="key">automation 2</span>:
+  <span class="key">alias</span>: <span class="string"><span class="content">Dryer emptied</span></span>
+
+  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sensor.dryer_status</span></span>
+  <span class="key">state_from</span>: <span class="string"><span class="content">'Complete'</span></span>
+  <span class="key">state_to</span>: <span class="string"><span class="content">'Empty'</span></span>
+
+  <span class="key">execute_service</span>: <span class="string"><span class="content">script.turn_on</span></span>
+  <span class="key">service_entity_id</span>: <span class="string"><span class="content">script.dryer_cleared</span></span>
+
+<span class="key">script</span>:
+  <span class="key">dryer_complete</span>:
+    <span class="key">alias</span>: <span class="string"><span class="content">Dryer Complete Script</span></span>
+    <span class="key">sequence</span>:
+      - <span class="string"><span class="content">alias: Pushbullet Notification</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">notify.notify</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">message</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">The dryer has finished its cycle, please empty it!</span><span class="delimiter">&quot;</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Red</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.red</span></span>
+      - <span class="string"><span class="content">delay:</span><span class="content">
+          seconds: 1</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Off</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_off</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+      - <span class="string"><span class="content">delay:</span><span class="content">
+          seconds: 1</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Red</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.red</span></span>
+
+  <span class="key">dryer_cleared</span>:
+    <span class="key">alias</span>: <span class="string"><span class="content">Dryer Cleared Script</span></span>
+    <span class="key">sequence</span>:
+      - <span class="string"><span class="content">alias: Living Room Lights Off</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_off</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+      - <span class="string"><span class="content">delay:</span><span class="content">
+          seconds: 1</span></span>
+      - <span class="string"><span class="content">alias: Living Room Lights Normal</span></span>
+        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">service_data</span>:
+          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.normal</span></span>
+</pre></div>
+</div>
+</div>
 
 <p>Resources used:</p>
 
 <ul>
-<li><a href="http://www.instructables.com/id/Uber-Home-Automation-w-Arduino-Pi/step13/Washer-Dryer-Smartifier-Water-Leak-Sensor/">Inspiration and Help with Arduino code</a></li>
-<li><a href="https://github.com/LowPowerLab/RFM69/">Moteino Code</a></li>
+  <li><a href="http://www.instructables.com/id/Uber-Home-Automation-w-Arduino-Pi/step13/Washer-Dryer-Smartifier-Water-Leak-Sensor/">Inspiration and Help with Arduino code</a></li>
+  <li><a href="https://github.com/LowPowerLab/RFM69/">Moteino Code</a></li>
 </ul>
-
-
-
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -387,7 +276,6 @@
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -469,7 +357,6 @@
 
   
 </div>
-
         </aside>
         
       </div>
@@ -480,30 +367,23 @@
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -519,14 +399,6 @@
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

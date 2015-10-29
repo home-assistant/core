@@ -1,0 +1,218 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Troubleshooting your configuration - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Common problems with tweaking your configuration and their solutions.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/getting-started/troubleshooting-configuration/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Troubleshooting your configuration">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/getting-started/troubleshooting-configuration/">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Common problems with tweaking your configuration and their solutions.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Troubleshooting Your Configuration
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>It can happen that you run into trouble while configuring Home Assistant. A component is not showing up or is acting weird. This page will discuss a few of the most common problems.</p>
+
+<p>Before we dive into common issues, make sure you know where your configuration directory is. Home Assistant will print out the configuration directory it is using when starting up.</p>
+
+<p>Whenever a component or configuration option results in a warning, it will be stored in <code>home-assistant.log</code>. This file is reset on start of Home Assistant.</p>
+
+<h3><a class="title-link" name="yaml" href="#yaml"></a> YAML</h3>
+
+<p>Home Assistant uses the YAML syntax for configuration. YAML can be confusing at start but it is really powerful in allowing you to express complex configurations.</p>
+
+<p>The basics of YAML are lists and lookup tables containing key-value pairs. Lists will have each item start with a <code>-</code> while lookup tables will have the format <code>key: value</code>. The last value for a key is used in case you specify a duplicate key.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># A list</span>
+- <span class="string"><span class="content">hello</span></span>
+- <span class="string"><span class="content">how</span></span>
+- <span class="string"><span class="content">are</span></span>
+- <span class="string"><span class="content">you</span></span>
+
+<span class="comment"># Lookup table</span>
+<span class="key">beer</span>: <span class="string"><span class="content">ice cold</span></span>  <span class="comment"># &lt;-- will be ignored because key specified twice</span>
+<span class="key">beer</span>: <span class="string"><span class="content">warm</span></span>
+<span class="key">wine</span>: <span class="string"><span class="content">room temperature</span></span>
+<span class="key">water</span>: <span class="string"><span class="content">cold</span></span>
+
+<span class="comment"># Nesting tables</span>
+<span class="key">device_tracker</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+
+<span class="comment"># Nesting a list of tables in a table</span>
+<span class="key">sensor</span>:
+  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="content">sensor/topic</span></span>
+  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="content">sensor2/topic</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Indentation is used to specify which objects are nested under one anohter. Getting the right indentation can be tricky if you’re not using an editor with a fixed width font. You can test your configuration using <a href="http://yaml-online-parser.appspot.com/">this online YAML parser</a>.</p>
+
+<p>To learn more about the quirks of YAML, read <a href="https://docs.saltstack.com/en/latest/topics/troubleshooting/yaml_idiosyncrasies.html">YAML IDIOSYNCRASIES</a> by SaltStack.</p>
+
+<h3><a class="title-link" name="my-component-does-not-show-up" href="#my-component-does-not-show-up"></a> My component does not show up</h3>
+
+<p>When a component does not show up, many different things can be the case. Before you try any of these steps, make sure to look at the <code>home-assistant.log</code> file and see if there are any errors related to your component you are trying to set up.</p>
+
+<p><strong>Problems with the configuration</strong><br />
+<code>configuration.yaml</code> does not allow multiple sections to have the same name. If you want a specific component to be loaded twice, append a number to the name.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">forecast</span></span>
+  [<span class="error">…]</span>
+
+<span class="key">sensor 2</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">bitcoin</span></span>
+  [<span class="error">…]</span>
+</pre></div>
+</div>
+</div>
+
+<p>Another common problem is that a required configuration setting is missing. If this is the case, the component will report this to <code>home-assistant.log</code>. You can have a look at <a href="/components/">the component page</a> for instructions how to setup the components.</p>
+
+<p>If you find any errors or want to expand the documentation, please <a href="https://github.com/balloob/home-assistant.io/issues">let us know</a>.</p>
+
+<p><strong>Problems with dependencies</strong><br />
+Almost all components have external dependencies to communicate with your devices and services. Sometimes Home Assistant is unable to install the necessary dependencies. If this is the case, it should show up in <code>home-assistant.log</code>.</p>
+
+<p>First step is trying to restart Home Assistant and see if the problem persists. If it does, please <a href="https://github.com/balloob/home-assistant/issues">report it</a> so we can investigate what is going on.</p>
+
+<p><strong>Problems with components</strong><br />
+It can happen that some components either do not work right away or stop working after Home Assistant has been running for a while. If this happens to you, please <a href="https://github.com/balloob/home-assistant/issues">report it</a> so that we can have a look.</p>
+
+<p class="note">
+Whenever you report an issue, be aware that we are a group of volunteers that do not have access to every single device in the world nor unlimited time to fix every problem out there.
+</p>
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

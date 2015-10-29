@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Home Assistant goes geo with OwnTracks</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-10-05T21:49:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 5, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-10-05T21:49:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 5, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> 1 minute reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,54 +124,43 @@
 </header>
 
 
-
-
-  <p>A few weeks have past and it is time again for another release: version 0.7.4. This time we&rsquo;re very
-glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map.
-The geo support consists of three different parts:</p>
+  <p>A few weeks have past and it is time again for another release: version 0.7.4. This time we’re very glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map. The geo support consists of three different parts:</p>
 
 <ul>
-<li><a href="/components/device_tracker.owntracks.html">OwnTracks platform for the device tracker</a> to get locations for devices</li>
-<li>Brand new <a href="/components/zone.html">zone component</a> to define zones to identify locations and <a href="/components/automation.html#zone-trigger">trigger automation</a></li>
-<li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
+  <li><a href="/components/device_tracker.owntracks/">OwnTracks platform for the device tracker</a> to get locations for devices</li>
+  <li>Brand new <a href="/components/zone/">zone component</a> to define zones to identify locations and <a href="/components/automation/#zone-trigger">trigger automation</a></li>
+  <li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
 </ul>
 
+<p>We have added a new <a href="/getting-started/presence-detection/">getting started section</a> to get up and running.</p>
 
-<p>We have added a new <a href="/getting-started/presence-detection.html">getting started section</a> to get up and running.</p>
-
-<p class='img'>
-<img src='/images/screenshots/map.png' />
+<p class="img">
+<img src="/images/screenshots/map.png" />
 Map in Home Assistant showing two people and three zones (home, school, work)
 </p>
 
+<p>Ofcourse more things happened in the last three weeks. I’m moving away from my usual long post to a short summary of highlights:</p>
 
-<p>Ofcourse more things happened in the last three weeks. I&rsquo;m moving away from my usual long post to a
-short summary of highlights:</p>
-
-<p><a href='/components/media_player.plex.html'>
-<img src='/images/supported_brands/plex.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<p><a href="/components/media_player.plex/">
+<img src="/images/supported_brands/plex.png" style="border:none; box-shadow: none; float: right;" height="50" />
 </a></p>
 
 <ul>
-<li>Sensor: <a href="/components/sensor.rest.html">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
-<li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt.html">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-<li>Media Player: <a href="/components/media_player.plex.html">Plex platform</a> added (<a href="https://github.com/miniconfig,%20[@adrienbrault](https://github.com/adrienbrault">@miniconfig</a>)</li>
-<li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Light: <a href="/components/light.limitlessled.html">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
-<li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
-<li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
+  <li>Sensor: <a href="/components/sensor.rest/">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt/">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>Media Player: <a href="/components/media_player.plex/">Plex platform</a> added (<a href="https://github.com/miniconfig, [@adrienbrault](https://github.com/adrienbrault)">@miniconfig</a></li>
+  <li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Light: <a href="/components/light.limitlessled/">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
+  <li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
 </ul>
-
-
-
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -206,7 +172,6 @@ short summary of highlights:</p>
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -284,7 +249,6 @@ short summary of highlights:</p>
 
   
 </div>
-
         </aside>
         
       </div>
@@ -295,30 +259,23 @@ short summary of highlights:</p>
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -334,14 +291,6 @@ short summary of highlights:</p>
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

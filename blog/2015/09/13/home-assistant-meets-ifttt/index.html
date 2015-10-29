@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Home Assistant meets IFTTT</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-09-13T09:28:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> September 13, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> three minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-09-13T09:28:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> September 13, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -138,7 +116,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -149,218 +126,185 @@
 </header>
 
 
+  <p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a webservice that integrates with almost every possible webservice out there. Adding Home Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
 
+<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet if your smoke alarm goes off.</p>
 
-  <p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
-<a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
-webservice that integrates with almost every possible webservice out there. Adding Home
-Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
-
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
-if your smoke alarm goes off.</p>
-
-<p class='img'>
-  <img src='/images/blog/2015-09-ifttt/splash.png'>
+<p class="img">
+  <img src="/images/blog/2015-09-ifttt/splash.png" />
 </p>
 
-
-<p>Head over to the <a href="/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
-read more button for some example recipes.</p>
+<p>Head over to the <a href="/components/ifttt/">setup instructions</a> to get started with IFTTT. Click the read more button for some example recipes.</p>
 
 <a name="read-more"></a>
 
+<p>In each of the following examples, make sure to replace the XXX in the url with your correct host address and api password.</p>
 
-<p>In each of the following examples, make sure to replace the XXX in the url with your correct
-host address and api password.</p>
+<h2><a class="title-link" name="turn-off-irregation-system-when-not-needed" href="#turn-off-irregation-system-when-not-needed"></a> Turn off irregation system when not needed</h2>
 
-<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed</h2>
-
-<p class='img'>
-  <img src='/images/blog/2015-09-ifttt/recipe-weather.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-ifttt/recipe-weather.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;switch.irrigation&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “switch.irrigation” }</td>
+    </tr>
+  </tbody>
 </table>
 
+<h2><a class="title-link" name="tweet-when-important-events-happen" href="#tweet-when-important-events-happen"></a> Tweet when important events happen</h2>
 
-<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen</h2>
-
-<p class='img'>
-  <img src='/images/blog/2015-09-ifttt/recipe-twitter.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-ifttt/recipe-twitter.png" />
 </p>
 
+<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered. Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in <code>value1</code>.</p>
 
-<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered.
-Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
-<code>value1</code>.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Configuration.yaml entry</span>
+<span class="key">automation</span>:
+- <span class="string"><span class="content">alias: Post a tweet when fire alarm is triggered</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+    <span class="key">mqtt_topic</span>: <span class="string"><span class="content">home/alarm/fire</span></span>
+    <span class="key">mqtt_payload</span>: <span class="string"><span class="content">'on'</span></span>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">automation</span><span class="p-Indicator">:</span>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">alias</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Post a tweet when fire alarm is triggered</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">trigger</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">mqtt_topic</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">home/alarm/fire</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">mqtt_payload</span><span class="p-Indicator">:</span> <span class="s">&#39;on&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ifttt.trigger</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span> <span class="p-Indicator">{</span><span class="s">&quot;event&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;HA_FIRE_ALARM&quot;</span><span class="p-Indicator">,</span> <span class="s">&quot;value1&quot;</span><span class="p-Indicator">:</span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">fire</span><span class="nv"> </span><span class="s">alarm</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">triggered!&quot;</span><span class="p-Indicator">}</span>
-</span></code></pre></td></tr></table></div></figure>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">ifttt.trigger</span></span>
+    <span class="key">data</span>: <span class="string"><span class="content">{&quot;event&quot;:&quot;HA_FIRE_ALARM&quot;, &quot;value1&quot;:&quot;The fire alarm just triggered!&quot;}</span></span>
+</pre></div>
+</div>
+</div>
 
+<h2><a class="title-link" name="turn-on-lights-when-i-get-home" href="#turn-on-lights-when-i-get-home"></a> Turn on lights when I get home</h2>
 
-<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home</h2>
-
-<p class='img'>
-  <img src='/images/blog/2015-09-ifttt/recipe-geo.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-ifttt/recipe-geo.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;light.kitchen&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “light.kitchen” }</td>
+    </tr>
+  </tbody>
 </table>
 
+<h2><a class="title-link" name="flash-lights-when-a-new-pr-comes-in-for-home-assistant" href="#flash-lights-when-a-new-pr-comes-in-for-home-assistant"></a> Flash lights when a new PR comes in for Home Assistant</h2>
 
-<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant</h2>
-
-<p class='img'>
-  <img src='/images/blog/2015-09-ifttt/recipe-github.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-ifttt/recipe-github.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;group.all_lights&rdquo;, &ldquo;flash&rdquo;:&ldquo;yes&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “group.all_lights”, “flash”:”yes” }</td>
+    </tr>
+  </tbody>
 </table>
 
+<h2><a class="title-link" name="fire-events-when-pressing-the-do-button" href="#fire-events-when-pressing-the-do-button"></a> Fire events when pressing the DO button</h2>
 
-<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button</h2>
-
-<p class='img'>
-  <img src='/images/blog/2015-09-ifttt/recipe-do.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-ifttt/recipe-do.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+  </tbody>
 </table>
-
-
-
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -372,7 +316,6 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -454,7 +397,6 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
 
   
 </div>
-
         </aside>
         
       </div>
@@ -465,30 +407,23 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -504,14 +439,6 @@ Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter chann
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">IP Cameras, Arduinos, Kodi and Efergy Energy Monitors now supported</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-07-11T01:37:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> July 11, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> five minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-07-11T01:37:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> July 11, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> four minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,210 +124,139 @@
 </header>
 
 
-
-
   <p>Another month has passed and some great new features have landed in Home Assistant. This month release has been made possible by <a href="https://github.com/balloob">balloob</a>, <a href="https://github.com/ettisan">ettisan</a>, <a href="https://github.com/fabaff">fabaff</a>, <a href="https://github.com/gyran">gyran</a>, <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/michaelarnauts">michaelarnauts</a>, <a href="https://github.com/miniconfig">miniconfig</a> and <a href="https://github.com/rmkraus">rmkraus</a>.</p>
 
 <p>This release includes some architectural changes by me. The first is that the frontend is now based on a <a href="http://optimizely.github.io/nuclear-js/">NuclearJS</a> JavaScript backend. This has greatly helped to organize and optimize the frontend code. Another change is that Home Assistant will now install dependencies on-demand instead of installing dependencies for all supported devices.</p>
 
-<p><strong>IP Camera Support</strong><br>
+<p><strong>IP Camera Support</strong><br />
 James has worked very hard to add support for IP cameras to Home Assistant which is included in this release. The initial release focusses on providing generic IP camera support. This means that any webcam that can exposes a JPEG image via a url can be integrated.</p>
 
-<p>Home Assistant will route the requests to your camera via the server allowing you to expose IP camera&rsquo;s inside your network via the Home Assistant app.</p>
+<p>Home Assistant will route the requests to your camera via the server allowing you to expose IP camera’s inside your network via the Home Assistant app.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">camera</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">generic</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">my sample camera</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MY_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MY_PASSWORD</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">still_image_url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://194.218.96.92/jpg/image.jpg</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">camera</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">generic</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">my sample camera</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">MY_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">MY_PASSWORD</span></span>
+  <span class="key">still_image_url</span>: <span class="string"><span class="content">http://194.218.96.92/jpg/image.jpg</span></span>
+</pre></div>
+</div>
+</div>
 
-
-
-
-<p class='note'>
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
+<p class="note">
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href="https://github.com/balloob/home-assistant/issues">GitHub</a>.
 </p>
-
-
-
 
 <a name="read-more"></a>
 
+<p><strong>Arduino</strong><br />
+<img src="/images/supported_brands/arduino.png" style="border:none; box-shadow: none; float: right;" height="50" /> Fabian has contributed support for interfacing with Arduinos. This makes it possible to connect your Arduino via USB and expose pins as sensor data and write to pins via switches. Have a look at <a href="/components/arduino/">the docs</a> for an extensive guide to get started.</p>
 
-<p><strong>Arduino</strong><br>
-<img src='/images/supported_brands/arduino.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Fabian has contributed support for interfacing with Arduinos. This makes it possible to connect your Arduino via USB and expose pins as sensor data and write to pins via switches. Have a look at <a href="/components/arduino.html">the docs</a> for an extensive guide to get started.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">arduino</span></span>
+  <span class="key">pins</span>:
+    <span class="key">11</span>:
+      <span class="key">name</span>: <span class="string"><span class="content">Fan Office</span></span>
+      <span class="key">type</span>: <span class="string"><span class="content">digital</span></span>
+    <span class="key">12</span>:
+      <span class="key">name</span>: <span class="string"><span class="content">Light Desk</span></span>
+      <span class="key">type</span>: <span class="string"><span class="content">digital</span></span>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">arduino</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">pins</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">11</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Fan Office</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">digital</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">12</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Light Desk</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">digital</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">arduino</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">pins</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">1</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Door switch</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">analog</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">0</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Brightness</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">analog</span>
-</span></code></pre></td></tr></table></div></figure>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">arduino</span></span>
+  <span class="key">pins</span>:
+    <span class="key">1</span>:
+      <span class="key">name</span>: <span class="string"><span class="content">Door switch</span></span>
+      <span class="key">type</span>: <span class="string"><span class="content">analog</span></span>
+    <span class="key">0</span>:
+      <span class="key">name</span>: <span class="string"><span class="content">Brightness</span></span>
+      <span class="key">type</span>: <span class="string"><span class="content">analog</span></span>
+</pre></div>
+</div>
+</div>
 
+<p><strong>Kodi (XBMC)</strong><br />
+<img src="/images/supported_brands/kodi.png" style="border:none; box-shadow: none; float: right;" height="50" /> Ettisan has contributed a Kodi (XBMC) platform for the media player component. This allows you to track all the media that you are playing and allow you to control it.</p>
 
-<p><strong>Kodi (XBMC)</strong><br>
-<img src='/images/supported_brands/kodi.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Ettisan has contributed a Kodi (XBMC) platform for the media player component. This allows you to track all the media that you are playing and allow you to control it.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">media_player</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">kodi</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Kodi</span></span>
+  <span class="key">url</span>: <span class="string"><span class="content">http://192.168.0.123/jsonrpc</span></span>
+  <span class="key">user</span>: <span class="string"><span class="content">kodi</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">my_secure_password</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">media_player</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodi</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Kodi</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://192.168.0.123/jsonrpc</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">user</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">kodi</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">my_secure_password</span>
-</span></code></pre></td></tr></table></div></figure>
+<p><strong>TP-Link</strong><br />
+<img src="/images/supported_brands/tp-link.png" style="border:none; box-shadow: none; float: right;" width="150" /> Michael has added TP-Link support to the device tracker. This allows you to now detect presence if you have a TP-Link router.</p>
 
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">device_tracker</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">tplink</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">YOUR_ROUTER_IP</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">YOUR_ADMIN_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_ADMIN_PASSWORD</span></span>
+</pre></div>
+</div>
+</div>
 
-<p><strong>TP-Link</strong><br>
-<img src='/images/supported_brands/tp-link.png' style='border:none; box-shadow: none; float: right;' width='150' />
-Michael has added TP-Link support to the device tracker. This allows you to now detect presence if you have a TP-Link router.</p>
+<p><strong>Efergy energy monitor</strong><br />
+<img src="/images/supported_brands/efergy.png" style="border:none; box-shadow: none; float: right;" height="50" /> Miniconfig has contributed support for the <a href="https://efergy.com">Efergy energy meters</a>. To get an app token, log in to your efergy account, go to the Settings page, click on App tokens, and click “Add token”.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">device_tracker</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tplink</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ROUTER_IP</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ADMIN_PASSWORD</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">efergy</span></span>
+  <span class="key">app_token</span>: <span class="string"><span class="content">APP_TOKEN</span></span>
+  <span class="key">utc_offset</span>: <span class="string"><span class="content">UTC_OFFSET</span></span>
+  <span class="key">monitored_variables</span>:
+    - <span class="string"><span class="content">type: instant_readings</span></span>
+    - <span class="string"><span class="content">type: budget</span></span>
+    - <span class="string"><span class="content">type: cost</span></span>
+      <span class="key">period</span>: <span class="string"><span class="content">day</span></span>
+      <span class="key">currency</span>: <span class="string"><span class="content">$</span></span>
+</pre></div>
+</div>
+</div>
 
-
-<p><strong>Efergy energy monitor</strong><br>
-<img src='/images/supported_brands/efergy.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Miniconfig has contributed support for the <a href="https://efergy.com">Efergy energy meters</a>. To get an app token, log in to your efergy account, go to the Settings page, click on App tokens, and click &ldquo;Add token&rdquo;.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">efergy</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">app_token</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">APP_TOKEN</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">utc_offset</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">UTC_OFFSET</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">instant_readings</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">budget</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cost</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">period</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">day</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">currency</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">$</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Forecast.io</strong><br>
+<p><strong>Forecast.io</strong><br />
 Fabian has added support for <a href="https://forecast.io/">Forecast.io</a> to get weather forecasts for Home Assistant. You need an API key which is free but requires a <a href="https://developer.forecast.io/register">registration</a>. To add Forecast.io to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">forecast</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_APP_KEY</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_conditions</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">summary</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">precip_type</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">precip_intensity</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">temperature</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">dew_point</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">wind_speed</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">wind_bearing</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">cloud_cover</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">humidity</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">pressure</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">visibility</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">ozone</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">forecast</span></span>
+  <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_APP_KEY</span></span>
+  <span class="key">monitored_conditions</span>:
+    - <span class="string"><span class="content">summary</span></span>
+    - <span class="string"><span class="content">precip_type</span></span>
+    - <span class="string"><span class="content">precip_intensity</span></span>
+    - <span class="string"><span class="content">temperature</span></span>
+    - <span class="string"><span class="content">dew_point</span></span>
+    - <span class="string"><span class="content">wind_speed</span></span>
+    - <span class="string"><span class="content">wind_bearing</span></span>
+    - <span class="string"><span class="content">cloud_cover</span></span>
+    - <span class="string"><span class="content">humidity</span></span>
+    - <span class="string"><span class="content">pressure</span></span>
+    - <span class="string"><span class="content">visibility</span></span>
+    - <span class="string"><span class="content">ozone</span></span>
+</pre></div>
+</div>
+</div>
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -362,7 +268,6 @@ Fabian has added support for <a href="https://forecast.io/">Forecast.io</a> to g
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -444,7 +349,6 @@ Fabian has added support for <a href="https://forecast.io/">Forecast.io</a> to g
 
   
 </div>
-
         </aside>
         
       </div>
@@ -455,30 +359,23 @@ Fabian has added support for <a href="https://forecast.io/">Forecast.io</a> to g
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -494,14 +391,6 @@ Fabian has added support for <a href="https://forecast.io/">Forecast.io</a> to g
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

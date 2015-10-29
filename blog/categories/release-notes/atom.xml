@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-27T12:45:27-07:00</updated>
+  <updated>2015-10-29T00:08:34-07:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -18,58 +18,47 @@
     <link href="https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported/"/>
     <updated>2015-10-26T18:10:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported</id>
-    <content type="html"><![CDATA[<p>After two weeks of hard work I&rsquo;m proud to announce the release of Home Assistant v0.7.6. For this release the main
-focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been
-squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by
-<a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="/components/">component section</a> on the website has gotten a
-complete revamp.</p>
+    <content type="html"><![CDATA[<p>After two weeks of hard work I’m proud to announce the release of Home Assistant v0.7.6. For this release the main focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by <a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="/components/">component section</a> on the website has gotten a complete revamp.</p>
 
 <h4>Changes</h4>
 
-<p><img src='https://home-assistant.io/images/supported_brands/radiotherm.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px;' height='50' />
-<img src='https://home-assistant.io/images/supported_brands/firetv.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;' height='50' />
-<img src='https://home-assistant.io/images/supported_brands/geofancy.png' style='border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;' height='50' /></p>
+<p><img src="https://home-assistant.io/images/supported_brands/radiotherm.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="https://home-assistant.io/images/supported_brands/firetv.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;" height="50" /><img src="https://home-assistant.io/images/supported_brands/geofancy.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;" height="50" /></p>
 
 <ul>
-<li>Device tracker: Newer <a href="/components/device_tracker.tplink.html">TP-Link routers</a> now supported (<a href="https://github.com/mKeRix">@mKeRix</a>)</li>
-<li>Alarm Control Panel: <a href="/components/alarm_control_panel.manual.html">Manual alarm</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-<li>Thermostat: <a href="/components/thermostat.radiotherm.html">Radiotherm</a> now supported (<a href="https://github.com/toddeye">@toddeye</a>)</li>
-<li>Media Player: <a href="/components/media_player.firetv.html">Amazon FireTV</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
-<li>Device Tracker: <a href="/components/device_tracker.geofancy.html">Geofancy</a> now supported (<a href="https://github.com/wind-rider">@wind-rider</a>)</li>
-<li>New component <a href="/components/shell_command.html">Shell Command</a> can expose shell commands as services (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li><a href="/components/script.html">Scripts</a> can now be customized using <code>customize</code> key in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Light: <a href="/components/light.hyperion.html">Hyperion</a> now supported (<a href="https://github.com/MakeMeASandwich">@MakeMeASandwich</a>)</li>
-<li>Sensor: <a href="/components/sensor.arest.html">aRest</a> can now also read out pins (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Sensor: <a href="/components/sensor.forecast.html">Forecast.io</a> now supports specifying units in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Thermostat: <a href="/components/thermostat.heat_control.html">Heat Control</a> has been completely rewritten (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Switch: <a href="/components/switch.rest.html">Rest</a> now supported (<a href="https://github.com/bachp">@bachp</a>)</li>
-<li>Media Player: <a href="/components/media_player.plex.html">Plex</a> can now be auto discovered and configure itself (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-<li><a href="/components/downloader.html">Downloader</a> will now treat relative paths based on config dir (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-<li>Line Charts will use interpolation for sensor data and show current and target temperature for thermostats (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Device Tracker: <a href="/components/device_tracker.ubus.html">OpenWRT via ubus</a> now supported (<a href="https://github.com/krzynio">@krzynio</a>)</li>
+  <li>Device tracker: Newer <a href="/components/device_tracker.tplink/">TP-Link routers</a> now supported (<a href="https://github.com/mKeRix">@mKeRix</a>)</li>
+  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.manual/">Manual alarm</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.radiotherm/">Radiotherm</a> now supported (<a href="https://github.com/toddeye">@toddeye</a>)</li>
+  <li>Media Player: <a href="/components/media_player.firetv/">Amazon FireTV</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li>Device Tracker: <a href="/components/device_tracker.geofancy/">Geofancy</a> now supported (<a href="https://github.com/wind-rider">@wind-rider</a>)</li>
+  <li>New component <a href="/components/shell_command/">Shell Command</a> can expose shell commands as services (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li><a href="/components/script/">Scripts</a> can now be customized using <code>customize</code> key in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Light: <a href="/components/light.hyperion/">Hyperion</a> now supported (<a href="https://github.com/MakeMeASandwich">@MakeMeASandwich</a>)</li>
+  <li>Sensor: <a href="/components/sensor.arest/">aRest</a> can now also read out pins (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Sensor: <a href="/components/sensor.forecast/">Forecast.io</a> now supports specifying units in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.heat_control/">Heat Control</a> has been completely rewritten (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Switch: <a href="/components/switch.rest/">Rest</a> now supported (<a href="https://github.com/bachp">@bachp</a>)</li>
+  <li>Media Player: <a href="/components/media_player.plex/">Plex</a> can now be auto discovered and configure itself (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li><a href="/components/downloader/">Downloader</a> will now treat relative paths based on config dir (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Line Charts will use interpolation for sensor data and show current and target temperature for thermostats (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Device Tracker: <a href="/components/device_tracker.ubus/">OpenWRT via ubus</a> now supported (<a href="https://github.com/krzynio">@krzynio</a>)</li>
 </ul>
 
-
 <!--more-->
-
 
 <h4>Breaking changes</h4>
 
 <p>As part of this release we did some cleanup which introduced backwards incompatible changes:</p>
 
-<p><strong>Heat Control thermostat no longer includes scheduling features.</strong><br>
-This feature has been removed completely. Use the <a href="/components/automation.html">automation component</a>
-instead to control target temperature.</p>
+<p><strong>Heat Control thermostat no longer includes scheduling features.</strong><br />
+This feature has been removed completely. Use the <a href="/components/automation/">automation component</a> instead to control target temperature.</p>
 
-<p><strong>Config changed for calling a service from a script.</strong><br>
-<code>execute_service:</code> has been replaced with <code>service:</code>. See <a href="/components/script.html">component page</a>
-for example. The old method will continue working for some time.</p>
+<p><strong>Config changed for calling a service from a script.</strong><br />
+<code>execute_service:</code> has been replaced with <code>service:</code>. See <a href="/components/script/">component page</a> for example. The old method will continue working for some time.</p>
 
-<p><strong>Scenes can no longer be turned off.</strong><br>
-It is no longer possible to turn a scene off after it has been activated. The way it worked was unpredictable
-and causes a lot of confusion.</p>
+<p><strong>Scenes can no longer be turned off.</strong><br />
+It is no longer possible to turn a scene off after it has been activated. The way it worked was unpredictable and causes a lot of confusion.</p>
 
-<p><strong>Downloader treats relative paths now relative to the config dir instead of the current working dir.</strong><br>
+<p><strong>Downloader treats relative paths now relative to the config dir instead of the current working dir.</strong><br />
 This makes more sense as most people run Home Assistant as a daemon</p>
 ]]></content>
   </entry>
@@ -82,28 +71,23 @@ This makes more sense as most people run Home Assistant as a daemon</p>
     <content type="html"><![CDATA[<p>We discovered two issues annoying enough to warrent the release of 0.7.5:</p>
 
 <ul>
-<li>Home Assistant package did not include the CloudMQTT certificate.</li>
-<li>A bug in the core caused issues when some platforms are loaded twice.</li>
+  <li>Home Assistant package did not include the CloudMQTT certificate.</li>
+  <li>A bug in the core caused issues when some platforms are loaded twice.</li>
 </ul>
-
 
 <p>This release also includes some new platforms (because they keep coming!):</p>
 
-<p><img src='https://home-assistant.io/images/supported_brands/blinkstick.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<img src='https://home-assistant.io/images/supported_brands/rfxtrx.png' style='border:none; box-shadow: none; float: right; clear: right;' height='50' />
-<img src='https://home-assistant.io/images/supported_brands/telegram.png' style='border:none; box-shadow: none; float: right; clear: right;' height='50' /></p>
+<p><img src="https://home-assistant.io/images/supported_brands/blinkstick.png" style="border:none; box-shadow: none; float: right;" height="50" /><img src="https://home-assistant.io/images/supported_brands/rfxtrx.png" style="border:none; box-shadow: none; float: right; clear: right;" height="50" /><img src="https://home-assistant.io/images/supported_brands/telegram.png" style="border:none; box-shadow: none; float: right; clear: right;" height="50" /></p>
 
 <ul>
-<li>Light: <a href="/components/light.blinksticklight.html">blinkstick platform</a> added (<a href="https://github.com/alanbowman">@alanbowman</a>)</li>
-<li>Device Tracker: <a href="/components/device_tracker.snmp.html">SNMP platform</a> added (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-<li>Light: <a href="/components/light.rfxtrx.html">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
-<li>Switch: <a href="/components/switch.rfxtrx.html">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
-<li>Notify: <a href="/components/notify.telegram.html">telegram platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Light: <a href="/components/light.blinksticklight/">blinkstick platform</a> added (<a href="https://github.com/alanbowman">@alanbowman</a>)</li>
+  <li>Device Tracker: <a href="/components/device_tracker.snmp/">SNMP platform</a> added (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Light: <a href="/components/light.rfxtrx/">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
+  <li>Switch: <a href="/components/switch.rfxtrx/">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
+  <li>Notify: <a href="/components/notify.telegram/">telegram platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
 </ul>
 
-
-<p>Also, the media player was extended by <a href="https://github.com/maddox">@maddox</a> to support the play media command.
-This has been implemented for the <a href="/components/media_player.itunes.html">iTunes platform</a>.</p>
+<p>Also, the media player was extended by <a href="https://github.com/maddox">@maddox</a> to support the play media command. This has been implemented for the <a href="/components/media_player.itunes/">iTunes platform</a>.</p>
 ]]></content>
   </entry>
   
@@ -112,43 +96,37 @@ This has been implemented for the <a href="/components/media_player.itunes.html"
     <link href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"/>
     <updated>2015-10-05T21:49:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks</id>
-    <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we&rsquo;re very
-glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map.
-The geo support consists of three different parts:</p>
+    <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we’re very glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map. The geo support consists of three different parts:</p>
 
 <ul>
-<li><a href="/components/device_tracker.owntracks.html">OwnTracks platform for the device tracker</a> to get locations for devices</li>
-<li>Brand new <a href="/components/zone.html">zone component</a> to define zones to identify locations and <a href="/components/automation.html#zone-trigger">trigger automation</a></li>
-<li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
+  <li><a href="/components/device_tracker.owntracks/">OwnTracks platform for the device tracker</a> to get locations for devices</li>
+  <li>Brand new <a href="/components/zone/">zone component</a> to define zones to identify locations and <a href="/components/automation/#zone-trigger">trigger automation</a></li>
+  <li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
 </ul>
 
+<p>We have added a new <a href="/getting-started/presence-detection/">getting started section</a> to get up and running.</p>
 
-<p>We have added a new <a href="/getting-started/presence-detection.html">getting started section</a> to get up and running.</p>
-
-<p class='img'>
-<img src='https://home-assistant.io/images/screenshots/map.png' />
+<p class="img">
+<img src="https://home-assistant.io/images/screenshots/map.png" />
 Map in Home Assistant showing two people and three zones (home, school, work)
 </p>
 
+<p>Ofcourse more things happened in the last three weeks. I’m moving away from my usual long post to a short summary of highlights:</p>
 
-<p>Ofcourse more things happened in the last three weeks. I&rsquo;m moving away from my usual long post to a
-short summary of highlights:</p>
-
-<p><a href='https://home-assistant.io/components/media_player.plex.html'>
-<img src='https://home-assistant.io/images/supported_brands/plex.png' style='border:none; box-shadow: none; float: right;' height='50' />
+<p><a href="https://home-assistant.io/components/media_player.plex/">
+<img src="https://home-assistant.io/images/supported_brands/plex.png" style="border:none; box-shadow: none; float: right;" height="50" />
 </a></p>
 
 <ul>
-<li>Sensor: <a href="/components/sensor.rest.html">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
-<li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt.html">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-<li>Media Player: <a href="/components/media_player.plex.html">Plex platform</a> added (<a href="https://github.com/miniconfig,%20[@adrienbrault](https://github.com/adrienbrault">@miniconfig</a>)</li>
-<li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
-<li>Light: <a href="/components/light.limitlessled.html">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
-<li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
-<li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
+  <li>Sensor: <a href="/components/sensor.rest/">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt/">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>Media Player: <a href="/components/media_player.plex/">Plex platform</a> added (<a href="https://github.com/miniconfig, [@adrienbrault](https://github.com/adrienbrault)">@miniconfig</a></li>
+  <li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Light: <a href="/components/light.limitlessled/">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
+  <li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
 </ul>
-
 ]]></content>
   </entry>
   
@@ -157,67 +135,61 @@ short summary of highlights:</p>
     <link href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"/>
     <updated>2015-09-19T21:47:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support</id>
-    <content type="html"><![CDATA[<p>It&rsquo;s like someone opened a can of rock solid developers and emptied it above our
-<a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with
-great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
+    <content type="html"><![CDATA[<p>It’s like someone opened a can of rock solid developers and emptied it above our <a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
 
 <p>See <a href="https://github.com/balloob/home-assistant/releases/tag/0.7.3">GitHub</a> for more detailed release notes.</p>
 
 <p><em>Migration note: the <code>scheduler</code> component has been removed in favor of the <code>automation</code> component.</em></p>
 
-<p><strong>Sonos</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/sonos.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Sonos support has been added by <a href="https://github.com/rhooper">@rhooper</a> and <a href="https://github.com/SEJeff">@SEJeff</a>. Home Assistant is now able to automatically
-detect Sonos devices in your network and set them up for you. It will allow you to control music
-playing on your Sonos and change the volume.</p>
+<p><strong>Sonos</strong><br />
+<img src="https://home-assistant.io/images/supported_brands/sonos.png" style="border:none; box-shadow: none; float: right;" height="50" /> Sonos support has been added by <a href="https://github.com/rhooper">@rhooper</a> and <a href="https://github.com/SEJeff">@SEJeff</a>. Home Assistant is now able to automatically detect Sonos devices in your network and set them up for you. It will allow you to control music playing on your Sonos and change the volume.</p>
 
-<p><strong>iTunes and airplay speakers</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/itunes.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will
-have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
+<p><strong>iTunes and airplay speakers</strong><br />
+<img src="https://home-assistant.io/images/supported_brands/itunes.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
 
-<pre><code class="yaml"># Example configuration.yaml entry
-media_player:
-  platform: itunes
-  name: iTunes
-  host: http://192.168.1.50
-  port: 8181
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">media_player</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">itunes</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">iTunes</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">http://192.168.1.50</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">8181</span></span>
+</pre></div>
+</div>
+</div>
 
 <!--more-->
 
+<p><strong>Automation</strong><br />
+Automation has gotten a lot of love. It now supports conditions, multiple triggers and new types of triggers. The best to get started with it is to head over to the new <a href="/getting-started/automation/">getting started with automation</a> page.</p>
 
-<p><strong>Automation</strong><br>
-Automation has gotten a lot of love. It now supports conditions, multiple triggers and new types of
-triggers. The best to get started with it is to head over to the new
-<a href="/getting-started/automation.html">getting started with automation</a> page.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example of entry in configuration.yaml</span>
+<span class="key">automation</span>:
+  <span class="key">alias</span>: <span class="string"><span class="content">Light on in the evening</span></span>
+  <span class="key">trigger</span>:
+    - <span class="string"><span class="content">platform: sun</span></span>
+      <span class="key">event</span>: <span class="string"><span class="content">sunset</span></span>
+      <span class="key">offset</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">-01:00:00</span><span class="delimiter">&quot;</span></span>
+    - <span class="string"><span class="content">platform: state</span></span>
+      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
+      <span class="key">state</span>: <span class="string"><span class="content">home</span></span>
+  <span class="key">condition</span>:
+    - <span class="string"><span class="content">platform: state</span></span>
+      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
+      <span class="key">state</span>: <span class="string"><span class="content">home</span></span>
+    - <span class="string"><span class="content">platform: time</span></span>
+      <span class="key">after</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">16:00:00</span><span class="delimiter">&quot;</span></span>
+      <span class="key">before</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">23:00:00</span><span class="delimiter">&quot;</span></span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">homeassistant.turn_on</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+</pre></div>
+</div>
+</div>
 
-<pre><code class="yaml"># Example of entry in configuration.yaml
-automation:
-  alias: Light on in the evening
-  trigger:
-    - platform: sun
-      event: sunset
-      offset: "-01:00:00"
-    - platform: state
-      entity_id: group.all_devices
-      state: home
-  condition:
-    - platform: state
-      entity_id: group.all_devices
-      state: home
-    - platform: time
-      after: "16:00:00"
-      before: "23:00:00"
-  action:
-    service: homeassistant.turn_on
-    entity_id: group.living_room
-</code></pre>
-
-<p><strong>Verisure Alarms</strong><br>
-<img src='https://home-assistant.io/images/supported_brands/verisure.png' style='border:none; box-shadow: none; float: right;' height='50' />
-We now support arming and disarming your verisure alarm from within Home Assistant thanks to added
-support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+<p><strong>Verisure Alarms</strong><br />
+<img src="https://home-assistant.io/images/supported_brands/verisure.png" style="border:none; box-shadow: none; float: right;" height="50" /> We now support arming and disarming your verisure alarm from within Home Assistant thanks to added support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
 ]]></content>
   </entry>
   
@@ -226,195 +198,179 @@ support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
     <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
     <updated>2015-09-13T09:28:00-07:00</updated>
     <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
-    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by
-<a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a
-webservice that integrates with almost every possible webservice out there. Adding Home
-Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
+    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a webservice that integrates with almost every possible webservice out there. Adding Home Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
 
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet
-if your smoke alarm goes off.</p>
+<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet if your smoke alarm goes off.</p>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/splash.png'>
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/splash.png" />
 </p>
 
-
-<p>Head over to the <a href="/components/ifttt.html">setup instructions</a> to get started with IFTTT. Click the
-read more button for some example recipes.</p>
+<p>Head over to the <a href="/components/ifttt/">setup instructions</a> to get started with IFTTT. Click the read more button for some example recipes.</p>
 
 <!--more-->
 
-
-<p>In each of the following examples, make sure to replace the XXX in the url with your correct
-host address and api password.</p>
+<p>In each of the following examples, make sure to replace the XXX in the url with your correct host address and api password.</p>
 
 <h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;switch.irrigation&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “switch.irrigation” }</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png" />
 </p>
 
+<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered. Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in <code>value1</code>.</p>
 
-<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered.
-Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in
-<code>value1</code>.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Configuration.yaml entry</span>
+<span class="key">automation</span>:
+- <span class="string"><span class="content">alias: Post a tweet when fire alarm is triggered</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+    <span class="key">mqtt_topic</span>: <span class="string"><span class="content">home/alarm/fire</span></span>
+    <span class="key">mqtt_payload</span>: <span class="string"><span class="content">'on'</span></span>
 
-<pre><code class="yaml"># Configuration.yaml entry
-automation:
-- alias: Post a tweet when fire alarm is triggered
-  trigger:
-    platform: mqtt
-    mqtt_topic: home/alarm/fire
-    mqtt_payload: 'on'
-
-  action:
-    service: ifttt.trigger
-    data: {"event":"HA_FIRE_ALARM", "value1":"The fire alarm just triggered!"}
-</code></pre>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">ifttt.trigger</span></span>
+    <span class="key">data</span>: <span class="string"><span class="content">{&quot;event&quot;:&quot;HA_FIRE_ALARM&quot;, &quot;value1&quot;:&quot;The fire alarm just triggered!&quot;}</span></span>
+</pre></div>
+</div>
+</div>
 
 <h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;light.kitchen&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “light.kitchen” }</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-<tr>
-<td> BODY </td>
-<td> { &ldquo;entity_id&rdquo;: &ldquo;group.all_lights&rdquo;, &ldquo;flash&rdquo;:&ldquo;yes&rdquo; }</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+    <tr>
+      <td>BODY</td>
+      <td>{ “entity_id”: “group.all_lights”, “flash”:”yes” }</td>
+    </tr>
+  </tbody>
 </table>
-
 
 <h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button </h2>
 
-<p class='img'>
-  <img src='https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png' />
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png" />
 </p>
-
 
 <p>Maker channel setup:</p>
 
 <table>
-<thead>
-<tr>
-<th> Field </th>
-<th> Value </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td> URL   </td>
-<td>  <a href="http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx">http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</a></td>
-</tr>
-<tr>
-<td> METHOD </td>
-<td> POST</td>
-</tr>
-<tr>
-<td> CONTENT TYPE </td>
-<td> application/json</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>URL</td>
+      <td>http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</td>
+    </tr>
+    <tr>
+      <td>METHOD</td>
+      <td>POST</td>
+    </tr>
+    <tr>
+      <td>CONTENT TYPE</td>
+      <td>application/json</td>
+    </tr>
+  </tbody>
 </table>
-
 ]]></content>
   </entry>
   

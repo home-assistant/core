@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -113,59 +108,56 @@
 <p>Home Assistant is open-source and MIT licensed. The source can be found here:</p>
 
 <ul>
-<li><a href="https://github.com/balloob/home-assistant">home-assistant</a> - Python server-backend</li>
-<li><a href="https://github.com/balloob/home-assistant-js">home-assistant-js</a> - javascript-backend powering the client</li>
-<li><a href="https://github.com/balloob/home-assistant-polymer">home-assistant-polymer</a> - Polymer UI</li>
+  <li><a href="https://github.com/balloob/home-assistant">home-assistant</a> - Python server-backend</li>
+  <li><a href="https://github.com/balloob/home-assistant-js">home-assistant-js</a> - javascript-backend powering the client</li>
+  <li><a href="https://github.com/balloob/home-assistant-polymer">home-assistant-polymer</a> - Polymer UI</li>
 </ul>
 
-
-<h3><a class='title-link' name='starting-development' href='#starting-development'></a> Starting development</h3>
+<h3><a class="title-link" name="starting-development" href="#starting-development"></a> Starting development</h3>
 
 <p>You will need to setup a development environment if you want to start developing a new feature or component for Home Assistant perform theses steps</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>git clone https://github.com/balloob/home-assistant.git
-</span><span class='line'><span class="nb">cd </span>home-assistant
-</span><span class='line'>script/setup
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ git clone https://github.com/balloob/home-assistant.git
+$ cd home-assistant
+$ script/setup
+</pre></div>
+</div>
+</div>
 
 <p>After following these steps, running <code>hass</code> will invoke your local installation.</p>
 
-<h3><a class='title-link' name='submitting-improvements' href='#submitting-improvements'></a> Submitting improvements</h3>
+<h3><a class="title-link" name="submitting-improvements" href="#submitting-improvements"></a> Submitting improvements</h3>
 
-<p>Improvements to Home Assistant should be submitted one feature at a time using Github pull
+<p>Improvements to Home Assistant should be submitted one feature at a time using Github pull<br />
 requests.</p>
 
 <ol>
-<li>Go to <a href="https://github.com/balloob/home-assistant">the Home Assistant repository</a> and click fork in the top right.</li>
-<li>Follow steps in the previous section but with your forked repository.</li>
-<li>Create a new branch to hold your changes<br>
+  <li>Go to <a href="https://github.com/balloob/home-assistant">the Home Assistant repository</a> and click fork in the top right.</li>
+  <li>Follow steps in the previous section but with your forked repository.</li>
+  <li>Create a new branch to hold your changes<br />
 <code>git checkout -b some-feature</code></li>
-<li>Make the changes you want</li>
-<li>Check your changes for style violations<br>
+  <li>Make the changes you want</li>
+  <li>Check your changes for style violations<br />
 <code>./script/lint</code></li>
-<li>Commit the changes<br>
-<code>git add .</code><br>
+  <li>Commit the changes<br />
+<code>git add .</code><br />
 <code>git commit -m "Added some-feature"</code></li>
-<li>Push your commited changes back to your fork on Github<br>
+  <li>Push your commited changes back to your fork on Github<br />
 <code>git push origin HEAD</code></li>
-<li>Follow <a href="https://help.github.com/articles/creating-a-pull-request/">these steps</a> to create your
+  <li>Follow <a href="https://help.github.com/articles/creating-a-pull-request/">these steps</a> to create your<br />
 pull request.</li>
 </ol>
 
-
-<h3><a class='title-link' name='further-reading' href='#further-reading'></a> Further reading</h3>
+<h3><a class="title-link" name="further-reading" href="#further-reading"></a> Further reading</h3>
 
 <ul>
-<li><a href="/developers/architecture.html">Home Assistant Architecture</a></li>
-<li><a href="/developers/frontend.html">Frontend development</a></li>
-<li><a href="/developers/creating_components.html">Creating a custom component</a></li>
-<li><a href="/developers/add_new_platform.html">Adding support for a new platform</a></li>
-<li><a href="/developers/api.html">Rest API</a></li>
-<li><a href="/developers/website.html">Website</a></li>
+  <li><a href="/developers/architecture/">Home Assistant Architecture</a></li>
+  <li><a href="/developers/frontend/">Frontend development</a></li>
+  <li><a href="/developers/creating_components/">Creating a custom component</a></li>
+  <li><a href="/developers/add_new_platform/">Adding support for a new platform</a></li>
+  <li><a href="/developers/api/">Rest API</a></li>
+  <li><a href="/developers/website/">Website</a></li>
 </ul>
 
 
@@ -184,32 +176,23 @@ pull request.</li>
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
-
-
 
   </body>
 </html>

@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Release notes for June 10, 2015</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-06-10T18:54:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> June 10, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> seven minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-06-10T18:54:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> June 10, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> five minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,266 +124,187 @@
 </header>
 
 
-
-
-  <p>Wow, almost a month has gone by since the last release and this release is <em>packed</em>. The biggest part of this release is probably one that you won&rsquo;t notice: the frontend has been upgraded from Polymer 0.5 to the brand new released Polymer 1.0. Polymer has been declared stable by the Google overlords which will allow us to expand functionality that was waiting for this moment to arrive.</p>
+  <p>Wow, almost a month has gone by since the last release and this release is <em>packed</em>. The biggest part of this release is probably one that you won’t notice: the frontend has been upgraded from Polymer 0.5 to the brand new released Polymer 1.0. Polymer has been declared stable by the Google overlords which will allow us to expand functionality that was waiting for this moment to arrive.</p>
 
 <p>This release sets a record for the amount of people involved: 8! <a href="https://github.com/Andythigpen">Andythigpen</a>, <a href="https://github.com/Jamespcole">Jamespcole</a>, <a href="https://github.com/Azelphur">Azelphur</a>, <a href="https://github.com/Fabaff">Fabaff</a>, <a href="https://github.com/Dutchy-">Dutchy-</a>, <a href="https://github.com/Fbradyirl">Fbradyirl</a>, <a href="https://github.com/wind-rider">wind-rider</a> and <a href="https://github.com/ettisan">ettisan</a>, thanks a lot for your contributions!</p>
 
 <p>A big improvement has been brought this release by wind-rider. He took the time to revive the Chromecast support and started improving the media player integration. This triggered other people to join in resulting in a revamped media player experience and support for the Music Player Daemon.</p>
 
-<p class='img'>
-  <img src='/images/screenshots/media_player-card.png' />
-  Example of the new media player cards
+<p class="img">
+  <img src="/images/screenshots/media_player-card.png" />   Example of the new media player cards
 </p>
 
-
-
-
-<p class='note'>
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
+<p class="note">
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href="https://github.com/balloob/home-assistant/issues">GitHub</a>.
 </p>
-
-
-
 
 <a name="read-more"></a>
-
 
 <p>Before jumping into the newly supported platforms, here are the other improvements that are landing this release:</p>
 
 <ul>
-<li>Fronted upgraded to Polymer 1.0 by @balloob</li>
-<li>Include other YAML files using the <code>!include</code> keyword by @andythigpen</li>
-<li>Switch support and bug fixes for Vera platform by @jamespcole</li>
-<li>HTTP session support for the HTTP component by @jamespcole</li>
-<li>Device tracker bugfixes by @Dutchy-</li>
-<li>Bugfix for device tracker platform by @fbradyirl</li>
-<li>Fixing Chromecast support by @wind-rider</li>
-<li>Media player improvements by @balloob and @wind-rider</li>
-<li>Nest thermostat bugfixes by @balloob</li>
-<li>Fix the device tracker getting in a deadlock by @balloob</li>
-<li>Update documentation by @fabaff</li>
+  <li>Fronted upgraded to Polymer 1.0 by @balloob</li>
+  <li>Include other YAML files using the <code>!include</code> keyword by @andythigpen</li>
+  <li>Switch support and bug fixes for Vera platform by @jamespcole</li>
+  <li>HTTP session support for the HTTP component by @jamespcole</li>
+  <li>Device tracker bugfixes by @Dutchy-</li>
+  <li>Bugfix for device tracker platform by @fbradyirl</li>
+  <li>Fixing Chromecast support by @wind-rider</li>
+  <li>Media player improvements by @balloob and @wind-rider</li>
+  <li>Nest thermostat bugfixes by @balloob</li>
+  <li>Fix the device tracker getting in a deadlock by @balloob</li>
+  <li>Update documentation by @fabaff</li>
 </ul>
 
+<p><strong>Music Player Daemon</strong><br />
+<img src="/images/supported_brands/mpd.png" style="border:none; box-shadow: none; float: right;" height="50" /> Fabaff has contributed MusicPlayerDaemon support. The mpd platform allows you to control a <a href="http://www.musicpd.org/">Music Player Daemon</a> from Home Assistant. Right now, only playback is supported and not playlist manipulation.</p>
 
-<p><strong>Music Player Daemon</strong><br>
-<img src='/images/supported_brands/mpd.png' style='border:none; box-shadow: none; float: right;' height='50' />
-Fabaff has contributed MusicPlayerDaemon support. The mpd platform allows you to control a <a href="http://www.musicpd.org/">Music Player Daemon</a> from Home Assistant. Right now, only playback is supported and not playlist manipulation.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">media_player</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mpd</span></span>
+  <span class="key">server</span>: <span class="string"><span class="content">127.0.0.1</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">6600</span></span>
+  <span class="key">location</span>: <span class="string"><span class="content">bedroom</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">media_player</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mpd</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">server</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">127.0.0.1</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">6600</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">location</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">bedroom</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Command line switch</strong><br>
+<p><strong>Command line switch</strong><br />
 A switch platform that issues specific commands when it is turned on and off. This might very well become our most popular platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">command_switch</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">switches</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">kitchen_light</span><span class="p-Indicator">:</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">oncmd</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">switch_command on kitchen</span>
-</span><span class='line'>        <span class="l-Scalar-Plain">offcmd</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">switch_command off kitchen</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_switch</span></span>
+  <span class="key">switches</span>:
+    - <span class="string"><span class="content">kitchen_light:</span><span class="content">
+        oncmd: switch_command on kitchen
+        offcmd: switch_command off kitchen</span></span>
+</pre></div>
+</div>
+</div>
 
-
-<p><strong>LimitlessLED</strong><br>
+<p><strong>LimitlessLED</strong><br />
 This new platform can control your LimitlessLED lights from within Home Assistant. The lights are also known as EasyBulb, AppLight, AppLamp, MiLight, LEDme, dekolight or iLight.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">light</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">limitlessled</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.10</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">group_1_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Living Room</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">group_2_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Bedroom</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">group_3_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Office</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">group_4_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Kitchen</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">light</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">limitlessled</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">192.168.1.10</span></span>
+  <span class="key">group_1_name</span>: <span class="string"><span class="content">Living Room</span></span>
+  <span class="key">group_2_name</span>: <span class="string"><span class="content">Bedroom</span></span>
+  <span class="key">group_3_name</span>: <span class="string"><span class="content">Office</span></span>
+  <span class="key">group_4_name</span>: <span class="string"><span class="content">Kitchen</span></span>
+</pre></div>
+</div>
+</div>
 
+<p><strong>Bitcoin sensor</strong><br />
+<img src="/images/supported_brands/bitcoin.png" style="border:none; box-shadow: none; float: right;" height="50" /> The bitcoin platform displays various details about the <a href="https://bitcoin.org">Bitcoin</a> network. If you have an online wallet from <a href="https://blockchain.info/">Blockchain.info</a> the sensor is capable to show your current balance.</p>
 
-<p><strong>Bitcoin sensor</strong><br>
-<img src='/images/supported_brands/bitcoin.png' style='border:none; box-shadow: none; float: right;' height='50' />
-The bitcoin platform displays various details about the <a href="https://bitcoin.org">Bitcoin</a> network. If you have an online wallet from <a href="https://blockchain.info/">Blockchain.info</a> the sensor is capable to show your current balance.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">bitcoin</span></span>
+  <span class="key">wallet</span>: <span class="string"><span class="content">'YOUR WALLET_ID'</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_ACCOUNT_PASSWORD</span></span>
+  <span class="key">currency</span>: <span class="string"><span class="content">YOUR CURRENCY</span></span>
+  <span class="key">display_options</span>:
+    - <span class="string"><span class="content">exchangerate</span></span>
+    - <span class="string"><span class="content">trade_volume_btc</span></span>
+    - <span class="string"><span class="content">miners_revenue_usd</span></span>
+    - <span class="string"><span class="content">btc_mined</span></span>
+    - <span class="string"><span class="content">trade_volume_usd</span></span>
+    - <span class="string"><span class="content">difficulty</span></span>
+    - <span class="string"><span class="content">minutes_between_blocks</span></span>
+    - <span class="string"><span class="content">number_of_transactions</span></span>
+    - <span class="string"><span class="content">hash_rate</span></span>
+    - <span class="string"><span class="content">timestamp</span></span>
+    - <span class="string"><span class="content">mined_blocks</span></span>
+    - <span class="string"><span class="content">blocks_size</span></span>
+    - <span class="string"><span class="content">total_fees_btc</span></span>
+    - <span class="string"><span class="content">total_btc_sent</span></span>
+    - <span class="string"><span class="content">estimated_btc_sent</span></span>
+    - <span class="string"><span class="content">total_btc</span></span>
+    - <span class="string"><span class="content">total_blocks</span></span>
+    - <span class="string"><span class="content">next_retarget</span></span>
+    - <span class="string"><span class="content">estimated_transaction_volume_usd</span></span>
+    - <span class="string"><span class="content">miners_revenue_btc</span></span>
+    - <span class="string"><span class="content">market_price_usd</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">bitcoin</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">wallet</span><span class="p-Indicator">:</span> <span class="s">&#39;YOUR</span><span class="nv"> </span><span class="s">WALLET_ID&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_ACCOUNT_PASSWORD</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">currency</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR CURRENCY</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">display_options</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">exchangerate</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">trade_volume_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">miners_revenue_usd</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">btc_mined</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">trade_volume_usd</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">difficulty</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">minutes_between_blocks</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">number_of_transactions</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">hash_rate</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">timestamp</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mined_blocks</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">blocks_size</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_fees_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_btc_sent</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">estimated_btc_sent</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">total_blocks</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">next_retarget</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">estimated_transaction_volume_usd</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">miners_revenue_btc</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">market_price_usd</span>
-</span></code></pre></td></tr></table></div></figure>
+<p><strong>SMTP notificatoin platform</strong><br />
+<img src="/images/supported_brands/smtp.png" style="border:none; box-shadow: none; float: right;" height="50" /> The smtp platform allows you to deliver notifications from Home Assistant to an e-mail recipient.</p>
 
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mail</span></span>
+  <span class="key">server</span>: <span class="string"><span class="content">MAIL_SERVER</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">YOUR_SMTP_PORT</span></span>
+  <span class="key">sender</span>: <span class="string"><span class="content">SENDER_EMAIL_ADDRESS</span></span>
+  <span class="key">starttls</span>: <span class="string"><span class="content">1 or 0</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">YOUR_SMTP_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_SMTP_PASSWORD</span></span>
+  <span class="key">recipient</span>: <span class="string"><span class="content">YOUR_RECIPIENT</span></span>
+</pre></div>
+</div>
+</div>
 
-<p><strong>SMTP notificatoin platform</strong><br>
-<img src='/images/supported_brands/smtp.png' style='border:none; box-shadow: none; float: right;' height='50' />
-The smtp platform allows you to deliver notifications from Home Assistant to an e-mail recipient.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mail</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">server</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">MAIL_SERVER</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_SMTP_PORT</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sender</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">SENDER_EMAIL_ADDRESS</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">starttls</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1 or 0</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_SMTP_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_SMTP_PASSWORD</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">recipient</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_RECIPIENT</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Syslog notification platform</strong><br>
+<p><strong>Syslog notification platform</strong><br />
 The syslog platform allows you to deliver notifications from Home Assistant to the local syslog.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">syslog</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">syslog</span></span>
+</pre></div>
+</div>
+</div>
 
+<p><strong>Swiss Public transport sensor</strong><br />
+The swiss public transport sensor will give you the next two departure times from a given location to another one in Switzerland. See the <a href="/components/sensor.swiss_public_transport/">component page</a> for more information how to set it up.</p>
 
-<p><strong>Swiss Public transport sensor</strong><br>
-The swiss public transport sensor will give you the next two departure times from a given location to another one in Switzerland. See the <a href="/components/sensor.swiss_public_transport.html">component page</a> for more information how to set it up.</p>
+<p><strong>Transmission turtle mode switch</strong><br />
+<img src="/images/supported_brands/transmission.png" style="border:none; box-shadow: none; float: right;" height="50" /> The transmission platform allows you to control your <a href="http://www.transmissionbt.com/">Transmission</a> client from within Home Assistant. The platform enables you switch to your ‘Alternative Speed Limits’ (aka ‘Turtle mode’) setting.</p>
 
-<p><strong>Transmission turtle mode switch</strong><br>
-<img src='/images/supported_brands/transmission.png' style='border:none; box-shadow: none; float: right;' height='50' />
-The transmission platform allows you to control your <a href="http://www.transmissionbt.com/">Transmission</a> client from within Home Assistant. The platform enables you switch to your &lsquo;Alternative Speed Limits&rsquo; (aka &lsquo;Turtle mode&rsquo;) setting.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">transmission</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Transmission</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">192.168.1.26</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">9091</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">YOUR_USERNAME</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Transmission</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.26</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9091</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Hikvision camera motion detection support</strong><br>
+<p><strong>Hikvision camera motion detection support</strong><br />
 This switch platform allows you to control your motion detection setting on your Hikvision camera.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">switch</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">hikvisioncam</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Hikvision Cam 1 Motion Detection</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">192.168.1.26</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">username</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_USERNAME</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_PASSWORD</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">switch</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">hikvisioncam</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">Hikvision Cam 1 Motion Detection</span></span>
+    <span class="key">host</span>: <span class="string"><span class="content">192.168.1.26</span></span>
+    <span class="key">username</span>: <span class="string"><span class="content">YOUR_USERNAME</span></span>
+    <span class="key">password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
+</pre></div>
+</div>
+</div>
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -418,7 +316,6 @@ This switch platform allows you to control your motion detection setting on your
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -500,7 +397,6 @@ This switch platform allows you to control your motion detection setting on your
 
   
 </div>
-
         </aside>
         
       </div>
@@ -511,30 +407,23 @@ This switch platform allows you to control your motion detection setting on your
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -550,14 +439,6 @@ This switch platform allows you to control your motion detection setting on your
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">UTC & Time zone awareness</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-05-09T23:08:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> May 9, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
+    <time datetime="2015-05-09T23:08:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> May 9, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
     <span><i class='icon-time'></i> two minutes reading time</span>
-    
-
-  <span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,50 +124,42 @@
 </header>
 
 
-
-
-  <p>I have recently merged code to refactor Home Assistant to use only UTC times internally. A much needed refactor. I&rsquo;ve added some extra test coverage to time sensitive parts to ensure stability. The code has been live in the dev branch for the last 9 days and will be soon released to the master branch.</p>
+  <p>I have recently merged code to refactor Home Assistant to use only UTC times internally. A much needed refactor. I’ve added some extra test coverage to time sensitive parts to ensure stability. The code has been live in the dev branch for the last 9 days and will be soon released to the master branch.</p>
 
 <p>From now on all internal communication will be done in UTC: time changed events, datetime attributes of states, etc. To get the current time in UTC you can call <code>homeassistant.util.dt.utcnow()</code>. This is a timezone aware UTC datetime object. <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/util/dt.py"><code>homeassistant.util.dt</code></a> is a new util package with date helpers.</p>
 
 <p>There is also such a thing as local time. Local time is based on the time zone that you have setup in your <code>configuration.yaml</code>. Local times should only be used for user facing information: logs, frontend and automation settings in <code>configuration.yaml</code>.</p>
 
 <h3>Setting up your time zone</h3>
-
 <p>Setting up a time zone happens in <code>configuration.yaml</code>. If you have no time zone setup, it will be auto detected using the existing detection code using <a href="https://freegeoip.net">freegeoip.net</a>. You can find a list of compatible time zones on <a href="http://en.wikipedia.org/wiki/List_of_tz_database_time_zones">Wikipedia</a>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">time_zone</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">America/Los_Angeles</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">homeassistant</span>:
+  <span class="key">time_zone</span>: <span class="string"><span class="content">America/Los_Angeles</span></span>
+</pre></div>
+</div>
+</div>
 
 <h3>Compatibility</h3>
-
 <p>The changes to the code are mostly backwards compatible. The old <code>hass.track_time_change</code> and <code>hass.track_point_in_time</code> use now internally two new methods: <code>hass.track_utc_time_change</code> and <code>hass.track_point_in_utc_time</code>. The usage of the old methods have not changed and should be backwards compatible.</p>
 
 <p>This refactor adds a new migration for the database adding a <code>utc_offset</code> column to events and states. This information is currently not used but can prove useful in the future when we start analyzing the historical data.</p>
 
-<h3><a class='title-link' name='backwards-incompatible-stuff' href='#backwards-incompatible-stuff'></a> Backwards incompatible stuff</h3>
+<h3><a class="title-link" name="backwards-incompatible-stuff" href="#backwards-incompatible-stuff"></a> Backwards incompatible stuff</h3>
 
 <p>All built-in components have been upgraded. The following list is only for people that run custom components:</p>
 
 <ul>
-<li><code>hass.track_time_change</code> and <code>hass.track_point_in_time</code> will now return a time zone aware datetime object. Python does not allow comparing a naive with an aware datetime object.</li>
-<li>the sun attributes for rising and setting are now in UTC. The methods <code>sun.next_rising(hass)</code> and <code>sun.next_setting(hass)</code> are backwards compatible, just be careful if you used to read the raw attributes.</li>
-<li>the API sends all times in UTC. If you use anything else besides the frontend to talk to HA, make sure it handles it differently.</li>
+  <li><code>hass.track_time_change</code> and <code>hass.track_point_in_time</code> will now return a time zone aware datetime object. Python does not allow comparing a naive with an aware datetime object.</li>
+  <li>the sun attributes for rising and setting are now in UTC. The methods <code>sun.next_rising(hass)</code> and <code>sun.next_setting(hass)</code> are backwards compatible, just be careful if you used to read the raw attributes.</li>
+  <li>the API sends all times in UTC. If you use anything else besides the frontend to talk to HA, make sure it handles it differently.</li>
 </ul>
-
-
-
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -202,7 +171,6 @@
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -284,7 +252,6 @@
 
   
 </div>
-
         </aside>
         
       </div>
@@ -295,30 +262,23 @@
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -334,14 +294,6 @@
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

@@ -1,0 +1,216 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Dim lights when playing media - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Dim lights up or down when playing media">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/cookbook/dim_lights_when_playing_media/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Dim lights when playing media">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/cookbook/dim_lights_when_playing_media/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Dim lights up or down when playing media">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Dim Lights When Playing Media
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>Like it how the lights dim up/down at the movies? Do it at home as well!</p>
+
+<p>This example uses the media player, Philips Hue (transitions) and the sun component.<br />
+We’ll use actions to detect media player state changes and scenes to control multiple<br />
+lights, color settings and transition between scenes.</p>
+
+<h4>Scenes</h4>
+<p>One scene for normal light, one for when movies are on.<br />
+A 2 second transition gives a nice ‘feel’ to the switch.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">scene</span>:
+  - <span class="string"><span class="content">name: Livingroom normal</span></span>
+    <span class="key">entities</span>:
+        <span class="key">light.light1</span>:
+            <span class="key">state</span>: <span class="string"><span class="content">on</span></span>
+            <span class="key">transition</span>: <span class="string"><span class="content">2</span></span>
+            <span class="key">brightness</span>: <span class="string"><span class="content">150</span></span>
+            <span class="key">xy_color</span>: <span class="string"><span class="content">[ 0.4448, 0.4066 ]</span></span>
+        <span class="key">light.light2</span>:
+            <span class="key">state</span>: <span class="string"><span class="content">on</span></span>
+            <span class="key">transition</span>: <span class="string"><span class="content">2</span></span>
+            <span class="key">brightness</span>: <span class="string"><span class="content">215</span></span>
+            <span class="key">xy_color</span>: <span class="string"><span class="content">[ 0.4448, 0.4066 ]</span></span>
+  - <span class="string"><span class="content">name: Livingroom dim</span></span>
+    <span class="key">entities</span>:
+        <span class="key">light.light1</span>:
+            <span class="key">state</span>: <span class="string"><span class="content">on</span></span>
+            <span class="key">transition</span>: <span class="string"><span class="content">2</span></span>
+            <span class="key">brightness</span>: <span class="string"><span class="content">75</span></span>
+            <span class="key">xy_color</span>: <span class="string"><span class="content">[ 0.5926, 0.3814 ]</span></span>
+        <span class="key">light.light2</span>:
+            <span class="key">state</span>: <span class="string"><span class="content">on</span></span>
+            <span class="key">transition</span>: <span class="string"><span class="content">2</span></span>
+            <span class="key">brightness</span>: <span class="string"><span class="content">145</span></span>
+            <span class="key">xy_color</span>: <span class="string"><span class="content">[ 0.5529, 0.4107 ]</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4>Automation</h4>
+<p>The paused/stopped state is best matched using “from: ‘playing’”.<br />
+Adding in the sun condition as we only want this when it’s dark.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  - <span class="string"><span class="content">action: &quot;Media player paused/stopped&quot;</span></span>
+    <span class="key">trigger</span>:
+      - <span class="string"><span class="content">platform: state</span></span>
+        <span class="key">entity_id</span>: <span class="string"><span class="content">media_player.htpc</span></span>
+        <span class="key">from</span>: <span class="string"><span class="content">'playing'</span></span>
+    <span class="key">condition</span>:
+      - <span class="string"><span class="content">platform: sun</span></span>
+        <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+        <span class="key">state</span>: <span class="string"><span class="content">'below_horizon'</span></span>
+    <span class="key">action</span>:
+        <span class="key">service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">entity_id</span>: <span class="string"><span class="content">scene.livingroom_normal</span></span>
+
+  - <span class="string"><span class="content">alias: &quot;Media player playing&quot;</span></span>
+    <span class="key">trigger</span>:
+      - <span class="string"><span class="content">platform: state</span></span>
+        <span class="key">entity_id</span>: <span class="string"><span class="content">media_player.htpc</span></span>
+        <span class="key">to</span>: <span class="string"><span class="content">'playing'</span></span>
+    <span class="key">condition</span>:
+      - <span class="string"><span class="content">platform: sun</span></span>
+        <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+        <span class="key">state</span>: <span class="string"><span class="content">'below_horizon'</span></span>
+    <span class="key">action</span>:
+        <span class="key">service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+        <span class="key">entity_id</span>: <span class="string"><span class="content">scene.livingroom_dim</span></span>
+</pre></div>
+</div>
+</div>
+
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

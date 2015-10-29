@@ -1,0 +1,324 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Command line sensor - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to integrate command line sensors into Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/sensor.command_sensor/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Command line sensor">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/sensor.command_sensor/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to integrate command line sensors into Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Command line sensor
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>A sensor platform that issues specific commands to get data. This might very well become our most powerful platform as it allows anyone to integrate any type of switch into Home Assistant that can be controlled from the command line, including calling other scripts!</p>
+
+<p>To enable it, add the following lines to your <code>configuration.yaml</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_sensor</span></span>
+  <span class="key">command</span>: <span class="string"><span class="content">SENSOR_COMMAND</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Command sensor</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
+  <span class="key">correction_factor</span>: <span class="string"><span class="content">0.4921</span></span>
+  <span class="key">decimal_places</span>: <span class="string"><span class="content">0</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>command</strong> (<em>Required</em>): The action to take to get the value.</li>
+  <li><strong>name</strong> (<em>Optional</em>): Name of the command sensor.</li>
+  <li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
+  <li><strong>correction_factor</strong> (<em>Optional</em>): A float value to do some basic calculations.</li>
+  <li><strong>decimal_places</strong> (<em>Optional</em>): Number of decimal places of the value. Default is 0.</li>
+</ul>
+
+<h2><a class="title-link" name="examples" href="#examples"></a> Examples</h2>
+
+<p>In this section you find some real life examples of how to use this sensor.</p>
+
+<h3><a class="title-link" name="hard-drive-temperature" href="#hard-drive-temperature"></a> Hard drive temperature</h3>
+
+<p>There are several ways to get the temperature of your hard drive. A simple solution is to use <a href="https://savannah.nongnu.org/projects/hddtemp/">hddtemp</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ hddtemp -n /dev/sda
+</pre></div>
+</div>
+</div>
+
+<p>To use those information, the entry for a sensor in the <code>configuration.yaml</code> file will look like this.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_sensor</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">HD Temperature</span></span>
+  <span class="key">command</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">hddtemp -n /dev/sda</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
+</pre></div>
+</div>
+</div>
+
+<h3><a class="title-link" name="cpu-temperature" href="#cpu-temperature"></a> CPU temperature</h3>
+
+<p>Thanks to the <a href="https://en.wikipedia.org/wiki/Procfs"><code>proc</code></a> file system, various details about a system can be retrieved. Here the CPU temperature is of interest. Add something similar to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+  - <span class="string"><span class="content">platform: command_sensor</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">CPU Temperature</span></span>
+    <span class="key">command</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">cat /sys/class/thermal/thermal_zone0/temp</span><span class="delimiter">&quot;</span></span>
+    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
+    <span class="key">correction_factor</span>: <span class="string"><span class="content">0.001</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>The <code>correction_factor</code> will make sure that the value is shown in a useful format in the frontend.</p>
+
+<h3><a class="title-link" name="use-an-external-script" href="#use-an-external-script"></a> Use an external script</h3>
+
+<p>The example is doing the same as the <a href="/components/sensor.arest/">aREST sensor</a> but with an external Python script. It should give you an idea about interacting with devices which are exposing a RESTful API.</p>
+
+<p>The one-line script to retrieve a value is shown below. Of course would it be possible to use this directly in the <code>configuration.yaml</code> file but need extra care about the quotation marks.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ python3 -c &quot;import requests; print(requests.get('http://10.0.0.48/analog/2').json()['return_value'])&quot;
+</pre></div>
+</div>
+</div>
+
+<p>The script (saved as <code>arest-value.py</code>) that is used looks like the example below.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment">#!/usr/bin/python3</span>
+<span class="keyword">from</span> <span class="include">requests</span> <span class="keyword">import</span> <span class="include">get</span>
+response = get(<span class="string"><span class="delimiter">'</span><span class="content">http://10.0.0.48/analog/2</span><span class="delimiter">'</span></span>)
+print(response.json()[<span class="string"><span class="delimiter">'</span><span class="content">return_value</span><span class="delimiter">'</span></span>])
+</pre></div>
+</div>
+</div>
+
+<p>To use the script you need to add something like the following to your <code>configuration.yaml</code> file.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_sensor</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Brightness</span></span>
+  <span class="key">command</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">python3 /path/to/script/arest-value.py</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
+</pre></div>
+</div>
+</div>
+
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+  </div>
+    <div class='section'>
+    <h1 class="title delta">Category Sensor</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/sensor.bitcoin/'>Bitcoin</a>
+        </li>
+        <li>
+            <a href='/components/sensor.cpuspeed/'>CPU speed</a>
+        </li>
+        <li>
+            Command line sensor
+        </li>
+        <li>
+            <a href='/components/sensor.efergy/'>Efergy sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.glances/'>Glances</a>
+        </li>
+        <li>
+            <a href='/components/sensor.mqtt/'>MQTT sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.modbus/'>Modbus sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.mysensors/'>MySensors sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.rest/'>RESTful sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.rfxtrx/'>RFXtrx sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.sabnzbd/'>SABnzbd</a>
+        </li>
+        <li>
+            <a href='/components/sensor.swiss_public_transport/'>Swiss Public Transport</a>
+        </li>
+        <li>
+            <a href='/components/sensor.systemmonitor/'>System Monitor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.temper/'>TEMPer sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.tellstick/'>TellStick sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.time_date/'>Time & Date</a>
+        </li>
+        <li>
+            <a href='/components/sensor.transmission/'>Transmission sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.vera/'>Vera sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.wink/'>Wink sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.worldclock/'>Worldclock</a>
+        </li>
+        <li>
+            <a href='/components/sensor.arest/'>aREST sensor</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

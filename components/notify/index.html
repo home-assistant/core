@@ -1,0 +1,218 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Notifications - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to add user notifications to Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/notify/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Notifications">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/notify/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to add user notifications to Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Notifications
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>One of the things most people want at some point in their home automation is to get notified when certain events occur. For this reason there is a <code>notify</code> component in Home Assistant.</p>
+
+<p>Home Assistant currently supports a wide range of services for notifications. Please check the sidebar for a full list of platforms.</p>
+
+<p>If your are running into troubles with your notification platform, a simple way to test it is to use <strong>Call Service</strong> from the <strong>Developer Tools</strong>. Choose your service (<em>notify/xyz</em>) from the list of <strong>Available services:</strong> and enter something like the sample below into  the <strong>Service Data</strong> field and hit <strong>CALL SERVICE</strong>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">title</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">Test</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">A simple test message from HA.</span><span class="delimiter">&quot;</span></span>}
+</pre></div>
+</div>
+</div>
+
+<p>This will send a single message to your notification platform configured in your <code>configuration.yaml</code> file.</p>
+
+<h2><a class="title-link" name="examples" href="#examples"></a> Examples</h2>
+
+<h3><a class="title-link" name="automation" href="#automation"></a> Automation</h3>
+
+<p>Notifications are great to be used within Home Automation. Below is a an example configuration that you can add to your <code>configuration.yaml</code> file to be notified when the sun sets.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">alias</span>: <span class="string"><span class="content">Sun set notification</span></span>
+
+  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+  <span class="key">state_from</span>: <span class="string"><span class="content">above_horizon</span></span>
+  <span class="key">state_to</span>: <span class="string"><span class="content">below_horizon</span></span>
+
+  <span class="key">execute_service</span>: <span class="string"><span class="content">notify.NOTIFIER_NAME</span></span>
+  <span class="key">service_data</span>: <span class="string"><span class="content">{&quot;message&quot;:&quot;YAY&quot;}</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>For more automation examples, see the <a href="/components/automation/">getting started with automation page</a>.</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+  </div>
+            <h1 class='title delta'>Platforms</h1>
+            <ul class='divided'>
+          <li><a href='/components/notify.file/'>
+            File
+          </a></li>
+          <li><a href='/components/notify.instapush/'>
+            Instapush
+          </a></li>
+          <li><a href='/components/notify.xmpp/'>
+            Jabber (XMPP)
+          </a></li>
+          <li><a href='/components/notify.nma/'>
+            Notify My Android
+          </a></li>
+          <li><a href='/components/notify.pushbullet/'>
+            PushBullet
+          </a></li>
+          <li><a href='/components/notify.pushover/'>
+            PushOver
+          </a></li>
+          <li><a href='/components/notify.smtp/'>
+            SMTP
+          </a></li>
+          <li><a href='/components/notify.slack/'>
+            Slack
+          </a></li>
+          <li><a href='/components/notify.syslog/'>
+            Syslog
+          </a></li>
+          <li><a href='/components/notify.telegram/'>
+            Telegram
+          </a></li>
+      </ul>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,237 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SNMP - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to integrate SNMP into Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/device_tracker.snmp/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="SNMP">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.snmp/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to integrate SNMP into Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      SNMP
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>Most wifi-accesspoints (WAP) and wifi-routers (WRT) support the Simple Network Management Protocol (SNMP). This is a standardized method for monitoring/manageing network connected devices. SNMP uses a tree-like hierarchy where each node is an object. Many of these objects contain (live) lists of insances and metrics, like network interfaces, disks, and wifi registrations.</p>
+
+<p class="note warning">
+This device tracker needs SNMP to be enabled on the router.
+</p>
+
+<p>OID examples:<br />
+- Microtik: 1.3.6.1.4.1.14988.1.1.1.2.1.1 (confirmed)<br />
+- Aruba: 1.3.6.1.4.1.14823.2.3.3.1.2.4.1.2 (untested)</p>
+
+<p>To use the snmp platform in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">device_tracker</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">snmp</span></span>
+  <span class="key">hosts</span>: <span class="string"><span class="content">192.168.1.1</span></span>
+  <span class="key">community</span>: <span class="string"><span class="content">public</span></span>
+  <span class="key">baseoid</span>: <span class="string"><span class="content">1.3.6.1.4.1.14988.1.1.1.2.1.1</span></span>
+</pre></div>
+</div>
+</div>
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>host</strong> (<em>Required</em>): The IP address of the router, eg. 192.168.1.1.</li>
+  <li>
+    <p><strong>community</strong> (<em>Required</em>): The SNMP community which is configured in the WAP/WRT. Most devices have a default community set to to <code>public</code> with read-only permission (which is sufficient).</p>
+  </li>
+  <li><strong>baseoid</strong> (<em>Required</em>): The OID prefix where wireless client registrations can be found, usually vendor specific. It’s advised to use the numerical notation. To find this base OID, check vendor documentation or check the MIB file for your device.</li>
+</ul>
+
+<p>See the <a href="/components/device_tracker/">device tracker component page</a> for instructions how to configure the people to be tracked.</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/network-snmp.png' />
+  </div>
+    <div class='section'>
+      This is a platform for
+      <a href='/components/device_tracker/'>the Device Tracker component</a>.
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Presence Detection</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/device_tracker.asuswrt/'>ASUSWRT</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.actiontec/'>Actiontec</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.aruba/'>Aruba</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.ddwrt/'>DD-WRT</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.geofancy/'>Geofancy</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.mqtt/'>MQTT device tracker</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.netgear/'>Netgear</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.nmap_scanner/'>Nmap</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.luci/'>OpenWRT (luci)</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.ubus/'>OpenWRT (ubus)</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.owntracks/'>Owntracks</a>
+        </li>
+        <li>
+            SNMP
+        </li>
+        <li>
+            <a href='/components/device_tracker.tplink/'>TP-Link</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.thomson/'>Thomson</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.tomato/'>Tomato</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

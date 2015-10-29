@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Using MQTT with Home Assistant</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-09-11T02:19:38-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> September 11, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Fabian Affolter</span>
-
-    <span><i class='icon-time'></i> 10 minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-09-11T02:19:38-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> September 11, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Fabian Affolter</span>
+    <span><i class='icon-time'></i> nine minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -138,7 +116,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -149,10 +126,8 @@
 </header>
 
 
-
-
-  <p><img src='/images/supported_brands/mqtt.png' style='border:none; box-shadow: none; float: right;' height='80' />
-The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt.html">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn&rsquo;t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn&rsquo;t matter if the data is coming from a human, a web service, or a device.</p>
+  
+<p><img src="/images/supported_brands/mqtt.png" style="border:none; box-shadow: none; float: right;" height="80" /> <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn’t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn’t matter if the data is coming from a human, a web service, or a device.</p>
 
 <p>A great example is shown in a <a href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/">Laundry Automation</a> post in this blog.</p>
 
@@ -160,309 +135,317 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 
 <a name="read-more"></a>
 
+<h3><a class="title-link" name="manual-usage" href="#manual-usage"></a> Manual usage</h3>
 
-<h3><a class='title-link' name='manual-usage' href='#manual-usage'></a> Manual usage</h3>
+<p>The simplest but not the coolest way as a human to interact with a Home Assistant sensor is launching a command manually. Let’s create a “Mood” sensor. For simplicity Home Assistant and the MQTT broker are both running on the same host. The needed configuration snipplets to add to the <code>configuration.yaml</code> file consists of two parts: one for the broker and one for the sensor.</p>
 
-<p>The simplest but not the coolest way as a human to interact with a Home Assistant sensor is launching a command manually. Let&rsquo;s create a &ldquo;Mood&rdquo; sensor. For simplicity Home Assistant and the MQTT broker are both running on the same host. The needed configuration snipplets to add to the <code>configuration.yaml</code> file consists of two parts: one for the broker and one for the sensor.</p>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+</pre></td>
+  <td class="code"><pre><span class="key">mqtt</span>:
+  <span class="key">broker</span>: <span class="string"><span class="content">127.0.0.1</span></span>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">mqtt</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">broker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">127.0.0.1</span>
-</span><span class='line'>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Fabian&#39;s</span><span class="nv"> </span><span class="s">Mood&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/fabian/mood&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
+<span class="key">sensor</span>:
+  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Fabian's Mood</span><span class="delimiter">&quot;</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/fabian/mood</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 
-
-<p>After a restart of Home Assistant the &ldquo;Mood&rdquo; sensor will show up in the frontend. For more details about the configuration of MQTT itself and the sensor, please refer to the <a href="https://home-assistant.io/components/mqtt.html">MQTT component</a> or the <a href="https://home-assistant.io/components/sensor.mqtt.html">MQTT sensor</a> documentation.</p>
+<p>After a restart of Home Assistant the “Mood” sensor will show up in the frontend. For more details about the configuration of MQTT itself and the sensor, please refer to the <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> or the <a href="https://home-assistant.io/components/sensor.mqtt/">MQTT sensor</a> documentation.</p>
 
 <p>Now we can set the mood. The commandline tool (<code>mosquitto_pub</code>) which is shipped with <code>mosquitto</code> is used to send an MQTT message.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>mosquitto_pub  -h 127.0.0.1 -t <span class="s2">&quot;home-assistant/fabian/mood&quot;</span> -m <span class="s2">&quot;bad&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+</pre></td>
+  <td class="code"><pre>$ mosquitto_pub  -h 127.0.0.1 -t &quot;home-assistant/fabian/mood&quot; -m &quot;bad&quot;
+</pre></td>
+</tr></table>
+</div>
 
-
-
-
-<p class='img'>
-  <img src='/images/blog/2015-09-mqtt/mood.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-mqtt/mood.png" />
   The Mood sensor
 </p>
 
+<p>This is a really bad example. Don’t do this in the real world because you won’t be able to create diagrams of historical data. Better use a numerical value.</p>
 
-<p>This is a really bad example. Don&rsquo;t do this in the real world because you won&rsquo;t be able to create diagrams of historical data. Better use a numerical value.</p>
-
-<h3><a class='title-link' name='python-mqtt-bindings' href='#python-mqtt-bindings'></a> Python MQTT bindings</h3>
+<h3><a class="title-link" name="python-mqtt-bindings" href="#python-mqtt-bindings"></a> Python MQTT bindings</h3>
 
 <p>The last section was pretty boring, I know. Nobody wants to send MQTT messages by hand if there is a computer on the desk. If you are playing the lottery this section is for you. If not, read it anyway because the lottery is just an example :-).</p>
 
 <p>This example is using the <a href="https://eclipse.org/paho/clients/python/">Paho MQTT Python binding</a> because those binding should be available on the host where Home Assistant is running. If you want to use this example on another machine, please make sure that the bindings are installed (<code>pip3 install paho-mqtt</code>).</p>
 
-<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called &ldquo;Lottery&rdquo; and the unit of measurement will be &ldquo;No.&rdquo;.</p>
+<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called “Lottery” and the unit of measurement will be “No.”.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Lottery&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/lottery/number&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;No.&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+</pre></td>
+  <td class="code"><pre>  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Lottery</span><span class="delimiter">&quot;</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/lottery/number</span><span class="delimiter">&quot;</span></span>
+    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">No.</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 
-
-<p>Don&rsquo;t forget to restart Home Assistant to make the configuration active.</p>
+<p>Don’t forget to restart Home Assistant to make the configuration active.</p>
 
 <p>To play, we need numbers from 1 to 49 which can be marked on the ticket. Those numbers should be random and displayed in the Home Assistant frontend. The Python script below is another simple example on how to send MQTT messages from the commandline; this time in a loop. For further information and examples please check the <a href="https://eclipse.org/paho/clients/python/docs/">Paho MQTT</a> documentation.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/python3</span>
-</span><span class='line'><span class="c">#</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">time</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">random</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">paho.mqtt.client</span> <span class="kn">as</span> <span class="nn">mqtt</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">paho.mqtt.publish</span> <span class="kn">as</span> <span class="nn">publish</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">broker</span> <span class="o">=</span> <span class="s">&#39;127.0.0.1&#39;</span>
-</span><span class='line'><span class="n">state_topic</span> <span class="o">=</span> <span class="s">&#39;home-assistant/lottery/number&#39;</span>
-</span><span class='line'><span class="n">delay</span> <span class="o">=</span> <span class="mi">5</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># Send a single message to set the mood</span>
-</span><span class='line'><span class="n">publish</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="s">&#39;home-assistant/fabian/mood&#39;</span><span class="p">,</span> <span class="s">&#39;good&#39;</span><span class="p">,</span> <span class="n">hostname</span><span class="o">=</span><span class="n">broker</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># Send messages in a loop</span>
-</span><span class='line'><span class="n">client</span> <span class="o">=</span> <span class="n">mqtt</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="s">&quot;ha-client&quot;</span><span class="p">)</span>
-</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">broker</span><span class="p">)</span>
-</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">loop_start</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">state_topic</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-</span><span class='line'>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+</pre></td>
+  <td class="code"><pre><span class="comment">#!/usr/bin/python3</span>
+<span class="comment">#</span>
+<span class="keyword">import</span> <span class="include">time</span>
+<span class="keyword">import</span> <span class="include">random</span>
+<span class="keyword">import</span> <span class="include">paho.mqtt.client</span> <span class="keyword">as</span> mqtt
+<span class="keyword">import</span> <span class="include">paho.mqtt.publish</span> <span class="keyword">as</span> publish
 
+broker = <span class="string"><span class="delimiter">'</span><span class="content">127.0.0.1</span><span class="delimiter">'</span></span>
+state_topic = <span class="string"><span class="delimiter">'</span><span class="content">home-assistant/lottery/number</span><span class="delimiter">'</span></span>
+delay = <span class="integer">5</span>
+
+<span class="comment"># Send a single message to set the mood</span>
+publish.single(<span class="string"><span class="delimiter">'</span><span class="content">home-assistant/fabian/mood</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">good</span><span class="delimiter">'</span></span>, hostname=broker)
+
+<span class="comment"># Send messages in a loop</span>
+client = mqtt.Client(<span class="string"><span class="delimiter">&quot;</span><span class="content">ha-client</span><span class="delimiter">&quot;</span></span>)
+client.connect(broker)
+client.loop_start()
+
+<span class="keyword">while</span> <span class="predefined-constant">True</span>:
+    client.publish(state_topic, random.randrange(<span class="integer">0</span>, <span class="integer">50</span>, <span class="integer">1</span>))
+    time.sleep(delay)
+</pre></td>
+</tr></table>
+</div>
 
 <p>Every 5 seconds a message with a new number is sent to the broker and picked up by Home Assistant. By the way, my mood is much better now.</p>
 
-<p class='img'>
-  <img src='/images/blog/2015-09-mqtt/lottery.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-mqtt/lottery.png" />
   The Lottery sensor
 </p>
 
+<p>With only a few lines of Python and an MQTT broker you can create your own “smartdevice” or send information to Home Assistant which you haven’t think of. Of course this is not limited to Python. If there is an MQTT library available, the device can be used with Home Assistant now.</p>
 
-<p>With only a few lines of Python and an MQTT broker you can create your own &ldquo;smartdevice&rdquo; or send information to Home Assistant which you haven&rsquo;t think of. Of course this is not limited to Python. If there is an MQTT library available, the device can be used with Home Assistant now.</p>
-
-<h3><a class='title-link' name='arduino' href='#arduino'></a> Arduino</h3>
+<h3><a class="title-link" name="arduino" href="#arduino"></a> Arduino</h3>
 
 <p>To get started with real hardware that is capable to send MQTT messages, the Arduino platform is an inexpensive way to do it. In this section an Arduino UNO with an Ethernet shield and a photo resistor is used. The photo resistor is connected to analog pin 0 (A0) and has an output from 0 to 1024.</p>
 
-<p class='img'>
-  <img src='/images/blog/2015-09-mqtt/arduino-shield.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-mqtt/arduino-shield.png" />
   The Arduino UNO with Ethernet shield and photo resistor
 </p>
 
-
 <p>The <a href="http://knolleary.github.io/pubsubclient/">MQTT client</a> for the Arduino needs to be available in your Arduino IDE. Below you will find a sketch which could act as a starting point. Please modify the IP addresses, the MAC address, and the pin as needed and upload the sketch to your Arduino.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/*</span>
-</span><span class='line'><span class="cm">  This sketch is based on the basic MQTT example by</span>
-</span><span class='line'><span class="cm">  http://knolleary.github.io/pubsubclient/</span>
-</span><span class='line'><span class="cm">*/</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#include &lt;SPI.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;Ethernet.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;PubSubClient.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define DEBUG 1 </span><span class="c1">// Debug output to serial console</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Device settings</span>
-</span><span class='line'><span class="n">IPAddress</span> <span class="nf">deviceIp</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">43</span><span class="p">);</span>
-</span><span class='line'><span class="n">byte</span> <span class="n">deviceMac</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mh">0xAB</span><span class="p">,</span> <span class="mh">0xCD</span><span class="p">,</span> <span class="mh">0xFE</span><span class="p">,</span> <span class="mh">0xFE</span><span class="p">,</span> <span class="mh">0xFE</span><span class="p">,</span> <span class="mh">0xFE</span> <span class="p">};</span>
-</span><span class='line'><span class="kt">char</span><span class="o">*</span> <span class="n">deviceId</span>  <span class="o">=</span> <span class="s">&quot;sensor01&quot;</span><span class="p">;</span> <span class="c1">// Name of the sensor</span>
-</span><span class='line'><span class="kt">char</span><span class="o">*</span> <span class="n">stateTopic</span> <span class="o">=</span> <span class="s">&quot;home-assistant/sensor01/brightness&quot;</span><span class="p">;</span> <span class="c1">// MQTT topic where values are published</span>
-</span><span class='line'><span class="kt">int</span> <span class="n">sensorPin</span> <span class="o">=</span> <span class="n">A0</span><span class="p">;</span> <span class="c1">// Pin to which the sensor is connected to</span>
-</span><span class='line'><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// Buffer to store the sensor value</span>
-</span><span class='line'><span class="kt">int</span> <span class="n">updateInterval</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span> <span class="c1">// Interval in miliseconds</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// MQTT server settings</span>
-</span><span class='line'><span class="n">IPAddress</span> <span class="nf">mqttServer</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
-</span><span class='line'><span class="kt">int</span> <span class="n">mqttPort</span> <span class="o">=</span> <span class="mi">1883</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">EthernetClient</span> <span class="n">ethClient</span><span class="p">;</span>
-</span><span class='line'><span class="n">PubSubClient</span> <span class="nf">client</span><span class="p">(</span><span class="n">ethClient</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">reconnect</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">client</span><span class="p">.</span><span class="n">connected</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'><span class="cp">#if DEBUG</span>
-</span><span class='line'>    <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Attempting MQTT connection...&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="cp">#endif</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">client</span><span class="p">.</span><span class="n">connect</span><span class="p">(</span><span class="n">deviceId</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'><span class="cp">#if DEBUG</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;connected&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="cp">#endif</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'><span class="cp">#if DEBUG</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;failed, rc=&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">client</span><span class="p">.</span><span class="n">state</span><span class="p">());</span>
-</span><span class='line'>      <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot; try again in 5 seconds&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="cp">#endif</span>
-</span><span class='line'>      <span class="n">delay</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">setup</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="mi">57600</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">setServer</span><span class="p">(</span><span class="n">mqttServer</span><span class="p">,</span> <span class="n">mqttPort</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">Ethernet</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="n">deviceMac</span><span class="p">,</span> <span class="n">deviceIp</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">delay</span><span class="p">(</span><span class="mi">1500</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">loop</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">client</span><span class="p">.</span><span class="n">connected</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">reconnect</span><span class="p">();</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">loop</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kt">int</span> <span class="n">sensorValue</span> <span class="o">=</span> <span class="n">analogRead</span><span class="p">(</span><span class="n">sensorPin</span><span class="p">);</span>
-</span><span class='line'><span class="cp">#if DEBUG</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Sensor value: &quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="n">Serial</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="n">sensorValue</span><span class="p">);</span>
-</span><span class='line'><span class="cp">#endif</span>
-</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">publish</span><span class="p">(</span><span class="n">stateTopic</span><span class="p">,</span> <span class="n">itoa</span><span class="p">(</span><span class="n">sensorValue</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">10</span><span class="p">));</span>
-</span><span class='line'>  <span class="n">delay</span><span class="p">(</span><span class="n">updateInterval</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+<a href="#n31" name="n31">31</a>
+<a href="#n32" name="n32">32</a>
+<a href="#n33" name="n33">33</a>
+<a href="#n34" name="n34">34</a>
+<a href="#n35" name="n35">35</a>
+<a href="#n36" name="n36">36</a>
+<a href="#n37" name="n37">37</a>
+<a href="#n38" name="n38">38</a>
+<a href="#n39" name="n39">39</a>
+<strong><a href="#n40" name="n40">40</a></strong>
+<a href="#n41" name="n41">41</a>
+<a href="#n42" name="n42">42</a>
+<a href="#n43" name="n43">43</a>
+<a href="#n44" name="n44">44</a>
+<a href="#n45" name="n45">45</a>
+<a href="#n46" name="n46">46</a>
+<a href="#n47" name="n47">47</a>
+<a href="#n48" name="n48">48</a>
+<a href="#n49" name="n49">49</a>
+<strong><a href="#n50" name="n50">50</a></strong>
+<a href="#n51" name="n51">51</a>
+<a href="#n52" name="n52">52</a>
+<a href="#n53" name="n53">53</a>
+<a href="#n54" name="n54">54</a>
+<a href="#n55" name="n55">55</a>
+<a href="#n56" name="n56">56</a>
+<a href="#n57" name="n57">57</a>
+<a href="#n58" name="n58">58</a>
+<a href="#n59" name="n59">59</a>
+<strong><a href="#n60" name="n60">60</a></strong>
+<a href="#n61" name="n61">61</a>
+<a href="#n62" name="n62">62</a>
+<a href="#n63" name="n63">63</a>
+<a href="#n64" name="n64">64</a>
+<a href="#n65" name="n65">65</a>
+<a href="#n66" name="n66">66</a>
+<a href="#n67" name="n67">67</a>
+<a href="#n68" name="n68">68</a>
+</pre></td>
+  <td class="code"><pre><span class="comment">/*
+  This sketch is based on the basic MQTT example by
+  http://knolleary.github.io/pubsubclient/
+*/</span>
 
+<span class="preprocessor">#include</span> <span class="include">&lt;SPI.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;Ethernet.h&gt;</span>
+<span class="preprocessor">#include</span> <span class="include">&lt;PubSubClient.h&gt;</span>
+
+<span class="preprocessor">#define</span> DEBUG <span class="integer">1</span> <span class="comment">// Debug output to serial console</span>
+
+<span class="comment">// Device settings</span>
+IPAddress deviceIp(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">0</span>, <span class="integer">43</span>);
+byte deviceMac[] = { <span class="hex">0xAB</span>, <span class="hex">0xCD</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span> };
+<span class="predefined-type">char</span>* deviceId  = <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor01</span><span class="delimiter">&quot;</span></span>; <span class="comment">// Name of the sensor</span>
+<span class="predefined-type">char</span>* stateTopic = <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/sensor01/brightness</span><span class="delimiter">&quot;</span></span>; <span class="comment">// MQTT topic where values are published</span>
+<span class="predefined-type">int</span> sensorPin = A0; <span class="comment">// Pin to which the sensor is connected to</span>
+<span class="predefined-type">char</span> buf[<span class="integer">4</span>]; <span class="comment">// Buffer to store the sensor value</span>
+<span class="predefined-type">int</span> updateInterval = <span class="integer">1000</span>; <span class="comment">// Interval in miliseconds</span>
+
+<span class="comment">// MQTT server settings</span>
+IPAddress mqttServer(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">0</span>, <span class="integer">12</span>);
+<span class="predefined-type">int</span> mqttPort = <span class="integer">1883</span>;
+
+EthernetClient ethClient;
+PubSubClient client(ethClient);
+
+<span class="directive">void</span> reconnect() {
+  <span class="keyword">while</span> (!client.connected()) {
+<span class="preprocessor">#if</span> DEBUG
+    Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Attempting MQTT connection...</span><span class="delimiter">&quot;</span></span>);
+<span class="preprocessor">#endif</span>
+    <span class="keyword">if</span> (client.connect(deviceId)) {
+<span class="preprocessor">#if</span> DEBUG
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>);
+<span class="preprocessor">#endif</span>
+    } <span class="keyword">else</span> {
+<span class="preprocessor">#if</span> DEBUG
+      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">failed, rc=</span><span class="delimiter">&quot;</span></span>);
+      Serial.print(client.state());
+      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content"> try again in 5 seconds</span><span class="delimiter">&quot;</span></span>);
+<span class="preprocessor">#endif</span>
+      delay(<span class="integer">5000</span>);
+    }
+  }
+}
+
+<span class="directive">void</span> setup() {
+  Serial.begin(<span class="integer">57600</span>);
+  client.setServer(mqttServer, mqttPort);
+  Ethernet.begin(deviceMac, deviceIp);
+  delay(<span class="integer">1500</span>);
+}
+
+<span class="directive">void</span> loop() {
+  <span class="keyword">if</span> (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  <span class="predefined-type">int</span> sensorValue = analogRead(sensorPin);
+<span class="preprocessor">#if</span> DEBUG
+  Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sensor value: </span><span class="delimiter">&quot;</span></span>);
+  Serial.println(sensorValue);
+<span class="preprocessor">#endif</span>
+  client.publish(stateTopic, itoa(sensorValue, buf, <span class="integer">10</span>));
+  delay(updateInterval);
+}
+</pre></td>
+</tr></table>
+</div>
 
 <p>The Arduino will send the value of the sensor every second. To use the data in Home Assistant, add an additional MQTT sensor to the <code>configuration.yaml</code> file.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'>  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mqtt</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Brightness&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">state_topic</span><span class="p-Indicator">:</span> <span class="s">&quot;home-assistant/sensor01/brightness&quot;</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">unit_of_measurement</span><span class="p-Indicator">:</span> <span class="s">&quot;cd&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
+<div class="highlighter-coderay"><table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+</pre></td>
+  <td class="code"><pre>  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Brightness</span><span class="delimiter">&quot;</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/sensor01/brightness</span><span class="delimiter">&quot;</span></span>
+    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">cd</span><span class="delimiter">&quot;</span></span>
+</pre></td>
+</tr></table>
+</div>
 
 <p>After a restart of Home Assistant the values of your Arduino will be available.</p>
 
-<p class='img'>
-  <img src='/images/blog/2015-09-mqtt/arduino.png' />
+<p class="img">
+  <img src="/images/blog/2015-09-mqtt/arduino.png" />
   The Brightness sensor
 </p>
 
-
 <p>I hope that this post could give you some ideas about the usage Home Assistant and MQTT. If you are working on a cool project that includes Home Assistant, please let us now.</p>
-
-
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -474,7 +457,6 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -556,7 +538,6 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
 
   
 </div>
-
         </aside>
         
       </div>
@@ -567,30 +548,23 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -606,14 +580,6 @@ The <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to H
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>

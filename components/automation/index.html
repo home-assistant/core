@@ -1,0 +1,503 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Automation - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to setup automation within Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/automation/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Automation">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/automation/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to setup automation within Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Automation
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>This page will go into more detail about the various options the <code>automation</code> component offers. If you haven’t yet, read the <a href="/getting-started/automation/">getting started page on automation</a>.</p>
+
+<p>A configuration section of an automation requires a <code>trigger</code> and an <code>action</code> section. <code>condition</code> and <code>condition_type</code> are optional. To keep this page compact, all following sections will not show the full configuration but only the relevant part.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example of entry in configuration.yaml</span>
+<span class="key">automation</span>:
+<span class="comment"># Turns on lights 1 hour before sunset if people are home</span>
+<span class="comment"># and if people get home between 16:00-23:00</span>
+- <span class="string"><span class="content">alias: 'Rule 1 Light on in the evening'</span></span>
+  <span class="key">trigger</span>:
+    <span class="comment"># Prefix the first line of each trigger configuration</span>
+    <span class="comment"># with a '-' to enter multiple</span>
+    - <span class="string"><span class="content">platform: sun</span></span>
+      <span class="key">event</span>: <span class="string"><span class="content">sunset</span></span>
+      <span class="key">offset</span>: <span class="string"><span class="content">'-01:00:00'</span></span>
+    - <span class="string"><span class="content">platform: state</span></span>
+      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
+      <span class="key">state</span>: <span class="string"><span class="content">'home'</span></span>
+  <span class="key">condition</span>:
+    <span class="comment"># Prefix the first line of each condition configuration</span>
+    <span class="comment"># with a '-'' to enter multiple</span>
+    - <span class="string"><span class="content">platform: state</span></span>
+      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
+      <span class="key">state</span>: <span class="string"><span class="content">'home'</span></span>
+    - <span class="string"><span class="content">platform: time</span></span>
+      <span class="key">after</span>: <span class="string"><span class="content">'16:00:00'</span></span>
+      <span class="key">before</span>: <span class="string"><span class="content">'23:00:00'</span></span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">homeassistant.turn_on</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+
+<span class="comment"># Turn off lights when everybody leaves the house</span>
+- <span class="string"><span class="content">alias: 'Rule 2 - Away Mode'</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
+    <span class="key">state</span>: <span class="string"><span class="content">'not_home'</span></span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">light.turn_off</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_lights</span></span>
+
+<span class="comment"># Notify when Paulus leaves the house in the evening</span>
+- <span class="string"><span class="content">alias: 'Leave Home notification'</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">zone</span></span>
+    <span class="key">event</span>: <span class="string"><span class="content">leave</span></span>
+    <span class="key">zone</span>: <span class="string"><span class="content">zone.home</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">device_tracker.paulus</span></span>
+  <span class="key">condition</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">time</span></span>
+    <span class="key">after</span>: <span class="string"><span class="content">'20:00'</span></span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">notify.notify</span></span>
+    <span class="key">data</span>:
+      <span class="key">message</span>: <span class="string"><span class="content">'Paulus left the house'</span></span>
+</pre></div>
+</div>
+</div>
+
+<ul>
+  <li><a href="#conditions">Jump to conditions</a></li>
+  <li><a href="#actions">Jump to actions</a></li>
+  <li><a href="#troubleshooting">Jump to troubleshooting</a></li>
+</ul>
+
+<h2><a class="title-link" name="triggers" href="#triggers"></a> Triggers</h2>
+
+<p>Triggers are what starts the processing of an automation rule. It is possible to specify multiple triggers for the same rule. Once a trigger starts, Home Assistant will validate the conditions, if any, and call the action.</p>
+
+<h4><a class="title-link" name="event-trigger" href="#event-trigger"></a> Event trigger</h4>
+<p>Triggers when an event is being processed. Events are the raw building blocks of Home Assistant. You can match events on just the event name or also require specific event data to be present.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">event</span></span>
+    <span class="key">event_type</span>: <span class="string"><span class="content">MY_CUSTOM_EVENT</span></span>
+    <span class="comment"># optional</span>
+    <span class="key">event_data</span>:
+      <span class="key">mood</span>: <span class="string"><span class="content">happy</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="mqtt-trigger" href="#mqtt-trigger"></a> MQTT trigger</h4>
+<p>Triggers when a specific message is received on given topic. Optionally can match on the payload being sent over the topic.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+    <span class="key">topic</span>: <span class="string"><span class="content">living_room/switch/ac</span></span>
+    <span class="comment"># Optional</span>
+    <span class="key">payload</span>: <span class="string"><span class="content">'on'</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="numeric-state-trigger" href="#numeric-state-trigger"></a> Numeric state trigger</h4>
+<p>On state change of a specified entity, attempts to parse the state as a number and triggers if value is above and/or below a threshold.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">numeric_state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">sensor.temperature</span></span>
+    <span class="comment"># At least one of the following required</span>
+    <span class="key">above</span>: <span class="string"><span class="content">17</span></span>
+    <span class="key">below</span>: <span class="string"><span class="content">25</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="state-trigger" href="#state-trigger"></a> State trigger</h4>
+
+<p>Triggers when the state of an entity changes. If only entity_id given will match all state changes.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">device_tracker.paulus</span></span>
+    <span class="comment"># Optional</span>
+    <span class="key">from</span>: <span class="string"><span class="content">'not_home'</span></span>
+    <span class="key">to</span>: <span class="string"><span class="content">'home'</span></span>
+</pre></div>
+</div>
+</div>
+
+<p class="note warning">
+  Use quotes around your values for <code>from</code> and <code>to</code> to avoid the YAML parser interpreting values as booleans.
+</p>
+
+<h4><a class="title-link" name="sun-trigger" href="#sun-trigger"></a> Sun trigger</h4>
+<p>Trigger when the sun is setting or rising. An optional time offset can be given to have it trigger for example 45 minutes before sunset, when dusk is setting in.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">sun</span></span>
+    <span class="comment"># Possible values: sunset, sunrise</span>
+    <span class="key">event</span>: <span class="string"><span class="content">sunset</span></span>
+    <span class="comment"># Optional time offset. This example is 45 minutes.</span>
+    <span class="key">offset</span>: <span class="string"><span class="content">'-00:45:00'</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="time-trigger" href="#time-trigger"></a> Time trigger</h4>
+
+<p>Time can be triggered in many ways. The most common is to specify <code>after</code> and trigger at a specific point in time each day. Alternatively, you can also match if the hour, minute or second of the current time has a specific value. For example, by only setting minutes in the config to 5 it will trigger every hour when it is 5 minutes past whole.  You cannot use <code>after</code> together with hour, minute or second.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">time</span></span>
+    <span class="comment"># All following are optional.</span>
+    <span class="comment"># When 'after' is used, you cannot also match on hour, minute, seconds.</span>
+    <span class="comment"># Military time format.</span>
+    <span class="comment"># after: '15:32:00'</span>
+    <span class="key">hours</span>: <span class="string"><span class="content">0</span></span>
+    <span class="key">minutes</span>: <span class="string"><span class="content">5</span></span>
+    <span class="key">seconds</span>: <span class="string"><span class="content">0</span></span>
+    <span class="key">weekday</span>:
+      - <span class="string"><span class="content">sat</span></span>
+      - <span class="string"><span class="content">sun</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>You can use <code>weekday</code> to limit the trigger times to speific days as well (also available in conditions). Valid values for <code>weekday</code> are (<code>sun</code>, <code>mon</code>, <code>tue</code>, <code>wed</code>, <code>thu</code>, <code>fri</code> &amp; <code>sat</code>)</p>
+
+<p>The above example will trigger on Saturday and Sunday every hour on the 5 (2:05, 3:05, 4:05, etc).</p>
+
+<h4><a class="title-link" name="zone-trigger" href="#zone-trigger"></a> Zone trigger</h4>
+
+<p>Zone triggers can trigger when an entity is entering or leaving the zone. For zone automation to work, you need to have setup a device tracker platform that supports reporting GPS coordinates. Currently this is limited to the <a href="/components/device_tracker.owntracks/">OwnTracks platform</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">zone</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">device_tracker.paulus</span></span>
+    <span class="key">zone</span>: <span class="string"><span class="content">zone.home</span></span>
+    <span class="comment"># Event is either enter or leave</span>
+    <span class="key">event</span>: <span class="string"><span class="content">enter</span></span>
+</pre></div>
+</div>
+</div>
+
+<h2><a class="title-link" name="conditions" href="#conditions"></a> Conditions</h2>
+
+<p>Conditions are an optional part of an automation rule and be used to prevent an action from happening when triggered. Conditions look very familiar to triggers but are very different. A trigger will look at events happening at the system while a condition only looks at how the system looks right now. A trigger can observe that a switch is being turned on. A condition can only see if a switch is on or off.</p>
+
+<p>An automation rule can have mulitiple triggers. By default the action will only fire if all conditions pass. An optional key <code>condition_type: 'or'</code> can be set on the automation rule to fire action if any condition matches.  In the example below, the automation would trigger if the time is before 05:00 <em>OR</em> after 20:00.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition_type</span>: <span class="string"><span class="content">or</span></span>
+  <span class="key">condition</span>:
+   - <span class="string"><span class="content">platform: time</span></span>
+     <span class="key">before</span>: <span class="string"><span class="content">'05:00'</span></span>
+   - <span class="string"><span class="content">platform: time</span></span>
+     <span class="key">after</span>: <span class="string"><span class="content">'20:00'</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>If your triggers and conditions are exactly the same, you can use a shortcut to specify conditions. In this case, triggers that are not valid conditions will be ignored.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition</span>: <span class="string"><span class="content">use_trigger_values</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="numeric-state-condition" href="#numeric-state-condition"></a> Numeric state condition</h4>
+
+<p>Attempts to parse the state of specified entity as a number and triggers if value is above and/or below a threshold.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">numeric_state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">sensor.temperature</span></span>
+    <span class="comment"># At least one of the following required</span>
+    <span class="key">above</span>: <span class="string"><span class="content">17</span></span>
+    <span class="key">below</span>: <span class="string"><span class="content">25</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="state-condition" href="#state-condition"></a> State condition</h4>
+
+<p>Tests if an entity is a specified state.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">device_tracker.paulus</span></span>
+    <span class="key">state</span>: <span class="string"><span class="content">not_home</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="time-condition" href="#time-condition"></a> Time condition</h4>
+
+<p>The time condition can test if it is after a specified time, before a specified time or if it is a certain day of the week</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">time</span></span>
+    <span class="comment"># At least one of the following is required.</span>
+    <span class="key">after</span>: <span class="string"><span class="content">'15:00:00'</span></span>
+    <span class="key">before</span>: <span class="string"><span class="content">'23:00:00'</span></span>
+    <span class="key">weekday</span>:
+      - <span class="string"><span class="content">mon</span></span>
+      - <span class="string"><span class="content">wed</span></span>
+      - <span class="string"><span class="content">fri</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Valid values for <code>weekday</code> are (<code>sun</code>, <code>mon</code>, <code>tue</code>, <code>wed</code>, <code>thu</code>, <code>fri</code> &amp; <code>sat</code>)</p>
+
+<h4><a class="title-link" name="zone-condition" href="#zone-condition"></a> Zone condition</h4>
+
+<p>Zone conditions test if an entity is in a certain zone. For zone automation to work, you need to have setup a device tracker platform that supports reporting GPS coordinates. Currently this is limited to the <a href="/components/device_tracker.owntracks/">OwnTracks platform</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">zone</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">device_tracker.paulus</span></span>
+    <span class="key">zone</span>: <span class="string"><span class="content">zone.home</span></span>
+</pre></div>
+</div>
+</div>
+
+<h2><a class="title-link" name="actions" href="#actions"></a> Actions</h2>
+
+<p>When an automation rule fires, it calls a service. For this service you can specify an entity id it should apply to and optional service parameters (to specify for example the brightness).</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="comment"># Change the light in the kitchen and living room to 150 brightness and color red.</span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">homeassistant.turn_on</span></span>
+    <span class="key">entity_id</span>:
+      - <span class="string"><span class="content">light.kitchen</span></span>
+      - <span class="string"><span class="content">light.living_room</span></span>
+    <span class="key">data</span>:
+      <span class="key">brightness</span>: <span class="string"><span class="content">150</span></span>
+      <span class="key">rgb_color</span>: <span class="string"><span class="content">[255, 0, 0]</span></span>
+</pre></div>
+</div>
+</div>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="comment"># Notify me on my mobile phone of an event</span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">notify.notify</span></span>
+    <span class="key">data</span>:
+      <span class="key">message</span>: <span class="string"><span class="content">Something just happened, better take a look!</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>If you want to specify multiple services to be called or include a delay, have a look at the <a href="/components/script/">script component</a>. If you want to describe how certain entities should look, check out the <a href="/components/scene/">scene component</a>.</p>
+
+<h2><a class="title-link" name="troubleshooting" href="#troubleshooting"></a> Troubleshooting</h2>
+
+<p>You can verify that your automation rules are being initialized correctly by watching both the realtime logs and also the logbook.  The realtime logs will show the rules being initialized (once for each trigger):</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>INFO [homeassistant.components.automation] Initialized rule Rainy Day
+INFO [homeassistant.components.automation] Initialized rule Rainy Day
+INFO [homeassistant.components.automation] Initialized rule Rainy Day
+INFO [homeassistant.components.automation] Initialized rule Rain is over
+</pre></div>
+</div>
+</div>
+
+<p>The Logbook component will show a line entry when an automation is triggered.  You can look at the previous entry to determine which trigger in the rule triggered the event.</p>
+
+<p><img src="/images/components/automation/logbook.png" alt="Logbook example" /></p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+  </div>
+    <div class='section'>
+    <h1 class="title delta">Category Automation</h1>
+    <ul class='divided'>
+        <li>
+            Automation
+        </li>
+        <li>
+            <a href='/components/ifttt/'>IFTTT</a>
+        </li>
+        <li>
+            <a href='/components/keyboard/'>Keyboard</a>
+        </li>
+        <li>
+            <a href='/components/device_sun_light_trigger/'>Presence based lights</a>
+        </li>
+        <li>
+            <a href='/components/script/'>Scripts</a>
+        </li>
+        <li>
+            <a href='/components/shell_command/'>Shell command</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

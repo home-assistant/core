@@ -5,8 +5,6 @@
   <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
 
   
-
-    
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -32,7 +30,6 @@
     <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
 </head>
 
-
   <body >
 
     <header>
@@ -54,10 +51,10 @@
     <a href="/getting-started/">Getting started</a>
     <ul>
       <li><a href='/getting-started/'>Installing Home Assistant</a></li>
-      <li><a href='/getting-started/configuration.html'>Configuration basics</a></li>
-      <li><a href='/getting-started/devices.html'>Adding devices</a></li>
-      <li><a href='/getting-started/presence-detection.html'>Presence detection</a></li>
-      <li><a href='/getting-started/automation.html'>Automation</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -65,25 +62,23 @@
   <li>
     <a href="/developers/">Developers</a>
     <ul>
-      <li><a href="/developers/architecture.html">Architecture</a></li>
-      <li><a href="/developers/frontend.html">Frontend development</a></li>
-      <li><a href="/developers/creating_components.html">
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
         Creating components
       </a></li>
-      <li><a href="/developers/add_new_platform.html">
+      <li><a href="/developers/add_new_platform/">
         Adding platform support
       </a></li>
-      <li><a href="/developers/api.html">API</a></li>
-      <li><a href="/developers/credits.html">Credits</a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
     </ul>
   </li>
   <li><a href="/blog/">Blog</a></li>
   <li><a href="/help/">Need help?</a></li>
 </ul>
-
   </nav>
 </div>
-
 
   </div>
 </div>
@@ -98,6 +93,7 @@
         
 
           <article class="post">
+  
   <header>
   
   <h1 class="title indent">Release notes for May 14, 2015</h1>
@@ -105,28 +101,10 @@
 
   
   <div class="meta clearfix">
-    
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-05-14T22:25:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> May 14, 2015</time>
-    
-  
-
-<span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-
-    <span><i class='icon-time'></i> five minutes reading time</span>
-    
-
-  <span>
+    <time datetime="2015-05-14T22:25:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> May 14, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> three minutes reading time</span>
+    <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
@@ -136,7 +114,6 @@
     
     </ul>
   </span>
-
     
       <a class='comments'
          href="#disqus_thread"
@@ -147,187 +124,134 @@
 </header>
 
 
-
-
   <p>Almost three busy weeks have past since the last release. We used this time to finally make the overhaul to use UTC as the internal date time format. We added a bunch of test coverage in the process to make sure the transition went smoothly. Pleas see <a href="/blog/2015/05/09/utc-time-zone-awareness/#backwards-incompatible-stuff">the blog post about the UTC refactor</a> for backwards incompatible changes.</p>
 
 <p>This release includes a significant startup boost for the frontend and a fix for Wemo discovery after their latest firmware upgrade.</p>
 
 <p>I would like to give a big shout out to our newest contributor <a href="https://github.com/fabaff">fabaff</a> for taking the time to improve the documentation.</p>
 
-<p class='note'>
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href='https://github.com/balloob/home-assistant/issues'>GitHub</a>.
+<p class="note">
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href="https://github.com/balloob/home-assistant/issues">GitHub</a>.
 </p>
-
-
-
 
 <a name="read-more"></a>
 
-
-<p><strong>Overwriting Entity Attributes</strong><br>
+<p><strong>Overwriting Entity Attributes</strong><br />
 Before diving into the newly supported devices and services, I want to highlight an awesome configuration enhancement by <a href="https://github.com/rmkraus">rmkraus</a>: overwriting entity attributes.</p>
 
 <p>These new configuration settings allow you to overwrite entity state attributes. The main usage for this is being able to overwrite attributes that influence how an entity is shown in the interface.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">homeassistant</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">customize</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">light.bowl</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="c1"># hides this entity from the interface</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">hidden</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">light.ceiling</span><span class="p-Indicator">:</span>
-</span><span class='line'>      <span class="c1"># Replaces the state badge with given picture</span>
-</span><span class='line'>      <span class="l-Scalar-Plain">entity_picture</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://graph.facebook.com/schoutsen/picture</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">homeassistant</span>:
+  <span class="key">customize</span>:
+    <span class="key">light.bowl</span>:
+      <span class="comment"># hides this entity from the interface</span>
+      <span class="key">hidden</span>: <span class="string"><span class="content">true</span></span>
+    <span class="key">light.ceiling</span>:
+      <span class="comment"># Replaces the state badge with given picture</span>
+      <span class="key">entity_picture</span>: <span class="string"><span class="content">http://graph.facebook.com/schoutsen/picture</span></span>
+</pre></div>
+</div>
+</div>
 
+<p><strong>MySensors</strong><br />
+<img src="/images/supported_brands/mysensors.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/andythigpen">Andythigpen</a> and <a href="https://github.com/theolind">Theolind</a> have added support for the <a href="http://www.mysensors.org">MySensors platform</a> to Home Assistant.</p>
 
-<p><strong>MySensors</strong><br>
-<img src='/images/supported_brands/mysensors.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/andythigpen">Andythigpen</a> and <a href="https://github.com/theolind">Theolind</a> have added support for the <a href="http://www.mysensors.org">MySensors platform</a> to Home Assistant.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mysensors</span></span>
+  <span class="key">port</span>: <span class="string"><span class="content">/dev/ttyACM0</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysensors</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">/dev/ttyACM0</span>
-</span></code></pre></td></tr></table></div></figure>
+<p><strong>OpenWeatherMap</strong><br />
+<img src="/images/supported_brands/openweathermap.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://openweathermap.org">OpenWeatherMap</a>. This will allow you to integrate local meteorological data into Home Assistant.</p>
 
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">openweathermap</span></span>
+  <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_API_KEY</span></span>
+  <span class="key">monitored_variables</span>:
+    - <span class="string"><span class="content">type: 'weather'</span></span>
+    - <span class="string"><span class="content">type: 'temperature'</span></span>
+    - <span class="string"><span class="content">type: 'wind_speed'</span></span>
+    - <span class="string"><span class="content">type: 'humidity'</span></span>
+    - <span class="string"><span class="content">type: 'pressure'</span></span>
+    - <span class="string"><span class="content">type: 'clouds'</span></span>
+    - <span class="string"><span class="content">type: 'rain'</span></span>
+    - <span class="string"><span class="content">type: 'snow'</span></span>
+</pre></div>
+</div>
+</div>
 
-<p><strong>OpenWeatherMap</strong><br>
-<img src='/images/supported_brands/openweathermap.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://openweathermap.org">OpenWeatherMap</a>. This will allow you to integrate local meteorological data into Home Assistant.</p>
+<p><strong>InstaPush</strong><br />
+<img src="/images/supported_brands/instapush.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="https://instapush.im">InstaPush</a>. This will allow you send messages from Home Assistant to your iOS and Android devices.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">openweathermap</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_API_KEY</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;weather&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;temperature&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;wind_speed&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;humidity&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;pressure&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;clouds&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;rain&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;snow&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">instapush</span></span>
+    <span class="comment"># Get those by creating a new application, event, and tracker on https://instapush.im</span>
+    <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+    <span class="key">app_secret</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+    <span class="key">event</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+    <span class="key">tracker</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+</pre></div>
+</div>
+</div>
 
+<p><strong>XMPP</strong><br />
+<img src="/images/supported_brands/xmpp.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for Jabber/XMPP. This will allow you send messages from Home Assistant to anyone on Jabber/XMPP.</p>
 
-<p><strong>InstaPush</strong><br>
-<img src='/images/supported_brands/instapush.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="https://instapush.im">InstaPush</a>. This will allow you send messages from Home Assistant to your iOS and Android devices.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">xmpp</span></span>
+    <span class="key">sender</span>: <span class="string"><span class="content">YOUR_JID</span></span>
+    <span class="key">password</span>: <span class="string"><span class="content">YOUR_JABBER_ACCOUNT_PASSWORD</span></span>
+    <span class="key">recipient</span>: <span class="string"><span class="content">YOUR_RECIPIENT</span></span>
+</pre></div>
+</div>
+</div>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">instapush</span>
-</span><span class='line'>    <span class="c1"># Get those by creating a new application, event, and tracker on https://instapush.im</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">app_secret</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">event</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">tracker</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span></code></pre></td></tr></table></div></figure>
+<p><strong>Notify My Android</strong><br />
+<img src="/images/supported_brands/nma.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://www.notifymyandroid.com/">Notify My Android</a>. This will allow you to send messages from Home Assistant to your Android device.</p>
 
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">nma</span></span>
+    <span class="comment"># Get this by registering a new application on http://www.notifymyandroid.com/</span>
+    <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+</pre></div>
+</div>
+</div>
 
-<p><strong>XMPP</strong><br>
-<img src='/images/supported_brands/xmpp.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for Jabber/XMPP. This will allow you send messages from Home Assistant to anyone on Jabber/XMPP.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">xmpp</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">sender</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JID</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">password</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_JABBER_ACCOUNT_PASSWORD</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">recipient</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YOUR_RECIPIENT</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Notify My Android</strong><br>
-<img src='/images/supported_brands/nma.png' style='border:none; box-shadow: none; float: right;' height='50' />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://www.notifymyandroid.com/">Notify My Android</a>. This will allow you to send messages from Home Assistant to your Android device.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">nma</span>
-</span><span class='line'>    <span class="c1"># Get this by registering a new application on http://www.notifymyandroid.com/</span>
-</span><span class='line'>    <span class="l-Scalar-Plain">api_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ABCDEFGHJKLMNOPQRSTUVXYZ</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>Time &amp; Date sensor</strong><br>
+<p><strong>Time &amp; Date sensor</strong><br />
 <a href="https://github.com/fabaff">Fabaff</a> has contributed a time &amp; date sensor. This will allow you to show the current time/date on the dashboard.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Example configuration.yaml entry</span>
-</span><span class='line'><span class="l-Scalar-Plain">sensor</span><span class="p-Indicator">:</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">platform</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">time_date</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">monitored_variables</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;time&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;date&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;date_time&#39;</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">type</span><span class="p-Indicator">:</span> <span class="s">&#39;time_date&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">time_date</span></span>
+  <span class="key">monitored_variables</span>:
+    - <span class="string"><span class="content">type: 'time'</span></span>
+    - <span class="string"><span class="content">type: 'date'</span></span>
+    - <span class="string"><span class="content">type: 'date_time'</span></span>
+    - <span class="string"><span class="content">type: 'time_date'</span></span>
+</pre></div>
+</div>
+</div>
 </article>
 
- 
+
 <section id="disqus">
   <h3 class="indent title">Comments</h3>
-  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
 </section>
 
 
@@ -339,7 +263,6 @@ Before diving into the newly supported devices and services, I want to highlight
   
   
     
-
     <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
@@ -421,7 +344,6 @@ Before diving into the newly supported devices and services, I want to highlight
 
   
 </div>
-
         </aside>
         
       </div>
@@ -432,30 +354,23 @@ Before diving into the newly supported devices and services, I want to highlight
   <div class="grid">
     <div class="grid__item">
       <p class="copyright">
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
 </p>
     </div>
   </div>
 </div>
-
     </footer>
 
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
 
-    
-
-
-<script>
+    <script>
   var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
   (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
   g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
   s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
-
-
-
 <script>
   var disqus_shortname = 'home-assistant';
   
@@ -471,14 +386,6 @@ Before diving into the newly supported devices and services, I want to highlight
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   }());
 </script>
-
-
-
-
-
-
-
-
 
   </body>
 </html>
