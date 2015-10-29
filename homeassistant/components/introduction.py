@@ -26,13 +26,13 @@ def setup(hass, config=None):
         Here are some resources to get started:
 
          - Configuring Home Assistant:
-           https://home-assistant.io/getting-started/configuration.html
+           https://home-assistant.io/getting-started/configuration/
 
          - Available components:
            https://home-assistant.io/components/
 
          - Troubleshooting your configuration:
-           https://home-assistant.io/getting-started/troubleshooting-configuration.html
+           https://home-assistant.io/getting-started/troubleshooting-configuration/
 
          - Getting help:
            https://home-assistant.io/help/
