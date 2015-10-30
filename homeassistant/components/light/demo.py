@@ -16,7 +16,7 @@ LIGHT_COLORS = [
     [0.460, 0.470],
 ]
 
-LIGHT_TEMPS = [160, 300, 500]
+LIGHT_TEMPS = [160, 500]
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
