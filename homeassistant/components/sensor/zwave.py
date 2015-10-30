@@ -22,12 +22,11 @@ PHILIO = '013c'
 PHILIO_SLIM_SENSOR = '0002'
 PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
 
-WORKAROUND_NO_TRIGGER_OFF_EVENT = 'trigger_no_off_event'
+WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
 
-SPECIFIC_DEVICE_MAPPINGS = [
-    (WORKAROUND_NO_TRIGGER_OFF_EVENT, PHILIO_SLIM_SENSOR_MOTION),
-]
-
+DEVICE_MAPPINGS = {
+  PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
+}
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Z-Wave sensors. """
@@ -36,17 +35,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     value.set_change_verified(False)
 
-    # Check workaround mappings for specific devices
-    for workaround_definition in SPECIFIC_DEVICE_MAPPINGS:
-        workaround, sensor_specification = workaround_definition
-        if sensor_specification == (
-                value.command_class, value.node.manufacturer_id,
-                value.node.manufacturer_id, value.node.manufacturer_id):
-            if workaround == WORKAROUND_NO_TRIGGER_OFF_EVENT:
-                add_devices([ZWaveTriggerSensor(value, hass)])
-                return
+    # if 1 in groups and (zwave.NETWORK.controller.node_id not in
+    #                     groups[1].associations):
+    #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
 
-    # generic Device mappings
+    specific_sensor_key = (value.node.manufacturer_id,
+                           value.node.product_id,
+                           value.index)
+
+    # Check workaround mappings for specific devices
+    if specific_sensor_key in DEVICE_MAPPINGS:
+        if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
+            add_devices([ZWaveTriggerSensor(value, hass)])
+            return
+
+        # generic Device mappings
     if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value)])
 
