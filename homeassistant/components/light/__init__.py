@@ -253,7 +253,7 @@ def setup(hass, config):
             # Without this check, a ctcolor with value '99' would work
             # These values are based on Philips Hue, may need ajustment later
             if isinstance(colortemp, int) and 154 <= colortemp <= 500:
-                    params[ATTR_COLOR_TEMP] = colortemp
+                params[ATTR_COLOR_TEMP] = colortemp
 
         if ATTR_RGB_COLOR in dat:
             try:
