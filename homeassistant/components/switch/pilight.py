@@ -7,6 +7,7 @@ import socket
 import json
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,77 +19,77 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 	#_LOGGER.info(config)
 	host = config['ip']
 	port = config['port']
-	for device in config['switches']:
-		name = config['switches'][device]['name']
-		_LOGGER.info("Register Device " + name + ".")
-		aDevice = Pilight_Switch(host, port, name, device)
-		if aDevice.setup():
-			add_devices_callback([aDevice])
-		else:
-			return False
-	return True
+	server = Pilight_Server(host, port)
+	add_devices_callback([server])
+	if server.setup():
+		for device in config['switches']:
+			if server.existSwitch(device):
+				if config['switches'][device]:
+					name = config['switches'][device]['name']
+				else:
+					name = device
+				_LOGGER.info("Register Device " + name + ".")
+				aDevice = Pilight_Switch(server, name, device)
+				if aDevice.setup():
+					add_devices_callback([aDevice])
+			else: 
+				_LOGGER.info("Pilight doesnt know a Switch " + device + ".")
+		return True
+	return False
 
-
-
-class Pilight_Switch(SwitchDevice):
-	""" Represents a Pilight Switch """
-
-	def __init__(self, host, port, name, dev_name):
+class Pilight_Server(Entity):
+	""" represents the pilight server and saves the states of the switches """
+	
+	def __init__(self, host, port):
+		self._name = "Pilight"
 		self._host = host
 		self._port = port
-		self._name = name
-		self._dev_name = dev_name
-		self._state = ""
+		self._hidden = True
+		self._states = {}
 		self._is_available = True
-		
+
 	@property
 	def name(self):
-		""" Return the hostname of the server. """
+		""" Return the name of the Server. """
 		return self._name
 
 	@property
-	def dev_name(self):
-		""" Return the piligh intern device name of the server. """
-		return self._dev_name
+	def states(self):
+		""" Return the states of the devices. """
+		return self._states
 
 	@property
-	def state(self):
-		""" Return state of the device. """
-		return self._state
+	def host(self):
+		""" Return the hostname of the server. """
+		return self._host
 
-	def is_on(self):
-		""" True if the device is online. """
-		return self._is_on
+	@property
+	def port(self):
+		""" Return the port of the server. """
+		return self._port
 
-	def turn_on(self, **kwargs):
-		""" Turn the switch on. """
-		self.json_request({"action":"control","code":{"device": self._dev_name,"state": "on"}})
-
-	def turn_off(self, **kwargs):
-		""" Turn the switch off. """
-		self.json_request({"action":"control","code":{"device": self._dev_name,"state": "off"}})
-
-	def update(self):
-		""" Ping the remote. """
-		# just see if the remote port is open
-		self._is_available = self.json_request({"action":"request values"})
-		for device in  self._is_available['values']:
-			if self._dev_name in device['devices']:
-				if self._state != device['values']['state']:
-					self._state = device['values']['state']
-					if self._state == "off": 
-						self._is_on = False
-					elif self._state == "on":
-						self._is_on = True
-					_LOGGER.info("State of the Device " + self._name + " changed to " + device['values']['state'])
-		#_LOGGER.info(self._is_available)
+	@property
+	def hidden(self):
+		""" Return the visibility in GUI. """
+		return self._hidden
 
 	def setup(self):
-		""" Get the hostname of the remote. """
-		response = self.json_request()
-		if response:
-			return True
+		""" Intruduce the device. """
+		return self.update()
 
+	def update(self):
+		""" Grap the states from the pilight server. """
+		self._states = self.json_request({"action":"request values"})
+		if self._states:
+			return True
+		_LOGGER.info("Update failed. Maybe the Server isnt online.")
+		return False
+
+	def existSwitch(self, name):
+		""" Checks if a switch with the name exist """
+		for device in  self.states['values']:
+			if name in device['devices']:
+				return True
 		return False
 
 	def json_request(self, request=None, wait_for_response=False):
@@ -145,3 +146,71 @@ class Pilight_Switch(SwitchDevice):
 
 		sock.close()
 		return json.loads(response)
+
+class Pilight_Switch(SwitchDevice,Pilight_Server):
+	""" Represents a Pilight Switch """
+
+	def __init__(self, server, name, dev_name):
+		Pilight_Server.__init__(self, server.host, server.port)
+		self._name = name
+		self._dev_name = dev_name
+		self._state = ""
+		self._hidden = False
+		self._server = server
+		self._is_available = True
+		
+	@property
+	def name(self):
+		""" Return the name of the switch. """
+		return self._name
+
+	@property
+	def dev_name(self):
+		""" Return the piligh intern device name of the server. """
+		return self._dev_name
+
+	@property
+	def state(self):
+		""" Return state of the device. """
+		return self._state
+
+	@property
+	def hidden(self):
+		""" Return the visibility in GUI. """
+		return self._hidden
+
+	def setup(self):
+		""" Get intruduce the switch an checks the exist. """
+		return self.update()
+
+	def turn_on(self, **kwargs):
+		""" Turn the switch on. """
+		res = self.json_request({"action":"control","code":{"device": self._dev_name,"state": "on"}})
+		if res: 
+			return True
+		return False
+
+	def turn_off(self, **kwargs):
+		""" Turn the switch off. """
+		res = self.json_request({"action":"control","code":{"device": self._dev_name,"state": "off"}})
+		if res: 
+			return True
+		return False
+
+	def update(self):
+		""" Update the State of the Switch """
+		for device in  self._server.states['values']:
+			if self._dev_name in device['devices']:
+				if self._state != device['values']['state']:
+					self._state = device['values']['state']
+					if self._state == "off": 
+						self._is_on = False
+					elif self._state == "on":
+						self._is_on = True
+					_LOGGER.info("State of the Device " + self._name + " changed to " + device['values']['state'])
+				return True
+		return False
+		#_LOGGER.info(self._is_available)
+
+
+
