@@ -128,7 +128,7 @@ pyfttt==0.3
 https://github.com/balloob/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
 # Vera (*.vera)
-https://github.com/pavoni/home-assistant-vera-api/archive/90e203b58c5897930a9567252943b7c96c39652b.zip#python-vera==0.1.1
+https://github.com/pavoni/home-assistant-vera-api/archive/efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip#python-vera==0.1.1
 
 # Sonos (media_player.sonos)
 SoCo==0.11.1
