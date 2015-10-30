@@ -25,8 +25,9 @@ PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
 WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
 
 DEVICE_MAPPINGS = {
-  PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
+    PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
 }
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Z-Wave sensors. """
