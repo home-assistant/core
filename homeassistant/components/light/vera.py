@@ -15,7 +15,7 @@ from homeassistant.components.switch.vera import VeraSwitch
 from homeassistant.components.light import ATTR_BRIGHTNESS
 
 REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
-                '90e203b58c5897930a9567252943b7c96c39652b.zip'
+                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
                 '#python-vera==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)

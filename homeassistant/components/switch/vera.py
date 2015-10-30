@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
 
 REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
-                '90e203b58c5897930a9567252943b7c96c39652b.zip'
+                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
                 '#python-vera==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
