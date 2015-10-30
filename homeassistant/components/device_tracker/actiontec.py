@@ -57,7 +57,6 @@ class ActiontecDeviceScanner(object):
         self.password = config[CONF_PASSWORD]
         self.lock = threading.Lock()
         self.last_results = []
-        # Test the router is accessible
         data = self.get_actiontec_data()
         self.success_init = data is not None
         _LOGGER.info("actiontec scanner initialized")
@@ -90,21 +89,13 @@ class ActiontecDeviceScanner(object):
             return False
 
         with self.lock:
-            exclude_targets = set()
-            exclude_target_list = []
             now = dt_util.now()
             actiontec_data = self.get_actiontec_data()
             if not actiontec_data:
                 return False
-            self.last_results = []
-            for client in exclude_target_list:
-                if client in actiontec_data:
-                    actiontec_data.pop(client)
-            for name, data in actiontec_data.items():
-                if data['timevalid'] > 0:
-                    device = Device(data['mac'], name, now)
-                    self.last_results.append(device)
-            self.last_results.extend(exclude_targets)
+            self.last_results = [Device(data['mac'], name, now)
+                                 for name, data in actiontec_data.items()
+                                 if data['timevalid'] > -60]
             _LOGGER.info("actiontec scan successful")
             return True
 
