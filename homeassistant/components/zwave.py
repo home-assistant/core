@@ -58,6 +58,15 @@ def nice_print_node(node):
     print("\n\n\n")
 
 
+def get_config_value(node, value_index):
+    """ Returns the current config value for a specific index """
+
+    for _, value in node.values.items():
+        # 112 == config command class
+        if value.command_class == 112 and value.index == value_index:
+            return value.data
+
+
 def setup(hass, config):
     """
     Setup Z-wave.
