@@ -31,6 +31,8 @@ light:
 
 """
 import logging
+
+import homeassistant.util.color as color_util
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (Light,
                                             ATTR_BRIGHTNESS, ATTR_RGB_COLOR)
@@ -41,9 +43,7 @@ DEFAULT_NAME = "MQTT Light"
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_ON = "on"
 DEFAULT_PAYLOAD_OFF = "off"
-DEFAULT_RGB = [255, 255, 255]
 DEFAULT_RGB_PATTERN = "%d,%d,%d"
-DEFAULT_BRIGHTNESS = 120
 DEFAULT_OPTIMISTIC = False
 
 DEPENDENCIES = ['mqtt']
@@ -58,53 +58,46 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("Missing required variable: command_topic")
         return False
 
-    if config.get('rgb_command_topic') is not None:
-        add_devices_callback([MqttLightRGB(
-            hass,
-            config.get('name', DEFAULT_NAME),
-            {"state_topic": config.get('state_topic'),
-             "command_topic": config.get('command_topic'),
-             "brightness_state_topic": config.get('brightness_state_topic'),
-             "brightness_command_topic":
+    add_devices_callback([MqttLight(
+        hass,
+        config.get('name', DEFAULT_NAME),
+        {"state_topic": config.get('state_topic'),
+         "command_topic": config.get('command_topic'),
+         "brightness_state_topic": config.get('brightness_state_topic'),
+         "brightness_command_topic":
              config.get('brightness_command_topic'),
-             "rgb_state_topic": config.get('rgb_state_topic'),
-             "rgb_command_topic": config.get('rgb_command_topic')},
-            config.get('rgb', DEFAULT_RGB),
-            config.get('qos', DEFAULT_QOS),
-            {"on": config.get('payload_on', DEFAULT_PAYLOAD_ON),
-             "off": config.get('payload_off', DEFAULT_PAYLOAD_OFF)},
-            config.get('brightness', DEFAULT_BRIGHTNESS),
-            config.get('optimistic', DEFAULT_OPTIMISTIC))])
+         "rgb_state_topic": config.get('rgb_state_topic'),
+         "rgb_command_topic": config.get('rgb_command_topic')},
+        config.get('rgb', [255, 255, 255]),
+        config.get('qos', DEFAULT_QOS),
+        {"on": config.get('payload_on', DEFAULT_PAYLOAD_ON),
+         "off": config.get('payload_off', DEFAULT_PAYLOAD_OFF)},
+        config.get('brightness'),
+        config.get('optimistic', DEFAULT_OPTIMISTIC))])
 
-    else:
-        add_devices_callback([MqttLight(
-            hass,
-            config.get('name', DEFAULT_NAME),
-            {"state_topic": config.get('state_topic'),
-             "command_topic": config.get('command_topic')},
-            config.get('qos', DEFAULT_QOS),
-            {"on": config.get('payload_on', DEFAULT_PAYLOAD_ON),
-             "off": config.get('payload_off', DEFAULT_PAYLOAD_OFF)},
-            config.get('optimistic', DEFAULT_OPTIMISTIC))])
+# pylint: disable=too-many-instance-attributes
 
 
 class MqttLight(Light):
-    """ Provides a demo light. """
+    """ Provides a demo Mqtt light. """
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name,
                  topic,
-                 qos,
+                 rgb, qos,
                  payload,
-                 optimistic):
+                 brightness, optimistic):
 
         self._hass = hass
         self._name = name
         self._topic = topic
+        self._rgb = rgb
         self._qos = qos
         self._payload = payload
+        self._brightness = brightness
         self._optimistic = optimistic
         self._state = False
+        self._xy = None
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
@@ -122,6 +115,48 @@ class MqttLight(Light):
             # subscribe the state_topic
             mqtt.subscribe(self._hass, self._topic["state_topic"],
                            message_received, self._qos)
+
+        def brightness_received(topic, payload, qos):
+            """ A new MQTT message has been received. """
+            self._brightness = int(payload)
+            self.update_ha_state()
+
+        def rgb_received(topic, payload, qos):
+            """ A new MQTT message has been received. """
+            self._rgb = [int(val) for val in payload.split(',')]
+            self._xy = color_util.color_RGB_to_xy(int(self._rgb[0]),
+                                                  int(self._rgb[1]),
+                                                  int(self._rgb[2]))
+            self.update_ha_state()
+
+        if self._topic["brightness_state_topic"] is not None:
+            mqtt.subscribe(self._hass, self._topic["brightness_state_topic"],
+                           brightness_received, self._qos)
+            self._brightness = 255
+        else:
+            self._brightness = None
+
+        if self._topic["rgb_state_topic"] is not None:
+            mqtt.subscribe(self._hass, self._topic["rgb_state_topic"],
+                           rgb_received, self._qos)
+            self._xy = [0, 0]
+        else:
+            self._xy = None
+
+    @property
+    def brightness(self):
+        """ Brightness of this light between 0..255. """
+        return self._brightness
+
+    @property
+    def rgb_color(self):
+        """ RGB color value. """
+        return self._rgb
+
+    @property
+    def color_xy(self):
+        """ RGB color value. """
+        return self._xy
 
     @property
     def should_poll(self):
@@ -141,6 +176,19 @@ class MqttLight(Light):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
 
+        if ATTR_RGB_COLOR in kwargs and \
+           self._topic["rgb_command_topic"] is not None:
+            self._rgb = kwargs[ATTR_RGB_COLOR]
+            rgb = DEFAULT_RGB_PATTERN % tuple(self._rgb)
+            mqtt.publish(self._hass, self._topic["rgb_command_topic"],
+                         rgb, self._qos)
+
+        if ATTR_BRIGHTNESS in kwargs and \
+           self._topic["brightness_command_topic"] is not None:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            mqtt.publish(self._hass, self._topic["brightness_command_topic"],
+                         self._brightness, self._qos)
+
         mqtt.publish(self._hass, self._topic["command_topic"],
                      self._payload["on"], self._qos)
 
@@ -157,81 +205,4 @@ class MqttLight(Light):
         if self._optimistic:
             # optimistically assume that switch has changed state
             self._state = False
-            self.update_ha_state()
-
-
-class MqttLightRGB(MqttLight):
-    """ Provides a demo RGB light. """
-
-    # pylint: disable=too-many-arguments
-    def __init__(self, hass, name,
-                 topic,
-                 rgb, qos,
-                 payload,
-                 brightness, optimistic):
-
-        super().__init__(hass, name, topic, qos,
-                         payload, optimistic)
-
-        self._rgb = rgb
-        self._brightness = brightness
-        self._xy = [[0.5, 0.5]]
-
-        def brightness_received(topic, payload, qos):
-            """ A new MQTT message has been received. """
-            self._brightness = int(payload)
-            self.update_ha_state()
-
-        def rgb_received(topic, payload, qos):
-            """ A new MQTT message has been received. """
-            self._rgb = [int(val) for val in payload.split(',')]
-            self.update_ha_state()
-
-        if self._topic["brightness_state_topic"] is not None:
-            mqtt.subscribe(self._hass, self._topic["brightness_state_topic"],
-                           brightness_received, self._qos)
-
-        if self._topic["rgb_state_topic"] is not None:
-            mqtt.subscribe(self._hass, self._topic["rgb_state_topic"],
-                           rgb_received, self._qos)
-
-    @property
-    def brightness(self):
-        """ Brightness of this light between 0..255. """
-        return self._brightness
-
-    @property
-    def rgb_color(self):
-        """ RGB color value. """
-        return self._rgb
-
-    @property
-    def color_xy(self):
-        """ RGB color value. """
-        return self._xy
-
-    def turn_on(self, **kwargs):
-        """ Turn the device on. """
-
-        if ATTR_RGB_COLOR in kwargs and \
-           self._topic["rgb_command_topic"] is not None:
-
-            self._rgb = kwargs[ATTR_RGB_COLOR]
-            rgb = DEFAULT_RGB_PATTERN % tuple(self._rgb)
-            mqtt.publish(self._hass, self._topic["rgb_command_topic"],
-                         rgb, self._qos)
-
-        if ATTR_BRIGHTNESS in kwargs and \
-           self._topic["brightness_command_topic"] is not None:
-
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            mqtt.publish(self._hass, self._topic["brightness_command_topic"],
-                         self._brightness, self._qos)
-
-        mqtt.publish(self._hass, self._topic["command_topic"],
-                     self._payload["on"], self._qos)
-
-        if self._optimistic:
-            # optimistically assume that switch has changed state
-            self._state = True
             self.update_ha_state()
