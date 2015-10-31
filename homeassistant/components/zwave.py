@@ -61,10 +61,15 @@ def nice_print_node(node):
 def get_config_value(node, value_index):
     """ Returns the current config value for a specific index """
 
-    for _, value in node.values.items():
-        # 112 == config command class
-        if value.command_class == 112 and value.index == value_index:
-            return value.data
+    try:
+        for value in node.values.values():
+            # 112 == config command class
+            if value.command_class == 112 and value.index == value_index:
+                return value.data
+    except RuntimeError:
+        # If we get an runtime error the dict has changed while
+        # we was looking for a value, just do it again
+        return get_config_value(node, value_index)
 
 
 def setup(hass, config):
