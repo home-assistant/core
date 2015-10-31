@@ -47,8 +47,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Check workaround mappings for specific devices
     if specific_sensor_key in DEVICE_MAPPINGS:
         if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
-            re_arm_time = (zwave.get_config_value(node, 9) * 8)
-            add_devices([ZWaveTriggerSensor(value, hass, re_arm_time)])
+            # Default the multiplier to 4
+            re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
+            add_devices([
+                ZWaveTriggerSensor(value, hass, re_arm_multiplier * 8)
+            ])
 
     # generic Device mappings
     elif value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
@@ -145,7 +148,7 @@ class ZWaveTriggerSensor(ZWaveSensor):
         """
         super(ZWaveTriggerSensor, self).__init__(sensor_value)
         self._hass = hass
-        self.invalidate_after = None
+        self.invalidate_after = dt_util.utcnow()
         self.re_arm_sec = re_arm_sec
 
     def value_changed(self, value):
