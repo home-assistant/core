@@ -47,11 +47,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Check workaround mappings for specific devices
     if specific_sensor_key in DEVICE_MAPPINGS:
         if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
-            add_devices([ZWaveTriggerSensor(value, hass)])
-            return
+            re_arm_time = (zwave.get_config_value(node, 9) * 8)
+            add_devices([ZWaveTriggerSensor(value, hass, re_arm_time)])
 
-        # generic Device mappings
-    if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
+    # generic Device mappings
+    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value)])
 
     elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
@@ -131,12 +131,22 @@ class ZWaveBinarySensor(ZWaveSensor):
 
 
 class ZWaveTriggerSensor(ZWaveSensor):
-    """ Represents a stateless sensor which triggers events within Z-Wave. """
+    """
+    Represents a stateless sensor which
+    triggers events just 'On' within Z-Wave.
+    """
 
-    def __init__(self, sensor_value, hass):
+    def __init__(self, sensor_value, hass, re_arm_sec=60):
+        """
+        :param sensor_value: The z-wave node
+        :param hass:
+        :param re_arm_sec: Set state to Off re_arm_sec after the last On event
+        :return:
+        """
         super(ZWaveTriggerSensor, self).__init__(sensor_value)
         self._hass = hass
         self.invalidate_after = None
+        self.re_arm_sec = re_arm_sec
 
     def value_changed(self, value):
         """ Called when a value has changed on the network. """
@@ -145,7 +155,7 @@ class ZWaveTriggerSensor(ZWaveSensor):
             if value.data:
                 # only allow this value to be true for 60 secs
                 self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
-                    seconds=60)
+                    seconds=self.re_arm_sec)
                 track_point_in_time(
                     self._hass, self.update_ha_state,
                     self.invalidate_after)
