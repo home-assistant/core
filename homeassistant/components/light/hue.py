@@ -14,9 +14,9 @@ from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
-    ATTR_FLASH, FLASH_LONG, FLASH_SHORT, ATTR_EFFECT,
-    EFFECT_COLORLOOP)
+    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
+    ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
+    ATTR_EFFECT, EFFECT_COLORLOOP)
 
 REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -125,6 +125,7 @@ def request_configuration(host, hass, add_devices_callback):
 
         return
 
+    # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
         setup_bridge(host, hass, add_devices_callback)
@@ -169,6 +170,11 @@ class HueLight(Light):
         return self.info['state'].get('xy')
 
     @property
+    def color_temp(self):
+        """ CT color value. """
+        return self.info['state'].get('ct')
+
+    @property
     def is_on(self):
         """ True if device is on. """
         self.update_lights()
@@ -189,6 +195,9 @@ class HueLight(Light):
 
         if ATTR_XY_COLOR in kwargs:
             command['xy'] = kwargs[ATTR_XY_COLOR]
+
+        if ATTR_COLOR_TEMP in kwargs:
+            command['ct'] = kwargs[ATTR_COLOR_TEMP]
 
         flash = kwargs.get(ATTR_FLASH)
 
