@@ -100,17 +100,12 @@
   </header>
   <hr class="divider">
 
-  <p>The ISY994 is a home automation controller that is capable of controlling<br />
-Insteon and X10 devices. The controller is also capable of controlling Z-Wave<br />
-devices but that functionality has not yet been confirmed with Home Assistant.<br />
-The ISY994 controller is manufactured by <a href="https://www.universal-devices.com/residential/isy994i-series/">Universal<br />
-Devices</a>.</p>
+  <p>The ISY994 is a home automation controller that is capable of controlling Insteon and X10 devices. The controller is also capable of controlling Z-Wave devices but that functionality has not yet been confirmed with Home Assistant.<br />
+The ISY994 controller is manufactured by <a href="https://www.universal-devices.com/residential/isy994i-series/">Universal Devices</a>.</p>
 
 <h3><a class="title-link" name="basic-configuration" href="#basic-configuration"></a> Basic Configuration</h3>
 
-<p>Home Assistant is capable of communicating with any switch, sensor, and light<br />
-that is configured on the controller. Using the programs on the controller,<br />
-custom switches and sensors can also be created.</p>
+<p>Home Assistant is capable of communicating with any switch, sensor, and light that is configured on the controller. Using the programs on the controller, custom switches and sensors can also be created.</p>
 
 <p>To integrate your ISY994 controller with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
 
@@ -134,61 +129,40 @@ custom switches and sensors can also be created.</p>
   <li>
     <p><strong>password</strong> (<em>Required</em>): The password that used to access the ISY interface.</p>
   </li>
-  <li><strong>sensor_string</strong> (<em>Optional</em>): This is the string that is used to identify which devices are to be assumed to be sensors instead of lights of switches. By default, this string is ‘Sensor’. If this string is found in the device name, Home Assistant will<br />
-assume it is as a sensor.</li>
-  <li><strong>hidden_string</strong> (<em>Optional</em>): The HIDDEN_STRING is a string that is used to identify which devices are to be<br />
-hidden on Home Assistant’s front page. This string will be stripped from the<br />
-device’s name before being used. By default, this value is ‘{HIDE ME}’.</li>
-  <li><strong>tls</strong> (<em>Optional</em>): This entry should refelct the version of TLS that the ISY controller is using for HTTPS encryption. This value can be either 1.1 or 1.2. If this value is not set, it is assumed to be version 1.1. This is the default for most users.<br />
-ISY994 Pro users may likely be using 1.2. When using HTTPS in the host entry, it is best practice to set this value.</li>
+  <li><strong>sensor_string</strong> (<em>Optional</em>): This is the string that is used to identify which devices are to be assumed to be sensors instead of lights of switches. By default, this string is ‘Sensor’. If this string is found in the device name, Home Assistant will assume it is as a sensor.</li>
+  <li><strong>hidden_string</strong> (<em>Optional</em>): The HIDDEN_STRING is a string that is used to identify which devices are to be hidden on Home Assistant’s front page. This string will be stripped from the device’s name before being used. By default, this value is ‘{HIDE ME}’.</li>
+  <li><strong>tls</strong> (<em>Optional</em>): This entry should refelct the version of TLS that the ISY controller is using for HTTPS encryption. This value can be either 1.1 or 1.2. If this value is not set, it is assumed to be version 1.1. This is the default for most users. ISY994 Pro users may likely be using 1.2. When using HTTPS in the host entry, it is best practice to set this value.</li>
 </ul>
 
 <p>Once the ISY controller is configured, it will automatically import any lights, switches, and sensors it can locate.</p>
 
 <h3><a class="title-link" name="creating-custom-switches" href="#creating-custom-switches"></a> Creating Custom Switches</h3>
 
-<p>Using the Programs tab in the controller’s Administrative Console, custom<br />
-switches can be created that will appear natively inside of Home Assistant.<br />
-Home Assistant will scan two different directories for switch configurations on<br />
-the controller. These directories must exist at the root level. The two<br />
-directories used to make switches are <em>HA.doors</em> and <em>HA.switches</em>. Currently,<br />
-the two receive identical treatment in Home Assistant.</p>
+<p>Using the Programs tab in the controller’s Administrative Console, custom switches can be created that will appear natively inside of Home Assistant. Home Assistant will scan two different directories for switch configurations on the controller. These directories must exist at the root level. The two directories used to make switches are <em>HA.doors</em> and <em>HA.switches</em>. Currently, the two receive identical treatment in Home Assistant.</p>
 
-<p>A switch is created by creating a directory under either of these root<br />
-dirctories with the name you would like to call the switch. Two programs are<br />
-then required in this directory: <em>status</em> and <em>actions</em>. The image below shows<br />
-a sample configuration. This sample includes an extra program called <em>auto on</em>.<br />
-This is ignored by Home Assistant.</p>
+<p>A switch is created by creating a directory under either of these root dirctories with the name you would like to call the switch. Two programs are then required in this directory: <em>status</em> and <em>actions</em>. The image below shows a sample configuration. This sample includes an extra program called <em>auto on</em>. This is ignored by Home Assistant.</p>
 
 <p class="img">
   <img src="/images/isy994/isy994_SwitchExample.png" />
 </p>
 
-<p>The <em>status</em> program in this directory is what indicates if the switch is on or<br />
-off. Only the IF clause is evaluated. If the clause returns True, the switch<br />
-will be on. False will indicate the switch is off.</p>
+<p>The <em>status</em> program in this directory is what indicates if the switch is on or off. Only the IF clause is evaluated. If the clause returns True, the switch will be on. False will indicate the switch is off.</p>
 
 <p class="img">
   <img src="/images/isy994/isy994_SwitchStatusExample.png" />
 </p>
 
-<p>The <em>actions</em> program indicates what should be performed to turn the switch on<br />
-or off. The THEN clause gives instructions for turning the switch on while the<br />
-ELSE clause gives instructions for turning the switch off. Below is an example.</p>
+<p>The <em>actions</em> program indicates what should be performed to turn the switch on or off. The THEN clause gives instructions for turning the switch on while the ELSE clause gives instructions for turning the switch off. Below is an example.</p>
 
 <p class="img">
   <img src="/images/isy994/isy994_SwitchActionsExample.png" />
 </p>
 
-<p>The example program above shows how to control a legacy X10 device from Home<br />
-Assistant using an ISY controller.</p>
+<p>The example program above shows how to control a legacy X10 device from Home Assistant using an ISY controller.</p>
 
 <h3><a class="title-link" name="creating-custom-sensors" href="#creating-custom-sensors"></a> Creating Custom Sensors</h3>
 
-<p>Custom sensors can also be created using the Programs tab in the ISY<br />
-controller’s Administrative Console. For programs, three different root level<br />
-folders are evaluated that are all handled a little differently inside of Home<br />
-Assistant.</p>
+<p>Custom sensors can also be created using the Programs tab in the ISY controller’s Administrative Console. For programs, three different root level folders are evaluated that are all handled a little differently inside of Home Assistant.</p>
 
 <ul>
   <li><em>HA.sensors</em> will have states of Open or Closed</li>
@@ -196,17 +170,13 @@ Assistant.</p>
   <li><em>HA.locations</em> will have states of Home or Away</li>
 </ul>
 
-<p>To create a custom sensor, create a program under any of the three root<br />
-directories. The name of the program will be the name of the sensor. An example<br />
-below shows a location indicator setup.</p>
+<p>To create a custom sensor, create a program under any of the three root directories. The name of the program will be the name of the sensor. An example below shows a location indicator setup.</p>
 
 <p class="img">
   <img src="/images/isy994/isy994_SensorExample.png" />
 </p>
 
-<p>The program created only needs an IF clause. It will be evaluated to either<br />
-Open/On/Home when it returns True and Closed/Off/Away when it returns False. An<br />
-example is below.</p>
+<p>The program created only needs an IF clause. It will be evaluated to either Open/On/Home when it returns True and Closed/Off/Away when it returns False. An example is below.</p>
 
 <p class="img">
   <img src="/images/isy994/isy994_SensorStatusExample.png" />

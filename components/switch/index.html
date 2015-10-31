@@ -107,12 +107,32 @@
   <li>Registers services <code>switch/turn_on</code> and <code>switch/turn_off</code> to control switches.</li>
 </ul>
 
-<p>Optional service data:</p>
+<h3><a class="title-link" name="use-the-services" href="#use-the-services"></a> Use the services</h3>
 
-<ul>
-  <li><code>entity_id</code> - only act on specific switch. Else targets all.</li>
-</ul>
+<p>Go the the <strong>Developer Tools</strong>, then to <strong>Call Service</strong> in the frontend, and choose <code>switch/turn_on</code> or <code>switch/turn_off</code> from the list of available services (<strong>Available services:</strong> on the left). Enter something like the sample below into the <strong>Service Data</strong> field and hit <strong>CALL SERVICE</strong>.</p>
 
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">entity_id</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom_pin2</span><span class="delimiter">&quot;</span></span>}
+</pre></div>
+</div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Service data attribute</th>
+      <th>Optional</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>entity_id</code></td>
+      <td>yes</td>
+      <td>Only act on specific switch. Else targets all.</td>
+    </tr>
+  </tbody>
+</table>
 
 </article>
 

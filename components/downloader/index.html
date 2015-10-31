@@ -102,7 +102,7 @@
 
   <p>The <code>downloader</code> component provides a service to download files. It will raise an error and not continue to set itself up when the download directory does not exist.</p>
 
-<p>To enable it, add the following lines to your <code>configuration.yaml</code>:</p>
+<p>To enable it, add the following lines to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
@@ -111,11 +111,24 @@
 </pre></div>
 </div>
 </div>
-<p>If the path is not absolute, it’s assumed to be relative to the HASS configuration directory.</p>
 
-<h4>Service <code>downloader/download_file</code></h4>
+<p>Configuration variables:</p>
 
-<p>Download the specified url.</p>
+<ul>
+  <li><strong>download_dir</strong> (<em>Required</em>): If the path is not absolute, it’s assumed to be relative to the Home Assistant configuration directory (eg. <code>.homeassistant/downloads</code>).</li>
+</ul>
+
+<h3><a class="title-link" name="use-the-service" href="#use-the-service"></a> Use the service</h3>
+
+<p>Go the the “Developer Tools”, then to “Call Service”, and choose <code>downloader/download_file</code> from the list of available services. Fill the “Service Data” field as shown in the example below and hit “CALL SERVICE”.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">url</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">http://domain.tld/path/to/file</span><span class="delimiter">&quot;</span></span>}
+</pre></div>
+</div>
+</div>
+
+<p>This will download the file from the given URL.</p>
 
 <table>
   <thead>

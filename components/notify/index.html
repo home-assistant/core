@@ -107,35 +107,36 @@
 <p>If your are running into troubles with your notification platform, a simple way to test it is to use <strong>Call Service</strong> from the <strong>Developer Tools</strong>. Choose your service (<em>notify/xyz</em>) from the list of <strong>Available services:</strong> and enter something like the sample below into  the <strong>Service Data</strong> field and hit <strong>CALL SERVICE</strong>.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">title</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">Test</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">A simple test message from HA.</span><span class="delimiter">&quot;</span></span>}
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">A simple test message from HA.</span><span class="delimiter">&quot;</span></span>}
 </pre></div>
 </div>
 </div>
 
 <p>This will send a single message to your notification platform configured in your <code>configuration.yaml</code> file.</p>
 
-<h2><a class="title-link" name="examples" href="#examples"></a> Examples</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Service data attribute</th>
+      <th>Optional</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>title</code></td>
+      <td>yes</td>
+      <td>Can be used to set a title for the message. The default is <code>Home Assistant</code>.</td>
+    </tr>
+    <tr>
+      <td><code>message</code></td>
+      <td>no</td>
+      <td>Message to send to recipient.</td>
+    </tr>
+  </tbody>
+</table>
 
-<h3><a class="title-link" name="automation" href="#automation"></a> Automation</h3>
-
-<p>Notifications are great to be used within Home Automation. Below is a an example configuration that you can add to your <code>configuration.yaml</code> file to be notified when the sun sets.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="key">automation</span>:
-  <span class="key">alias</span>: <span class="string"><span class="content">Sun set notification</span></span>
-
-  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
-  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
-  <span class="key">state_from</span>: <span class="string"><span class="content">above_horizon</span></span>
-  <span class="key">state_to</span>: <span class="string"><span class="content">below_horizon</span></span>
-
-  <span class="key">execute_service</span>: <span class="string"><span class="content">notify.NOTIFIER_NAME</span></span>
-  <span class="key">service_data</span>: <span class="string"><span class="content">{&quot;message&quot;:&quot;YAY&quot;}</span></span>
-</pre></div>
-</div>
-</div>
-
-<p>For more automation examples, see the <a href="/components/automation/">getting started with automation page</a>.</p>
+<p>For more automation examples, see the <a href="/getting-started/automation/">getting started with automation page</a> or the <a href="/cookbook">configuration cookbook</a>.</p>
 
 </article>
 

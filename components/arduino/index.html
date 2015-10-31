@@ -104,8 +104,6 @@
 
 <p>There are a lot of extensions (so called <a href="https://www.arduino.cc/en/Main/ArduinoShields">shields</a>) available. Those shields can be plugged-in into the existing connectors and stacked on top of each other. This makes it possible to expand the capabilities of the Arduino boards.</p>
 
-<h2>Basic Configuration</h2>
-
 <p>The arduino component is designed to let you use a directly attached board to your Home Assistant host over USB.</p>
 
 <p>You need to have the <a href="https://github.com/firmata/">Firmata firmware</a> on your board. Please upload the <code>StandardFirmata</code> sketch to your board, please refer to the <a href="https://www.arduino.cc/en/Main/Howto">Arduino documentation</a> for further information.</p>
@@ -123,8 +121,10 @@
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>port</strong> (<em>Required</em>): The port where your board is connected to your Home Assistant host. If you are using an original Arduino the port will be named <code>ttyACM*</code>. The exact number can be determined with <code>ls /dev/ttyACM*</code>.</li>
+  <li><strong>port</strong> (<em>Required</em>): The port where your board is connected to your Home Assistant host. If you are using an original Arduino the port will be named <code>ttyACM*</code> otherwise <code>ttyUSB*</code>.</li>
 </ul>
+
+<p>The exact number can be determined with the command shown below.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ ls /dev/ttyACM*
@@ -132,18 +132,11 @@
 </div>
 </div>
 
-<p>If that is not working, check your <code>dmesg</code> or <code>journalctl -f</code> output. Keep in mind that Arduino clones are often using a different name for the port (e.g. <code>/dev/ttyUSB*</code>).</p>
+<p>If that’s not working, check your <code>dmesg</code> or <code>journalctl -f</code> output. Keep in mind that Arduino clones are often using a different name for the port (eg. <code>/dev/ttyUSB*</code>).</p>
 
 <p class="note warning">
 A word of caution: The Arduino boards are not storing states. This means that with every initialization the pins are set to off/low.
 </p>
-
-<h2>Building on top of the Arduino component</h2>
-
-<ul>
-  <li><a href="/components/sensor.arduino/">Arduino Sensor</a></li>
-  <li><a href="/components/switch.arduino/">Arduino Switch</a></li>
-</ul>
 
 
 </article>

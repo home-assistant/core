@@ -148,71 +148,8 @@
   </li>
 </ul>
 
-<p>The variables in the <code>monitored_variables</code> array must be available in the response of the device. As a starting point you find below a sketch for the Arduino device family. There are two variables (<code>temperature</code> and <code>humidity</code>) which will act as endpoints.</p>
+<p>The variables in the <code>monitored_variables</code> array must be available in the response of the device. As a starting point you could use the one of the example sketches (eg.  <a href="https://raw.githubusercontent.com/marcoschwartz/aREST/master/examples/Ethernet/Ethernet.ino">Ethernet</a> for an Arduino with Ethernet shield). In those sketches are two variables (<code>temperature</code> and <code>humidity</code>) available which will act as endpoints.</p>
 
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment">/*
-  This modified sketch is based on the Ethernet example of the aREST 
-  (http://arest.io/) library.
-*/</span>
-
-<span class="comment">// Libraries</span>
-<span class="preprocessor">#include</span> <span class="include">&lt;SPI.h&gt;</span>
-<span class="preprocessor">#include</span> <span class="include">&lt;Ethernet.h&gt;</span>
-<span class="preprocessor">#include</span> <span class="include">&lt;aREST.h&gt;</span>
-<span class="preprocessor">#include</span> <span class="include">&lt;avr/wdt.h&gt;</span>
-
-<span class="comment">// Device settings</span>
-<span class="predefined-type">char</span>* deviceId = <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor02</span><span class="delimiter">&quot;</span></span>;
-<span class="predefined-type">char</span>* deviceName = <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>;
-byte deviceMac[] = { <span class="hex">0x20</span>, <span class="hex">0xD5</span>, <span class="hex">0xD3</span>, <span class="hex">0x03</span>, <span class="hex">0xFE</span>, <span class="hex">0x31</span> };
-IPAddress deviceIp(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">1</span>, <span class="integer">12</span>);
-
-EthernetServer server(<span class="integer">80</span>);
-aREST rest = aREST();
-
-<span class="comment">// Variables to be exposed to the API</span>
-<span class="predefined-type">int</span> temperature;
-<span class="predefined-type">int</span> humidity;
-
-<span class="directive">void</span> setup(<span class="directive">void</span>) {
-  Serial.begin(<span class="integer">57600</span>);
-
-  <span class="comment">// Init variables and expose them to REST API</span>
-  temperature = <span class="integer">0</span>;
-  humidity = <span class="integer">0</span>;
-  
-  rest.variable(<span class="string"><span class="delimiter">&quot;</span><span class="content">temperature</span><span class="delimiter">&quot;</span></span>, &amp;temperature);
-  rest.variable(<span class="string"><span class="delimiter">&quot;</span><span class="content">humidity</span><span class="delimiter">&quot;</span></span>, &amp;humidity);
-
-  <span class="comment">// Give name and ID to device</span>
-  rest.set_id(deviceId);
-  rest.set_name(deviceName);
-
-  Ethernet.begin(deviceMac, deviceIp);
- 
-  server.begin();
-  Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sensor is ready...</span><span class="delimiter">&quot;</span></span>);
-
-  <span class="comment">// Start watchdog</span>
-  wdt_enable(WDTO_4S);
-}
-
-<span class="directive">void</span> loop() {
-  EthernetClient client = server.available();
-  rest.handle(client);
-  wdt_reset();
-
-  <span class="comment">// Replace this with your actual sensor readings, like</span>
-  <span class="comment">// temperature = (((analogRead(A0) * 5.0) / 1024) - 0.5) * 10;</span>
-  temperature = random(<span class="integer">400</span>);
-  humidity = random(<span class="integer">600</span>);
-  delay(<span class="integer">500</span>);
-}
-
-</pre></div>
-</div>
-</div>
 <p>Accessing one of the endpoints (eg. http://192.168.1.10/temperature) will give you the value inside a JSON response.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
@@ -233,6 +170,14 @@ aREST rest = aREST();
    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span> : <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>,
    <span class="key"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span> : <span class="value">true</span>
 }
+</pre></div>
+</div>
+</div>
+
+<p><code>return_value</code> contains the sensor’s data in a JSON response for a given pin (eg. http://192.168.1.10/analog/2/ or  http://192.168.1.10/digital/7/).</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">return_value</span><span class="delimiter">&quot;</span></span>: <span class="integer">34</span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor02</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>: <span class="value">true</span>}
 </pre></div>
 </div>
 </div>

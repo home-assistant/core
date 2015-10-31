@@ -124,17 +124,17 @@
 <ul>
   <li><strong>resource</strong> (<em>Required</em>): IP address and schema of the device that is exposing an aREST API, eg. http://192.168.1.10.</li>
   <li><strong>name</strong> (<em>Optional</em>): Let you overwrite the the name of the device. By default <em>name</em> from the device is used.</li>
-  <li><strong>pins</strong> (<em>Required</em>): An array with all used pins of your board.
+  <li><strong>pins</strong> array (<em>Required</em>): An array with all used pins of your board.
     <ul>
       <li><strong>name</strong> (<em>Required</em>): The name of the pin you wish to toggle.</li>
     </ul>
   </li>
 </ul>
 
-<p>Accessing one of the endpoints (eg. http://192.168.1.10/analog/2/) will give you a JSON response. The interesting part is <code>return_value</code> which represents the sensor’s data.</p>
+<p>You can still switch your pins with a web browser or a command line tool. Use the http://192.168.1.10/digital/8/1 to set pin 8 to high/on, the JSON response will give you some feedback.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">return_value</span><span class="delimiter">&quot;</span></span>: <span class="integer">34</span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor02</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>: <span class="value">true</span>}
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Pin D8 set to 1</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor02</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>: <span class="value">true</span>}
 </pre></div>
 </div>
 </div>
