@@ -18,7 +18,6 @@ DEPENDENCIES = ['rfxtrx']
 
 import homeassistant.components.rfxtrx as rfxtrx
 
-
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELCIUS),
     ('Humidity', '%'),
