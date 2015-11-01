@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def sensor_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if isinstance(event.device, SensorEvent):
+        if isinstance(event, SensorEvent):
             entity_id = slugify(event.device.id_string.lower())
 
             # Add entity if not exist and the automatic_add is True
