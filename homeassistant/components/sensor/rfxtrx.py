@@ -12,11 +12,10 @@ from collections import OrderedDict
 from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 from RFXtrx import SensorEvent
+import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.util import slugify
 
 DEPENDENCIES = ['rfxtrx']
-
-import homeassistant.components.rfxtrx as rfxtrx
 
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELCIUS),
