@@ -96,6 +96,7 @@ FLASH_LONG = "long"
 # Apply an effect to the light, can be EFFECT_COLORLOOP
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
+EFFECT_WHITE = "white"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
@@ -282,6 +283,8 @@ def setup(hass, config):
         if ATTR_EFFECT in dat:
             if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
                 params[ATTR_EFFECT] = EFFECT_COLORLOOP
+            if dat[ATTR_EFFECT] == EFFECT_WHITE:
+                params[ATTR_EFFECT] = EFFECT_WHITE
 
         for light in target_lights:
             light.turn_on(**params)
