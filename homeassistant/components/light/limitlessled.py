@@ -162,11 +162,10 @@ class RGBWLimitlessLED(LimitlessLED):
 
         effect = kwargs.get(ATTR_EFFECT)
 
-        if effect:
-            if effect == EFFECT_COLORLOOP:
-                self.pool.execute(self.controller_id, "disco", self.group)
-            if effect == EFFECT_WHITE:
-                self.pool.execute(self.controller_id, "white", self.group)
+        if effect == EFFECT_COLORLOOP:
+            self.pool.execute(self.controller_id, "disco", self.group)
+        if effect == EFFECT_WHITE:
+            self.pool.execute(self.controller_id, "white", self.group)
         else:
             self.pool.execute(self.controller_id, "set_color",
                               self._xy_to_led_color(self._xy_color),
