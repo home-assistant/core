@@ -64,7 +64,7 @@ class TestLightMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic(self):
         self.assertTrue(light.setup(self.hass, {
-            'switch': {
+            'light': {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'test_light_rgb/status',
@@ -82,21 +82,21 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        fire_mqtt_message(self.hass, 'test', 'on')
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
-        fire_mqtt_message(self.hass, 'test', 'off')
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'off')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
-
+        
     def test_sending_mqtt_commands_and_optimistic(self):
         self.assertTrue(light.setup(self.hass, {
-            'switch': {
+            'light': {
                 'platform': 'mqtt',
                 'name': 'test',
                 'command_topic': 'test_light_rgb/set',
@@ -113,7 +113,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        switch.turn_on(self.hass, 'light.test')
+        light.turn_on(self.hass, 'light.test')
         self.hass.pool.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'on', 2),
@@ -121,7 +121,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
-        switch.turn_off(self.hass, 'light.test')
+        light.turn_off(self.hass, 'light.test')
         self.hass.pool.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'off', 2),
