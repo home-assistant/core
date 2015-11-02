@@ -93,6 +93,13 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
+
+        fire_mqtt_message(self.hass, 'test_light_rgb/brightness/status', '100')
+        self.hass.pool.block_till_done()
+
+        light_state = self.hass.states.get('light.test')
+        self.assertEqual(100,
+                         light_state.attributes)
         
     def test_sending_mqtt_commands_and_optimistic(self):
         self.assertTrue(light.setup(self.hass, {
