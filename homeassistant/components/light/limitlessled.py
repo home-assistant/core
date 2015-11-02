@@ -164,7 +164,7 @@ class RGBWLimitlessLED(LimitlessLED):
 
         if effect == EFFECT_COLORLOOP:
             self.pool.execute(self.controller_id, "disco", self.group)
-        if effect == EFFECT_WHITE:
+        elif effect == EFFECT_WHITE:
             self.pool.execute(self.controller_id, "white", self.group)
         else:
             self.pool.execute(self.controller_id, "set_color",
