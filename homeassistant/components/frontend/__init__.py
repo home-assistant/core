@@ -25,6 +25,8 @@ FRONTEND_URLS = [
     '/devEvent']
 STATES_URL = re.compile(r'/states(/([a-zA-Z\._\-0-9/]+)|)')
 
+_FINGERPRINT = re.compile(r'^(\w+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
+
 
 def setup(hass, config):
     """ Setup serving the frontend. """
@@ -80,9 +82,10 @@ def _handle_get_static(handler, path_match, data):
     """ Returns a static file for the frontend. """
     req_file = util.sanitize_path(path_match.group('file'))
 
-    # Strip md5 hash out of frontend filename
-    if re.match(r'^frontend-[A-Za-z0-9]{32}\.html$', req_file):
-        req_file = "frontend.html"
+    # Strip md5 hash out
+    fingerprinted = _FINGERPRINT.match(req_file)
+    if fingerprinted:
+        req_file = "{}.{}".format(*fingerprinted.groups())
 
     path = os.path.join(os.path.dirname(__file__), 'www_static', req_file)
 
