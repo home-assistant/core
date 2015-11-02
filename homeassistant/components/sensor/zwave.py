@@ -7,14 +7,26 @@ For more details about the zwave component, please refer to the documentation
 at https://home-assistant.io/components/zwave.html
 """
 # pylint: disable=import-error
+from homeassistant.helpers.event import track_point_in_time
 from openzwave.network import ZWaveNetwork
 from pydispatch import dispatcher
-
+import datetime
+import homeassistant.util.dt as dt_util
 import homeassistant.components.zwave as zwave
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_ON, STATE_OFF,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
+
+PHILIO = '013c'
+PHILIO_SLIM_SENSOR = '0002'
+PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
+
+WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
+
+DEVICE_MAPPINGS = {
+    PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -28,7 +40,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #                     groups[1].associations):
     #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
 
-    if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
+    specific_sensor_key = (value.node.manufacturer_id,
+                           value.node.product_id,
+                           value.index)
+
+    # Check workaround mappings for specific devices
+    if specific_sensor_key in DEVICE_MAPPINGS:
+        if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
+            # Default the multiplier to 4
+            re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
+            add_devices([
+                ZWaveTriggerSensor(value, hass, re_arm_multiplier * 8)
+            ])
+
+    # generic Device mappings
+    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value)])
 
     elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
@@ -37,12 +63,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ZWaveSensor(Entity):
     """ Represents a Z-Wave sensor. """
+
     def __init__(self, sensor_value):
         self._value = sensor_value
         self._node = sensor_value.node
 
         dispatcher.connect(
-            self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
+            self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     @property
     def should_poll(self):
@@ -90,7 +117,7 @@ class ZWaveSensor(Entity):
     def unit_of_measurement(self):
         return self._value.units
 
-    def _value_changed(self, value):
+    def value_changed(self, value):
         """ Called when a value has changed on the network. """
         if self._value.value_id == value.value_id:
             self.update_ha_state()
@@ -104,6 +131,47 @@ class ZWaveBinarySensor(ZWaveSensor):
     def state(self):
         """ Returns the state of the sensor. """
         return STATE_ON if self._value.data else STATE_OFF
+
+
+class ZWaveTriggerSensor(ZWaveSensor):
+    """
+    Represents a stateless sensor which
+    triggers events just 'On' within Z-Wave.
+    """
+
+    def __init__(self, sensor_value, hass, re_arm_sec=60):
+        """
+        :param sensor_value: The z-wave node
+        :param hass:
+        :param re_arm_sec: Set state to Off re_arm_sec after the last On event
+        :return:
+        """
+        super(ZWaveTriggerSensor, self).__init__(sensor_value)
+        self._hass = hass
+        self.invalidate_after = dt_util.utcnow()
+        self.re_arm_sec = re_arm_sec
+
+    def value_changed(self, value):
+        """ Called when a value has changed on the network. """
+        if self._value.value_id == value.value_id:
+            self.update_ha_state()
+            if value.data:
+                # only allow this value to be true for 60 secs
+                self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
+                    seconds=self.re_arm_sec)
+                track_point_in_time(
+                    self._hass, self.update_ha_state,
+                    self.invalidate_after)
+
+    @property
+    def state(self):
+        """ Returns the state of the sensor. """
+        if not self._value.data or \
+                (self.invalidate_after is not None and
+                 self.invalidate_after <= dt_util.utcnow()):
+            return STATE_OFF
+
+        return STATE_ON
 
 
 class ZWaveMultilevelSensor(ZWaveSensor):
