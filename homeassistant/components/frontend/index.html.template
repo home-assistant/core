@@ -46,6 +46,6 @@
     </div>
     <script src='/static/webcomponents-lite.min.js'></script>
     <link rel='import' href='/static/{{ app_url }}' />
-    <home-assistant auth='{{ auth }}'></home-assistant>
+    <home-assistant auth='{{ auth }}' icons='{{ icons }}'></home-assistant>
   </body>
 </html>

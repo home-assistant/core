@@ -8,7 +8,7 @@ import re
 import os
 import logging
 
-from . import version
+from . import version, mdi_version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
 from homeassistant.config import get_default_config_dir
@@ -74,6 +74,7 @@ def _handle_get_root(handler, path_match, data):
 
     template_html = template_html.replace('{{ app_url }}', app_url)
     template_html = template_html.replace('{{ auth }}', auth)
+    template_html = template_html.replace('{{ icons }}', mdi_version.VERSION)
 
     handler.wfile.write(template_html.encode("UTF-8"))
 
