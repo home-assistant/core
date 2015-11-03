@@ -74,6 +74,9 @@ ATTR_FRIENDLY_NAME = "friendly_name"
 # A picture to represent entity
 ATTR_ENTITY_PICTURE = "entity_picture"
 
+# Icon to use in the frontend
+ATTR_ICON = "icon"
+
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
