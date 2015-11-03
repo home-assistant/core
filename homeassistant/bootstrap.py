@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    CONF_SCAN_INTERVAL, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -310,6 +310,20 @@ def process_ha_core_config(hass, config):
     set_time_zone(config.get(CONF_TIME_ZONE))
 
     customize = config.get(CONF_CUSTOMIZE)
+
+    if isinstance(customize, dict):
+        for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
+            if not isinstance(attrs, dict):
+                continue
+            Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
+
+    scan_interval = config.get(CONF_SCAN_INTERVAL)
+
+    if isinstance(scan_interval, dict):
+        for component, current_scan_interval in scan_interval.items():
+            hac.overwrite_scan_interval(current_scan_interval, component)
+    elif scan_interval is not None:
+        hac.overwrite_scan_interval(scan_interval)
 
     if isinstance(customize, dict):
         for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
