@@ -3,15 +3,17 @@ homeassistant.components.switch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various switches that can be controlled remotely.
 """
-import logging
 from datetime import timedelta
+import logging
+import os
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.components import group, discovery, wink, isy994
+from homeassistant.components import group, discovery, wink, isy994, verisure
 
 DOMAIN = 'switch'
 DEPENDENCIES = []
@@ -24,19 +26,22 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_TODAY_MWH = "today_mwh"
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
+ATTR_SENSOR_STATE = "sensor_state"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
-    discovery.services.BELKIN_WEMO: 'wemo',
+    discovery.SERVICE_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
+    verisure.DISCOVER_SWITCHES: 'verisure'
 }
 
 PROP_TO_ATTR = {
     'current_power_mwh': ATTR_CURRENT_POWER_MWH,
     'today_power_mw': ATTR_TODAY_MWH,
+    'sensor_state': ATTR_SENSOR_STATE
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,21 +50,18 @@ _LOGGER = logging.getLogger(__name__)
 def is_on(hass, entity_id=None):
     """ Returns if the switch is on based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_SWITCHES
-
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 def turn_on(hass, entity_id=None):
     """ Turns all or specified switch on. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
     """ Turns all or specified switch off. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
@@ -83,9 +85,12 @@ def setup(hass, config):
             if switch.should_poll:
                 switch.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_switch_service)
-
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_switch_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_switch_service,
+                           descriptions.get(SERVICE_TURN_OFF))
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_switch_service,
+                           descriptions.get(SERVICE_TURN_ON))
 
     return True
 
@@ -102,6 +107,16 @@ class SwitchDevice(ToggleEntity):
     @property
     def today_power_mw(self):
         """ Today total power usage in mw. """
+        return None
+
+    @property
+    def is_standby(self):
+        """ Is the device in standby. """
+        return None
+
+    @property
+    def sensor_state(self):
+        """ Is the sensor on or off. """
         return None
 
     @property

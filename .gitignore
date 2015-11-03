@@ -7,14 +7,13 @@ homeassistant/components/frontend/www_static/polymer/bower_components/*
 config/custom_components/*
 !config/custom_components/example.py
 !config/custom_components/hello_world.py
+!config/custom_components/mqtt_example.py
+
+tests/config/home-assistant.log
 
 # Hide sublime text stuff
 *.sublime-project
 *.sublime-workspace
-
-# Hide code validator output
-pep8.txt
-pylint.txt
 
 # Hide some OS X stuff
 .DS_Store
@@ -26,6 +25,9 @@ Icon
 ._*
 
 .idea
+
+# pytest
+.cache
 
 # GITHUB Proposed Python stuff:
 *.py[cod]

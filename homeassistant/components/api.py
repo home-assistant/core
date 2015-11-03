@@ -1,15 +1,17 @@
 """
 homeassistant.components.api
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides a Rest API for Home Assistant.
+
+For more details about the RESTful API, please refer to the documentation at
+https://home-assistant.io/developers/api.html
 """
 import re
 import logging
 import threading
 import json
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
 from homeassistant.const import (
@@ -103,6 +105,10 @@ def _handle_get_api_stream(handler, path_match, data):
     write_lock = threading.Lock()
     block = threading.Event()
 
+    restrict = data.get('restrict')
+    if restrict:
+        restrict = restrict.split(',')
+
     def write_message(payload):
         """ Writes a message to the output. """
         with write_lock:
@@ -118,7 +124,8 @@ def _handle_get_api_stream(handler, path_match, data):
         """ Forwards events to the open request. """
         nonlocal gracefully_closed
 
-        if block.is_set() or event.event_type == EVENT_TIME_CHANGED:
+        if block.is_set() or event.event_type == EVENT_TIME_CHANGED or \
+           restrict and event.event_type not in restrict:
             return
         elif event.event_type == EVENT_HOMEASSISTANT_STOP:
             gracefully_closed = True

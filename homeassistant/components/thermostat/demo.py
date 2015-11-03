@@ -3,7 +3,6 @@ homeassistant.components.thermostat.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Demo platform that offers a fake thermostat.
-
 """
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS, TEMP_FAHRENHEIT
@@ -19,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class DemoThermostat(ThermostatDevice):
-    """ Represents a HeatControl within Home Assistant. """
+    """ Represents a HeatControl thermostat. """
 
     def __init__(self, name, target_temperature, unit_of_measurement,
                  away, current_temperature):
@@ -60,7 +59,7 @@ class DemoThermostat(ThermostatDevice):
         return self._away
 
     def set_temperature(self, temperature):
-        """ Set new target temperature """
+        """ Set new target temperature. """
         self._target_temperature = temperature
 
     def turn_away_mode_on(self):

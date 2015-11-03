@@ -1,4 +1,8 @@
+# coding: utf-8
 """ Constants used by Home Assistant components. """
+
+__version__ = "0.7.7"
+
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
 
@@ -38,12 +42,18 @@ STATE_ON = 'on'
 STATE_OFF = 'off'
 STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
-STATE_UNKNOWN = "unknown"
+STATE_UNKNOWN = 'unknown'
 STATE_OPEN = 'open'
 STATE_CLOSED = 'closed'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
+STATE_STANDBY = 'standby'
+STATE_ALARM_DISARMED = 'disarmed'
+STATE_ALARM_ARMED_HOME = 'armed_home'
+STATE_ALARM_ARMED_AWAY = 'armed_away'
+STATE_ALARM_PENDING = 'pending'
+STATE_ALARM_TRIGGERED = 'triggered'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -94,6 +104,13 @@ ATTR_LAST_TRIP_TIME = "last_tripped_time"
 # For all entity's, this hold whether or not it should be hidden
 ATTR_HIDDEN = "hidden"
 
+# Location of the entity
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
+
+# Accuracy of location in meters
+ATTR_GPS_ACCURACY = 'gps_accuracy'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 
@@ -110,6 +127,11 @@ SERVICE_MEDIA_PAUSE = "media_pause"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
 SERVICE_MEDIA_SEEK = "media_seek"
+
+SERVICE_ALARM_DISARM = "alarm_disarm"
+SERVICE_ALARM_ARM_HOME = "alarm_arm_home"
+SERVICE_ALARM_ARM_AWAY = "alarm_arm_away"
+SERVICE_ALARM_TRIGGER = "alarm_trigger"
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
@@ -136,6 +158,7 @@ HTTP_UNAUTHORIZED = 401
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422
+HTTP_INTERNAL_SERVER_ERROR = 500
 
 HTTP_HEADER_HA_AUTH = "X-HA-access"
 HTTP_HEADER_ACCEPT_ENCODING = "Accept-Encoding"

@@ -1,8 +1,10 @@
 """
 homeassistant.components.history
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provide pre-made queries on top of the recorder component.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/history.html
 """
 import re
 from datetime import timedelta
@@ -146,8 +148,6 @@ def _api_history_period(handler, path_match, data):
         start_time = dt_util.utcnow() - one_day
 
     end_time = start_time + one_day
-
-    print("Fetchign", start_time, end_time)
 
     entity_id = data.get('filter_entity_id')
 

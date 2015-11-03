@@ -6,18 +6,18 @@ Sets up a demo environment that mimics interaction with devices.
 """
 import time
 
-import homeassistant as ha
+import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.loader as loader
 from homeassistant.const import (
-    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID)
+    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "demo"
 
-DEPENDENCIES = []
+DEPENDENCIES = ['introduction', 'conversation']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    'switch', 'light', 'thermostat', 'sensor', 'media_player', 'notify']
+    'switch', 'light', 'sensor', 'thermostat', 'media_player', 'notify']
 
 
 def setup(hass, config):
@@ -33,10 +33,10 @@ def setup(hass, config):
 
     # Setup sun
     if not hass.config.latitude:
-        hass.config.latitude = '32.87336'
+        hass.config.latitude = 32.87336
 
     if not hass.config.longitude:
-        hass.config.longitude = '117.22743'
+        hass.config.longitude = 117.22743
 
     bootstrap.setup_component(hass, 'sun')
 
@@ -46,10 +46,13 @@ def setup(hass, config):
             hass, component, {component: {CONF_PLATFORM: 'demo'}})
 
     # Setup room groups
-    lights = hass.states.entity_ids('light')
-    switches = hass.states.entity_ids('switch')
-    group.setup_group(hass, 'living room', [lights[0], lights[1], switches[0]])
-    group.setup_group(hass, 'bedroom', [lights[2], switches[1]])
+    lights = sorted(hass.states.entity_ids('light'))
+    switches = sorted(hass.states.entity_ids('switch'))
+    media_players = sorted(hass.states.entity_ids('media_player'))
+    group.setup_group(hass, 'living room', [lights[2], lights[1], switches[0],
+                                            media_players[1]])
+    group.setup_group(hass, 'bedroom', [lights[0], switches[1],
+                                        media_players[0]])
 
     # Setup IP Camera
     bootstrap.setup_component(
@@ -57,7 +60,15 @@ def setup(hass, config):
         {'camera': {
             'platform': 'generic',
             'name': 'IP Camera',
-            'still_image_url': 'http://194.218.96.92/jpg/image.jpg',
+            'still_image_url': 'http://home-assistant.io/demo/webcam.jpg',
+        }})
+
+    # Setup alarm_control_panel
+    bootstrap.setup_component(
+        hass, 'alarm_control_panel',
+        {'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'Test Alarm',
         }})
 
     # Setup scripts
@@ -65,7 +76,7 @@ def setup(hass, config):
         hass, 'script',
         {'script': {
             'demo': {
-                'alias': 'Demo {}'.format(lights[0]),
+                'alias': 'Toggle {}'.format(lights[0].split('.')[1]),
                 'sequence': [{
                     'execute_service': 'light.turn_off',
                     'service_data': {ATTR_ENTITY_ID: lights[0]}
@@ -102,10 +113,12 @@ def setup(hass, config):
     # Setup fake device tracker
     hass.states.set("device_tracker.paulus", "home",
                     {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/297400035/picture"})
+                     "http://graph.facebook.com/297400035/picture",
+                     ATTR_FRIENDLY_NAME: 'Paulus'})
     hass.states.set("device_tracker.anne_therese", "not_home",
-                    {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/621994601/picture"})
+                    {ATTR_FRIENDLY_NAME: 'Anne Therese',
+                     'latitude': hass.config.latitude + 0.002,
+                     'longitude': hass.config.longitude + 0.002})
 
     hass.states.set("group.all_devices", "home",
                     {

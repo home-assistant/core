@@ -1,16 +1,17 @@
 """
 homeassistant.components.conversation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to have conversations with Home Assistant.
-This is more a proof of concept.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/conversation.html
 """
 import logging
 import re
 
-import homeassistant
+from homeassistant import core
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
 DOMAIN = "conversation"
 DEPENDENCIES = []
@@ -44,7 +45,7 @@ def setup(hass, config):
 
         entity_ids = [
             state.entity_id for state in hass.states.all()
-            if state.attributes.get(ATTR_FRIENDLY_NAME, "").lower() == name]
+            if state.name.lower() == name]
 
         if not entity_ids:
             logger.error(
@@ -52,16 +53,14 @@ def setup(hass, config):
             return
 
         if command == 'on':
-            hass.services.call(
-                homeassistant.DOMAIN, SERVICE_TURN_ON, {
-                    ATTR_ENTITY_ID: entity_ids,
-                }, blocking=True)
+            hass.services.call(core.DOMAIN, SERVICE_TURN_ON, {
+                ATTR_ENTITY_ID: entity_ids,
+            }, blocking=True)
 
         elif command == 'off':
-            hass.services.call(
-                homeassistant.DOMAIN, SERVICE_TURN_OFF, {
-                    ATTR_ENTITY_ID: entity_ids,
-                }, blocking=True)
+            hass.services.call(core.DOMAIN, SERVICE_TURN_OFF, {
+                ATTR_ENTITY_ID: entity_ids,
+            }, blocking=True)
 
         else:
             logger.error(

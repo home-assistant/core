@@ -1,48 +1,10 @@
 """
+homeassistant.components.camera.generic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for IP Cameras.
 
-This component provides basic support for IP cameras. For the basic support to
-work you camera must support accessing a JPEG snapshot via a URL and you will
-need to specify the "still_image_url" parameter which should be the location of
-the JPEG image.
-
-As part of the basic support the following features will be provided:
--MJPEG video streaming
--Saving a snapshot
--Recording(JPEG frame capture)
-
-To use this component, add the following to your config/configuration.yaml:
-
-camera:
-    platform: generic
-    name: Door Camera
-    username: YOUR_USERNAME
-    password: YOUR_PASSWORD
-    still_image_url: http://YOUR_CAMERA_IP_AND_PORT/image.jpg
-
-
-VARIABLES:
-
-These are the variables for the device_data array:
-
-still_image_url
-*Required
-The URL your camera serves the image on.
-Example: http://192.168.1.21:2112/
-
-name
-*Optional
-This parameter allows you to override the name of your camera in homeassistant
-
-username
-*Optional
-THe username for acessing your camera
-
-password
-*Optional
-the password for accessing your camera
-
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/camera.generic.html
 """
 import logging
 from requests.auth import HTTPBasicAuth
@@ -78,7 +40,7 @@ class GenericCamera(Camera):
         self._still_image_url = device_info['still_image_url']
 
     def camera_image(self):
-        """ Return a still image reponse from the camera """
+        """ Return a still image reponse from the camera. """
         if self._username and self._password:
             response = requests.get(
                 self._still_image_url,
@@ -90,5 +52,5 @@ class GenericCamera(Camera):
 
     @property
     def name(self):
-        """ Return the name of this device """
+        """ Return the name of this device. """
         return self._name

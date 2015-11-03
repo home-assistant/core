@@ -1,34 +1,22 @@
 """
 homeassistant.components.sun
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to keep track of the sun.
 
-Event listener
---------------
-The suns event listener will call the service when the sun rises or sets with
-an offset.
-
-The sun event need to have the type 'sun', which service to call, which event
-(sunset or sunrise) and the offset.
-
-{
-    "type": "sun",
-    "service": "switch.turn_on",
-    "event": "sunset",
-    "offset": "-01:00:00"
-}
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sun.html
 """
 import logging
 from datetime import timedelta
+import urllib
 
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.scheduler import ServiceEventListener
 
 DEPENDENCIES = []
-REQUIREMENTS = ['astral>=0.8.1']
+REQUIREMENTS = ['astral==0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
@@ -129,8 +117,13 @@ def setup(hass, config):
 
     if elevation is None:
         google = GoogleGeocoder()
-        google._get_elevation(location)  # pylint: disable=protected-access
-        _LOGGER.info('Retrieved elevation from Google: %s', location.elevation)
+        try:
+            google._get_elevation(location)  # pylint: disable=protected-access
+            _LOGGER.info(
+                'Retrieved elevation from Google: %s', location.elevation)
+        except urllib.error.URLError:
+            # If no internet connection available etc.
+            pass
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
@@ -203,98 +196,6 @@ class Sun(Entity):
         self.update_ha_state()
 
         # Schedule next update at next_change+1 second so sun state has changed
-        self.hass.track_point_in_utc_time(
-            self.point_in_time_listener,
+        track_point_in_utc_time(
+            self.hass, self.point_in_time_listener,
             self.next_change + timedelta(seconds=1))
-
-
-def create_event_listener(schedule, event_listener_data):
-    """ Create a sun event listener based on the description. """
-
-    negative_offset = False
-    service = event_listener_data['service']
-    offset_str = event_listener_data['offset']
-    event = event_listener_data['event']
-
-    if offset_str.startswith('-'):
-        negative_offset = True
-        offset_str = offset_str[1:]
-
-    (hour, minute, second) = [int(x) for x in offset_str.split(':')]
-
-    offset = timedelta(hours=hour, minutes=minute, seconds=second)
-
-    if event == 'sunset':
-        return SunsetEventListener(schedule, service, offset, negative_offset)
-
-    return SunriseEventListener(schedule, service, offset, negative_offset)
-
-
-# pylint: disable=too-few-public-methods
-class SunEventListener(ServiceEventListener):
-    """ This is the base class for sun event listeners. """
-
-    def __init__(self, schedule, service, offset, negative_offset):
-        ServiceEventListener.__init__(self, schedule, service)
-
-        self.offset = offset
-        self.negative_offset = negative_offset
-
-    def __get_next_time(self, next_event):
-        """
-        Returns when the next time the service should be called.
-        Taking into account the offset and which days the event should execute.
-        """
-
-        if self.negative_offset:
-            next_time = next_event - self.offset
-        else:
-            next_time = next_event + self.offset
-
-        while next_time < dt_util.now() or \
-                next_time.weekday() not in self.my_schedule.days:
-            next_time = next_time + timedelta(days=1)
-
-        return next_time
-
-    def schedule_next_event(self, hass, next_event):
-        """ Schedule the event. """
-        next_time = self.__get_next_time(next_event)
-
-        # pylint: disable=unused-argument
-        def execute(now):
-            """ Call the execute method. """
-            self.execute(hass)
-
-        hass.track_point_in_time(execute, next_time)
-
-        return next_time
-
-
-# pylint: disable=too-few-public-methods
-class SunsetEventListener(SunEventListener):
-    """ This class is used the call a service when the sun sets. """
-    def schedule(self, hass):
-        """ Schedule the event """
-        next_setting_dt = next_setting(hass)
-
-        next_time_dt = self.schedule_next_event(hass, next_setting_dt)
-
-        _LOGGER.info(
-            'SunsetEventListener scheduled for %s, will call service %s.%s',
-            next_time_dt, self.domain, self.service)
-
-
-# pylint: disable=too-few-public-methods
-class SunriseEventListener(SunEventListener):
-    """ This class is used the call a service when the sun rises. """
-
-    def schedule(self, hass):
-        """ Schedule the event. """
-        next_rising_dt = next_rising(hass)
-
-        next_time_dt = self.schedule_next_event(hass, next_rising_dt)
-
-        _LOGGER.info(
-            'SunriseEventListener scheduled for %s, will call service %s.%s',
-            next_time_dt, self.domain, self.service)

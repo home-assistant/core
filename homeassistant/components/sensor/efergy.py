@@ -1,54 +1,14 @@
 """
 homeassistant.components.sensor.efergy
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Monitors home energy use as measured by an efergy engage hub using its
+(unofficial, undocumented) API.
 
-Monitors home energy use as measured by an efergy
-engage hub using its (unofficial, undocumented) API.
-
-Configuration:
-
-To use the efergy sensor you will need to add something
-like the following to your config/configuration.yaml
-
-sensor:
-  platform: efergy
-  app_token: APP_TOKEN
-  utc_offset: UTC_OFFSET
-  monitored_variables:
-    - type: instant_readings
-    - type: budget
-    - type: cost
-      period: day
-      currency: $
-
-Variables:
-
-api_key
-*Required
-To get a new App Token, log in to your efergy account, go
-to the Settings page, click on App tokens, and click "Add token".
-
-utc_offset
-*Required for some variables
-Some variables (currently only the daily_cost) require that the
-negative number of minutes your timezone is ahead/behind UTC time.
-
-monitored_variables
-*Required
-An array specifying the variables to monitor.
-
-period
-*Optional
-Some variables take a period argument. Valid options are "day",
-1"week", "month", and "year"
-
-currency
-*Optional
-This is used to display the cost/period as the unit when monitoring the
-cost.  It should correspond to the actual currency used in your dashboard.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.efergy.html
 """
 import logging
-from requests import get
+from requests import get, RequestException
 
 from homeassistant.helpers.entity import Entity
 
@@ -62,7 +22,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the efergy sensor. """
+    """ Sets up the Efergy sensor. """
     app_token = config.get("app_token")
     if not app_token:
         _LOGGER.error(
@@ -119,20 +79,23 @@ class EfergySensor(Entity):
         return self._unit_of_measurement
 
     def update(self):
-        """ Gets the efergy monitor data from the web service """
-        if self.type == 'instant_readings':
-            url_string = _RESOURCE + 'getInstant?token=' + self.app_token
-            response = get(url_string)
-            self._state = response.json()['reading'] / 1000
-        elif self.type == 'budget':
-            url_string = _RESOURCE + 'getBudget?token=' + self.app_token
-            response = get(url_string)
-            self._state = response.json()['status']
-        elif self.type == 'cost':
-            url_string = _RESOURCE + 'getCost?token=' + self.app_token \
-                + '&offset=' + self.utc_offset + '&period=' \
-                + self.period
-            response = get(url_string)
-            self._state = response.json()['sum']
-        else:
-            self._state = 'Unknown'
+        """ Gets the Efergy monitor data from the web service. """
+        try:
+            if self.type == 'instant_readings':
+                url_string = _RESOURCE + 'getInstant?token=' + self.app_token
+                response = get(url_string)
+                self._state = response.json()['reading'] / 1000
+            elif self.type == 'budget':
+                url_string = _RESOURCE + 'getBudget?token=' + self.app_token
+                response = get(url_string)
+                self._state = response.json()['status']
+            elif self.type == 'cost':
+                url_string = _RESOURCE + 'getCost?token=' + self.app_token \
+                    + '&offset=' + self.utc_offset + '&period=' \
+                    + self.period
+                response = get(url_string)
+                self._state = response.json()['sum']
+            else:
+                self._state = 'Unknown'
+        except RequestException:
+            _LOGGER.warning('Could not update status for %s', self.name)

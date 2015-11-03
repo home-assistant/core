@@ -4,33 +4,8 @@ homeassistant.components.sensor.arduino
 Support for getting information from Arduino pins. Only analog pins are
 supported.
 
-Configuration:
-
-sensor:
-  platform: arduino
-  pins:
-    7:
-      name: Door switch
-      type: analog
-    0:
-      name: Brightness
-      type: analog
-
-Variables:
-
-pins
-*Required
-An array specifying the digital pins to use on the Arduino board.
-
-These are the variables for the pins array:
-
-name
-*Required
-The name for the pin that will be used in the frontend.
-
-type
-*Required
-The type of the pin: 'analog'.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.arduino.html
 """
 import logging
 
@@ -46,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Arduino platform. """
 
-    # Verify that Arduino board is present
+    # Verify that the Arduino board is present
     if arduino.BOARD is None:
         _LOGGER.error('A connection has not been made to the Arduino board.')
         return False

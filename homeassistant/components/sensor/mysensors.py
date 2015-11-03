@@ -1,29 +1,13 @@
 """
 homeassistant.components.sensor.mysensors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Support for MySensors sensors.
 
-Configuration:
-
-To use the MySensors sensor you will need to add something like the
-following to your config/configuration.yaml
-
-sensor:
-  platform: mysensors
-  port: '/dev/ttyACM0'
-
-Variables:
-
-port
-*Required
-Port of your connection to your MySensors device.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.mysensors.html
 """
 import logging
 
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.pymysensors.mysensors.mysensors as mysensors
-import homeassistant.external.pymysensors.mysensors.const as const
 from homeassistant.helpers.entity import Entity
 
 from homeassistant.const import (
@@ -34,16 +18,23 @@ from homeassistant.const import (
 CONF_PORT = "port"
 CONF_DEBUG = "debug"
 CONF_PERSISTENCE = "persistence"
+CONF_PERSISTENCE_FILE = "persistence_file"
+CONF_VERSION = "version"
 
 ATTR_NODE_ID = "node_id"
 ATTR_CHILD_ID = "child_id"
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pyserial>=2.7']
+REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/'
+                'd4b809c2167650691058d1e29bfd2c4b1792b4b0.zip'
+                '#pymysensors==0.3']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the mysensors platform. """
+
+    import mysensors.mysensors as mysensors
+    import mysensors.const_14 as const
 
     devices = {}    # keep track of devices added to HA
     # Just assume celcius means that the user wants metric for now.
@@ -69,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     name = '{} {}.{}'.format(sensor.sketch_name, nid, child.id)
                     node[child_id][value_type] = \
                         MySensorsNodeValue(
-                            nid, child_id, name, value_type, is_metric)
+                            nid, child_id, name, value_type, is_metric, const)
                     new_devices.append(node[child_id][value_type])
                 else:
                     node[child_id][value_type].update_sensor(
@@ -85,9 +76,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     persistence = config.get(CONF_PERSISTENCE, True)
+    persistence_file = config.get(CONF_PERSISTENCE_FILE, 'mysensors.pickle')
+    version = config.get(CONF_VERSION, '1.4')
 
     gateway = mysensors.SerialGateway(port, sensor_update,
-                                      persistence=persistence)
+                                      persistence=persistence,
+                                      persistence_file=persistence_file,
+                                      protocol_version=version)
     gateway.metric = is_metric
     gateway.debug = config.get(CONF_DEBUG, False)
     gateway.start()
@@ -102,8 +97,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class MySensorsNodeValue(Entity):
     """ Represents the value of a MySensors child node. """
-    # pylint: disable=too-many-arguments
-    def __init__(self, node_id, child_id, name, value_type, metric):
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    def __init__(self, node_id, child_id, name, value_type, metric, const):
         self._name = name
         self.node_id = node_id
         self.child_id = child_id
@@ -111,6 +106,7 @@ class MySensorsNodeValue(Entity):
         self.value_type = value_type
         self.metric = metric
         self._value = ''
+        self.const = const
 
     @property
     def should_poll(self):
@@ -130,11 +126,11 @@ class MySensorsNodeValue(Entity):
     @property
     def unit_of_measurement(self):
         """ Unit of measurement of this entity. """
-        if self.value_type == const.SetReq.V_TEMP:
+        if self.value_type == self.const.SetReq.V_TEMP:
             return TEMP_CELCIUS if self.metric else TEMP_FAHRENHEIT
-        elif self.value_type == const.SetReq.V_HUM or \
-                self.value_type == const.SetReq.V_DIMMER or \
-                self.value_type == const.SetReq.V_LIGHT_LEVEL:
+        elif self.value_type == self.const.SetReq.V_HUM or \
+                self.value_type == self.const.SetReq.V_DIMMER or \
+                self.value_type == self.const.SetReq.V_LIGHT_LEVEL:
             return '%'
         return None
 
@@ -150,8 +146,8 @@ class MySensorsNodeValue(Entity):
     def update_sensor(self, value, battery_level):
         """ Update a sensor with the latest value from the controller. """
         _LOGGER.info("%s value = %s", self._name, value)
-        if self.value_type == const.SetReq.V_TRIPPED or \
-           self.value_type == const.SetReq.V_ARMED:
+        if self.value_type == self.const.SetReq.V_TRIPPED or \
+           self.value_type == self.const.SetReq.V_ARMED:
             self._value = STATE_ON if int(value) == 1 else STATE_OFF
         else:
             self._value = value

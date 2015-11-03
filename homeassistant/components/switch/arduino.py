@@ -1,36 +1,11 @@
 """
 homeassistant.components.switch.arduino
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for switching Arduino pins on and off. So fare only digital pins are
+Support for switching Arduino pins on and off. So far only digital pins are
 supported.
 
-Configuration:
-
-switch:
-  platform: arduino
-  pins:
-    11:
-      name: Fan Office
-      type: digital
-    12:
-      name: Light Desk
-      type: digital
-
-Variables:
-
-pins
-*Required
-An array specifying the digital pins to use on the Arduino board.
-
-These are the variables for the pins array:
-
-name
-*Required
-The name for the pin that will be used in the frontend.
-
-type
-*Required
-The type of the pin: 'digital'.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.arduino.html
 """
 import logging
 
@@ -62,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ArduinoSwitch(SwitchDevice):
-    """ Represents an Arduino Switch. """
+    """ Represents an Arduino switch. """
     def __init__(self, name, pin, pin_type):
         self._pin = pin
         self._name = name or DEVICE_DEFAULT_NAME

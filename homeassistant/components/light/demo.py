@@ -12,9 +12,8 @@ from homeassistant.components.light import (
 
 
 LIGHT_COLORS = [
-    [0.861, 0.3259],
-    [0.6389, 0.3028],
-    [0.1684, 0.0416]
+    [0.368, 0.180],
+    [0.460, 0.470],
 ]
 
 
@@ -22,8 +21,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return demo lights. """
     add_devices_callback([
         DemoLight("Bed Light", False),
-        DemoLight("Ceiling", True),
-        DemoLight("Kitchen", True)
+        DemoLight("Ceiling Lights", True, LIGHT_COLORS[0]),
+        DemoLight("Kitchen Lights", True, LIGHT_COLORS[1])
     ])
 
 

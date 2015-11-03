@@ -1,8 +1,10 @@
 """
 homeassistant.components.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Connects Home Assistant to a Z-Wave network.
+
+For configuration details please visit the documentation for this component at
+https://home-assistant.io/components/zwave.html
 """
 from pprint import pprint
 
@@ -13,7 +15,7 @@ from homeassistant.const import (
 
 DOMAIN = "zwave"
 DEPENDENCIES = []
-REQUIREMENTS = ['pydispatcher>=2.0.5']
+REQUIREMENTS = ['pydispatcher==2.0.5']
 
 CONF_USB_STICK_PATH = "usb_path"
 DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"

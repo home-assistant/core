@@ -1,59 +1,21 @@
 """
 homeassistant.components.sensor.sabnzbd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Monitors SABnzbd NZB client API.
 
-Monitors SABnzbd NZB client API
-
-Configuration:
-
-To use the SABnzbd sensor you will need to add something like the following to
-your config/configuration.yaml
-
-sensor:
-    platform: sabnzbd
-    name: SAB
-    api_key: YOUR_API_KEY
-    base_url: YOUR_SABNZBD_BASE_URL
-    monitored_variables:
-        - type: 'current_status'
-        - type: 'speed'
-        - type: 'queue_size'
-        - type: 'queue_remaining'
-        - type: 'disk_size'
-        - type: 'disk_free'
-
-Variables:
-
-base_url
-*Required
-This is the base URL of your SABnzbd instance including the port number if not
-running on 80. Example: http://192.168.1.32:8124/
-
-name
-*Optional
-The name to use when displaying this SABnzbd instance
-
-monitored_variables
-*Required
-An array specifying the variables to monitor.
-
-These are the variables for the monitored_variables array:
-
-type
-*Required
-The variable you wish to monitor, see the configuration example above for a
-list of all available variables.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.sabnzbd.html
 """
-
 from homeassistant.util import Throttle
 from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
-# pylint: disable=no-name-in-module, import-error
-from homeassistant.external.nzbclients.sabnzbd import SabnzbdApi
-from homeassistant.external.nzbclients.sabnzbd import SabnzbdApiException
 
 import logging
+
+REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
+                'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
+                '#python-sabnzbd==0.1']
 
 SENSOR_TYPES = {
     'current_status': ['Status', ''],
@@ -71,7 +33,9 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors. """
+    """ Sets up the SABnzbd sensors. """
+    from pysabnzbd import SabnzbdApi, SabnzbdApiException
+
     api_key = config.get("api_key")
     base_url = config.get("base_url")
     name = config.get("name", "SABnzbd")
@@ -105,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SabnzbdSensor(Entity):
-    """ A Sabnzbd sensor """
+    """ Represents an SABnzbd sensor. """
 
     def __init__(self, sensor_type, sabnzb_client, client_name):
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -132,6 +96,7 @@ class SabnzbdSensor(Entity):
     def refresh_sabnzbd_data(self):
         """ Calls the throttled SABnzbd refresh method. """
         if _THROTTLED_REFRESH is not None:
+            from pysabnzbd import SabnzbdApiException
             try:
                 _THROTTLED_REFRESH()
             except SabnzbdApiException:
