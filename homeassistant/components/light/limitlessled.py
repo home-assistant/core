@@ -18,7 +18,8 @@ import logging
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
-                                            ATTR_XY_COLOR)
+                                            ATTR_XY_COLOR, ATTR_EFFECT,
+                                            EFFECT_COLORLOOP, EFFECT_WHITE)
 from homeassistant.util.color import color_RGB_to_xy
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,10 +160,21 @@ class RGBWLimitlessLED(LimitlessLED):
         if ATTR_XY_COLOR in kwargs:
             self._xy_color = kwargs[ATTR_XY_COLOR]
 
-        self.pool.execute(self.controller_id, "set_color",
-                          self._xy_to_led_color(self._xy_color), self.group)
+        effect = kwargs.get(ATTR_EFFECT)
+
+        if effect == EFFECT_COLORLOOP:
+            self.pool.execute(self.controller_id, "disco", self.group)
+        elif effect == EFFECT_WHITE:
+            self.pool.execute(self.controller_id, "white", self.group)
+        else:
+            self.pool.execute(self.controller_id, "set_color",
+                              self._xy_to_led_color(self._xy_color),
+                              self.group)
+
+        # Brightness can be set independently of color
         self.pool.execute(self.controller_id, "set_brightness",
                           self._brightness / 255.0, self.group)
+
         self.update_ha_state()
 
 
