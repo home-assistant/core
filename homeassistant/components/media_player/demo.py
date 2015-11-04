@@ -1,9 +1,7 @@
 """
 homeassistant.components.media_player.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Demo implementation of the media player.
-
 """
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF)

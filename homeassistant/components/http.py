@@ -1,76 +1,11 @@
 """
-homeassistant.components.httpinterface
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+homeassistant.components.http
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This module provides an API and a HTTP interface for debug purposes.
 
-By default it will run on port 8123.
-
-All API calls have to be accompanied by an 'api_password' parameter and will
-return JSON. If successful calls will return status code 200 or 201.
-
-Other status codes that can occur are:
- - 400 (Bad Request)
- - 401 (Unauthorized)
- - 404 (Not Found)
- - 405 (Method not allowed)
-
-The api supports the following actions:
-
-/api - GET
-Returns message if API is up and running.
-Example result:
-{
-  "message": "API running."
-}
-
-/api/states - GET
-Returns a list of entities for which a state is available
-Example result:
-[
-    { .. state object .. },
-    { .. state object .. }
-]
-
-/api/states/<entity_id> - GET
-Returns the current state from an entity
-Example result:
-{
-    "attributes": {
-        "next_rising": "07:04:15 29-10-2013",
-        "next_setting": "18:00:31 29-10-2013"
-    },
-    "entity_id": "weather.sun",
-    "last_changed": "23:24:33 28-10-2013",
-    "state": "below_horizon"
-}
-
-/api/states/<entity_id> - POST
-Updates the current state of an entity. Returns status code 201 if successful
-with location header of updated resource and as body the new state.
-parameter: new_state - string
-optional parameter: attributes - JSON encoded object
-Example result:
-{
-    "attributes": {
-        "next_rising": "07:04:15 29-10-2013",
-        "next_setting": "18:00:31 29-10-2013"
-    },
-    "entity_id": "weather.sun",
-    "last_changed": "23:24:33 28-10-2013",
-    "state": "below_horizon"
-}
-
-/api/events/<event_type> - POST
-Fires an event with event_type
-optional parameter: event_data - JSON encoded object
-Example result:
-{
-    "message": "Event download_file fired."
-}
-
+For more details about the RESTful API, please refer to the documentation at
+https://home-assistant.io/developers/api.html
 """
-
 import json
 import threading
 import logging
@@ -86,7 +21,7 @@ from http import cookies
 from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 
-import homeassistant as ha
+import homeassistant.core as ha
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
@@ -119,7 +54,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config=None):
     """ Sets up the HTTP API and debug interface. """
-
     if config is None or DOMAIN not in config:
         config = {DOMAIN: {}}
 
@@ -139,9 +73,14 @@ def setup(hass, config=None):
 
     sessions_enabled = config[DOMAIN].get(CONF_SESSIONS_ENABLED, True)
 
-    server = HomeAssistantHTTPServer(
-        (server_host, server_port), RequestHandler, hass, api_password,
-        development, no_password_set, sessions_enabled)
+    try:
+        server = HomeAssistantHTTPServer(
+            (server_host, server_port), RequestHandler, hass, api_password,
+            development, no_password_set, sessions_enabled)
+    except OSError:
+        # Happens if address already in use
+        _LOGGER.exception("Error setting up HTTP server")
+        return False
 
     hass.bus.listen_once(
         ha.EVENT_HOMEASSISTANT_START,
@@ -183,10 +122,12 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
             _LOGGER.info("running http in development mode")
 
     def start(self):
-        """ Starts the server. """
-        self.hass.bus.listen_once(
-            ha.EVENT_HOMEASSISTANT_STOP,
-            lambda event: self.shutdown())
+        """ Starts the HTTP server. """
+        def stop_http(event):
+            """ Stops the HTTP server. """
+            self.shutdown()
+
+        self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
         _LOGGER.info(
             "Starting web interface at http://%s:%d", *self.server_address)
@@ -199,8 +140,13 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.serve_forever()
 
     def register_path(self, method, url, callback, require_auth=True):
-        """ Regitsters a path wit the server. """
+        """ Registers a path with the server. """
         self.paths.append((method, url, callback, require_auth))
+
+    def log_message(self, fmt, *args):
+        """ Redirect built-in log to HA logging """
+        # pylint: disable=no-self-use
+        _LOGGER.info(fmt, *args)
 
 
 # pylint: disable=too-many-public-methods,too-many-locals
@@ -218,6 +164,15 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Contructor, call the base constructor and set up session """
         self._session = None
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+
+    def log_message(self, fmt, *arguments):
+        """ Redirect built-in log to HA logging """
+        if self.server.no_password_set:
+            _LOGGER.info(fmt, *arguments)
+        else:
+            _LOGGER.info(
+                fmt, *(arg.replace(self.server.api_password, '*******')
+                       if isinstance(arg, str) else arg for arg in arguments))
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """ Does some common checks and calls appropriate method. """
@@ -472,7 +427,7 @@ class ServerSession:
         return self._expiry < date_util.utcnow()
 
 
-class SessionStore:
+class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
     def __init__(self, enabled=True):
         """ Set up the session store """

@@ -1,9 +1,11 @@
 """
 homeassistant.components.recorder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Component that records all events and state changes. Allows other components
+to query this database.
 
-Component that records all events and state changes.
-Allows other components to query this database.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/recorder.html
 """
 import logging
 import threading
@@ -13,7 +15,7 @@ from datetime import datetime, date
 import json
 import atexit
 
-from homeassistant import Event, EventOrigin, State
+from homeassistant.core import Event, EventOrigin, State
 import homeassistant.util.dt as date_util
 from homeassistant.remote import JSONEncoder
 from homeassistant.const import (
@@ -256,7 +258,7 @@ class Recorder(threading.Thread):
         """ Query the database. """
         try:
             with self.conn, self.lock:
-                _LOGGER.info("Running query %s", sql_query)
+                _LOGGER.debug("Running query %s", sql_query)
 
                 cur = self.conn.cursor()
 

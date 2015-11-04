@@ -1,57 +1,10 @@
 """
-homeassistant.components.notify.mail
+homeassistant.components.notify.smtp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mail (SMTP) notification service.
 
-Mail notification service.
-
-Configuration:
-
-To use the Mail notifier you will need to add something like the following
-to your config/configuration.yaml
-
-notify:
-  platform: mail
-  server: MAIL_SERVER
-  port: YOUR_SMTP_PORT
-  sender: SENDER_EMAIL_ADDRESS
-  starttls: 1 or 0
-  username: YOUR_SMTP_USERNAME
-  password: YOUR_SMTP_PASSWORD
-  recipient: YOUR_RECIPIENT
-
-Variables:
-
-server
-*Required
-SMTP server which is used to end the notifications. For Google Mail, eg.
-smtp.gmail.com. Keep in mind that Google has some extra layers of protection
-which need special attention (Hint: 'Less secure apps').
-
-port
-*Required
-The port that the SMTP server is using, eg. 587 for Google Mail and STARTTLS
-or 465/993 depending on your SMTP servers.
-
-sender
-*Required
-E-Mail address of the sender.
-
-starttls
-*Optional
-Enables STARTTLS, eg. 1 or 0.
-
-username
-*Required
-Username for the SMTP account.
-
-password
-*Required
-Password for the SMTP server that belongs to the given username. If the
-password contains a colon it need to be wrapped in apostrophes.
-
-recipient
-*Required
-Recipient of the notification.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.smtp.html
 """
 import logging
 import smtplib
@@ -141,13 +94,19 @@ class MailNotificationService(BaseNotificationService):
         self.username = username
         self.password = password
         self.recipient = recipient
+        self.tries = 2
+        self.mail = None
+
+        self.connect()
+
+    def connect(self):
+        """ Connect/Authenticate to SMTP Server """
 
         self.mail = smtplib.SMTP(self._server, self._port)
         self.mail.ehlo_or_helo_if_needed()
         if self.starttls == 1:
             self.mail.starttls()
             self.mail.ehlo()
-
         self.mail.login(self.username, self.password)
 
     def send_message(self, message="", **kwargs):
@@ -161,4 +120,12 @@ class MailNotificationService(BaseNotificationService):
         msg['From'] = self._sender
         msg['X-Mailer'] = 'HomeAssistant'
 
-        self.mail.sendmail(self._sender, self.recipient, msg.as_string())
+        for _ in range(self.tries):
+            try:
+                self.mail.sendmail(self._sender, self.recipient,
+                                   msg.as_string())
+                break
+            except smtplib.SMTPException:
+                _LOGGER.warning('SMTPException sending mail: '
+                                'retrying connection')
+                self.connect()

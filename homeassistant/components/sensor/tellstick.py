@@ -1,27 +1,10 @@
 """
 homeassistant.components.sensor.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Shows sensor values from Tellstick sensors.
 
-Shows sensor values from tellstick sensors.
-
-Possible config keys:
-
-id of the sensor: Name the sensor with ID
-135=Outside
-
-only_named: Only show the named sensors
-only_named=1
-
-temperature_scale: The scale of the temperature value
-temperature_scale=°C
-
-datatype_mask: mask to determine which sensor values to show based on
-https://tellcore-py.readthedocs.org
-    /en/v1.0.4/constants.html#module-tellcore.constants
-
-datatype_mask=1   # only show temperature
-datatype_mask=12  # only show rain rate and rain total
-datatype_mask=127 # show all sensor values
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.tellstick.html
 """
 import logging
 from collections import namedtuple
@@ -34,6 +17,8 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
+
+REQUIREMENTS = ['tellcore-py==1.1.2']
 
 
 # pylint: disable=unused-argument
@@ -77,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             sensor_name = config[ts_sensor.id]
         except KeyError:
-            if 'only_named' in config:
+            if util.convert(config.get('only_named'), bool, False):
                 continue
             sensor_name = str(ts_sensor.id)
 

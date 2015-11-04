@@ -1,12 +1,11 @@
+sudo: false
 language: python
+cache:
+  directories:
+    - $HOME/virtualenv/python3.4.2/
 python:
   - "3.4"
 install:
-  - pip install -r requirements.txt
-  - pip install flake8 pylint coveralls
+  - script/bootstrap_server
 script:
-  - flake8 homeassistant --exclude bower_components,external
-  - pylint homeassistant
-  - coverage run -m unittest discover tests
-after_success:
-  - coveralls
+  - script/cibuild

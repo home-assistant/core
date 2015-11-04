@@ -1,14 +1,15 @@
 """
 homeassistant.components.simple_alarm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Intruder alerts component.
 
-Provides a simple alarm feature:
- - flash a light when a known device comes home
- - flash a light red if a light turns on while there is no one home.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/simple_alarm.html
 """
 import logging
 
 import homeassistant.loader as loader
+from homeassistant.helpers.event import track_state_change
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME
 
 DOMAIN = "simple_alarm"
@@ -16,7 +17,7 @@ DOMAIN = "simple_alarm"
 DEPENDENCIES = ['group', 'device_tracker', 'light']
 
 # Attribute to tell which light has to flash whem a known person comes home
-# If ommitted will flash all.
+# If omitted will flash all.
 CONF_KNOWN_LIGHT = "known_light"
 
 # Attribute to tell which light has to flash whem an unknown person comes home
@@ -83,8 +84,8 @@ def setup(hass, config):
         if not device_tracker.is_on(hass):
             unknown_alarm()
 
-    hass.states.track_change(
-        light.ENTITY_ID_ALL_LIGHTS,
+    track_state_change(
+        hass, light.ENTITY_ID_ALL_LIGHTS,
         unknown_alarm_if_lights_on, STATE_OFF, STATE_ON)
 
     def ring_known_alarm(entity_id, old_state, new_state):
@@ -93,8 +94,8 @@ def setup(hass, config):
             known_alarm()
 
     # Track home coming of each device
-    hass.states.track_change(
-        hass.states.entity_ids(device_tracker.DOMAIN),
+    track_state_change(
+        hass, hass.states.entity_ids(device_tracker.DOMAIN),
         ring_known_alarm, STATE_NOT_HOME, STATE_HOME)
 
     return True
