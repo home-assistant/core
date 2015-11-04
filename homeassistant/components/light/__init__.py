@@ -96,6 +96,7 @@ FLASH_LONG = "long"
 # Apply an effect to the light, can be EFFECT_COLORLOOP
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
+EFFECT_WHITE = "white"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
@@ -156,7 +157,7 @@ def turn_off(hass, entity_id=None, transition=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-# pylint: disable=too-many-branches, too-many-locals
+# pylint: disable=too-many-branches, too-many-locals, too-many-statements
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
 
@@ -282,6 +283,8 @@ def setup(hass, config):
         if ATTR_EFFECT in dat:
             if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
                 params[ATTR_EFFECT] = EFFECT_COLORLOOP
+            if dat[ATTR_EFFECT] == EFFECT_WHITE:
+                params[ATTR_EFFECT] = EFFECT_WHITE
 
         for light in target_lights:
             light.turn_on(**params)
