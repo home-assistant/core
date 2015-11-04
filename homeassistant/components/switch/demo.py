@@ -12,16 +12,17 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return demo switches. """
     add_devices_callback([
-        DemoSwitch('Decorative Lights', True),
-        DemoSwitch('AC', False)
+        DemoSwitch('Decorative Lights', True, None),
+        DemoSwitch('AC', False, 'mdi:air-conditioner')
     ])
 
 
 class DemoSwitch(SwitchDevice):
     """ Provides a demo switch. """
-    def __init__(self, name, state):
+    def __init__(self, name, state, icon):
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
+        self._icon = icon
 
     @property
     def should_poll(self):
@@ -32,6 +33,11 @@ class DemoSwitch(SwitchDevice):
     def name(self):
         """ Returns the name of the device if any. """
         return self._name
+
+    @property
+    def icon(self):
+        """ Returns the icon to use for device if any. """
+        return self._icon
 
     @property
     def current_power_mwh(self):
