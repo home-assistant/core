@@ -1,14 +1,12 @@
 """
 Helper methods for components within Home Assistant.
 """
+import re
+
 from homeassistant.loader import get_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, DEVICE_DEFAULT_NAME)
 from homeassistant.util import ensure_unique_string, slugify
-
-# Deprecated 3/5/2015 - Moved to homeassistant.helpers.entity
-# pylint: disable=unused-import
-from .entity import Entity as Device, ToggleEntity as ToggleDevice  # noqa
 
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
@@ -77,7 +75,7 @@ def config_per_platform(config, domain, logger):
     config_key = domain
     found = 1
 
-    while config_key in config:
+    for config_key in extract_domain_configs(config, domain):
         platform_config = config[config_key]
         if not isinstance(platform_config, list):
             platform_config = [platform_config]
@@ -93,3 +91,9 @@ def config_per_platform(config, domain, logger):
 
         found += 1
         config_key = "{} {}".format(domain, found)
+
+
+def extract_domain_configs(config, domain):
+    """ Extract keys from config for given domain name. """
+    pattern = re.compile(r'^{}(| .+)$'.format(domain))
+    return (key for key in config.keys() if pattern.match(key))

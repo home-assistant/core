@@ -1,38 +1,11 @@
 """
 homeassistant.components.device_tracker.luci
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Device tracker platform that supports scanning a OpenWRT router for device
 presence.
 
-
-It's required that the luci RPC package is installed on the OpenWRT router:
-# opkg install luci-mod-rpc
-
-Configuration:
-
-To use the Luci tracker you will need to add something like the following
-to your config/configuration.yaml
-
-device_tracker:
-  platform: luci
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.luci.html
 """
 import logging
 import json
@@ -66,7 +39,8 @@ def get_scanner(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class LuciDeviceScanner(object):
-    """ This class queries a wireless router running OpenWrt firmware
+    """
+    This class queries a wireless router running OpenWrt firmware
     for connected devices. Adapted from Tomato scanner.
 
     # opkg install luci-mod-rpc
@@ -95,8 +69,9 @@ class LuciDeviceScanner(object):
         self.success_init = self.token is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
 
         self._update_info()
 
@@ -124,8 +99,10 @@ class LuciDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the Luci router is up to date.
-            Returns boolean if scanning successful. """
+        """
+        Ensures the information from the Luci router is up to date.
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
@@ -179,6 +156,6 @@ def _req_json_rpc(url, method, *args, **kwargs):
 
 
 def _get_token(host, username, password):
-    """ Get authentication token for the given host+username+password """
+    """ Get authentication token for the given host+username+password. """
     url = 'http://{}/cgi-bin/luci/rpc/auth'.format(host)
     return _req_json_rpc(url, 'login', username, password)
