@@ -37,7 +37,12 @@ LOGGER_LOGS = 'logs'
 
 
 class HomeAssistantLogFilter(logging.Filter):
+    """A Home Assistant log filter"""
+    # pylint: disable=no-init,too-few-public-methods
+
     def __init__(self, logfilter):
+        super().__init__()
+
         self.logfilter = logfilter
 
     def filter(self, record):
@@ -66,14 +71,20 @@ def setup(hass, config=None):
     # Set default log severity
     logfilter[LOGGER_DEFAULT] = LOGSEVERITY['debug'.upper()]
     if LOGGER_DEFAULT in loggerconfig:
-        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[loggerconfig[LOGGER_DEFAULT].upper()]
+        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[
+            loggerconfig[LOGGER_DEFAULT].upper()
+        ]
 
     # Compute logseverity for components
     if LOGGER_LOGS in loggerconfig:
         for key, value in loggerconfig[LOGGER_LOGS].items():
             loggerconfig[LOGGER_LOGS][key] = LOGSEVERITY[value.upper()]
 
-        logs = sorted(loggerconfig[LOGGER_LOGS].items(), key=lambda t: t[0], reverse=True)
+        logs = sorted(
+            loggerconfig[LOGGER_LOGS].items(),
+            key=lambda t: t[0],
+            reverse=True
+        )
         logfilter[LOGGER_LOGS] = logs
 
     # Set log filter for all log handler
