@@ -93,9 +93,8 @@ omit =
     homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
-    homeassistant/components/thermostat/nest.py
     homeassistant/components/thermostat/honeywell_round_connected.py
-
+    homeassistant/components/thermostat/nest.py
 
 
 [report]
