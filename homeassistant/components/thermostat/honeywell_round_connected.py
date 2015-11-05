@@ -7,13 +7,14 @@ import socket
 import logging
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
+logger=logging.getLogger(__name__)
 
 REQUIREMENTS = ['evohomeclient==0.2.3']
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the nest thermostat. """
+    """ Sets up the honeywel thermostat. """
     logger = logging.getLogger(__name__)
 
     username = config.get(CONF_USERNAME)
@@ -57,7 +58,7 @@ class RoundThermostat(ThermostatDevice):
 
     @property
     def name(self):
-        """ Returns the name of the nest, if any. """
+        """ Returns the name of the honeywell, if any. """
         return self._name
 
     @property
@@ -91,8 +92,12 @@ class RoundThermostat(ThermostatDevice):
         return True
 
     def update(self):
-        for dev in self.device.temperatures(force_refresh=True):
-            self._current_temperature = dev['temp']
-            self._target_temperature = dev['setpoint']
-            self._name = dev['name']
-            self._sensorid = dev['id']
+        try:
+            # assuming I am only receiving one temperature sensor from the api..
+            _device = next(self.device.temperatures(force_refresh=True))
+            self._current_temperature = _device['temp']
+            self._target_temperature = _device['setpoint']
+            self._name = _device['name']
+            self._sensorid = _device['id']
+        except StopIteration:
+            logger.error("Did not receive any temperature data from the evohomeclient api.")
