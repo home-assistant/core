@@ -17,6 +17,7 @@ logger:
 
 """
 import logging
+from collections import OrderedDict
 
 DOMAIN = 'logger'
 DEPENDENCIES = []
@@ -49,9 +50,8 @@ class HomeAssistantLogFilter(logging.Filter):
 
         # Log with filterd severity
         if LOGGER_LOGS in self.logfilter:
-            for keyvalue in self.logfilter[LOGGER_LOGS]:
-                filtername = keyvalue[0]
-                logseverity = keyvalue[1]
+            for filtername in self.logfilter[LOGGER_LOGS]:
+                logseverity = self.logfilter[LOGGER_LOGS][filtername]
                 if record.name.startswith(filtername):
                     return record.levelno >= logseverity
 
@@ -63,33 +63,32 @@ class HomeAssistantLogFilter(logging.Filter):
 def setup(hass, config=None):
     """ Setup the logger component. """
 
-    root_logger = logging.getLogger()
-
-    loggerconfig = config.get(DOMAIN)
     logfilter = dict()
 
     # Set default log severity
-    logfilter[LOGGER_DEFAULT] = LOGSEVERITY['debug'.upper()]
-    if LOGGER_DEFAULT in loggerconfig:
+    logfilter[LOGGER_DEFAULT] = LOGSEVERITY['DEBUG']
+    if LOGGER_DEFAULT in config.get(DOMAIN):
         logfilter[LOGGER_DEFAULT] = LOGSEVERITY[
-            loggerconfig[LOGGER_DEFAULT].upper()
+            config.get(DOMAIN)[LOGGER_DEFAULT].upper()
         ]
 
     # Compute logseverity for components
-    if LOGGER_LOGS in loggerconfig:
-        for key, value in loggerconfig[LOGGER_LOGS].items():
-            loggerconfig[LOGGER_LOGS][key] = LOGSEVERITY[value.upper()]
+    if LOGGER_LOGS in config.get(DOMAIN):
+        for key, value in config.get(DOMAIN)[LOGGER_LOGS].items():
+            config.get(DOMAIN)[LOGGER_LOGS][key] = LOGSEVERITY[value.upper()]
 
-        logs = sorted(
-            loggerconfig[LOGGER_LOGS].items(),
-            key=lambda t: t[0],
-            reverse=True
+        logs = OrderedDict(
+            sorted(
+                config.get(DOMAIN)[LOGGER_LOGS].items(),
+                key=lambda t: len(t[0]),
+                reverse=True
+            )
         )
+
         logfilter[LOGGER_LOGS] = logs
 
     # Set log filter for all log handler
     for handler in logging.root.handlers:
         handler.addFilter(HomeAssistantLogFilter(logfilter))
-        root_logger.info(logfilter)
 
     return True
