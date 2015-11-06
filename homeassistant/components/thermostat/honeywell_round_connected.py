@@ -53,7 +53,6 @@ class RoundThermostat(ThermostatDevice):
         self._current_temperature = None
         self._target_temperature = None
         self._name = "round connected"
-        self._sensorid = None
         self.update()
 
     @property
@@ -98,6 +97,5 @@ class RoundThermostat(ThermostatDevice):
             self._current_temperature = _device['temp']
             self._target_temperature = _device['setpoint']
             self._name = _device['name']
-            self._sensorid = _device['id']
         except StopIteration:
             logger.error("Did not receive any temperature data from the evohomeclient api.")
