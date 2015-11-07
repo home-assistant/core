@@ -109,8 +109,9 @@ DISCOVERY_PLATFORMS = {
 
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
-    'color_xy': ATTR_XY_COLOR,
     'color_temp': ATTR_COLOR_TEMP,
+    'rgb_color': ATTR_RGB_COLOR,
+    'xy_color': ATTR_XY_COLOR,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -263,28 +264,17 @@ def setup(hass, config):
 
                 if len(rgb_color) == 3:
                     params[ATTR_RGB_COLOR] = [int(val) for val in rgb_color]
-                    params[ATTR_XY_COLOR] = \
-                        color_util.color_RGB_to_xy(int(rgb_color[0]),
-                                                   int(rgb_color[1]),
-                                                   int(rgb_color[2]))
 
             except (TypeError, ValueError):
                 # TypeError if rgb_color is not iterable
                 # ValueError if not all values can be converted to int
                 pass
 
-        if ATTR_FLASH in dat:
-            if dat[ATTR_FLASH] == FLASH_SHORT:
-                params[ATTR_FLASH] = FLASH_SHORT
+        if dat.get(ATTR_FLASH) in (FLASH_SHORT, FLASH_LONG):
+            params[ATTR_FLASH] = dat[ATTR_FLASH]
 
-            elif dat[ATTR_FLASH] == FLASH_LONG:
-                params[ATTR_FLASH] = FLASH_LONG
-
-        if ATTR_EFFECT in dat:
-            if dat[ATTR_EFFECT] == EFFECT_COLORLOOP:
-                params[ATTR_EFFECT] = EFFECT_COLORLOOP
-            if dat[ATTR_EFFECT] == EFFECT_WHITE:
-                params[ATTR_EFFECT] = EFFECT_WHITE
+        if dat.get(ATTR_EFFECT) in (EFFECT_COLORLOOP, EFFECT_WHITE):
+            params[ATTR_EFFECT] = dat[ATTR_EFFECT]
 
         for light in target_lights:
             light.turn_on(**params)
@@ -315,8 +305,13 @@ class Light(ToggleEntity):
         return None
 
     @property
-    def color_xy(self):
+    def xy_color(self):
         """ XY color value [float, float]. """
+        return None
+
+    @property
+    def rgb_color(self):
+        """ RGB color value [int, int, int] """
         return None
 
     @property
@@ -339,6 +334,12 @@ class Light(ToggleEntity):
                 value = getattr(self, prop)
                 if value:
                     data[attr] = value
+
+            if ATTR_RGB_COLOR not in data and ATTR_XY_COLOR in data and \
+               ATTR_BRIGHTNESS in data:
+                data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
+                    data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
+                    data[ATTR_BRIGHTNESS])
 
         device_attr = self.device_state_attributes
 
