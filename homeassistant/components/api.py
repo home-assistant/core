@@ -17,10 +17,10 @@ import homeassistant.remote as rem
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS,
-    URL_API_CONFIG, URL_API_BOOTSTRAP,
+    URL_API_CONFIG, URL_API_BOOTSTRAP, URL_API_VERSION,
     EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
-    HTTP_UNPROCESSABLE_ENTITY)
+    HTTP_UNPROCESSABLE_ENTITY, __version__)
 
 
 DOMAIN = 'api'
@@ -47,6 +47,9 @@ def setup(hass, config):
 
     # /api/config
     hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config)
+
+    # /api/version
+    hass.http.register_path('GET', URL_API_VERSION, _handle_get_api_version)
 
     # /api/bootstrap
     hass.http.register_path(
@@ -95,7 +98,6 @@ def setup(hass, config):
 def _handle_get_api(handler, path_match, data):
     """ Renders the debug interface. """
     handler.write_json_message("API running.")
-
 
 def _handle_get_api_stream(handler, path_match, data):
     """ Provide a streaming interface for the event bus. """
@@ -158,6 +160,11 @@ def _handle_get_api_stream(handler, path_match, data):
 def _handle_get_api_config(handler, path_match, data):
     """ Returns the Home Assistant config. """
     handler.write_json(handler.server.hass.config.as_dict())
+
+
+def _handle_get_api_version(handler, path_match, data):
+    """ Returns the Home Assistant version. """
+    handler.write_json({'version': __version__})
 
 
 def _handle_get_api_bootstrap(handler, path_match, data):
