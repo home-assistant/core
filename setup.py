@@ -9,22 +9,14 @@ DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
-# PACKAGE_DATA = \
-#     {'homeassistant.components.frontend': ['index.html.template'],
-#      'homeassistant.components.frontend.www_static': ['*.*'],
-#      'homeassistant.components.frontend.www_static.images': ['*.*'],
-#      'homeassistant.components.mqtt': ['*.crt'],
-#      'homeassistant.startup': ['*.*']}
-
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
     'pytz>=2015.4',
     'pip>=7.0.0',
-    'vincenty==0.1.2'
+    'vincenty==0.1.3'
 ]
 
-    # package_data=PACKAGE_DATA,
 setup(
     name=PACKAGE_NAME,
     version=__version__,
