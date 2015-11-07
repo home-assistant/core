@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_COMPONENT = 'component'
 
 PLATFORM_FORMAT = '{}.{}'
+ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
 def setup_component(hass, domain, config=None):
@@ -252,7 +253,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                 "Colorlog package not found, console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.path('home-assistant.log')
+    err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
 
     # Check if we can write to the error log if it exists or that
