@@ -14,13 +14,14 @@ import json
 import homeassistant.core as ha
 from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
+from homeassistant.bootstrap import ERROR_LOG_FILENAME
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS,
-    URL_API_CONFIG, URL_API_BOOTSTRAP,
+    URL_API_CONFIG, URL_API_BOOTSTRAP, URL_API_ERROR_LOG,
     EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
-    HTTP_UNPROCESSABLE_ENTITY)
+    HTTP_UNPROCESSABLE_ENTITY, CONTENT_TYPE_TEXT_PLAIN)
 
 
 DOMAIN = 'api'
@@ -88,6 +89,9 @@ def setup(hass, config):
     # /components
     hass.http.register_path(
         'GET', URL_API_COMPONENTS, _handle_get_api_components)
+
+    hass.http.register_path('GET', URL_API_ERROR_LOG,
+                            _handle_get_api_error_log)
 
     return True
 
@@ -339,6 +343,13 @@ def _handle_get_api_components(handler, path_match, data):
     """ Returns all the loaded components. """
 
     handler.write_json(handler.server.hass.config.components)
+
+
+def _handle_get_api_error_log(handler, path_match, data):
+    """ Returns the logged errors for this session. """
+    error_path = handler.server.hass.config.path(ERROR_LOG_FILENAME)
+    with open(error_path, 'rb') as error_log:
+        handler.write_file_pointer(CONTENT_TYPE_TEXT_PLAIN, error_log)
 
 
 def _services_json(hass):
