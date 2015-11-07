@@ -27,10 +27,21 @@ COMMAND_CLASS_SENSOR_BINARY = 48
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
 COMMAND_CLASS_BATTERY = 128
 
-# list of tuple (DOMAIN, discovered service, supported command classes)
+GENRE_WHATEVER = None
+GENRE_USER = "User"
+
+TYPE_WHATEVER = None
+TYPE_BYTE = "Byte"
+TYPE_BOOL = "Bool"
+
+# list of tuple (DOMAIN, discovered service, supported command
+# classes, value type)
 DISCOVERY_COMPONENTS = [
-    ('sensor', DISCOVER_SENSORS,
-     [COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL]),
+    ('sensor',
+     DISCOVER_SENSORS,
+     [COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL],
+     TYPE_WHATEVER,
+     GENRE_WHATEVER),
 ]
 
 ATTR_NODE_ID = "node_id"
@@ -110,19 +121,31 @@ def setup(hass, config):
 
     def value_added(node, value):
         """ Called when a value is added to a node on the network. """
-        for component, discovery_service, command_ids in DISCOVERY_COMPONENTS:
-            if value.command_class in command_ids:
-                # Ensure component is loaded
-                bootstrap.setup_component(hass, component, config)
 
-                # Fire discovery event
-                hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                    ATTR_SERVICE: discovery_service,
-                    ATTR_DISCOVERED: {
-                        ATTR_NODE_ID: node.node_id,
-                        ATTR_VALUE_ID: value.value_id,
-                    }
-                })
+        for (component,
+             discovery_service,
+             command_ids,
+             value_type,
+             value_genre) in DISCOVERY_COMPONENTS:
+
+            if value.command_class not in command_ids:
+                continue
+            if value_type is not None and value_type != value.type:
+                continue
+            if value_genre is not None and value_genre != value.genre:
+                continue
+
+            # Ensure component is loaded
+            bootstrap.setup_component(hass, component, config)
+
+            # Fire discovery event
+            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
+                ATTR_SERVICE: discovery_service,
+                ATTR_DISCOVERED: {
+                    ATTR_NODE_ID: node.node_id,
+                    ATTR_VALUE_ID: value.value_id,
+                }
+            })
 
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
