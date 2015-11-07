@@ -99,6 +99,7 @@ def _handle_get_api(handler, path_match, data):
     """ Renders the debug interface. """
     handler.write_json_message("API running.")
 
+
 def _handle_get_api_stream(handler, path_match, data):
     """ Provide a streaming interface for the event bus. """
     gracefully_closed = False
