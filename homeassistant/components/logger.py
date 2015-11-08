@@ -8,14 +8,16 @@ https://home-assistant.io/components/logger.html
 
 Sample configuration
 
-# By default log all messages and ignore log event lowest than critical for custom omponents
+# By default log all messages and ignore log event lowest than critical
+# for custom omponents
 logger:
   default: info
   logs:
     homeassistant.components.device_tracker: critical
     homeassistant.components.camera: critical
 
-# By default ignore all messages lowest than critical and log event for custom components
+# By default ignore all messages lowest than critical and log event
+# for custom components
 logger:
   default: critical
   logs:
