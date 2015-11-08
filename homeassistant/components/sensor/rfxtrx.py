@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     rfxtrx.RFX_DEVICES[entity_id] = new_sensor
                     add_devices_callback([new_sensor])
             else:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "EntityID: %s sensor_update",
                     entity_id,
                 )
