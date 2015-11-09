@@ -61,6 +61,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         # Check if entity exists or previously added automatically
         if entity_id in rfxtrx.RFX_DEVICES:
+            _LOGGER.debug(
+                "EntityID: %s switch_update. Command: %s",
+                entity_id,
+                event.values['Command']
+            )
             if event.values['Command'] == 'On'\
                     or event.values['Command'] == 'Off':
                 if event.values['Command'] == 'On':
