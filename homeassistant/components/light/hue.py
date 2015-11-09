@@ -5,18 +5,21 @@ Support for Hue lights.
 
 https://home-assistant.io/components/light.hue.html
 """
+import json
 import logging
+import os
 import socket
 from datetime import timedelta
 from urllib.parse import urlparse
 
 from homeassistant.loader import get_component
 import homeassistant.util as util
+import homeassistant.util.color as color_util
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
     ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
-    ATTR_EFFECT, EFFECT_COLORLOOP)
+    ATTR_EFFECT, EFFECT_COLORLOOP, ATTR_RGB_COLOR)
 
 REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -30,20 +33,36 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
+def _find_host_from_config(hass):
+    """ Attempt to detect host based on existing configuration. """
+    path = hass.config.path(PHUE_CONFIG_FILE)
+
+    if not os.path.isfile(path):
+        return None
+
+    try:
+        with open(path) as inp:
+            return next(json.loads(''.join(inp)).keys().__iter__())
+    except (ValueError, AttributeError, StopIteration):
+        # ValueError if can't parse as JSON
+        # AttributeError if JSON value is not a dict
+        # StopIteration if no keys
+        return None
+
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
-    try:
-        # pylint: disable=unused-variable
-        import phue  # noqa
-    except ImportError:
-        _LOGGER.exception("Error while importing dependency phue.")
-
-        return
-
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
         host = config.get(CONF_HOST, None)
+
+        if host is None:
+            host = _find_host_from_config(hass)
+
+        if host is None:
+            _LOGGER.error('No host found in configuration')
+            return False
 
     # Only act if we are not already configuring this host
     if host in _CONFIGURING:
@@ -165,7 +184,7 @@ class HueLight(Light):
         return self.info['state']['bri']
 
     @property
-    def color_xy(self):
+    def xy_color(self):
         """ XY color value. """
         return self.info['state'].get('xy')
 
@@ -195,6 +214,9 @@ class HueLight(Light):
 
         if ATTR_XY_COLOR in kwargs:
             command['xy'] = kwargs[ATTR_XY_COLOR]
+        elif ATTR_RGB_COLOR in kwargs:
+            command['xy'] = color_util.color_RGB_to_xy(
+                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
 
         if ATTR_COLOR_TEMP in kwargs:
             command['ct'] = kwargs[ATTR_COLOR_TEMP]
