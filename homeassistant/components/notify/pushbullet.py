@@ -4,7 +4,7 @@ homeassistant.components.notify.pushbullet
 PushBullet platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.pushbullet.html
+https://home-assistant.io/components/notify.pushbullet/
 """
 import logging
 

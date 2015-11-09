@@ -4,7 +4,7 @@ homeassistant.components.notify.file
 File notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.file.html
+https://home-assistant.io/components/notify.file/
 """
 import logging
 import os

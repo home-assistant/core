@@ -4,7 +4,7 @@ homeassistant.components.notify.nma
 NMA (Notify My Android) notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.nma.html
+https://home-assistant.io/components/notify.nma/
 """
 import logging
 import xml.etree.ElementTree as ET
