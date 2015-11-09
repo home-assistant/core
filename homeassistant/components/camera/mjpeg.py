@@ -58,11 +58,11 @@ class MjpegCamera(Camera):
             with closing(requests.get(self._mjpeg_url,
                                       auth=HTTPBasicAuth(self._username,
                                                          self._password),
-                         stream=True)) as response:
+                                      stream=True)) as response:
                 return process_response(response)
         else:
             with closing(requests.get(self._mjpeg_url,
-                         stream=True)) as response:
+                                      stream=True)) as response:
                 return process_response(response)
 
     @property
