@@ -4,7 +4,7 @@ homeassistant.components.switch.tellstick
 Support for Tellstick switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tellstick.html
+https://home-assistant.io/components/switch.tellstick/
 """
 import logging
 

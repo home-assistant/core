@@ -4,7 +4,7 @@ homeassistant.components.sensor.vera
 Support for Vera sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.vera.html
+https://home-assistant.io/components/sensor.vera/
 """
 import logging
 from requests.exceptions import RequestException

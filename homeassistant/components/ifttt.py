@@ -4,7 +4,7 @@ homeassistant.components.ifttt
 This component enable you to trigger Maker IFTTT recipes.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ifttt.html
+https://home-assistant.io/components/ifttt/
 """
 import logging
 import requests

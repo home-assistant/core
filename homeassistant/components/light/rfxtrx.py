@@ -4,7 +4,7 @@ homeassistant.components.light.rfxtrx
 Support for RFXtrx lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rfxtrx.html
+https://home-assistant.io/components/light.rfxtrx/
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx

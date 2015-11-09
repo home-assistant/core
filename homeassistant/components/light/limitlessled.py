@@ -1,18 +1,10 @@
 """
 homeassistant.components.light.limitlessled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for LimitlessLED bulbs.
 
-Support for LimitlessLED bulbs, also known as...
-
-- EasyBulb
-- AppLight
-- AppLamp
-- MiLight
-- LEDme
-- dekolight
-- iLight
-
-https://home-assistant.io/components/light.limitlessled.html
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.limitlessled/
 """
 import logging
 

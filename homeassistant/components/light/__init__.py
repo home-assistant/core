@@ -1,56 +1,11 @@
 """
 homeassistant.components.light
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with lights.
 
-It offers the following services:
-
-TURN_OFF - Turns one or multiple lights off.
-
-Supports following parameters:
- - transition
-   Integer that represents the time the light should take to transition to
-   the new state.
- - entity_id
-   String or list of strings that point at entity_ids of lights.
-
-TURN_ON - Turns one or multiple lights on and change attributes.
-
-Supports following parameters:
- - transition
-   Integer that represents the time the light should take to transition to
-   the new state.
-
- - entity_id
-   String or list of strings that point at entity_ids of lights.
-
- - profile
-   String with the name of one of the built-in profiles (relax, energize,
-   concentrate, reading) or one of the custom profiles defined in
-   light_profiles.csv in the current working directory.
-
-   Light profiles define a xy color and a brightness.
-
-   If a profile is given and a brightness or xy color then the profile values
-   will be overwritten.
-
- - xy_color
-   A list containing two floats representing the xy color you want the light
-   to be.
-
- - rgb_color
-   A list containing three integers representing the xy color you want the
-   light to be.
-
- - color_temp
-   An INT in mireds represending the color temperature you want the light to be
-
- - brightness
-   Integer between 0 and 255 representing how bright you want the light to be.
-
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/light/
 """
-
 import logging
 import os
 import csv

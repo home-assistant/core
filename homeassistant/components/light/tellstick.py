@@ -4,7 +4,7 @@ homeassistant.components.light.tellstick
 Support for Tellstick lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tellstick.html
+https://home-assistant.io/components/light.tellstick/
 """
 import logging
 # pylint: disable=no-name-in-module, import-error

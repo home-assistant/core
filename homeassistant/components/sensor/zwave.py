@@ -3,8 +3,8 @@ homeassistant.components.sensor.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Z-Wave sensors.
 
-For more details about the zwave component, please refer to the documentation
-at https://home-assistant.io/components/zwave.html
+For more details about this platform, please refer to the documentation
+at https://home-assistant.io/components/zwave/
 """
 # pylint: disable=import-error
 from homeassistant.helpers.event import track_point_in_time
