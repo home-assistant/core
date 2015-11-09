@@ -1,8 +1,10 @@
 """
 homeassistant.components.notify
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to notify people.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/notify/
 """
 from functools import partial
 import logging
