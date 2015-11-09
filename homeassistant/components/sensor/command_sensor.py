@@ -4,7 +4,7 @@ homeassistant.components.sensor.command_sensor
 Allows to configure custom shell commands to turn a value for a sensor.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.command_sensor.html
+https://home-assistant.io/components/sensor.command_sensor/
 """
 import logging
 import subprocess

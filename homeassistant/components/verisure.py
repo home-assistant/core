@@ -4,7 +4,7 @@ components.verisure
 Provides support for verisure components.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/verisure.html
+https://home-assistant.io/components/verisure/
 """
 import logging
 from datetime import timedelta

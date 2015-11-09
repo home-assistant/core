@@ -4,7 +4,7 @@ homeassistant.components.switch.transmission
 Enable or disable Transmission BitTorrent client Turtle Mode.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.transmission.html
+https://home-assistant.io/components/switch.transmission/
 """
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import STATE_ON, STATE_OFF

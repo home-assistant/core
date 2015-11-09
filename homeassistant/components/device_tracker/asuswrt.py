@@ -4,32 +4,8 @@ homeassistant.components.device_tracker.asuswrt
 Device tracker platform that supports scanning a ASUSWRT router for device
 presence.
 
-This device tracker needs telnet to be enabled on the router.
-
-Configuration:
-
-To use the ASUSWRT tracker you will need to add something like the following
-to your configuration.yaml file.
-
-device_tracker:
-  platform: asuswrt
-  host: YOUR_ROUTER_IP
-  username: YOUR_ADMIN_USERNAME
-  password: YOUR_ADMIN_PASSWORD
-
-Variables:
-
-host
-*Required
-The IP address of your router, e.g. 192.168.1.1.
-
-username
-*Required
-The username of an user with administrative privileges, usually 'admin'.
-
-password
-*Required
-The password for your given admin account.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.asuswrt/
 """
 import logging
 from datetime import timedelta

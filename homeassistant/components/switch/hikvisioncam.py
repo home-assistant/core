@@ -4,7 +4,7 @@ homeassistant.components.switch.hikvision
 Support turning on/off motion detection on Hikvision cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hikvision.html
+https://home-assistant.io/components/switch.hikvision/
 """
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import STATE_ON, STATE_OFF

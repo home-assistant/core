@@ -3,8 +3,8 @@ homeassistant.components.zone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows defintion of zones in Home Assistant.
 
-For configuration details please visit the documentation for this component at
-https://home-assistant.io/components/zone.html
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/zone/
 """
 import logging
 

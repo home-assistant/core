@@ -4,7 +4,7 @@ homeassistant.components.sensor.glances
 Gathers system information of hosts which running glances.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.glances.html
+https://home-assistant.io/components/sensor.glances/
 """
 import logging
 import requests

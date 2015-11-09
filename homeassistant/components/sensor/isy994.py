@@ -4,7 +4,7 @@ homeassistant.components.sensor.isy994
 Support for ISY994 sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/isy994.html
+https://home-assistant.io/components/isy994/
 """
 import logging
 

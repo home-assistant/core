@@ -5,7 +5,7 @@ The Swiss public transport sensor will give you the next two departure times
 from a given location to another one. This sensor is limited to Switzerland.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.swiss_public_transport.html
+https://home-assistant.io/components/sensor.swiss_public_transport/
 """
 import logging
 from datetime import timedelta

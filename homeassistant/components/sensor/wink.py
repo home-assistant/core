@@ -3,8 +3,8 @@ homeassistant.components.sensor.wink
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Wink sensors.
 
-For more details about the wink component, please refer to the documentation
-at https://home-assistant.io/components/sensor.wink.html
+For more details about this platform, please refer to the documentation at
+at https://home-assistant.io/components/sensor.wink/
 """
 import logging
 
