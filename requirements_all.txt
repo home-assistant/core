@@ -150,3 +150,6 @@ py-cpuinfo==0.1.6
 
 # Radio Thermostat (thermostat.radiotherm)
 radiotherm==1.2
+
+# Honeywell Evo Home Client
+evohomeclient==0.2.3
