@@ -24,7 +24,8 @@ import homeassistant.bootstrap as bootstrap
 from homeassistant.const import (
     SERVER_PORT, HTTP_HEADER_HA_AUTH, URL_API, URL_API_STATES,
     URL_API_STATES_ENTITY, URL_API_EVENTS, URL_API_EVENTS_EVENT,
-    URL_API_SERVICES, URL_API_SERVICES_SERVICE, URL_API_EVENT_FORWARD)
+    URL_API_SERVICES, URL_API_SERVICES_SERVICE, URL_API_EVENT_FORWARD,
+    URL_API_VERSION)
 
 METHOD_GET = "get"
 METHOD_POST = "post"
@@ -296,6 +297,20 @@ def validate_api(api):
 
     except HomeAssistantError:
         return APIStatus.CANNOT_CONNECT
+
+
+def get_version(api):
+    """ Returns the Home Assistant version. """
+    try:
+        req = api(METHOD_GET, URL_API_VERSION)
+
+        return req.json() if req.status_code == 200 else {}
+
+    except (HomeAssistantError, ValueError):
+        # ValueError if req.json() can't parse the json
+        _LOGGER.exception("Unexpected result retrieving version")
+
+        return {}
 
 
 def connect_remote_events(from_api, to_api):
