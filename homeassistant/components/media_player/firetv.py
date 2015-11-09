@@ -4,7 +4,7 @@ homeassistant.components.media_player.firetv
 Provides functionality to interact with FireTV devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.firetv.html
+https://home-assistant.io/components/media_player.firetv/
 """
 import logging
 import requests

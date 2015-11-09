@@ -4,7 +4,7 @@ homeassistant.components.sensor.tellstick
 Shows sensor values from Tellstick sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tellstick.html
+https://home-assistant.io/components/sensor.tellstick/
 """
 import logging
 from collections import namedtuple

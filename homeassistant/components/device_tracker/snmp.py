@@ -5,7 +5,7 @@ Device tracker platform that supports fetching WiFi associations
 through SNMP.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.snmp.html
+https://home-assistant.io/components/device_tracker.snmp/
 """
 import logging
 from datetime import timedelta

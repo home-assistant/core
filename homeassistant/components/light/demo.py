@@ -1,7 +1,6 @@
 """
 homeassistant.components.light.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Demo platform that implements lights.
 
 """

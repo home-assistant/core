@@ -3,7 +3,8 @@ homeassistant.components.light.hue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Hue lights.
 
-https://home-assistant.io/components/light.hue.html
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.hue/
 """
 import json
 import logging
