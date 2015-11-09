@@ -151,6 +151,7 @@ URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
 URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
 URL_API_BOOTSTRAP = "/api/bootstrap"
+URL_API_ERROR_LOG = "/api/error_log"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -173,3 +174,4 @@ HTTP_HEADER_EXPIRES = "Expires"
 
 CONTENT_TYPE_JSON = "application/json"
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
+CONTENT_TYPE_TEXT_PLAIN = 'text/plain'
