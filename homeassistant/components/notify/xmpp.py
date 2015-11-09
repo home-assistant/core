@@ -50,6 +50,7 @@ class XmppNotificationService(BaseNotificationService):
 
 
 def send_message(sender, password, recipient, message):
+    """ Send a message over XMPP. """
     import sleekxmpp
 
     class SendNotificationBot(sleekxmpp.ClientXMPP):
@@ -78,4 +79,4 @@ def send_message(sender, password, recipient, message):
             """" Disconnect from the server if credentials are invalid. """
             self.disconnect()
 
-    SendNotificationBot(sender, password, recipient, message)
+    SendNotificationBot()
