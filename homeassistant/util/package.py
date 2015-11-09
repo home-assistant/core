@@ -32,8 +32,8 @@ def install_package(package, upgrade=True, target=None):
             return False
 
 
-def check_package_exists(package, target):
-    """Check if a package exists.
+def check_package_exists(package, lib_dir):
+    """Check if a package is installed globally or in lib_dir.
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req."""
     try:
@@ -42,5 +42,11 @@ def check_package_exists(package, target):
         # This is a zip file
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
-    return any(dist in req for dist in
-               pkg_resources.find_distributions(target))
+    # Check packages from lib dir
+    if lib_dir is not None:
+        if any(dist in req for dist in
+               pkg_resources.find_distributions(lib_dir)):
+            return True
+
+    # Check packages from global + virtual environment
+    return any(dist in req for dist in pkg_resources.working_set)
