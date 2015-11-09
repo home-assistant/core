@@ -24,12 +24,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # Add switch from config file
     switchs = []
     devices = config.get('devices')
+
     if devices:
         for entity_id, entity_info in devices.items():
             if entity_id not in rfxtrx.RFX_DEVICES:
                 _LOGGER.info("Add %s rfxtrx.switch", entity_info['name'])
+
+                pushbutton = entity_info[rfxtrx.CONF_PUSHBUTTON] \
+                    if rfxtrx.CONF_PUSHBUTTON in entity_info else False
+                datas = {'state': False, rfxtrx.CONF_PUSHBUTTON: pushbutton}
+
                 rfxobject = rfxtrx.get_rfx_object(entity_info['packetid'])
-                newswitch = RfxtrxSwitch(entity_info['name'], rfxobject, False)
+                newswitch = RfxtrxSwitch(entity_info['name'], rfxobject, datas)
                 rfxtrx.RFX_DEVICES[entity_id] = newswitch
                 switchs.append(newswitch)
 
@@ -80,10 +86,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class RfxtrxSwitch(SwitchDevice):
     """ Provides a RFXtrx switch. """
-    def __init__(self, name, event, state):
+    def __init__(self, name, event, datas):
         self._name = name
         self._event = event
-        self._state = state
+        self._state = datas['state']
+        self._pushbutton = datas[rfxtrx.CONF_PUSHBUTTON]
 
     @property
     def should_poll(self):
@@ -106,7 +113,7 @@ class RfxtrxSwitch(SwitchDevice):
             self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
 
         self._state = True
-        self.update_ha_state()
+        self.update_ha_state(forceevent=self._pushbutton)
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
@@ -114,4 +121,4 @@ class RfxtrxSwitch(SwitchDevice):
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
         self._state = False
-        self.update_ha_state()
+        self.update_ha_state(forceevent=self._pushbutton)
