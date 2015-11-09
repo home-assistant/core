@@ -48,7 +48,7 @@ class MjpegCamera(Camera):
             opener = urllib.request.build_opener(handler)
             urllib.request.install_opener(opener)
 
-        stream=urllib.request.urlopen(self._mjpeg_url)
+        stream = urllib.request.urlopen(self._mjpeg_url)
         charset = stream.headers.get_param('charset')
         bytes = b''
         while True:
