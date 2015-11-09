@@ -208,11 +208,13 @@ def _handle_post_state_entity(handler, path_match, data):
         return
 
     attributes = data['attributes'] if 'attributes' in data else None
+    forceevent = data['forceevent'] if 'forceevent' in data else False
 
     is_new_state = handler.server.hass.states.get(entity_id) is None
 
     # Write state
-    handler.server.hass.states.set(entity_id, new_state, attributes)
+    handler.server.hass.states.set(
+        entity_id, new_state, attributes, forceevent)
 
     state = handler.server.hass.states.get(entity_id)
 

@@ -83,7 +83,7 @@ class Entity(object):
     hass = None
     entity_id = None
 
-    def update_ha_state(self, force_refresh=False):
+    def update_ha_state(self, force_refresh=False, forceevent=False):
         """
         Updates Home Assistant with current state of entity.
         If force_refresh == True will update entity before setting state.
@@ -129,7 +129,7 @@ class Entity(object):
                     state, attr[ATTR_UNIT_OF_MEASUREMENT])
             state = str(state)
 
-        return self.hass.states.set(self.entity_id, state, attr)
+        return self.hass.states.set(self.entity_id, state, attr, forceevent)
 
     def __eq__(self, other):
         return (isinstance(other, Entity) and
