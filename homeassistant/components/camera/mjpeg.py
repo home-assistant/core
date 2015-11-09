@@ -44,6 +44,7 @@ class MjpegCamera(Camera):
         """ Return a still image reponse from the camera. """
 
         def process_response(response):
+            """ Take in a response obj, return the jpg from it. """
             data = b''
             for chunk in response.iter_content(1024):
                 data += chunk
@@ -54,12 +55,14 @@ class MjpegCamera(Camera):
                     return jpg
 
         if self._username and self._password:
-            with closing(requests.get(self._mjpeg_url, auth = HTTPBasicAuth(
-                self._username, self._password), stream = True)) as response:
+            with closing(requests.get(self._mjpeg_url,
+                                      auth=HTTPBasicAuth(self._username,
+                                                         self._password),
+                         stream=True)) as response:
                 return process_response(response)
         else:
-            with closing(requests.get(self._mjpeg_url, 
-                stream = True)) as response:
+            with closing(requests.get(self._mjpeg_url,
+                         stream=True)) as response:
                 return process_response(response)
 
     @property
