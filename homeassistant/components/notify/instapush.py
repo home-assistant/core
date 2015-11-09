@@ -4,7 +4,7 @@ homeassistant.components.notify.instapush
 Instapush notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.instapush.html
+https://home-assistant.io/components/notify.instapush/
 """
 import logging
 import json

@@ -4,7 +4,7 @@ homeassistant.components.notify.smtp
 Mail (SMTP) notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.smtp.html
+https://home-assistant.io/components/notify.smtp/
 """
 import logging
 import smtplib
