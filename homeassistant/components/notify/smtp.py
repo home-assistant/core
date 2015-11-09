@@ -20,10 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(hass, config):
     """ Get the mail notification service. """
 
-    if not validate_config(
-        {DOMAIN: config},
-        {DOMAIN: ['server', 'port', 'sender', 'username', 'password',
-                  'recipient']}, _LOGGER):
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: ['server', 'port', 'sender', 'username',
+                                     'password', 'recipient']},
+                           _LOGGER):
         return None
 
     smtp_server = config['server']
