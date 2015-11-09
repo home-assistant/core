@@ -11,7 +11,8 @@ from requests.auth import HTTPBasicAuth
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera import Camera
-import urllib.request
+import requests
+from contextlib import closing
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,23 +42,23 @@ class MjpegCamera(Camera):
 
     def camera_image(self):
         """ Return a still image reponse from the camera. """
-        if self._username and self._password:
-            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, self._mjpeg_url, self._username, self._password)
-            handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-            opener = urllib.request.build_opener(handler)
-            urllib.request.install_opener(opener)
 
-        stream = urllib.request.urlopen(self._mjpeg_url)
-        charset = stream.headers.get_param('charset')
-        bytes = b''
-        while True:
-            bytes += stream.read(1024)
-            a = bytes.find(b'\xff\xd8')
-            b = bytes.find(b'\xff\xd9')
-            if a != -1 and b != -1:
-                jpg = bytes[a:b+2]
-                return jpg
+        def process_response(response):
+            data = b''
+            for chunk in response.iter_content(1024):
+                data += chunk
+                jpg_start = data.find(b'\xff\xd8')
+                jpg_end = data.find(b'\xff\xd9')
+                if jpg_start != -1 and jpg_end != -1:
+                    jpg = data[jpg_start:jpg_end + 2]
+                    return jpg
+
+        if self._username and self._password:
+            with closing(requests.get(self._mjpeg_url, auth=HTTPBasicAuth(self._username, self._password), stream=True)) as response:
+                return process_response(response)
+        else:
+            with closing(requests.get(self._mjpeg_url, stream=True)) as response:
+                return process_response(response)
 
     @property
     def name(self):
