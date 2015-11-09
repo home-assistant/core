@@ -4,7 +4,7 @@ homeassistant.components.wink
 Connects to a Wink hub and loads relevant components to control its devices.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/wink.html
+https://home-assistant.io/components/wink/
 """
 import logging
 

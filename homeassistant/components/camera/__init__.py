@@ -4,24 +4,8 @@ homeassistant.components.camera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various cameras.
 
-The following features are supported:
- - Returning recorded camera images and streams
- - Proxying image requests via HA for external access
- - Converting a still image url into a live video stream
-
-Upcoming features
- - Recording
- - Snapshot
- - Motion Detection Recording(for supported cameras)
- - Automatic Configuration(for supported cameras)
- - Creation of child entities for supported functions
- - Collating motion event images passed via FTP into time based events
- - A service for calling camera functions
- - Camera movement(panning)
- - Zoom
- - Light/Nightvision toggling
- - Support for more devices
- - Expanded documentation
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/camera/
 """
 import requests
 import logging

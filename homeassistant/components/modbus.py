@@ -4,7 +4,7 @@ homeassistant.components.modbus
 Modbus component, using pymodbus (python3 branch).
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/modbus.html
+https://home-assistant.io/components/modbus/
 """
 import logging
 

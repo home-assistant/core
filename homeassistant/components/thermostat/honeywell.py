@@ -1,7 +1,10 @@
 """
-homeassistant.components.thermostat.honeywell_round_connected
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.thermostat.honeywell
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for Honeywell Round Connected thermostats.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/thermostat.honeywell/
 """
 import socket
 import logging
@@ -76,7 +79,7 @@ class RoundThermostat(ThermostatDevice):
             data = next(self.device.temperatures(force_refresh=True))
         except StopIteration:
             _LOGGER.error("Did not receive any temperature data from the "
-                          "evohomeclient api.")
+                          "evohomeclient API.")
             return
 
         self._current_temperature = data['temp']

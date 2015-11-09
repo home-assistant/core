@@ -4,7 +4,7 @@ homeassistant.components.camera.mjpeg
 Support for IP Cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.mjpeg.html
+https://home-assistant.io/components/camera.mjpeg/
 """
 import logging
 from requests.auth import HTTPBasicAuth
@@ -41,10 +41,10 @@ class MjpegCamera(Camera):
         self._mjpeg_url = device_info['mjpeg_url']
 
     def camera_image(self):
-        """ Return a still image reponse from the camera. """
+        """ Return a still image response from the camera. """
 
         def process_response(response):
-            """ Take in a response obj, return the jpg from it. """
+            """ Take in a response object, return the jpg from it. """
             data = b''
             for chunk in response.iter_content(1024):
                 data += chunk

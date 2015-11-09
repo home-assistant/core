@@ -4,7 +4,7 @@ homeassistant.components.media_player.squeezebox
 Provides an interface to the Logitech SqueezeBox API
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.squeezebox.html
+https://home-assistant.io/components/media_player.squeezebox/
 """
 import logging
 import telnetlib

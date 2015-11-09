@@ -3,7 +3,8 @@ homeassistant.components.light.hyperion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Hyperion remotes.
 
-https://home-assistant.io/components/light.hyperion.html
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.hyperion/
 """
 import logging
 import socket

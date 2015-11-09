@@ -4,7 +4,7 @@ homeassistant.components.camera.foscam
 This component provides basic support for Foscam IP cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.foscam.html
+https://home-assistant.io/components/camera.foscam/
 """
 import logging
 from homeassistant.helpers import validate_config

@@ -4,7 +4,7 @@ homeassistant.components.switch.vera
 Support for Vera switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.vera.html
+https://home-assistant.io/components/switch.vera/
 """
 import logging
 import time

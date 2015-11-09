@@ -4,7 +4,7 @@ homeassistant.components.sensor.cpuspeed
 Shows the current CPU speed.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.cpuspeed.html
+https://home-assistant.io/components/sensor.cpuspeed/
 """
 import logging
 
