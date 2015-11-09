@@ -52,16 +52,14 @@ PRIORITIES = {5: syslog.LOG_EMERG,
 def get_service(hass, config):
     """ Get the mail notification service. """
 
-    if not validate_config(config,
-                           {DOMAIN: ['facility',
-                                     'option',
-                                     'priority']},
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: ['facility', 'option', 'priority']},
                            _LOGGER):
         return None
 
-    _facility = FACILITIES.get(config[DOMAIN]['facility'], 40)
-    _option = OPTIONS.get(config[DOMAIN]['option'], 10)
-    _priority = PRIORITIES.get(config[DOMAIN]['priority'], -1)
+    _facility = FACILITIES.get(config['facility'], 40)
+    _option = OPTIONS.get(config['option'], 10)
+    _priority = PRIORITIES.get(config['priority'], -1)
 
     return SyslogNotificationService(_facility, _option, _priority)
 
