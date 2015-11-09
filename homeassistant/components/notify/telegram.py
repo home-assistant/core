@@ -4,7 +4,7 @@ homeassistant.components.notify.telegram
 Telegram platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.telegram.html
+https://home-assistant.io/components/notify.telegram/
 """
 import logging
 import urllib
