@@ -51,8 +51,7 @@ def setup(hass, config):
             continue
 
         # create platform service
-        notify_service = notify_implementation.get_service(
-            hass, {DOMAIN: p_config})
+        notify_service = notify_implementation.get_service(hass, p_config)
 
         if notify_service is None:
             _LOGGER.error("Failed to initialize notification service %s",
