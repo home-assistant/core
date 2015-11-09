@@ -4,7 +4,7 @@ homeassistant.components.switch.wemo
 Support for WeMo switches.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.wemo.html
+https://home-assistant.io/components/switch.wemo/
 """
 import logging
 

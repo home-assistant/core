@@ -2,6 +2,9 @@
 homeassistant.components.alarm_control_panel.verisure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Verisure alarm control panel.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/verisure/
 """
 import logging
 

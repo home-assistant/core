@@ -4,7 +4,7 @@ homeassistant.components.sensor.rfxtrx
 Shows sensor values from RFXtrx sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rfxtrx.html
+https://home-assistant.io/components/sensor.rfxtrx/
 """
 import logging
 from collections import OrderedDict

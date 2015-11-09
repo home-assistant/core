@@ -4,7 +4,7 @@ homeassistant.components.media_player.sonos
 Provides an interface to Sonos players (via SoCo)
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.sonos.html
+https://home-assistant.io/components/media_player.sonos/
 """
 import logging
 import datetime

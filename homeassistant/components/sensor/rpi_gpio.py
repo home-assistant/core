@@ -4,7 +4,7 @@ homeassistant.components.sensor.rpi_gpio
 Allows to configure a binary state sensor using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rpi_gpio.html
+https://home-assistant.io/components/sensor.rpi_gpio/
 """
 import logging
 from homeassistant.helpers.entity import Entity
