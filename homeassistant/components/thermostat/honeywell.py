@@ -7,42 +7,33 @@ import socket
 import logging
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
-logger=logging.getLogger(__name__)
 
 REQUIREMENTS = ['evohomeclient==0.2.3']
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the honeywel thermostat. """
-    logger = logging.getLogger(__name__)
+    from evohomeclient import EvohomeClient
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     if username is None or password is None:
-        logger.error("Missing required configuration items %s or %s",
-                     CONF_USERNAME, CONF_PASSWORD)
-        return
-
-    try:
-        from evohomeclient import EvohomeClient
-    except ImportError:
-        logger.exception(
-            "Error while importing dependency evohomeclient. "
-            "Did you maybe not install the python evohomeclient dependency?")
-
-        return
+        _LOGGER.error("Missing required configuration items %s or %s",
+                      CONF_USERNAME, CONF_PASSWORD)
+        return False
 
     evo_api = EvohomeClient(username, password)
     try:
-        add_devices([
-            RoundThermostat(evo_api)
-        ])
+        add_devices([RoundThermostat(evo_api)])
     except socket.error:
-        logger.error(
+        _LOGGER.error(
             "Connection error logging into the honeywell evohome web service"
         )
+        return False
 
 
 class RoundThermostat(ThermostatDevice):
@@ -66,12 +57,6 @@ class RoundThermostat(ThermostatDevice):
         return TEMP_CELCIUS
 
     @property
-    def device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        # Move these to Thermostat Device and make them global
-        return {}
-
-    @property
     def current_temperature(self):
         """ Returns the current temperature. """
         return self._current_temperature
@@ -85,17 +70,15 @@ class RoundThermostat(ThermostatDevice):
         """ Set new target temperature """
         self.device.set_temperature(self._name, temperature)
 
-    @property
-    def should_poll(self):
-        """ Should poll the evohome cloud service """
-        return True
-
     def update(self):
         try:
-            # assuming I am only receiving one temperature sensor from the api..
-            _device = next(self.device.temperatures(force_refresh=True))
-            self._current_temperature = _device['temp']
-            self._target_temperature = _device['setpoint']
-            self._name = _device['name']
+            # Only take first thermostat data from API for now
+            data = next(self.device.temperatures(force_refresh=True))
         except StopIteration:
-            logger.error("Did not receive any temperature data from the evohomeclient api.")
+            _LOGGER.error("Did not receive any temperature data from the "
+                          "evohomeclient api.")
+            return
+
+        self._current_temperature = data['temp']
+        self._target_temperature = data['setpoint']
+        self._name = data['name']
