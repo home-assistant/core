@@ -1,8 +1,8 @@
 """
-homeassistant.components.switch.demo
+homeassistant.components.switch.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Demo platform that has two fake switches.
+Zwave platform that handles simple binary switches.
 """
 # pylint: disable=import-error
 from openzwave.network import ZWaveNetwork
