@@ -43,7 +43,7 @@ def _distance_squared(rgb1, rgb2):
 
 
 def _rgb_to_led_color(rgb_color):
-    """ Convert an RGB color to the closest LedController color string. """
+    """ Convert an RGB color to the closest color string and color. """
     return sorted((_distance_squared(rgb_color, color), name)
                   for name, color in COLOR_TABLE.items())[0][1]
 
@@ -128,7 +128,7 @@ class RGBWLimitlessLED(LimitlessLED):
         super().__init__(pool, controller_id, group, name, 'rgbw')
 
         self._brightness = 100
-        self._rgb_color = COLOR_TABLE['white']
+        self._led_color = 'white'
 
     @property
     def brightness(self):
@@ -136,7 +136,7 @@ class RGBWLimitlessLED(LimitlessLED):
 
     @property
     def rgb_color(self):
-        return self._rgb_color
+        return COLOR_TABLE[self._led_color]
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
@@ -146,7 +146,7 @@ class RGBWLimitlessLED(LimitlessLED):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_RGB_COLOR in kwargs:
-            self._rgb_color = _rgb_to_led_color(kwargs[ATTR_RGB_COLOR])
+            self._led_color = _rgb_to_led_color(kwargs[ATTR_RGB_COLOR])
 
         effect = kwargs.get(ATTR_EFFECT)
 
@@ -156,8 +156,7 @@ class RGBWLimitlessLED(LimitlessLED):
             self.pool.execute(self.controller_id, "white", self.group)
         else:
             self.pool.execute(self.controller_id, "set_color",
-                              self._rgb_color,
-                              self.group)
+                              self._led_color, self.group)
 
         # Brightness can be set independently of color
         self.pool.execute(self.controller_id, "set_brightness",
