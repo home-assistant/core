@@ -244,9 +244,9 @@ class StateMachine(ha.StateMachine):
 
         bus.listen(ha.EVENT_STATE_CHANGED, self._state_changed_listener)
 
-    def set(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None, forceevent=False):
         """ Calls set_state on remote API . """
-        set_state(self._api, entity_id, new_state, attributes)
+        set_state(self._api, entity_id, new_state, attributes, forceevent)
 
     def mirror(self):
         """ Discards current data and mirrors the remote state machine. """
@@ -412,7 +412,7 @@ def get_states(api):
         return []
 
 
-def set_state(api, entity_id, new_state, attributes=None):
+def set_state(api, entity_id, new_state, attributes=None, forceevent=False):
     """
     Tells API to update state for entity_id.
     Returns True if success.
@@ -421,7 +421,8 @@ def set_state(api, entity_id, new_state, attributes=None):
     attributes = attributes or {}
 
     data = {'state': new_state,
-            'attributes': attributes}
+            'attributes': attributes,
+            'forceevent': forceevent}
 
     try:
         req = api(METHOD_POST,

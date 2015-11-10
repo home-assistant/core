@@ -16,6 +16,7 @@ REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip' +
 DOMAIN = "rfxtrx"
 CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
+CONF_PUSHBUTTON = 'pushbutton'
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)

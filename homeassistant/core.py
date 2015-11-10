@@ -477,7 +477,7 @@ class StateMachine(object):
         with self._lock:
             return self._states.pop(entity_id, None) is not None
 
-    def set(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None, forceevent=False):
         """ Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -496,7 +496,7 @@ class StateMachine(object):
             same_state = is_existing and old_state.state == new_state
             same_attr = is_existing and old_state.attributes == attributes
 
-            if same_state and same_attr:
+            if not forceevent and same_state and same_attr:
                 return
 
             # If state did not exist or is different, set it
