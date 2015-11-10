@@ -69,12 +69,8 @@ class ZwaveSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        if self._node.set_switch(self._value.value_id, True):
-            self._state = True
-        self.update_ha_state()
+        self._node.set_switch(self._value.value_id, True)
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._node.set_switch(self._value.value_id, False):
-            self._state = False
-        self.update_ha_state()
+        self._node.set_switch(self._value.value_id, False)
