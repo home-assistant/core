@@ -11,7 +11,7 @@ import homeassistant.components.zwave as zwave
 
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
-from time import sleep
+from threading import Timer
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -53,35 +53,32 @@ class ZwaveDimmer(Light):
 
         # Used for value change event handling
         self._refreshing = False
-        self._expect = None
+        self._timer = None
 
         dispatcher.connect(
             self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     def _value_changed(self, value):
         """ Called when a value has changed on the network. """
-        if self._value.value_id == value.value_id:
-            # leoc: Since my multilevel switches dim slowly between
-            # brightness levels / states, the value_change event does
-            # not return the new end state, but rather the state the
-            # the switch was at, before changing. Thus we have to wait
-            # 2 seconds until the change is done...
-            if self._refreshing:
-                self._refreshing = False
-                brightness, state = brightness_state(value)
-                print("Refresh: ", brightness, ", ", state, ", ", self._expect)
-                if self._expect is None or self._expect == state:
-                    print("Is expected!")
-                    self._brightness, self._state = brightness, state
-                    self._expect = None
-                    self.update_ha_state()
-                else:
-                    print("Not expected!")
-            else:
+        if self._value.value_id != value.value_id:
+            return
+
+        if self._refreshing:
+            self._refreshing = False
+            self._brightness, self._state = brightness_state(value)
+        else:
+            def _refresh_value():
+                """Used timer callback for delayed value refresh."""
                 self._refreshing = True
-                print("Value change: sleeping")
-                sleep(2)
-                value.refresh()
+                self._value.refresh()
+
+            if self._timer is not None and self._timer.isAlive():
+                self._timer.cancel()
+
+            self._timer = Timer(2, _refresh_value)
+            self._timer.start()
+
+        self.update_ha_state()
 
     @property
     def should_poll(self):
@@ -112,21 +109,13 @@ class ZwaveDimmer(Light):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         # Zwave multilevel switches use a range of [0, 99] to control
-        # brightness ...
+        # brightness.
         brightness = (self._brightness / 255) * 99
 
-        print("Turn on", self._brightness, brightness)
-
-        self._expect = STATE_ON
         if self._node.set_dimmer(self._value.value_id, brightness):
             self._state = STATE_ON
-        self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        print("Turn off")
-
-        self._expect = STATE_OFF
         if self._node.set_dimmer(self._value.value_id, 0):
             self._state = STATE_OFF
-        self.update_ha_state()
