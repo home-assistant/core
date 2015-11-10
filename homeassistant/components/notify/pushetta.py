@@ -35,7 +35,7 @@ def get_service(hass, config):
         _LOGGER.error("Please check your access token")
         return None
     except exceptions.ChannelNotFoundError:
-        _LOGGER.exception("Channel '%s' not found", config['channel_name'])
+        _LOGGER.error("Channel '%s' not found", config['channel_name'])
         return None
 
     return PushettaNotificationService(config[CONF_API_KEY],
