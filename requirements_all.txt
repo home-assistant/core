@@ -151,5 +151,8 @@ py-cpuinfo==0.1.6
 # Radio Thermostat (thermostat.radiotherm)
 radiotherm==1.2
 
-# Honeywell Evo Home Client
+# Honeywell Evo Home Client (thermostat.honeywell)
 evohomeclient==0.2.3
+
+# Pushetta (notify.pushetta)
+pushetta==1.0.15
