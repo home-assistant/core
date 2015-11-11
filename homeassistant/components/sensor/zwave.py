@@ -31,6 +31,16 @@ DEVICE_MAPPINGS = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Z-Wave sensors. """
+
+    # Return on empty `discovery_info`. Given you configure HA with:
+    #
+    # sensor:
+    #   platform: zwave
+    #
+    # `setup_platform` will be called without `discovery_info`.
+    if discovery_info is None:
+        return
+
     node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
 
