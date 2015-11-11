@@ -108,11 +108,13 @@ class TestLightMQTT(unittest.TestCase):
 
         xy = color_util.color_RGB_to_xy(125,125,125)
 
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
+        self.hass.pool.block_till_done()
+
         fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status', '125,125,125')
         self.hass.pool.block_till_done()
 
         light_state = self.hass.states.get('light.test')
-        self.hass.pool.block_till_done()
         self.assertEqual(xy,
                          light_state.attributes['xy_color'])
         
