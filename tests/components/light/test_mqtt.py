@@ -102,6 +102,7 @@ class TestLightMQTT(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         light_state = self.hass.states.get('light.test')
+        self.hass.pool.block_till_done()
         self.assertEqual(100,
                          light_state.attributes['brightness'])
 
@@ -111,6 +112,7 @@ class TestLightMQTT(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         light_state = self.hass.states.get('light.test')
+        self.hass.pool.block_till_done()
         self.assertEqual(xy,
                          light_state.attributes['xy_color'])
         
