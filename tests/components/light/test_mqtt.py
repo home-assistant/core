@@ -104,8 +104,6 @@ class TestLightMQTT(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.assertEqual(100,
                          light_state.attributes['brightness'])
-        self.assertEqual([0, 0],
-                         light_state.attributes['xy_color'])
 
         xy = color_util.color_RGB_to_xy(125,125,125)
 
