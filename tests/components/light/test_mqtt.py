@@ -44,6 +44,7 @@ light:
   payload_off: "off"
 """
 import unittest
+import homeassistant.util.color as color_util
 
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.core as ha
@@ -93,13 +94,25 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
+        
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
+        self.hass.pool.block_till_done()
 
         fire_mqtt_message(self.hass, 'test_light_rgb/brightness/status', '100')
         self.hass.pool.block_till_done()
 
         light_state = self.hass.states.get('light.test')
         self.assertEqual(100,
-                         light_state.attributes)
+                         light_state.attributes['brightness'])
+        self.assertEqual([0, 0],
+                         light_state.attributes['xy_color'])
+        xy = color_util.color_RGB_to_xy(125,125,125) 
+        fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status', '125,125,125')
+        self.hass.pool.block_till_done()
+
+        light_state = self.hass.states.get('light.test')
+        self.assertEqual(xy,
+                         light_state.attributes['xy_color'])
         
     def test_sending_mqtt_commands_and_optimistic(self):
         self.assertTrue(light.setup(self.hass, {
