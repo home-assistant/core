@@ -1,30 +1,10 @@
 """
 homeassistant.components.logger
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Component that will help guide the user taking its first steps.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Component that will help set the level of logging for components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logger/
-
-Sample configuration
-
-# By default log all messages and ignore log event lowest than critical
-# for custom omponents
-logger:
-  default: info
-  logs:
-    homeassistant.components.device_tracker: critical
-    homeassistant.components.camera: critical
-
-# By default ignore all messages lowest than critical and log event
-# for custom components
-logger:
-  default: critical
-  logs:
-    homeassistant.components: info
-    homeassistant.components.rfxtrx: debug
-    homeassistant.components.device_tracker: critical
-    homeassistant.components.camera: critical
 """
 import logging
 from collections import OrderedDict
@@ -48,7 +28,7 @@ LOGGER_LOGS = 'logs'
 
 
 class HomeAssistantLogFilter(logging.Filter):
-    """A Home Assistant log filter"""
+    """ A log filter. """
     # pylint: disable=no-init,too-few-public-methods
 
     def __init__(self, logfilter):
@@ -58,7 +38,7 @@ class HomeAssistantLogFilter(logging.Filter):
 
     def filter(self, record):
 
-        # Log with filterd severity
+        # Log with filtered severity
         if LOGGER_LOGS in self.logfilter:
             for filtername in self.logfilter[LOGGER_LOGS]:
                 logseverity = self.logfilter[LOGGER_LOGS][filtername]
@@ -82,7 +62,7 @@ def setup(hass, config=None):
             config.get(DOMAIN)[LOGGER_DEFAULT].upper()
         ]
 
-    # Compute logseverity for components
+    # Compute log severity for components
     if LOGGER_LOGS in config.get(DOMAIN):
         for key, value in config.get(DOMAIN)[LOGGER_LOGS].items():
             config.get(DOMAIN)[LOGGER_LOGS][key] = LOGSEVERITY[value.upper()]
