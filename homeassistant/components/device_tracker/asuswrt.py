@@ -158,13 +158,16 @@ class AsusWrtDeviceScanner(object):
         for lease in leases_result:
             match = _LEASES_REGEX.search(lease.decode('utf-8'))
 
+            if not match:
+                _LOGGER.warning("Could not parse lease row: %s", lease)
+                continue
+
             # For leases where the client doesn't set a hostname, ensure
             # it is blank and not '*', which breaks the entity_id down
             # the line
-            if match:
-                host = match.group('host')
-                if host == '*':
-                    host = ''
+            host = match.group('host')
+            if host == '*':
+                host = ''
 
             devices[match.group('ip')] = {
                 'host': host,
@@ -175,6 +178,9 @@ class AsusWrtDeviceScanner(object):
 
         for neighbor in neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
-            if match and match.group('ip') in devices:
+            if not match:
+                _LOGGER.warning("Could not parse neighbor row: %s", neighbor)
+                continue
+            if match.group('ip') in devices:
                 devices[match.group('ip')]['status'] = match.group('status')
         return devices
