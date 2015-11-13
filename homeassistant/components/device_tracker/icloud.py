@@ -30,7 +30,6 @@ REQUIREMENTS = ['https://github.com/picklepete/pyicloud/archive/'
                 'certifi']
 
 
-#pylint: disable=unused-argument
 def get_scanner(hass, config):
     """ Validates config and returns a iPhone Scanner. """
     if not validate_config(config,
@@ -64,7 +63,9 @@ class ICloudDeviceScanner(object):
         # Get the data from iCloud
         try:
             _LOGGER.info('Logging into iCloud Services')
-            self._api = PyiCloudService(self.username, self.password, verify=True)
+            self._api = PyiCloudService(self.username,
+                                        self.password,
+                                        verify=True)
         except PyiCloudFailedLoginException:
             _LOGGER.exception("Failed login to iCloud Service." +
                               "Verify Username and Password")
@@ -119,7 +120,9 @@ class ICloudDeviceScanner(object):
         for device in self._api.devices:
             try:
                 devices[device.status()['name']] = {
-                    'device_id': re.sub(r'(\s*|\W*)', device.status()['name'], ''),
+                    'device_id': re.sub(r'(\s*|\W*)',
+                                        device.status()['name'],
+                                        ''),
                     'host_name': device.status()['name'],
                     'gps': (device.location()['latitude'],
                             device.location()['longitude']),
