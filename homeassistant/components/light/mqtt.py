@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
              config.get('brightness_command_topic'),
          "rgb_state_topic": config.get('rgb_state_topic'),
          "rgb_command_topic": config.get('rgb_command_topic')},
-        config.get('rgb', [255, 255, 255]),
+        config.get('rgb', [-1, -1, -1]),
         config.get('qos', DEFAULT_QOS),
         {"on": config.get('payload_on', DEFAULT_PAYLOAD_ON),
          "off": config.get('payload_off', DEFAULT_PAYLOAD_OFF)},
@@ -67,7 +67,10 @@ class MqttLight(Light):
         self._hass = hass
         self._name = name
         self._topic = topic
-        self._rgb = rgb
+        if rgb != [-1, -1, -1]:
+            self._rgb = rgb
+        else:
+            self._rgb = None
         self._qos = qos
         self._payload = payload
         self._brightness = brightness
