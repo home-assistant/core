@@ -87,7 +87,10 @@ def setup(hass, config):
 
         if camera:
             response = camera.camera_image()
-            handler.wfile.write(response)
+            if response is not None:
+                handler.wfile.write(response)
+            else:
+                handler.send_response(HTTP_NOT_FOUND)
         else:
             handler.send_response(HTTP_NOT_FOUND)
 
@@ -129,20 +132,21 @@ def setup(hass, config):
             while True:
 
                 img_bytes = camera.camera_image()
+                if img_bytes is not None:
+                    headers_str = '\r\n'.join((
+                        'Content-length: {}'.format(len(img_bytes)),
+                        'Content-type: image/jpeg',
+                    )) + '\r\n\r\n'
 
-                headers_str = '\r\n'.join((
-                    'Content-length: {}'.format(len(img_bytes)),
-                    'Content-type: image/jpeg',
-                )) + '\r\n\r\n'
+                    handler.request.sendall(
+                        bytes(headers_str, 'utf-8') +
+                        img_bytes +
+                        bytes('\r\n', 'utf-8'))
 
-                handler.request.sendall(
-                    bytes(headers_str, 'utf-8') +
-                    img_bytes +
-                    bytes('\r\n', 'utf-8'))
-
-                handler.request.sendall(
-                    bytes('--jpgboundary\r\n', 'utf-8'))
-
+                    handler.request.sendall(
+                        bytes('--jpgboundary\r\n', 'utf-8'))
+                else:
+                    break
         except (requests.RequestException, IOError):
             camera.is_streaming = False
             camera.update_ha_state()
