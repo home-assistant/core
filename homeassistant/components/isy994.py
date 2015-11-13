@@ -5,7 +5,7 @@ Connects to an ISY-994 controller and loads relevant components to control its
 devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
 
 For configuration details please visit the documentation for this component at
-https://home-assistant.io/components/isy994.html
+https://home-assistant.io/components/isy994/
 """
 import logging
 from urllib.parse import urlparse

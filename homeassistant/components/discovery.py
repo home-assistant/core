@@ -1,7 +1,6 @@
 """
 homeassistant.components.discovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Starts a service to scan in intervals for new devices.
 
 Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.

@@ -4,7 +4,7 @@ homeassistant.components.switch.wemo
 Support for WeMo switches.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.wemo.html
+https://home-assistant.io/components/switch.wemo/
 """
 import logging
 
@@ -15,7 +15,7 @@ REQUIREMENTS = ['pywemo==0.3.2']
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return WeMo switches. """
     import pywemo

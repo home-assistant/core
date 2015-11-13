@@ -4,7 +4,7 @@ homeassistant.components.automation.state
 Offers state listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation.html#state-trigger
+at https://home-assistant.io/components/automation/#state-trigger
 """
 import logging
 

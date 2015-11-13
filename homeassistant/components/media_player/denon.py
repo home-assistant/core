@@ -4,7 +4,7 @@ homeassistant.components.media_player.denon
 Provides an interface to Denon Network Receivers.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.denon.html
+https://home-assistant.io/components/media_player.denon/
 """
 import telnetlib
 import logging

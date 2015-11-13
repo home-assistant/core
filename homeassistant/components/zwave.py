@@ -3,8 +3,8 @@ homeassistant.components.zwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects Home Assistant to a Z-Wave network.
 
-For configuration details please visit the documentation for this component at
-https://home-assistant.io/components/zwave.html
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/zwave/
 """
 from pprint import pprint
 
@@ -22,15 +22,33 @@ DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 
 DISCOVER_SENSORS = "zwave.sensors"
+DISCOVER_LIGHTS = "zwave.light"
 
+COMMAND_CLASS_SWITCH_MULTILEVEL = 38
 COMMAND_CLASS_SENSOR_BINARY = 48
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
 COMMAND_CLASS_BATTERY = 128
 
-# list of tuple (DOMAIN, discovered service, supported command classes)
+GENRE_WHATEVER = None
+GENRE_USER = "User"
+
+TYPE_WHATEVER = None
+TYPE_BYTE = "Byte"
+TYPE_BOOL = "Bool"
+
+# list of tuple (DOMAIN, discovered service, supported command
+# classes, value type)
 DISCOVERY_COMPONENTS = [
-    ('sensor', DISCOVER_SENSORS,
-     [COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL]),
+    ('sensor',
+     DISCOVER_SENSORS,
+     [COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL],
+     TYPE_WHATEVER,
+     GENRE_WHATEVER),
+    ('light',
+     DISCOVER_LIGHTS,
+     [COMMAND_CLASS_SWITCH_MULTILEVEL],
+     TYPE_BYTE,
+     GENRE_USER),
 ]
 
 ATTR_NODE_ID = "node_id"
@@ -56,6 +74,20 @@ def nice_print_node(node):
     print("FOUND NODE", node.product_name)
     pprint(node_dict)
     print("\n\n\n")
+
+
+def get_config_value(node, value_index):
+    """ Returns the current config value for a specific index """
+
+    try:
+        for value in node.values.values():
+            # 112 == config command class
+            if value.command_class == 112 and value.index == value_index:
+                return value.data
+    except RuntimeError:
+        # If we get an runtime error the dict has changed while
+        # we was looking for a value, just do it again
+        return get_config_value(node, value_index)
 
 
 def setup(hass, config):
@@ -96,19 +128,31 @@ def setup(hass, config):
 
     def value_added(node, value):
         """ Called when a value is added to a node on the network. """
-        for component, discovery_service, command_ids in DISCOVERY_COMPONENTS:
-            if value.command_class in command_ids:
-                # Ensure component is loaded
-                bootstrap.setup_component(hass, component, config)
 
-                # Fire discovery event
-                hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                    ATTR_SERVICE: discovery_service,
-                    ATTR_DISCOVERED: {
-                        ATTR_NODE_ID: node.node_id,
-                        ATTR_VALUE_ID: value.value_id,
-                    }
-                })
+        for (component,
+             discovery_service,
+             command_ids,
+             value_type,
+             value_genre) in DISCOVERY_COMPONENTS:
+
+            if value.command_class not in command_ids:
+                continue
+            if value_type is not None and value_type != value.type:
+                continue
+            if value_genre is not None and value_genre != value.genre:
+                continue
+
+            # Ensure component is loaded
+            bootstrap.setup_component(hass, component, config)
+
+            # Fire discovery event
+            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
+                ATTR_SERVICE: discovery_service,
+                ATTR_DISCOVERED: {
+                    ATTR_NODE_ID: node.node_id,
+                    ATTR_VALUE_ID: value.value_id,
+                }
+            })
 
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)

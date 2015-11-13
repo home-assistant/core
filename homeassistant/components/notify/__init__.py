@@ -1,8 +1,10 @@
 """
 homeassistant.components.notify
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to notify people.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/notify/
 """
 from functools import partial
 import logging
@@ -51,8 +53,7 @@ def setup(hass, config):
             continue
 
         # create platform service
-        notify_service = notify_implementation.get_service(
-            hass, {DOMAIN: p_config})
+        notify_service = notify_implementation.get_service(hass, p_config)
 
         if notify_service is None:
             _LOGGER.error("Failed to initialize notification service %s",

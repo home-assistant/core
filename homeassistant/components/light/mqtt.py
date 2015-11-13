@@ -1,34 +1,10 @@
 """
 homeassistant.components.light.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a MQTT light.
 
-config for RGB Version with brightness:
-
-light:
-  platform: mqtt
-  name: "Office Light RGB"
-  state_topic: "office/rgb1/light/status"
-  command_topic: "office/rgb1/light/switch"
-  brightness_state_topic: "office/rgb1/brightness/status"
-  brightness_command_topic: "office/rgb1/brightness/set"
-  rgb_state_topic: "office/rgb1/rgb/status"
-  rgb_command_topic: "office/rgb1/rgb/set"
-  qos: 0
-  payload_on: "on"
-  payload_off: "off"
-
-config without RGB:
-
-light:
-  platform: mqtt
-  name: "Office Light"
-  state_topic: "office/rgb1/light/status"
-  command_topic: "office/rgb1/light/switch"
-  qos: 0
-  payload_on: "on"
-  payload_off: "off"
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.mqtt/
 """
 import logging
 
@@ -79,7 +55,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class MqttLight(Light):
-    """ Provides a demo Mqtt light. """
+    """ Provides a MQTT light. """
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name,
@@ -112,12 +88,12 @@ class MqttLight(Light):
             # force optimistic mode
             self._optimistic = True
         else:
-            # subscribe the state_topic
+            # Subscribe the state_topic
             mqtt.subscribe(self._hass, self._topic["state_topic"],
                            message_received, self._qos)
 
         def brightness_received(topic, payload, qos):
-            """ A new MQTT message has been received. """
+            """ A new MQTT message for the brightness has been received. """
             self._brightness = int(payload)
             self.update_ha_state()
 
@@ -160,7 +136,7 @@ class MqttLight(Light):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo light. """
+        """ No polling needed for a MQTT light. """
         return False
 
     @property

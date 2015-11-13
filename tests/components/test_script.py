@@ -47,7 +47,18 @@ class TestScript(unittest.TestCase):
             }
         }))
 
-        self.assertIsNone(self.hass.states.get(ENTITY_ID))
+        self.assertEqual(0, len(self.hass.states.entity_ids('script')))
+
+    def test_setup_with_invalid_object_id(self):
+        self.assertTrue(script.setup(self.hass, {
+            'script': {
+                'test hello world': {
+                    'sequence': []
+                }
+            }
+        }))
+
+        self.assertEqual(0, len(self.hass.states.entity_ids('script')))
 
     def test_firing_event(self):
         event = 'test_event'
@@ -61,6 +72,7 @@ class TestScript(unittest.TestCase):
         self.assertTrue(script.setup(self.hass, {
             'script': {
                 'test': {
+                    'alias': 'Test Script',
                     'sequence': [{
                         'event': event,
                         'event_data': {
