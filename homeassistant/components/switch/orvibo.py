@@ -1,5 +1,5 @@
 """
-homeassistant.components.switch.s20
+homeassistant.components.switch.orvibo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Orvibo S20 Wifi Smart Switches.
 
