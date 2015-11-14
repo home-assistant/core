@@ -36,7 +36,7 @@ blinkstick==1.1.7
 phue==0.8
 
 # homeassistant.components.light.limitlessled
-ledcontroller==1.1.0
+limitlessled==1.0.0
 
 # homeassistant.components.light.tellstick
 # homeassistant.components.sensor.tellstick
