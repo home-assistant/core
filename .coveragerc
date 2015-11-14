@@ -84,6 +84,7 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/switch/orvibo.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
@@ -99,7 +100,6 @@ omit =
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_gpio.py
-    homeassistant/components/switch/s20.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/honeywell.py
