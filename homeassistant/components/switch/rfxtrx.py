@@ -8,10 +8,15 @@ https://home-assistant.io/components/switch.rfxtrx.html
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
-from RFXtrx import LightingDevice
+import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.util import slugify
+
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.rfxtrx import ATTR_STATE, ATTR_PUSHBUTTON, ATTR_PACKETID, \
+    ATTR_NAME, EVENT_BUTTON_PRESSED
+
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -27,9 +32,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if devices:
         for entity_id, entity_info in devices.items():
             if entity_id not in rfxtrx.RFX_DEVICES:
-                _LOGGER.info("Add %s rfxtrx.switch", entity_info['name'])
-                rfxobject = rfxtrx.get_rfx_object(entity_info['packetid'])
-                newswitch = RfxtrxSwitch(entity_info['name'], rfxobject, False)
+                _LOGGER.info("Add %s rfxtrx.switch", entity_info[ATTR_NAME])
+
+                # Check if in push button mode
+                pushbutton = entity_info[ATTR_PUSHBUTTON] \
+                    if ATTR_PUSHBUTTON in entity_info else False
+                datas = {ATTR_STATE: False, ATTR_PUSHBUTTON: pushbutton}
+
+                rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
+                newswitch = RfxtrxSwitch(
+                    entity_info[ATTR_NAME], rfxobject, datas)
                 rfxtrx.RFX_DEVICES[entity_id] = newswitch
                 switchs.append(newswitch)
 
@@ -37,7 +49,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def switch_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if isinstance(event.device, LightingDevice):
+        if not isinstance(event.device, rfxtrxmod.LightingDevice):
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -55,12 +67,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             )
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             entity_name = "%s : %s" % (entity_id, pkt_id)
-            new_switch = RfxtrxSwitch(entity_name, event, False)
+            datas = {ATTR_STATE: False, ATTR_PUSHBUTTON: False}
+            new_switch = RfxtrxSwitch(entity_name, event, datas)
             rfxtrx.RFX_DEVICES[entity_id] = new_switch
             add_devices_callback([new_switch])
 
         # Check if entity exists or previously added automatically
-        if entity_id in rfxtrx.RFX_DEVICES:
+        if entity_id in rfxtrx.RFX_DEVICES \
+                and isinstance(rfxtrx.RFX_DEVICES[entity_id], RfxtrxSwitch):
             _LOGGER.debug(
                 "EntityID: %s switch_update. Command: %s",
                 entity_id,
@@ -73,6 +87,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 else:
                     rfxtrx.RFX_DEVICES[entity_id].turn_off()
 
+                # Fire event
+                if rfxtrx.RFX_DEVICES[entity_id].ispushbutton:
+                    rfxtrx.RFX_DEVICES[entity_id].hass.bus.fire(
+                        EVENT_BUTTON_PRESSED, {
+                            ATTR_ENTITY_ID:
+                                rfxtrx.RFX_DEVICES[entity_id].entity_id,
+                            ATTR_STATE: event.values['Command'].lower()
+                        }
+                    )
+
     # Subscribe to main rfxtrx events
     if switch_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
@@ -80,10 +104,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class RfxtrxSwitch(SwitchDevice):
     """ Provides a RFXtrx switch. """
-    def __init__(self, name, event, state):
+    def __init__(self, name, event, datas):
         self._name = name
         self._event = event
-        self._state = state
+        self._state = datas[ATTR_STATE]
+        self._pushbutton = datas[ATTR_PUSHBUTTON]
 
     @property
     def should_poll(self):
@@ -94,6 +119,11 @@ class RfxtrxSwitch(SwitchDevice):
     def name(self):
         """ Returns the name of the device if any. """
         return self._name
+
+    @property
+    def ispushbutton(self):
+        """ Returns is the device is pushbutton type"""
+        return self._pushbutton
 
     @property
     def is_on(self):
