@@ -12,8 +12,8 @@ from homeassistant.components.switch import SwitchDevice
 
 from orvibo.s20 import S20, S20Exception
 
-DEFAULT_NAME = "Orbivo S20 Switch"
-REQUIREMENTS = ['orbivo==1.0.0']
+DEFAULT_NAME = "Orvibo S20 Switch"
+REQUIREMENTS = ['orvibo==1.0.0']
 _LOGGER = logging.getLogger(__name__)
 
 
