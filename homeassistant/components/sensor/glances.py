@@ -155,7 +155,7 @@ class GlancesData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from teh Glances REST API. """
+        """ Gets the latest data from the Glances REST API. """
         try:
             response = requests.get(self._resource, timeout=10)
             self.data = response.json()
