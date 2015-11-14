@@ -27,8 +27,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         s20 = S20(config.get('host'))
         add_devices_callback([S20Switch(config.get('name', DEFAULT_NAME),
                                         s20)])
-    except S20Exception as exception:
-        _LOGGER.error(exception)
+    except S20Exception:
+        _LOGGER.exception("S20 couldn't be initialized")
 
 
 class S20Switch(SwitchDevice):
@@ -36,11 +36,12 @@ class S20Switch(SwitchDevice):
     def __init__(self, name, s20):
         self._name = name
         self._s20 = s20
+        self._state = False
 
     @property
     def should_poll(self):
-        """ No polling needed. """
-        return False
+        """ Poll. """
+        return True
 
     @property
     def name(self):
@@ -50,24 +51,27 @@ class S20Switch(SwitchDevice):
     @property
     def is_on(self):
         """ True if device is on. """
+        return self._state
+
+    def update(self):
+        """ Update device state. """
         try:
-            return self._s20.on
-        except S20Exception as exception:
-            _LOGGER.error(exception)
-            return False
+            self._state = self._s20.on
+        except S20Exception:
+            _LOGGER.exception("Error while fetching S20 state")
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
         try:
             self._s20.on = True
-        except S20Exception as exception:
-            _LOGGER.error(exception)
-        self.update_ha_state()
+            self._state = True
+        except S20Exception:
+            _LOGGER.exception("Error while turning on S20")
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
         try:
             self._s20.on = False
-        except S20Exception as exception:
-            _LOGGER.error(exception)
-        self.update_ha_state()
+            self._state = False
+        except S20Exception:
+            _LOGGER.exception("Error while turning off S20")
