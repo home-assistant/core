@@ -157,5 +157,5 @@ evohomeclient==0.2.3
 # Pushetta (notify.pushetta)
 pushetta==1.0.15
 
-# Orbivo S10
-orbivo==1.0.0
+# Orvibo S10
+orvibo==1.0.0
