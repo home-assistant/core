@@ -132,7 +132,9 @@ def setup(hass, config):
             while True:
 
                 img_bytes = camera.camera_image()
-                if img_bytes is not None:
+                if img_bytes is None:
+                    continue
+                else:
                     headers_str = '\r\n'.join((
                         'Content-length: {}'.format(len(img_bytes)),
                         'Content-type: image/jpeg',
@@ -145,8 +147,7 @@ def setup(hass, config):
 
                     handler.request.sendall(
                         bytes('--jpgboundary\r\n', 'utf-8'))
-                else:
-                    break
+
         except (requests.RequestException, IOError):
             camera.is_streaming = False
             camera.update_ha_state()
