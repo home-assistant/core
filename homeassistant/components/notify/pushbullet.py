@@ -56,11 +56,11 @@ class PushBulletNotificationService(BaseNotificationService):
         '''
         self.pushbullet.refresh()
         self.pbtargets = {
-            'devices':
+            'device':
                 {tgt.nickname: tgt for tgt in self.pushbullet.devices},
-            'contacts':
+            'contact':
                 {tgt.email: tgt for tgt in self.pushbullet.contacts},
-            'channels':
+            'channel':
                 {tgt.channel_tag: tgt for tgt in self.pushbullet.channels},
         }
 
@@ -71,37 +71,43 @@ class PushBulletNotificationService(BaseNotificationService):
         linked to the PB account.
         """
         targets = kwargs.get(ATTR_TARGET)
-        # Disabeling title
         title = kwargs.get(ATTR_TITLE)
-        title = None
+        refreshed = False
 
-        if targets:
-            # Make list if not so
-            if not isinstance(targets, list):
-                targets = [targets]
-
-            # Main loop, Process all targets specified
-            for ttype, tname in [target.split('.', 1) for target in targets]:
-                if ttype == 'device' and not tname:
-                    # Allow for 'normal' push, combined with other targets
-                    self.pushbullet.push_note(title, message)
-                    _LOGGER.info('Sent notification to self')
-                    continue
-
-                # Attempt push_note on a dict value. Keys are types & target
-                # name. The pbtargets have all *actual* targets.
-                try:
-                    self.pbtargets[ttype+'s'][tname].push_note(title, message)
-                except KeyError:
-                    _LOGGER.error('No such target: %s.%s', ttype, tname)
-                    continue
-                except self.pushbullet.errors.PushError:
-                    _LOGGER.error('Notify failed to: %s.%s', ttype, tname)
-                    self.refresh()
-                    continue
-                _LOGGER.info('Sent notification to %s.%s', ttype, tname)
-
-        else:
+        if not targets:
             # Backward compatebility, notify all devices in own account
             self.pushbullet.push_note(title, message)
             _LOGGER.info('Sent notification to self')
+            return
+
+        # Make list if not so
+        if not isinstance(targets, list):
+            targets = [targets]
+
+        # Main loop, Process all targets specified
+        for target in targets:
+
+            # Allow for untargeted push, combined with other types
+            if target in ['device', 'device/']:
+                self.pushbullet.push_note(title, message)
+                _LOGGER.info('Sent notification to self')
+                continue
+
+            ttype, tname = target.split('/', 1)
+
+            # Refresh if name not found. Poor mans refresh ;)
+            if tname not in self.pbtargets[ttype] and not refreshed:
+                self.refresh()
+                refreshed = True
+
+            # Attempt push_note on a dict value. Keys are types & target
+            # name. Dict pbtargets has all *actual* targets.
+            try:
+                self.pbtargets[ttype][tname].push_note(title, message)
+            except KeyError:
+                _LOGGER.error('No such target: %s.%s', ttype, tname)
+                continue
+            except self.pushbullet.errors.PushError:
+                _LOGGER.error('Notify failed to: %s.%s', ttype, tname)
+                continue
+            _LOGGER.info('Sent notification to %s.%s', ttype, tname)
