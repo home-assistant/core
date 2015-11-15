@@ -8,12 +8,13 @@ https://home-assistant.io/components/notify.pushbullet/
 """
 import logging
 
-from homeassistant.components.notify import ATTR_TITLE, BaseNotificationService
+from homeassistant.components.notify import (
+    ATTR_TITLE, ATTR_TARGET, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pushbullet.py==0.9.0']
-ATTR_TARGET = 'target'
+
 
 # pylint: disable=unused-argument
 def get_service(hass, config):
@@ -61,8 +62,8 @@ class PushBulletNotificationService(BaseNotificationService):
     def send_message(self, message=None, **kwargs):
         """ Send a message to a user. """
         targets = kwargs.get(ATTR_TARGET)
-        title = kwargs.get(ATTR_TITLE)
         # Disabeling title
+        title = kwargs.get(ATTR_TITLE)
         title = None
 
         if targets:
