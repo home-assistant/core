@@ -20,6 +20,7 @@ REQUIREMENTS = ['pydispatcher==2.0.5']
 CONF_USB_STICK_PATH = "usb_path"
 DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
+CONF_POLLING_INTERVAL = "polling_interval"
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_LIGHTS = "zwave.light"
@@ -168,6 +169,10 @@ def setup(hass, config):
     def start_zwave(event):
         """ Called when Home Assistant starts up. """
         NETWORK.start()
+
+        polling_interval = config[DOMAIN].get(CONF_POLLING_INTERVAL, None)
+        if polling_interval is not None:
+            NETWORK.setPollInterval(polling_interval)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
