@@ -20,6 +20,7 @@ REQUIREMENTS = ['pydispatcher==2.0.5']
 CONF_USB_STICK_PATH = "usb_path"
 DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
+CONF_POLLING_INTERVAL = "polling_interval"
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
@@ -30,6 +31,7 @@ COMMAND_CLASS_SWITCH_MULTILEVEL = 38
 COMMAND_CLASS_SWITCH_BINARY = 37
 COMMAND_CLASS_SENSOR_BINARY = 48
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
+COMMAND_CLASS_METER = 50
 COMMAND_CLASS_BATTERY = 128
 
 GENRE_WHATEVER = None
@@ -38,15 +40,18 @@ GENRE_USER = "User"
 TYPE_WHATEVER = None
 TYPE_BYTE = "Byte"
 TYPE_BOOL = "Bool"
+TYPE_DECIMAL = "Decimal"
 
 # list of tuple (DOMAIN, discovered service, supported command
 # classes, value type)
 DISCOVERY_COMPONENTS = [
     ('sensor',
      DISCOVER_SENSORS,
-     [COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL],
+     [COMMAND_CLASS_SENSOR_BINARY,
+      COMMAND_CLASS_SENSOR_MULTILEVEL,
+      COMMAND_CLASS_METER],
      TYPE_WHATEVER,
-     GENRE_WHATEVER),
+     GENRE_USER),
     ('light',
      DISCOVER_LIGHTS,
      [COMMAND_CLASS_SWITCH_MULTILEVEL],
@@ -172,6 +177,10 @@ def setup(hass, config):
     def start_zwave(event):
         """ Called when Home Assistant starts up. """
         NETWORK.start()
+
+        polling_interval = config[DOMAIN].get(CONF_POLLING_INTERVAL, None)
+        if polling_interval is not None:
+            NETWORK.setPollInterval(polling_interval)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
