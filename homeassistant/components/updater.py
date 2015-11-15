@@ -10,8 +10,8 @@ import logging
 
 import requests
 
-from homeassistant.const import __version__ as (
-    CURRENT_VERSION, ATTR_FRIENDLY_NAME)
+from homeassistant.const import __version__ as CURRENT_VERSION
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers import event
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,18 +26,7 @@ def setup(hass, config):
 
     def check_newest_version(_=None):
         ''' check if a new version is available and report if one is '''
-
-        try:
-            newest = get_newest_version()
-        except requests.RequestException:
-            _LOGGER.exception('Could not contact PyPI to check for updates')
-            return
-        except ValueError:
-            _LOGGER.exception('Received invalid response from PyPI')
-            return
-        except KeyError:
-            _LOGGER.exception('Response from PyPI did not include version')
-            return
+        newest = get_newest_version()
 
         if newest != CURRENT_VERSION and newest is not None:
             hass.states.set(
@@ -53,5 +42,16 @@ def setup(hass, config):
 
 def get_newest_version():
     ''' Get the newest HA version form PyPI '''
-    req = requests.get(PYPI_URL)
-    return req.json()['info']['version']
+    try:
+        req = requests.get(PYPI_URL)
+
+        return req.json()['info']['version']
+    except requests.RequestException:
+        _LOGGER.exception('Could not contact PyPI to check for updates')
+        return
+    except ValueError:
+        _LOGGER.exception('Received invalid response from PyPI')
+        return
+    except KeyError:
+        _LOGGER.exception('Response from PyPI did not include version')
+        return
