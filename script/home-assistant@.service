@@ -9,6 +9,7 @@ Type=simple
 User=%i
 WorkingDirectory=%h
 ExecStart=/usr/bin/hass --config %h/.homeassistant/
+SendSIGKILL=no
 
 [Install]
 WantedBy=multi-user.target
