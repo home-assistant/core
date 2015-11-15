@@ -64,7 +64,6 @@ class S20Switch(SwitchDevice):
         """ Turn the device on. """
         try:
             self._s20.on = True
-            self._state = True
         except S20Exception:
             _LOGGER.exception("Error while turning on S20")
 
@@ -72,6 +71,5 @@ class S20Switch(SwitchDevice):
         """ Turn the device off. """
         try:
             self._s20.on = False
-            self._state = False
         except S20Exception:
             _LOGGER.exception("Error while turning off S20")
