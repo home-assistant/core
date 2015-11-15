@@ -30,7 +30,7 @@ def setup(hass, config):
 
         if newest != CURRENT_VERSION and newest is not None:
             hass.states.set(
-                ENTITY_ID, newest, {'ATTR_FRIENDLY_NAME': 'Update Available'})
+                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available'})
 
     event.track_time_change(hass, check_newest_version,
                             hour=[0, 12], minute=0, second=0)
