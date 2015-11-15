@@ -9,3 +9,7 @@ notify:
     title:
       description: Optional title for your notification.
       example: 'Your Garage Door Friend'
+
+    target:
+      description: Target of the notification. Optional depending on the platform
+      example: platform specific
