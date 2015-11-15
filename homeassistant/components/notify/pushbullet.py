@@ -81,7 +81,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 targets = [targets]
 
             # Main loop, Process all targets specified
-            for ttype, tname in [target.split('.') for target in targets]:
+            for ttype, tname in [target.split('.', 1) for target in targets]:
                 if ttype == 'device' and not tname:
                     # Allow for 'normal' push, combined with other targets
                     self.pushbullet.push_note(title, message)
