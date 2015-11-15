@@ -9,11 +9,12 @@ After bootstrapping you can add your own components or
 start by calling homeassistant.start_home_assistant(bus)
 """
 
-import os
-import sys
+from collections import defaultdict
 import logging
 import logging.handlers
-from collections import defaultdict
+import os
+import shutil
+import sys
 
 import homeassistant.core as core
 import homeassistant.util.dt as date_util
@@ -25,7 +26,7 @@ import homeassistant.components as core_components
 import homeassistant.components.group as group
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
+    __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
@@ -168,6 +169,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
+    process_ha_config_upgrade(hass)
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
@@ -279,6 +281,29 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
     else:
         _LOGGER.error(
             'Unable to setup error log %s (access denied)', err_log_path)
+
+
+def process_ha_config_upgrade(hass):
+    """ Upgrade config if necessary. """
+    version_path = hass.config.path('.HA_VERSION')
+
+    try:
+        with open(version_path, 'rt') as inp:
+            conf_version = inp.readline().strip()
+    except FileNotFoundError:
+        # Last version to not have this file
+        conf_version = '0.7.7'
+
+    if conf_version == __version__:
+        return
+
+    _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
+                 __version__)
+
+    shutil.rmtree(hass.config.path('lib'))
+
+    with open(version_path, 'wt') as outp:
+        outp.write(__version__)
 
 
 def process_ha_core_config(hass, config):
