@@ -47,9 +47,14 @@ class PushBulletNotificationService(BaseNotificationService):
         self.refresh()
 
     def refresh(self):
-        ''' Refresh devices, contacts, channels, etc '''
-        self.pushbullet.refresh()
+        '''
+        Refresh devices, contacts, channels, etc
 
+        pbtargets stores all targets available from this pushbullet instance
+        into a dict. These are PB objects!. It sacrifices a bit of memory
+        for faster processing at send_message
+        '''
+        self.pushbullet.refresh()
         self.pbtargets = {
             'devices':
                 {tgt.nickname: tgt for tgt in self.pushbullet.devices},
@@ -60,7 +65,11 @@ class PushBulletNotificationService(BaseNotificationService):
         }
 
     def send_message(self, message=None, **kwargs):
-        """ Send a message to a user. """
+        """
+        Send a message to a specified target.
+        If no target specified, a 'normal' push will be sent to all devices
+        linked to the PB account.
+        """
         targets = kwargs.get(ATTR_TARGET)
         # Disabeling title
         title = kwargs.get(ATTR_TITLE)
@@ -79,6 +88,8 @@ class PushBulletNotificationService(BaseNotificationService):
                     _LOGGER.info('Sent notification to self')
                     continue
 
+                # Attempt push_note on a dict value. Keys are types & target
+                # name. The pbtargets have all *actual* targets.
                 try:
                     self.pbtargets[ttype+'s'][tname].push_note(title, message)
                 except KeyError:
