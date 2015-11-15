@@ -300,7 +300,9 @@ def process_ha_config_upgrade(hass):
     _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
                  __version__)
 
-    shutil.rmtree(hass.config.path('lib'))
+    lib_path = hass.config.path('lib')
+    if os.path.isdir(lib_path):
+        shutil.rmtree(lib_path)
 
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
