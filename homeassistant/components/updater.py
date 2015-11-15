@@ -27,7 +27,8 @@ def setup(hass, config):
         newest = get_newest_version()
         if newest != CURRENT_VERSION and newest is not None:
             hass.states.set(
-                '{}.Update'.format(DOMAIN), newest)
+                '{}.Update'.format(DOMAIN), newest,
+                {'friendly_name': 'Update Available'})
 
     event.track_time_change(hass, check_newest_version,
                             hour=12, minute=0, second=0)
