@@ -84,7 +84,7 @@ class HomeAssistant(object):
 
         if os.name != "nt":
             try:
-                signal.signal(signal.SIGQUIT, stop_homeassistant)
+                signal.signal(signal.SIGTERM, stop_homeassistant)
             except ValueError:
                 _LOGGER.warning(
                     'Could not bind to SIGQUIT. Are you running in a thread?')
