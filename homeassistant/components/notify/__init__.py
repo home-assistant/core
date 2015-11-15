@@ -10,6 +10,7 @@ from functools import partial
 import logging
 import os
 
+import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform
@@ -45,8 +46,8 @@ def setup(hass, config):
 
     for platform, p_config in config_per_platform(config, DOMAIN, _LOGGER):
         # get platform
-        notify_implementation = get_component(
-            'notify.{}'.format(platform))
+        notify_implementation = bootstrap.prepare_setup_platform(
+            hass, config, DOMAIN, platform)
 
         if notify_implementation is None:
             _LOGGER.error("Unknown notification service specified.")
