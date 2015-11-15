@@ -12,7 +12,6 @@ import os
 
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
-from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform
 
 from homeassistant.const import CONF_NAME
