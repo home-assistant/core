@@ -32,6 +32,7 @@ DEFAULT_CONFIG = (
 DEFAULT_COMPONENTS = {
     'introduction': 'Show links to resources in log and frontend',
     'frontend': 'Enables the frontend',
+    'updater': 'Checks for available updates',
     'discovery': 'Discover some devices automatically',
     'conversation': 'Allows you to issue voice commands from the frontend',
     'history': 'Enables support for tracking state changes over time.',
