@@ -4,7 +4,7 @@ homeassistant.components.media_player.kodi
 Provides an interface to the XBMC/Kodi JSON-RPC API
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.kodi.html
+https://home-assistant.io/components/media_player.kodi/
 """
 import urllib
 import logging

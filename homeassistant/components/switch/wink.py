@@ -4,7 +4,7 @@ homeassistant.components.switch.wink
 Support for Wink switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.wink.html
+https://home-assistant.io/components/switch.wink/
 """
 import logging
 
@@ -12,8 +12,8 @@ from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                'c2b700e8ca866159566ecf5e644d9c297f69f257.zip'
-                '#python-wink==0.1']
+                '9eb39eaba0717922815e673ad1114c685839d890.zip'
+                '#python-wink==0.1.1']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

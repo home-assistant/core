@@ -4,7 +4,7 @@ homeassistant.components.light.rfxtrx
 Support for RFXtrx lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rfxtrx.html
+https://home-assistant.io/components/light.rfxtrx/
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
@@ -59,6 +59,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         # Check if entity exists or previously added automatically
         if entity_id in rfxtrx.RFX_DEVICES:
+            _LOGGER.debug(
+                "EntityID: %s light_update. Command: %s",
+                entity_id,
+                event.values['Command']
+            )
             if event.values['Command'] == 'On'\
                     or event.values['Command'] == 'Off':
                 if event.values['Command'] == 'On':

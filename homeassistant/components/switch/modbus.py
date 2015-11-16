@@ -4,7 +4,7 @@ homeassistant.components.switch.modbus
 Support for Modbus switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.modbus.html
+https://home-assistant.io/components/switch.modbus/
 """
 import logging
 

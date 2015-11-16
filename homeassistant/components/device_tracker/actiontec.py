@@ -5,7 +5,7 @@ Device tracker platform that supports scanning an Actiontec MI424WR
 (Verizon FIOS) router for device presence.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.actiontec.html
+https://home-assistant.io/components/device_tracker.actiontec/
 """
 import logging
 from datetime import timedelta
@@ -17,20 +17,19 @@ import telnetlib
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle, convert
+from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-# Interval in minutes to exclude devices from a scan while they are home
-CONF_HOME_INTERVAL = "home_interval"
-
 _LOGGER = logging.getLogger(__name__)
 
 _LEASES_REGEX = re.compile(
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})' +
-    r'\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))')
+    r'\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))' +
+    r'\svalid\sfor:\s(?P<timevalid>(-?\d+))' +
+    r'\ssec')
 
 
 # pylint: disable=unused-argument
@@ -40,9 +39,7 @@ def get_scanner(hass, config):
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
         return None
-
     scanner = ActiontecDeviceScanner(config[DOMAIN])
-
     return scanner if scanner.success_init else None
 
 Device = namedtuple("Device", ["mac", "ip", "last_update"])
@@ -58,19 +55,11 @@ class ActiontecDeviceScanner(object):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
-        self.home_interval = timedelta(minutes=minutes)
-
         self.lock = threading.Lock()
-
         self.last_results = []
-
-        # Test the router is accessible
         data = self.get_actiontec_data()
         self.success_init = data is not None
         _LOGGER.info("actiontec scanner initialized")
-        if self.home_interval:
-            _LOGGER.info("home_interval set to: %s", self.home_interval)
 
     def scan_devices(self):
         """
@@ -100,27 +89,13 @@ class ActiontecDeviceScanner(object):
             return False
 
         with self.lock:
-            exclude_targets = set()
-            exclude_target_list = []
             now = dt_util.now()
-            if self.home_interval:
-                for host in self.last_results:
-                    if host.last_update + self.home_interval > now:
-                        exclude_targets.add(host)
-                if len(exclude_targets) > 0:
-                    exclude_target_list = [t.ip for t in exclude_targets]
-
             actiontec_data = self.get_actiontec_data()
             if not actiontec_data:
                 return False
-            self.last_results = []
-            for client in exclude_target_list:
-                if client in actiontec_data:
-                    actiontec_data.pop(client)
-            for name, data in actiontec_data.items():
-                device = Device(data['mac'], name, now)
-                self.last_results.append(device)
-            self.last_results.extend(exclude_targets)
+            self.last_results = [Device(data['mac'], name, now)
+                                 for name, data in actiontec_data.items()
+                                 if data['timevalid'] > -60]
             _LOGGER.info("actiontec scan successful")
             return True
 
@@ -153,6 +128,7 @@ class ActiontecDeviceScanner(object):
             if match is not None:
                 devices[match.group('ip')] = {
                     'ip': match.group('ip'),
-                    'mac': match.group('mac').upper()
+                    'mac': match.group('mac').upper(),
+                    'timevalid': int(match.group('timevalid'))
                     }
         return devices
