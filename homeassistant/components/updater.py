@@ -1,10 +1,10 @@
 """
-homeassistant.components.sensor.updater
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Sensor that checks for available updates.
+homeassistant.components.updater
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Component that checks for available updates.
 
 For more details about this platform, please refer to the documentation at
-at https://home-assistant.io/components/sensor.updater/
+at https://home-assistant.io/components/updater/
 """
 import logging
 
@@ -22,10 +22,10 @@ ENTITY_ID = 'updater.updater'
 
 
 def setup(hass, config):
-    ''' setup the updater component '''
+    """ Setup the updater component. """
 
     def check_newest_version(_=None):
-        ''' check if a new version is available and report if one is '''
+        """ Check if a new version is available and report if one is. """
         newest = get_newest_version()
 
         if newest != CURRENT_VERSION and newest is not None:
@@ -41,7 +41,7 @@ def setup(hass, config):
 
 
 def get_newest_version():
-    ''' Get the newest HA version form PyPI '''
+    """ Get the newest Home Assistant version from PyPI. """
     try:
         req = requests.get(PYPI_URL)
 
