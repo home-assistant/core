@@ -93,9 +93,17 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.info('Sent notification to self')
                 continue
 
-            ttype, tname = target.split('/', 1)
+            try:
+                ttype, tname = target.split('/', 1)
+            except ValueError:
+                _LOGGER.error('Invalid target syntax: %s', target)
+                continue
 
-            # Refresh if name not found. Poor mans refresh ;)
+            # Refresh if name not found. While awaiting periodic refresh
+            # solution in component, poor mans refresh ;)
+            if ttype not in self.pbtargets:
+                _LOGGER.error('Invalid target syntax: %s', target)
+                continue
             if tname not in self.pbtargets[ttype] and not refreshed:
                 self.refresh()
                 refreshed = True
