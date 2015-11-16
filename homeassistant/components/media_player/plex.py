@@ -4,7 +4,7 @@ homeassistant.components.media_player.plex
 Provides an interface to the Plex API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.plex.html
+https://home-assistant.io/components/media_player.plex/
 """
 import os
 import json

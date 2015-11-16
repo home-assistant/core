@@ -167,7 +167,7 @@ def load_order_components(components):
         load_order.update(comp_load_order)
 
     # Push some to first place in load order
-    for comp in ('recorder', 'introduction'):
+    for comp in ('logger', 'recorder', 'introduction'):
         if comp in load_order:
             load_order.promote(comp)
 

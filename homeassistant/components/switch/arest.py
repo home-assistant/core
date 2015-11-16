@@ -5,7 +5,7 @@ The arest switch can control the digital pins of a device running with the
 aREST RESTful framework for Arduino, the ESP8266, and the Raspberry Pi.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.arest.html
+https://home-assistant.io/components/switch.arest/
 """
 import logging
 import requests

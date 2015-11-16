@@ -5,7 +5,7 @@ Device tracker platform that supports scanning a OpenWRT router for device
 presence.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.ubus.html
+https://home-assistant.io/components/device_tracker.ubus/
 """
 import logging
 import json

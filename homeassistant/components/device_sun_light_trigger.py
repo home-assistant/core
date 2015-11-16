@@ -1,9 +1,11 @@
 """
 homeassistant.components.device_sun_light_trigger
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Provides functionality to turn on lights based on the state of the sun and
+devices.
 
-Provides functionality to turn on lights based on
-the state of the sun and devices.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/device_sun_light_trigger/
 """
 import logging
 from datetime import timedelta

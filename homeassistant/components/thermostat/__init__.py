@@ -1,8 +1,10 @@
 """
 homeassistant.components.thermostat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with thermostats.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/thermostat/
 """
 import logging
 import os

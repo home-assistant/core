@@ -5,7 +5,7 @@ The Worldclock sensor let you display the current time of a different time
 zone.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.worldclock.html
+https://home-assistant.io/components/sensor.worldclock/
 """
 import logging
 

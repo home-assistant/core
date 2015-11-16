@@ -4,7 +4,7 @@ homeassistant.components.automation.zone
 Offers zone automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation.html#zone-trigger
+at https://home-assistant.io/components/automation/#zone-trigger
 """
 import logging
 
