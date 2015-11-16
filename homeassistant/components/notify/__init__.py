@@ -23,6 +23,9 @@ DEPENDENCIES = []
 ATTR_TITLE = "title"
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
+# Target of the notification (user, device, etc)
+ATTR_TARGET = 'target'
+
 # Text to notify user of
 ATTR_MESSAGE = "message"
 
@@ -69,8 +72,9 @@ def setup(hass, config):
                 return
 
             title = call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+            target = call.data.get(ATTR_TARGET)
 
-            notify_service.send_message(message, title=title)
+            notify_service.send_message(message, title=title, target=target)
 
         # register service
         service_call_handler = partial(notify_message, notify_service)
