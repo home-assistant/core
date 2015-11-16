@@ -4,7 +4,7 @@ homeassistant.components.switch.command_switch
 Allows to configure custom shell commands to turn a switch on/off.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.command_switch.html
+https://home-assistant.io/components/switch.command_switch/
 """
 import logging
 import subprocess

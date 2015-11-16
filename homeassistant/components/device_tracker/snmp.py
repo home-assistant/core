@@ -5,7 +5,7 @@ Device tracker platform that supports fetching WiFi associations
 through SNMP.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.snmp.html
+https://home-assistant.io/components/device_tracker.snmp/
 """
 import logging
 from datetime import timedelta
@@ -45,9 +45,12 @@ class SnmpScanner(object):
     This class queries any SNMP capable Acces Point for connected devices.
     """
     def __init__(self, config):
-        self.host = config[CONF_HOST]
-        self.community = config[CONF_COMMUNITY]
-        self.baseoid = config[CONF_BASEOID]
+        from pysnmp.entity.rfc3413.oneliner import cmdgen
+        self.snmp = cmdgen.CommandGenerator()
+
+        self.host = cmdgen.UdpTransportTarget((config[CONF_HOST], 161))
+        self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
 
         self.lock = threading.Lock()
 
@@ -91,16 +94,11 @@ class SnmpScanner(object):
 
     def get_snmp_data(self):
         """ Fetch mac addresses from WAP via SNMP. """
-        from pysnmp.entity.rfc3413.oneliner import cmdgen
 
         devices = []
 
-        snmp = cmdgen.CommandGenerator()
-        errindication, errstatus, errindex, restable = snmp.nextCmd(
-            cmdgen.CommunityData(self.community),
-            cmdgen.UdpTransportTarget((self.host, 161)),
-            cmdgen.MibVariable(self.baseoid)
-        )
+        errindication, errstatus, errindex, restable = self.snmp.nextCmd(
+            self.community, self.host, self.baseoid)
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)

@@ -5,7 +5,7 @@ Monitors home energy use as measured by an efergy engage hub using its
 (unofficial, undocumented) API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.efergy.html
+https://home-assistant.io/components/sensor.efergy/
 """
 import logging
 from requests import get, RequestException

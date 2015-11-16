@@ -4,7 +4,7 @@ homeassistant.components.notify.file
 File notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.file.html
+https://home-assistant.io/components/notify.file/
 """
 import logging
 import os
@@ -20,14 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(hass, config):
     """ Get the file notification service. """
 
-    if not validate_config(config,
+    if not validate_config({DOMAIN: config},
                            {DOMAIN: ['filename',
                                      'timestamp']},
                            _LOGGER):
         return None
 
-    filename = config[DOMAIN]['filename']
-    timestamp = config[DOMAIN]['timestamp']
+    filename = config['filename']
+    timestamp = config['timestamp']
 
     return FileNotificationService(hass, filename, timestamp)
 
