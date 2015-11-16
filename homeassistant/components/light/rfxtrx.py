@@ -14,7 +14,7 @@ from homeassistant.components.light import Light
 from homeassistant.util import slugify
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.components.rfxtrx import ATTR_STATE, ATTR_PUSHBUTTON, ATTR_PACKETID, \
+from homeassistant.components.rfxtrx import ATTR_STATE, ATTR_FIREEVENT, ATTR_PACKETID, \
     ATTR_NAME, EVENT_BUTTON_PRESSED
 
 
@@ -33,10 +33,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if entity_id not in rfxtrx.RFX_DEVICES:
                 _LOGGER.info("Add %s rfxtrx.light", entity_info[ATTR_NAME])
 
-                # Check if in push button mode
-                pushbutton = entity_info[ATTR_PUSHBUTTON] \
-                    if ATTR_PUSHBUTTON in entity_info else False
-                datas = {ATTR_STATE: False, ATTR_PUSHBUTTON: pushbutton}
+                # Check if i must fire event
+                fire_event = entity_info.get(ATTR_FIREEVENT, False)
+                datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
 
                 rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
                 new_light = RfxtrxLight(
@@ -67,7 +66,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             )
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             entity_name = "%s : %s" % (entity_id, pkt_id)
-            datas = {ATTR_STATE: False, ATTR_PUSHBUTTON: False}
+            datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
             new_light = RfxtrxLight(entity_name, event, datas)
             rfxtrx.RFX_DEVICES[entity_id] = new_light
             add_devices_callback([new_light])
@@ -86,7 +85,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 rfxtrx.RFX_DEVICES[entity_id].update_ha_state()
 
                 # Fire event
-                if rfxtrx.RFX_DEVICES[entity_id].ispushbutton:
+                if rfxtrx.RFX_DEVICES[entity_id].isfire_event:
                     rfxtrx.RFX_DEVICES[entity_id].hass.bus.fire(
                         EVENT_BUTTON_PRESSED, {
                             ATTR_ENTITY_ID:
@@ -106,7 +105,7 @@ class RfxtrxLight(Light):
         self._name = name
         self._event = event
         self._state = datas[ATTR_STATE]
-        self._pushbutton = datas[ATTR_PUSHBUTTON]
+        self._isfire_event = datas[ATTR_FIREEVENT]
 
     @property
     def should_poll(self):
@@ -119,9 +118,9 @@ class RfxtrxLight(Light):
         return self._name
 
     @property
-    def ispushbutton(self):
-        """ Returns is the device is pushbutton type"""
-        return self._pushbutton
+    def isfire_event(self):
+        """ Returns is the device must fire event"""
+        return self._fire_event
 
     @property
     def is_on(self):

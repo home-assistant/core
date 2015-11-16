@@ -20,7 +20,7 @@ ATTR_DEBUG = 'debug'
 ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_PACKETID = 'packetid'
-ATTR_PUSHBUTTON = 'pushbutton'
+ATTR_FIREEVENT = 'fire_event'
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
