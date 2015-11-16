@@ -17,19 +17,19 @@ For help on building your component, please see the [developer documentation](ht
 
 After you finish adding support for your device:
 
- - Update the supported devices in the `README.md` file.
- - Add any new dependencies to `requirements_all.txt`. There is no ordering right now, so just add it to the end.
- - Update the `.coveragerc` file.
- - Provide some documentation for [home-assistant.io](https://home-assistant.io/). The documentation is handled in a separate [git repository](https://github.com/balloob/home-assistant.io). It's OK to add a docstring with configuration details to the file header.
+ - Add a link to the website of your device/service/component in the "examples" listing of the `README.md` file.
+ - Add any new dependencies to `requirements_all.txt` if needed. There is no ordering right now, so just add it to the end of the file.
+ - Update the `.coveragerc` file to exclude your platform if there are no tests available.
+ - Provide some documentation for [home-assistant.io](https://home-assistant.io/). It's OK to just add a docstring with configuration details (sample entry for `configuration.yaml` file and alike) to the file header as a start. Visit the [website documentation](https://home-assistant.io/developers/website/) for further information on contributing to [home-assistant.io](https://github.com/balloob/home-assistant.io).
  - Make sure all your code passes ``pylint`` and ``flake8`` (PEP8 and some more) validation. To check your repository, run `./script/lint`.
  - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
  - Check for comments and suggestions on your Pull Request and keep an eye on the [Travis output](https://travis-ci.org/balloob/home-assistant/).
 
-If you've added a component:
+If you add a platform for an existing component, there is usually no need for updating the frontend. Only if you've added a new component that should show up in the frontend, there are more steps needed:
 
  - Update the file [`home-assistant-icons.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/frontend/www_static/polymer/resources/home-assistant-icons.html) with an icon for your domain ([pick one from this list](https://www.polymer-project.org/1.0/components/core-elements/demo.html#core-icon)).
- - Update the demo component with two states that it provides
- - Add your component to home-assistant.conf.example
+ - Update the demo component with two states that it provides.
+ - Add your component to `home-assistant.conf.example`.
 
 Since you've updated `home-assistant-icons.html`, you've made changes to the frontend:
 

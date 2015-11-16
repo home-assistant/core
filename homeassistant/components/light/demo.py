@@ -1,37 +1,40 @@
 """
 homeassistant.components.light.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Demo platform that implements lights.
 
 """
 import random
 
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR)
+    Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP)
 
 
 LIGHT_COLORS = [
-    [0.368, 0.180],
-    [0.460, 0.470],
+    [237, 224, 33],
+    [255, 63, 111],
 ]
+
+LIGHT_TEMPS = [240, 380]
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return demo lights. """
     add_devices_callback([
         DemoLight("Bed Light", False),
-        DemoLight("Ceiling Lights", True, LIGHT_COLORS[0]),
-        DemoLight("Kitchen Lights", True, LIGHT_COLORS[1])
+        DemoLight("Ceiling Lights", True, LIGHT_COLORS[0], LIGHT_TEMPS[1]),
+        DemoLight("Kitchen Lights", True, LIGHT_COLORS[1], LIGHT_TEMPS[0])
     ])
 
 
 class DemoLight(Light):
     """ Provides a demo switch. """
-    def __init__(self, name, state, xy=None, brightness=180):
+    # pylint: disable=too-many-arguments
+    def __init__(self, name, state, rgb=None, ct=None, brightness=180):
         self._name = name
         self._state = state
-        self._xy = xy or random.choice(LIGHT_COLORS)
+        self._rgb = rgb or random.choice(LIGHT_COLORS)
+        self._ct = ct or random.choice(LIGHT_TEMPS)
         self._brightness = brightness
 
     @property
@@ -50,9 +53,14 @@ class DemoLight(Light):
         return self._brightness
 
     @property
-    def color_xy(self):
-        """ XY color value. """
-        return self._xy
+    def rgb_color(self):
+        """ rgb color value. """
+        return self._rgb
+
+    @property
+    def color_temp(self):
+        """ CT color temperature. """
+        return self._ct
 
     @property
     def is_on(self):
@@ -63,8 +71,11 @@ class DemoLight(Light):
         """ Turn the device on. """
         self._state = True
 
-        if ATTR_XY_COLOR in kwargs:
-            self._xy = kwargs[ATTR_XY_COLOR]
+        if ATTR_RGB_COLOR in kwargs:
+            self._rgb = kwargs[ATTR_RGB_COLOR]
+
+        if ATTR_COLOR_TEMP in kwargs:
+            self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]

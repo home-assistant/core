@@ -1,8 +1,10 @@
 """
 homeassistant.components.automation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Allows to setup simple automation rules via the config file.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/automation/
 """
 import logging
 

@@ -4,7 +4,7 @@ homeassistant.components.switch.mqtt
 Allows to configure a MQTT switch.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.mqtt.html
+https://home-assistant.io/components/switch.mqtt/
 """
 import logging
 import homeassistant.components.mqtt as mqtt

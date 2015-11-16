@@ -4,7 +4,7 @@ homeassistant.components.switch.rpi_gpio
 Allows to control the GPIO pins of a Raspberry Pi.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rpi_gpio.html
+https://home-assistant.io/components/switch.rpi_gpio/
 """
 import logging
 try:

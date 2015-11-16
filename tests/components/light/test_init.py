@@ -152,13 +152,7 @@ class TestLight(unittest.TestCase):
             data)
 
         method, data = dev2.last_call('turn_on')
-        self.assertEquals(
-            data[light.ATTR_XY_COLOR],
-            color_util.color_RGB_to_xy(255, 255, 255))
-
-        self.assertEquals(
-            data[light.ATTR_RGB_COLOR],
-            [255, 255, 255])
+        self.assertEquals(data[light.ATTR_RGB_COLOR], [255, 255, 255])
 
         method, data = dev3.last_call('turn_on')
         self.assertEqual({light.ATTR_XY_COLOR: [.4, .6]}, data)

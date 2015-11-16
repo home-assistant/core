@@ -36,10 +36,12 @@ omit =
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/device_tracker/geofancy.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
+    homeassistant/components/device_tracker/owntracks.py
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
@@ -48,6 +50,7 @@ omit =
     homeassistant/components/downloader.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/hue.py
+    homeassistant/components/light/mqtt.py
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/hyperion.py
@@ -64,6 +67,7 @@ omit =
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
+    homeassistant/components/notify/pushetta.py
     homeassistant/components/notify/pushover.py
     homeassistant/components/notify/slack.py
     homeassistant/components/notify/smtp.py
@@ -80,6 +84,7 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/switch/orvibo.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
@@ -97,6 +102,7 @@ omit =
     homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
+    homeassistant/components/thermostat/honeywell.py
     homeassistant/components/thermostat/nest.py
     homeassistant/components/thermostat/radiotherm.py
 

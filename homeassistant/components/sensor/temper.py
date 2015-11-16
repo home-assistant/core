@@ -4,7 +4,7 @@ homeassistant.components.sensor.temper
 Support for getting temperature from TEMPer devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.temper.html
+https://home-assistant.io/components/sensor.temper/
 """
 import logging
 from homeassistant.helpers.entity import Entity

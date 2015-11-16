@@ -20,6 +20,10 @@ turn_on:
       description: Color for the light in XY-format
       example: '[0.52, 0.43]'
 
+    color_temp:
+      description: Color temperature for the light in mireds (154-500)
+      example: '250'
+
     brightness:
       description: Number between 0..255 indicating brightness
       example: 120
