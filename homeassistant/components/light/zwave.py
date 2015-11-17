@@ -7,9 +7,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.zwave/
 """
 # pylint: disable=import-error
-from openzwave.network import ZWaveNetwork
-from pydispatch import dispatcher
-
 import homeassistant.components.zwave as zwave
 
 from homeassistant.const import STATE_ON, STATE_OFF
@@ -51,6 +48,9 @@ class ZwaveDimmer(Light):
     """ Provides a Z-Wave dimmer. """
     # pylint: disable=too-many-arguments
     def __init__(self, value):
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
+
         self._value = value
         self._node = value.node
 

@@ -8,8 +8,6 @@ at https://home-assistant.io/components/zwave/
 """
 # pylint: disable=import-error
 from homeassistant.helpers.event import track_point_in_time
-from openzwave.network import ZWaveNetwork
-from pydispatch import dispatcher
 import datetime
 import homeassistant.util.dt as dt_util
 import homeassistant.components.zwave as zwave
@@ -79,6 +77,9 @@ class ZWaveSensor(Entity):
     """ Represents a Z-Wave sensor. """
 
     def __init__(self, sensor_value):
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
+
         self._value = sensor_value
         self._node = sensor_value.node
 
