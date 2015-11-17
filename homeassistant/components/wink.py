@@ -25,6 +25,7 @@ REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
+DISCOVER_LOCKS = "wink.locks"
 
 
 def setup(hass, config):
@@ -41,7 +42,8 @@ def setup(hass, config):
     for component_name, func_exists, discovery_type in (
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
             ('switch', pywink.get_switches, DISCOVER_SWITCHES),
-            ('sensor', pywink.get_sensors, DISCOVER_SENSORS)):
+            ('sensor', pywink.get_sensors, DISCOVER_SENSORS),
+            ('lock', pywink.get_locks, DISCOVER_LOCKS)):
 
         if func_exists():
             component = get_component(component_name)
