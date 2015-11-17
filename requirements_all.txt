@@ -44,6 +44,7 @@ ledcontroller==1.1.0
 tellcore-py==1.1.2
 
 # homeassistant.components.light.vera
+# homeassistant.components.sensor.vera
 # homeassistant.components.switch.vera
 https://github.com/pavoni/home-assistant-vera-api/archive/efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip#python-vera==0.1.1
 
@@ -132,9 +133,6 @@ https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc7045
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
-
-# homeassistant.components.sensor.vera
-https://github.com/balloob/home-assistant-vera-api/archive/a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip#python-vera==0.1
 
 # homeassistant.components.sun
 astral==0.8.1
