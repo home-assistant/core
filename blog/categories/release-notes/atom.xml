@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-30T22:13:50-07:00</updated>
+  <updated>2015-11-16T21:44:43-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,53 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights ]]></title>
+    <link href="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/"/>
+    <updated>2015-11-16T20:27:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported</id>
+    <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/screenshots/custom-icons.png" style="float: right;" />We have all been hard at work to get this latest release ready. One of the big highlights in this release is the introduction of an extended iconset to be used in the frontend (credits to <a href="https://github.com/happyleavesaoc">@happyleavesaoc</a> for idea and prototype). To get started with customizing, pick any icon from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>, prefix the name with <code>mdi:</code> and stick it into your <code>customize</code> section in <code>configuration.yaml</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">homeassistant</span>:
+  <span class="key">customize</span>:
+    <span class="key">switch.ac</span>:
+      <span class="key">icon</span>: <span class="string"><span class="content">'mdi:air-conditioner'</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4>Breaking changes</h4>
+
+<ul>
+  <li>Any existing zone icon will have to be replaced with one from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>.</li>
+  <li>LimitlessLED light services require colors to be specified in RGB instead of XY.</li>
+</ul>
+
+<h4>Changes</h4>
+
+<p><img src="https://home-assistant.io/images/supported_brands/honeywell.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="https://home-assistant.io/images/supported_brands/orvibo.png" style="clear: right;  border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="https://home-assistant.io/images/supported_brands/pushetta.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /></p>
+
+<ul>
+  <li>Thermostat: <a href="/components/thermostat.honeywell/">Honeywell</a> now supported (<a href="https://github.com/sander76">@sander76</a>)</li>
+  <li>Switch: <a href="/components/switch.orvibo/">Orvibo</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li>Camera: <a href="/components/camera.mjpeg/">mjpeg camera’s</a> now supported (<a href="https://github.com/ryanturner">@ryanturner</a>)</li>
+  <li>Notify: <a href="/components/notify.pushetta/">Pushetta</a> now supported (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Light: <a href="/components/light.mqtt/">MQTT</a> now supported (<a href="https://github.com/hexxter">@hexxter</a>)</li>
+  <li>Light: <a href="/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
+  <li>Switch: <a href="/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
+  <li>New component <a href="/components/logger/">logger</a> allows filtering logged data (<a href="https://github.com/badele">@badele</a>)</li>
+  <li>New component <a href="/components/updater/">updater</a> will notify users if an update for Home Assistant is available (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Notify: <a href="/components/notify.pushbullet/">PushBullet</a> now allows targeting contacts/channels/specific devices (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Light: Allow controlling color temperature (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Frontend: about page added (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Switch RGB as the color unit used in light component (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Re-install platform and component dependencies after a Home Assistant version upgrade (<a href="https://github.com/balloob">@balloob</a>)</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[0.7.6: Amazon FireTV, Radiotherm thermostats]]></title>
@@ -190,187 +237,6 @@ Automation has gotten a lot of love. It now supports conditions, multiple trigge
 
 <p><strong>Verisure Alarms</strong><br />
 <img src="https://home-assistant.io/images/supported_brands/verisure.png" style="border:none; box-shadow: none; float: right;" height="50" /> We now support arming and disarming your verisure alarm from within Home Assistant thanks to added support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Home Assistant meets IFTTT]]></title>
-    <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
-    <updated>2015-09-13T09:28:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
-    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a webservice that integrates with almost every possible webservice out there. Adding Home Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
-
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet if your smoke alarm goes off.</p>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/splash.png" />
-</p>
-
-<p>Head over to the <a href="/components/ifttt/">setup instructions</a> to get started with IFTTT. Click the read more button for some example recipes.</p>
-
-<!--more-->
-
-<p>In each of the following examples, make sure to replace the XXX in the url with your correct host address and api password.</p>
-
-<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-    <tr>
-      <td>BODY</td>
-      <td>{ “entity_id”: “switch.irrigation” }</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png" />
-</p>
-
-<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered. Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in <code>value1</code>.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Configuration.yaml entry</span>
-<span class="key">automation</span>:
-- <span class="string"><span class="content">alias: Post a tweet when fire alarm is triggered</span></span>
-  <span class="key">trigger</span>:
-    <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
-    <span class="key">mqtt_topic</span>: <span class="string"><span class="content">home/alarm/fire</span></span>
-    <span class="key">mqtt_payload</span>: <span class="string"><span class="content">'on'</span></span>
-
-  <span class="key">action</span>:
-    <span class="key">service</span>: <span class="string"><span class="content">ifttt.trigger</span></span>
-    <span class="key">data</span>: <span class="string"><span class="content">{&quot;event&quot;:&quot;HA_FIRE_ALARM&quot;, &quot;value1&quot;:&quot;The fire alarm just triggered!&quot;}</span></span>
-</pre></div>
-</div>
-</div>
-
-<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-    <tr>
-      <td>BODY</td>
-      <td>{ “entity_id”: “light.kitchen” }</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-    <tr>
-      <td>BODY</td>
-      <td>{ “entity_id”: “group.all_lights”, “flash”:”yes” }</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-  </tbody>
-</table>
 ]]></content>
   </entry>
   

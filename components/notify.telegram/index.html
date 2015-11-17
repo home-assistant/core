@@ -105,8 +105,8 @@
 <p>The requirement are:</p>
 
 <ul>
-  <li>You need a <a href="https://core.telegram.org/bots">Telegram bot</a>. Please follow those <a href="https://core.telegram.org/bots#botfather">instructions</a> to create one and get the token. Keep in mind that bots are not allowed to contact users. You need to make the first contactwith your user.</li>
-  <li>The chat ID of an user</li>
+  <li>You need a <a href="https://core.telegram.org/bots">Telegram bot</a>. Please follow those <a href="https://core.telegram.org/bots#botfather">instructions</a> to create one and get the token for your bot. Keep in mind that bots are not allowed to contact users. You need to make the first contact with your user. Meaning that you need to send a message to the bot from your user.</li>
+  <li>The <code>chat_id</code> of an user.</li>
 </ul>
 
 <p>An easy way to get your chat ID is described below:</p>
@@ -120,6 +120,26 @@ print(chat_id)
 </div>
 </div>
 
+<p>Another way to retrieve your <code>chat_id</code> is visiting <a href="https://api.telegram.org/botYOUR_API_TOKEN/getUpdates">https://api.telegram.org/botYOUR_API_TOKEN/getUpdates</a>.</p>
+
+<p>The result set will include your chat ID as <code>id</code> in the <code>from</code> section:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+   <span class="key"><span class="delimiter">&quot;</span><span class="content">ok</span><span class="delimiter">&quot;</span></span>:<span class="value">true</span>,
+   <span class="key"><span class="delimiter">&quot;</span><span class="content">result</span><span class="delimiter">&quot;</span></span>:[
+      {
+         <span class="key"><span class="delimiter">&quot;</span><span class="content">update_id</span><span class="delimiter">&quot;</span></span>:<span class="integer">254199982</span>,
+         <span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>:{
+            <span class="key"><span class="delimiter">&quot;</span><span class="content">message_id</span><span class="delimiter">&quot;</span></span>:<span class="integer">201</span>,
+            <span class="key"><span class="delimiter">&quot;</span><span class="content">from</span><span class="delimiter">&quot;</span></span>:{
+               <span class="key"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>:<span class="integer">123456789</span>,
+               <span class="key"><span class="delimiter">&quot;</span><span class="content">first_name</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">Your first name</span><span class="delimiter">&quot;</span></span>,
+<span class="error">.</span><span class="error">.</span><span class="error">.</span>
+</pre></div>
+</div>
+</div>
+
 <p>To enable Telegram notifications in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
@@ -127,7 +147,6 @@ print(chat_id)
 <span class="key">notify</span>:
   <span class="key">name</span>: <span class="string"><span class="content">NOTIFIER_NAME</span></span>
   <span class="key">platform</span>: <span class="string"><span class="content">telegram</span></span>
-  <span class="comment"># Get those by creating a new bot on https://core.telegram.org/bots</span>
   <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
   <span class="key">chat_id</span>: <span class="string"><span class="content">YOUR_CHAT_ID</span></span>
 </pre></div>
@@ -137,8 +156,7 @@ print(chat_id)
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created.<br />
-The default value is <code>notify</code>. The notifier will bind to the service<br />
+  <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service<br />
 <code>notify.NOTIFIER_NAME</code>.</li>
   <li><strong>api_key</strong> (<em>Required</em>): The API token of your bot.</li>
   <li><strong>chat_id</strong> (<em>Required</em>: The chat ID of your user.</li>
@@ -184,6 +202,9 @@ The default value is <code>notify</code>. The notifier will bind to the service<
         </li>
         <li>
             <a href='/components/notify.pushover/'>PushOver</a>
+        </li>
+        <li>
+            <a href='/components/notify.pushetta/'>Pushetta</a>
         </li>
         <li>
             <a href='/components/notify.smtp/'>SMTP</a>

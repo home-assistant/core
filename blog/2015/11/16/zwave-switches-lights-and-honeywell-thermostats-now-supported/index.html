@@ -1,0 +1,303 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights  - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Home Assistant 0.8 can now interact with Honeywell thermostats, Orvibo switches and has improved Z-Wave support.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights ">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Home Assistant 0.8 can now interact with Honeywell thermostats, Orvibo switches and has improved Z-Wave support.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="post">
+  
+  <header>
+  
+  <h1 class="title indent">0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-11-16T20:27:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> November 16, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <p><img src="/images/screenshots/custom-icons.png" style="float: right;" />We have all been hard at work to get this latest release ready. One of the big highlights in this release is the introduction of an extended iconset to be used in the frontend (credits to <a href="https://github.com/happyleavesaoc">@happyleavesaoc</a> for idea and prototype). To get started with customizing, pick any icon from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>, prefix the name with <code>mdi:</code> and stick it into your <code>customize</code> section in <code>configuration.yaml</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">homeassistant</span>:
+  <span class="key">customize</span>:
+    <span class="key">switch.ac</span>:
+      <span class="key">icon</span>: <span class="string"><span class="content">'mdi:air-conditioner'</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4>Breaking changes</h4>
+
+<ul>
+  <li>Any existing zone icon will have to be replaced with one from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>.</li>
+  <li>LimitlessLED light services require colors to be specified in RGB instead of XY.</li>
+</ul>
+
+<h4>Changes</h4>
+
+<p><img src="/images/supported_brands/honeywell.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="/images/supported_brands/orvibo.png" style="clear: right;  border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="/images/supported_brands/pushetta.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /></p>
+
+<ul>
+  <li>Thermostat: <a href="/components/thermostat.honeywell/">Honeywell</a> now supported (<a href="https://github.com/sander76">@sander76</a>)</li>
+  <li>Switch: <a href="/components/switch.orvibo/">Orvibo</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li>Camera: <a href="/components/camera.mjpeg/">mjpeg camera’s</a> now supported (<a href="https://github.com/ryanturner">@ryanturner</a>)</li>
+  <li>Notify: <a href="/components/notify.pushetta/">Pushetta</a> now supported (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Light: <a href="/components/light.mqtt/">MQTT</a> now supported (<a href="https://github.com/hexxter">@hexxter</a>)</li>
+  <li>Light: <a href="/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
+  <li>Switch: <a href="/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
+  <li>New component <a href="/components/logger/">logger</a> allows filtering logged data (<a href="https://github.com/badele">@badele</a>)</li>
+  <li>New component <a href="/components/updater/">updater</a> will notify users if an update for Home Assistant is available (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Notify: <a href="/components/notify.pushbullet/">PushBullet</a> now allows targeting contacts/channels/specific devices (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Light: Allow controlling color temperature (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Frontend: about page added (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Switch RGB as the color unit used in light component (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Re-install platform and component dependencies after a Home Assistant version upgrade (<a href="https://github.com/balloob">@balloob</a>)</li>
+</ul>
+</article>
+
+
+<section id="disqus">
+  <h3 class="indent title">Comments</h3>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+</section>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    
+    <section class="sharing aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Share this post</h1>
+  
+  <a href="//twitter.com/share"
+     class="twitter-share-button"
+     data-url="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/"
+     data-counturl="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="standard"></div>
+  
+  
+    <div class="fb-share-button" style='top: -6px;'
+         data-href="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/"
+         data-layout="button_count">
+    </div>
+  
+</section>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '338291289691179',
+      xfbml      : true,
+      version    : 'v2.2'
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+<section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Other Posts</h1>
+  <ul class="divided">
+    
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/10/26/firetv-and-radiotherm-now-supported/">0.7.6: Amazon FireTV, Radiotherm thermostats</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/">Report the temperature with ESP8266 to MQTT</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/">0.7.5: Blinkstick, SNMP, Telegram</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/">Home Assistant goes geo with OwnTracks</a>
+        </li>
+      
+    
+  </ul>
+</section>
+
+
+
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+<script>
+  var disqus_shortname = 'home-assistant';
+  
+    
+    // var disqus_developer = 1;
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/';
+    var disqus_script = 'embed.js';
+  
+  (function () {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  }());
+</script>
+
+  </body>
+</html>

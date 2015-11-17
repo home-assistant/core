@@ -171,6 +171,18 @@
 
 <p>The <code>correction_factor</code> will make sure that the value is shown in a useful format in the frontend.</p>
 
+<h3><a class="title-link" name="details-about-the-upstream-home-assistant-release" href="#details-about-the-upstream-home-assistant-release"></a> Details about the upstream Home Assistant release</h3>
+
+<p>You can see directly in the frontend (<strong>Developer tools</strong> -&gt; <strong>About</strong>) what release of Home Assistant you are running. The Home Assistant releases are available on the <a href="https://pypi.python.org/pypi">Python Package Index</a>. This makes it possible to get the current release.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>  - <span class="string"><span class="content">platform: command_sensor</span></span>
+    <span class="key">command</span>: <span class="string"><span class="content">python3 -c &quot;import requests; print(requests.get('https://pypi.python.org/pypi/homeassistant/json').json()['info']['version'])&quot;</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">HA release</span></span>
+</pre></div>
+</div>
+</div>
+
 <h3><a class="title-link" name="use-an-external-script" href="#use-an-external-script"></a> Use an external script</h3>
 
 <p>The example is doing the same as the <a href="/components/sensor.arest/">aREST sensor</a> but with an external Python script. It should give you an idea about interacting with devices which are exposing a RESTful API.</p>
@@ -206,7 +218,6 @@ print(response.json()[<span class="string"><span class="delimiter">'</span><span
 </pre></div>
 </div>
 </div>
-
 
 </article>
 
@@ -283,6 +294,9 @@ print(response.json()[<span class="string"><span class="delimiter">'</span><span
         </li>
         <li>
             <a href='/components/sensor.worldclock/'>Worldclock</a>
+        </li>
+        <li>
+            <a href='/components/sensor.zwave/'>Z-Wave sensor</a>
         </li>
         <li>
             <a href='/components/sensor.arest/'>aREST sensor</a>

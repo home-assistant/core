@@ -100,13 +100,15 @@
   </header>
   <hr class="divider">
 
-  <p><a href="http://www.z-wave.com/">Z-Wave</a> support for Home Assistant is very new. We have started now by integrating only the sensors.</p>
+  <p><a href="http://www.z-wave.com/">Z-Wave</a> integration for Home Assistant allows you to observe and control connected Z-Wave devices. Z-Wave support requires a Z-Wave USB stick to be plugged into the host.</p>
 
-<p>Support for Z-Wave can be added by plugging a Z-Wave USB stick into your computer.</p>
+<p>There is currently support for switches, lights and sensors. All will be picked up automatically after configuring this platform.</p>
 
-<p>To allow Home Assistant to talk to your Z-Wave USB stick you will have to compile <code>Python Open Z-Wave</code> yourself. We have made it easy and added a script that will do just that for you: <code>script/build_python_openzwave</code>.</p>
+<h3>Installation</h3>
 
-<p>Please make sure you have the correct dependencies installed:</p>
+<p>To allow Home Assistant to talk to your Z-Wave USB stick you will have to compile Python Open Z-Wave. This can be done using <a href="https://github.com/balloob/home-assistant/blob/dev/script/build_python_openzwave">this script</a>. <em>(The Home Assistant docker image has support for Z-Wave built-in)</em></p>
+
+<p>Make sure you have the correct dependencies installed before running the script:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ apt-get install cython3 libudev-dev python-sphinx python3-setuptools
@@ -115,7 +117,7 @@ $ pip3 install &quot;cython&lt;0.23&quot;
 </div>
 </div>
 
-<p>As an alternative, the Home Assistant docker image has support for Z-Wave built-in.</p>
+<h3>Configuration</h3>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
@@ -153,6 +155,20 @@ $ pip3 install &quot;cython&lt;0.23&quot;
   <div class='brand-logo-container section'>
       <img src='/images/supported_brands/z-wave.png' />
   </div>
+          <div class='section'>
+          <h1 class='title delta'>Related components</h1>
+          <ul class='divided'>
+        <li><a href='/components/light.zwave/'>
+          Z-Wave light
+        </a></li>
+        <li><a href='/components/sensor.zwave/'>
+          Z-Wave sensor
+        </a></li>
+        <li><a href='/components/switch.zwave/'>
+          Z-Wave switch
+        </a></li>
+    </ul>
+    </div>
     <div class='section'>
     <h1 class="title delta">Category Hub</h1>
     <ul class='divided'>

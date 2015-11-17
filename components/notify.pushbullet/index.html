@@ -100,16 +100,17 @@
   </header>
   <hr class="divider">
 
-  <p>Home Assistant currently supports the awesome <a href="https://www.pushbullet.com/">PushBullet</a>, a free service to send information between your phones, browsers and friends.</p>
+  <p><a href="https://www.pushbullet.com/">PushBullet</a> is a free service to send information between your phones, browsers and friends.</p>
 
-<p>To add PushBullet to your installation, add the following to your <code>configuration.yaml</code> file:</p>
+<h3>Configuration</h3>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">notify</span>:
-  <span class="key">name</span>: <span class="string"><span class="content">NOTIFIER_NAME</span></span>
   <span class="key">platform</span>: <span class="string"><span class="content">pushbullet</span></span>
   <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_API_KEY</span></span>
+  <span class="comment"># Optional</span>
+  <span class="key">name</span>: <span class="string"><span class="content">NOTIFIER_NAME</span></span>
 </pre></div>
 </div>
 </div>
@@ -117,11 +118,65 @@
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service <code>notify.NOTIFIER_NAME</code>.</li>
   <li><strong>api_key</strong> (<em>Required</em>): Enter the API key for PushBullet. Go to https://www.pushbullet.com/ to retrieve your API key.</li>
+  <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service <code>notify.NOTIFIER_NAME</code>.</li>
 </ul>
 
-<p>For more automation examples, see the <a href="/components/automation/">getting started with automation page</a>.</p>
+<h3>Usage</h3>
+
+<p>PushBullet is a notify platform and thus can be controlled by calling the notify service <a href="/components/notify/">as described here</a>. An optional <strong>target</strong> parameter can be given to PushBullet to specify one or many account’s devices, contacts or channels to notify.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Prefix</th>
+      <th>Suffix</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>All devices</td>
+      <td><code>device</code></td>
+      <td>–</td>
+      <td><code>device</code></td>
+    </tr>
+    <tr>
+      <td>Device</td>
+      <td><code>device/</code></td>
+      <td>Device nickname</td>
+      <td><code>device/iphone</code></td>
+    </tr>
+    <tr>
+      <td>Contact</td>
+      <td><code>contact/</code></td>
+      <td>Contact e-mail (lowercase)</td>
+      <td><code>contact/email@example.com</code></td>
+    </tr>
+    <tr>
+      <td>Channel</td>
+      <td><code>channel/</code></td>
+      <td>Channel tag</td>
+      <td><code>channel/my_home</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>Example service payload</h4>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">A message for many people</span><span class="delimiter">&quot;</span></span>,
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">target</span><span class="delimiter">&quot;</span></span>: [
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">device</span><span class="delimiter">&quot;</span></span>,
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">contact/hello@example.com</span><span class="delimiter">&quot;</span></span>,
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">channel/my_home</span><span class="delimiter">&quot;</span></span>
+  ]
+}
+</pre></div>
+</div>
+</div>
 
 </article>
 
@@ -161,6 +216,9 @@
         </li>
         <li>
             <a href='/components/notify.pushover/'>PushOver</a>
+        </li>
+        <li>
+            <a href='/components/notify.pushetta/'>Pushetta</a>
         </li>
         <li>
             <a href='/components/notify.smtp/'>SMTP</a>

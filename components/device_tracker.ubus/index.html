@@ -102,7 +102,7 @@
 
   <p><em>This is one of the two ways we support OpenWRT. If you encounter problems, try <a href="/components/device_tracker.luci/">luci</a>.</em></p>
 
-<p>This is a presence detection scanner for OpenWRT using <a href="http://wiki.openwrt.org/doc/techref/ubus">ubus</a>.</p>
+<p>This is a presence detection scanner for <a href="https://openwrt.org/">OpenWRT</a> using <a href="http://wiki.openwrt.org/doc/techref/ubus">ubus</a>.</p>
 
 <p>Before this scanner can be used you have to install the ubus RPC package on OpenWRT:</p>
 
@@ -131,7 +131,24 @@
 </div>
 </div>
 
-<p>After this is done, configure Home Assistant as follows:</p>
+<p>Restart the services.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre># /etc/init.d/rpcd restart &amp;&amp; /etc/init.d/uhttpd restart
+</pre></div>
+</div>
+</div>
+
+<p>Check if the <code>file</code> namespaces is registered with the RPC server.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre># ubus list | grep file
+file
+</pre></div>
+</div>
+</div>
+
+<p>After this is done, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
@@ -147,9 +164,9 @@
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>host</strong> (<em>Required</em>): The IP address of your router, e.g. 192.168.1.1.</li>
-  <li><strong>username</strong> (<em>Required</em>): The username of an user with administrative privileges, usually <em>admin</em>.</li>
-  <li><strong>password</strong> (<em>Required</em>): The password for your given admin account.</li>
+  <li><strong>host</strong> (<em>Required</em>): The IP address of your router, eg. 192.168.1.1.</li>
+  <li><strong>username</strong> (<em>Required</em>): The username of an user with administrative privileges, usually <em>root</em>.</li>
+  <li><strong>password</strong> (<em>Required</em>): The password for your given account.</li>
 </ul>
 
 <p>See the <a href="/components/device_tracker/">device tracker component page</a> for instructions how to configure the people to be tracked.</p>

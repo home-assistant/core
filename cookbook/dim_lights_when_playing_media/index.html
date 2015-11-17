@@ -149,13 +149,13 @@ Adding in the sun condition as we only want this when it’s dark.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">automation</span>:
-  - <span class="string"><span class="content">action: &quot;Media player paused/stopped&quot;</span></span>
+  - <span class="string"><span class="content">alias: &quot;Media player paused/stopped&quot;</span></span>
     <span class="key">trigger</span>:
       - <span class="string"><span class="content">platform: state</span></span>
         <span class="key">entity_id</span>: <span class="string"><span class="content">media_player.htpc</span></span>
         <span class="key">from</span>: <span class="string"><span class="content">'playing'</span></span>
     <span class="key">condition</span>:
-      - <span class="string"><span class="content">platform: sun</span></span>
+      - <span class="string"><span class="content">platform: state</span></span>
         <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
         <span class="key">state</span>: <span class="string"><span class="content">'below_horizon'</span></span>
     <span class="key">action</span>:
@@ -168,7 +168,7 @@ Adding in the sun condition as we only want this when it’s dark.</p>
         <span class="key">entity_id</span>: <span class="string"><span class="content">media_player.htpc</span></span>
         <span class="key">to</span>: <span class="string"><span class="content">'playing'</span></span>
     <span class="key">condition</span>:
-      - <span class="string"><span class="content">platform: sun</span></span>
+      - <span class="string"><span class="content">platform: state</span></span>
         <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
         <span class="key">state</span>: <span class="string"><span class="content">'below_horizon'</span></span>
     <span class="key">action</span>:

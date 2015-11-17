@@ -165,6 +165,48 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </div>
 </div>
 
+<h4><a class="title-link" name="get-apiconfig" href="#get-apiconfig"></a> GET /api/config</h4>
+<p>Returns the current configuration as JSON.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">components</span><span class="delimiter">&quot;</span></span>: [
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">recorder</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">http</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor.time_date</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">api</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">frontend</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">sun</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">logbook</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">history</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">group</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">automation</span><span class="delimiter">&quot;</span></span>
+    ],
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">latitude</span><span class="delimiter">&quot;</span></span>: <span class="float">44.1234</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">location_name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Home</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">longitude</span><span class="delimiter">&quot;</span></span>: <span class="float">5.5678</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">temperature_unit</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="char">\u00b0</span><span class="content">C</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">time_zone</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Europe/Zurich</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">version</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">0.8.0.dev0</span><span class="delimiter">&quot;</span></span>
+}
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="get-apibootstrap" href="#get-apibootstrap"></a> GET /api/bootstrap</h4>
+<p>Returns all data needed to bootstrap Home Assistant.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">config</span><span class="delimiter">&quot;</span></span>: {<span class="error">.</span><span class="error">.</span><span class="error">.</span>},
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">events</span><span class="delimiter">&quot;</span></span>: [<span class="error">.</span><span class="error">.</span><span class="error">.</span>],
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">services</span><span class="delimiter">&quot;</span></span>: [<span class="error">.</span><span class="error">.</span><span class="error">.</span>],
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">states</span><span class="delimiter">&quot;</span></span>: [<span class="error">.</span><span class="error">.</span><span class="error">.</span>]
+}
+</pre></div>
+</div>
+</div>
+
 <h4><a class="title-link" name="get-apievents" href="#get-apievents"></a> GET /api/events</h4>
 <p>Returns an array of event objects. Each event object contain event name and listener count.</p>
 

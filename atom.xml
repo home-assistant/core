@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-10-30T22:13:50-07:00</updated>
+  <updated>2015-11-16T21:44:43-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,53 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights ]]></title>
+    <link href="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/"/>
+    <updated>2015-11-16T20:27:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported</id>
+    <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/screenshots/custom-icons.png" style="float: right;" />We have all been hard at work to get this latest release ready. One of the big highlights in this release is the introduction of an extended iconset to be used in the frontend (credits to <a href="https://github.com/happyleavesaoc">@happyleavesaoc</a> for idea and prototype). To get started with customizing, pick any icon from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>, prefix the name with <code>mdi:</code> and stick it into your <code>customize</code> section in <code>configuration.yaml</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">homeassistant</span>:
+  <span class="key">customize</span>:
+    <span class="key">switch.ac</span>:
+      <span class="key">icon</span>: <span class="string"><span class="content">'mdi:air-conditioner'</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4>Breaking changes</h4>
+
+<ul>
+  <li>Any existing zone icon will have to be replaced with one from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>.</li>
+  <li>LimitlessLED light services require colors to be specified in RGB instead of XY.</li>
+</ul>
+
+<h4>Changes</h4>
+
+<p><img src="https://home-assistant.io/images/supported_brands/honeywell.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="https://home-assistant.io/images/supported_brands/orvibo.png" style="clear: right;  border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="https://home-assistant.io/images/supported_brands/pushetta.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /></p>
+
+<ul>
+  <li>Thermostat: <a href="https://home-assistant.io/components/thermostat.honeywell/">Honeywell</a> now supported (<a href="https://github.com/sander76">@sander76</a>)</li>
+  <li>Switch: <a href="https://home-assistant.io/components/switch.orvibo/">Orvibo</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li>Camera: <a href="https://home-assistant.io/components/camera.mjpeg/">mjpeg camera’s</a> now supported (<a href="https://github.com/ryanturner">@ryanturner</a>)</li>
+  <li>Notify: <a href="https://home-assistant.io/components/notify.pushetta/">Pushetta</a> now supported (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Light: <a href="https://home-assistant.io/components/light.mqtt/">MQTT</a> now supported (<a href="https://github.com/hexxter">@hexxter</a>)</li>
+  <li>Light: <a href="https://home-assistant.io/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
+  <li>Switch: <a href="https://home-assistant.io/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
+  <li>New component <a href="https://home-assistant.io/components/logger/">logger</a> allows filtering logged data (<a href="https://github.com/badele">@badele</a>)</li>
+  <li>New component <a href="https://home-assistant.io/components/updater/">updater</a> will notify users if an update for Home Assistant is available (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Notify: <a href="https://home-assistant.io/components/notify.pushbullet/">PushBullet</a> now allows targeting contacts/channels/specific devices (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Light: Allow controlling color temperature (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
+  <li>Frontend: about page added (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Switch RGB as the color unit used in light component (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Re-install platform and component dependencies after a Home Assistant version upgrade (<a href="https://github.com/balloob">@balloob</a>)</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[0.7.6: Amazon FireTV, Radiotherm thermostats]]></title>
@@ -2302,22 +2349,6 @@ An initial version of voice control for Home Assistant has landed. The current i
 </pre></div>
 </div>
 </div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[New logo for Home Assistant]]></title>
-    <link href="https://home-assistant.io/blog/2015/03/08/new-logo/"/>
-    <updated>2015-03-08T23:16:10-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/03/08/new-logo</id>
-    <content type="html"><![CDATA[<p>It is well known that you are either a good programmer or a good designer. It’s rare you’ll meet someone that is both. That’s why it wasn’t surprising to anyone that the logo that I made was mediocre — at best. Luckily, <a href="http://jeremygeltman.com/">Jeremy Geltman</a> has come to the rescue and contributed a brand new logo for Home Assistant.</p>
-
-<p>The new logo follows Googles material design spec. It uses the blue color that Home Assistant uses in the interface and it comes in two versions: a high detailed version (for homescreen icon etc) and a simple version (for favicon etc).</p>
-
-<p class="img">
-<img src="https://home-assistant.io/images/blog/ha-logo-history.png" />
-The old logo, the new detailed logo and the new simple logo.
-</p>
 ]]></content>
   </entry>
   

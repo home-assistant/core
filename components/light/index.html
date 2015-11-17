@@ -104,26 +104,22 @@
 
 <p>It has <a href="https://github.com/balloob/home-assistant/blob/master/homeassistant/components/light/light_profiles.csv">4 built-in light profiles</a> which you’re able to extend by putting a <code>light_profiles.csv</code> file in your config dir.</p>
 
-<p>It supports the following platforms:</p>
-
-<ul>
-  <li><code>hue</code> for Philips Hue</li>
-  <li><code>wink</code> for Wink</li>
-</ul>
-
 <p>Preferred way to setup the Philips Hue platform is through the <a href="/components/discovery/">the discovery component</a>. For the Wink light platform enable <a href="/components/wink/">the wink component</a>.</p>
 
 <p>If you want to enable the light component directly, add the following lines to your <code>configuration.yaml</code>:</p>
 
-<pre><code>light:
-  platform: hue
-</code></pre>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">light</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">hue</span></span>
+</pre></div>
+</div>
+</div>
 
 <p class="note">
 The light component supports multiple entries in <code>configuration.yaml</code> by appending a sequential number to the section: <code>light 2:</code>, <code>light 3:</code> etc.
 </p>
 
-<h3>Service <code>light.turn_on</code></h3>
+<h3><a class="title-link" name="service-lightturn_on" href="#service-lightturn_on"></a> Service <code>light.turn_on</code></h3>
 
 <p>Turns one light on or multiple lights on using <a href="/components/group/">groups</a>.</p>
 
@@ -139,32 +135,37 @@ The light component supports multiple entries in <code>configuration.yaml</code>
     <tr>
       <td><code>entity_id</code></td>
       <td>no</td>
-      <td>Only act on specified lights. Else targets all.</td>
+      <td>String or list of strings that point at <code>entity_id</code>s of lights. Else targets all.</td>
     </tr>
     <tr>
       <td><code>transition</code></td>
       <td>yes</td>
-      <td>Seconds to take to switch to new state. *not supported by Wink</td>
+      <td>Integer that represents the time the light should take to transition to the new state. *not supported by Wink</td>
     </tr>
     <tr>
       <td><code>profile</code></td>
       <td>yes</td>
-      <td>Which light profile to use.</td>
+      <td>String with the name of one of the built-in profiles (relax, energize, concentrate, reading) or one of the custom profiles defined in <code>light_profiles.csv</code> in the current working directory.  Light profiles define a xy color and a brightness. If a profile is given and a brightness or xy color then the profile values will be overwritten.</td>
     </tr>
     <tr>
       <td><code>xy_color</code></td>
       <td>yes</td>
-      <td>Two comma seperated floats that represent the color in XY</td>
+      <td>A list containing two floats representing the xy color you want the light to be. Two comma seperated floats that represent the color in XY.</td>
     </tr>
     <tr>
       <td><code>rgb_color</code></td>
       <td>yes</td>
-      <td>Three comma seperated integers that represent the color in RGB</td>
+      <td>A list containing three integers representing the xy color you want the light to be. Three comma seperated integers that represent the color in RGB</td>
+    </tr>
+    <tr>
+      <td><code>color_temp</code></td>
+      <td>yes</td>
+      <td>An INT in mireds represending the color temperature you want the light to be.</td>
     </tr>
     <tr>
       <td><code>brightness</code></td>
       <td>yes</td>
-      <td>Integer between 0 and 255 for how bright the color should be</td>
+      <td>Integer between 0 and 255 for how bright the color should be.</td>
     </tr>
     <tr>
       <td><code>flash</code></td>
@@ -174,7 +175,7 @@ The light component supports multiple entries in <code>configuration.yaml</code>
   </tbody>
 </table>
 
-<h3>Service <code>light.turn_off</code></h3>
+<h3><a class="title-link" name="service-lightturn_off" href="#service-lightturn_off"></a> Service <code>light.turn_off</code></h3>
 
 <p>Turns one or multiple lights off.</p>
 
@@ -190,10 +191,16 @@ The light component supports multiple entries in <code>configuration.yaml</code>
     <tr>
       <td><code>entity_id</code></td>
       <td>no</td>
-      <td>Only act on specified lights. Else targets all.</td>
+      <td>String or list of strings that point at <code>entity_id</code>s of lights. Else targets all.</td>
+    </tr>
+    <tr>
+      <td><code>transition</code></td>
+      <td>no</td>
+      <td>Integer that represents the time the light should take to transition to the new state.</td>
     </tr>
   </tbody>
 </table>
+
 
 </article>
 
@@ -219,6 +226,9 @@ The light component supports multiple entries in <code>configuration.yaml</code>
           <li><a href='/components/light.limitlessled/'>
             LimitlessLED
           </a></li>
+          <li><a href='/components/light.mqtt/'>
+            MQTT light
+          </a></li>
           <li><a href='/components/light.hue/'>
             Philips Hue
           </a></li>
@@ -233,6 +243,9 @@ The light component supports multiple entries in <code>configuration.yaml</code>
           </a></li>
           <li><a href='/components/light.wink/'>
             Wink light
+          </a></li>
+          <li><a href='/components/light.zwave/'>
+            Z-Wave light
           </a></li>
       </ul>
 </section>

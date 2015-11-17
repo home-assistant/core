@@ -100,19 +100,27 @@
   </header>
   <hr class="divider">
 
-  <p>One of the things most people want at some point in their home automation is to get notified when certain events occur. For this reason there is a <code>notify</code> component in Home Assistant.</p>
+  <p>The <code>notify</code> component makes it possible to send notifications to a wide variety of platforms. Please check the sidebar for a full list of platforms that are supported.</p>
 
-<p>Home Assistant currently supports a wide range of services for notifications. Please check the sidebar for a full list of platforms.</p>
-
-<p>If your are running into troubles with your notification platform, a simple way to test it is to use <strong>Call Service</strong> from the <strong>Developer Tools</strong>. Choose your service (<em>notify/xyz</em>) from the list of <strong>Available services:</strong> and enter something like the sample below into  the <strong>Service Data</strong> field and hit <strong>CALL SERVICE</strong>.</p>
+<h3>Configuration</h3>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>:<span class="string"><span class="delimiter">&quot;</span><span class="content">A simple test message from HA.</span><span class="delimiter">&quot;</span></span>}
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">pushbullet</span></span>
+  <span class="comment"># Optional name for the notify service</span>
+  <span class="key">name</span>: <span class="string"><span class="content">paulus</span></span>
+  <span class="comment"># api_key is a required config key by the pushbullet platform</span>
+  <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFG</span></span>
 </pre></div>
 </div>
 </div>
 
-<p>This will send a single message to your notification platform configured in your <code>configuration.yaml</code> file.</p>
+<p>The <strong>name</strong> parameter is optional but needed if you want to use multiple platforms. The platform will be exposed as service <code>notify/&lt;name&gt;</code>. The name will default to <code>notify</code> if not supplied.</p>
+
+<h3>Service</h3>
+
+<p>Once loaded, the <code>notify</code> platform will expose a service that can be called to send notifications.</p>
 
 <table>
   <thead>
@@ -124,19 +132,34 @@
   </thead>
   <tbody>
     <tr>
-      <td><code>title</code></td>
-      <td>yes</td>
-      <td>Can be used to set a title for the message. The default is <code>Home Assistant</code>.</td>
-    </tr>
-    <tr>
       <td><code>message</code></td>
       <td>no</td>
-      <td>Message to send to recipient.</td>
+      <td>Body of the notification.</td>
+    </tr>
+    <tr>
+      <td><code>title</code></td>
+      <td>yes</td>
+      <td>Title of the notification. Default is <code>Home Assistant</code>.</td>
+    </tr>
+    <tr>
+      <td><code>target</code></td>
+      <td>yes</td>
+      <td>Some platforms will allow specifying a recipient that will receive the notification. See your platform page if it is supported.</td>
     </tr>
   </tbody>
 </table>
 
-<p>For more automation examples, see the <a href="/getting-started/automation/">getting started with automation page</a> or the <a href="/cookbook">configuration cookbook</a>.</p>
+<h3>Test if it works</h3>
+
+<p>A simple way to test if you have set up your notify platform correctly is to use <strong>Call Service</strong> from the <strong>Developer Tools</strong> to call your notify service. Choose your service (<em>notify/xyz</em>) from the list of <strong>Available services:</strong> and enter something like the sample below into  the <strong>Service Data</strong> field and hit <strong>CALL SERVICE</strong>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">A simple test message from HA.</span><span class="delimiter">&quot;</span></span>
+}
+</pre></div>
+</div>
+</div>
 
 </article>
 
@@ -170,6 +193,9 @@
           </a></li>
           <li><a href='/components/notify.pushover/'>
             PushOver
+          </a></li>
+          <li><a href='/components/notify.pushetta/'>
+            Pushetta
           </a></li>
           <li><a href='/components/notify.smtp/'>
             SMTP
