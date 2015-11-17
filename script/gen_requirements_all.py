@@ -9,6 +9,11 @@ import os
 import pkgutil
 import re
 
+COMMENT_REQUIREMENTS = [
+    'RPi.GPIO',
+    'Adafruit_Python_DHT'
+]
+
 
 def explore_module(package, explore_children):
     module = importlib.import_module(package)
@@ -33,6 +38,11 @@ def core_requirements():
             r'REQUIRES = \[(.*?)\]', inp.read(), re.S).group(1)
 
     return re.findall(r"'(.*?)'", reqs_raw)
+
+
+def comment_requirement(req):
+    """ Some requirements don't install on all systems. """
+    return any(ign in req for ign in COMMENT_REQUIREMENTS)
 
 
 def main():
@@ -69,7 +79,11 @@ def main():
         for req in sorted(requirements,
                           key=lambda name: (len(name.split('.')), name)):
             print('#', req)
-        print(pkg)
+
+        if comment_requirement(pkg):
+            print('#', pkg)
+        else:
+            print(pkg)
         print()
 
 if __name__ == '__main__':
