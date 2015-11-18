@@ -16,8 +16,7 @@ can do this at https://www.ecobee.com/consumerportal/index.html
 Click My Apps, Add application, Enter Pin and click Authorize.
 
 After authorizing the application click the button in the configuration
-card.  Now your thermostat should shown in home-assistant.  You will need
-to restart home assistant to get rid of the configuration card.  Once the
+card.  Now your thermostat should shown in home-assistant.  Once the
 thermostat has been added you can add the ecobee sensor component
 to your configuration.yaml.
 
@@ -34,8 +33,8 @@ import logging
 import os
 
 REQUIREMENTS = [
-    'https://github.com/nkgilley/home-assistant-ecobee-api/archive/'
-    'e0388659a0f2fc7266485affbd398350cc0b5c58.zip#python-ecobee==0.1.1']
+    'https://github.com/nkgilley/python-ecobee-api/archive/'
+    '824a7dfabe7ef6975b2864f33e6ae0b48fb6ea3f.zip#python-ecobee==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,20 +63,15 @@ def setup_ecobee(hass, config, add_devices_callback):
 
     # If ecobee has a PIN then it needs to be configured.
     if ecobee.pin is not None:
-        # ecobee.request_pin()
         request_configuration(ecobee, hass, add_devices_callback)
         return
 
     if 'ecobee' in _CONFIGURING:
-        _CONFIGURING.pop('ecobee')
         configurator = get_component('configurator')
-        configurator.request_done('ecobee')
+        configurator.request_done(_CONFIGURING.pop('ecobee'))
 
-    devices = []
-    for index in range(0, len(ecobee.thermostats)):
-        devices.append(Thermostat(ecobee, index))
-
-    add_devices_callback(devices)
+    add_devices_callback(Thermostat(ecobee, index)
+                         for index in range(len(ecobee.thermostats)))
 
 
 def request_configuration(ecobee, hass, add_devices_callback):
@@ -101,34 +95,31 @@ def request_configuration(ecobee, hass, add_devices_callback):
         description=(
             'Please authorize this app at https://www.ecobee.com/consumer'
             'portal/index.html with pin code: ' + ecobee.pin),
-        description_image='https://goo.gl/6tBkbH',
+        description_image="/static/images/config_ecobee_thermostat.png",
         submit_caption="I have authorized the app."
     )
 
 
 class Thermostat(ThermostatDevice):
-    """docstring for Thermostat"""
+    """ Thermostat class for Ecobee """
 
     def __init__(self, ecobee, thermostat_index):
         self.ecobee = ecobee
         self.thermostat_index = thermostat_index
-        self.thermostat_data = self.ecobee.get_thermostat(
+        self.thermostat = self.ecobee.get_thermostat(
             self.thermostat_index)
-        self._name = self.thermostat_data['name']
-        if 'away' in self.thermostat_data['program']['currentClimateRef']:
-            self._away = True
-        else:
-            self._away = False
+        self._name = self.thermostat['name']
+        self._away = 'away' in self.thermostat['program']['currentClimateRef']
 
     def update(self):
-        self.thermostat_data = self.ecobee.get_thermostat(
+        self.thermostat = self.ecobee.get_thermostat(
             self.thermostat_index)
         _LOGGER.info("ecobee data updated successfully.")
 
     @property
     def name(self):
         """ Returns the name of the Ecobee Thermostat. """
-        return self.thermostat_data['name']
+        return self.thermostat['name']
 
     @property
     def unit_of_measurement(self):
@@ -138,7 +129,7 @@ class Thermostat(ThermostatDevice):
     @property
     def current_temperature(self):
         """ Returns the current temperature. """
-        return self.thermostat_data['runtime']['actualTemperature'] / 10
+        return self.thermostat['runtime']['actualTemperature'] / 10
 
     @property
     def target_temperature(self):
@@ -148,27 +139,27 @@ class Thermostat(ThermostatDevice):
     @property
     def target_temperature_low(self):
         """ Returns the lower bound temperature we try to reach. """
-        return int(self.thermostat_data['runtime']['desiredHeat'] / 10)
+        return int(self.thermostat['runtime']['desiredHeat'] / 10)
 
     @property
     def target_temperature_high(self):
         """ Returns the upper bound temperature we try to reach. """
-        return int(self.thermostat_data['runtime']['desiredCool'] / 10)
+        return int(self.thermostat['runtime']['desiredCool'] / 10)
 
     @property
     def humidity(self):
         """ Returns the current humidity. """
-        return self.thermostat_data['runtime']['actualHumidity']
+        return self.thermostat['runtime']['actualHumidity']
 
     @property
     def desired_fan_mode(self):
         """ Returns the desired fan mode of operation. """
-        return self.thermostat_data['runtime']['desiredFanMode']
+        return self.thermostat['runtime']['desiredFanMode']
 
     @property
     def fan(self):
         """ Returns the current fan state. """
-        if 'fan' in self.thermostat_data['equipmentStatus']:
+        if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
         else:
             return STATE_OFF
@@ -176,7 +167,7 @@ class Thermostat(ThermostatDevice):
     @property
     def operation(self):
         """ Returns current operation ie. heat, cool, idle """
-        status = self.thermostat_data['equipmentStatus']
+        status = self.thermostat['equipmentStatus']
         if status == '':
             return STATE_IDLE
         elif 'Cool' in status:
@@ -191,7 +182,7 @@ class Thermostat(ThermostatDevice):
     @property
     def mode(self):
         """ Returns current mode ie. home, away, sleep """
-        mode = self.thermostat_data['program']['currentClimateRef']
+        mode = self.thermostat['program']['currentClimateRef']
         if 'away' in mode:
             self._away = True
         else:
@@ -201,7 +192,7 @@ class Thermostat(ThermostatDevice):
     @property
     def hvac_mode(self):
         """ Return current hvac mode ie. auto, auxHeatOnly, cool, heat, off """
-        return self.thermostat_data['settings']['hvacMode']
+        return self.thermostat['settings']['hvacMode']
 
     @property
     def device_state_attributes(self):
