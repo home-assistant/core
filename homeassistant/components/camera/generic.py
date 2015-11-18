@@ -40,7 +40,7 @@ class GenericCamera(Camera):
         self._still_image_url = device_info['still_image_url']
 
     def camera_image(self):
-        """ Return a still image reponse from the camera. """
+        """ Return a still image response from the camera. """
         if self._username and self._password:
             try:
                 response = requests.get(
