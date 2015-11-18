@@ -35,7 +35,7 @@ import os
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/home-assistant-ecobee-api/archive/'
-    'c61ee6d456bb5f4ab0c9598804aa9231c3d06f8e.zip#python-ecobee==0.1.1']
+    'e0388659a0f2fc7266485affbd398350cc0b5c58.zip#python-ecobee==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
