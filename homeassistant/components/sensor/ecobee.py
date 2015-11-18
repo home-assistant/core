@@ -13,6 +13,8 @@ import json
 import logging
 import os
 
+DEPENDENCIES = ['thermostat']
+
 SENSOR_TYPES = {
     'temperature': ['Temperature', '°F'],
     'humidity': ['Humidity', '%'],
@@ -24,27 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
-def config_from_file(filename, config=None):
-    ''' Small configuration file management function '''
-    if config:
-        # We're writing configuration
+def config_from_file(filename):
+    ''' Small configuration file reading function '''
+    if os.path.isfile(filename):
         try:
-            with open(filename, 'w') as fdesc:
-                fdesc.write(json.dumps(config))
+            with open(filename, 'r') as fdesc:
+                return json.loads(fdesc.read())
         except IOError as error:
-            print(error)
+            _LOGGER.error("ecobee sensor couldn't read config file: " + error)
             return False
-        return True
     else:
-        # We're reading config
-        if os.path.isfile(filename):
-            try:
-                with open(filename, 'r') as fdesc:
-                    return json.loads(fdesc.read())
-            except IOError as error:
-                return False
-        else:
-            return {}
+        return {}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

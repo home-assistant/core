@@ -161,4 +161,4 @@ pushetta==1.0.15
 orvibo==1.0.0
 
 # Ecobee (*.ecobee)
-https://github.com/nkgilley/home-assistant-ecobee-api/archive/e0388659a0f2fc7266485affbd398350cc0b5c58.zip#python-ecobee==0.1.1
+https://github.com/nkgilley/python-ecobee-api/archive/824a7dfabe7ef6975b2864f33e6ae0b48fb6ea3f.zip#python-ecobee==0.0.1
