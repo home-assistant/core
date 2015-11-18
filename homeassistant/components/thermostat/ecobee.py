@@ -34,7 +34,7 @@ import os
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-ecobee-api/archive/'
-    '824a7dfabe7ef6975b2864f33e6ae0b48fb6ea3f.zip#python-ecobee==0.0.1']
+    '730009b9593899d42e98c81a0544f91e65b2bc15.zip#python-ecobee==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
