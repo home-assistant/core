@@ -29,17 +29,22 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (
     CONF_API_KEY, TEMP_FAHRENHEIT, STATE_ON, STATE_OFF)
+from homeassistant.util import Throttle
+from datetime import timedelta
 import logging
 import os
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-ecobee-api/archive/'
-    '730009b9593899d42e98c81a0544f91e65b2bc15.zip#python-ecobee==0.0.1']
+    '790c20d820dbb727af2dbfb3ef0f79231e19a503.zip#python-ecobee==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
+
+# Return cached results if last scan was less then this time ago
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -48,33 +53,32 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if 'ecobee' in _CONFIGURING:
         return
 
-    setup_ecobee(hass, config, add_devices_callback)
+    from pyecobee import config_from_file
 
-
-def setup_ecobee(hass, config, add_devices_callback):
-    """ Setup ecobee thermostat """
-    from pyecobee import Ecobee, config_from_file
     # Create ecobee.conf if it doesn't exist
     if not os.path.isfile(hass.config.path(ECOBEE_CONFIG_FILE)):
         jsonconfig = {"API_KEY": config[CONF_API_KEY]}
         config_from_file(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
+    data = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))
+    setup_ecobee(hass, data, config, add_devices_callback)
 
-    ecobee = Ecobee(hass.config.path(ECOBEE_CONFIG_FILE))
 
+def setup_ecobee(hass, data, config, add_devices_callback):
+    """ Setup ecobee thermostat """
     # If ecobee has a PIN then it needs to be configured.
-    if ecobee.pin is not None:
-        request_configuration(ecobee, hass, add_devices_callback)
+    if data.ecobee.pin is not None:
+        request_configuration(data, hass, add_devices_callback)
         return
 
     if 'ecobee' in _CONFIGURING:
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('ecobee'))
 
-    add_devices_callback(Thermostat(ecobee, index)
-                         for index in range(len(ecobee.thermostats)))
+    add_devices_callback(Thermostat(data, index)
+                         for index in range(len(data.ecobee.thermostats)))
 
 
-def request_configuration(ecobee, hass, add_devices_callback):
+def request_configuration(data, hass, add_devices_callback):
     """ Request configuration steps from the user. """
     configurator = get_component('configurator')
     if 'ecobee' in _CONFIGURING:
@@ -84,35 +88,50 @@ def request_configuration(ecobee, hass, add_devices_callback):
         return
 
     # pylint: disable=unused-argument
-    def ecobee_configuration_callback(data):
+    def ecobee_configuration_callback(callback_data):
         """ Actions to do when our configuration callback is called. """
-        ecobee.request_tokens()
-        ecobee.update()
-        setup_ecobee(hass, None, add_devices_callback)
+        data.ecobee.request_tokens()
+        data.ecobee.update()
+        setup_ecobee(hass, data, None, add_devices_callback)
 
     _CONFIGURING['ecobee'] = configurator.request_config(
         hass, "Ecobee", ecobee_configuration_callback,
         description=(
             'Please authorize this app at https://www.ecobee.com/consumer'
-            'portal/index.html with pin code: ' + ecobee.pin),
+            'portal/index.html with pin code: ' + data.ecobee.pin),
         description_image="/static/images/config_ecobee_thermostat.png",
         submit_caption="I have authorized the app."
     )
 
 
+# pylint: disable=too-few-public-methods
+class EcobeeData(object):
+    """ Gets the latest data and update the states. """
+
+    def __init__(self, config_filename):
+        from pyecobee import Ecobee
+        self.ecobee = Ecobee(config_filename)
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """ Get the latest data from pyecobee. """
+        self.ecobee.update()
+
+
 class Thermostat(ThermostatDevice):
     """ Thermostat class for Ecobee """
 
-    def __init__(self, ecobee, thermostat_index):
-        self.ecobee = ecobee
+    def __init__(self, data, thermostat_index):
+        self.data = data
         self.thermostat_index = thermostat_index
-        self.thermostat = self.ecobee.get_thermostat(
+        self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
         self._name = self.thermostat['name']
         self._away = 'away' in self.thermostat['program']['currentClimateRef']
 
     def update(self):
-        self.thermostat = self.ecobee.get_thermostat(
+        self.data.update()
+        self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
         _LOGGER.info("ecobee data updated successfully.")
 
@@ -183,10 +202,7 @@ class Thermostat(ThermostatDevice):
     def mode(self):
         """ Returns current mode ie. home, away, sleep """
         mode = self.thermostat['program']['currentClimateRef']
-        if 'away' in mode:
-            self._away = True
-        else:
-            self._away = False
+        self._away = 'away' in mode
         return mode
 
     @property
@@ -213,42 +229,42 @@ class Thermostat(ThermostatDevice):
     def turn_away_mode_on(self):
         """ Turns away on. """
         self._away = True
-        self.ecobee.set_climate_hold("away")
+        self.data.ecobee.set_climate_hold("away")
 
     def turn_away_mode_off(self):
         """ Turns away off. """
         self._away = False
-        self.ecobee.resume_program()
+        self.data.ecobee.resume_program()
 
     def set_temperature(self, temperature):
         """ Set new target temperature """
         temperature = int(temperature)
         low_temp = temperature - 1
         high_temp = temperature + 1
-        self.ecobee.set_hold_temp(low_temp, high_temp)
+        self.data.ecobee.set_hold_temp(low_temp, high_temp)
 
     def set_hvac_mode(self, mode):
         """ Set HVAC mode (auto, auxHeatOnly, cool, heat, off) """
-        self.ecobee.set_hvac_mode(mode)
+        self.data.ecobee.set_hvac_mode(mode)
 
     # Home and Sleep mode aren't used in UI yet:
 
     # def turn_home_mode_on(self):
     #     """ Turns home mode on. """
     #     self._away = False
-    #     self.ecobee.set_climate_hold("home")
+    #     self.data.ecobee.set_climate_hold("home")
 
     # def turn_home_mode_off(self):
     #     """ Turns home mode off. """
     #     self._away = False
-    #     self.ecobee.resume_program()
+    #     self.data.ecobee.resume_program()
 
     # def turn_sleep_mode_on(self):
     #     """ Turns sleep mode on. """
     #     self._away = False
-    #     self.ecobee.set_climate_hold("sleep")
+    #     self.data.ecobee.set_climate_hold("sleep")
 
     # def turn_sleep_mode_off(self):
     #     """ Turns sleep mode off. """
     #     self._away = False
-    #     self.ecobee.resume_program()
+    #     self.data.ecobee.resume_program()
