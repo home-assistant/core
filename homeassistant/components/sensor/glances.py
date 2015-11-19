@@ -120,7 +120,7 @@ class GlancesSensor(Entity):
                     return round(value['fs'][0]['free'] / 1024**3, 1)
                 except KeyError:
                     return round((value['fs'][0]['size'] -
-                                  value['fs'][0]['used']) /1024**3, 1)
+                                  value['fs'][0]['used']) / 1024**3, 1)
             elif self.type == 'memory_use_percent':
                 return value['mem']['percent']
             elif self.type == 'memory_use':
