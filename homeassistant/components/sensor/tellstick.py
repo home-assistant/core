@@ -9,9 +9,6 @@ https://home-assistant.io/components/sensor.tellstick/
 import logging
 from collections import namedtuple
 
-import tellcore.telldus as telldus
-import tellcore.constants as tellcore_constants
-
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 import homeassistant.util as util
@@ -24,6 +21,9 @@ REQUIREMENTS = ['tellcore-py==1.1.2']
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Tellstick sensors. """
+    import tellcore.telldus as telldus
+    import tellcore.constants as tellcore_constants
+
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE:
         DatatypeDescription(
