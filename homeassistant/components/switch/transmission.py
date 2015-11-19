@@ -10,9 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from homeassistant.helpers.entity import ToggleEntity
-# pylint: disable=no-name-in-module, import-error
-import transmissionrpc
-from transmissionrpc.error import TransmissionError
 import logging
 
 _LOGGING = logging.getLogger(__name__)
@@ -22,6 +19,9 @@ REQUIREMENTS = ['transmissionrpc==0.11']
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Sets up the transmission sensor. """
+    import transmissionrpc
+    from transmissionrpc.error import TransmissionError
+
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
