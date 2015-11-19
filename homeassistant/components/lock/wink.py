@@ -8,8 +8,8 @@ https://home-assistant.io/components/lock.wink/
 """
 import logging
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_ACCESS_TOKEN, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.components.lock import LockDevice
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
                 '9eb39eaba0717922815e673ad1114c685839d890.zip'
@@ -34,16 +34,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(WinkLockDevice(lock) for lock in pywink.get_locks())
 
 
-class WinkLockDevice(Entity):
+class WinkLockDevice(LockDevice):
     """ Represents a Wink lock. """
 
     def __init__(self, wink):
         self.wink = wink
-
-    @property
-    def state(self):
-        """ Returns the state. """
-        return STATE_LOCKED if self.is_locked else STATE_UNLOCKED
 
     @property
     def unique_id(self):
@@ -60,14 +55,14 @@ class WinkLockDevice(Entity):
         self.wink.updateState()
 
     @property
-    def is_locked(self):
+    def locked(self):
         """ True if device is locked. """
         return self.wink.state()
 
-    def do_lock(self):
+    def lock(self):
         """ Lock the device. """
         self.wink.setState(True)
 
-    def do_unlock(self):
+    def unlock(self):
         """ Unlock the device. """
         self.wink.setState(False)

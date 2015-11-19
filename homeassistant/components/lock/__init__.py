@@ -12,12 +12,12 @@ import os
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity
 
 from homeassistant.const import (
-    STATE_LOCKED, SERVICE_LOCK, SERVICE_UNLOCK, ATTR_ENTITY_ID)
-from homeassistant.components import (
-    group, wink)
+    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK,
+    ATTR_ENTITY_ID)
+from homeassistant.components import (group, wink)
 
 DOMAIN = 'lock'
 DEPENDENCIES = []
@@ -44,19 +44,19 @@ PROP_TO_ATTR = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_locked(hass, entity_id=None):
+def locked(hass, entity_id=None):
     """ Returns if the lock is locked based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
-def do_lock(hass, entity_id=None):
+def lock(hass, entity_id=None):
     """ Locks all or specified locks. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_LOCK, data)
 
 
-def do_unlock(hass, entity_id=None):
+def unlock(hass, entity_id=None):
     """ Unlocks all or specified locks. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
@@ -73,14 +73,14 @@ def setup(hass, config):
         """ Handles calls to the lock services. """
         target_locks = component.extract_from_service(service)
 
-        for lock in target_locks:
+        for item in target_locks:
             if service.service == SERVICE_LOCK:
-                lock.do_lock()
+                item.lock()
             else:
-                lock.do_unlock()
+                item.unlock()
 
-            if lock.should_poll:
-                lock.update_ha_state(True)
+            if item.should_poll:
+                item.update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -92,7 +92,7 @@ def setup(hass, config):
     return True
 
 
-class LockDevice(ToggleEntity):
+class LockDevice(Entity):
     """ Represents a lock within Home Assistant. """
     # pylint: disable=no-self-use
 
@@ -102,23 +102,8 @@ class LockDevice(ToggleEntity):
         return None
 
     @property
-    def device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return None
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        data = {}
-
-        for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value:
-                data[attr] = value
-
-        device_attr = self.device_state_attributes
-
-        if device_attr is not None:
-            data.update(device_attr)
-
-        return data
+    def state(self):
+        is_locked = self.locked
+        if is_locked is None:
+            return STATE_UNKNOWN
+        return STATE_LOCKED if is_locked else STATE_UNLOCKED
