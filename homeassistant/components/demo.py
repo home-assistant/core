@@ -18,7 +18,7 @@ DEPENDENCIES = ['conversation', 'introduction', 'zone']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     'device_tracker', 'light', 'media_player', 'notify', 'switch', 'sensor',
-    'thermostat']
+    'thermostat', 'binary_sensor']
 
 
 def setup(hass, config):
