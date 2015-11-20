@@ -1,4 +1,3 @@
-#!/usr/local/bin/python3
 """
 homeassistant.components.thermostat.ecobee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,19 +23,14 @@ thermostat:
   platform: ecobee
   api_key: asdfasdfasdfasdfasdfaasdfasdfasdfasdf
 """
-from homeassistant.loader import get_component
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
-from homeassistant.const import (
-    CONF_API_KEY, TEMP_FAHRENHEIT, STATE_ON, STATE_OFF)
+from homeassistant.const import (TEMP_FAHRENHEIT, STATE_ON, STATE_OFF)
 from homeassistant.util import Throttle
 from datetime import timedelta
 import logging
-import os
 
-REQUIREMENTS = [
-    'https://github.com/nkgilley/python-ecobee-api/archive/'
-    '790c20d820dbb727af2dbfb3ef0f79231e19a503.zip#python-ecobee==0.0.1']
+DEPENDENCIES = ['ecobee']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,70 +41,28 @@ _CONFIGURING = {}
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup Platform """
-    # Only act if we are not already configuring this host
-    if 'ecobee' in _CONFIGURING:
+    _LOGGER.error("ecobee !!!!")
+    if discovery_info is None:
         return
-
-    from pyecobee import config_from_file
-
-    # Create ecobee.conf if it doesn't exist
-    if not os.path.isfile(hass.config.path(ECOBEE_CONFIG_FILE)):
-        jsonconfig = {"API_KEY": config[CONF_API_KEY]}
-        config_from_file(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
-    data = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))
-    setup_ecobee(hass, data, config, add_devices_callback)
+    data = EcobeeData(discovery_info[0])
+    setup_ecobee(hass, data, add_devices)
 
 
-def setup_ecobee(hass, data, config, add_devices_callback):
+def setup_ecobee(hass, data, add_devices):
     """ Setup ecobee thermostat """
-    # If ecobee has a PIN then it needs to be configured.
-    if data.ecobee.pin is not None:
-        request_configuration(data, hass, add_devices_callback)
-        return
 
-    if 'ecobee' in _CONFIGURING:
-        configurator = get_component('configurator')
-        configurator.request_done(_CONFIGURING.pop('ecobee'))
-
-    add_devices_callback(Thermostat(data, index)
-                         for index in range(len(data.ecobee.thermostats)))
-
-
-def request_configuration(data, hass, add_devices_callback):
-    """ Request configuration steps from the user. """
-    configurator = get_component('configurator')
-    if 'ecobee' in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING['ecobee'], "Failed to register, please try again.")
-
-        return
-
-    # pylint: disable=unused-argument
-    def ecobee_configuration_callback(callback_data):
-        """ Actions to do when our configuration callback is called. """
-        data.ecobee.request_tokens()
-        data.ecobee.update()
-        setup_ecobee(hass, data, None, add_devices_callback)
-
-    _CONFIGURING['ecobee'] = configurator.request_config(
-        hass, "Ecobee", ecobee_configuration_callback,
-        description=(
-            'Please authorize this app at https://www.ecobee.com/consumer'
-            'portal/index.html with pin code: ' + data.ecobee.pin),
-        description_image="/static/images/config_ecobee_thermostat.png",
-        submit_caption="I have authorized the app."
-    )
+    add_devices(Thermostat(data, index)
+                for index in range(len(data.ecobee.thermostats)))
 
 
 # pylint: disable=too-few-public-methods
 class EcobeeData(object):
     """ Gets the latest data and update the states. """
 
-    def __init__(self, config_filename):
-        from pyecobee import Ecobee
-        self.ecobee = Ecobee(config_filename)
+    def __init__(self, network):
+        self.ecobee = network
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
