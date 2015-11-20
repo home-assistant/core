@@ -56,5 +56,4 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
 
         self.assertEqual('100', state.state)
-        self.assertEqual('fav unit',
-                         state.attributes.get('unit_of_measurement'))
+
