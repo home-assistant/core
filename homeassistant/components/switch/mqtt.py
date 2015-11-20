@@ -55,13 +55,7 @@ class MqttSwitch(SwitchDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
-        
-        self._state_format = state_format
-        
-        if self._state_format.startswith('json:'):
-          self._parser = mqtt.JsonFmtParser(self._state_format[5:])
-        else:
-          self._parser = lambda x: x
+        self._parser = mqtt.FmtParser(state_format)
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
