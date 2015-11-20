@@ -47,12 +47,7 @@ class MqttSensor(Entity):
         self._state_topic = state_topic
         self._qos = qos
         self._unit_of_measurement = unit_of_measurement
-        self._state_format = state_format
-        
-        if self._state_format.startswith('json:'):
-          self._parser = mqtt.JsonFmtParser(self._state_format[5:])
-        else:
-          self._parser = lambda x: x
+        self._parser = mqtt.FmtParser(state_format)
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
