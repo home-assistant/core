@@ -41,3 +41,4 @@ class DemoBinarySensor(BinarySensorDevice):
     def is_on(self):
         """ True if the binary sensor is on. """
         return self._state
+
