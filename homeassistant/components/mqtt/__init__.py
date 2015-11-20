@@ -9,6 +9,8 @@ https://home-assistant.io/components/mqtt/
 import logging
 import os
 import socket
+import json
+import jsonpath_rw
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
@@ -125,6 +127,15 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service)
 
     return True
+
+
+class JsonFmtParser(object):
+  """ Implements a json parser on xpath"""
+  def __init__(self, jsonpath):
+    self._expr = jsonpath_rw.parse(jsonpath)
+  def __call__(self, payload):
+    match = self._expr.find(json.loads(payload))
+    return match[0].value if len(match) > 0 else None
 
 
 # This is based on one of the paho-mqtt examples:
