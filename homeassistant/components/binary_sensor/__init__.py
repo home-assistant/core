@@ -11,6 +11,7 @@ import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import (STATE_ON, STATE_OFF)
 
 DOMAIN = 'binary_sensor'
 DEPENDENCIES = []
@@ -31,12 +32,17 @@ def setup(hass, config):
 
 # pylint: disable=no-self-use
 class BinarySensorDevice(Entity):
-    """ Represents a binary sensor.. """
+    """ Represents a binary sensor. """
 
     @property
     def is_on(self):
         """ True if the binary sensor is on. """
-        return False
+        return None
+
+    @property
+    def state(self):
+        """ Returns the state of the binary sensor. """
+        return STATE_ON if self.is_on else STATE_OFF
 
     @property
     def friendly_state(self):
