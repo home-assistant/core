@@ -41,7 +41,7 @@ class DemoLock(LockDevice):
         return self._icon
 
     @property
-    def locked(self):
+    def is_locked(self):
         """ True if device is locked. """
         if self._state == STATE_LOCKED:
             return True
