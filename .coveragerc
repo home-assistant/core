@@ -16,6 +16,8 @@ omit =
 
     homeassistant/components/*/tellstick.py
     homeassistant/components/*/vera.py
+
+    homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
 
     homeassistant/components/verisure.py
