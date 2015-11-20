@@ -44,7 +44,7 @@ PROP_TO_ATTR = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def locked(hass, entity_id=None):
+def is_locked(hass, entity_id=None):
     """ Returns if the lock is locked based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
@@ -97,13 +97,21 @@ class LockDevice(Entity):
     # pylint: disable=no-self-use
 
     @property
-    def locked(self):
+    def is_locked(self):
         """ Is the lock locked or unlocked. """
         return None
 
+    def lock(self):
+        """ Locks the lock. """
+        raise NotImplementedError()
+
+    def unlock(self):
+        """ Unlocks the lock. """
+        raise NotImplementedError()
+
     @property
     def state(self):
-        is_locked = self.locked
-        if is_locked is None:
+        locked = self.is_locked
+        if locked is None:
             return STATE_UNKNOWN
-        return STATE_LOCKED if is_locked else STATE_UNLOCKED
+        return STATE_LOCKED if locked else STATE_UNLOCKED
