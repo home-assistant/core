@@ -81,7 +81,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             )
             if event.values['Command'] == 'On'\
                     or event.values['Command'] == 'Off':
-                rfxtrx.RFX_DEVICES[entity_id]._state = event.values['Command'] == 'On'
+
+                # Update the rfxtrx device state
+                is_on = event.values['Command'] == 'On'
+                rfxtrx.RFX_DEVICES[entity_id]._state = is_on
                 rfxtrx.RFX_DEVICES[entity_id].update_ha_state()
 
                 # Fire event
