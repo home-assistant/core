@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
                 # Update the rfxtrx device state
                 is_on = event.values['Command'] == 'On'
-                rfxtrx.RFX_DEVICES[entity_id]._state = is_on
+                rfxtrx.RFX_DEVICES[entity_id].state = is_on
                 rfxtrx.RFX_DEVICES[entity_id].update_ha_state()
 
                 # Fire event
@@ -123,12 +123,27 @@ class RfxtrxLight(Light):
     @property
     def isfire_event(self):
         """ Returns is the device must fire event"""
-        return self._fire_event
+        return self._isfire_event
+
+    @isfire_event.setter
+    def isfire_event(self, value):
+        """ set isfire_event property"""
+        self._isfire_event = value
 
     @property
     def is_on(self):
         """ True if light is on. """
+        return self.state
+
+    @property
+    def state(self):
+        """ Return the state value"""
         return self._state
+
+    @state.setter
+    def state(self, value):  # pylint: disable=arguments-differ
+        """ Set the state value"""
+        self._state = value
 
     def turn_on(self, **kwargs):
         """ Turn the light on. """
@@ -136,7 +151,7 @@ class RfxtrxLight(Light):
         if hasattr(self, '_event') and self._event:
             self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
 
-        self._state = True
+        self.state = True
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
@@ -145,5 +160,5 @@ class RfxtrxLight(Light):
         if hasattr(self, '_event') and self._event:
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
-        self._state = False
+        self.state = False
         self.update_ha_state()
