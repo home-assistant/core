@@ -142,10 +142,10 @@ class _JsonFmtParser(object):
 class FmtParser(object):
     """ wrapper for all supported formats """
     def __init__(self, fmt):
-        if fmt.startswith('json:'):
-            self._parser = _JsonFmtParser(fmt[5:])
-        else:
-            self._parser = lambda x: x
+        self._parser = lambda x: x
+        if fmt:
+            if fmt.startswith('json:'):
+                self._parser = _JsonFmtParser(fmt[5:])
 
     def __call__(self, payload):
         return self._parser(payload)
