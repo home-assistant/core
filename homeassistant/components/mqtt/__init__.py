@@ -129,24 +129,26 @@ def setup(hass, config):
     return True
 
 
-class FmtParser(object):
-  """ wrapper for all supported formats """
-  
-  class _JsonFmtParser(object):
+class _JsonFmtParser(object):
     """ Implements a json parser on xpath"""
     def __init__(self, jsonpath):
-      self._expr = jsonpath_rw.parse(jsonpath)
+        self._expr = jsonpath_rw.parse(jsonpath)
+
     def __call__(self, payload):
-      match = self._expr.find(json.loads(payload))
-      return match[0].value if len(match) > 0 else None 
-      
-  def __init__(self, fmt):
-    if fmt.startswith('json:'):
-      self._parser = FmtParser._JsonFmtParser(fmt[5:])
-    else:
-      self._parser = lambda x: x
-  def __call__(self, payload):
-    return self._parser(payload)
+        match = self._expr.find(json.loads(payload))
+        return match[0].value if len(match) > 0 else payload
+
+
+class FmtParser(object):
+    """ wrapper for all supported formats """
+    def __init__(self, fmt):
+        if fmt.startswith('json:'):
+            self._parser = _JsonFmtParser(fmt[5:])
+        else:
+            self._parser = lambda x: x
+
+    def __call__(self, payload):
+        return self._parser(payload)
 
 
 # This is based on one of the paho-mqtt examples:

@@ -7,8 +7,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
 import logging
-import json
-import jsonpath_rw
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 
@@ -40,7 +38,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSensor(Entity):
     """ Represents a sensor that can be updated using MQTT. """
-    def __init__(self, hass, name, state_topic, qos, unit_of_measurement,state_format):
+    def __init__(self, hass, name, state_topic, qos, unit_of_measurement,
+                 state_format):
         self._state = "-"
         self._hass = hass
         self._name = name
