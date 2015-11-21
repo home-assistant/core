@@ -1,5 +1,5 @@
 """
-homeassistant.components.zwave
+homeassistant.components.ecobee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects Home Assistant to the Ecobee API and maintains tokens.
 
@@ -12,6 +12,7 @@ api_key: asdflaksf
 
 from homeassistant.loader import get_component
 from homeassistant import bootstrap
+from homeassistant.util import Throttle
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED, CONF_API_KEY)
@@ -57,7 +58,7 @@ def request_configuration(network, hass):
         hass, "Ecobee", ecobee_configuration_callback,
         description=(
             'Please authorize this app at https://www.ecobee.com/consumer'
-            'portal/index.html with pin code: ' + NETWORK.pin),
+            'portal/index.html with pin code: ' + network.pin),
         description_image="/static/images/config_ecobee_thermostat.png",
         submit_caption="I have authorized the app."
     )
@@ -75,6 +76,20 @@ def setup_ecobee(hass, network):
         configurator.request_done(_CONFIGURING.pop('ecobee'))
 
 
+# pylint: disable=too-few-public-methods
+class EcobeeData(object):
+    """ Gets the latest data and update the states. """
+
+    def __init__(self, config_file):
+        from pyecobee import Ecobee
+        self.ecobee = Ecobee(config_file)
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """ Get the latest data from pyecobee. """
+        self.ecobee.update()
+
+
 def setup(hass, config):
     """
     Setup Ecobee.
@@ -87,7 +102,7 @@ def setup(hass, config):
     if 'ecobee' in _CONFIGURING:
         return
 
-    from pyecobee import Ecobee, config_from_file
+    from pyecobee import config_from_file
 
     # Create ecobee.conf if it doesn't exist
     if not os.path.isfile(hass.config.path(ECOBEE_CONFIG_FILE)):
@@ -97,9 +112,9 @@ def setup(hass, config):
         jsonconfig = {"API_KEY": config[DOMAIN].get(CONF_API_KEY)}
         config_from_file(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
 
-    NETWORK = Ecobee(hass.config.path(ECOBEE_CONFIG_FILE))
+    NETWORK = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))
 
-    setup_ecobee(hass, NETWORK)
+    setup_ecobee(hass, NETWORK.ecobee)
 
     # Ensure component is loaded
     bootstrap.setup_component(hass, 'thermostat', config)
