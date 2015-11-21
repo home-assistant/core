@@ -10,8 +10,8 @@ from functools import partial
 import logging
 import os
 
+import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
-from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform
 
 from homeassistant.const import CONF_NAME
@@ -22,6 +22,9 @@ DEPENDENCIES = []
 # Title of notification
 ATTR_TITLE = "title"
 ATTR_TITLE_DEFAULT = "Home Assistant"
+
+# Target of the notification (user, device, etc)
+ATTR_TARGET = 'target'
 
 # Text to notify user of
 ATTR_MESSAGE = "message"
@@ -45,8 +48,8 @@ def setup(hass, config):
 
     for platform, p_config in config_per_platform(config, DOMAIN, _LOGGER):
         # get platform
-        notify_implementation = get_component(
-            'notify.{}'.format(platform))
+        notify_implementation = bootstrap.prepare_setup_platform(
+            hass, config, DOMAIN, platform)
 
         if notify_implementation is None:
             _LOGGER.error("Unknown notification service specified.")
@@ -69,8 +72,9 @@ def setup(hass, config):
                 return
 
             title = call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+            target = call.data.get(ATTR_TARGET)
 
-            notify_service.send_message(message, title=title)
+            notify_service.send_message(message, title=title, target=target)
 
         # register service
         service_call_handler = partial(notify_message, notify_service)

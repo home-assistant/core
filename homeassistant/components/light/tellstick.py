@@ -6,13 +6,9 @@ Support for Tellstick lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tellstick/
 """
-import logging
-# pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
                                  ATTR_FRIENDLY_NAME)
-import tellcore.constants as tellcore_constants
-from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
 
@@ -20,12 +16,9 @@ REQUIREMENTS = ['tellcore-py==1.1.2']
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick lights. """
 
-    try:
-        import tellcore.telldus as telldus
-    except ImportError:
-        logging.getLogger(__name__).exception(
-            "Failed to import tellcore")
-        return []
+    import tellcore.telldus as telldus
+    from tellcore.library import DirectCallbackDispatcher
+    import tellcore.constants as tellcore_constants
 
     core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
 
@@ -58,16 +51,19 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class TellstickLight(Light):
     """ Represents a Tellstick light. """
-    last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
-                              tellcore_constants.TELLSTICK_TURNOFF |
-                              tellcore_constants.TELLSTICK_DIM |
-                              tellcore_constants.TELLSTICK_UP |
-                              tellcore_constants.TELLSTICK_DOWN)
 
     def __init__(self, tellstick_device):
+        import tellcore.constants as tellcore_constants
+
         self.tellstick_device = tellstick_device
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self._brightness = 0
+
+        self.last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
+                                       tellcore_constants.TELLSTICK_TURNOFF |
+                                       tellcore_constants.TELLSTICK_DIM |
+                                       tellcore_constants.TELLSTICK_UP |
+                                       tellcore_constants.TELLSTICK_DOWN)
 
     @property
     def name(self):
@@ -104,6 +100,8 @@ class TellstickLight(Light):
 
     def update(self):
         """ Update state of the light. """
+        import tellcore.constants as tellcore_constants
+
         last_command = self.tellstick_device.last_sent_command(
             self.last_sent_command_mask)
 

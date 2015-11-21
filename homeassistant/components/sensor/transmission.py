@@ -11,10 +11,6 @@ from datetime import timedelta
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
 from homeassistant.helpers.entity import Entity
-# pylint: disable=no-name-in-module, import-error
-import transmissionrpc
-
-from transmissionrpc.error import TransmissionError
 
 import logging
 
@@ -33,6 +29,9 @@ _THROTTLED_REFRESH = None
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Transmission sensors. """
+    import transmissionrpc
+    from transmissionrpc.error import TransmissionError
+
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
@@ -97,6 +96,8 @@ class TransmissionSensor(Entity):
 
     def refresh_transmission_data(self):
         """ Calls the throttled Transmission refresh method. """
+        from transmissionrpc.error import TransmissionError
+
         if _THROTTLED_REFRESH is not None:
             try:
                 _THROTTLED_REFRESH()

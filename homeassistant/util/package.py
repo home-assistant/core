@@ -29,6 +29,7 @@ def install_package(package, upgrade=True, target=None):
         try:
             return 0 == subprocess.call(args)
         except subprocess.SubprocessError:
+            _LOGGER.exception('Unable to install pacakge %s', package)
             return False
 
 

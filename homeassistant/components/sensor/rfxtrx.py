@@ -11,7 +11,6 @@ from collections import OrderedDict
 
 from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
-from RFXtrx import SensorEvent
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.util import slugify
 
@@ -28,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
+    from RFXtrx import SensorEvent
 
     def sensor_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """

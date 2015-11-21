@@ -50,6 +50,7 @@ omit =
     homeassistant/components/downloader.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/hue.py
+    homeassistant/components/light/mqtt.py
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/hyperion.py
@@ -83,6 +84,7 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/switch/orvibo.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
