@@ -55,11 +55,11 @@ class MqttSwitch(SwitchDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
-        self._parser = mqtt.FmtParser(state_format)
+        self._parse = mqtt.FmtParser(state_format)
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
-            payload = self._parser(payload)
+            payload = self._parse(payload)
             if payload == self._payload_on:
                 self._state = True
                 self.update_ha_state()
