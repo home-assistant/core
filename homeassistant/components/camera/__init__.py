@@ -58,7 +58,7 @@ MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
-    """ Track states and offer events for sensors. """
+    """ Track states and offer events for cameras. """
 
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
@@ -87,7 +87,10 @@ def setup(hass, config):
 
         if camera:
             response = camera.camera_image()
-            handler.wfile.write(response)
+            if response is not None:
+                handler.wfile.write(response)
+            else:
+                handler.send_response(HTTP_NOT_FOUND)
         else:
             handler.send_response(HTTP_NOT_FOUND)
 
@@ -98,7 +101,8 @@ def setup(hass, config):
 
     # pylint: disable=unused-argument
     def _proxy_camera_mjpeg_stream(handler, path_match, data):
-        """ Proxies the camera image as an mjpeg stream via the HA server.
+        """
+        Proxies the camera image as an mjpeg stream via the HA server.
         This function takes still images from the IP camera and turns them
         into an MJPEG stream.  This means that HA can return a live video
         stream even with only a still image URL available.
@@ -129,7 +133,8 @@ def setup(hass, config):
             while True:
 
                 img_bytes = camera.camera_image()
-
+                if img_bytes is None:
+                    continue
                 headers_str = '\r\n'.join((
                     'Content-length: {}'.format(len(img_bytes)),
                     'Content-type: image/jpeg',
@@ -159,7 +164,7 @@ def setup(hass, config):
 
 
 class Camera(Entity):
-    """ The base class for camera components """
+    """ The base class for camera components. """
 
     def __init__(self):
         self.is_streaming = False
@@ -167,23 +172,23 @@ class Camera(Entity):
     @property
     # pylint: disable=no-self-use
     def is_recording(self):
-        """ Returns true if the device is recording """
+        """ Returns true if the device is recording. """
         return False
 
     @property
     # pylint: disable=no-self-use
     def brand(self):
-        """ Should return a string of the camera brand """
+        """ Should return a string of the camera brand. """
         return None
 
     @property
     # pylint: disable=no-self-use
     def model(self):
-        """ Returns string of camera model """
+        """ Returns string of camera model. """
         return None
 
     def camera_image(self):
-        """ Return bytes of camera image """
+        """ Return bytes of camera image. """
         raise NotImplementedError()
 
     @property

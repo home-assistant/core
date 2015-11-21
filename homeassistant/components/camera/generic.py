@@ -40,13 +40,21 @@ class GenericCamera(Camera):
         self._still_image_url = device_info['still_image_url']
 
     def camera_image(self):
-        """ Return a still image reponse from the camera. """
+        """ Return a still image response from the camera. """
         if self._username and self._password:
-            response = requests.get(
-                self._still_image_url,
-                auth=HTTPBasicAuth(self._username, self._password))
+            try:
+                response = requests.get(
+                    self._still_image_url,
+                    auth=HTTPBasicAuth(self._username, self._password))
+            except requests.exceptions.RequestException as error:
+                _LOGGER.error('Error getting camera image: %s', error)
+                return None
         else:
-            response = requests.get(self._still_image_url)
+            try:
+                response = requests.get(self._still_image_url)
+            except requests.exceptions.RequestException as error:
+                _LOGGER.error('Error getting camera image: %s', error)
+                return None
 
         return response.content
 

@@ -6,6 +6,9 @@ Connects Home Assistant to a Z-Wave network.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
+import sys
+import os.path
+
 from pprint import pprint
 
 from homeassistant import bootstrap
@@ -20,13 +23,20 @@ REQUIREMENTS = ['pydispatcher==2.0.5']
 CONF_USB_STICK_PATH = "usb_path"
 DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
+CONF_POLLING_INTERVAL = "polling_interval"
+DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
+                                         'python-openzwave', 'config')
 
 DISCOVER_SENSORS = "zwave.sensors"
+DISCOVER_SWITCHES = "zwave.switch"
 DISCOVER_LIGHTS = "zwave.light"
 
 COMMAND_CLASS_SWITCH_MULTILEVEL = 38
+
+COMMAND_CLASS_SWITCH_BINARY = 37
 COMMAND_CLASS_SENSOR_BINARY = 48
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
+COMMAND_CLASS_METER = 50
 COMMAND_CLASS_BATTERY = 128
 
 GENRE_WHATEVER = None
@@ -35,19 +45,27 @@ GENRE_USER = "User"
 TYPE_WHATEVER = None
 TYPE_BYTE = "Byte"
 TYPE_BOOL = "Bool"
+TYPE_DECIMAL = "Decimal"
 
 # list of tuple (DOMAIN, discovered service, supported command
 # classes, value type)
 DISCOVERY_COMPONENTS = [
     ('sensor',
      DISCOVER_SENSORS,
-     [COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL],
+     [COMMAND_CLASS_SENSOR_BINARY,
+      COMMAND_CLASS_SENSOR_MULTILEVEL,
+      COMMAND_CLASS_METER],
      TYPE_WHATEVER,
-     GENRE_WHATEVER),
+     GENRE_USER),
     ('light',
      DISCOVER_LIGHTS,
      [COMMAND_CLASS_SWITCH_MULTILEVEL],
      TYPE_BYTE,
+     GENRE_USER),
+    ('switch',
+     DISCOVER_SWITCHES,
+     [COMMAND_CLASS_SWITCH_BINARY],
+     TYPE_BOOL,
      GENRE_USER),
 ]
 
@@ -107,7 +125,9 @@ def setup(hass, config):
     # Setup options
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
-        user_path=hass.config.config_dir)
+        user_path=hass.config.config_dir,
+        config_path=config[DOMAIN].get('config_path',
+                                       DEFAULT_ZWAVE_CONFIG_PATH),)
 
     options.set_console_output(use_debug)
     options.lock()
@@ -164,6 +184,10 @@ def setup(hass, config):
     def start_zwave(event):
         """ Called when Home Assistant starts up. """
         NETWORK.start()
+
+        polling_interval = config[DOMAIN].get(CONF_POLLING_INTERVAL, None)
+        if polling_interval is not None:
+            NETWORK.setPollInterval(polling_interval)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
