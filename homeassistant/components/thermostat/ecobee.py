@@ -26,8 +26,6 @@ thermostat:
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (TEMP_FAHRENHEIT, STATE_ON, STATE_OFF)
-from homeassistant.util import Throttle
-from datetime import timedelta
 import logging
 
 DEPENDENCIES = ['ecobee']
@@ -37,37 +35,15 @@ _LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup Platform """
     _LOGGER.error("ecobee !!!!")
     if discovery_info is None:
         return
-    data = EcobeeData(discovery_info[0])
-    setup_ecobee(hass, data, add_devices)
-
-
-def setup_ecobee(hass, data, add_devices):
-    """ Setup ecobee thermostat """
-
+    data = discovery_info[0]
     add_devices(Thermostat(data, index)
                 for index in range(len(data.ecobee.thermostats)))
-
-
-# pylint: disable=too-few-public-methods
-class EcobeeData(object):
-    """ Gets the latest data and update the states. """
-
-    def __init__(self, network):
-        self.ecobee = network
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """ Get the latest data from pyecobee. """
-        self.ecobee.update()
 
 
 class Thermostat(ThermostatDevice):
