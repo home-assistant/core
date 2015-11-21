@@ -6,6 +6,9 @@ Connects Home Assistant to a Z-Wave network.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
+import sys
+import os.path
+
 from pprint import pprint
 
 from homeassistant import bootstrap
@@ -21,6 +24,8 @@ CONF_USB_STICK_PATH = "usb_path"
 DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 CONF_POLLING_INTERVAL = "polling_interval"
+DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
+                                         'python-openzwave', 'config')
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
@@ -120,7 +125,9 @@ def setup(hass, config):
     # Setup options
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
-        user_path=hass.config.config_dir)
+        user_path=hass.config.config_dir,
+        config_path=config[DOMAIN].get('config_path',
+                                       DEFAULT_ZWAVE_CONFIG_PATH),)
 
     options.set_console_output(use_debug)
     options.lock()
