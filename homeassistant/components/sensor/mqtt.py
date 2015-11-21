@@ -46,11 +46,11 @@ class MqttSensor(Entity):
         self._state_topic = state_topic
         self._qos = qos
         self._unit_of_measurement = unit_of_measurement
-        self._parser = mqtt.FmtParser(state_format)
+        self._parse = mqtt.FmtParser(state_format)
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
-            self._state = self._parser(payload)
+            self._state = self._parse(payload)
             self.update_ha_state()
 
         mqtt.subscribe(hass, self._state_topic, message_received, self._qos)
