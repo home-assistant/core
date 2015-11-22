@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://home-assistant.io/blog/2015/11/22/survey-november-2015/</loc>
+    <lastmod>2015-11-22T06:51:18-08:00</lastmod>
+  </url>
+  <url>
     <loc>https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/</loc>
     <lastmod>2015-11-16T20:27:00-08:00</lastmod>
   </url>
@@ -232,10 +236,7 @@
     <loc>https://home-assistant.io/blog/categories/esp8266/</loc>
   </url>
   <url>
-    <loc>https://home-assistant.io/blog/posts/2/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/posts/3/</loc>
+    <loc>https://home-assistant.io/blog/categories/survey/</loc>
   </url>
     <url>
       <loc>https://home-assistant.io/components/automation/</loc>
@@ -401,6 +402,9 @@
     </url>
     <url>
       <loc>https://home-assistant.io/components/sensor.mysensors/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/binary_sensor.mqtt/</loc>
     </url>
     <url>
       <loc>https://home-assistant.io/components/sensor.mqtt/</loc>
@@ -655,6 +659,18 @@
       <loc>https://home-assistant.io/components/updater/</loc>
     </url>
     <url>
+      <loc>https://home-assistant.io/components/lock.wink/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/binary_sensor/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/binary_sensor.arest/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/lock/</loc>
+    </url>
+    <url>
       <loc>https://home-assistant.io/cookbook/automation_for_rainy_days/</loc>
     </url>
     <url>
@@ -758,6 +774,9 @@
     </url>
     <url>
       <loc>https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/11/22/survey-november-2015/</loc>
     </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.html</loc>
@@ -938,6 +957,14 @@
   <url>
     <loc>https://home-assistant.io/components/light.wink.html</loc>
     <lastmod>2015-11-06T21:08:28-08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/lock.html</loc>
+    <lastmod>2015-11-22T12:33:15-08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/components/lock.wink.html</loc>
+    <lastmod>2015-11-22T12:33:15-08:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/logbook.html</loc>

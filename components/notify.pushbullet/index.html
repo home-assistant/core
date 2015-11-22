@@ -124,7 +124,7 @@
 
 <h3>Usage</h3>
 
-<p>PushBullet is a notify platform and thus can be controlled by calling the notify service <a href="/components/notify/">as described here</a>. An optional <strong>target</strong> parameter can be given to PushBullet to specify one or many account’s devices, contacts or channels to notify.</p>
+<p>PushBullet is a notify platform and thus can be controlled by calling the notify service <a href="/components/notify/">as described here</a>. It will send a notification to all devices registered in the PushBullet account.  An optional <strong>target</strong> parameter can be given to PushBullet to specify specific account’s devices, contacts or channels.</p>
 
 <table>
   <thead>
@@ -137,22 +137,10 @@
   </thead>
   <tbody>
     <tr>
-      <td>All devices</td>
-      <td><code>device</code></td>
-      <td>–</td>
-      <td><code>device</code></td>
-    </tr>
-    <tr>
       <td>Device</td>
       <td><code>device/</code></td>
       <td>Device nickname</td>
       <td><code>device/iphone</code></td>
-    </tr>
-    <tr>
-      <td>Contact</td>
-      <td><code>contact/</code></td>
-      <td>Contact e-mail (lowercase)</td>
-      <td><code>contact/email@example.com</code></td>
     </tr>
     <tr>
       <td>Channel</td>
@@ -160,8 +148,16 @@
       <td>Channel tag</td>
       <td><code>channel/my_home</code></td>
     </tr>
+    <tr>
+      <td>Email</td>
+      <td><code>email/</code></td>
+      <td>Contact’s email address</td>
+      <td><code>email/email@example.com</code></td>
+    </tr>
   </tbody>
 </table>
+
+<p>If using targets, your own account’s email address functions as ‘send to all devices’. All targets are verified (if exists) before sending, except email.</p>
 
 <h4>Example service payload</h4>
 
@@ -169,7 +165,7 @@
   <div class="code"><pre>{
   <span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">A message for many people</span><span class="delimiter">&quot;</span></span>,
   <span class="key"><span class="delimiter">&quot;</span><span class="content">target</span><span class="delimiter">&quot;</span></span>: [
-    <span class="string"><span class="delimiter">&quot;</span><span class="content">device</span><span class="delimiter">&quot;</span></span>,
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">device/telephone</span><span class="delimiter">&quot;</span></span>,
     <span class="string"><span class="delimiter">&quot;</span><span class="content">contact/hello@example.com</span><span class="delimiter">&quot;</span></span>,
     <span class="string"><span class="delimiter">&quot;</span><span class="content">channel/my_home</span><span class="delimiter">&quot;</span></span>
   ]

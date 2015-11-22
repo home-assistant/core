@@ -102,11 +102,20 @@
 
   <p>The glances sensor platform is consuming the system information provided by the <a href="https://github.com/nicolargo/glances">Glances</a> API. This enables one to track remote host and display their stats in Home Assistant.</p>
 
-<p>This sensors needs a running isntance of <code>glances</code> on the host:</p>
+<p>This sensors needs a running instance of <code>glances</code> on the host. The minimal supported version of <code>glances</code> is 2.3:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>glances -w
 Glances web server started on http://0.0.0.0:61208/
+</pre></div>
+</div>
+</div>
+
+<p>Check if you are able to access the API located at <code>http://IP_ADRRESS:61208/api/2</code>. The details about your memory usage is provided as a JSON response. If so, you are good to proceed.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET http://IP_ADDRESS:61208/api/2/mem/free
+{&quot;free&quot;: 203943936}
 </pre></div>
 </div>
 </div>

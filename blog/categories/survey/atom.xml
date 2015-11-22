@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: survey | Home Assistant]]></title>
+  <link href="https://home-assistant.io/blog/categories/survey/atom.xml" rel="self"/>
+  <link href="https://home-assistant.io/"/>
+  <updated>2015-11-22T12:47:40-08:00</updated>
+  <id>https://home-assistant.io/</id>
+  <author>
+    <name><![CDATA[Paulus Schoutsen]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Survey November 2015]]></title>
+    <link href="https://home-assistant.io/blog/2015/11/22/survey-november-2015/"/>
+    <updated>2015-11-22T06:51:18-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/11/22/survey-november-2015</id>
+    <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/blog/2015-11-survey/releases.png" style="float: right; margin-left: 8px; margin-bottom: 8px;" height="120" />Around a week ago we started with the first survey. Now 30 people have participated. Thank you very much if you did. We think that’s enough time to have some “only partially representative” data. It’s hard to tell how many Home Assistant users are out there. Currently there are 215 members in our <a href="https://gitter.im/balloob/home-assistant">Gitter chat room</a> and last week <a href="https://pypi.python.org/pypi/homeassistant/">PyPI</a> counted 5063 downloads.</p>
+
+<p>The idea was to anonymously collect some details about the usage of the different parts of Home Assistant and a little bit about the environment its running in.</p>
+
+<!--more-->
+<p>Thanks to Python, users are running Home Assistant on the most popular Linux distributions and other operating systems including OS X and Microsoft Windows. One quarter of the operating systems are unknown which leads to the assumption that it is possible to run Home Assistant on most of the available operation systems today. We hope that *BSD users have fun too. The Hardware platform of choice seems to be x86_64 and ARM.</p>
+
+<p>Of course most users are running with the <a href="/components/automation/">automation</a> component otherwise it would make much sense to use Home Assistant. The <a href="/components/sun/">sun</a> component is used a lot too. We hope that this is not because this component is enabled by default.</p>
+
+<p>The <a href="/components/alarm_control_panel/">Alarm control panels</a> and the <a href="/components/camera/">camera component</a> are both used by around one third of the participants of the survey. It’s safe to say that they cover a niche, but they will gain momentum when people discover how they can build alarm systems with Home Assistant.</p>
+
+<p><a href="/components/light.hue/">Philips Hue</a> is the “winner” in the light category closely followed by <a href="components/light.mqtt/">MQTT lights</a>. <a href="/components/media_player.cast/">Google Cast</a> and <a href="/components/media_player.plex/"> Plex</a> are the top media player platforms. <a href="/components/notify.pushbullet/">Pushbullet</a> is by far the most-used <a href="https://home-assistant.io/components/notify/">notification platform</a>. If you followed the recent efforts to improve this platform it’s comprehensible.</p>
+
+<p>It’s interesting to see that most of the sensor, switch, and thermostat platforms are used. A lot of people seem to be interested in the weather data provided by the <a href="/components/sensor.forecast/">Forecast sensor</a>. The MQTT sensors and switches are deployed in almost 50% of all Home Assistant setups.</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/releases.png" />
+  Home Assistant releases
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/os.png" />
+  Operating systems
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/platforms.png" />
+  Hardware platforms
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/components.png" />
+  Components
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/alarm-cameras.png" />
+  Alarm Control Panels and Cameras
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/trackers.png" />
+  Device trackers
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/lights.png" />
+  Lights
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/players.png" />
+  Media players
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/notifications.png" />
+  Notifications
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/sensors.png" />
+  Sensors
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/switches.png" />
+  Switches
+</p>
+
+<p class="img">
+  <img src="https://home-assistant.io/images/blog/2015-11-survey/thermostats.png" />
+  Thermostats
+</p>
+
+<p>The conclusion is that <a href="http://mqtt.org/">MQTT</a> is popular in almost every section from Alarm Control Panel, presence detection with <a href="http://owntracks.org/">owntracks</a>, sensors and switches, and now even for lights.</p>
+
+<p>The interpretation of the data is up to you. Again, thanks for participating in this survey.</p>
+]]></content>
+  </entry>
+  
+</feed>
