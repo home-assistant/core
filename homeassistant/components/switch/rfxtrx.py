@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 rfxtrx.RFX_DEVICES[entity_id].update_ha_state()
 
                 # Fire event
-                if rfxtrx.RFX_DEVICES[entity_id].isfire_event:
+                if rfxtrx.RFX_DEVICES[entity_id].should_fire_event:
                     rfxtrx.RFX_DEVICES[entity_id].hass.bus.fire(
                         EVENT_BUTTON_PRESSED, {
                             ATTR_ENTITY_ID:
@@ -108,7 +108,7 @@ class RfxtrxSwitch(SwitchDevice):
         self._name = name
         self._event = event
         self._state = datas[ATTR_STATE]
-        self._isfire_event = datas[ATTR_FIREEVENT]
+        self._should_fire_event = datas[ATTR_FIREEVENT]
 
     @property
     def should_poll(self):
@@ -121,14 +121,9 @@ class RfxtrxSwitch(SwitchDevice):
         return self._name
 
     @property
-    def isfire_event(self):
+    def should_fire_event(self):
         """ Returns is the device must fire event"""
-        return self._isfire_event
-
-    @isfire_event.setter
-    def isfire_event(self, value):
-        """ set isfire_event property"""
-        self._isfire_event = value
+        return self._should_fire_event
 
     @property
     def is_on(self):
