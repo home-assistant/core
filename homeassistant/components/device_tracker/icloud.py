@@ -1,134 +1,79 @@
 """
 homeassistant.components.device_tracker.icloud
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a iCloud devices.
+Device tracker platform that supports scanning iCloud devices.
 
-It does require that your device has registered with Find My iPhone.
+It does require that your device has beend registered with Find My iPhone.
+
+Note: that this may cause battery drainage as it wakes up your device to
+get the current location.
+
+Note: You may receive an email from Apple stating that someone has logged
+into your account.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.icloud/
 """
 import logging
-from datetime import timedelta
-import threading
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
-
+from homeassistant.helpers.event import track_utc_time_change
+from pyicloud import PyiCloudService
+from pyicloud.exceptions import PyiCloudFailedLoginException
+from pyicloud.exceptions import PyiCloudNoDevicesException
 import re
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
+SCAN_INTERVAL = 60
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['https://github.com/picklepete/pyicloud/archive/'
                 '80f6cd6decc950514b8dc43b30c5bded81b34d5f.zip'
-                '#pyicloud==0.8.0',
-                'certifi']
+                '#pyicloud==0.8.0']
 
 
-def get_scanner(hass, config):
-    """ Validates config and returns a iPhone Scanner. """
-    if not validate_config(config,
-                           {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
+def setup_scanner(hass, config, see):
 
-    scanner = ICloudDeviceScanner(config[DOMAIN])
+    # Get the username and password from the configuration
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
-    return scanner if scanner.success_init else None
+    try:
+        _LOGGER.info('Logging into iCloud Account')
+        # Attempt the login to iCloud
+        api = PyiCloudService(username,
+                              password,
+                              verify=True)
+    except PyiCloudFailedLoginException as e:
+        _LOGGER.exception('Error logging into iCloud Service: {0}'.format(str(e)))
 
-
-class ICloudDeviceScanner(object):
-    """
-    This class looks up devices from your iCloud account
-    and can report on their lat and long if registered.
-    """
-
-    def __init__(self, config):
-        from pyicloud import PyiCloudService
-        from pyicloud.exceptions import PyiCloudFailedLoginException
-        from pyicloud.exceptions import PyiCloudNoDevicesException
-
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-
-        self.lock = threading.Lock()
-
-        self.last_results = {}
-
-        # Get the data from iCloud
+    def update_icloud(now):
         try:
-            _LOGGER.info('Logging into iCloud Services')
-            self._api = PyiCloudService(self.username,
-                                        self.password,
-                                        verify=True)
-        except PyiCloudFailedLoginException:
-            _LOGGER.exception("Failed login to iCloud Service." +
-                              "Verify Username and Password")
-            return
+            # The session timeouts if we are not using it so we have to re-authenticate.  This will send an email.
+            api.authenticate()
+            # Loop through every device registered with the iCloud account
+            for device in api.devices:
+                status = device.status()
+                location = device.location()
+                # If the device has a location add it. If not do nothing
+                if location:
+                    see(
+                        dev_id=re.sub(r"(\s|\W|')",
+                                      '',
+                                      status['name']),
+                        host_name=status['name'],
+                        gps=(location['latitude'], location['longitude']),
+                        battery=status['batteryLevel']*100,
+                        gps_accuracy=location['horizontalAccuracy']
+                    )
+                else:
+                    # No location found for the device so continue
+                    continue
+        except PyiCloudNoDevicesException as e:
+            _LOGGER.exception('No iCloud Devices found!')
 
-        try:
-            devices = self.get_devices()
-        except PyiCloudNoDevicesException:
-            _LOGGER.exception("No iCloud Devices found.")
-            return
-
-        self.success_init = devices is not None
-
-        if self.success_init:
-            self.last_results = devices
-        else:
-            _LOGGER.error('Issues getting iCloud results')
-
-    def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found devices id's
-        """
-
-        self._update_info()
-
-        return [device for device in self.last_results]
-
-    def get_device_name(self, mac):
-        """ Returns the name of the given device or None if we don't know """
-        try:
-            return next(device for device in self.last_results
-                        if device == mac)
-        except StopIteration:
-            return None
-
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def _update_info(self):
-        """ Retrieve the latest information from iCloud
-         Returns a bool if scanning is successful
-        """
-
-        if not self.success_init:
-            return
-
-        with self.lock:
-            _LOGGER.info('Scanning iCloud Devices')
-
-            self.last_results = self.get_devices() or {}
-
-    def get_devices(self):
-        devices = {}
-        for device in self._api.devices:
-            try:
-                devices[device.status()['name']] = {
-                    'device_id': re.sub(r'(\s*|\W*)',
-                                        device.status()['name'],
-                                        ''),
-                    'host_name': device.status()['name'],
-                    'gps': (device.location()['latitude'],
-                            device.location()['longitude']),
-                    'battery': device.status()['batteryLevel']*100
-                }
-            except TypeError:
-                # Device is not tracked.
-                continue
-        return devices
+    track_utc_time_change(
+        hass,
+        update_icloud,
+        second=range(0, 60, SCAN_INTERVAL)
+    )
