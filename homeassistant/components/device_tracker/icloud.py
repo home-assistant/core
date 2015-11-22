@@ -33,6 +33,9 @@ REQUIREMENTS = ['https://github.com/picklepete/pyicloud/archive/'
 
 
 def setup_scanner(hass, config, see):
+    """
+    Set up the iCloud Scanner
+    """
 
     # Get the username and password from the configuration
     username = config[CONF_USERNAME]
@@ -45,11 +48,17 @@ def setup_scanner(hass, config, see):
                               password,
                               verify=True)
     except PyiCloudFailedLoginException as e:
-        _LOGGER.exception('Error logging into iCloud Service: {0}'.format(str(e)))
+        _LOGGER.exception(
+            'Error logging into iCloud Service: {0}'.format(str(e))
+        )
 
     def update_icloud(now):
+        """
+        Authenticate against iCloud and scan for devices.
+        """
         try:
-            # The session timeouts if we are not using it so we have to re-authenticate.  This will send an email.
+            # The session timeouts if we are not using it so we
+            # have to re-authenticate.  This will send an email.
             api.authenticate()
             # Loop through every device registered with the iCloud account
             for device in api.devices:
@@ -69,7 +78,7 @@ def setup_scanner(hass, config, see):
                 else:
                     # No location found for the device so continue
                     continue
-        except PyiCloudNoDevicesException as e:
+        except PyiCloudNoDevicesException:
             _LOGGER.exception('No iCloud Devices found!')
 
     track_utc_time_change(
