@@ -10,7 +10,8 @@ https://home-assistant.io/components/light.zwave/
 import homeassistant.components.zwave as zwave
 
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
+from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
+                                            ATTR_TRANSITION)
 from threading import Timer
 
 
@@ -56,9 +57,19 @@ class ZwaveDimmer(Light):
 
         self._brightness, self._state = brightness_state(value)
 
+        # Used to track actual brightness of light when fading on/off using a
+        # transition
+        if self._state == STATE_ON:
+            self._current_brightness = int(self._brightness / 255 * 99)
+        else:
+            self._current_brightness = 0
+
         # Used for value change event handling
         self._refreshing = False
         self._timer = None
+
+        # Used for emulating a slow transition
+        self._transition_timer = None
 
         dispatcher.connect(
             self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -110,6 +121,9 @@ class ZwaveDimmer(Light):
     def turn_on(self, **kwargs):
         """ Turn the device on. """
 
+        if self._transition_timer is not None:
+            self._transition_timer.cancel()
+
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
@@ -117,10 +131,46 @@ class ZwaveDimmer(Light):
         # brightness.
         brightness = (self._brightness / 255) * 99
 
+        # If 0, then just send command to turn on light immediately. Some dimmer
+        # switches will still have a fade-on period that's built into the
+        # hardware.
+        transition = kwargs.get(ATTR_TRANSITION, 0)
+        # TODO: Is there a minimum transition interval below which this doesn't
+        # work? If so, we may need to add a check for that and then use larger
+        # brightness steps.
+
+        # Update interval specifies the time (in seconds) between each increment
+        # of brightness by a value of 1 (0 to 99).
+        update_interval = transition/brightness
+
+        # If transition is immediate, jump to the final level.
+        brightness_step = 1 if transition != 0 else brightness
+
+        self._transition_update(brightness_step, brightness, update_interval)
+
+    def _transition_update(self, brightness_step, target_brightness,
+                           update_interval):
+
+        brightness = self._current_brightness + brightness_step
         if self._node.set_dimmer(self._value.value_id, brightness):
-            self._state = STATE_ON
+            if brightness != 0:
+                self._state = STATE_ON
+            else:
+                self._state = STATE_OFF
+            self._current_brightness = brightness
+
+        if brightness != target_brightness:
+            args = (brightness_step, target_brightness, update_interval)
+            self._transition_timer = \
+                Timer(update_interval, self._transition_update, args).start()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._node.set_dimmer(self._value.value_id, 0):
-            self._state = STATE_OFF
+
+        if self._transition_timer is not None:
+            self._transition_timer.cancel()
+
+        transition = kwargs.get(ATTR_TRANSITION, 0)
+        update_interval = transition/self._current_brightness
+        brightness_step = -1 if transition != 0 else -self._current_brightness
+        self._transition_update(brightness_step, 0, update_interval)
