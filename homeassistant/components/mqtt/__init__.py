@@ -31,7 +31,7 @@ SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
 
 DEPENDENCIES = []
-REQUIREMENTS = ['paho-mqtt==1.1'
+REQUIREMENTS = ['paho-mqtt==1.1',
                 'jsonpath-rw==1.4.0']
 
 CONF_BROKER = 'broker'
