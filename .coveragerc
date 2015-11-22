@@ -29,7 +29,7 @@ omit =
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
-    homeassistant/components/ifttt.py
+    homeassistant/components/binary_sensor/arest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/*
     homeassistant/components/device_tracker/actiontec.py
@@ -48,6 +48,7 @@ omit =
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
+    homeassistant/components/ifttt.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/mqtt.py
@@ -84,7 +85,6 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
-    homeassistant/components/switch/orvibo.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
@@ -98,6 +98,7 @@ omit =
     homeassistant/components/switch/command_switch.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
+    homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
