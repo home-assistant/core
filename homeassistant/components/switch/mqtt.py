@@ -37,14 +37,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('qos', DEFAULT_QOS),
         config.get('payload_on', DEFAULT_PAYLOAD_ON),
         config.get('payload_off', DEFAULT_PAYLOAD_OFF),
-        config.get('optimistic', DEFAULT_OPTIMISTIC))])
+        config.get('optimistic', DEFAULT_OPTIMISTIC),
+        config.get('state_format'))])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSwitch(SwitchDevice):
     """ Represents a switch that can be togggled using MQTT. """
     def __init__(self, hass, name, state_topic, command_topic, qos,
-                 payload_on, payload_off, optimistic):
+                 payload_on, payload_off, optimistic, state_format):
         self._state = False
         self._hass = hass
         self._name = name
@@ -54,9 +55,11 @@ class MqttSwitch(SwitchDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
+        self._parse = mqtt.FmtParser(state_format)
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
+            payload = self._parse(payload)
             if payload == self._payload_on:
                 self._state = True
                 self.update_ha_state()

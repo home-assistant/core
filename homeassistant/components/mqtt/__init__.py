@@ -9,6 +9,7 @@ https://home-assistant.io/components/mqtt/
 import logging
 import os
 import socket
+import json
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
@@ -30,7 +31,7 @@ SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
 
 DEPENDENCIES = []
-REQUIREMENTS = ['paho-mqtt==1.1']
+REQUIREMENTS = ['paho-mqtt==1.1', 'jsonpath-rw==1.4.0']
 
 CONF_BROKER = 'broker'
 CONF_PORT = 'port'
@@ -125,6 +126,31 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service)
 
     return True
+
+
+# pylint: disable=too-few-public-methods
+class _JsonFmtParser(object):
+    """ Implements a json parser on xpath"""
+    def __init__(self, jsonpath):
+        import jsonpath_rw
+        self._expr = jsonpath_rw.parse(jsonpath)
+
+    def __call__(self, payload):
+        match = self._expr.find(json.loads(payload))
+        return match[0].value if len(match) > 0 else payload
+
+
+# pylint: disable=too-few-public-methods
+class FmtParser(object):
+    """ wrapper for all supported formats """
+    def __init__(self, fmt):
+        self._parse = lambda x: x
+        if fmt:
+            if fmt.startswith('json:'):
+                self._parse = _JsonFmtParser(fmt[5:])
+
+    def __call__(self, payload):
+        return self._parse(payload)
 
 
 # This is based on one of the paho-mqtt examples:
