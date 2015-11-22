@@ -10,7 +10,6 @@ import logging
 import os
 import socket
 import json
-import jsonpath_rw
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
@@ -32,7 +31,8 @@ SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
 
 DEPENDENCIES = []
-REQUIREMENTS = ['paho-mqtt==1.1']
+REQUIREMENTS = ['paho-mqtt==1.1'
+                'jsonpath-rw==1.4.0']
 
 CONF_BROKER = 'broker'
 CONF_PORT = 'port'
@@ -133,6 +133,7 @@ def setup(hass, config):
 class _JsonFmtParser(object):
     """ Implements a json parser on xpath"""
     def __init__(self, jsonpath):
+        import jsonpath_rw
         self._expr = jsonpath_rw.parse(jsonpath)
 
     def __call__(self, payload):
