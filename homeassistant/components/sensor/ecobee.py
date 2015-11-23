@@ -48,13 +48,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     dev = list()
+    NETWORK.update()
     for name, data in NETWORK.ecobee.sensors.items():
         if 'temp' in data:
-            dev.append(EcobeeSensor(name, 'temperature', hass))
+            dev.append(EcobeeSensor(name, 'temperature'))
         if 'humidity' in data:
-            dev.append(EcobeeSensor(name, 'humidity', hass))
+            dev.append(EcobeeSensor(name, 'humidity'))
         if 'occupancy' in data:
-            dev.append(EcobeeSensor(name, 'occupancy', hass))
+            dev.append(EcobeeSensor(name, 'occupancy'))
 
     add_devices(dev)
 
@@ -62,10 +63,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EcobeeSensor(Entity):
     """ An ecobee sensor. """
 
-    def __init__(self, sensor_name, sensor_type, hass):
+    def __init__(self, sensor_name, sensor_type):
         self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
         self.sensor_name = sensor_name
-        self.hass = hass
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -85,6 +85,7 @@ class EcobeeSensor(Entity):
         return self._unit_of_measurement
 
     def update(self):
+        NETWORK.update()
         data = NETWORK.ecobee.sensors[self.sensor_name]
         if self.type == 'temperature':
             self._state = data['temp']
