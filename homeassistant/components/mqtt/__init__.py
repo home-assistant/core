@@ -158,7 +158,7 @@ class FmtParser(object):
 # This is based on one of the paho-mqtt examples:
 # http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.python.git/tree/examples/sub-class.py
 # pylint: disable=too-many-arguments
-class MQTT(object):  # pragma: no cover
+class MQTT(object):
     """ Implements messaging service for MQTT. """
     def __init__(self, hass, broker, port, client_id, keepalive, username,
                  password, certificate):
@@ -194,12 +194,6 @@ class MQTT(object):  # pragma: no cover
         """ Publish a MQTT message. """
         self._mqttc.publish(topic, payload, qos)
 
-    def unsubscribe(self, topic):
-        """ Unsubscribe from topic. """
-        result, mid = self._mqttc.unsubscribe(topic)
-        _raise_on_error(result)
-        self.userdata['progress'][mid] = topic
-
     def start(self):
         """ Run the MQTT client. """
         self._mqttc.loop_start()
@@ -216,6 +210,12 @@ class MQTT(object):  # pragma: no cover
         _raise_on_error(result)
         self.userdata['progress'][mid] = topic
         self.userdata['topics'][topic] = None
+
+    def unsubscribe(self, topic):
+        """ Unsubscribe from topic. """
+        result, mid = self._mqttc.unsubscribe(topic)
+        _raise_on_error(result)
+        self.userdata['progress'][mid] = topic
 
 
 def _mqtt_on_message(mqttc, userdata, msg):
@@ -236,7 +236,7 @@ def _mqtt_on_connect(mqttc, userdata, flags, result_code):
             3: 'Server unavailable',
             4: 'Bad username or password',
             5: 'Not authorised'
-        }.get(result_code))
+        }.get(result_code, 'Unknown reason'))
         mqttc.disconnect()
         return
 
@@ -293,7 +293,7 @@ def _mqtt_on_disconnect(mqttc, userdata, result_code):
         tries += 1
 
 
-def _raise_on_error(result):  # pragma: no cover
+def _raise_on_error(result):
     """ Raise error if error result. """
     if result != 0:
         raise HomeAssistantError('Error talking to MQTT: {}'.format(result))
