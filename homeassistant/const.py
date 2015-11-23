@@ -53,6 +53,8 @@ STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'
 STATE_ALARM_PENDING = 'pending'
 STATE_ALARM_TRIGGERED = 'triggered'
+STATE_LOCKED = 'locked'
+STATE_UNLOCKED = 'unlocked'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -96,6 +98,9 @@ ATTR_BATTERY_LEVEL = "battery_level"
 # For devices which support an armed state
 ATTR_ARMED = "device_armed"
 
+# For devices which support a locked state
+ATTR_LOCKED = "locked"
+
 # For sensors that support 'tripping', eg. motion and door sensors
 ATTR_TRIPPED = "device_tripped"
 
@@ -134,6 +139,9 @@ SERVICE_ALARM_DISARM = "alarm_disarm"
 SERVICE_ALARM_ARM_HOME = "alarm_arm_home"
 SERVICE_ALARM_ARM_AWAY = "alarm_arm_away"
 SERVICE_ALARM_TRIGGER = "alarm_trigger"
+
+SERVICE_LOCK = "lock"
+SERVICE_UNLOCK = "unlock"
 
 SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
