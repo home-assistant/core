@@ -48,7 +48,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     dev = list()
-    NETWORK.update()
+    while NETWORK is None:
+        continue
     for name, data in NETWORK.ecobee.sensors.items():
         if 'temp' in data:
             dev.append(EcobeeSensor(name, 'temperature'))
