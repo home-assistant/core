@@ -103,6 +103,7 @@ omit =
     homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
+    homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/honeywell.py
     homeassistant/components/thermostat/nest.py
     homeassistant/components/thermostat/radiotherm.py
