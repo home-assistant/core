@@ -1,13 +1,29 @@
 """
 homeassistant.components.ecobee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connects Home Assistant to the Ecobee API and maintains tokens.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ecobee/
+Ecobee Component
 
-[ecobee]
-api_key: asdflaksf
+This component adds support for Ecobee3 Wireless Thermostats.
+You will need to setup developer access to your thermostat,
+and create and API key on the ecobee website.
+
+The first time you run this component you will see a configuration
+component card in Home Assistant.  This card will contain a PIN code
+that you will need to use to authorize access to your thermostat.  You
+can do this at https://www.ecobee.com/consumerportal/index.html
+Click My Apps, Add application, Enter Pin and click Authorize.
+
+After authorizing the application click the button in the configuration
+card.  Now your thermostat and sensors should shown in home-assistant.
+
+You can use the optional hold_temp parameter to set whether or not holds
+are set indefintely or until the next scheduled event.
+
+ecobee:
+  api_key: asdfasdfasdfasdfasdfaasdfasdfasdfasdf
+  hold_temp: True
+
 """
 
 from homeassistant.loader import get_component
@@ -22,8 +38,10 @@ import os
 
 DOMAIN = "ecobee"
 DISCOVER_THERMOSTAT = "ecobee.thermostat"
+DISCOVER_SENSORS = "ecobee.sensor"
 DEPENDENCIES = []
 NETWORK = None
+HOLD_TEMP = 'hold_temp'
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-ecobee-api/archive/'
@@ -38,7 +56,7 @@ _CONFIGURING = {}
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 
-def request_configuration(network, hass):
+def request_configuration(network, hass, config):
     """ Request configuration steps from the user. """
     configurator = get_component('configurator')
     if 'ecobee' in _CONFIGURING:
@@ -52,7 +70,7 @@ def request_configuration(network, hass):
         """ Actions to do when our configuration callback is called. """
         network.request_tokens()
         network.update()
-        setup_ecobee(hass, network)
+        setup_ecobee(hass, network, config)
 
     _CONFIGURING['ecobee'] = configurator.request_config(
         hass, "Ecobee", ecobee_configuration_callback,
@@ -64,16 +82,34 @@ def request_configuration(network, hass):
     )
 
 
-def setup_ecobee(hass, network):
+def setup_ecobee(hass, network, config):
     """ Setup ecobee thermostat """
     # If ecobee has a PIN then it needs to be configured.
     if network.pin is not None:
-        request_configuration(network, hass)
+        request_configuration(network, hass, config)
         return
 
     if 'ecobee' in _CONFIGURING:
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('ecobee'))
+
+    # Ensure component is loaded
+    bootstrap.setup_component(hass, 'thermostat')
+    bootstrap.setup_component(hass, 'sensor')
+
+    hold_temp = config[DOMAIN].get(HOLD_TEMP, False)
+
+    # Fire thermostat discovery event
+    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
+        ATTR_SERVICE: DISCOVER_THERMOSTAT,
+        ATTR_DISCOVERED: {'hold_temp': hold_temp}
+    })
+
+    # Fire sensor discovery event
+    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
+        ATTR_SERVICE: DISCOVER_SENSORS,
+        ATTR_DISCOVERED: {}
+    })
 
 
 # pylint: disable=too-few-public-methods
@@ -88,6 +124,7 @@ class EcobeeData(object):
     def update(self):
         """ Get the latest data from pyecobee. """
         self.ecobee.update()
+        _LOGGER.info("ecobee data updated successfully.")
 
 
 def setup(hass, config):
@@ -114,18 +151,7 @@ def setup(hass, config):
 
     NETWORK = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))
 
-    setup_ecobee(hass, NETWORK.ecobee)
-
-    # Ensure component is loaded
-    bootstrap.setup_component(hass, 'thermostat', config)
-
-    # Fire discovery event
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-        ATTR_SERVICE: DISCOVER_THERMOSTAT,
-        ATTR_DISCOVERED: {
-            'network': NETWORK,
-        }
-    })
+    setup_ecobee(hass, NETWORK.ecobee, config)
 
     def stop_ecobee(event):
         """ Stop Ecobee. """

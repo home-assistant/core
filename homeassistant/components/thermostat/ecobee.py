@@ -15,17 +15,20 @@ can do this at https://www.ecobee.com/consumerportal/index.html
 Click My Apps, Add application, Enter Pin and click Authorize.
 
 After authorizing the application click the button in the configuration
-card.  Now your thermostat should shown in home-assistant.  Once the
-thermostat has been added you can add the ecobee sensor component
-to your configuration.yaml.
+card.  Now your thermostat and sensors should shown in home-assistant.
 
-thermostat:
-  platform: ecobee
+You can use the optional hold_temp parameter to set whether or not holds
+are set indefintely or until the next scheduled event.
+
+ecobee:
   api_key: asdfasdfasdfasdfasdfaasdfasdfasdfasdf
+  hold_temp: True
+
 """
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (TEMP_FAHRENHEIT, STATE_ON, STATE_OFF)
+from homeassistant.components.ecobee import NETWORK
 import logging
 
 DEPENDENCIES = ['ecobee']
@@ -38,30 +41,32 @@ _CONFIGURING = {}
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup Platform """
-    _LOGGER.error("ecobee !!!!")
     if discovery_info is None:
         return
-    data = discovery_info[0]
-    add_devices(Thermostat(data, index)
+    data = NETWORK
+    hold_temp = discovery_info['hold_temp']
+    _LOGGER.info("Loading ecobee thermostat component with hold_temp set to "
+                 + str(hold_temp))
+    add_devices(Thermostat(data, index, hold_temp)
                 for index in range(len(data.ecobee.thermostats)))
 
 
 class Thermostat(ThermostatDevice):
     """ Thermostat class for Ecobee """
 
-    def __init__(self, data, thermostat_index):
+    def __init__(self, data, thermostat_index, hold_temp):
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
         self._name = self.thermostat['name']
         self._away = 'away' in self.thermostat['program']['currentClimateRef']
+        self.hold_temp = hold_temp
 
     def update(self):
         self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
-        _LOGGER.info("ecobee data updated successfully.")
 
     @property
     def name(self):
@@ -157,7 +162,10 @@ class Thermostat(ThermostatDevice):
     def turn_away_mode_on(self):
         """ Turns away on. """
         self._away = True
-        self.data.ecobee.set_climate_hold("away")
+        if self.hold_temp:
+            self.data.ecobee.set_climate_hold("away", "indefinite")
+        else:
+            self.data.ecobee.set_climate_hold("away")
 
     def turn_away_mode_off(self):
         """ Turns away off. """
@@ -169,7 +177,10 @@ class Thermostat(ThermostatDevice):
         temperature = int(temperature)
         low_temp = temperature - 1
         high_temp = temperature + 1
-        self.data.ecobee.set_hold_temp(low_temp, high_temp)
+        if self.hold_temp:
+            self.data.ecobee.set_hold_temp(low_temp, high_temp, "indefinite")
+        else:
+            self.data.ecobee.set_hold_temp(low_temp, high_temp)
 
     def set_hvac_mode(self, mode):
         """ Set HVAC mode (auto, auxHeatOnly, cool, heat, off) """
