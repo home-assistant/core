@@ -26,7 +26,7 @@ ecobee:
 
 """
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.ecobee import NETWORK
+from homeassistant.components import ecobee
 from homeassistant.const import TEMP_FAHRENHEIT
 import logging
 
@@ -48,9 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     dev = list()
-    while NETWORK is None:
-        continue
-    for name, data in NETWORK.ecobee.sensors.items():
+    for name, data in ecobee.NETWORK.ecobee.sensors.items():
         if 'temp' in data:
             dev.append(EcobeeSensor(name, 'temperature'))
         if 'humidity' in data:
@@ -86,8 +84,8 @@ class EcobeeSensor(Entity):
         return self._unit_of_measurement
 
     def update(self):
-        NETWORK.update()
-        data = NETWORK.ecobee.sensors[self.sensor_name]
+        ecobee.NETWORK.update()
+        data = ecobee.NETWORK.ecobee.sensors[self.sensor_name]
         if self.type == 'temperature':
             self._state = data['temp']
         elif self.type == 'humidity':

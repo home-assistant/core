@@ -28,7 +28,7 @@ ecobee:
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (TEMP_FAHRENHEIT, STATE_ON, STATE_OFF)
-from homeassistant.components.ecobee import NETWORK
+from homeassistant.components import ecobee
 import logging
 
 DEPENDENCIES = ['ecobee']
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup Platform """
     if discovery_info is None:
         return
-    data = NETWORK
+    data = ecobee.NETWORK
     hold_temp = discovery_info['hold_temp']
     _LOGGER.info("Loading ecobee thermostat component with hold_temp set to "
                  + str(hold_temp))
