@@ -76,7 +76,7 @@ class ArestSwitch(SwitchDevice):
             self._state = True
         else:
             _LOGGER.error("Can't turn on pin %s at %s. Is device offline?",
-                          self._resource, self._pin)
+                          self._pin, self._resource)
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
@@ -86,7 +86,7 @@ class ArestSwitch(SwitchDevice):
             self._state = False
         else:
             _LOGGER.error("Can't turn off pin %s at %s. Is device offline?",
-                          self._resource, self._pin)
+                          self._pin, self._resource)
 
     def update(self):
         """ Gets the latest data from aREST API and updates the state. """
