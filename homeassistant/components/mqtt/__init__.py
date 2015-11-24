@@ -28,6 +28,7 @@ MQTT_CLIENT = None
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_QOS = 0
+DEFAULT_RETAIN = False
 
 SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
@@ -46,11 +47,12 @@ CONF_CERTIFICATE = 'certificate'
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
 ATTR_QOS = 'qos'
+ATTR_RETAIN = 'retain'
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
 
-def publish(hass, topic, payload, qos=None):
+def publish(hass, topic, payload, qos=None, retain=None):
     """ Send an MQTT message. """
     data = {
         ATTR_TOPIC: topic,
@@ -58,6 +60,10 @@ def publish(hass, topic, payload, qos=None):
     }
     if qos is not None:
         data[ATTR_QOS] = qos
+
+    if retain is not None:
+        data[ATTR_RETAIN] = retain
+
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
@@ -119,9 +125,10 @@ def setup(hass, config):
         msg_topic = call.data.get(ATTR_TOPIC)
         payload = call.data.get(ATTR_PAYLOAD)
         qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
+        retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
         if msg_topic is None or payload is None:
             return
-        MQTT_CLIENT.publish(msg_topic, payload, qos)
+        MQTT_CLIENT.publish(msg_topic, payload, qos, retain)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
@@ -190,9 +197,9 @@ class MQTT(object):
 
         self._mqttc.connect(broker, port, keepalive)
 
-    def publish(self, topic, payload, qos):
+    def publish(self, topic, payload, qos, retain):
         """ Publish a MQTT message. """
-        self._mqttc.publish(topic, payload, qos)
+        self._mqttc.publish(topic, payload, qos, retain)
 
     def start(self):
         """ Run the MQTT client. """
