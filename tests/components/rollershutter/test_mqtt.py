@@ -93,9 +93,9 @@ class TestRollershutterMQTT(unittest.TestCase):
             }
         }))
 
-        current_position = self.hass.states.get(
-            'rollershutter.test').attributes['current_position']
-        self.assertEqual(-1, current_position)
+        state_attributes_dict = self.hass.states.get(
+            'rollershutter.test').attributes
+        self.assertFalse('current_position' in state_attributes_dict)
 
         fire_mqtt_message(self.hass, 'state-topic', '0')
         self.hass.pool.block_till_done()
@@ -110,6 +110,12 @@ class TestRollershutterMQTT(unittest.TestCase):
         self.assertEqual(50, current_position)
 
         fire_mqtt_message(self.hass, 'state-topic', '101')
+        self.hass.pool.block_till_done()
+        current_position = self.hass.states.get(
+            'rollershutter.test').attributes['current_position']
+        self.assertEqual(50, current_position)
+
+        fire_mqtt_message(self.hass, 'state-topic', 'non-numeric')
         self.hass.pool.block_till_done()
         current_position = self.hass.states.get(
             'rollershutter.test').attributes['current_position']

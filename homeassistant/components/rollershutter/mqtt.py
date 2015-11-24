@@ -8,7 +8,6 @@ https://home-assistant.io/components/rollershutter.mqtt/
 import logging
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.rollershutter import RollershutterDevice
-from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN)
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
@@ -47,7 +46,7 @@ class MqttRollershutter(RollershutterDevice):
     """ Represents a rollershutter that can be togggled using MQTT """
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_up, payload_down, payload_stop, state_format):
-        self._state = -1
+        self._state = None
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
@@ -58,17 +57,20 @@ class MqttRollershutter(RollershutterDevice):
         self._payload_stop = payload_stop
         self._parse = mqtt.FmtParser(state_format)
 
-        if self._state_topic:
-            def message_received(topic, payload, qos):
-                """ A new MQTT message has been received. """
-                value = self._parse(payload)
-                if value.isnumeric():
-                    if 0 <= int(value) <= 100:
-                        self._state = int(value)
-                        self.update_ha_state()
+        if self._state_topic is None:
+            return
 
-            mqtt.subscribe(hass, self._state_topic, message_received,
-                           self._qos)
+        def message_received(topic, payload, qos):
+            """ A new MQTT message has been received. """
+            value = self._parse(payload)
+            if value.isnumeric() and 0 <= int(value) <= 100:
+                self._state = int(value)
+                self.update_ha_state()
+            else:
+                _LOGGER.warning(
+                    "Payload is expected to be an integer between 0 and 100")
+
+        mqtt.subscribe(hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -81,19 +83,15 @@ class MqttRollershutter(RollershutterDevice):
         return self._name
 
     @property
-    def state(self):
-        """ Returns the state of the device. """
-        if self._state == -1:
-            return STATE_UNKNOWN
-        elif self._state == 0:
-            return STATE_CLOSED
-        else:
-            return STATE_OPEN
+    def current_position(self):
+        """ Return current position of rollershutter.
+        None is unknown, 0 is closed, 100 is fully open. """
+        return self._state
 
     @property
     def is_open(self):
         """ True if device is open. """
-        return self.state == STATE_OPEN
+        return self._state > 0
 
     def move_up(self, **kwargs):
         """ Moves the device UP. """
@@ -113,7 +111,7 @@ class MqttRollershutter(RollershutterDevice):
     @property
     def state_attributes(self):
         """ Return the state attributes. """
-        state_attr = {
-            ATTR_CURRENT_POSITION: self._state,
-        }
+        state_attr = {}
+        if self._state is not None:
+            state_attr[ATTR_CURRENT_POSITION] = self._state
         return state_attr
