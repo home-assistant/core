@@ -30,7 +30,6 @@ from homeassistant.loader import get_component
 from homeassistant import bootstrap
 from homeassistant.util import Throttle
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED, CONF_API_KEY)
 from datetime import timedelta
 import logging
@@ -152,17 +151,5 @@ def setup(hass, config):
     NETWORK = EcobeeData(hass.config.path(ECOBEE_CONFIG_FILE))
 
     setup_ecobee(hass, NETWORK.ecobee, config)
-
-    def stop_ecobee(event):
-        """ Stop Ecobee. """
-
-        pass
-
-    def start_ecobee(event):
-        """ Called when Home Assistant starts up. """
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_ecobee)
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_ecobee)
 
     return True
