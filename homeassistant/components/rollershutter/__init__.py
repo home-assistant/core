@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components import group
 from homeassistant.const import (
     SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_MOVE_STOP,
-    STATE_OPEN, ATTR_ENTITY_ID)
+    STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, ATTR_ENTITY_ID)
 
 
 DOMAIN = 'rollershutter'
@@ -97,6 +97,21 @@ def setup(hass, config):
 class RollershutterDevice(Entity):
     """ Represents a rollershutter within Home Assistant. """
     # pylint: disable=no-self-use
+
+    @property
+    def current_position(self):
+        """ Return current position of rollershutter.
+        None is unknown, 0 is closed, 100 is fully open. """
+        raise NotImplementedError()
+
+    @property
+    def state(self):
+        current = self.current_position
+
+        if current is None:
+            return STATE_UNKNOWN
+
+        return STATE_CLOSED if current == 0 else STATE_OPEN
 
     @property
     def state_attributes(self):
