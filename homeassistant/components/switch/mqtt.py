@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSwitch(SwitchDevice):
-    """ Represents a switch that can be togggled using MQTT. """
+    """ Represents a switch that can be toggled using MQTT. """
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_on, payload_off, optimistic, state_format):
         self._state = False
