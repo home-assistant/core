@@ -16,19 +16,18 @@ influx:
   dbuser_password: DB_USER_PASSWORD
 """
 import logging
-import requests
-import socket
 
 import homeassistant.util as util
 from homeassistant.helpers import validate_config
-from homeassistant.const import (MATCH_ALL)
+from homeassistant.const import (EVENT_STATE_CHANGED, STATE_ON, STATE_OFF,
+                                 STATE_UNLOCKED, STATE_LOCKED, STATE_UNKNOWN)
+from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
+                                          STATE_BELOW_HORIZON)
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "influx"
 DEPENDENCIES = ['recorder']
-
-INFLUX_CLIENT = None
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
@@ -46,7 +45,7 @@ CONF_PASSWORD = 'password'
 def setup(hass, config):
     """ Setup the Influx component. """
 
-    from influxdb import exceptions
+    from influxdb import InfluxDBClient, exceptions
 
     if not validate_config(config, {DOMAIN: ['host']}, _LOGGER):
         return False
@@ -59,85 +58,63 @@ def setup(hass, config):
     username = util.convert(conf.get(CONF_USERNAME), str)
     password = util.convert(conf.get(CONF_PASSWORD), str)
 
-    global INFLUX_CLIENT
-
     try:
-        INFLUX_CLIENT = Influx(host, port, username, password, dbname)
-    except (socket.gaierror, requests.exceptions.ConnectionError):
-        _LOGGER.error("Database is not accessible. "
+        influx = InfluxDBClient(host=host, port=port, username=username,
+                                password=password, database=dbname)
+        databases = [i['name'] for i in influx.get_list_database()]
+    except exceptions.InfluxDBClientError:
+        _LOGGER.error("Database host is not accessible. "
                       "Please check your entries in the configuration file.")
         return False
 
-    try:
-        INFLUX_CLIENT.create_database(dbname)
-    except exceptions.InfluxDBClientError:
-        _LOGGER.info("Database '%s' already exists", dbname)
-
-    INFLUX_CLIENT.switch_user(username, password)
-    INFLUX_CLIENT.switch_database(dbname)
+    if dbname not in databases:
+        _LOGGER.error("Database %s doesn't exist", dbname)
+        return False
 
     def event_listener(event):
         """ Listen for new messages on the bus and sends them to Influx. """
         event_data = event.as_dict()
-        json_body = []
 
-        if event_data['event_type'] is not 'time_changed':
-            try:
-                entity_id = event_data['data']['entity_id']
-                new_state = event_data['data']['new_state']
+        if event_data['event_type'] is not EVENT_STATE_CHANGED:
+            return
 
-                json_body = [
-                    {
-                        "measurement": entity_id.split('.')[1],
-                        "tags": {
-                            "type":  entity_id.split('.')[0],
-                        },
-                        "time": event_data['time_fired'],
-                        "fields": {
-                            "value": new_state.state
-                        }
-                    }
-                ]
-            except KeyError:
-                pass
+        state = event_data['data']['new_state']
+
+        if state.state == STATE_ON or state.state == STATE_LOCKED or \
+                state.state == STATE_ABOVE_HORIZON:
+            _state = 1
+        elif state.state == STATE_OFF or state.state == STATE_UNLOCKED or \
+                state.state == STATE_UNKNOWN or \
+                state.state == STATE_BELOW_HORIZON:
+            _state = 0
+        else:
+            _state = state.state
+
+        try:
+            measurement = state.attributes['unit_of_measurement']
+        except KeyError:
+            measurement = '{}'.format(state.domain)
+
+        json_body = [
+            {
+                'measurement': measurement,
+                'tags': {
+                    'domain': state.domain,
+                    'entity_id': state.object_id,
+                },
+                'time': event_data['time_fired'],
+                'fields': {
+                    'value': _state,
+                }
+            }
+        ]
 
         if json_body:
-            INFLUX_CLIENT.write_data(json_body)
+            try:
+                influx.write_points(json_body)
+            except exceptions.InfluxDBClientError:
+                _LOGGER.error("Field type conflict")
 
-    hass.bus.listen(MATCH_ALL, event_listener)
+    hass.bus.listen(EVENT_STATE_CHANGED, event_listener)
 
     return True
-
-
-# pylint: disable=too-many-arguments
-class Influx(object):
-    """ Implements the handling of an connection to an Influx database.. """
-
-    def __init__(self, host, port, username, password, dbname):
-
-        from influxdb import InfluxDBClient
-
-        self._host = host
-        self._port = port
-        self._username = username
-        self._password = password
-        self._dbname = dbname
-
-        self.client = InfluxDBClient(self._host, self._port, self._username,
-                                     self._password, self._dbname)
-
-    def switch_user(self, username, password):
-        """ Switch the user to the given one. """
-        self.client.switch_user(username, password)
-
-    def create_database(self, dbname):
-        """ Creates a new Influx database. """
-        self.client.create_database(dbname)
-
-    def switch_database(self, dbname):
-        """ Switch the user to the given one. """
-        return self.client.switch_database(dbname)
-
-    def write_data(self, data):
-        """ Writes data to Influx database. """
-        self.client.write_points(data)
