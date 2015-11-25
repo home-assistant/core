@@ -1,0 +1,103 @@
+"""
+homeassistant.components.switch.mystrom
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for myStrom switches.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/switch.mystrom/
+"""
+import logging
+import requests
+
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import STATE_UNKNOWN
+
+DEFAULT_NAME = 'myStrom Switch'
+
+_LOGGER = logging.getLogger(__name__)
+
+
+# pylint: disable=unused-argument, too-many-function-args
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Find and return myStrom switches. """
+    resource = config.get('resource')
+
+    if resource is None:
+        _LOGGER.error('Missing required variable: resource')
+        return False
+
+    try:
+        requests.get(resource, timeout=10)
+    except requests.exceptions.MissingSchema:
+        _LOGGER.error("Missing resource or schema in configuration. "
+                      "Add http:// to your URL.")
+        return False
+    except requests.exceptions.ConnectionError:
+        _LOGGER.error("No route to device. "
+                      "Please check the IP address in the configuration file.")
+        return False
+
+    add_devices([MyStromSwitch(
+        config.get('name', DEFAULT_NAME),
+        config.get('resource'))])
+
+
+class MyStromSwitch(SwitchDevice):
+    """ Represents a myStrom switch. """
+    def __init__(self, name, resource):
+        self._state = STATE_UNKNOWN
+        self._name = name
+        self._resource = resource
+        self.consumption = 0
+
+    @property
+    def name(self):
+        """ The name of the switch. """
+        return self._name
+
+    @property
+    def is_on(self):
+        """ True if switch is on. """
+        return self._state
+
+    @property
+    def current_power_mwh(self):
+        """ Current power consumption in mwh. """
+        return self.consumption
+
+    def turn_on(self, **kwargs):
+        """ Turn the switch on. """
+        request = requests.get('{}/relay'.format(self._resource),
+                               params={'state': '1'},
+                               timeout=10)
+        if request.status_code == 200:
+            self._state = True
+        else:
+            _LOGGER.error("Can't turn on %s. Is device offline?",
+                          self._resource)
+
+    def turn_off(self, **kwargs):
+        """ Turn the switch off. """
+        request = requests.get('{}/relay'.format(self._resource),
+                               params={'state': '0'},
+                               timeout=10)
+        if request.status_code == 200:
+            self._state = False
+        else:
+            _LOGGER.error("Can't turn off %s. Is device offline?",
+                          self._resource)
+
+    def update(self):
+        """ Gets the latest data from REST API and updates the state. """
+        try:
+            request = requests.get('{}/report'.format(self._resource),
+                                   timeout=10)
+            if request.json()['relay'] is True:
+                self._state = True
+            else:
+                self._state = False
+
+            self.consumption = request.json()['power']
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("No route to device '%s'. Is device offline?",
+                          self._resource)
