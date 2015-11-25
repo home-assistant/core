@@ -72,9 +72,6 @@ class MyStromSwitch(SwitchDevice):
                                    timeout=10)
             if request.status_code == 200:
                 self._state = True
-            else:
-                raise requests.exceptions.ConnectionError
-
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Can't turn on %s. Is device offline?",
                           self._resource)
@@ -87,9 +84,6 @@ class MyStromSwitch(SwitchDevice):
                                    timeout=10)
             if request.status_code == 200:
                 self._state = False
-            else:
-                raise requests.exceptions.ConnectionError
-
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Can't turn on %s. Is device offline?",
                           self._resource)
