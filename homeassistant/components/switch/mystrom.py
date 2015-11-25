@@ -10,7 +10,6 @@ import logging
 import requests
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_UNKNOWN
 
 DEFAULT_NAME = 'myStrom Switch'
 
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MyStromSwitch(SwitchDevice):
     """ Represents a myStrom switch. """
     def __init__(self, name, resource):
-        self._state = STATE_UNKNOWN
+        self._state = False
         self._name = name
         self._resource = resource
         self.consumption = 0
@@ -67,24 +66,32 @@ class MyStromSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """ Turn the switch on. """
-        request = requests.get('{}/relay'.format(self._resource),
-                               params={'state': '1'},
-                               timeout=10)
-        if request.status_code == 200:
-            self._state = True
-        else:
+        try:
+            request = requests.get('{}/relay'.format(self._resource),
+                                   params={'state': '1'},
+                                   timeout=10)
+            if request.status_code == 200:
+                self._state = True
+            else:
+                raise requests.exceptions.ConnectionError
+
+        except requests.exceptions.ConnectionError:
             _LOGGER.error("Can't turn on %s. Is device offline?",
                           self._resource)
 
     def turn_off(self, **kwargs):
         """ Turn the switch off. """
-        request = requests.get('{}/relay'.format(self._resource),
-                               params={'state': '0'},
-                               timeout=10)
-        if request.status_code == 200:
-            self._state = False
-        else:
-            _LOGGER.error("Can't turn off %s. Is device offline?",
+        try:
+            request = requests.get('{}/relay'.format(self._resource),
+                                   params={'state': '0'},
+                                   timeout=10)
+            if request.status_code == 200:
+                self._state = False
+            else:
+                raise requests.exceptions.ConnectionError
+
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Can't turn on %s. Is device offline?",
                           self._resource)
 
     def update(self):
