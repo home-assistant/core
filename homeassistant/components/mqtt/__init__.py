@@ -132,7 +132,7 @@ def setup(hass, config):
 
 # pylint: disable=too-few-public-methods
 class _JsonFmtParser(object):
-    """ Implements a json parser on xpath"""
+    """ Implements a json parser on xpath. """
     def __init__(self, jsonpath):
         import jsonpath_rw
         self._expr = jsonpath_rw.parse(jsonpath)
@@ -144,7 +144,7 @@ class _JsonFmtParser(object):
 
 # pylint: disable=too-few-public-methods
 class FmtParser(object):
-    """ wrapper for all supported formats """
+    """ Wrapper for all supported formats. """
     def __init__(self, fmt):
         self._parse = lambda x: x
         if fmt:
@@ -252,7 +252,7 @@ def _mqtt_on_connect(mqttc, userdata, flags, result_code):
 
 
 def _mqtt_on_subscribe(mqttc, userdata, mid, granted_qos):
-    """ Called when subscribe successfull. """
+    """ Called when subscribe successful. """
     topic = userdata['progress'].pop(mid, None)
     if topic is None:
         return
@@ -260,7 +260,7 @@ def _mqtt_on_subscribe(mqttc, userdata, mid, granted_qos):
 
 
 def _mqtt_on_unsubscribe(mqttc, userdata, mid, granted_qos):
-    """ Called when subscribe successfull. """
+    """ Called when subscribe successful. """
     topic = userdata['progress'].pop(mid, None)
     if topic is None:
         return

@@ -47,16 +47,16 @@ class PushBulletNotificationService(BaseNotificationService):
         self.refresh()
 
     def refresh(self):
-        '''
+        """
         Refresh devices, contacts, etc
 
         pbtargets stores all targets available from this pushbullet instance
         into a dict. These are PB objects!. It sacrifices a bit of memory
-        for faster processing at send_message
+        for faster processing at send_message.
 
         As of sept 2015, contacts were replaced by chats. This is not
-        implemented in the module yet
-        '''
+        implemented in the module yet.
+        """
         self.pushbullet.refresh()
         self.pbtargets = {
             'device': {
@@ -72,7 +72,7 @@ class PushBulletNotificationService(BaseNotificationService):
         If no target specified, a 'normal' push will be sent to all devices
         linked to the PB account.
         Email is special, these are assumed to always exist. We use a special
-        call which doesn't require a push object
+        call which doesn't require a push object.
         """
         targets = kwargs.get(ATTR_TARGET)
         title = kwargs.get(ATTR_TITLE)

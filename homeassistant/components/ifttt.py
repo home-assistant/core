@@ -28,7 +28,7 @@ REQUIREMENTS = ['pyfttt==0.3']
 
 
 def trigger(hass, event, value1=None, value2=None, value3=None):
-    """ Trigger a Maker IFTTT recipe """
+    """ Trigger a Maker IFTTT recipe. """
     data = {
         ATTR_EVENT: event,
         ATTR_VALUE1: value1,
@@ -39,7 +39,7 @@ def trigger(hass, event, value1=None, value2=None, value3=None):
 
 
 def setup(hass, config):
-    """ Setup the ifttt service component """
+    """ Setup the ifttt service component. """
 
     if not validate_config(config, {DOMAIN: ['key']}, _LOGGER):
         return False
