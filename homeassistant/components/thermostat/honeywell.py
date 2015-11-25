@@ -74,6 +74,7 @@ class RoundThermostat(ThermostatDevice):
         self.device.set_temperature(self._name, temperature)
 
     def update(self):
+        """ Update the data from the thermostat. """
         try:
             # Only take first thermostat data from API for now
             data = next(self.device.temperatures(force_refresh=True))
