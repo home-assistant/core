@@ -1,23 +1,11 @@
 """
 homeassistant.components.thermostat.homematic
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds support for Homematic (HM-TC-IT-WM-W-EU, HM-CC-RT-DN)
-thermostats using Homegear or Homematic central (CCU1/CCU2).
+Adds support for Homematic (HM-TC-IT-WM-W-EU, HM-CC-RT-DN) thermostats using
+Homegear or Homematic central (CCU1/CCU2).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.homematic/
-
-Configuration example:
-
-thermostat:
-  platform: homematic
-  address: HOMEGEAR/CCU ADDRESS (e.g. http://localhost:2001)
-  devices:
-    Livingroom 1:
-      id: DEVICE_SERIAL_NO (e.g. MEQ0791521)
-    Livingroom 2:
-      id: DEVICE_SERIAL_NO
-
 """
 import logging
 import socket
@@ -111,18 +99,20 @@ class HomematicThermostat(ThermostatDevice):
         return self._target_temperature
 
     def set_temperature(self, temperature):
-        """ Set new target temperature """
+        """ Set new target temperature. """
         self.device.setValue(self._full_device_name,
                              PROPERTY_SET_TEMPERATURE,
                              temperature)
 
     @property
     def device_state_attributes(self):
+        """ Returns device specific state attributes. """
         return {"valve": self._valve,
                 "battery": self._battery,
                 "mode": self._mode}
 
     def update(self):
+        """ Update the data from the thermostat. """
         try:
             self._current_temperature = self.device.getValue(
                 self._full_device_name,
