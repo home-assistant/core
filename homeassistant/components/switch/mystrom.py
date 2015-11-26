@@ -16,29 +16,27 @@ DEFAULT_NAME = 'myStrom Switch'
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return myStrom switches. """
-    resource = config.get('resource')
+    host = config.get('host')
 
-    if resource is None:
-        _LOGGER.error('Missing required variable: resource')
+    if host is None:
+        _LOGGER.error('Missing required variable: host')
         return False
+
+    resource = 'http://{}'.format(host)
 
     try:
         requests.get(resource, timeout=10)
-    except requests.exceptions.MissingSchema:
-        _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// to your URL.")
-        return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to device. "
-                      "Please check the IP address in the configuration file.")
+        _LOGGER.error("No route to device %s. "
+                      "Please check the IP address in the configuration file",
+                      host)
         return False
 
     add_devices([MyStromSwitch(
         config.get('name', DEFAULT_NAME),
-        config.get('resource'))])
+        resource)])
 
 
 class MyStromSwitch(SwitchDevice):
