@@ -90,16 +90,16 @@ class MqttMotor(MotorDevice):
 
     @property
     def is_open(self):
-        """ True if device is open. """
+        """ True if device is current position is not zero. """
         return self._state > 0
 
     def open(self, **kwargs):
-        """ Close the device. """
+        """ Open the device. """
         mqtt.publish(self.hass, self._command_topic, self._payload_open,
                      self._qos)
 
     def close(self, **kwargs):
-        """ Open the device. """
+        """ Close the device. """
         mqtt.publish(self.hass, self._command_topic, self._payload_close,
                      self._qos)
 
