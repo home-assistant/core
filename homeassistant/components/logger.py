@@ -10,7 +10,6 @@ import logging
 from collections import OrderedDict
 
 DOMAIN = 'logger'
-DEPENDENCIES = []
 
 LOGSEVERITY = {
     'CRITICAL': 50,

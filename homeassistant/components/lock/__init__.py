@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.components import (group, wink)
 
 DOMAIN = 'lock'
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_LOCKS = 'all locks'
