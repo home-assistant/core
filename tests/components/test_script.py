@@ -27,23 +27,10 @@ class TestScript(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_setup_with_empty_sequence(self):
-        self.assertTrue(script.setup(self.hass, {
-            'script': {
-                'test': {
-                    'sequence': []
-                }
-            }
-        }))
-
-        self.assertIsNone(self.hass.states.get(ENTITY_ID))
-
     def test_setup_with_missing_sequence(self):
         self.assertTrue(script.setup(self.hass, {
             'script': {
-                'test': {
-                    'sequence': []
-                }
+                'test': {}
             }
         }))
 
@@ -54,6 +41,19 @@ class TestScript(unittest.TestCase):
             'script': {
                 'test hello world': {
                     'sequence': []
+                }
+            }
+        }))
+
+        self.assertEqual(0, len(self.hass.states.entity_ids('script')))
+
+    def test_setup_with_dict_as_sequence(self):
+        self.assertTrue(script.setup(self.hass, {
+            'script': {
+                'test': {
+                    'sequence': {
+                        'event': 'test_event'
+                    }
                 }
             }
         }))
