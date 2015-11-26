@@ -14,7 +14,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
 
 DOMAIN = 'binary_sensor'
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

@@ -15,7 +15,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = []
 REQUIREMENTS = ['astral==0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
