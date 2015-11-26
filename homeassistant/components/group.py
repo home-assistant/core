@@ -17,7 +17,6 @@ from homeassistant.const import (
     STATE_UNKNOWN)
 
 DOMAIN = "group"
-DEPENDENCIES = []
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
