@@ -16,7 +16,6 @@ from homeassistant.helpers import event
 
 _LOGGER = logging.getLogger(__name__)
 PYPI_URL = 'https://pypi.python.org/pypi/homeassistant/json'
-DEPENDENCIES = []
 DOMAIN = 'updater'
 ENTITY_ID = 'updater.updater'
 

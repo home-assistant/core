@@ -17,7 +17,6 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "wink"
-DEPENDENCIES = []
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
                 '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
                 '#python-wink==0.2']
