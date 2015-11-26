@@ -113,7 +113,7 @@ def setup(hass, config):
             try:
                 influx.write_points(json_body)
             except exceptions.InfluxDBClientError:
-                _LOGGER.error("Field type conflict")
+                _LOGGER.exception('Error saving event to Influx')
 
     hass.bus.listen(EVENT_STATE_CHANGED, event_listener)
 
