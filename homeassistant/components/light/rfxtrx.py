@@ -8,7 +8,6 @@ https://home-assistant.io/components/light.rfxtrx/
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
-import RFXtrx as rfxtrxmod
 
 from homeassistant.components.light import Light
 from homeassistant.util import slugify
@@ -25,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
+    import RFXtrx as rfxtrxmod
+
     lights = []
     devices = config.get('devices', None)
 

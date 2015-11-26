@@ -8,7 +8,6 @@ https://home-assistant.io/components/switch.rfxtrx/
 """
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
-import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.util import slugify
@@ -25,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
+    import RFXtrx as rfxtrxmod
 
     # Add switch from config file
     switchs = []
