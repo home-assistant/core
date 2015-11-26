@@ -49,6 +49,7 @@ omit =
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/ifttt.py
+    homeassistant/components/influx.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/mqtt.py

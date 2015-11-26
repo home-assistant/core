@@ -23,6 +23,9 @@ netdisco==0.5.1
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.influx
+influxdb==2.10.0
+
 # homeassistant.components.isy994
 PyISY==1.0.5
 
@@ -165,4 +168,3 @@ https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
-
