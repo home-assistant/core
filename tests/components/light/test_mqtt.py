@@ -139,7 +139,7 @@ class TestLightMQTT(unittest.TestCase):
         light.turn_on(self.hass, 'light.test')
         self.hass.pool.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', 'on', 2),
+        self.assertEqual(('test_light_rgb/set', 'on', 2, False),
                          self.mock_publish.mock_calls[-1][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
@@ -147,7 +147,7 @@ class TestLightMQTT(unittest.TestCase):
         light.turn_off(self.hass, 'light.test')
         self.hass.pool.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', 'off', 2),
+        self.assertEqual(('test_light_rgb/set', 'off', 2, False),
                          self.mock_publish.mock_calls[-1][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
