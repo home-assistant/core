@@ -149,7 +149,7 @@ hikvision==0.4
 orvibo==1.0.0
 
 # homeassistant.components.switch.wemo
-pywemo==0.3.2
+pywemo==0.3.3
 
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.3
