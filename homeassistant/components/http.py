@@ -34,7 +34,6 @@ import homeassistant.util.dt as date_util
 import homeassistant.bootstrap as bootstrap
 
 DOMAIN = "http"
-DEPENDENCIES = []
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"

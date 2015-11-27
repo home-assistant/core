@@ -17,7 +17,6 @@ from homeassistant.helpers import config_per_platform
 from homeassistant.const import CONF_NAME
 
 DOMAIN = "notify"
-DEPENDENCIES = []
 
 # Title of notification
 ATTR_TITLE = "title"
