@@ -20,7 +20,6 @@ from homeassistant.const import (
     TEMP_CELCIUS)
 
 DOMAIN = "thermostat"
-DEPENDENCIES = []
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = 60

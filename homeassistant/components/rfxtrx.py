@@ -9,7 +9,6 @@ https://home-assistant.io/components/rfxtrx/
 import logging
 from homeassistant.util import slugify
 
-DEPENDENCIES = []
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip' +
                 '#RFXtrx==0.2']
 
