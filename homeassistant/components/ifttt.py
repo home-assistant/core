@@ -22,8 +22,6 @@ ATTR_VALUE1 = 'value1'
 ATTR_VALUE2 = 'value2'
 ATTR_VALUE3 = 'value3'
 
-DEPENDENCIES = []
-
 REQUIREMENTS = ['pyfttt==0.3']
 
 
