@@ -18,7 +18,7 @@ python-nmap==0.4.3
 pysnmp==4.2.5
 
 # homeassistant.components.discovery
-netdisco==0.5.1
+netdisco==0.5.2
 
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/d35596b67c75451fa47001c493a15eebee195e93.zip#python-ecobee==0.0.1
