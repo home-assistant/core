@@ -58,7 +58,7 @@ class TestMotorMQTT(unittest.TestCase):
         state = self.hass.states.get('motor.test')
         self.assertEqual(STATE_OPEN, state.state)
 
-    def test_sending_mqtt_commands(self):
+    def test_send_open_command(self):
         self.assertTrue(motor.setup(self.hass, {
             'motor': {
                 'platform': 'mqtt',
@@ -75,7 +75,51 @@ class TestMotorMQTT(unittest.TestCase):
         motor.call_open(self.hass, 'motor.test')
         self.hass.pool.block_till_done()
 
-        self.assertEqual(('command-topic', 'OPEN', 2),
+        self.assertEqual(('command-topic', 'OPEN', 2, False),
+                         self.mock_publish.mock_calls[-1][1])
+        state = self.hass.states.get('motor.test')
+        self.assertEqual(STATE_UNKNOWN, state.state)
+
+    def test_send_close_command(self):
+        self.assertTrue(motor.setup(self.hass, {
+            'motor': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 2
+            }
+        }))
+
+        state = self.hass.states.get('motor.test')
+        self.assertEqual(STATE_UNKNOWN, state.state)
+
+        motor.call_close(self.hass, 'motor.test')
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(('command-topic', 'CLOSE', 2, False),
+                         self.mock_publish.mock_calls[-1][1])
+        state = self.hass.states.get('motor.test')
+        self.assertEqual(STATE_UNKNOWN, state.state)
+
+    def test_send_stop_command(self):
+        self.assertTrue(motor.setup(self.hass, {
+            'motor': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 2
+            }
+        }))
+
+        state = self.hass.states.get('motor.test')
+        self.assertEqual(STATE_UNKNOWN, state.state)
+
+        motor.call_stop(self.hass, 'motor.test')
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(('command-topic', 'STOP', 2, False),
                          self.mock_publish.mock_calls[-1][1])
         state = self.hass.states.get('motor.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
