@@ -17,7 +17,6 @@ from homeassistant.const import (
 
 
 DOMAIN = 'motor'
-DEPENDENCIES = []
 SCAN_INTERVAL = 15
 
 GROUP_NAME_ALL_MOTORS = 'all motors'
@@ -29,6 +28,8 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 DISCOVERY_PLATFORMS = {}
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_CURRENT_POSITION = 'current_position'
 
 
 def is_open(hass, entity_id=None):
@@ -114,17 +115,24 @@ class MotorDevice(Entity):
 
     @property
     def state_attributes(self):
-        """ Returns optional state attributes. """
-        return None
+        """ Return the state attributes. """
+        current = self.current_position
+
+        if current is None:
+            return None
+
+        return {
+            ATTR_CURRENT_POSITION: current
+        }
 
     def open(self, **kwargs):
-        """ Open the device. """
+        """ Open the motor. """
         raise NotImplementedError()
 
     def close(self, **kwargs):
-        """ Close the device. """
+        """ Close the motor. """
         raise NotImplementedError()
 
     def stop(self, **kwargs):
-        """ Stop the device. """
+        """ Stop the motor. """
         raise NotImplementedError()
