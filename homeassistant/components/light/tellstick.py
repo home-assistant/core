@@ -67,6 +67,8 @@ class TellstickLight(Light):
                                        tellcore_constants.TELLSTICK_DIM |
                                        tellcore_constants.TELLSTICK_UP |
                                        tellcore_constants.TELLSTICK_DOWN)
+                                       
+         self.update()
 
     @property
     def name(self):
