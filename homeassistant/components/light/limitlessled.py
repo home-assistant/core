@@ -14,13 +14,6 @@ from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
                                             ATTR_FLASH, FLASH_LONG,
                                             EFFECT_COLORLOOP, EFFECT_WHITE)
 
-from limitlessled import Color
-from limitlessled.bridge import Bridge
-from limitlessled.group.rgbw import RgbwGroup
-from limitlessled.group.white import WhiteGroup
-from limitlessled.pipeline import Pipeline
-from limitlessled.presets import COLORLOOP
-
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['limitlessled==1.0.0']
@@ -32,38 +25,43 @@ DEFAULT_LED_TYPE = 'rgbw'
 WHITE = [255, 255, 255]
 
 
-def legacy_setup(config, add_devices_callback):
-    """ Perform setup using legacy format. """
+def rewrite_legacy(config):
+    """ Rewrite legacy configuration to new format. """
     bridges = config.get('bridges', [config])
-    lights = []
+    new_bridges = []
     for bridge_conf in bridges:
-        bridge = Bridge(bridge_conf.get('host'))
-        for i in range(1, 5):
-            name_key = 'group_%d_name' % i
-            if name_key in bridge_conf:
-                group_type = bridge_conf.get('group_%d_type' % i,
-                                             DEFAULT_LED_TYPE)
-                group = bridge.add_group(i,
-                                         bridge_conf.get(name_key),
-                                         group_type)
-                lights.append(LimitlessLEDGroup.factory(group))
-    add_devices_callback(lights)
+        groups = []
+        if 'groups' in bridge_conf:
+            groups = bridge_conf['groups']
+        else:
+            _LOGGER.warn("Legacy configuration format detected")
+            for i in range(1, 5):
+                name_key = 'group_%d_name' % i
+                if name_key in bridge_conf:
+                    groups.append({
+                        'number': i,
+                        'type':  bridge_conf.get('group_%d_type' % i,
+                                                 DEFAULT_LED_TYPE),
+                        'name': bridge_conf.get(name_key)
+                    })
+        new_bridges.append({
+            'host': bridge_conf.get('host'),
+            'groups': groups
+        })
+    return {'bridges': new_bridges}
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the LimitlessLED lights. """
+    from limitlessled.bridge import Bridge
 
     # Two legacy configuration formats are supported to
     # maintain backwards compatibility.
-    legacy_setup(config, add_devices_callback)
+    config = rewrite_legacy(config)
 
     # Use the expanded configuration format.
-    if 'bridges' not in config:
-        return
     lights = []
     for bridge_conf in config.get('bridges'):
-        if 'groups' not in bridge_conf:
-            continue
         bridge = Bridge(bridge_conf.get('host'),
                         port=bridge_conf.get('port', DEFAULT_PORT),
                         version=bridge_conf.get('version', DEFAULT_VERSION))
@@ -82,9 +80,10 @@ def state(new_state):
     """
     def decorator(function):
         """ Decorator function. """
-        # pylint: disable=no-member
+        # pylint: disable=no-member,protected-access
         def wrapper(self, **kwargs):
             """ Wrap a group state change. """
+            from limitlessled.pipeline import Pipeline
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
             # Stop any repeating pipeline.
@@ -100,7 +99,7 @@ def state(new_state):
             # Do group type-specific work.
             function(self, transition_time, pipeline, **kwargs)
             # Update state.
-            self.on_state = new_state
+            self._is_on = new_state
             self.group.enqueue(pipeline)
             self.update_ha_state()
         return wrapper
@@ -113,12 +112,14 @@ class LimitlessLEDGroup(Light):
         """ Initialize a group. """
         self.group = group
         self.repeating = False
-        self.on_state = False
+        self._is_on = False
         self._brightness = None
 
     @staticmethod
     def factory(group):
         """ Produce LimitlessLEDGroup objects. """
+        from limitlessled.group.rgbw import RgbwGroup
+        from limitlessled.group.white import WhiteGroup
         if isinstance(group, WhiteGroup):
             return LimitlessLEDWhiteGroup(group)
         elif isinstance(group, RgbwGroup):
@@ -140,7 +141,7 @@ class LimitlessLEDGroup(Light):
     @property
     def is_on(self):
         """ True if device is on. """
-        return self.on_state
+        return self._is_on
 
     @property
     def brightness(self):
@@ -208,6 +209,7 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """ Turn on (or adjust property of) a group. """
+        from limitlessled.presets import COLORLOOP
         # Check arguments.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -270,6 +272,7 @@ def _from_hass_color(color):
     """ Convert Home Assistant RGB list
     to Color tuple.
     """
+    from limitlessled import Color
     return Color(*tuple(color))
 
 
