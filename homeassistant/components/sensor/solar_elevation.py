@@ -117,6 +117,5 @@ class SolarElevation(Entity):
 
     def update(self):
         """ Update solar elevation. """
-        print("update called")
         self._state = round(self.solar_elevation, 2)
         self.update_ha_state()
