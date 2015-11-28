@@ -307,18 +307,19 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 json.dumps(data, indent=4, sort_keys=True,
                            cls=rem.JSONEncoder).encode("UTF-8"))
 
-    def write_file(self, path):
+    def write_file(self, path, cache_headers=True):
         """ Returns a file to the user. """
         try:
             with open(path, 'rb') as inp:
-                self.write_file_pointer(self.guess_type(path), inp)
+                self.write_file_pointer(self.guess_type(path), inp,
+                                        cache_headers)
 
         except IOError:
             self.send_response(HTTP_NOT_FOUND)
             self.end_headers()
             _LOGGER.exception("Unable to serve %s", path)
 
-    def write_file_pointer(self, content_type, inp):
+    def write_file_pointer(self, content_type, inp, cache_headers=True):
         """
         Helper function to write a file pointer to the user.
         Does not do error handling.
@@ -328,7 +329,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.send_response(HTTP_OK)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, content_type)
 
-        self.set_cache_header()
+        if cache_headers:
+            self.set_cache_header()
         self.set_session_cookie_header()
 
         if do_gzip:
