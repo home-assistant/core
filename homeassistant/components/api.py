@@ -21,7 +21,7 @@ from homeassistant.const import (
     URL_API_CONFIG, URL_API_BOOTSTRAP, URL_API_ERROR_LOG,
     EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
-    HTTP_UNPROCESSABLE_ENTITY, CONTENT_TYPE_TEXT_PLAIN)
+    HTTP_UNPROCESSABLE_ENTITY)
 
 
 DOMAIN = 'api'
@@ -35,10 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Register the API with the HTTP interface. """
-
-    if 'http' not in hass.config.components:
-        _LOGGER.error('Dependency http is not loaded')
-        return False
 
     # /api - for validation purposes
     hass.http.register_path('GET', URL_API, _handle_get_api)
@@ -347,9 +343,8 @@ def _handle_get_api_components(handler, path_match, data):
 
 def _handle_get_api_error_log(handler, path_match, data):
     """ Returns the logged errors for this session. """
-    error_path = handler.server.hass.config.path(ERROR_LOG_FILENAME)
-    with open(error_path, 'rb') as error_log:
-        handler.write_file_pointer(CONTENT_TYPE_TEXT_PLAIN, error_log)
+    handler.write_file(handler.server.hass.config.path(ERROR_LOG_FILENAME),
+                       False)
 
 
 def _services_json(hass):
