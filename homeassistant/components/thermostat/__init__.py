@@ -15,6 +15,7 @@ from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
+from homeassistant.components import ecobee
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
     TEMP_CELCIUS)
@@ -41,6 +42,10 @@ ATTR_OPERATION = "current_operation"
 
 _LOGGER = logging.getLogger(__name__)
 
+DISCOVERY_PLATFORMS = {
+    ecobee.DISCOVER_THERMOSTAT: 'ecobee',
+}
+
 
 def set_away_mode(hass, away_mode, entity_id=None):
     """ Turn all or specified thermostat away mode on. """
@@ -66,7 +71,8 @@ def set_temperature(hass, temperature, entity_id=None):
 
 def setup(hass, config):
     """ Setup thermostats. """
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                SCAN_INTERVAL, DISCOVERY_PLATFORMS)
     component.setup(config)
 
     def thermostat_service(service):

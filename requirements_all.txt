@@ -20,6 +20,9 @@ pysnmp==4.2.5
 # homeassistant.components.discovery
 netdisco==0.5.1
 
+# homeassistant.components.ecobee
+https://github.com/nkgilley/python-ecobee-api/archive/d35596b67c75451fa47001c493a15eebee195e93.zip#python-ecobee==0.0.1
+
 # homeassistant.components.ifttt
 pyfttt==0.3
 
@@ -75,6 +78,8 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 
 # homeassistant.components.mqtt
 paho-mqtt==1.1
+
+# homeassistant.components.mqtt
 jsonpath-rw==1.4.0
 
 # homeassistant.components.notify.pushbullet
