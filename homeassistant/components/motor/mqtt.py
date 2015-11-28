@@ -18,10 +18,7 @@ DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_CLOSE = "CLOSE"
 DEFAULT_PAYLOAD_STOP = "STOP"
 
-ATTR_CURRENT_POSITION = 'current_position'
 
-
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Motor """
 
@@ -88,11 +85,6 @@ class MqttMotor(MotorDevice):
         None is unknown, 0 is closed, 100 is fully open. """
         return self._state
 
-    @property
-    def is_open(self):
-        """ True if device is current position is not zero. """
-        return self._state > 0
-
     def open(self, **kwargs):
         """ Open the device. """
         mqtt.publish(self.hass, self._command_topic, self._payload_open,
@@ -107,11 +99,3 @@ class MqttMotor(MotorDevice):
         """ Stop the device. """
         mqtt.publish(self.hass, self._command_topic, self._payload_stop,
                      self._qos)
-
-    @property
-    def state_attributes(self):
-        """ Return the state attributes. """
-        state_attr = {}
-        if self._state is not None:
-            state_attr[ATTR_CURRENT_POSITION] = self._state
-        return state_attr
