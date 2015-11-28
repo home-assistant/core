@@ -100,7 +100,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # This also seems works to send to all devices in own account
             if ttype == 'email':
                 self.pushbullet.push_note(title, message, email=tname)
-                _LOGGER.info('Sent notification to self')
+                _LOGGER.info('Sent notification to email %s', tname)
                 continue
 
             # Refresh if name not found. While awaiting periodic refresh
@@ -108,18 +108,21 @@ class PushBulletNotificationService(BaseNotificationService):
             if ttype not in self.pbtargets:
                 _LOGGER.error('Invalid target syntax: %s', target)
                 continue
-            if tname.lower() not in self.pbtargets[ttype] and not refreshed:
+
+            tname = tname.lower()
+
+            if tname not in self.pbtargets[ttype] and not refreshed:
                 self.refresh()
                 refreshed = True
 
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
             try:
-                self.pbtargets[ttype][tname.lower()].push_note(title, message)
+                self.pbtargets[ttype][tname].push_note(title, message)
+                _LOGGER.info('Sent notification to %s/%s', ttype, tname)
             except KeyError:
                 _LOGGER.error('No such target: %s/%s', ttype, tname)
                 continue
             except self.pushbullet.errors.PushError:
                 _LOGGER.error('Notify failed to: %s/%s', ttype, tname)
                 continue
-            _LOGGER.info('Sent notification to %s/%s', ttype, tname)
