@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('Invalid configuration received: %s', ", ".join(errors))
         return False
 
-    platform_config = config.get(DOMAIN, {})
+    platform_config = config.get(SUN_DOMAIN, {})
 
     elevation = platform_config.get(CONF_SUN_ELEVATION)
 
