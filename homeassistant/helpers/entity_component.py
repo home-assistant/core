@@ -9,7 +9,7 @@ from homeassistant.helpers import (
     generate_entity_id, config_per_platform, extract_entity_ids)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.components import group, discovery
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_SCAN_INTERVAL)
 
 DEFAULT_SCAN_INTERVAL = 15
 
@@ -34,7 +34,7 @@ class EntityComponent(object):
 
         self.entities = {}
         self.group = None
-        self.is_polling = False
+        self.entity_platform_components = {}
 
         self.config = None
 
@@ -74,14 +74,11 @@ class EntityComponent(object):
 
                 entity.update_ha_state()
 
-        if self.group is None and self.group_name is not None:
-            self.group = group.Group(self.hass, self.group_name,
-                                     user_defined=False)
-
         if self.group is not None:
             self.group.update_tracked_entity_ids(self.entities.keys())
 
-        self._start_polling()
+        for platform_component in self.entity_platform_components.values():
+            platform_component.start_polling()
 
     def extract_from_service(self, service):
         """
@@ -95,14 +92,6 @@ class EntityComponent(object):
                     in extract_entity_ids(self.hass, service)
                     if entity_id in self.entities]
 
-    def _update_entity_states(self, now):
-        """ Update the states of all the entities. """
-        self.logger.info("Updating %s entities", self.domain)
-
-        for entity in self.entities.values():
-            if entity.should_poll:
-                entity.update_ha_state(True)
-
     def _entity_discovered(self, service, info):
         """ Called when a entity is discovered. """
         if service not in self.discovery_platforms:
@@ -110,7 +99,62 @@ class EntityComponent(object):
 
         self._setup_platform(self.discovery_platforms[service], {}, info)
 
-    def _start_polling(self):
+    def _setup_platform(self, platform_type, platform_config,
+                        discovery_info=None):
+        """ Tries to setup a platform for this component. """
+        platform = prepare_setup_platform(
+            self.hass, self.config, self.domain, platform_type)
+
+        if platform is None:
+            return
+
+        if self.group is None and self.group_name is not None:
+            self.group = group.Group(self.hass, self.group_name,
+                                     user_defined=False)
+
+        platform_name = '{}.{}'.format(self.domain, platform_type)
+        if platform_name in self.entity_platform_components:
+            platform_component = self.entity_platform_components[platform_name]
+        else:
+            scan_interval = platform_config.get(CONF_SCAN_INTERVAL,
+                                                self.scan_interval)
+            platform_component = EntityPlatformComponent(
+                self.logger, self.hass, self.entity_id_format,
+                self.entities, self.group, scan_interval, platform_name)
+            self.entity_platform_components[platform_name] = platform_component
+
+        try:
+            platform.setup_platform(
+                self.hass, platform_config,
+                self.add_entities, discovery_info)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception(
+                'Error while setting up platform %s', platform_type)
+            return
+
+        self.hass.config.components.append(platform_name)
+
+
+class EntityPlatformComponent(object):
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-few-public-methods
+    """
+    Helper class that will help a component manage entities of a platform.
+    """
+    def __init__(self, logger, hass, entity_id_format, entities, group_obj,
+                 scan_interval, name):
+        self.logger = logger
+        self.hass = hass
+        self.entity_id_format = entity_id_format
+        self.entities = entities
+        self.scan_interval = scan_interval
+        self.is_polling = False
+
+        self.group = group_obj
+        self.name = name
+
+    def start_polling(self):
         """ Start polling entities if necessary. """
         if self.is_polling or \
            not any(entity.should_poll for entity in self.entities.values()):
@@ -122,22 +166,10 @@ class EntityComponent(object):
             self.hass, self._update_entity_states,
             second=range(0, 60, self.scan_interval))
 
-    def _setup_platform(self, platform_type, platform_config,
-                        discovery_info=None):
-        """ Tries to setup a platform for this component. """
-        platform = prepare_setup_platform(
-            self.hass, self.config, self.domain, platform_type)
+    def _update_entity_states(self, now):
+        """ Update the states of all the entities. """
+        self.logger.info("Updating %s entities", self.name)
 
-        if platform is None:
-            return
-
-        try:
-            platform.setup_platform(
-                self.hass, platform_config, self.add_entities, discovery_info)
-        except Exception:  # pylint: disable=broad-except
-            self.logger.exception(
-                'Error while setting up platform %s', platform_type)
-            return
-
-        platform_name = '{}.{}'.format(self.domain, platform_type)
-        self.hass.config.components.append(platform_name)
+        for entity in self.entities.values():
+            if entity.should_poll:
+                entity.update_ha_state(True)
