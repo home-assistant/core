@@ -44,7 +44,6 @@ light:
   payload_off: "off"
 """
 import unittest
-import homeassistant.util.color as color_util
 
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.core as ha
@@ -62,6 +61,29 @@ class TestLightMQTT(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass.stop()
+
+    def test_no_color_or_brightness_if_no_topics(self):
+        self.assertTrue(light.setup(self.hass, {
+            'light': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test_light_rgb/status',
+                'command_topic': 'test_light_rgb/set',
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('rgb_color'))
+        self.assertIsNone(state.attributes.get('brightness'))
+
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertIsNone(state.attributes.get('rgb_color'))
+        self.assertIsNone(state.attributes.get('brightness'))
 
     def test_controlling_state_via_topic(self):
         self.assertTrue(light.setup(self.hass, {
@@ -82,12 +104,16 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('rgb_color'))
+        self.assertIsNone(state.attributes.get('brightness'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
+        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual(255, state.attributes.get('brightness'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', 'off')
         self.hass.pool.block_till_done()
