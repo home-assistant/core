@@ -8,20 +8,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>RESTful switch - Home Assistant</title>
+    <title>myStrom switch - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate REST switches into Home Assistant.">
+    <meta name="description" content="Instructions how to integrate myStrom switches into Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/switch.rest/">
+    <link rel="canonical" href="https://home-assistant.io/components/switch.mystrom/">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="RESTful switch">
+    <meta property="og:title" content="myStrom switch">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/switch.rest/">
+    <meta property="og:url" content="https://home-assistant.io/components/switch.mystrom/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to integrate REST switches into Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate myStrom switches into Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -95,23 +95,21 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      RESTful switch
+      myStrom switch
     </h1>
   </header>
   <hr class="divider">
 
-  <p>The rest switch platform allows you to control a given endpoint that supports a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">RESTful API</a>. The switch can get the state via GET and set the state via POST on a given REST resource.</p>
+  <p>The <code>mystrom</code> switch platform allows you to control the state of your <a href="https://mystrom.ch/en/">myStrom</a> switches. The built-in sensor is measuring the power consumption while the switch is on.</p>
 
-<p>To enable this switch, add the following lines to your <code>configuration.yaml</code> file:</p>
+<p>To use your myStrom switch in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">switch</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">rest</span></span>
-  <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS/ENDPOINT</span></span>
-  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Bedroom Switch</span><span class="delimiter">&quot;</span></span>
-  <span class="key">body_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ON</span><span class="delimiter">&quot;</span></span>
-  <span class="key">body_off</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">OFF</span><span class="delimiter">&quot;</span></span>
+  <span class="key">platform</span>: <span class="string"><span class="content">mystrom</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">IP_ADRRESS</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">MyStrom Switch</span></span>
 </pre></div>
 </div>
 </div>
@@ -119,15 +117,29 @@
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>resource</strong> (<em>Required</em>): The resource or endpoint that contains the value.</li>
-  <li><strong>name</strong> (<em>Optional</em>): Name of the REST switch.</li>
-  <li><strong>body_on</strong> (<em>Optional</em>): The body that represents enabled state. Default is “ON”.</li>
-  <li><strong>body_off</strong> (<em>Optional</em>):The body that represents disabled state. Default is “OFF”.</li>
+  <li><strong>host</strong> (<em>Required</em>): The IP address of your myStrom switch, eg. http://192.168.1.32</li>
+  <li><strong>name</strong> (<em>Optional</em>): The name to use when displaying this switch.</li>
 </ul>
 
-<p class="note warning">
-Make sure that the URL matches exactly your endpoint or resource.
-</p>
+<p>Check if you are able to access the device located at <code>http://IP_ADRRESS</code>. The details about your switch is provided as a JSON response.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET http://IP_ADDRESS/report
+{
+    &quot;power&quot;:    0,
+    &quot;relay&quot;:    false
+}
+</pre></div>
+</div>
+</div>
+
+<p>or change its state:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -G -X GET http://IP_ADDRESS/relay -d 'state=1'
+</pre></div>
+</div>
+</div>
 
 
 </article>
@@ -142,18 +154,11 @@ Make sure that the URL matches exactly your endpoint or resource.
   
     <section class="aside-module grid__item one-whole lap-one-half">
   <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/mystrom.png' />
   </div>
     <div class='section'>
       This is a platform for
       <a href='/components/switch/'>the Switches component</a>.
-    </div>
-          <div class='section'>
-          <h1 class='title delta'>Related components</h1>
-          <ul class='divided'>
-        <li><a href='/components/sensor.rest/'>
-          RESTful sensor
-        </a></li>
-    </ul>
     </div>
     <div class='section'>
     <h1 class="title delta">Category Switch</h1>
@@ -177,7 +182,7 @@ Make sure that the URL matches exactly your endpoint or resource.
             <a href='/components/switch.orvibo/'>Orvibo switch</a>
         </li>
         <li>
-            RESTful switch
+            <a href='/components/switch.rest/'>RESTful switch</a>
         </li>
         <li>
             <a href='/components/switch.rfxtrx/'>RFXtrx switch</a>
@@ -201,7 +206,7 @@ Make sure that the URL matches exactly your endpoint or resource.
             <a href='/components/switch.arest/'>aREST switch</a>
         </li>
         <li>
-            <a href='/components/switch.mystrom/'>myStrom switch</a>
+            myStrom switch
         </li>
     </ul>
     </div>

@@ -105,13 +105,55 @@
 
   <p>Home Assistant will be able to automatically discover and configure any Google Chromecasts, Netgear routers, Belkin WeMo switches, Philips Hue bridges and Sonos speakers in your network if you have <a href="/components/discovery/">the discovery component</a> enabled (which is by default).</p>
 
-<p>See the <a href="/components/">components overview page</a> to find installation instructions for your devices and services.  Many components use the <code>sensor</code> platform.  Sensors need to be added into the <code>configuration.yaml</code> as <code>sensor:</code>, <code>sensor 2:</code>, <code>sensor 3:</code>, etc.  There should not be gaps in the sequence or your sensors might not load correctly.</p>
+<p>See the <a href="/components/">components overview page</a> to find installation instructions for your devices and services. If you can’t find support for your favorite device or service, <a href="/developers/add_new_platform/">consider adding support</a>.</p>
 
-<p class="note">
-Most components that support multiple entries within the <code>configuration.yaml</code> follow the <code>component:</code>, <code>component 2:</code> format.
+<p>Usually every entity needs its own entry in the <code>configuration.yaml</code> file. There are two kind of styles for multiple entries:</p>
+
+<h4><a class="title-link" name="style-1" href="#style-1"></a> Style 1</h4>
+
+<p>Collect every entity under the “parent”.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">sensor</span>:
+  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home/bedroom/temperature</span><span class="delimiter">&quot;</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">MQTT Sensor 1</span><span class="delimiter">&quot;</span></span>
+  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home/kitchen/temperature</span><span class="delimiter">&quot;</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">MQTT Sensor 2</span><span class="delimiter">&quot;</span></span>
+  - <span class="string"><span class="content">platform: rest</span></span>
+    <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS/ENDPOINT</span></span>
+
+<span class="key">switch</span>:
+  - <span class="string"><span class="content">platform: vera</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="style-2" href="#style-2"></a> Style 2</h4>
+
+<p>If you prefer to place your entries somewhere in the <code>configuration.yaml</code> file then you just choose this style. You need to append numbers (see example below) or strings (like <code>media_player livingroom:</code> or <code>media_player kitchen:</code>) to differentiate the entries. The appended number or string must be unique.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">media_player 1</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mpd</span></span>
+  <span class="key">server</span>: <span class="string"><span class="content">IP_ADDRESS</span></span>
+
+<span class="key">media_player 2</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">plex</span></span>
+
+<span class="key">camera</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">generic</span></span>
+
+<span class="key">media_player 3</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">sonos</span></span>
+</pre></div>
+</div>
+</div>
+
+<p class="note note">
+If your devices are not showing up in the frontend then check the entries in your <code>configuration.yaml</code> file for duplicates. 
 </p>
-
-<p>If you can’t find support for your favorite device or service, <a href="/developers/add_new_platform/">consider adding support</a></p>
 
 <h3><a class="title-link" name="grouping-devices" href="#grouping-devices"></a> Grouping devices</h3>
 

@@ -109,7 +109,7 @@
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">media_player</span>:
-  - <span class="string"><span class="content">platform: plex</span></span>
+  <span class="key">platform</span>: <span class="string"><span class="content">plex</span></span>
 </pre></div>
 </div>
 </div>
@@ -117,15 +117,15 @@
 <p>You may also need to create the file <code>plex.conf</code>.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">&lt;IP_ADDRESS&gt;:&lt;PORT&gt;</span><span class="delimiter">&quot;</span></span>: {<span class="key"><span class="delimiter">&quot;</span><span class="content">token</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">&lt;TOKEN&gt;</span><span class="delimiter">&quot;</span></span>}}
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">IP_ADDRESS:PORT</span><span class="delimiter">&quot;</span></span>: {<span class="key"><span class="delimiter">&quot;</span><span class="content">token</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">TOKEN</span><span class="delimiter">&quot;</span></span>}}
 </pre></div>
 </div>
 </div>
 
 <ul>
-  <li><code>&lt;IP_ADDRESS&gt;</code> <em>Required</em>: IP address of the Plex Media Server</li>
-  <li><code>&lt;PORT&gt;</code> <em>required</em>: Default is 32400</li>
-  <li><code>&lt;TOKEN&gt;</code> <em>Optional</em>: Only if authentication is required. Set to <code>None</code> (without quotes) otherwise.</li>
+  <li><strong>IP_ADDRESS</strong> (<em>Required</em>): IP address of the Plex Media Server</li>
+  <li><strong>PORT</strong> (<em>Required</em>): Port where Plex is listening. Default is 32400</li>
+  <li><strong>TOKEN</strong> (<em>Optional</em>): Only if authentication is required. Set to <code>None</code> (without quotes) otherwise.</li>
 </ul>
 
 <p>At this moment, the Plex platform only supports one Plex Media Server.</p>

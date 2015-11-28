@@ -8,20 +8,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>RESTful switch - Home Assistant</title>
+    <title>Homematic thermostat - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to integrate REST switches into Home Assistant.">
+    <meta name="description" content="Instructions how to integrate Homematic thermostats within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/switch.rest/">
+    <link rel="canonical" href="https://home-assistant.io/components/thermostat.homematic/">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="RESTful switch">
+    <meta property="og:title" content="Homematic thermostat">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/switch.rest/">
+    <meta property="og:url" content="https://home-assistant.io/components/thermostat.homematic/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to integrate REST switches into Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate Homematic thermostats within Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -95,23 +95,24 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      RESTful switch
+      Homematic thermostat
     </h1>
   </header>
   <hr class="divider">
 
-  <p>The rest switch platform allows you to control a given endpoint that supports a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">RESTful API</a>. The switch can get the state via GET and set the state via POST on a given REST resource.</p>
+  <p>The homematic thermostat platform let you control <a href="http://www.homematic.com/">Homematic</a> thermostat from Home Assistant. Currently there is support for Homematic (HM-TC-IT-WM-W-EU, HM-CC-RT-DN) thermostats using Homegear or Homematic central (CCU1/CCU2).</p>
 
-<p>To enable this switch, add the following lines to your <code>configuration.yaml</code> file:</p>
+<p>To set it up, add the following information to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">switch</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">rest</span></span>
-  <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS/ENDPOINT</span></span>
-  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Bedroom Switch</span><span class="delimiter">&quot;</span></span>
-  <span class="key">body_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ON</span><span class="delimiter">&quot;</span></span>
-  <span class="key">body_off</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">OFF</span><span class="delimiter">&quot;</span></span>
+  <div class="code"><pre><span class="key">thermostat</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">homematic</span></span>
+  <span class="key">address</span>: <span class="string"><span class="content">HOMEGEAR/CCU_ADDRESS</span></span>
+  <span class="key">devices</span>:
+    <span class="key">Livingroom 1</span>:
+      <span class="key">id</span>: <span class="string"><span class="content">DEVICE_SERIAL_NO </span></span>
+    <span class="key">Livingroom 2</span>:
+      <span class="key">id</span>: <span class="string"><span class="content">DEVICE_SERIAL_NO</span></span>
 </pre></div>
 </div>
 </div>
@@ -119,15 +120,17 @@
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>resource</strong> (<em>Required</em>): The resource or endpoint that contains the value.</li>
-  <li><strong>name</strong> (<em>Optional</em>): Name of the REST switch.</li>
-  <li><strong>body_on</strong> (<em>Optional</em>): The body that represents enabled state. Default is “ON”.</li>
-  <li><strong>body_off</strong> (<em>Optional</em>):The body that represents disabled state. Default is “OFF”.</li>
+  <li><strong>address</strong> (<em>Required</em>: Adress of your Homegear or Homeatic central, eg. http://localhost:2001</li>
+  <li><strong>devices</strong> array (<em>Required</em>): List of all your Homeatic devices.
+    <ul>
+      <li><strong>name</strong> (<em>Required</em>): Name to identify the device.
+        <ul>
+          <li><strong>id</strong> (<em>Required</em>): The serial number of the device, eg. MEQ0791521</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
 </ul>
-
-<p class="note warning">
-Make sure that the URL matches exactly your endpoint or resource.
-</p>
 
 
 </article>
@@ -142,66 +145,29 @@ Make sure that the URL matches exactly your endpoint or resource.
   
     <section class="aside-module grid__item one-whole lap-one-half">
   <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/homematic.png' />
   </div>
     <div class='section'>
       This is a platform for
-      <a href='/components/switch/'>the Switches component</a>.
-    </div>
-          <div class='section'>
-          <h1 class='title delta'>Related components</h1>
-          <ul class='divided'>
-        <li><a href='/components/sensor.rest/'>
-          RESTful sensor
-        </a></li>
-    </ul>
+      <a href='/components/thermostat/'>the Thermostats component</a>.
     </div>
     <div class='section'>
-    <h1 class="title delta">Category Switch</h1>
+    <h1 class="title delta">Category Thermostat</h1>
     <ul class='divided'>
         <li>
-            <a href='/components/switch.wemo/'>Belkin WeMo switch</a>
+            <a href='/components/thermostat.heat_control/'>Heat control</a>
         </li>
         <li>
-            <a href='/components/switch.command_switch/'>Command line switch</a>
+            Homematic thermostat
         </li>
         <li>
-            <a href='/components/switch.edimax/'>Edimax switch</a>
+            <a href='/components/thermostat.honeywell/'>Honeywell thermostat</a>
         </li>
         <li>
-            <a href='/components/switch.mqtt/'>MQTT switch</a>
+            <a href='/components/thermostat.nest/'>Nest thermostat</a>
         </li>
         <li>
-            <a href='/components/switch.modbus/'>Modbus switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.orvibo/'>Orvibo switch</a>
-        </li>
-        <li>
-            RESTful switch
-        </li>
-        <li>
-            <a href='/components/switch.rfxtrx/'>RFXtrx switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.tellstick/'>TellStick switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.transmission/'>Transmission switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.vera/'>Vera switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.wink/'>Wink switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.zwave/'>Z-Wave switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.arest/'>aREST switch</a>
-        </li>
-        <li>
-            <a href='/components/switch.mystrom/'>myStrom switch</a>
+            <a href='/components/thermostat.radiotherm/'>Radiotherm thermostat</a>
         </li>
     </ul>
     </div>

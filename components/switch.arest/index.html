@@ -102,7 +102,7 @@
 
   <p>The arest switch platform allows you to toggle pins of your devices (like Arduino boards with a ethernet/wifi connection, ESP8266 based devices, and the Raspberry Pi) running the <a href="http://arest.io/">aREST</a> RESTful framework.</p>
 
-<p>To use your aREST enabled device in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+<p>To use your aREST enabled device with pins in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
@@ -119,19 +119,46 @@
 </div>
 </div>
 
+<p>If you want to use custom functions, then add the following to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">arest</span></span>
+  <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Office</span></span>
+  <span class="key">functions</span>:
+    <span class="key">function1</span>:
+      <span class="key">name</span>: 
+    <span class="key">function2</span>:
+      <span class="key">name</span>: <span class="string"><span class="content">Light Desk</span></span>
+</pre></div>
+</div>
+</div>
+
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>resource</strong> (<em>Required</em>): IP address and schema of the device that is exposing an aREST API, eg. http://192.168.1.10.</li>
+  <li><strong>resource</strong> (<em>Required</em>): IP address and schema of the device that is exposing an aREST API, eg. http://192.168.1.10 (no-trailing slash)</li>
   <li><strong>name</strong> (<em>Optional</em>): Let you overwrite the the name of the device. By default <em>name</em> from the device is used.</li>
-  <li><strong>pins</strong> array (<em>Required</em>): An array with all used pins of your board.
+  <li><strong>pins</strong> array (<em>Required</em>): An array with all used pins.
     <ul>
-      <li><strong>name</strong> (<em>Required</em>): The name of the pin you wish to toggle.</li>
+      <li><strong>name</strong> (<em>Required</em>): The name of the pin to use in the frontend.</li>
     </ul>
   </li>
 </ul>
 
-<p>You can still switch your pins with a web browser or a command line tool. Use the http://192.168.1.10/digital/8/1 to set pin 8 to high/on, the JSON response will give you some feedback.</p>
+<p>or</p>
+
+<ul>
+  <li><strong>functions</strong> array (<em>Required</em>): An array with all used functions.
+    <ul>
+      <li><strong>name</strong> (<em>Required</em>): The name to use in the frontend.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>You can still switch your pins with a web browser or a command line tool. Use the URL http://192.168.1.10/digital/8/1 to set pin 8 to high/on, the JSON response will give you the feedback.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Pin D8 set to 1</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor02</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">livingroom</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>: <span class="value">true</span>}
@@ -213,6 +240,9 @@
         </li>
         <li>
             aREST switch
+        </li>
+        <li>
+            <a href='/components/switch.mystrom/'>myStrom switch</a>
         </li>
     </ul>
     </div>

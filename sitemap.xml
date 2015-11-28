@@ -238,6 +238,15 @@
   <url>
     <loc>https://home-assistant.io/blog/categories/survey/</loc>
   </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/2/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/3/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/4/</loc>
+  </url>
     <url>
       <loc>https://home-assistant.io/components/automation/</loc>
     </url>
@@ -669,6 +678,12 @@
     </url>
     <url>
       <loc>https://home-assistant.io/components/lock/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/thermostat.homematic/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/switch.mystrom/</loc>
     </url>
     <url>
       <loc>https://home-assistant.io/cookbook/automation_for_rainy_days/</loc>
