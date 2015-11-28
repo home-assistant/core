@@ -143,6 +143,10 @@ SERVICE_ALARM_TRIGGER = "alarm_trigger"
 SERVICE_LOCK = "lock"
 SERVICE_UNLOCK = "unlock"
 
+SERVICE_OPEN = 'open'
+SERVICE_CLOSE = 'close'
+SERVICE_STOP = 'stop'
+
 # #### API / REMOTE ####
 SERVER_PORT = 8123
 
