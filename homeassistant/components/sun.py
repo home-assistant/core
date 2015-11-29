@@ -145,12 +145,6 @@ class Sun(Entity):
         track_utc_time_change(hass, self.timer_update, second=30)
 
     @property
-    def should_poll(self):
-        """ We trigger updates ourselves after sunset/sunrise,
-            but sun angle requires poll """
-        return True
-
-    @property
     def name(self):
         return "Sun"
 
