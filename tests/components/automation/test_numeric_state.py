@@ -253,6 +253,156 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_if_fires_on_entity_change_below_with_attribute(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 9 is below 10
+        self.hass.states.set('test.entity', 9, { 'test_attribute': 11 })
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_not_fires_on_entity_change_not_below_with_attribute(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 11 is not below 10
+        self.hass.states.set('test.entity', 11, { 'test_attribute': 9 })
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_fires_on_attribute_change_with_attribute_below(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'attribute': 'test_attribute',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 9 is below 10
+        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9 })
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_not_fires_on_attribute_change_with_attribute_not_below(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'attribute': 'test_attribute',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 11 is not below 10
+        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11 })
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_not_fires_on_entity_change_with_attribute_below(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'attribute': 'test_attribute',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 11 is not below 10, entity state value should not be tested
+        self.hass.states.set('test.entity', '9', { 'test_attribute': 11 })
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_not_fires_on_entity_change_with_not_attribute_below(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'attribute': 'test_attribute',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 11 is not below 10, entity state value should not be tested
+        self.hass.states.set('test.entity', 'entity')
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_fires_on_attribute_change_with_attribute_below_multiple_attributes(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'attribute': 'test_attribute',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 9 is not below 10
+        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9, 'not_test_attribute': 11 })
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_not_fires_on_attribute_change_with_attribute_not_below_multiple_attributes(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'attribute': 'test_attribute',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 11 is not below 10
+        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11, 'not_test_attribute': 9  })
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
     def test_if_action(self):
         entity_id = 'domain.test_entity'
         test_state = 10
