@@ -8,6 +8,8 @@
     <link rel='shortcut icon' href='/static/favicon.ico' />
     <link rel='icon' type='image/png'
          href='/static/favicon-192x192.png' sizes='192x192'>
+    <link rel='icon' type='image/png'
+         href='/static/favicon-384x384.png' sizes='384x384'>
     <link rel='apple-touch-icon' sizes='180x180'
          href='/static/favicon-apple-180x180.png'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
@@ -32,17 +34,14 @@
         left: 0;
         right: 0;
         bottom: 0;
-      }
-      #init div {
-        line-height: 34px;
-        margin-bottom: 89px;
+        margin-bottom: 123px;
       }
     </style>
   </head>
   <body fullbleed>
     <div id='init'>
-      <img src='/static/splash.png' height='230' />
-      <div>Initializing</div>
+      <img src='/static/favicon-192x192.png' height='192' />
+      <div></div>
     </div>
     <script src='/static/webcomponents-lite.min.js'></script>
     <link rel='import' href='/static/{{ app_url }}' />
