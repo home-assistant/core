@@ -4,8 +4,8 @@ homeassistant.components.camera.demo
 Demo platform that has a fake camera.
 """
 import os
-from random import randint
 from homeassistant.components.camera import Camera
+import homeassistant.util.dt as dt_util
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -24,12 +24,12 @@ class DemoCamera(Camera):
 
     def camera_image(self):
         """ Return a faked still image response. """
+        now = dt_util.utcnow()
 
         image_path = os.path.join(os.path.dirname(__file__),
-                                  'demo_{}.png'.format(randint(1, 5)))
+                                  'demo_{}.jpg'.format(now.second % 4))
         with open(image_path, 'rb') as file:
-            output = file.read()
-        return output
+            return file.read()
 
     @property
     def name(self):
