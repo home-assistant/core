@@ -36,10 +36,6 @@ DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LOCKS: 'wink'
 }
 
-PROP_TO_ATTR = {
-    'locked': ATTR_LOCKED
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
