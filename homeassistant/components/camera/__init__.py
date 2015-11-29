@@ -19,7 +19,6 @@ from homeassistant.const import (
     )
 
 from homeassistant.helpers.entity_component import EntityComponent
-import homeassistant.util.dt as dt_util
 
 
 DOMAIN = 'camera'
