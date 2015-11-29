@@ -23,7 +23,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "recorder"
-DEPENDENCIES = []
 
 DB_FILE = 'home-assistant.db'
 

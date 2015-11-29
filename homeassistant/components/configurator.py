@@ -15,7 +15,6 @@ from homeassistant.helpers import generate_entity_id
 from homeassistant.const import EVENT_TIME_CHANGED
 
 DOMAIN = "configurator"
-DEPENDENCIES = []
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SERVICE_CONFIGURE = "configure"
