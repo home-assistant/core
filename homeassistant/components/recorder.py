@@ -73,7 +73,7 @@ def row_to_state(row):
 def row_to_event(row):
     """ Convert a databse row to an event. """
     try:
-        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()],
+        return Event(row[1], json.loads(row[2]), EventOrigin(row[3]),
                      date_util.utc_from_timestamp(row[5]))
     except ValueError:
         # When json.loads fails
