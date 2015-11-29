@@ -143,6 +143,10 @@ SERVICE_ALARM_TRIGGER = "alarm_trigger"
 SERVICE_LOCK = "lock"
 SERVICE_UNLOCK = "unlock"
 
+SERVICE_OPEN = 'open'
+SERVICE_CLOSE = 'close'
+SERVICE_STOP = 'stop'
+
 # #### API / REMOTE ####
 SERVER_PORT = 8123
 
@@ -160,6 +164,7 @@ URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
 URL_API_BOOTSTRAP = "/api/bootstrap"
 URL_API_ERROR_LOG = "/api/error_log"
+URL_API_LOG_OUT = "/api/log_out"
 
 HTTP_OK = 200
 HTTP_CREATED = 201

@@ -76,8 +76,9 @@ def setup(hass, config):
             _LOGGER.warn("Found invalid key for script: %s. Use %s instead.",
                          object_id, slugify(object_id))
             continue
-        if not cfg.get(CONF_SEQUENCE):
-            _LOGGER.warn("Missing key 'sequence' for script %s", object_id)
+        if not isinstance(cfg.get(CONF_SEQUENCE), list):
+            _LOGGER.warn("Key 'sequence' for script %s should be a list",
+                         object_id)
             continue
         alias = cfg.get(CONF_ALIAS, object_id)
         script = Script(hass, object_id, alias, cfg[CONF_SEQUENCE])
