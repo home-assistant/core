@@ -25,10 +25,11 @@ ecobee:
   hold_temp: True
 
 """
+import logging
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import ecobee
 from homeassistant.const import TEMP_FAHRENHEIT
-import logging
 
 DEPENDENCIES = ['ecobee']
 

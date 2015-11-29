@@ -7,18 +7,19 @@ Component to interface with various cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
 """
-import requests
 import logging
-import time
 import re
+import time
+
+import requests
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
     )
-
-from homeassistant.helpers.entity_component import EntityComponent
 
 
 DOMAIN = 'camera'
