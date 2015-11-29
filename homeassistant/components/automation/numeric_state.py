@@ -82,7 +82,7 @@ def _in_range(value, range_start, range_end):
     try:
         value = float(value)
     except ValueError:
-        _LOGGER.warn("Missing value in numeric check")
+        _LOGGER.warning("Missing value in numeric check")
         return False
 
     if range_start is not None and range_end is not None:
