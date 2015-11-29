@@ -54,8 +54,7 @@ def setup(hass, config):
 
 
 def _handle_get_root(handler, path_match, data):
-    """ Renders the debug interface. """
-
+    """ Renders the frontend. """
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/html; charset=utf-8')
     handler.end_headers()
