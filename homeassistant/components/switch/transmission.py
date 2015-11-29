@@ -6,11 +6,11 @@ Enable or disable Transmission BitTorrent client Turtle Mode.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.transmission/
 """
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.const import STATE_ON, STATE_OFF
-
-from homeassistant.helpers.entity import ToggleEntity
 import logging
+
+from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
+                                 STATE_ON, STATE_OFF)
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGING = logging.getLogger(__name__)
 REQUIREMENTS = ['transmissionrpc==0.11']

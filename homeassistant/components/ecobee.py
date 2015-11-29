@@ -26,14 +26,15 @@ ecobee:
 
 """
 
+from datetime import timedelta
+import logging
+import os
+
 from homeassistant.loader import get_component
 from homeassistant import bootstrap
 from homeassistant.util import Throttle
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED, CONF_API_KEY)
-from datetime import timedelta
-import logging
-import os
 
 DOMAIN = "ecobee"
 DISCOVER_THERMOSTAT = "ecobee.thermostat"
