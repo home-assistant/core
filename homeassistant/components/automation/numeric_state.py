@@ -63,7 +63,7 @@ def if_action(hass, config):
 
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
-    attribute = config.get(CONF_ABOVE)
+    attribute = config.get(CONF_ATTRIBUTE)
 
     if below is None and above is None:
         _LOGGER.error("Missing configuration key."
