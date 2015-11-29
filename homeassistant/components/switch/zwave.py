@@ -4,8 +4,8 @@ homeassistant.components.switch.zwave
 
 Zwave platform that handles simple binary switches.
 """
+# Because we do not compile openzwave on CI
 # pylint: disable=import-error
-
 import homeassistant.components.zwave as zwave
 
 from homeassistant.components.switch import SwitchDevice
