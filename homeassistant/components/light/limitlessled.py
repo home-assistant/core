@@ -34,7 +34,7 @@ def rewrite_legacy(config):
         if 'groups' in bridge_conf:
             groups = bridge_conf['groups']
         else:
-            _LOGGER.warn("Legacy configuration format detected")
+            _LOGGER.warning("Legacy configuration format detected")
             for i in range(1, 5):
                 name_key = 'group_%d_name' % i
                 if name_key in bridge_conf:
