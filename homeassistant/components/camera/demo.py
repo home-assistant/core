@@ -24,12 +24,10 @@ class DemoCamera(Camera):
 
     def camera_image(self):
         """ Return a faked still image response. """
-
         image_path = os.path.join(os.path.dirname(__file__),
                                   'demo_{}.png'.format(randint(1, 5)))
         with open(image_path, 'rb') as file:
-            output = file.read()
-        return output
+            return file.read()
 
     @property
     def name(self):
