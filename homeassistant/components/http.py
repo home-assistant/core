@@ -53,10 +53,6 @@ def setup(hass, config):
     conf = config[DOMAIN]
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
-    no_password_set = api_password is None
-
-    if no_password_set:
-        api_password = util.get_random_string()
 
     # If no server host is given, accept all incoming requests
     server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
@@ -66,7 +62,7 @@ def setup(hass, config):
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development, no_password_set)
+            development)
     except OSError:
         # If address already in use
         _LOGGER.exception("Error setting up HTTP server")
@@ -93,14 +89,13 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development, no_password_set):
+                 hass, api_password, development):
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
         self.hass = hass
         self.api_password = api_password
         self.development = development
-        self.no_password_set = no_password_set
         self.paths = []
         self.sessions = SessionStore()
 
@@ -157,7 +152,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, fmt, *arguments):
         """ Redirect built-in log to HA logging """
-        if self.server.no_password_set:
+        if self.server.api_password is None:
             _LOGGER.info(fmt, *arguments)
         else:
             _LOGGER.info(
@@ -192,8 +187,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        if self.server.no_password_set:
-            _LOGGER.warning('NO PASSWORD SET')
+        if self.server.api_password is None:
             self.authenticated = True
         elif HTTP_HEADER_HA_AUTH in self.headers:
             api_password = self.headers.get(HTTP_HEADER_HA_AUTH)
