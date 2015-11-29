@@ -1,8 +1,10 @@
 """
 homeassistant.components.motor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Motor component.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/motor/
 """
 import os
 import logging
@@ -100,12 +102,15 @@ class MotorDevice(Entity):
 
     @property
     def current_position(self):
-        """ Return current position of motor.
-        None is unknown, 0 is closed, 100 is fully open. """
+        """
+        Return current position of motor.
+        None is unknown, 0 is closed, 100 is fully open.
+        """
         raise NotImplementedError()
 
     @property
     def state(self):
+        """ Returns the state of the motor. """
         current = self.current_position
 
         if current is None:

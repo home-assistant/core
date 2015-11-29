@@ -1,7 +1,8 @@
 """
 homeassistant.components.motor.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a MQTT motor.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/motor.mqtt/
 """
@@ -40,7 +41,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttMotor(MotorDevice):
-    """ Represents a motor that can be controlled using MQTT """
+    """ Represents a motor that can be controlled using MQTT. """
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_open, payload_close, payload_stop, state_format):
         self._state = None
@@ -76,13 +77,15 @@ class MqttMotor(MotorDevice):
 
     @property
     def name(self):
-        """ The name of the motor """
+        """ The name of the motor. """
         return self._name
 
     @property
     def current_position(self):
-        """ Return current position of motor.
-        None is unknown, 0 is closed, 100 is fully open. """
+        """
+        Return current position of motor.
+        None is unknown, 0 is closed, 100 is fully open.
+        """
         return self._state
 
     def open(self, **kwargs):
