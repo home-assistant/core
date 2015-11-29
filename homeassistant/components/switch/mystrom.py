@@ -91,12 +91,9 @@ class MyStromSwitch(SwitchDevice):
         try:
             request = requests.get('{}/report'.format(self._resource),
                                    timeout=10)
-            if request.json()['relay'] is True:
-                self._state = True
-            else:
-                self._state = False
-
-            self.consumption = request.json()['power']
+            data = request.json()
+            self._state = bool(data['relay'])
+            self.consumption = data['power']
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to device '%s'. Is device offline?",
                           self._resource)
