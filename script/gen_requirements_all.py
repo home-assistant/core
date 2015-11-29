@@ -8,7 +8,6 @@ import importlib
 import os
 import pkgutil
 import re
-import argparse
 
 COMMENT_REQUIREMENTS = [
     'RPi.GPIO',
@@ -60,10 +59,6 @@ def gather_modules():
         except ImportError:
             errors.append(package)
             continue
-        # For catching the error by RPi.GPIO
-        # RuntimeError: This module can only be run on a Raspberry Pi!
-        except RuntimeError:
-            continue
 
         if not getattr(module, 'REQUIREMENTS', None):
             continue
@@ -74,7 +69,7 @@ def gather_modules():
     if errors:
         print("Found errors")
         print('\n'.join(errors))
-        return
+        return None
 
     output.append('# Home Assistant core')
     output.append('\n')
@@ -99,32 +94,18 @@ def write_file(data):
         req_file.write(data)
 
 
-def display(data):
-    """ Prints the output to command line. """
-    print(data)
-
-
-def argparsing():
-    """ Parsing the command line arguments. """
-    parser = argparse.ArgumentParser(
-        description='Generate a requirements_all.txt')
-    parser.add_argument('file', nargs='?',
-                        help='create new requirements_all.txt file')
-    return parser.parse_args()
-
-
 def main():
     """ Main """
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
         return
-    args = argparsing()
+
     data = gather_modules()
 
-    if args.file:
-        write_file(data)
-    else:
-        display(data)
+    if data is None:
+        return
+
+    write_file(data)
 
 if __name__ == '__main__':
     main()
