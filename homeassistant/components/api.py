@@ -106,6 +106,7 @@ def _handle_get_api_stream(handler, path_match, data):
     wfile = handler.wfile
     write_lock = threading.Lock()
     block = threading.Event()
+    session_id = None
 
     restrict = data.get('restrict')
     if restrict:
@@ -119,6 +120,7 @@ def _handle_get_api_stream(handler, path_match, data):
             try:
                 wfile.write(msg.encode("UTF-8"))
                 wfile.flush()
+                handler.server.sessions.extend_validation(session_id)
             except IOError:
                 block.set()
 
@@ -138,6 +140,7 @@ def _handle_get_api_stream(handler, path_match, data):
 
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/event-stream')
+    session_id = handler.set_session_cookie_header()
     handler.end_headers()
 
     hass.bus.listen(MATCH_ALL, forward_events)

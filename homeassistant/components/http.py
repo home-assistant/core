@@ -337,32 +337,36 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def set_cache_header(self):
         """ Add cache headers if not in development """
-        if not self.server.development:
-            # 1 year in seconds
-            cache_time = 365 * 86400
+        if self.server.development:
+            return
 
-            self.send_header(
-                HTTP_HEADER_CACHE_CONTROL,
-                "public, max-age={}".format(cache_time))
-            self.send_header(
-                HTTP_HEADER_EXPIRES,
-                self.date_time_string(time.time()+cache_time))
+        # 1 year in seconds
+        cache_time = 365 * 86400
+
+        self.send_header(
+            HTTP_HEADER_CACHE_CONTROL,
+            "public, max-age={}".format(cache_time))
+        self.send_header(
+            HTTP_HEADER_EXPIRES,
+            self.date_time_string(time.time()+cache_time))
 
     def set_session_cookie_header(self):
-        """ Add the header for the session cookie. """
+        """ Add the header for the session cookie and return session id. """
         if not self.authenticated:
             return
 
-        current = self.get_cookie_session_id()
+        session_id = self.get_cookie_session_id()
 
-        if current is not None:
-            self.server.sessions.extend_validation(current)
+        if session_id is not None:
+            self.server.sessions.extend_validation(session_id)
             return
 
         self.send_header(
             'Set-Cookie',
             '{}={}'.format(SESSION_KEY, self.server.sessions.create())
         )
+
+        return session_id
 
     def verify_session(self):
         """ Verify that we are in a valid session. """
@@ -387,19 +391,22 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if morsel is None:
             return None
 
-        current = cookie[SESSION_KEY].value
+        session_id = cookie[SESSION_KEY].value
 
-        return current if self.server.sessions.is_valid(current) else None
+        if self.server.sessions.is_valid(session_id):
+            return session_id
+
+        return None
 
     def destroy_session(self):
         """ Destroys session. """
-        current = self.get_cookie_session_id()
+        session_id = self.get_cookie_session_id()
 
-        if current is None:
+        if session_id is None:
             return
 
         self.send_header('Set-Cookie', '')
-        self.server.sessions.destroy(current)
+        self.server.sessions.destroy(session_id)
 
 
 def session_valid_time():
