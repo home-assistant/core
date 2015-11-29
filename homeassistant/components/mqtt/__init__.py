@@ -138,7 +138,7 @@ def setup(hass, config):
 
 # pylint: disable=too-few-public-methods
 class _JsonFmtParser(object):
-    """ Implements a json parser on xpath. """
+    """ Implements a JSON parser on xpath. """
     def __init__(self, jsonpath):
         import jsonpath_rw
         self._expr = jsonpath_rw.parse(jsonpath)
