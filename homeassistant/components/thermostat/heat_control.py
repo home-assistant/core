@@ -111,19 +111,21 @@ class HeatControl(ThermostatDevice):
     @property
     def min_temp(self):
         """ Return minimum temperature. """
+        # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
         else:
-            # pylint: disable=no-member
+            # get default temp from super class
             return ThermostatDevice.min_temp.fget(self)
 
     @property
     def max_temp(self):
         """ Return maximum temperature. """
+        # pylint: disable=no-member
         if self._min_temp:
             return self._max_temp
         else:
-            # pylint: disable=no-member
+            # get default temp from super class
             return ThermostatDevice.max_temp.fget(self)
 
     def _sensor_changed(self, entity_id, old_state, new_state):
