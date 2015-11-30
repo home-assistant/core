@@ -149,9 +149,7 @@ class TestLightMQTT(unittest.TestCase):
                 'platform': 'mqtt',
                 'name': 'test',
                 'command_topic': 'test_light_rgb/set',
-                'brightness_state_topic': 'test_light_rgb/brightness/status',
                 'brightness_command_topic': 'test_light_rgb/brightness/set',
-                'rgb_state_topic': 'test_light_rgb/rgb/status',
                 'rgb_command_topic': 'test_light_rgb/rgb/set',
                 'qos': 2,
                 'payload_on': 'on',
@@ -177,3 +175,26 @@ class TestLightMQTT(unittest.TestCase):
                          self.mock_publish.mock_calls[-1][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
+
+        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
+                      brightness=50)
+        self.hass.pool.block_till_done()
+
+        # Calls are threaded so we need to reorder them
+        bright_call, rgb_call, state_call = \
+            sorted((call[1] for call in self.mock_publish.mock_calls[-3:]),
+                   key=lambda call: call[0])
+
+        self.assertEqual(('test_light_rgb/set', 'on', 2, False),
+                         state_call)
+
+        self.assertEqual(('test_light_rgb/rgb/set', '75,75,75', 2, False),
+                         rgb_call)
+
+        self.assertEqual(('test_light_rgb/brightness/set', 50, 2, False),
+                         bright_call)
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual([75, 75, 75], state.attributes['rgb_color'])
+        self.assertEqual(50, state.attributes['brightness'])
