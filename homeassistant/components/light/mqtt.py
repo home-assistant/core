@@ -18,7 +18,6 @@ DEFAULT_NAME = "MQTT Light"
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_ON = "on"
 DEFAULT_PAYLOAD_OFF = "off"
-DEFAULT_RGB_PATTERN = "%d,%d,%d"
 DEFAULT_OPTIMISTIC = False
 
 DEPENDENCIES = ['mqtt']
@@ -137,9 +136,8 @@ class MqttLight(Light):
 
         if ATTR_RGB_COLOR in kwargs and \
            self._topic["rgb_command_topic"] is not None:
-            rgb = DEFAULT_RGB_PATTERN % tuple(self._rgb)
             mqtt.publish(self._hass, self._topic["rgb_command_topic"],
-                         rgb, self._qos)
+                         "{},{},{}".format(*kwargs[ATTR_RGB_COLOR]), self._qos)
 
             if self._optimistic_rgb:
                 self._rgb = kwargs[ATTR_RGB_COLOR]
@@ -147,8 +145,10 @@ class MqttLight(Light):
 
         if ATTR_BRIGHTNESS in kwargs and \
            self._topic["brightness_command_topic"] is not None:
+
             mqtt.publish(self._hass, self._topic["brightness_command_topic"],
-                         self._brightness, self._qos)
+                         kwargs[ATTR_BRIGHTNESS], self._qos)
+
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
