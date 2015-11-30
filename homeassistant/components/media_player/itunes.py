@@ -4,9 +4,11 @@ homeassistant.components.media_player.itunes
 Provides an interface to iTunes API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.itunes.html
+https://home-assistant.io/components/media_player.itunes/
 """
 import logging
+
+import requests
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_PAUSE,
@@ -16,8 +18,6 @@ from homeassistant.components.media_player import (
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_MEDIA_COMMANDS)
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_ON)
-
-import requests
 
 _LOGGER = logging.getLogger(__name__)
 

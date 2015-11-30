@@ -4,7 +4,7 @@ homeassistant.components.switch.vera
 Support for Vera switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.vera.html
+https://home-assistant.io/components/switch.vera/
 """
 import logging
 import time
@@ -15,9 +15,9 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME)
 
-REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
-                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
-                '#python-vera==0.1']
+REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
+                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
+                '#python-vera==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,5 +126,8 @@ class VeraSwitch(ToggleEntity):
     def update(self):
         # We need to debounce the status call after turning switch on or off
         # because the vera has some lag in updating the device status
-        if (self.last_command_send + 5) < time.time():
-            self.is_on_status = self.vera_device.is_switched_on()
+        try:
+            if (self.last_command_send + 5) < time.time():
+                self.is_on_status = self.vera_device.is_switched_on()
+        except RequestException:
+            _LOGGER.warning('Could not update status for %s', self.name)

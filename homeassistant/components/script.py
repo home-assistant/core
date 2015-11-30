@@ -5,11 +5,10 @@ Scripts are a sequence of actions that can be triggered manually
 by the user or automatically based upon automation events, etc.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/script.html
+https://home-assistant.io/components/script/
 """
 import logging
 from datetime import timedelta
-import homeassistant.util.dt as date_util
 from itertools import islice
 import threading
 
@@ -17,6 +16,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util import slugify, split_entity_id
+import homeassistant.util.dt as date_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_TIME_CHANGED, STATE_ON, SERVICE_TURN_ON,
     SERVICE_TURN_OFF)
@@ -37,6 +37,7 @@ CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
 
 ATTR_LAST_ACTION = 'last_action'
+ATTR_CAN_CANCEL = 'can_cancel'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,11 +73,12 @@ def setup(hass, config):
 
     for object_id, cfg in config[DOMAIN].items():
         if object_id != slugify(object_id):
-            _LOGGER.warn("Found invalid key for script: %s. Use %s instead.",
-                         object_id, slugify(object_id))
+            _LOGGER.warning("Found invalid key for script: %s. Use %s instead",
+                            object_id, slugify(object_id))
             continue
-        if not cfg.get(CONF_SEQUENCE):
-            _LOGGER.warn("Missing key 'sequence' for script %s", object_id)
+        if not isinstance(cfg.get(CONF_SEQUENCE), list):
+            _LOGGER.warning("Key 'sequence' for script %s should be a list",
+                            object_id)
             continue
         alias = cfg.get(CONF_ALIAS, object_id)
         script = Script(hass, object_id, alias, cfg[CONF_SEQUENCE])
@@ -113,6 +115,8 @@ class Script(ToggleEntity):
         self._cur = -1
         self._last_action = None
         self._listener = None
+        self._can_cancel = not any(CONF_DELAY in action for action
+                                   in self.sequence)
 
     @property
     def should_poll(self):
@@ -126,7 +130,9 @@ class Script(ToggleEntity):
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        attrs = {}
+        attrs = {
+            ATTR_CAN_CANCEL: self._can_cancel
+        }
 
         if self._last_action:
             attrs[ATTR_LAST_ACTION] = self._last_action

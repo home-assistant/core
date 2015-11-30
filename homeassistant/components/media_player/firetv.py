@@ -4,7 +4,7 @@ homeassistant.components.media_player.firetv
 Provides functionality to interact with FireTV devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.firetv.html
+https://home-assistant.io/components/media_player.firetv/
 """
 import logging
 import requests
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info(
                 'Device %s accessible and ready for control', device_id)
         else:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 'Device %s is not registered with firetv-server', device_id)
     except requests.exceptions.RequestException:
         _LOGGER.error('Could not connect to firetv-server at %s', host)

@@ -10,14 +10,15 @@ import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.loader as loader
 from homeassistant.const import (
-    CONF_PLATFORM, ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME)
+    CONF_PLATFORM, ATTR_ENTITY_ID)
 
 DOMAIN = "demo"
 
-DEPENDENCIES = ['introduction', 'conversation']
+DEPENDENCIES = ['conversation', 'introduction', 'zone']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    'switch', 'light', 'sensor', 'thermostat', 'media_player', 'notify']
+    'device_tracker', 'light', 'media_player', 'notify', 'switch', 'sensor',
+    'thermostat', 'camera', 'binary_sensor', 'alarm_control_panel', 'lock']
 
 
 def setup(hass, config):
@@ -53,23 +54,6 @@ def setup(hass, config):
                                             media_players[1]])
     group.setup_group(hass, 'bedroom', [lights[0], switches[1],
                                         media_players[0]])
-
-    # Setup IP Camera
-    bootstrap.setup_component(
-        hass, 'camera',
-        {'camera': {
-            'platform': 'generic',
-            'name': 'IP Camera',
-            'still_image_url': 'http://home-assistant.io/demo/webcam.jpg',
-        }})
-
-    # Setup alarm_control_panel
-    bootstrap.setup_component(
-        hass, 'alarm_control_panel',
-        {'alarm_control_panel': {
-            'platform': 'manual',
-            'name': 'Test Alarm',
-        }})
 
     # Setup scripts
     bootstrap.setup_component(
@@ -109,25 +93,6 @@ def setup(hass, config):
                  switches[1]: False,
              }},
             ]})
-
-    # Setup fake device tracker
-    hass.states.set("device_tracker.paulus", "home",
-                    {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/297400035/picture",
-                     ATTR_FRIENDLY_NAME: 'Paulus'})
-    hass.states.set("device_tracker.anne_therese", "not_home",
-                    {ATTR_FRIENDLY_NAME: 'Anne Therese',
-                     'latitude': hass.config.latitude + 0.002,
-                     'longitude': hass.config.longitude + 0.002})
-
-    hass.states.set("group.all_devices", "home",
-                    {
-                        "auto": True,
-                        ATTR_ENTITY_ID: [
-                            "device_tracker.paulus",
-                            "device_tracker.anne_therese"
-                        ]
-                    })
 
     # Setup configurator
     configurator_ids = []

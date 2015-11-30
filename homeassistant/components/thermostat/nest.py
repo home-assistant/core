@@ -4,7 +4,7 @@ homeassistant.components.thermostat.nest
 Adds support for Nest thermostats.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/thermostat.nest.html
+https://home-assistant.io/components/thermostat.nest/
 """
 import socket
 import logging

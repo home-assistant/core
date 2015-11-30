@@ -4,15 +4,12 @@ homeassistant.components.sensor.rpi_gpio
 Allows to configure a binary state sensor using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rpi_gpio.html
+https://home-assistant.io/components/sensor.rpi_gpio/
 """
+# pylint: disable=import-error
 import logging
 from homeassistant.helpers.entity import Entity
 
-try:
-    import RPi.GPIO as GPIO
-except ImportError:
-    GPIO = None
 from homeassistant.const import (DEVICE_DEFAULT_NAME,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
@@ -29,10 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Raspberry PI GPIO ports. """
-    if GPIO is None:
-        _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
-        return
-    # pylint: disable=no-member
+    import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
 
     sensors = []
@@ -65,6 +59,7 @@ class RPiGPIOSensor(Entity):
     def __init__(self, port_name, port_num, pull_mode,
                  value_high, value_low, bouncetime):
         # pylint: disable=no-member
+        import RPi.GPIO as GPIO
         self._name = port_name or DEVICE_DEFAULT_NAME
         self._port = port_num
         self._pull = GPIO.PUD_DOWN if pull_mode == "DOWN" else GPIO.PUD_UP
