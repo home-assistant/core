@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-instance-attributes
 class HeatControl(ThermostatDevice):
     """ Represents a HeatControl device. """
-
+    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp):
         self.hass = hass
