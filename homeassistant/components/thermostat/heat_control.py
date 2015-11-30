@@ -46,14 +46,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       CONF_SENSOR)
         return False
 
-    add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp, target_temp)])
+    add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id, 
+                              min_temp, max_temp, target_temp)])
 
 
 # pylint: disable=too-many-instance-attributes
 class HeatControl(ThermostatDevice):
     """ Represents a HeatControl device. """
 
-    def __init__(self, hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp, target_temp):
+    def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
+                  min_temp, max_temp, target_temp):
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
@@ -111,6 +113,7 @@ class HeatControl(ThermostatDevice):
         if self._min_temp:
             return self._min_temp
         else:
+           # pylint: disable=no-member
             return ThermostatDevice.min_temp.fget(self)
 
     @property
@@ -119,6 +122,7 @@ class HeatControl(ThermostatDevice):
         if self._min_temp:
             return self._max_temp
         else:
+             # pylint: disable=no-member
             return ThermostatDevice.max_temp.fget(self)
 
     def _sensor_changed(self, entity_id, old_state, new_state):
