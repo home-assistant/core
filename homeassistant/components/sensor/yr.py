@@ -37,6 +37,7 @@ sensor:
 """
 import logging
 import datetime
+import homeassistant.util.dt as dt_util
 import urllib.request
 import xmltodict
 
@@ -158,7 +159,7 @@ class YrSensor(Entity):
     # pylint: disable=too-many-branches, too-many-return-statements
     def update(self):
         """ Gets the latest data from yr.no and updates the states. """
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         if now > self._nextrun:
             try:
                 response = urllib.request.urlopen(self._url)
