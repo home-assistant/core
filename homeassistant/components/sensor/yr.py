@@ -45,6 +45,9 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+
+REQUIREMENTS = ['xmltodict']
+
 # Sensor types are defined like so:
 SENSOR_TYPES = {
     'symbol': ['Symbol', ''],
