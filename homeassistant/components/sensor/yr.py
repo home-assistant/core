@@ -38,7 +38,6 @@ sensor:
 import logging
 import datetime
 import urllib.request
-import xmltodict
 
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import Entity
@@ -46,7 +45,8 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUIREMENTS = ['xmltodict']
+REQUIREMENTS = ['xmltodict', 'astral==0.8.1']
+
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -74,7 +74,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     from astral import Location, GoogleGeocoder
-
     location = Location(('', '', hass.config.latitude, hass.config.longitude,
                          hass.config.time_zone, 0))
 
@@ -109,7 +108,7 @@ class YrSensor(Entity):
     """ Implements an Yr.no sensor. """
 
     def __init__(self, coordinates, sensor_type):
-        self.client_name = ''
+        self.client_name = 'yr'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self._state = None
@@ -167,6 +166,7 @@ class YrSensor(Entity):
             if response.status != 200:
                 return
             data = response.read().decode('utf-8')
+            import xmltodict
             self._weather_data = xmltodict.parse(data)['weatherdata']
             model = self._weather_data['meta']['model']
             if '@nextrun' not in model:
