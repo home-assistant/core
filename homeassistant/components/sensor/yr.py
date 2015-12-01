@@ -16,6 +16,24 @@ sensor:
     - temperature
     - windDirection
 
+Will show all available sensors:
+sensor:
+  platform: yr
+  monitored_conditions:
+    - temperature
+    - symbol
+    - precipitation
+    - windSpeed
+    - pressure
+    - windDirection
+    - humidity
+    - fog
+    - cloudiness
+    - lowClouds
+    - mediumClouds
+    - highClouds
+    - dewpointTemperature
+
 """
 import logging
 import datetime
@@ -93,9 +111,10 @@ class YrSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._weather_data = None
-
+        self._info = ''
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._nextrun = datetime.datetime.fromtimestamp(0)
+        self._update = datetime.datetime.fromtimestamp(0)
         self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
             'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
 
@@ -114,7 +133,7 @@ class YrSensor(Entity):
     def state_attributes(self):
         """ Returns state attributes. """
         data = {}
-        data[''] = "Weather forecast from yr.no, delivered by the"\
+        data[''] = self._info + "Weather forecast from yr.no, delivered by the"\
             " Norwegian Meteorological Institute and the NRK"
         if self.type == 'symbol':
             symbol_nr = self._state
@@ -128,52 +147,81 @@ class YrSensor(Entity):
         """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches
+    @property
+    def should_poll(self):
+        """ Return True if entity has to be polled for state. """
+        return True
+
+    # pylint: disable=too-many-branches, too-many-return-statements
     def update(self):
         """ Gets the latest data from yr.no and updates the states. """
-        if datetime.datetime.now() > self._nextrun:
+        now = datetime.datetime.now()
+        if now > self._nextrun:
             try:
                 response = urllib.request.urlopen(self._url)
             except urllib.error.URLError:
                 return
             if response.status != 200:
                 return
-            _data = response.read().decode('utf-8')
-            self._weather_data = xmltodict.parse(_data)['weatherdata']
+            data = response.read().decode('utf-8')
+            self._weather_data = xmltodict.parse(data)['weatherdata']
             model = self._weather_data['meta']['model']
             if '@nextrun' not in model:
                 model = model[0]
             self._nextrun = datetime.datetime.strptime(model['@nextrun'],
                                                        "%Y-%m-%dT%H:%M:%SZ")
+
+        if now > self._update:
             time_data = self._weather_data['product']['time']
 
-            for k in range(len(self._weather_data['product']['time'])):
+            # pylint: disable=consider-using-enumerate
+            for k in range(len(time_data)):
+                valid_from = datetime.datetime.strptime(time_data[k]['@from'],
+                                                        "%Y-%m-%dT%H:%M:%SZ")
+                valid_to = datetime.datetime.strptime(time_data[k]['@to'],
+                                                      "%Y-%m-%dT%H:%M:%SZ")
+                self._update = valid_to
+                self._info = "Forecast between " + time_data[k]['@from'] \
+                    + " and " + time_data[k]['@to'] + ". "
+
                 temp_data = time_data[k]['location']
-                if self.type in temp_data:
-                    if self.type == 'precipitation':
+                if self.type in temp_data and now < valid_to:
+                    if self.type == 'precipitation' and valid_from < now:
                         self._state = temp_data[self.type]['@value']
+                        return
+                    elif self.type == 'symbol' and valid_from < now:
+                        self._state = temp_data[self.type]['@number']
+                        return
                     elif self.type == 'temperature':
                         self._state = temp_data[self.type]['@value']
+                        return
                     elif self.type == 'windSpeed':
                         self._state = temp_data[self.type]['@mps']
+                        return
                     elif self.type == 'pressure':
                         self._state = temp_data[self.type]['@value']
+                        return
                     elif self.type == 'windDirection':
                         self._state = float(temp_data[self.type]['@deg'])
+                        return
                     elif self.type == 'humidity':
                         self._state = temp_data[self.type]['@value']
+                        return
                     elif self.type == 'fog':
                         self._state = temp_data[self.type]['@percent']
+                        return
                     elif self.type == 'cloudiness':
                         self._state = temp_data[self.type]['@percent']
+                        return
                     elif self.type == 'lowClouds':
                         self._state = temp_data[self.type]['@percent']
+                        return
                     elif self.type == 'mediumClouds':
                         self._state = temp_data[self.type]['@percent']
+                        return
                     elif self.type == 'highClouds':
                         self._state = temp_data[self.type]['@percent']
+                        return
                     elif self.type == 'dewpointTemperature':
                         self._state = temp_data[self.type]['@value']
-                    elif self.type == 'symbol':
-                        self._state = temp_data[self.type]['@number']
-                    return
+                        return
