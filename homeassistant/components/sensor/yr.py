@@ -35,11 +35,11 @@ sensor:
     - dewpointTemperature
 
 """
-import homeassistant.util.dt as dt_util
 import logging
 import datetime
 import urllib.request
 import xmltodict
+import homeassistant.util.dt as dt_util
 
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import Entity
