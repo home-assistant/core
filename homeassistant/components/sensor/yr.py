@@ -51,12 +51,12 @@ REQUIREMENTS = ['xmltodict', 'astral==0.8.1']
 # Sensor types are defined like so:
 SENSOR_TYPES = {
     'symbol': ['Symbol', ''],
-    'precipitation': ['Condition', ''],
+    'precipitation': ['Condition', 'mm'],
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],
     'pressure': ['Pressure', 'hPa'],
     'windDirection': ['Wind direction', '°'],
-    'humidity': ['Humidity', ''],
+    'humidity': ['Humidity', '%'],
     'fog': ['Fog', '%'],
     'cloudiness': ['Cloudiness', '%'],
     'lowClouds': ['Low clouds', '%'],
