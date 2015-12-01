@@ -38,6 +38,7 @@ sensor:
 import logging
 import datetime
 import urllib.request
+import xmltodict
 
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import Entity
@@ -166,7 +167,7 @@ class YrSensor(Entity):
             if response.status != 200:
                 return
             data = response.read().decode('utf-8')
-            import xmltodict
+
             self._weather_data = xmltodict.parse(data)['weatherdata']
             model = self._weather_data['meta']['model']
             if '@nextrun' not in model:
