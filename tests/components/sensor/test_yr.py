@@ -59,7 +59,7 @@ class TestSensorYr(unittest.TestCase):
                          state.attributes.get('unit_of_measurement'))
 
         state = self.hass.states.get('sensor.yr_humidity')
-        self.assertEqual(None,
+        self.assertEqual('%',
                          state.attributes.get('unit_of_measurement'))
 
         state = self.hass.states.get('sensor.yr_fog')
