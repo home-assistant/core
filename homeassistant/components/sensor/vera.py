@@ -15,9 +15,9 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
-                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
-                '#python-vera==0.1']
+REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
+                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
+                '#python-vera==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ class VeraSensor(Entity):
 
     @property
     def state_attributes(self):
-        attr = super().state_attributes
+        attr = {}
         if self.vera_device.has_battery:
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
 

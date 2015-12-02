@@ -54,8 +54,7 @@ def setup(hass, config):
 
 
 def _handle_get_root(handler, path_match, data):
-    """ Renders the debug interface. """
-
+    """ Renders the frontend. """
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/html; charset=utf-8')
     handler.end_headers()
@@ -66,7 +65,7 @@ def _handle_get_root(handler, path_match, data):
         app_url = "frontend-{}.html".format(version.VERSION)
 
     # auto login if no password was set, else check api_password param
-    auth = ('no_password_set' if handler.server.no_password_set
+    auth = ('no_password_set' if handler.server.api_password is None
             else data.get('api_password', ''))
 
     with open(INDEX_PATH) as template_file:

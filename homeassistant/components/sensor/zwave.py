@@ -6,11 +6,11 @@ Interfaces with Z-Wave sensors.
 For more details about this platform, please refer to the documentation
 at https://home-assistant.io/components/zwave/
 """
+# Because we do not compile openzwave on CI
 # pylint: disable=import-error
-from homeassistant.helpers.event import track_point_in_time
-from openzwave.network import ZWaveNetwork
-from pydispatch import dispatcher
 import datetime
+
+from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
 import homeassistant.components.zwave as zwave
 from homeassistant.helpers.entity import Entity
@@ -79,6 +79,9 @@ class ZWaveSensor(Entity):
     """ Represents a Z-Wave sensor. """
 
     def __init__(self, sensor_value):
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
+
         self._value = sensor_value
         self._node = sensor_value.node
 

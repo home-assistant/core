@@ -12,7 +12,6 @@ import subprocess
 from homeassistant.util import slugify
 
 DOMAIN = 'shell_command'
-DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
 
