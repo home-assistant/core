@@ -68,7 +68,7 @@ class TestSensorMQTT(unittest.TestCase):
         switch.turn_on(self.hass, 'switch.test')
         self.hass.pool.block_till_done()
 
-        self.assertEqual(('command-topic', 'beer on', 2),
+        self.assertEqual(('command-topic', 'beer on', 2, False),
                          self.mock_publish.mock_calls[-1][1])
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
@@ -76,7 +76,35 @@ class TestSensorMQTT(unittest.TestCase):
         switch.turn_off(self.hass, 'switch.test')
         self.hass.pool.block_till_done()
 
-        self.assertEqual(('command-topic', 'beer off', 2),
+        self.assertEqual(('command-topic', 'beer off', 2, False),
                          self.mock_publish.mock_calls[-1][1])
+        state = self.hass.states.get('switch.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+    def test_controlling_state_via_topic_and_json_message(self):
+        self.assertTrue(switch.setup(self.hass, {
+            'switch': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'payload_on': 'beer on',
+                'payload_off': 'beer off',
+                'state_format': 'json:val'
+            }
+        }))
+
+        state = self.hass.states.get('switch.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        fire_mqtt_message(self.hass, 'state-topic', '{"val":"beer on"}')
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get('switch.test')
+        self.assertEqual(STATE_ON, state.state)
+
+        fire_mqtt_message(self.hass, 'state-topic', '{"val":"beer off"}')
+        self.hass.pool.block_till_done()
+
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
