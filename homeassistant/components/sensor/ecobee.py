@@ -49,30 +49,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     data = ecobee.NETWORK
-    sensor_list = list()
+    dev = list()
     for index in range(len(data.ecobee.thermostats)):
-        sensors = dict()
         for sensor in data.ecobee.get_remote_sensors(index):
-            sensor_info = dict()
             for item in sensor['capability']:
                 if item['type'] == 'temperature':
-                    sensor_info['temp'] = float(item['value']) / 10
+                    dev.append(
+                        EcobeeSensor(sensor['name'], 'temperature', index))
                 elif item['type'] == 'humidity':
-                    sensor_info['humidity'] = item['value']
+                    dev.append(
+                        EcobeeSensor(sensor['name'], 'humidity', index))
                 elif item['type'] == 'occupancy':
-                    sensor_info['occupancy'] = item['value']
-            sensors[sensor['name']] = sensor_info
-        sensor_list.append(sensors)
-
-    dev = list()
-    for index in range(len(sensor_list)):
-        for name, data in sensor_list[index].items():
-            if 'temp' in data:
-                dev.append(EcobeeSensor(name, 'temperature', index))
-            if 'humidity' in data:
-                dev.append(EcobeeSensor(name, 'humidity', index))
-            if 'occupancy' in data:
-                dev.append(EcobeeSensor(name, 'occupancy', index))
+                    dev.append(
+                        EcobeeSensor(sensor['name'], 'occupancy', index))
 
     add_devices(dev)
 
@@ -103,20 +92,22 @@ class EcobeeSensor(Entity):
         return self._unit_of_measurement
 
     def update(self):
-        ecobee.NETWORK.update()
         data = ecobee.NETWORK
+        data.update()
         for sensor in data.ecobee.get_remote_sensors(self.index):
-            sensor_info = dict()
             for item in sensor['capability']:
-                if item['type'] == 'temperature':
-                    sensor_info['temp'] = float(item['value']) / 10
-                elif item['type'] == 'humidity':
-                    sensor_info['humidity'] = item['value']
-                elif item['type'] == 'occupancy':
-                    sensor_info['occupancy'] = item['value']
-        if self.type == 'temperature':
-            self._state = sensor_info['temp']
-        elif self.type == 'humidity':
-            self._state = sensor_info['humidity']
-        elif self.type == 'occupancy':
-            self._state = sensor_info['occupancy']
+                if (
+                        item['type'] == self.type and
+                        self.type == 'temperature' and
+                        self.sensor_name == sensor['name']):
+                    self._state = float(item['value']) / 10
+                elif (
+                        item['type'] == self.type and
+                        self.type == 'humidity' and
+                        self.sensor_name == sensor['name']):
+                    self._state = item['value']
+                elif (
+                        item['type'] == self.type and
+                        self.type == 'occupancy' and
+                        self.sensor_name == sensor['name']):
+                    self._state = item['value']
