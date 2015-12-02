@@ -164,7 +164,8 @@ class Thermostat(ThermostatDevice):
         """ Turns away on. """
         self._away = True
         if self.hold_temp:
-            self.data.ecobee.set_climate_hold(self.thermostat_index, "away", "indefinite")
+            self.data.ecobee.set_climate_hold(self.thermostat_index,
+                                              "away", "indefinite")
         else:
             self.data.ecobee.set_climate_hold(self.thermostat_index, "away")
 
@@ -179,9 +180,11 @@ class Thermostat(ThermostatDevice):
         low_temp = temperature - 1
         high_temp = temperature + 1
         if self.hold_temp:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp, high_temp, "indefinite")
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp, "indefinite")
         else:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp, high_temp)
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp)
 
     def set_hvac_mode(self, mode):
         """ Set HVAC mode (auto, auxHeatOnly, cool, heat, off) """
