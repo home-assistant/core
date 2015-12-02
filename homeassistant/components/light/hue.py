@@ -206,9 +206,7 @@ class HueLight(Light):
         command = {'on': True}
 
         if ATTR_TRANSITION in kwargs:
-            # Transition time is in 1/10th seconds and cannot exceed
-            # 900 seconds.
-            command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
+            command['transitiontime'] = kwargs[ATTR_TRANSITION] * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
