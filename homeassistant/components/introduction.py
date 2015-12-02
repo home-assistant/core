@@ -9,7 +9,6 @@ https://home-assistant.io/components/introduction/
 import logging
 
 DOMAIN = 'introduction'
-DEPENDENCIES = []
 
 
 def setup(hass, config=None):

@@ -193,7 +193,7 @@ def _load_order_component(comp_name, load_order, loading):
 
     loading.add(comp_name)
 
-    for dependency in component.DEPENDENCIES:
+    for dependency in getattr(component, 'DEPENDENCIES', []):
         # Check not already loaded
         if dependency in load_order:
             continue

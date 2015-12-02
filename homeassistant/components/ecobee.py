@@ -26,19 +26,19 @@ ecobee:
 
 """
 
+from datetime import timedelta
+import logging
+import os
+
 from homeassistant.loader import get_component
 from homeassistant import bootstrap
 from homeassistant.util import Throttle
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED, CONF_API_KEY)
-from datetime import timedelta
-import logging
-import os
 
 DOMAIN = "ecobee"
 DISCOVER_THERMOSTAT = "ecobee.thermostat"
 DISCOVER_SENSORS = "ecobee.sensor"
-DEPENDENCIES = []
 NETWORK = None
 HOLD_TEMP = 'hold_temp'
 
@@ -93,8 +93,8 @@ def setup_ecobee(hass, network, config):
         configurator.request_done(_CONFIGURING.pop('ecobee'))
 
     # Ensure component is loaded
-    bootstrap.setup_component(hass, 'thermostat')
-    bootstrap.setup_component(hass, 'sensor')
+    bootstrap.setup_component(hass, 'thermostat', config)
+    bootstrap.setup_component(hass, 'sensor', config)
 
     hold_temp = config[DOMAIN].get(HOLD_TEMP, False)
 

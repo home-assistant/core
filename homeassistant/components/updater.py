@@ -16,7 +16,6 @@ from homeassistant.helpers import event
 
 _LOGGER = logging.getLogger(__name__)
 PYPI_URL = 'https://pypi.python.org/pypi/homeassistant/json'
-DEPENDENCIES = []
 DOMAIN = 'updater'
 ENTITY_ID = 'updater.updater'
 
@@ -48,10 +47,10 @@ def get_newest_version():
         return req.json()['info']['version']
     except requests.RequestException:
         _LOGGER.exception('Could not contact PyPI to check for updates')
-        return
+        return None
     except ValueError:
         _LOGGER.exception('Received invalid response from PyPI')
-        return
+        return None
     except KeyError:
         _LOGGER.exception('Response from PyPI did not include version')
-        return
+        return None

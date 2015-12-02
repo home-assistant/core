@@ -12,7 +12,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import wink, zwave, isy994, verisure, ecobee
 
 DOMAIN = 'sensor'
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
