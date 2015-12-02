@@ -10,7 +10,6 @@ import homeassistant.core as ha
 import homeassistant.components.sensor as sensor
 
 
-
 class TestSensorYr(unittest.TestCase):
     """ Test the Yr sensor. """
 
@@ -39,8 +38,7 @@ class TestSensorYr(unittest.TestCase):
         self.assertEqual(None,
                          state.attributes.get('unit_of_measurement'))
 
-
-    def test_default_setup(self):
+    def test_custom_setup(self):
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'yr',
@@ -48,7 +46,7 @@ class TestSensorYr(unittest.TestCase):
             }
         }))
         state = self.hass.states.get('sensor.yr_symbol')
-        self.assertEqual(None,state)
+        self.assertEqual(None, state)
 
         state = self.hass.states.get('sensor.yr_pressure')
         self.assertEqual('hPa',
@@ -69,4 +67,3 @@ class TestSensorYr(unittest.TestCase):
         state = self.hass.states.get('sensor.yr_wind_speed')
         self.assertEqual('m/s',
                          state.attributes.get('unit_of_measurement'))
-
