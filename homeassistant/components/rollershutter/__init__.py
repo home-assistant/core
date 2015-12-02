@@ -1,10 +1,10 @@
 """
-homeassistant.components.motor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Motor component.
+homeassistant.components.rollershutter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Rollershutter component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/motor/
+https://home-assistant.io/components/rollershutter/
 """
 import os
 import logging
@@ -14,15 +14,16 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import group
 from homeassistant.const import (
-    SERVICE_OPEN, SERVICE_CLOSE, SERVICE_STOP,
+    SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_STOP,
     STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, ATTR_ENTITY_ID)
 
 
-DOMAIN = 'motor'
+DOMAIN = 'rollershutter'
 SCAN_INTERVAL = 15
 
-GROUP_NAME_ALL_MOTORS = 'all motors'
-ENTITY_ID_ALL_MOTORS = group.ENTITY_ID_FORMAT.format('all_motors')
+GROUP_NAME_ALL_ROLLERSHUTTERS = 'all rollershutters'
+ENTITY_ID_ALL_ROLLERSHUTTERS = group.ENTITY_ID_FORMAT.format(
+    'all_rollershutters')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -35,82 +36,82 @@ ATTR_CURRENT_POSITION = 'current_position'
 
 
 def is_open(hass, entity_id=None):
-    """ Returns if the motor is open based on the statemachine. """
-    entity_id = entity_id or ENTITY_ID_ALL_MOTORS
+    """ Returns if the rollershutter is open based on the statemachine. """
+    entity_id = entity_id or ENTITY_ID_ALL_ROLLERSHUTTERS
     return hass.states.is_state(entity_id, STATE_OPEN)
 
 
-def call_open(hass, entity_id=None):
-    """ Open all or specified motor. """
+def move_up(hass, entity_id=None):
+    """ Move up all or specified rollershutter. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_OPEN, data)
+    hass.services.call(DOMAIN, SERVICE_MOVE_UP, data)
 
 
-def call_close(hass, entity_id=None):
-    """ Close all or specified motor. """
+def move_down(hass, entity_id=None):
+    """ Move down all or specified rollershutter. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_CLOSE, data)
+    hass.services.call(DOMAIN, SERVICE_MOVE_DOWN, data)
 
 
-def call_stop(hass, entity_id=None):
-    """ Stops all or specified motor. """
+def stop(hass, entity_id=None):
+    """ Stops all or specified rollershutter. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_STOP, data)
 
 
 def setup(hass, config):
-    """ Track states and offer events for motors. """
+    """ Track states and offer events for rollershutters. """
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_MOTORS)
+        GROUP_NAME_ALL_ROLLERSHUTTERS)
     component.setup(config)
 
-    def handle_motor_service(service):
-        """ Handles calls to the motor services. """
-        target_motors = component.extract_from_service(service)
+    def handle_rollershutter_service(service):
+        """ Handles calls to the rollershutter services. """
+        target_rollershutters = component.extract_from_service(service)
 
-        for motor in target_motors:
-            if service.service == SERVICE_OPEN:
-                motor.open()
-            elif service.service == SERVICE_CLOSE:
-                motor.close()
+        for rollershutter in target_rollershutters:
+            if service.service == SERVICE_MOVE_UP:
+                rollershutter.move_up()
+            elif service.service == SERVICE_MOVE_DOWN:
+                rollershutter.move_down()
             elif service.service == SERVICE_STOP:
-                motor.stop()
+                rollershutter.stop()
 
-            if motor.should_poll:
-                motor.update_ha_state(True)
+            if rollershutter.should_poll:
+                rollershutter.update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_OPEN,
-                           handle_motor_service,
-                           descriptions.get(SERVICE_OPEN))
-    hass.services.register(DOMAIN, SERVICE_CLOSE,
-                           handle_motor_service,
-                           descriptions.get(SERVICE_CLOSE))
+    hass.services.register(DOMAIN, SERVICE_MOVE_UP,
+                           handle_rollershutter_service,
+                           descriptions.get(SERVICE_MOVE_UP))
+    hass.services.register(DOMAIN, SERVICE_MOVE_DOWN,
+                           handle_rollershutter_service,
+                           descriptions.get(SERVICE_MOVE_DOWN))
     hass.services.register(DOMAIN, SERVICE_STOP,
-                           handle_motor_service,
+                           handle_rollershutter_service,
                            descriptions.get(SERVICE_STOP))
 
     return True
 
 
-class MotorDevice(Entity):
-    """ Represents a motor within Home Assistant. """
+class RollershutterDevice(Entity):
+    """ Represents a rollershutter within Home Assistant. """
     # pylint: disable=no-self-use
 
     @property
     def current_position(self):
         """
-        Return current position of motor.
+        Return current position of rollershutter.
         None is unknown, 0 is closed, 100 is fully open.
         """
         raise NotImplementedError()
 
     @property
     def state(self):
-        """ Returns the state of the motor. """
+        """ Returns the state of the rollershutter. """
         current = self.current_position
 
         if current is None:
@@ -130,14 +131,14 @@ class MotorDevice(Entity):
             ATTR_CURRENT_POSITION: current
         }
 
-    def open(self, **kwargs):
-        """ Open the motor. """
+    def move_up(self, **kwargs):
+        """ Move the rollershutter down. """
         raise NotImplementedError()
 
-    def close(self, **kwargs):
-        """ Close the motor. """
+    def move_down(self, **kwargs):
+        """ Move the rollershutter up. """
         raise NotImplementedError()
 
     def stop(self, **kwargs):
-        """ Stop the motor. """
+        """ Stop the rollershutter. """
         raise NotImplementedError()
