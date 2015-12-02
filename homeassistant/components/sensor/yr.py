@@ -99,6 +99,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             else:
                 dev.append(YrSensor(coordinates, variable))
 
+    # add symbol as default sensor
     if len(dev) == 0:
         dev.append(YrSensor(coordinates, "symbol"))
     add_devices(dev)
@@ -159,6 +160,7 @@ class YrSensor(Entity):
     def update(self):
         """ Gets the latest data from yr.no and updates the states. """
         now = datetime.datetime.now()
+        # check if new will be available
         if now > self._nextrun:
             try:
                 response = urllib.request.urlopen(self._url)
@@ -174,11 +176,12 @@ class YrSensor(Entity):
                 model = model[0]
             self._nextrun = datetime.datetime.strptime(model['@nextrun'],
                                                        "%Y-%m-%dT%H:%M:%SZ")
-
+        # check if data should be updated
         if now > self._update:
             time_data = self._weather_data['product']['time']
 
             # pylint: disable=consider-using-enumerate
+            # find sensor
             for k in range(len(time_data)):
                 valid_from = datetime.datetime.strptime(time_data[k]['@from'],
                                                         "%Y-%m-%dT%H:%M:%SZ")
