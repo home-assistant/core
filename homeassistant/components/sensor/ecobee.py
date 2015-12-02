@@ -43,18 +43,36 @@ _LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the sensors. """
     if discovery_info is None:
         return
+    data = ecobee.NETWORK
+    sensor_list = list()
+    for index in range(len(data.ecobee.thermostats)):
+        sensors = dict()
+        for sensor in data.ecobee.get_remote_sensors(index):
+            sensor_info = dict()
+            for item in sensor['capability']:
+                if item['type'] == 'temperature':
+                    sensor_info['temp'] = float(item['value']) / 10
+                elif item['type'] == 'humidity':
+                    sensor_info['humidity'] = item['value']
+                elif item['type'] == 'occupancy':
+                    sensor_info['occupancy'] = item['value']
+            sensors[sensor['name']] = sensor_info
+        sensor_list.append(sensors)
+
     dev = list()
-    for name, data in ecobee.NETWORK.ecobee.sensors.items():
-        if 'temp' in data:
-            dev.append(EcobeeSensor(name, 'temperature'))
-        if 'humidity' in data:
-            dev.append(EcobeeSensor(name, 'humidity'))
-        if 'occupancy' in data:
-            dev.append(EcobeeSensor(name, 'occupancy'))
+    for index in range(len(sensor_list)):
+        for name, data in sensor_list[index].items():
+            if 'temp' in data:
+                dev.append(EcobeeSensor(name, 'temperature', index))
+            if 'humidity' in data:
+                dev.append(EcobeeSensor(name, 'humidity', index))
+            if 'occupancy' in data:
+                dev.append(EcobeeSensor(name, 'occupancy', index))
 
     add_devices(dev)
 
@@ -62,10 +80,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EcobeeSensor(Entity):
     """ An ecobee sensor. """
 
-    def __init__(self, sensor_name, sensor_type):
+    def __init__(self, sensor_name, sensor_type, sensor_index):
         self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
         self.sensor_name = sensor_name
         self.type = sensor_type
+        self.index = sensor_index
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.update()
@@ -85,10 +104,19 @@ class EcobeeSensor(Entity):
 
     def update(self):
         ecobee.NETWORK.update()
-        data = ecobee.NETWORK.ecobee.sensors[self.sensor_name]
+        data = ecobee.NETWORK
+        for sensor in data.ecobee.get_remote_sensors(self.index):
+            sensor_info = dict()
+            for item in sensor['capability']:
+                if item['type'] == 'temperature':
+                    sensor_info['temp'] = float(item['value']) / 10
+                elif item['type'] == 'humidity':
+                    sensor_info['humidity'] = item['value']
+                elif item['type'] == 'occupancy':
+                    sensor_info['occupancy'] = item['value']
         if self.type == 'temperature':
-            self._state = data['temp']
+            self._state = sensor_info['temp']
         elif self.type == 'humidity':
-            self._state = data['humidity']
+            self._state = sensor_info['humidity']
         elif self.type == 'occupancy':
-            self._state = data['occupancy']
+            self._state = sensor_info['occupancy']
