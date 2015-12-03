@@ -53,15 +53,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
             for item in sensor['capability']:
-                if item['type'] == 'temperature':
-                    dev.append(
-                        EcobeeSensor(sensor['name'], 'temperature', index))
-                elif item['type'] == 'humidity':
-                    dev.append(
-                        EcobeeSensor(sensor['name'], 'humidity', index))
-                elif item['type'] == 'occupancy':
-                    dev.append(
-                        EcobeeSensor(sensor['name'], 'occupancy', index))
+                if item['type'] not in ('temperature',
+                                        'humidity', 'occupancy'):
+                    continue
+
+                dev.append(EcobeeSensor(sensor['name'], item['type'], index))
 
     add_devices(dev)
 
