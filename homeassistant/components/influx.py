@@ -27,7 +27,7 @@ from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "influx"
-DEPENDENCIES = ['recorder']
+DEPENDENCIES = []
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
