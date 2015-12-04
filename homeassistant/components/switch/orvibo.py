@@ -11,7 +11,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 
 DEFAULT_NAME = "Orvibo S20 Switch"
-REQUIREMENTS = ['orvibo==1.0.0']
+REQUIREMENTS = ['orvibo==1.0.1']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -20,15 +20,23 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return S20 switches. """
     from orvibo.s20 import S20, S20Exception
 
-    if config.get('host') is None:
-        _LOGGER.error("Missing required variable: host")
-        return
-    try:
-        s20 = S20(config.get('host'))
-        add_devices_callback([S20Switch(config.get('name', DEFAULT_NAME),
-                                        s20)])
-    except S20Exception:
-        _LOGGER.exception("S20 couldn't be initialized")
+    switches = []
+    switch_conf = config.get('switches', [config])
+
+    for switch in switch_conf:
+        if switch.get('host') is None:
+            _LOGGER.error("Missing required variable: host")
+            continue
+        host = switch.get('host')
+        try:
+            switches.append(S20Switch(switch.get('name', DEFAULT_NAME),
+                                      S20(host)))
+            _LOGGER.info("Initialized S20 at %s", host)
+        except S20Exception:
+            _LOGGER.exception("S20 at %s couldn't be initialized",
+                              host)
+
+    add_devices_callback(switches)
 
 
 class S20Switch(SwitchDevice):

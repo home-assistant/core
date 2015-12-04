@@ -101,6 +101,7 @@ class RadioThermostat(ThermostatDevice):
         return round(self._target_temperature, 1)
 
     def update(self):
+        """ Update the data from the thermostat. """
         self._current_temperature = self.device.temp['raw']
         self._name = self.device.name['raw']
         if self.device.tmode['human'] == 'Cool':

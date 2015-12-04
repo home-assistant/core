@@ -11,7 +11,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
-REQUIREMENTS = ['pywemo==0.3.2']
+REQUIREMENTS = ['pywemo==0.3.3']
 _LOGGER = logging.getLogger(__name__)
 
 

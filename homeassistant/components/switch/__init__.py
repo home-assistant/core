@@ -20,7 +20,6 @@ from homeassistant.components import (
     group, discovery, wink, isy994, verisure, zwave)
 
 DOMAIN = 'switch'
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_SWITCHES = 'all switches'
