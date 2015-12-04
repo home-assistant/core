@@ -16,9 +16,9 @@ https://home-assistant.io/components/device_tracker.icloud/
 """
 import logging
 
+import re
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.event import track_utc_time_change
-import re
 
 SCAN_INTERVAL = 1800
 
@@ -49,7 +49,7 @@ def setup_scanner(hass, config, see):
                               verify=True)
     except PyiCloudFailedLoginException as error:
         _LOGGER.exception(
-            'Error logging into iCloud Service: {0}'.format(error)
+            'Error logging into iCloud Service: {}'.format(error)
         )
         return
 

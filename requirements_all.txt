@@ -170,3 +170,6 @@ https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
+
+# homeassistant.sensor.icloud
+https://github.com/picklepete/pyicloud/archive/80f6cd6decc950514b8dc43b30c5bded81b34d5f.zip#pyicloud==0.8.0
