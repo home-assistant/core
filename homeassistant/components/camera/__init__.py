@@ -7,18 +7,19 @@ Component to interface with various cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
 """
-import requests
 import logging
-import time
 import re
+import time
+
+import requests
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
     )
-
-from homeassistant.helpers.entity_component import EntityComponent
 
 
 DOMAIN = 'camera'
@@ -80,19 +81,21 @@ def setup(hass, config):
     def _proxy_camera_image(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
         entity_id = path_match.group(ATTR_ENTITY_ID)
+        camera = component.entities.get(entity_id)
 
-        camera = None
-        if entity_id in component.entities.keys():
-            camera = component.entities[entity_id]
-
-        if camera:
-            response = camera.camera_image()
-            if response is not None:
-                handler.wfile.write(response)
-            else:
-                handler.send_response(HTTP_NOT_FOUND)
-        else:
+        if camera is None:
             handler.send_response(HTTP_NOT_FOUND)
+            handler.end_headers()
+            return
+
+        response = camera.camera_image()
+
+        if response is None:
+            handler.send_response(HTTP_NOT_FOUND)
+            handler.end_headers()
+            return
+
+        handler.wfile.write(response)
 
     hass.http.register_path(
         'GET',
@@ -108,12 +111,9 @@ def setup(hass, config):
         stream even with only a still image URL available.
         """
         entity_id = path_match.group(ATTR_ENTITY_ID)
+        camera = component.entities.get(entity_id)
 
-        camera = None
-        if entity_id in component.entities.keys():
-            camera = component.entities[entity_id]
-
-        if not camera:
+        if camera is None:
             handler.send_response(HTTP_NOT_FOUND)
             handler.end_headers()
             return
@@ -131,7 +131,6 @@ def setup(hass, config):
             # MJPEG_START_HEADER.format()
 
             while True:
-
                 img_bytes = camera.camera_image()
                 if img_bytes is None:
                     continue
@@ -148,11 +147,11 @@ def setup(hass, config):
                 handler.request.sendall(
                     bytes('--jpgboundary\r\n', 'utf-8'))
 
+                time.sleep(0.5)
+
         except (requests.RequestException, IOError):
             camera.is_streaming = False
             camera.update_ha_state()
-
-        camera.is_streaming = False
 
     hass.http.register_path(
         'GET',

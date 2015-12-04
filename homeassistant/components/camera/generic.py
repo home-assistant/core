@@ -7,11 +7,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.generic/
 """
 import logging
-from requests.auth import HTTPBasicAuth
-from homeassistant.helpers import validate_config
-from homeassistant.components.camera import DOMAIN
-from homeassistant.components.camera import Camera
+
 import requests
+from requests.auth import HTTPBasicAuth
+
+from homeassistant.helpers import validate_config
+from homeassistant.components.camera import DOMAIN, Camera
 
 _LOGGER = logging.getLogger(__name__)
 

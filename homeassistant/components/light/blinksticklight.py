@@ -14,7 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 REQUIREMENTS = ["blinkstick==1.1.7"]
-DEPENDENCIES = []
 
 
 # pylint: disable=unused-argument
