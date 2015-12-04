@@ -38,7 +38,6 @@ sensor:
 import logging
 import datetime
 import urllib.request
-import xmltodict
 
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import Entity
@@ -47,7 +46,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 REQUIREMENTS = ['xmltodict', 'astral==0.8.1']
-
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -91,17 +89,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     coordinates = dict(lat=hass.config.latitude,
                        lon=hass.config.longitude, msl=elevation)
 
+    weather = YrData(coordinates)
+
     dev = []
     if 'monitored_conditions' in config:
         for variable in config['monitored_conditions']:
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(YrSensor(coordinates, variable))
+                dev.append(YrSensor(variable, weather))
 
     # add symbol as default sensor
     if len(dev) == 0:
-        dev.append(YrSensor(coordinates, "symbol"))
+        dev.append(YrSensor("symbol", weather))
     add_devices(dev)
 
 
@@ -109,18 +109,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YrSensor(Entity):
     """ Implements an Yr.no sensor. """
 
-    def __init__(self, coordinates, sensor_type):
+    def __init__(self, sensor_type, weather):
         self.client_name = 'yr'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self._state = None
-        self._weather_data = None
+        self._weather = weather
         self._info = ''
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._nextrun = datetime.datetime.fromtimestamp(0)
         self._update = datetime.datetime.fromtimestamp(0)
-        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
-            'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
 
         self.update()
 
@@ -144,6 +141,9 @@ class YrSensor(Entity):
             data[ATTR_ENTITY_PICTURE] = "http://api.met.no/weatherapi/weathericon/1.1/" \
                                         "?symbol=" + str(symbol_nr) + \
                                         ";content_type=image/png"
+            data["description_image"] = "http://api.met.no/weatherapi/weathericon/1.1/" \
+                                        "?symbol=" + str(symbol_nr) + \
+                                        ";content_type=image/png"
         return data
 
     @property
@@ -159,26 +159,12 @@ class YrSensor(Entity):
     # pylint: disable=too-many-branches, too-many-return-statements
     def update(self):
         """ Gets the latest data from yr.no and updates the states. """
-        now = datetime.datetime.now()
-        # check if new will be available
-        if now > self._nextrun:
-            try:
-                response = urllib.request.urlopen(self._url)
-            except urllib.error.URLError:
-                return
-            if response.status != 200:
-                return
-            data = response.read().decode('utf-8')
 
-            self._weather_data = xmltodict.parse(data)['weatherdata']
-            model = self._weather_data['meta']['model']
-            if '@nextrun' not in model:
-                model = model[0]
-            self._nextrun = datetime.datetime.strptime(model['@nextrun'],
-                                                       "%Y-%m-%dT%H:%M:%SZ")
+        self._weather.update()
+        now = datetime.datetime.now()
         # check if data should be updated
         if now > self._update:
-            time_data = self._weather_data['product']['time']
+            time_data = self._weather.data['product']['time']
 
             # pylint: disable=consider-using-enumerate
             # find sensor
@@ -232,3 +218,36 @@ class YrSensor(Entity):
                     elif self.type == 'dewpointTemperature':
                         self._state = temp_data[self.type]['@value']
                         return
+
+
+# pylint: disable=too-few-public-methods
+class YrData(object):
+    """ Gets the latest data and updates the states. """
+
+    def __init__(self, coordinates):
+        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
+            'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
+
+        self._nextrun = datetime.datetime.fromtimestamp(0)
+        self.update()
+
+    def update(self):
+        """ Gets the latest data from yr.no """
+        now = datetime.datetime.now()
+        # check if new will be available
+        if now > self._nextrun:
+            try:
+                response = urllib.request.urlopen(self._url)
+            except urllib.error.URLError:
+                return
+            if response.status != 200:
+                return
+            data = response.read().decode('utf-8')
+
+            import xmltodict
+            self.data = xmltodict.parse(data)['weatherdata']
+            model = self.data['meta']['model']
+            if '@nextrun' not in model:
+                model = model[0]
+            self._nextrun = datetime.datetime.strptime(model['@nextrun'],
+                                                       "%Y-%m-%dT%H:%M:%SZ")
