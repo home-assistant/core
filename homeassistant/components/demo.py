@@ -18,7 +18,7 @@ DEPENDENCIES = ['conversation', 'introduction', 'zone']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     'device_tracker', 'light', 'media_player', 'notify', 'switch', 'sensor',
-    'thermostat', 'camera', 'binary_sensor']
+    'thermostat', 'camera', 'binary_sensor', 'alarm_control_panel', 'lock']
 
 
 def setup(hass, config):
@@ -54,23 +54,6 @@ def setup(hass, config):
                                             media_players[1]])
     group.setup_group(hass, 'bedroom', [lights[0], switches[1],
                                         media_players[0]])
-
-    # Setup IP Camera
-    bootstrap.setup_component(
-        hass, 'camera',
-        {'camera': {
-            'platform': 'generic',
-            'name': 'IP Camera',
-            'still_image_url': 'http://home-assistant.io/demo/webcam.jpg',
-        }})
-
-    # Setup alarm_control_panel
-    bootstrap.setup_component(
-        hass, 'alarm_control_panel',
-        {'alarm_control_panel': {
-            'platform': 'manual',
-            'name': 'Test Alarm',
-        }})
 
     # Setup scripts
     bootstrap.setup_component(
