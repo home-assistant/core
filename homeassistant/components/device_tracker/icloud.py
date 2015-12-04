@@ -49,7 +49,7 @@ def setup_scanner(hass, config, see):
                               verify=True)
     except PyiCloudFailedLoginException as error:
         _LOGGER.exception(
-            'Error logging into iCloud Service: {}'.format(error)
+            'Error logging into iCloud Service: %s' % error
         )
         return
 
