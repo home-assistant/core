@@ -141,9 +141,7 @@ class YrSensor(Entity):
             data[ATTR_ENTITY_PICTURE] = "http://api.met.no/weatherapi/weathericon/1.1/" \
                                         "?symbol=" + str(symbol_nr) + \
                                         ";content_type=image/png"
-            data["description_image"] = "http://api.met.no/weatherapi/weathericon/1.1/" \
-                                        "?symbol=" + str(symbol_nr) + \
-                                        ";content_type=image/png"
+
         return data
 
     @property
