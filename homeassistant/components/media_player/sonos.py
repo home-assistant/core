@@ -39,9 +39,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
     import soco
 
+    if discovery_info:
+        add_devices([SonosDevice(hass, soco.SoCo(discovery_info))])
+        return True
+
     players = soco.discover()
+
     if not players:
-        _LOGGER.warning('No Sonos speakers found. Disabling: %s', __name__)
+        _LOGGER.warning('No Sonos speakers found.')
         return False
 
     add_devices(SonosDevice(hass, p) for p in players)

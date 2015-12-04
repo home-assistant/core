@@ -21,7 +21,6 @@ import homeassistant.util.color as color_util
 
 
 DOMAIN = "light"
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'

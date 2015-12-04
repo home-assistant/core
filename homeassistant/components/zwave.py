@@ -17,7 +17,6 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "zwave"
-DEPENDENCIES = []
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
 CONF_USB_STICK_PATH = "usb_path"
@@ -83,7 +82,7 @@ def _obj_to_dict(obj):
 
 
 def nice_print_node(node):
-    """ Prints a nice formatted node to the output (debug method) """
+    """ Prints a nice formatted node to the output (debug method). """
     node_dict = _obj_to_dict(node)
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
@@ -95,7 +94,7 @@ def nice_print_node(node):
 
 
 def get_config_value(node, value_index):
-    """ Returns the current config value for a specific index """
+    """ Returns the current config value for a specific index. """
 
     try:
         for value in node.values.values():
