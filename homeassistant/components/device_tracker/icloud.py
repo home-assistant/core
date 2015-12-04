@@ -18,12 +18,9 @@ import logging
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.event import track_utc_time_change
-from pyicloud import PyiCloudService
-from pyicloud.exceptions import PyiCloudFailedLoginException
-from pyicloud.exceptions import PyiCloudNoDevicesException
 import re
 
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = 1800
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +33,9 @@ def setup_scanner(hass, config, see):
     """
     Set up the iCloud Scanner
     """
+    from pyicloud import PyiCloudService
+    from pyicloud.exceptions import PyiCloudFailedLoginException
+    from pyicloud.exceptions import PyiCloudNoDevicesException
 
     # Get the username and password from the configuration
     username = config[CONF_USERNAME]
@@ -47,10 +47,11 @@ def setup_scanner(hass, config, see):
         api = PyiCloudService(username,
                               password,
                               verify=True)
-    except PyiCloudFailedLoginException as e:
+    except PyiCloudFailedLoginException as error:
         _LOGGER.exception(
-            'Error logging into iCloud Service: {0}'.format(str(e))
+            'Error logging into iCloud Service: {0}'.format(error)
         )
+        return
 
     def update_icloud(now):
         """
@@ -79,7 +80,7 @@ def setup_scanner(hass, config, see):
                     # No location found for the device so continue
                     continue
         except PyiCloudNoDevicesException:
-            _LOGGER.exception('No iCloud Devices found!')
+            _LOGGER.info('No iCloud Devices found!')
 
     track_utc_time_change(
         hass,
