@@ -4,37 +4,32 @@ homeassistant.components.light.tellstick
 Support for Tellstick lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tellstick.html
+https://home-assistant.io/components/light.tellstick/
 """
-import logging
-# pylint: disable=no-name-in-module, import-error
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
                                  ATTR_FRIENDLY_NAME)
-import tellcore.constants as tellcore_constants
-from tellcore.library import DirectCallbackDispatcher
 REQUIREMENTS = ['tellcore-py==1.1.2']
+SIGNAL_REPETITIONS = 1
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick lights. """
 
-    try:
-        import tellcore.telldus as telldus
-    except ImportError:
-        logging.getLogger(__name__).exception(
-            "Failed to import tellcore")
-        return []
+    import tellcore.telldus as telldus
+    from tellcore.library import DirectCallbackDispatcher
+    import tellcore.constants as tellcore_constants
 
     core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
+    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
 
     switches_and_lights = core.devices()
     lights = []
 
     for switch in switches_and_lights:
         if switch.methods(tellcore_constants.TELLSTICK_DIM):
-            lights.append(TellstickLight(switch))
+            lights.append(TellstickLight(switch, signal_repetitions))
 
     def _device_event_callback(id_, method, data, cid):
         """ Called from the TelldusCore library to update one device """
@@ -58,16 +53,21 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class TellstickLight(Light):
     """ Represents a Tellstick light. """
-    last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
-                              tellcore_constants.TELLSTICK_TURNOFF |
-                              tellcore_constants.TELLSTICK_DIM |
-                              tellcore_constants.TELLSTICK_UP |
-                              tellcore_constants.TELLSTICK_DOWN)
 
-    def __init__(self, tellstick_device):
+    def __init__(self, tellstick_device, signal_repetitions):
+        import tellcore.constants as tellcore_constants
+
         self.tellstick_device = tellstick_device
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
+        self.signal_repetitions = signal_repetitions
         self._brightness = 0
+
+        self.last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
+                                       tellcore_constants.TELLSTICK_TURNOFF |
+                                       tellcore_constants.TELLSTICK_DIM |
+                                       tellcore_constants.TELLSTICK_UP |
+                                       tellcore_constants.TELLSTICK_DOWN)
+        self.update()
 
     @property
     def name(self):
@@ -86,7 +86,8 @@ class TellstickLight(Light):
 
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
-        self.tellstick_device.turn_off()
+        for _ in range(self.signal_repetitions):
+            self.tellstick_device.turn_off()
         self._brightness = 0
         self.update_ha_state()
 
@@ -99,11 +100,14 @@ class TellstickLight(Light):
         else:
             self._brightness = brightness
 
-        self.tellstick_device.dim(self._brightness)
+        for _ in range(self.signal_repetitions):
+            self.tellstick_device.dim(self._brightness)
         self.update_ha_state()
 
     def update(self):
         """ Update state of the light. """
+        import tellcore.constants as tellcore_constants
+
         last_command = self.tellstick_device.last_sent_command(
             self.last_sent_command_mask)
 

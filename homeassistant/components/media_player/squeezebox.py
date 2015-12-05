@@ -4,7 +4,7 @@ homeassistant.components.media_player.squeezebox
 Provides an interface to the Logitech SqueezeBox API
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.squeezebox.html
+https://home-assistant.io/components/media_player.squeezebox/
 """
 import logging
 import telnetlib
@@ -173,7 +173,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def volume_level(self):
         """ Volume level of the media player (0..1). """
         if 'mixer volume' in self._status:
-            return int(self._status['mixer volume']) / 100.0
+            return int(float(self._status['mixer volume'])) / 100.0
 
     @property
     def is_volume_muted(self):

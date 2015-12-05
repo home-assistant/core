@@ -15,7 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
 DOMAIN = 'alarm_control_panel'
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

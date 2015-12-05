@@ -4,7 +4,7 @@ homeassistant.components.thermostat.radiotherm
 Adds support for Radio Thermostat wifi-enabled home thermostats.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/thermostat.radiotherm.html
+https://home-assistant.io/components/thermostat.radiotherm/
 """
 import logging
 import datetime
@@ -101,6 +101,7 @@ class RadioThermostat(ThermostatDevice):
         return round(self._target_temperature, 1)
 
     def update(self):
+        """ Update the data from the thermostat. """
         self._current_temperature = self.device.temp['raw']
         self._name = self.device.name['raw']
         if self.device.tmode['human'] == 'Cool':

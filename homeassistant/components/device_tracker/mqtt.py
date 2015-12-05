@@ -4,7 +4,7 @@ homeassistant.components.device_tracker.mqtt
 MQTT platform for the device tracker.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.mqtt.html
+https://home-assistant.io/components/device_tracker.mqtt/
 """
 import logging
 from homeassistant import util

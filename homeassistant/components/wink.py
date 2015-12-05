@@ -4,7 +4,7 @@ homeassistant.components.wink
 Connects to a Wink hub and loads relevant components to control its devices.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/wink.html
+https://home-assistant.io/components/wink/
 """
 import logging
 
@@ -17,14 +17,14 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "wink"
-DEPENDENCIES = []
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                'c2b700e8ca866159566ecf5e644d9c297f69f257.zip'
-                '#python-wink==0.1']
+                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
+                '#python-wink==0.2']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
+DISCOVER_LOCKS = "wink.locks"
 
 
 def setup(hass, config):
@@ -41,7 +41,8 @@ def setup(hass, config):
     for component_name, func_exists, discovery_type in (
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
             ('switch', pywink.get_switches, DISCOVER_SWITCHES),
-            ('sensor', pywink.get_sensors, DISCOVER_SENSORS)):
+            ('sensor', pywink.get_sensors, DISCOVER_SENSORS),
+            ('lock', pywink.get_locks, DISCOVER_LOCKS)):
 
         if func_exists():
             component = get_component(component_name)

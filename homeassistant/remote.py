@@ -1,14 +1,15 @@
 """
 homeassistant.remote
 ~~~~~~~~~~~~~~~~~~~~
-
 A module containing drop in replacements for core parts that will interface
-with a remote instance of home assistant.
+with a remote instance of Home Assistant.
 
 If a connection error occurs while communicating with the API a
 HomeAssistantError will be raised.
-"""
 
+For more details about the Python API, please refer to the documentation at
+https://home-assistant.io/developers/python_api/
+"""
 import threading
 import logging
 import json
@@ -69,7 +70,7 @@ class API(object):
         return self.status == APIStatus.OK
 
     def __call__(self, method, path, data=None):
-        """ Makes a call to the Home Assistant api. """
+        """ Makes a call to the Home Assistant API. """
         if data is not None:
             data = json.dumps(data, cls=JSONEncoder)
 
@@ -189,7 +190,7 @@ class EventForwarder(object):
 
     def connect(self, api):
         """
-        Attach to a HA instance and forward events.
+        Attach to a Home Assistant instance and forward events.
 
         Will overwrite old target if one exists with same host/port.
         """
@@ -380,8 +381,7 @@ def get_state(api, entity_id):
     """ Queries given API for state of entity_id. """
 
     try:
-        req = api(METHOD_GET,
-                  URL_API_STATES_ENTITY.format(entity_id))
+        req = api(METHOD_GET, URL_API_STATES_ENTITY.format(entity_id))
 
         # req.status_code == 422 if entity does not exist
 

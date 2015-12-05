@@ -5,7 +5,7 @@ Connects to an ISY-994 controller and loads relevant components to control its
 devices. Also contains the base classes for ISY Sensors, Lights, and Switches.
 
 For configuration details please visit the documentation for this component at
-https://home-assistant.io/components/isy994.html
+https://home-assistant.io/components/isy994/
 """
 import logging
 from urllib.parse import urlparse
@@ -20,7 +20,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME)
 
 DOMAIN = "isy994"
-DEPENDENCIES = []
 REQUIREMENTS = ['PyISY==1.0.5']
 DISCOVER_LIGHTS = "isy994.lights"
 DISCOVER_SWITCHES = "isy994.switches"
@@ -117,7 +116,6 @@ class ISYDeviceABC(ToggleEntity):
     def __init__(self, node):
         # setup properties
         self.node = node
-        self.hidden = HIDDEN_STRING in self.raw_name
 
         # track changes
         self._change_handler = self.node.status. \
@@ -181,6 +179,11 @@ class ISYDeviceABC(ToggleEntity):
         """ Returns the cleaned name of the node. """
         return self.raw_name.replace(HIDDEN_STRING, '').strip() \
             .replace('_', ' ')
+
+    @property
+    def hidden(self):
+        """ Suggestion if the entity should be hidden from UIs. """
+        return HIDDEN_STRING in self.raw_name
 
     def update(self):
         """ Update state of the sensor. """

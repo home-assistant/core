@@ -4,16 +4,13 @@
     <meta charset="utf-8">
     <title>Home Assistant</title>
 
-    <link rel='manifest' href='/static/manifest.json' />
-    <link rel='shortcut icon' href='/static/favicon.ico' />
-    <link rel='icon' type='image/png'
-         href='/static/favicon-192x192.png' sizes='192x192'>
+    <link rel='manifest' href='/static/manifest.json'>
+    <link rel='icon' href='/static/favicon.ico'>
     <link rel='apple-touch-icon' sizes='180x180'
-         href='/static/favicon-apple-180x180.png'>
+          href='/static/favicon-apple-180x180.png'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <meta name='mobile-web-app-capable' content='yes'>
-    <meta name='viewport' content='width=device-width,
-          user-scalable=no' />
+    <meta name='viewport' content='width=device-width, user-scalable=no'>
     <meta name='theme-color' content='#03a9f4'>
     <style>
       #init {
@@ -26,26 +23,19 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        font-family: 'Roboto', 'Noto', sans-serif;
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-      }
-      #init div {
-        line-height: 34px;
-        margin-bottom: 89px;
+        margin-bottom: 123px;
       }
     </style>
   </head>
   <body fullbleed>
-    <div id='init'>
-      <img src='/static/splash.png' height='230' />
-      <div>Initializing</div>
-    </div>
+    <div id='init'><img src='/static/favicon-192x192.png' height='192'></div>
     <script src='/static/webcomponents-lite.min.js'></script>
     <link rel='import' href='/static/{{ app_url }}' />
-    <home-assistant auth='{{ auth }}'></home-assistant>
+    <home-assistant auth='{{ auth }}' icons='{{ icons }}'></home-assistant>
   </body>
 </html>

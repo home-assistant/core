@@ -4,7 +4,7 @@ homeassistant.components.api
 Provides a Rest API for Home Assistant.
 
 For more details about the RESTful API, please refer to the documentation at
-https://home-assistant.io/developers/api.html
+https://home-assistant.io/developers/api/
 """
 import re
 import logging
@@ -14,10 +14,11 @@ import json
 import homeassistant.core as ha
 from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
+from homeassistant.bootstrap import ERROR_LOG_FILENAME
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS,
-    URL_API_CONFIG, URL_API_BOOTSTRAP,
+    URL_API_CONFIG, URL_API_BOOTSTRAP, URL_API_ERROR_LOG, URL_API_LOG_OUT,
     EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
     HTTP_UNPROCESSABLE_ENTITY)
@@ -34,10 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Register the API with the HTTP interface. """
-
-    if 'http' not in hass.config.components:
-        _LOGGER.error('Dependency http is not loaded')
-        return False
 
     # /api - for validation purposes
     hass.http.register_path('GET', URL_API, _handle_get_api)
@@ -89,6 +86,11 @@ def setup(hass, config):
     hass.http.register_path(
         'GET', URL_API_COMPONENTS, _handle_get_api_components)
 
+    hass.http.register_path('GET', URL_API_ERROR_LOG,
+                            _handle_get_api_error_log)
+
+    hass.http.register_path('POST', URL_API_LOG_OUT, _handle_post_api_log_out)
+
     return True
 
 
@@ -104,6 +106,7 @@ def _handle_get_api_stream(handler, path_match, data):
     wfile = handler.wfile
     write_lock = threading.Lock()
     block = threading.Event()
+    session_id = None
 
     restrict = data.get('restrict')
     if restrict:
@@ -117,6 +120,7 @@ def _handle_get_api_stream(handler, path_match, data):
             try:
                 wfile.write(msg.encode("UTF-8"))
                 wfile.flush()
+                handler.server.sessions.extend_validation(session_id)
             except IOError:
                 block.set()
 
@@ -136,6 +140,7 @@ def _handle_get_api_stream(handler, path_match, data):
 
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/event-stream')
+    session_id = handler.set_session_cookie_header()
     handler.end_headers()
 
     hass.bus.listen(MATCH_ALL, forward_events)
@@ -339,6 +344,19 @@ def _handle_get_api_components(handler, path_match, data):
     """ Returns all the loaded components. """
 
     handler.write_json(handler.server.hass.config.components)
+
+
+def _handle_get_api_error_log(handler, path_match, data):
+    """ Returns the logged errors for this session. """
+    handler.write_file(handler.server.hass.config.path(ERROR_LOG_FILENAME),
+                       False)
+
+
+def _handle_post_api_log_out(handler, path_match, data):
+    """ Log user out. """
+    handler.send_response(HTTP_OK)
+    handler.destroy_session()
+    handler.end_headers()
 
 
 def _services_json(hass):

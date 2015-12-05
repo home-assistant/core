@@ -4,7 +4,7 @@ homeassistant.components.sensor.openweathermap
 OpenWeatherMap (OWM) service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.openweathermap.html
+https://home-assistant.io/components/sensor.openweathermap/
 """
 import logging
 from datetime import timedelta

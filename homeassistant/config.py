@@ -32,6 +32,7 @@ DEFAULT_CONFIG = (
 DEFAULT_COMPONENTS = {
     'introduction': 'Show links to resources in log and frontend',
     'frontend': 'Enables the frontend',
+    'updater': 'Checks for available updates',
     'discovery': 'Discover some devices automatically',
     'conversation': 'Allows you to issue voice commands from the frontend',
     'history': 'Enables support for tracking state changes over time.',
@@ -66,7 +67,7 @@ def create_default_config(config_dir, detect_location=True):
         Returns path to new config file if success, None if failed. """
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
-    info = {attr: default for attr, default, *_ in DEFAULT_CONFIG}
+    info = {attr: default for attr, default, _, _ in DEFAULT_CONFIG}
 
     location_info = detect_location and loc_util.detect_location_info()
 

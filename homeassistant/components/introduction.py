@@ -4,12 +4,11 @@ homeassistant.components.introduction
 Component that will help guide the user taking its first steps.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/introduction.html
+https://home-assistant.io/components/introduction/
 """
 import logging
 
 DOMAIN = 'introduction'
-DEPENDENCIES = []
 
 
 def setup(hass, config=None):
