@@ -4,9 +4,8 @@ homeassistant.components.device_tracker.geofancy
 Geofancy platform for the device tracker.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.geofancy.html
+https://home-assistant.io/components/device_tracker.geofancy/
 """
-
 from homeassistant.const import (
     HTTP_UNPROCESSABLE_ENTITY, HTTP_INTERNAL_SERVER_ERROR)
 

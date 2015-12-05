@@ -4,7 +4,7 @@ homeassistant.components.light.vera
 Support for Vera lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.vera.html
+https://home-assistant.io/components/light.vera/
 """
 import logging
 import time

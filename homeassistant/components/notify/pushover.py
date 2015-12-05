@@ -4,7 +4,7 @@ homeassistant.components.notify.pushover
 Pushover platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.pushover.html
+https://home-assistant.io/components/notify.pushover/
 """
 import logging
 
@@ -21,32 +21,21 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(hass, config):
     """ Get the pushover notification service. """
 
-    if not validate_config(config,
+    if not validate_config({DOMAIN: config},
                            {DOMAIN: ['user_key', CONF_API_KEY]},
                            _LOGGER):
         return None
 
-    try:
-        # pylint: disable=no-name-in-module, unused-variable
-        from pushover import InitError
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import pushover. "
-            "Did you maybe not install the 'python-pushover.py' package?")
-
-        return None
+    from pushover import InitError
 
     try:
-        api_token = config[DOMAIN].get(CONF_API_KEY)
-        return PushoverNotificationService(
-            config[DOMAIN]['user_key'],
-            api_token)
-
+        return PushoverNotificationService(config['user_key'],
+                                           config[CONF_API_KEY])
     except InitError:
         _LOGGER.error(
             "Wrong API key supplied. "
             "Get it at https://pushover.net")
+        return None
 
 
 # pylint: disable=too-few-public-methods
@@ -54,7 +43,6 @@ class PushoverNotificationService(BaseNotificationService):
     """ Implements notification service for Pushover. """
 
     def __init__(self, user_key, api_token):
-        # pylint: disable=no-name-in-module, unused-variable
         from pushover import Client
         self._user_key = user_key
         self._api_token = api_token
@@ -63,11 +51,9 @@ class PushoverNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
-
-        # pylint: disable=no-name-in-module
         from pushover import RequestError
-        title = kwargs.get(ATTR_TITLE)
+
         try:
-            self.pushover.send_message(message, title=title)
+            self.pushover.send_message(message, title=kwargs.get(ATTR_TITLE))
         except RequestError:
             _LOGGER.exception("Could not send pushover notification")

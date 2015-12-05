@@ -4,18 +4,13 @@ homeassistant.components.switch.hikvision
 Support turning on/off motion detection on Hikvision cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hikvision.html
+https://home-assistant.io/components/switch.hikvision/
 """
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 import logging
 
-try:
-    import hikvision.api
-    from hikvision.error import HikvisionError, MissingParamError
-except ImportError:
-    hikvision.api = None
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.const import (STATE_ON, STATE_OFF,
+                                 CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
 
 _LOGGING = logging.getLogger(__name__)
 REQUIREMENTS = ['hikvision==0.4']
@@ -25,19 +20,14 @@ REQUIREMENTS = ['hikvision==0.4']
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup Hikvision camera. """
+    import hikvision.api
+    from hikvision.error import HikvisionError, MissingParamError
 
     host = config.get(CONF_HOST, None)
     port = config.get('port', "80")
     name = config.get('name', "Hikvision Camera Motion Detection")
     username = config.get(CONF_USERNAME, "admin")
     password = config.get(CONF_PASSWORD, "12345")
-
-    if hikvision.api is None:
-        _LOGGING.error((
-            "Failed to import hikvision. Did you maybe not install the "
-            "'hikvision' dependency?"))
-
-        return False
 
     try:
         hikvision_cam = hikvision.api.CreateDevice(

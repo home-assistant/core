@@ -4,7 +4,7 @@ homeassistant.components.switch.edimax
 Support for Edimax switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.edimax.html
+https://home-assistant.io/components/switch.edimax/
 """
 import logging
 

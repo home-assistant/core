@@ -5,7 +5,7 @@ Arduino component that connects to a directly attached Arduino board which
 runs with the Firmata firmware.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/arduino.html
+https://home-assistant.io/components/arduino/
 """
 import logging
 
@@ -19,7 +19,6 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "arduino"
-DEPENDENCIES = []
 REQUIREMENTS = ['PyMata==2.07a']
 BOARD = None
 _LOGGER = logging.getLogger(__name__)

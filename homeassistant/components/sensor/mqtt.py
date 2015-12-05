@@ -4,7 +4,7 @@ homeassistant.components.sensor.mqtt
 Allows to configure a MQTT sensor.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mqtt.html
+https://home-assistant.io/components/sensor.mqtt/
 """
 import logging
 from homeassistant.helpers.entity import Entity
@@ -31,23 +31,26 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('name', DEFAULT_NAME),
         config.get('state_topic'),
         config.get('qos', DEFAULT_QOS),
-        config.get('unit_of_measurement'))])
+        config.get('unit_of_measurement'),
+        config.get('state_format'))])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSensor(Entity):
     """ Represents a sensor that can be updated using MQTT. """
-    def __init__(self, hass, name, state_topic, qos, unit_of_measurement):
+    def __init__(self, hass, name, state_topic, qos, unit_of_measurement,
+                 state_format):
         self._state = "-"
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._qos = qos
         self._unit_of_measurement = unit_of_measurement
+        self._parse = mqtt.FmtParser(state_format)
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
-            self._state = payload
+            self._state = self._parse(payload)
             self.update_ha_state()
 
         mqtt.subscribe(hass, self._state_topic, message_received, self._qos)

@@ -4,7 +4,7 @@ homeassistant.components.sensor.time_date
 Date and Time service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.time_date.html
+https://home-assistant.io/components/sensor.time_date/
 """
 import logging
 

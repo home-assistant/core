@@ -4,14 +4,14 @@ homeassistant.components.camera.foscam
 This component provides basic support for Foscam IP cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.foscam.html
+https://home-assistant.io/components/camera.foscam/
 """
 import logging
-from homeassistant.helpers import validate_config
-from homeassistant.components.camera import DOMAIN
-from homeassistant.components.camera import Camera
+
 import requests
-import re
+
+from homeassistant.helpers import validate_config
+from homeassistant.components.camera import DOMAIN, Camera
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class FoscamCamera(Camera):
         self._username = device_info.get('username')
         self._password = device_info.get('password')
         self._snap_picture_url = self._base_url \
-            + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture&usr=' \
+            + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture2&usr=' \
             + self._username + '&pwd=' + self._password
         self._name = device_info.get('name', 'Foscam Camera')
 
@@ -50,16 +50,8 @@ class FoscamCamera(Camera):
     def camera_image(self):
         """ Return a still image reponse from the camera. """
 
-        # send the request to snap a picture
+        # Send the request to snap a picture and return raw jpg data
         response = requests.get(self._snap_picture_url)
-
-        # parse the response to find the image file name
-
-        pattern = re.compile('src="[.][.]/(.*[.]jpg)"')
-        filename = pattern.search(response.content.decode("utf-8")).group(1)
-
-        # send request for the image
-        response = requests.get(self._base_url + filename)
 
         return response.content
 

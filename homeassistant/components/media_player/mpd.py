@@ -4,7 +4,7 @@ homeassistant.components.media_player.mpd
 Provides functionality to interact with a Music Player Daemon.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.mpd.html
+https://home-assistant.io/components/media_player.mpd/
 """
 import logging
 import socket

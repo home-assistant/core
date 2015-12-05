@@ -2,6 +2,9 @@
 homeassistant.components.switch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various switches that can be controlled remotely.
+
+For more details about this component, please refer to the documentation
+at https://home-assistant.io/components/switch/
 """
 from datetime import timedelta
 import logging
@@ -13,10 +16,10 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.components import group, discovery, wink, isy994, verisure
+from homeassistant.components import (
+    group, discovery, wink, isy994, verisure, zwave)
 
 DOMAIN = 'switch'
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_SWITCHES = 'all switches'
@@ -35,7 +38,8 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_WEMO: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
-    verisure.DISCOVER_SWITCHES: 'verisure'
+    verisure.DISCOVER_SWITCHES: 'verisure',
+    zwave.DISCOVER_SWITCHES: 'zwave',
 }
 
 PROP_TO_ATTR = {

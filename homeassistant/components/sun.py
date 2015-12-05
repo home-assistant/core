@@ -4,7 +4,7 @@ homeassistant.components.sun
 Provides functionality to keep track of the sun.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sun.html
+https://home-assistant.io/components/sun/
 """
 import logging
 from datetime import timedelta
@@ -12,13 +12,14 @@ import urllib
 
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.event import (
+    track_point_in_utc_time, track_utc_time_change)
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = []
 REQUIREMENTS = ['astral==0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
+ENTITY_ID_ELEVATION = "sun.elevation"
 
 CONF_ELEVATION = 'elevation'
 
@@ -27,6 +28,7 @@ STATE_BELOW_HORIZON = "below_horizon"
 
 STATE_ATTR_NEXT_RISING = "next_rising"
 STATE_ATTR_NEXT_SETTING = "next_setting"
+STATE_ATTR_ELEVATION = "elevation"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,11 +142,7 @@ class Sun(Entity):
         self.hass = hass
         self.location = location
         self._state = self.next_rising = self.next_setting = None
-
-    @property
-    def should_poll(self):
-        """ We trigger updates ourselves after sunset/sunrise """
-        return False
+        track_utc_time_change(hass, self.timer_update, second=30)
 
     @property
     def name(self):
@@ -160,14 +158,26 @@ class Sun(Entity):
     @property
     def state_attributes(self):
         return {
-            STATE_ATTR_NEXT_RISING: dt_util.datetime_to_str(self.next_rising),
-            STATE_ATTR_NEXT_SETTING: dt_util.datetime_to_str(self.next_setting)
+            STATE_ATTR_NEXT_RISING:
+                dt_util.datetime_to_str(self.next_rising),
+            STATE_ATTR_NEXT_SETTING:
+                dt_util.datetime_to_str(self.next_setting),
+            STATE_ATTR_ELEVATION: round(self.solar_elevation, 2)
         }
 
     @property
     def next_change(self):
         """ Returns the datetime when the next change to the state is. """
         return min(self.next_rising, self.next_setting)
+
+    @property
+    def solar_elevation(self):
+        """ Returns the angle the sun is above the horizon"""
+        from astral import Astral
+        return Astral().solar_elevation(
+            dt_util.utcnow(),
+            self.location.latitude,
+            self.location.longitude)
 
     def update_as_of(self, utc_point_in_time):
         """ Calculate sun state at a point in UTC time. """
@@ -199,3 +209,7 @@ class Sun(Entity):
         track_point_in_utc_time(
             self.hass, self.point_in_time_listener,
             self.next_change + timedelta(seconds=1))
+
+    def timer_update(self, time):
+        """ Needed to update solar elevation. """
+        self.update_ha_state()

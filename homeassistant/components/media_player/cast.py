@@ -4,7 +4,7 @@ homeassistant.components.media_player.chromecast
 Provides functionality to interact with Cast devices on the network.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.cast.html
+https://home-assistant.io/components/media_player.cast/
 """
 import logging
 
