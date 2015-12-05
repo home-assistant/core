@@ -317,7 +317,8 @@ class Device(Entity):
             attr[ATTR_BATTERY] = self.battery
 
         if self.last_seen:
-            attr[ATTR_LAST_SEEN] = dt_util.datetime_to_local_str(self.last_seen)
+            attr[ATTR_LAST_SEEN] = dt_util.datetime_to_local_str(
+                self.last_seen)
 
         return attr
 
