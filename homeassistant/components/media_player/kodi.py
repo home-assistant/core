@@ -4,7 +4,7 @@ homeassistant.components.media_player.kodi
 Provides an interface to the XBMC/Kodi JSON-RPC API
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.kodi.html
+https://home-assistant.io/components/media_player.kodi/
 """
 import urllib
 import logging
@@ -14,11 +14,6 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK)
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF)
-
-try:
-    import jsonrpc_requests
-except ImportError:
-    jsonrpc_requests = None
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['jsonrpc-requests==0.1']
@@ -30,11 +25,6 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
-
-    global jsonrpc_requests    # pylint: disable=invalid-name
-    if jsonrpc_requests is None:
-        import jsonrpc_requests as jsonrpc_requests_
-        jsonrpc_requests = jsonrpc_requests_
 
     add_devices([
         KodiDevice(
@@ -60,6 +50,7 @@ class KodiDevice(MediaPlayerDevice):
     # pylint: disable=too-many-public-methods
 
     def __init__(self, name, url, auth=None):
+        import jsonrpc_requests
         self._name = name
         self._url = url
         self._server = jsonrpc_requests.Server(url, auth=auth)
@@ -77,6 +68,7 @@ class KodiDevice(MediaPlayerDevice):
 
     def _get_players(self):
         """ Returns the active player objects or None """
+        import jsonrpc_requests
         try:
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:

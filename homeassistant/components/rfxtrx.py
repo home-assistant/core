@@ -4,18 +4,25 @@ homeassistant.components.rfxtrx
 Provides support for RFXtrx components.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/rfxtrx.html
+https://home-assistant.io/components/rfxtrx/
 """
 import logging
 from homeassistant.util import slugify
 
-DEPENDENCIES = []
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip' +
                 '#RFXtrx==0.2']
 
 DOMAIN = "rfxtrx"
-CONF_DEVICE = 'device'
-CONF_DEBUG = 'debug'
+
+ATTR_DEVICE = 'device'
+ATTR_DEBUG = 'debug'
+ATTR_STATE = 'state'
+ATTR_NAME = 'name'
+ATTR_PACKETID = 'packetid'
+ATTR_FIREEVENT = 'fire_event'
+
+EVENT_BUTTON_PRESSED = 'button_pressed'
+
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
@@ -50,15 +57,15 @@ def setup(hass, config):
     # Init the rfxtrx module
     global RFXOBJECT
 
-    if CONF_DEVICE not in config[DOMAIN]:
+    if ATTR_DEVICE not in config[DOMAIN]:
         _LOGGER.exception(
             "can found device parameter in %s YAML configuration section",
             DOMAIN
         )
         return False
 
-    device = config[DOMAIN][CONF_DEVICE]
-    debug = config[DOMAIN].get(CONF_DEBUG, False)
+    device = config[DOMAIN][ATTR_DEVICE]
+    debug = config[DOMAIN].get(ATTR_DEBUG, False)
 
     RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
 

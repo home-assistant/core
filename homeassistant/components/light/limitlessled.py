@@ -1,179 +1,284 @@
 """
 homeassistant.components.light.limitlessled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for LimitlessLED bulbs.
 
-Support for LimitlessLED bulbs, also known as...
-
-- EasyBulb
-- AppLight
-- AppLamp
-- MiLight
-- LEDme
-- dekolight
-- iLight
-
-https://home-assistant.io/components/light.limitlessled.html
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.limitlessled/
 """
 import logging
 
-from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
-                                            ATTR_XY_COLOR)
-from homeassistant.util.color import color_RGB_to_xy
+                                            ATTR_RGB_COLOR, ATTR_EFFECT,
+                                            ATTR_COLOR_TEMP, ATTR_TRANSITION,
+                                            ATTR_FLASH, FLASH_LONG,
+                                            EFFECT_COLORLOOP, EFFECT_WHITE)
+
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['ledcontroller==1.1.0']
+REQUIREMENTS = ['limitlessled==1.0.0']
+RGB_BOUNDARY = 40
+DEFAULT_TRANSITION = 0
+DEFAULT_PORT = 8899
+DEFAULT_VERSION = 5
+DEFAULT_LED_TYPE = 'rgbw'
+WHITE = [255, 255, 255]
+
+
+def rewrite_legacy(config):
+    """ Rewrite legacy configuration to new format. """
+    bridges = config.get('bridges', [config])
+    new_bridges = []
+    for bridge_conf in bridges:
+        groups = []
+        if 'groups' in bridge_conf:
+            groups = bridge_conf['groups']
+        else:
+            _LOGGER.warning("Legacy configuration format detected")
+            for i in range(1, 5):
+                name_key = 'group_%d_name' % i
+                if name_key in bridge_conf:
+                    groups.append({
+                        'number': i,
+                        'type':  bridge_conf.get('group_%d_type' % i,
+                                                 DEFAULT_LED_TYPE),
+                        'name': bridge_conf.get(name_key)
+                    })
+        new_bridges.append({
+            'host': bridge_conf.get('host'),
+            'groups': groups
+        })
+    return {'bridges': new_bridges}
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the LimitlessLED lights. """
-    import ledcontroller
+    from limitlessled.bridge import Bridge
 
-    # Handle old configuration format:
-    bridges = config.get('bridges', [config])
+    # Two legacy configuration formats are supported to
+    # maintain backwards compatibility.
+    config = rewrite_legacy(config)
 
-    for bridge_id, bridge in enumerate(bridges):
-        bridge['id'] = bridge_id
-
-    pool = ledcontroller.LedControllerPool([x['host'] for x in bridges])
-
+    # Use the expanded configuration format.
     lights = []
-    for bridge in bridges:
-        for i in range(1, 5):
-            name_key = 'group_%d_name' % i
-            if name_key in bridge:
-                group_type = bridge.get('group_%d_type' % i, 'rgbw')
-                lights.append(LimitlessLED.factory(pool, bridge['id'], i,
-                                                   bridge[name_key],
-                                                   group_type))
-
+    for bridge_conf in config.get('bridges'):
+        bridge = Bridge(bridge_conf.get('host'),
+                        port=bridge_conf.get('port', DEFAULT_PORT),
+                        version=bridge_conf.get('version', DEFAULT_VERSION))
+        for group_conf in bridge_conf.get('groups'):
+            group = bridge.add_group(group_conf.get('number'),
+                                     group_conf.get('name'),
+                                     group_conf.get('type', DEFAULT_LED_TYPE))
+            lights.append(LimitlessLEDGroup.factory(group))
     add_devices_callback(lights)
 
 
-class LimitlessLED(Light):
-    """ Represents a LimitlessLED light """
+def state(new_state):
+    """ State decorator.
+
+    Specify True (turn on) or False (turn off).
+    """
+    def decorator(function):
+        """ Decorator function. """
+        # pylint: disable=no-member,protected-access
+        def wrapper(self, **kwargs):
+            """ Wrap a group state change. """
+            from limitlessled.pipeline import Pipeline
+            pipeline = Pipeline()
+            transition_time = DEFAULT_TRANSITION
+            # Stop any repeating pipeline.
+            if self.repeating:
+                self.repeating = False
+                self.group.stop()
+            # Not on and should be? Turn on.
+            if not self.is_on and new_state is True:
+                pipeline.on()
+            # Set transition time.
+            if ATTR_TRANSITION in kwargs:
+                transition_time = kwargs[ATTR_TRANSITION]
+            # Do group type-specific work.
+            function(self, transition_time, pipeline, **kwargs)
+            # Update state.
+            self._is_on = new_state
+            self.group.enqueue(pipeline)
+            self.update_ha_state()
+        return wrapper
+    return decorator
+
+
+class LimitlessLEDGroup(Light):
+    """ LimitessLED group. """
+    def __init__(self, group):
+        """ Initialize a group. """
+        self.group = group
+        self.repeating = False
+        self._is_on = False
+        self._brightness = None
 
     @staticmethod
-    def factory(pool, controller_id, group, name, group_type):
-        ''' Construct a Limitless LED of the appropriate type '''
-        if group_type == 'white':
-            return WhiteLimitlessLED(pool, controller_id, group, name)
-        elif group_type == 'rgbw':
-            return RGBWLimitlessLED(pool, controller_id, group, name)
-
-    # pylint: disable=too-many-arguments
-    def __init__(self, pool, controller_id, group, name, group_type):
-        self.pool = pool
-        self.controller_id = controller_id
-        self.group = group
-
-        self.pool.execute(self.controller_id, "set_group_type", self.group,
-                          group_type)
-
-        # LimitlessLEDs don't report state, we have track it ourselves.
-        self.pool.execute(self.controller_id, "off", self.group)
-
-        self._name = name or DEVICE_DEFAULT_NAME
-        self._state = False
+    def factory(group):
+        """ Produce LimitlessLEDGroup objects. """
+        from limitlessled.group.rgbw import RgbwGroup
+        from limitlessled.group.white import WhiteGroup
+        if isinstance(group, WhiteGroup):
+            return LimitlessLEDWhiteGroup(group)
+        elif isinstance(group, RgbwGroup):
+            return LimitlessLEDRGBWGroup(group)
 
     @property
     def should_poll(self):
-        """ No polling needed. """
+        """ No polling needed.
+
+        LimitlessLED state cannot be fetched.
+        """
         return False
 
     @property
     def name(self):
-        """ Returns the name of the device if any. """
-        return self._name
+        """ Returns the name of the group. """
+        return self.group.name
 
     @property
     def is_on(self):
         """ True if device is on. """
-        return self._state
-
-    def turn_off(self, **kwargs):
-        """ Turn the device off. """
-        self._state = False
-        self.pool.execute(self.controller_id, "off", self.group)
-        self.update_ha_state()
-
-
-class RGBWLimitlessLED(LimitlessLED):
-    """ Represents a RGBW LimitlessLED light """
-
-    def __init__(self, pool, controller_id, group, name):
-        super().__init__(pool, controller_id, group, name, 'rgbw')
-
-        self._brightness = 100
-        self._xy_color = color_RGB_to_xy(255, 255, 255)
-
-        # Build a color table that maps an RGB color to a color string
-        # recognized by LedController's set_color method
-        self._color_table = [(color_RGB_to_xy(*x[0]), x[1]) for x in [
-            ((0xFF, 0xFF, 0xFF), 'white'),
-            ((0xEE, 0x82, 0xEE), 'violet'),
-            ((0x41, 0x69, 0xE1), 'royal_blue'),
-            ((0x87, 0xCE, 0xFA), 'baby_blue'),
-            ((0x00, 0xFF, 0xFF), 'aqua'),
-            ((0x7F, 0xFF, 0xD4), 'royal_mint'),
-            ((0x2E, 0x8B, 0x57), 'seafoam_green'),
-            ((0x00, 0x80, 0x00), 'green'),
-            ((0x32, 0xCD, 0x32), 'lime_green'),
-            ((0xFF, 0xFF, 0x00), 'yellow'),
-            ((0xDA, 0xA5, 0x20), 'yellow_orange'),
-            ((0xFF, 0xA5, 0x00), 'orange'),
-            ((0xFF, 0x00, 0x00), 'red'),
-            ((0xFF, 0xC0, 0xCB), 'pink'),
-            ((0xFF, 0x00, 0xFF), 'fusia'),
-            ((0xDA, 0x70, 0xD6), 'lilac'),
-            ((0xE6, 0xE6, 0xFA), 'lavendar'),
-        ]]
+        return self._is_on
 
     @property
     def brightness(self):
+        """ Brightness property. """
         return self._brightness
 
+    @state(False)
+    def turn_off(self, transition_time, pipeline, **kwargs):
+        """ Turn off a group. """
+        if self.is_on:
+            pipeline.transition(transition_time, brightness=0.0).off()
+
+
+class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
+    """ LimitlessLED White group. """
+    def __init__(self, group):
+        """ Initialize White group. """
+        super().__init__(group)
+        # Initialize group with known values.
+        self.group.on = True
+        self.group.temperature = 1.0
+        self.group.brightness = 0.0
+        self._brightness = _to_hass_brightness(1.0)
+        self._temperature = _to_hass_temperature(self.group.temperature)
+        self.group.on = False
+
     @property
-    def color_xy(self):
-        return self._xy_color
+    def color_temp(self):
+        """ Temperature property. """
+        return self._temperature
 
-    def _xy_to_led_color(self, xy_color):
-        """ Convert an XY color to the closest LedController color string. """
-        def abs_dist_squared(p_0, p_1):
-            """ Returns the absolute value of the squared distance """
-            return abs((p_0[0] - p_1[0])**2 + (p_0[1] - p_1[1])**2)
-
-        candidates = [(abs_dist_squared(xy_color, x[0]), x[1]) for x in
-                      self._color_table]
-
-        # First candidate in the sorted list is closest to desired color:
-        return sorted(candidates)[0][1]
-
-    def turn_on(self, **kwargs):
-        """ Turn the device on. """
-        self._state = True
-
+    @state(True)
+    def turn_on(self, transition_time, pipeline, **kwargs):
+        """ Turn on (or adjust property of) a group. """
+        # Check arguments.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_COLOR_TEMP in kwargs:
+            self._temperature = kwargs[ATTR_COLOR_TEMP]
+        # Set up transition.
+        pipeline.transition(transition_time,
+                            brightness=_from_hass_brightness(
+                                self._brightness),
+                            temperature=_from_hass_temperature(
+                                self._temperature))
 
-        if ATTR_XY_COLOR in kwargs:
-            self._xy_color = kwargs[ATTR_XY_COLOR]
 
-        self.pool.execute(self.controller_id, "set_color",
-                          self._xy_to_led_color(self._xy_color), self.group)
-        self.pool.execute(self.controller_id, "set_brightness",
-                          self._brightness / 255.0, self.group)
-        self.update_ha_state()
+class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
+    """ LimitlessLED RGBW group. """
+    def __init__(self, group):
+        """ Initialize RGBW group. """
+        super().__init__(group)
+        # Initialize group with known values.
+        self.group.on = True
+        self.group.white()
+        self._color = WHITE
+        self.group.brightness = 0.0
+        self._brightness = _to_hass_brightness(1.0)
+        self.group.on = False
+
+    @property
+    def rgb_color(self):
+        """ Color property. """
+        return self._color
+
+    @state(True)
+    def turn_on(self, transition_time, pipeline, **kwargs):
+        """ Turn on (or adjust property of) a group. """
+        from limitlessled.presets import COLORLOOP
+        # Check arguments.
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_RGB_COLOR in kwargs:
+            self._color = kwargs[ATTR_RGB_COLOR]
+        # White is a special case.
+        if min(self._color) > 256 - RGB_BOUNDARY:
+            pipeline.white()
+            self._color = WHITE
+        # Set up transition.
+        pipeline.transition(transition_time,
+                            brightness=_from_hass_brightness(
+                                self._brightness),
+                            color=_from_hass_color(self._color))
+        # Flash.
+        if ATTR_FLASH in kwargs:
+            duration = 0
+            if kwargs[ATTR_FLASH] == FLASH_LONG:
+                duration = 1
+            pipeline.flash(duration=duration)
+        # Add effects.
+        if ATTR_EFFECT in kwargs:
+            if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                self.repeating = True
+                pipeline.append(COLORLOOP)
+            if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
+                pipeline.white()
+                self._color = WHITE
 
 
-class WhiteLimitlessLED(LimitlessLED):
-    """ Represents a White LimitlessLED light """
+def _from_hass_temperature(temperature):
+    """ Convert Home Assistant color temperature
+    units to percentage.
+    """
+    return (temperature - 154) / 346
 
-    def __init__(self, pool, controller_id, group, name):
-        super().__init__(pool, controller_id, group, name, 'white')
 
-    def turn_on(self, **kwargs):
-        """ Turn the device on. """
-        self._state = True
-        self.pool.execute(self.controller_id, "on", self.group)
-        self.update_ha_state()
+def _to_hass_temperature(temperature):
+    """ Convert percentage to Home Assistant
+    color temperature units.
+    """
+    return int(temperature * 346) + 154
+
+
+def _from_hass_brightness(brightness):
+    """ Convert Home Assistant brightness units
+    to percentage.
+    """
+    return brightness / 255
+
+
+def _to_hass_brightness(brightness):
+    """ Convert percentage to Home Assistant
+    brightness units.
+    """
+    return int(brightness * 255)
+
+
+def _from_hass_color(color):
+    """ Convert Home Assistant RGB list
+    to Color tuple.
+    """
+    from limitlessled import Color
+    return Color(*tuple(color))
+
+
+def _to_hass_color(color):
+    """ Convert from Color tuple to
+    Home Assistant RGB list.
+    """
+    return list([int(c) for c in color])

@@ -5,7 +5,7 @@ Support for getting information from Arduino pins. Only analog pins are
 supported.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arduino.html
+https://home-assistant.io/components/sensor.arduino/
 """
 import logging
 

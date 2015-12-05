@@ -1,7 +1,6 @@
 """
 homeassistant.components.discovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Starts a service to scan in intervals for new devices.
 
 Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
@@ -18,8 +17,7 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "discovery"
-DEPENDENCIES = []
-REQUIREMENTS = ['netdisco==0.5.1']
+REQUIREMENTS = ['netdisco==0.5.2']
 
 SCAN_INTERVAL = 300  # seconds
 

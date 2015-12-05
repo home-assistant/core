@@ -4,7 +4,7 @@ homeassistant.components.shell_command
 Exposes regular shell commands as services.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/shell_command.html
+https://home-assistant.io/components/shell_command/
 """
 import logging
 import subprocess
@@ -12,7 +12,6 @@ import subprocess
 from homeassistant.util import slugify
 
 DOMAIN = 'shell_command'
-DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
 

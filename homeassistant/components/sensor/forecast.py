@@ -4,22 +4,16 @@ homeassistant.components.sensor.forecast
 Forecast.io weather service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.forecast.html
+https://home-assistant.io/components/sensor.forecast/
 """
 import logging
 from datetime import timedelta
-
-REQUIREMENTS = ['python-forecastio==1.3.3']
-
-try:
-    import forecastio
-except ImportError:
-    forecastio = None
 
 from homeassistant.util import Throttle
 from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['python-forecastio==1.3.3']
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor types are defined like so:
@@ -53,11 +47,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Forecast.io sensor. """
-
-    global forecastio  # pylint: disable=invalid-name
-    if forecastio is None:
-        import forecastio as forecastio_
-        forecastio = forecastio_
+    import forecastio
 
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -141,6 +131,7 @@ class ForeCastSensor(Entity):
     # pylint: disable=too-many-branches
     def update(self):
         """ Gets the latest data from Forecast.io and updates the states. """
+        import forecastio
 
         self.forecast_client.update()
         data = self.forecast_client.data
@@ -209,6 +200,7 @@ class ForeCastData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from Forecast.io. """
+        import forecastio
 
         forecast = forecastio.load_forecast(self._api_key,
                                             self.latitude,

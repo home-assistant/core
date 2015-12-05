@@ -1,8 +1,10 @@
 """
 homeassistant.components.media_player
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Component to interface with various media players.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/media_player/
 """
 import logging
 import os
@@ -20,7 +22,6 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
 DOMAIN = 'media_player'
-DEPENDENCIES = []
 SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

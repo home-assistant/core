@@ -1,9 +1,10 @@
 """
 homeassistant.components.thermostat.heat_control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adds support for heat control units.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/thermostat.heat_control.html
+https://home-assistant.io/components/thermostat.heat_control/
 """
 import logging
 
@@ -23,6 +24,9 @@ CONF_NAME = 'name'
 DEFAULT_NAME = 'Heat Control'
 CONF_HEATER = 'heater'
 CONF_SENSOR = 'target_sensor'
+CONF_MIN_TEMP = 'min_temp'
+CONF_MAX_TEMP = 'max_temp'
+CONF_TARGET_TEMP = 'target_temp'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,27 +37,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME, DEFAULT_NAME)
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
+    min_temp = util.convert(config.get(CONF_MIN_TEMP), float, None)
+    max_temp = util.convert(config.get(CONF_MAX_TEMP), float, None)
+    target_temp = util.convert(config.get(CONF_TARGET_TEMP), float, None)
 
     if None in (heater_entity_id, sensor_entity_id):
         _LOGGER.error('Missing required key %s or %s', CONF_HEATER,
                       CONF_SENSOR)
         return False
 
-    add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id)])
+    add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id,
+                             min_temp, max_temp, target_temp)])
 
 
 # pylint: disable=too-many-instance-attributes
 class HeatControl(ThermostatDevice):
     """ Represents a HeatControl device. """
-
-    def __init__(self, hass, name, heater_entity_id, sensor_entity_id):
+    # pylint: disable=too-many-arguments
+    def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
+                 min_temp, max_temp, target_temp):
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
 
         self._active = False
         self._cur_temp = None
-        self._target_temp = None
+        self._min_temp = min_temp
+        self._max_temp = max_temp
+        self._target_temp = target_temp
         self._unit = None
 
         track_state_change(hass, sensor_entity_id, self._sensor_changed)
@@ -78,6 +89,7 @@ class HeatControl(ThermostatDevice):
 
     @property
     def current_temperature(self):
+        """ Returns the sensor temperature. """
         return self._cur_temp
 
     @property
@@ -95,6 +107,26 @@ class HeatControl(ThermostatDevice):
         self._target_temp = temperature
         self._control_heating()
         self.update_ha_state()
+
+    @property
+    def min_temp(self):
+        """ Return minimum temperature. """
+        # pylint: disable=no-member
+        if self._min_temp:
+            return self._min_temp
+        else:
+            # get default temp from super class
+            return ThermostatDevice.min_temp.fget(self)
+
+    @property
+    def max_temp(self):
+        """ Return maximum temperature. """
+        # pylint: disable=no-member
+        if self._min_temp:
+            return self._max_temp
+        else:
+            # get default temp from super class
+            return ThermostatDevice.max_temp.fget(self)
 
     def _sensor_changed(self, entity_id, old_state, new_state):
         """ Called when temperature changes. """

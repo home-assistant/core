@@ -4,7 +4,7 @@ homeassistant.components.sensor.bitcoin
 Bitcoin information service that uses blockchain.info and its online wallet.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bitcoin.html
+https://home-assistant.io/components/sensor.bitcoin/
 """
 import logging
 from datetime import timedelta

@@ -4,7 +4,7 @@ homeassistant.components.downloader
 Provides functionality to download files.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/downloader.html
+https://home-assistant.io/components/downloader/
 """
 import os
 import logging
@@ -15,7 +15,6 @@ from homeassistant.helpers import validate_config
 from homeassistant.util import sanitize_filename
 
 DOMAIN = "downloader"
-DEPENDENCIES = []
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 

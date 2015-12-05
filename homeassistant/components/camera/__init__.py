@@ -4,37 +4,22 @@ homeassistant.components.camera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various cameras.
 
-The following features are supported:
- - Returning recorded camera images and streams
- - Proxying image requests via HA for external access
- - Converting a still image url into a live video stream
-
-Upcoming features
- - Recording
- - Snapshot
- - Motion Detection Recording(for supported cameras)
- - Automatic Configuration(for supported cameras)
- - Creation of child entities for supported functions
- - Collating motion event images passed via FTP into time based events
- - A service for calling camera functions
- - Camera movement(panning)
- - Zoom
- - Light/Nightvision toggling
- - Support for more devices
- - Expanded documentation
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/camera/
 """
-import requests
 import logging
-import time
 import re
+import time
+
+import requests
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
     )
-
-from homeassistant.helpers.entity_component import EntityComponent
 
 
 DOMAIN = 'camera'
@@ -74,7 +59,7 @@ MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
-    """ Track states and offer events for sensors. """
+    """ Track states and offer events for cameras. """
 
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
@@ -96,16 +81,21 @@ def setup(hass, config):
     def _proxy_camera_image(handler, path_match, data):
         """ Proxies the camera image via the HA server. """
         entity_id = path_match.group(ATTR_ENTITY_ID)
+        camera = component.entities.get(entity_id)
 
-        camera = None
-        if entity_id in component.entities.keys():
-            camera = component.entities[entity_id]
-
-        if camera:
-            response = camera.camera_image()
-            handler.wfile.write(response)
-        else:
+        if camera is None:
             handler.send_response(HTTP_NOT_FOUND)
+            handler.end_headers()
+            return
+
+        response = camera.camera_image()
+
+        if response is None:
+            handler.send_response(HTTP_NOT_FOUND)
+            handler.end_headers()
+            return
+
+        handler.wfile.write(response)
 
     hass.http.register_path(
         'GET',
@@ -114,18 +104,16 @@ def setup(hass, config):
 
     # pylint: disable=unused-argument
     def _proxy_camera_mjpeg_stream(handler, path_match, data):
-        """ Proxies the camera image as an mjpeg stream via the HA server.
+        """
+        Proxies the camera image as an mjpeg stream via the HA server.
         This function takes still images from the IP camera and turns them
         into an MJPEG stream.  This means that HA can return a live video
         stream even with only a still image URL available.
         """
         entity_id = path_match.group(ATTR_ENTITY_ID)
+        camera = component.entities.get(entity_id)
 
-        camera = None
-        if entity_id in component.entities.keys():
-            camera = component.entities[entity_id]
-
-        if not camera:
+        if camera is None:
             handler.send_response(HTTP_NOT_FOUND)
             handler.end_headers()
             return
@@ -143,9 +131,9 @@ def setup(hass, config):
             # MJPEG_START_HEADER.format()
 
             while True:
-
                 img_bytes = camera.camera_image()
-
+                if img_bytes is None:
+                    continue
                 headers_str = '\r\n'.join((
                     'Content-length: {}'.format(len(img_bytes)),
                     'Content-type: image/jpeg',
@@ -159,11 +147,11 @@ def setup(hass, config):
                 handler.request.sendall(
                     bytes('--jpgboundary\r\n', 'utf-8'))
 
+                time.sleep(0.5)
+
         except (requests.RequestException, IOError):
             camera.is_streaming = False
             camera.update_ha_state()
-
-        camera.is_streaming = False
 
     hass.http.register_path(
         'GET',
@@ -175,7 +163,7 @@ def setup(hass, config):
 
 
 class Camera(Entity):
-    """ The base class for camera components """
+    """ The base class for camera components. """
 
     def __init__(self):
         self.is_streaming = False
@@ -183,23 +171,23 @@ class Camera(Entity):
     @property
     # pylint: disable=no-self-use
     def is_recording(self):
-        """ Returns true if the device is recording """
+        """ Returns true if the device is recording. """
         return False
 
     @property
     # pylint: disable=no-self-use
     def brand(self):
-        """ Should return a string of the camera brand """
+        """ Should return a string of the camera brand. """
         return None
 
     @property
     # pylint: disable=no-self-use
     def model(self):
-        """ Returns string of camera model """
+        """ Returns string of camera model. """
         return None
 
     def camera_image(self):
-        """ Return bytes of camera image """
+        """ Return bytes of camera image. """
         raise NotImplementedError()
 
     @property
