@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Sets up the HTTP API and debug interface. """
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN, {})
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
 
