@@ -17,8 +17,19 @@ DOMAIN = "demo"
 DEPENDENCIES = ['conversation', 'introduction', 'zone']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    'device_tracker', 'light', 'media_player', 'notify', 'switch', 'sensor',
-    'thermostat', 'camera', 'binary_sensor', 'alarm_control_panel', 'lock']
+    'alarm_control_panel',
+    'binary_sensor',
+    'camera',
+    'device_tracker',
+    'light',
+    'lock',
+    'media_player',
+    'notify',
+    'rollershutter',
+    'sensor',
+    'switch',
+    'thermostat',
+]
 
 
 def setup(hass, config):
