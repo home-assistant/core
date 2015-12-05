@@ -5,7 +5,7 @@ Device tracker platform that supports scanning an Actiontec MI424WR
 (Verizon FIOS) router for device presence.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.actiontec.html
+https://home-assistant.io/components/device_tracker.actiontec/
 """
 import logging
 from datetime import timedelta

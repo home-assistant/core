@@ -5,7 +5,7 @@ Component that records all events and state changes. Allows other components
 to query this database.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/recorder.html
+https://home-assistant.io/components/recorder/
 """
 import logging
 import threading
@@ -23,7 +23,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "recorder"
-DEPENDENCIES = []
 
 DB_FILE = 'home-assistant.db'
 
@@ -59,7 +58,7 @@ def query_events(event_query, arguments=None):
 
 
 def row_to_state(row):
-    """ Convert a databsae row to a state. """
+    """ Convert a database row to a state. """
     try:
         return State(
             row[1], row[2], json.loads(row[3]),
@@ -74,7 +73,7 @@ def row_to_state(row):
 def row_to_event(row):
     """ Convert a databse row to an event. """
     try:
-        return Event(row[1], json.loads(row[2]), EventOrigin[row[3].lower()],
+        return Event(row[1], json.loads(row[2]), EventOrigin(row[3]),
                      date_util.utc_from_timestamp(row[5]))
     except ValueError:
         # When json.loads fails
@@ -83,8 +82,9 @@ def row_to_event(row):
 
 
 def run_information(point_in_time=None):
-    """ Returns information about current run or the run that
-        covers point_in_time. """
+    """
+    Returns information about current run or the run that covers point_in_time.
+    """
     _verify_instance()
 
     if point_in_time is None or point_in_time > _INSTANCE.recording_start:
@@ -142,8 +142,10 @@ class RecorderRun(object):
 
     @property
     def where_after_start_run(self):
-        """ Returns SQL WHERE clause to select rows
-            created after the start of the run. """
+        """
+        Returns SQL WHERE clause to select rows created after the start of the
+        run.
+        """
         return "created >= {} ".format(_adapt_datetime(self.start))
 
     @property
@@ -158,9 +160,7 @@ class RecorderRun(object):
 
 
 class Recorder(threading.Thread):
-    """
-    Threaded recorder
-    """
+    """ Threaded recorder class """
     def __init__(self, hass):
         threading.Thread.__init__(self)
 
@@ -208,8 +208,10 @@ class Recorder(threading.Thread):
             self.queue.task_done()
 
     def event_listener(self, event):
-        """ Listens for new events on the EventBus and puts them
-            in the process queue. """
+        """
+        Listens for new events on the EventBus and puts them in the process
+        queue.
+        """
         self.queue.put(event)
 
     def shutdown(self, event):
@@ -433,6 +435,6 @@ def _adapt_datetime(datetimestamp):
 
 
 def _verify_instance():
-    """ throws error if recorder not initialized. """
+    """ Throws error if recorder not initialized. """
     if _INSTANCE is None:
         raise RuntimeError("Recorder not initialized.")

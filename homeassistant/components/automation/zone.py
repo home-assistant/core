@@ -4,7 +4,7 @@ homeassistant.components.automation.zone
 Offers zone automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation.html#zone-trigger
+at https://home-assistant.io/components/automation/#zone-trigger
 """
 import logging
 
@@ -46,6 +46,7 @@ def trigger(hass, config, action):
         from_match = _in_zone(hass, zone_entity_id, from_s) if from_s else None
         to_match = _in_zone(hass, zone_entity_id, to_s)
 
+        # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
            event == EVENT_LEAVE and from_match and not to_match:
             action()

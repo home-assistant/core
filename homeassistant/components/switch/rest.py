@@ -4,7 +4,7 @@ homeassistant.components.switch.rest
 Allows to configure a REST switch.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rest.html
+https://home-assistant.io/components/switch.rest/
 """
 import logging
 import requests

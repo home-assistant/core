@@ -1,8 +1,10 @@
 """
 homeassistant.components.thermostat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to interact with thermostats.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/thermostat/
 """
 import logging
 import os
@@ -13,12 +15,12 @@ from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
+from homeassistant.components import ecobee
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
     TEMP_CELCIUS)
 
 DOMAIN = "thermostat"
-DEPENDENCIES = []
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = 60
@@ -39,6 +41,10 @@ ATTR_TEMPERATURE_HIGH = "target_temp_high"
 ATTR_OPERATION = "current_operation"
 
 _LOGGER = logging.getLogger(__name__)
+
+DISCOVERY_PLATFORMS = {
+    ecobee.DISCOVER_THERMOSTAT: 'ecobee',
+}
 
 
 def set_away_mode(hass, away_mode, entity_id=None):
@@ -65,7 +71,8 @@ def set_temperature(hass, temperature, entity_id=None):
 
 def setup(hass, config):
     """ Setup thermostats. """
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                SCAN_INTERVAL, DISCOVERY_PLATFORMS)
     component.setup(config)
 
     def thermostat_service(service):
@@ -140,13 +147,13 @@ class ThermostatDevice(Entity):
         data = {
             ATTR_CURRENT_TEMPERATURE:
             self._convert(self.current_temperature, 1),
-            ATTR_MIN_TEMP: self._convert(self.min_temp, 0),
-            ATTR_MAX_TEMP: self._convert(self.max_temp, 0),
-            ATTR_TEMPERATURE: self._convert(self.target_temperature, 0),
+            ATTR_MIN_TEMP: self._convert(self.min_temp, 1),
+            ATTR_MAX_TEMP: self._convert(self.max_temp, 1),
+            ATTR_TEMPERATURE: self._convert(self.target_temperature, 1),
             ATTR_TEMPERATURE_LOW:
-            self._convert(self.target_temperature_low, 0),
+            self._convert(self.target_temperature_low, 1),
             ATTR_TEMPERATURE_HIGH:
-            self._convert(self.target_temperature_high, 0),
+            self._convert(self.target_temperature_high, 1),
         }
 
         operation = self.operation

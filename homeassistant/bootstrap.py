@@ -9,11 +9,12 @@ After bootstrapping you can add your own components or
 start by calling homeassistant.start_home_assistant(bus)
 """
 
-import os
-import sys
+from collections import defaultdict
 import logging
 import logging.handlers
-from collections import defaultdict
+import os
+import shutil
+import sys
 
 import homeassistant.core as core
 import homeassistant.util.dt as date_util
@@ -25,7 +26,7 @@ import homeassistant.components as core_components
 import homeassistant.components.group as group
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
+    __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
     TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
@@ -34,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_COMPONENT = 'component'
 
 PLATFORM_FORMAT = '{}.{}'
+ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
 def setup_component(hass, domain, config=None):
@@ -80,7 +82,7 @@ def _setup_component(hass, domain, config):
         return True
     component = loader.get_component(domain)
 
-    missing_deps = [dep for dep in component.DEPENDENCIES
+    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
                     if dep not in hass.config.components]
 
     if missing_deps:
@@ -104,7 +106,7 @@ def _setup_component(hass, domain, config):
 
     # Assumption: if a component does not depend on groups
     # it communicates with devices
-    if group.DOMAIN not in component.DEPENDENCIES:
+    if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
         hass.pool.add_worker()
 
     hass.bus.fire(
@@ -131,14 +133,13 @@ def prepare_setup_platform(hass, config, domain, platform_name):
         return platform
 
     # Load dependencies
-    if hasattr(platform, 'DEPENDENCIES'):
-        for component in platform.DEPENDENCIES:
-            if not setup_component(hass, component, config):
-                _LOGGER.error(
-                    'Unable to prepare setup for platform %s because '
-                    'dependency %s could not be initialized', platform_path,
-                    component)
-                return None
+    for component in getattr(platform, 'DEPENDENCIES', []):
+        if not setup_component(hass, component, config):
+            _LOGGER.error(
+                'Unable to prepare setup for platform %s because '
+                'dependency %s could not be initialized', platform_path,
+                component)
+            return None
 
     if not _handle_requirements(hass, platform, platform_path):
         return None
@@ -167,6 +168,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
+    process_ha_config_upgrade(hass)
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
@@ -252,7 +254,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                 "Colorlog package not found, console coloring disabled")
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.path('home-assistant.log')
+    err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
 
     # Check if we can write to the error log if it exists or that
@@ -278,6 +280,31 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
     else:
         _LOGGER.error(
             'Unable to setup error log %s (access denied)', err_log_path)
+
+
+def process_ha_config_upgrade(hass):
+    """ Upgrade config if necessary. """
+    version_path = hass.config.path('.HA_VERSION')
+
+    try:
+        with open(version_path, 'rt') as inp:
+            conf_version = inp.readline().strip()
+    except FileNotFoundError:
+        # Last version to not have this file
+        conf_version = '0.7.7'
+
+    if conf_version == __version__:
+        return
+
+    _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
+                 __version__)
+
+    lib_path = hass.config.path('lib')
+    if os.path.isdir(lib_path):
+        shutil.rmtree(lib_path)
+
+    with open(version_path, 'wt') as outp:
+        outp.write(__version__)
 
 
 def process_ha_core_config(hass, config):

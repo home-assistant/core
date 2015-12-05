@@ -4,14 +4,13 @@ homeassistant.components.sensor.rfxtrx
 Shows sensor values from RFXtrx sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rfxtrx.html
+https://home-assistant.io/components/sensor.rfxtrx/
 """
 import logging
 from collections import OrderedDict
 
 from homeassistant.const import (TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
-from RFXtrx import SensorEvent
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.util import slugify
 
@@ -28,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Setup the RFXtrx platform. """
+    from RFXtrx import SensorEvent
 
     def sensor_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
@@ -43,6 +43,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     rfxtrx.RFX_DEVICES[entity_id] = new_sensor
                     add_devices_callback([new_sensor])
             else:
+                _LOGGER.debug(
+                    "EntityID: %s sensor_update",
+                    entity_id,
+                )
                 rfxtrx.RFX_DEVICES[entity_id].event = event
 
     if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:

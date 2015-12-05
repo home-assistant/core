@@ -1,12 +1,13 @@
 """
 homeassistant.components.browser
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to launch a webbrowser on the host machine.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/browser/
 """
 
 DOMAIN = "browser"
-DEPENDENCIES = []
 
 SERVICE_BROWSE_URL = "browse_url"
 

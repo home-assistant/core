@@ -4,19 +4,14 @@ homeassistant.components.sensor.transmission
 Monitors Transmission BitTorrent client API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.transmission.html
+https://home-assistant.io/components/sensor.transmission/
 """
-from homeassistant.util import Throttle
 from datetime import timedelta
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-
-from homeassistant.helpers.entity import Entity
-# pylint: disable=no-name-in-module, import-error
-import transmissionrpc
-
-from transmissionrpc.error import TransmissionError
-
 import logging
+
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.util import Throttle
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 SENSOR_TYPES = {
@@ -33,6 +28,9 @@ _THROTTLED_REFRESH = None
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Transmission sensors. """
+    import transmissionrpc
+    from transmissionrpc.error import TransmissionError
+
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
@@ -97,6 +95,8 @@ class TransmissionSensor(Entity):
 
     def refresh_transmission_data(self):
         """ Calls the throttled Transmission refresh method. """
+        from transmissionrpc.error import TransmissionError
+
         if _THROTTLED_REFRESH is not None:
             try:
                 _THROTTLED_REFRESH()
