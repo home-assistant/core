@@ -10,6 +10,7 @@ import json
 import logging
 
 import homeassistant.components.mqtt as mqtt
+import homeassistant.util.dt as dt_util
 
 DEPENDENCIES = ['mqtt']
 
@@ -45,6 +46,8 @@ def setup_scanner(hass, config, see):
             kwargs['gps_accuracy'] = data['acc']
         if 'batt' in data:
             kwargs['battery'] = data['batt']
+        if 'tst' in data:
+            kwargs['last_seen'] = dt_util.utc_from_timestamp(int(data['tst']))
 
         see(**kwargs)
 
