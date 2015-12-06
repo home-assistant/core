@@ -8,18 +8,18 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>MQTT Motor - Home Assistant</title>
+    <title>MQTT Rollershutter - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
     <meta name="description" content="Instructions how to integrate MQTT motorized devices into Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/motor.mqtt/">
+    <link rel="canonical" href="https://home-assistant.io/components/rollershutter.mqtt/">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="MQTT Motor">
+    <meta property="og:title" content="MQTT Rollershutter">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/motor.mqtt/">
+    <meta property="og:url" content="https://home-assistant.io/components/rollershutter.mqtt/">
     <meta property="og:type" content="article">
     <meta property="og:description" content="Instructions how to integrate MQTT motorized devices into Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
@@ -95,13 +95,14 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      MQTT Motor
+      MQTT Rollershutter
     </h1>
   </header>
   <hr class="divider">
 
-  <p>This platform enables the possibility to control an MQTT motorized device. The device state will be updated only after receiving the a new state from <code>state_topic</code>. If these messages are published with RETAIN flag, the MQTT device will receive an instant state update after subscription and will start with correct state. Otherwise, the initial state will be <code>unknown</code>.<br />
-There is a state attribute that stores the relative position of the device, where 0% means the device is <code>closed</code> and all other intermediate positions means the device is <code>open</code>.</p>
+  <p>This platform enables the possibility to control an MQTT rollershutter. The device state will be updated only after receiving the a new state from <code>state_topic</code>. If these messages are published with RETAIN flag, the MQTT device will receive an instant state update after subscription and will start with correct state. Otherwise, the initial state will be <code>unknown</code>.</p>
+
+<p>There is a state attribute that stores the relative position of the device, where 0% means the device is <code>closed</code> and all other intermediate positions means the device is <code>open</code>.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
@@ -122,17 +123,16 @@ There is a state attribute that stores the relative position of the device, wher
 
 <ul>
   <li>
-    <p><strong>command_topic</strong> (<em>Required</em>): The MQTT topic to publish commands to control the motor.</p>
+    <p><strong>command_topic</strong> (<em>Required</em>): The MQTT topic to publish commands to control the rollershutter.</p>
   </li>
-  <li><strong>name</strong> (<em>Optional</em>): The name of the motorized device. Default is ‘MQTT Motor’.</li>
-  <li><strong>state_topic</strong> (<em>Optional</em>): The MQTT topic subscribed to receive state updates. If not defined, the motor will be stateless, that is, no information about current position or open/closed. If defined, the received payload must be a integer between 0 and 100, that represents the percentage for fully closed and fully open, respectively.</li>
+  <li><strong>name</strong> (<em>Optional</em>): The name of the rollershutter. Default is ‘MQTT Rollershutter’.</li>
+  <li><strong>state_topic</strong> (<em>Optional</em>): The MQTT topic subscribed to receive state updates. If not defined, the rollershutter will be stateless, that is, no information about current position or open/closed. If defined, the received payload must be a integer between 0 and 100, that represents the percentage for fully closed and fully open, respectively.</li>
   <li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0. This QoS will also be used to publishing messages.</li>
-  <li><strong>payload_open</strong> (<em>Optional</em>): The payload to open the motorized device. Default is “OPEN”.</li>
-  <li><strong>payload_close</strong> (<em>Optional</em>): The payload to close the motorized device. Default is “CLOSE”.</li>
-  <li><strong>payload_stop</strong> (<em>Optional</em>): The payload to stop the motorized device. Default is “STOP”.</li>
+  <li><strong>payload_open</strong> (<em>Optional</em>): The payload to open the rollershutter. Default is “OPEN”.</li>
+  <li><strong>payload_close</strong> (<em>Optional</em>): The payload to close the rollershutter. Default is “CLOSE”.</li>
+  <li><strong>payload_stop</strong> (<em>Optional</em>): The payload to stop the rollershutter. Default is “STOP”.</li>
   <li><strong>state_format</strong> (<em>Optional</em>): The state format to parse. Default is None (no parser).</li>
 </ul>
-
 
 </article>
 
@@ -150,7 +150,7 @@ There is a state attribute that stores the relative position of the device, wher
   </div>
     <div class='section'>
       This is a platform for
-      <a href='/components/motor/'>the Motors component</a>.
+      <a href='/components/rollershutter/'>the Rollershutters component</a>.
     </div>
           <div class='section'>
           <h1 class='title delta'>Related components</h1>
@@ -179,10 +179,10 @@ There is a state attribute that stores the relative position of the device, wher
     </ul>
     </div>
     <div class='section'>
-    <h1 class="title delta">Category Motor</h1>
+    <h1 class="title delta">Category Rollershutter</h1>
     <ul class='divided'>
         <li>
-            MQTT Motor
+            MQTT Rollershutter
         </li>
     </ul>
     </div>

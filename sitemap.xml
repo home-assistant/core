@@ -245,6 +245,15 @@
   <url>
     <loc>https://home-assistant.io/blog/categories/community/</loc>
   </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/2/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/3/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/4/</loc>
+  </url>
     <url>
       <loc>https://home-assistant.io/components/automation/</loc>
     </url>
@@ -690,10 +699,10 @@
       <loc>https://home-assistant.io/components/thermostat.ecobee/</loc>
     </url>
     <url>
-      <loc>https://home-assistant.io/components/motor/</loc>
+      <loc>https://home-assistant.io/components/rollershutter/</loc>
     </url>
     <url>
-      <loc>https://home-assistant.io/components/motor.mqtt/</loc>
+      <loc>https://home-assistant.io/components/rollershutter.mqtt/</loc>
     </url>
     <url>
       <loc>https://home-assistant.io/components/light.limitlessled/</loc>
