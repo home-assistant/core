@@ -249,15 +249,6 @@
   <url>
     <loc>https://home-assistant.io/blog/categories/community/</loc>
   </url>
-  <url>
-    <loc>https://home-assistant.io/blog/posts/2/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/posts/3/</loc>
-  </url>
-  <url>
-    <loc>https://home-assistant.io/blog/posts/4/</loc>
-  </url>
     <url>
       <loc>https://home-assistant.io/components/automation/</loc>
     </url>
@@ -1438,6 +1429,14 @@
   </url>
   <url>
     <loc>https://home-assistant.io/googlef4f3693c209fe788.html</loc>
+    <lastmod>2014-12-22T00:10:47-08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/static/mdi-demo.html</loc>
+    <lastmod>2015-12-03T22:48:53-08:00</lastmod>
+  </url>
+</urlset>
+209fe788.html</loc>
     <lastmod>2014-12-22T00:10:47-08:00</lastmod>
   </url>
   <url>
