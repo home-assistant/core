@@ -125,7 +125,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
         _LOGGER.info(
-            "Starting web interface at http://%s:%d", *self.server_address)
+            "Starting web interface at %s", self.hass.config.api.base_url)
 
         # 31-1-2015: Refactored frontend/api components out of this component
         # To prevent stuff from breaking, load the two extracted components
