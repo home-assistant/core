@@ -381,7 +381,8 @@ class State(object):
     def copy(self):
         """ Creates a copy of itself. """
         return State(self.entity_id, self.state,
-                     dict(self.attributes), self.last_changed)
+                     dict(self.attributes), self.last_changed,
+                     self.last_updated)
 
     def as_dict(self):
         """ Converts State to a dict to be used within JSON.
