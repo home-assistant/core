@@ -160,7 +160,7 @@ orvibo==1.0.1
 pywemo==0.3.3
 
 # homeassistant.components.thermostat.honeywell
-evohomeclient==0.2.3
+evohomeclient==0.2.4
 
 # homeassistant.components.thermostat.nest
 python-nest==2.6.0
