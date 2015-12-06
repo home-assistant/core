@@ -6,9 +6,10 @@ Gathers system information of hosts which running glances.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.glances/
 """
-import logging
-import requests
 from datetime import timedelta
+import logging
+
+import requests
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
@@ -116,7 +117,11 @@ class GlancesSensor(Entity):
             elif self.type == 'disk_use':
                 return round(value['fs'][0]['used'] / 1024**3, 1)
             elif self.type == 'disk_free':
-                return round(value['fs'][0]['free'] / 1024**3, 1)
+                try:
+                    return round(value['fs'][0]['free'] / 1024**3, 1)
+                except KeyError:
+                    return round((value['fs'][0]['size'] -
+                                  value['fs'][0]['used']) / 1024**3, 1)
             elif self.type == 'memory_use_percent':
                 return value['mem']['percent']
             elif self.type == 'memory_use':

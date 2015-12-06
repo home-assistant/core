@@ -9,6 +9,7 @@ reports=no
 # abstract-class-not-used - is flaky, should not show up but does
 # unused-argument - generic callbacks and setup methods create a lot of warnings
 # global-statement - used for the on-demand requirement installation
+# redefined-variable-type - this is Python, we're duck typing!
 disable=
   locally-disabled,
   duplicate-code,
@@ -16,7 +17,8 @@ disable=
   abstract-class-little-used,
   abstract-class-not-used,
   unused-argument,
-  global-statement
+  global-statement,
+  redefined-variable-type
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError

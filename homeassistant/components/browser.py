@@ -8,7 +8,6 @@ https://home-assistant.io/components/browser/
 """
 
 DOMAIN = "browser"
-DEPENDENCIES = []
 
 SERVICE_BROWSE_URL = "browse_url"
 
