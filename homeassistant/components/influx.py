@@ -71,29 +71,23 @@ def setup(hass, config):
         _LOGGER.error("Database %s doesn't exist", dbname)
         return False
 
-    def event_listener(event):
+    def influx_event_listener(event):
         """ Listen for new messages on the bus and sends them to Influx. """
-        event_data = event.as_dict()
 
-        if event_data['event_type'] is not EVENT_STATE_CHANGED:
+        state = event.data.get('new_state')
+
+        if state is None:
             return
 
-        state = event_data['data']['new_state']
-
-        if state.state == STATE_ON or state.state == STATE_LOCKED or \
-                state.state == STATE_ABOVE_HORIZON:
+        if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON):
             _state = 1
-        elif state.state == STATE_OFF or state.state == STATE_UNLOCKED or \
-                state.state == STATE_UNKNOWN or \
-                state.state == STATE_BELOW_HORIZON:
+        elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
+                             STATE_BELOW_HORIZON):
             _state = 0
         else:
             _state = state.state
 
-        try:
-            measurement = state.attributes['unit_of_measurement']
-        except KeyError:
-            measurement = '{}'.format(state.domain)
+        measurement = state.attributes.get('unit_of_measurement', state.domain)
 
         json_body = [
             {
@@ -102,19 +96,18 @@ def setup(hass, config):
                     'domain': state.domain,
                     'entity_id': state.object_id,
                 },
-                'time': event_data['time_fired'],
+                'time': event.time_fired,
                 'fields': {
                     'value': _state,
                 }
             }
         ]
 
-        if json_body:
-            try:
-                influx.write_points(json_body)
-            except exceptions.InfluxDBClientError:
-                _LOGGER.exception('Error saving event to Influx')
+        try:
+            influx.write_points(json_body)
+        except exceptions.InfluxDBClientError:
+            _LOGGER.exception('Error saving event to Influx')
 
-    hass.bus.listen(EVENT_STATE_CHANGED, event_listener)
+    hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
 
     return True
