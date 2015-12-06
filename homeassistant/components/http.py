@@ -6,16 +6,17 @@ This module provides an API and a HTTP interface for debug purposes.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
-import json
-import threading
-import logging
-import time
-import gzip
-import os
 from datetime import timedelta
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+import gzip
 from http import cookies
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+import json
+import logging
+import os
 from socketserver import ThreadingMixIn
+import ssl
+import threading
+import time
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant.core as ha
@@ -36,6 +37,7 @@ CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
+CONF_CERTIFICATE = 'certificate'
 
 DATA_API_PASSWORD = 'api_password'
 
@@ -57,11 +59,12 @@ def setup(hass, config):
     server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
     server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
+    certificate = conf.get(CONF_CERTIFICATE)
 
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development)
+            development, certificate)
     except OSError:
         # If address already in use
         _LOGGER.exception("Error setting up HTTP server")
@@ -88,7 +91,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development):
+                 hass, api_password, development, certificate):
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
@@ -103,6 +106,9 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         if development:
             _LOGGER.info("running http in development mode")
+
+        if certificate is not None:
+            self.socket = ssl.wrap_socket(self.socket, certfile=certificate)
 
     def start(self):
         """ Starts the HTTP server. """
