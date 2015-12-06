@@ -36,7 +36,6 @@ CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
-CONF_SESSIONS_ENABLED = "sessions_enabled"
 
 DATA_API_PASSWORD = 'api_password'
 
