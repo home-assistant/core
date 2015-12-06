@@ -53,9 +53,10 @@ def setup(hass, config):
     bootstrap.setup_component(hass, 'sun')
 
     # Setup demo platforms
+    demo_config = config.copy()
     for component in COMPONENTS_WITH_DEMO_PLATFORM:
-        bootstrap.setup_component(
-            hass, component, {component: {CONF_PLATFORM: 'demo'}})
+        demo_config[component] = {CONF_PLATFORM: 'demo'}
+        bootstrap.setup_component(hass, component, demo_config)
 
     # Setup room groups
     lights = sorted(hass.states.entity_ids('light'))
