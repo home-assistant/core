@@ -2,9 +2,10 @@ sudo: false
 language: python
 cache:
   directories:
-    - $HOME/virtualenv/python3.4.2/
+    - $HOME/virtualenv/python$TRAVIS_PYTHON_VERSION/
 python:
-  - "3.4"
+  - 3.4.2
+  - 3.5.0
 install:
   - script/bootstrap_server
 script:

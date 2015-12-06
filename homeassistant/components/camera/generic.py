@@ -7,11 +7,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.generic/
 """
 import logging
-from requests.auth import HTTPBasicAuth
-from homeassistant.helpers import validate_config
-from homeassistant.components.camera import DOMAIN
-from homeassistant.components.camera import Camera
+
 import requests
+from requests.auth import HTTPBasicAuth
+
+from homeassistant.helpers import validate_config
+from homeassistant.components.camera import DOMAIN, Camera
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class GenericCamera(Camera):
         self._still_image_url = device_info['still_image_url']
 
     def camera_image(self):
-        """ Return a still image reponse from the camera. """
+        """ Return a still image response from the camera. """
         if self._username and self._password:
             try:
                 response = requests.get(
