@@ -76,7 +76,8 @@ def setup(hass, config):
         threading.Thread(target=server.start, daemon=True).start())
 
     hass.http = server
-    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
+    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
+                              certificate is not None)
 
     return True
 
