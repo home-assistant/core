@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-06T13:38:00-08:00</updated>
+  <updated>2015-12-06T13:55:22-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -33,7 +33,7 @@
   <li>Bunch of bug fixes and optimizations</li>
 </ul>
 
-<p>To update, run <code>pip3 install --update homeassistant</code>.</p>
+<p>To update, run <code>pip3 install --upgrade homeassistant</code>.</p>
 
 <p class="img">
 <img src="https://home-assistant.io/images/screenshots/lock-and-rollershutter-card.png" />
