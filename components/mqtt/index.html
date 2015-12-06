@@ -252,6 +252,46 @@ Home Assistant will automatically load the correct certificate if you connect to
 </div>
 </div>
 
+<h2><a class="title-link" name="processing-json" href="#processing-json"></a> Processing JSON</h2>
+
+<p>The MQTT switch and sensor platforms support processing JSON over MQTT messages and parse them using JSONPath. JSONPath allows you to specify where in the JSON the value resides that you want to use. The following examples will always return the value <code>100</code>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>JSONPath query</th>
+      <th>JSON</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>somekey</code></td>
+      <td><code>{ 'somekey': 100 }</code></td>
+    </tr>
+    <tr>
+      <td><code>somekey[0]</code></td>
+      <td><code>{ 'somekey': [100] }</code></td>
+    </tr>
+    <tr>
+      <td><code>somekey[0].value</code></td>
+      <td><code>{ 'somekey': [ { value: 100 } ] }</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>To use this, add the following key to your <code>configuration.yaml</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">state_format</span>: <span class="string"><span class="content">'json:somekey[0].value'</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>More information about the full JSONPath syntax can be found <a href="https://github.com/kennknowles/python-jsonpath-rw#jsonpath-syntax">here</a>.</p>
+
+
 </article>
 
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: release-notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-06T01:07:27-08:00</updated>
+  <updated>2015-12-06T13:32:36-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,35 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.9: Rollershutters, locks, binary sensors and InfluxDB]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/"/>
+    <updated>2015-12-06T11:29:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support</id>
+    <content type="html"><![CDATA[<p>It’s been a few weeks but we managed to polish a nice new release of Home Assistant for y’all!</p>
+
+<p><img src="https://home-assistant.io/images/supported_brands/homematic.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="https://home-assistant.io/images/supported_brands/ecobee.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="https://home-assistant.io/images/supported_brands/influxdb.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /></p>
+
+<ul>
+  <li>New <a href="/components/lock/">lock component</a> including <a href="/components/lock.wink/">Wink</a> support (<a href="https://github.com/miniconfig">@miniconfig</a>)</li>
+  <li>New <a href="/components/binary_sensor/">binary sensor component</a> including <a href="/components/binary_sensor.arest/">aRest</a> and <a href="/components/binary_sensor.mqtt/">MQTT</a> support (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>New <a href="/components/rollershutter/">rollershutter component</a> including <a href="/components/rollershutter.mqtt/">MQTT</a> support (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>New <a href="/components/influxdb/">InfluxDB component</a> to store data in InfluxDB (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.ecobee/">Ecobee</a> now supported (<a href="https://github.com/nkgilley">@nkgilley</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.homematic/">Homematic</a> now supported (<a href="https://github.com/goir">@goir</a>)</li>
+  <li>Support for <a href="/components/mqtt/#processing-json">parsing JSON values</a> received over MQTT (<a href="https://github.com/mcdeck">@mcdeck</a>)</li>
+  <li>Bunch of bug fixes and optimizations</li>
+</ul>
+
+<p>To update, run <code>pip3 install --update homeassistant</code>.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/screenshots/lock-and-rollershutter-card.png" />
+</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights ]]></title>
@@ -174,69 +203,6 @@ Map in Home Assistant showing two people and three zones (home, school, work)
   <li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
   <li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
 </ul>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Alarms, Sonos and iTunes now supported]]></title>
-    <link href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"/>
-    <updated>2015-09-19T21:47:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support</id>
-    <content type="html"><![CDATA[<p>It’s like someone opened a can of rock solid developers and emptied it above our <a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
-
-<p>See <a href="https://github.com/balloob/home-assistant/releases/tag/0.7.3">GitHub</a> for more detailed release notes.</p>
-
-<p><em>Migration note: the <code>scheduler</code> component has been removed in favor of the <code>automation</code> component.</em></p>
-
-<p><strong>Sonos</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/sonos.png" style="border:none; box-shadow: none; float: right;" height="50" /> Sonos support has been added by <a href="https://github.com/rhooper">@rhooper</a> and <a href="https://github.com/SEJeff">@SEJeff</a>. Home Assistant is now able to automatically detect Sonos devices in your network and set them up for you. It will allow you to control music playing on your Sonos and change the volume.</p>
-
-<p><strong>iTunes and airplay speakers</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/itunes.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">media_player</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">itunes</span></span>
-  <span class="key">name</span>: <span class="string"><span class="content">iTunes</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">http://192.168.1.50</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">8181</span></span>
-</pre></div>
-</div>
-</div>
-
-<!--more-->
-
-<p><strong>Automation</strong><br />
-Automation has gotten a lot of love. It now supports conditions, multiple triggers and new types of triggers. The best to get started with it is to head over to the new <a href="/getting-started/automation/">getting started with automation</a> page.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example of entry in configuration.yaml</span>
-<span class="key">automation</span>:
-  <span class="key">alias</span>: <span class="string"><span class="content">Light on in the evening</span></span>
-  <span class="key">trigger</span>:
-    - <span class="string"><span class="content">platform: sun</span></span>
-      <span class="key">event</span>: <span class="string"><span class="content">sunset</span></span>
-      <span class="key">offset</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">-01:00:00</span><span class="delimiter">&quot;</span></span>
-    - <span class="string"><span class="content">platform: state</span></span>
-      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
-      <span class="key">state</span>: <span class="string"><span class="content">home</span></span>
-  <span class="key">condition</span>:
-    - <span class="string"><span class="content">platform: state</span></span>
-      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
-      <span class="key">state</span>: <span class="string"><span class="content">home</span></span>
-    - <span class="string"><span class="content">platform: time</span></span>
-      <span class="key">after</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">16:00:00</span><span class="delimiter">&quot;</span></span>
-      <span class="key">before</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">23:00:00</span><span class="delimiter">&quot;</span></span>
-  <span class="key">action</span>:
-    <span class="key">service</span>: <span class="string"><span class="content">homeassistant.turn_on</span></span>
-    <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Verisure Alarms</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/verisure.png" style="border:none; box-shadow: none; float: right;" height="50" /> We now support arming and disarming your verisure alarm from within Home Assistant thanks to added support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
 ]]></content>
   </entry>
   

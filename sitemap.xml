@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/</loc>
+    <lastmod>2015-12-06T11:29:00-08:00</lastmod>
+  </url>
+  <url>
     <loc>https://home-assistant.io/blog/2015/12/05/community-highlights/</loc>
     <lastmod>2015-12-05T23:39:00-08:00</lastmod>
   </url>
@@ -708,6 +712,9 @@
       <loc>https://home-assistant.io/components/light.limitlessled/</loc>
     </url>
     <url>
+      <loc>https://home-assistant.io/components/influxdb/</loc>
+    </url>
+    <url>
       <loc>https://home-assistant.io/cookbook/automation_for_rainy_days/</loc>
     </url>
     <url>
@@ -817,6 +824,9 @@
     </url>
     <url>
       <loc>https://home-assistant.io/blog/2015/12/05/community-highlights/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/</loc>
     </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.html</loc>
@@ -1352,11 +1362,11 @@
   </url>
   <url>
     <loc>https://home-assistant.io/demo/frontend.html</loc>
-    <lastmod>2015-12-03T22:48:53-08:00</lastmod>
+    <lastmod>2015-12-06T13:26:47-08:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/demo/index.html</loc>
-    <lastmod>2015-12-03T22:48:53-08:00</lastmod>
+    <lastmod>2015-12-06T13:29:08-08:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/add_new_platform.html</loc>

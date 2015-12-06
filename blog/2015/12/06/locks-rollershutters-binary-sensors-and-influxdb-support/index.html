@@ -8,21 +8,21 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Release notes for January 24, 2015 - Home Assistant</title>
+    <title>0.9: Rollershutters, locks, binary sensors and InfluxDB - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="The release notes for January 24, 2015">
+    <meta name="description" content="Version 0.9 of Home Assistant has been released.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/blog/2015/01/24/release-notes/">
+    <link rel="canonical" href="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Release notes for January 24, 2015">
+    <meta property="og:title" content="0.9: Rollershutters, locks, binary sensors and InfluxDB">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/01/24/release-notes/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="The release notes for January 24, 2015">
-    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    <meta property="og:description" content="Version 0.9 of Home Assistant has been released.">
+    <meta property="og:image" content="https://home-assistant.io/images/screenshots/lock-and-rollershutter-card.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
     <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
@@ -96,14 +96,14 @@
   
   <header>
   
-  <h1 class="title indent">Release notes for January 24, 2015</h1>
+  <h1 class="title indent">0.9: Rollershutters, locks, binary sensors and InfluxDB</h1>
   
 
   
   <div class="meta clearfix">
-    <time datetime="2015-01-24T18:36:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 24, 2015</time>
+    <time datetime="2015-12-06T11:29:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 6, 2015</time>
     <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span><i class='icon-time'></i> less than one minute reading time</span>
     <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
@@ -124,30 +124,26 @@
 </header>
 
 
-  <p>I have just merged the latest version of the development branch into master. Here are some of the highlights of this release:</p>
+  <p>It’s been a few weeks but we managed to polish a nice new release of Home Assistant for y’all!</p>
 
-<p><strong>Configuration via the frontend</strong><br /><br />
-Phliips Hue will now be auto discovered and uses the new <code>configurator</code> component to interact with the user to finish the setup process.</p>
-
-<p><strong>Wink Hub support</strong><br /><br />
-Thanks to the work done by John McLaughlin and Geoff Norton we now support the lights, switches and sensors that are connected to the Wink hub.</p>
-
-<p><strong>The getting started guide and component page have been reorganized</strong><br /><br />
-The getting started instructions have been split into separate pages per component and a general overview page. The goal is to have a page per component that describes:</p>
+<p><img src="/images/supported_brands/homematic.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="/images/supported_brands/ecobee.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="/images/supported_brands/influxdb.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /></p>
 
 <ul>
-  <li>What it does</li>
-  <li>How to set it up</li>
-  <li>Which states it maintains</li>
-  <li>Which services it provides</li>
-  <li>Additional development tips</li>
+  <li>New <a href="/components/lock/">lock component</a> including <a href="/components/lock.wink/">Wink</a> support (<a href="https://github.com/miniconfig">@miniconfig</a>)</li>
+  <li>New <a href="/components/binary_sensor/">binary sensor component</a> including <a href="/components/binary_sensor.arest/">aRest</a> and <a href="/components/binary_sensor.mqtt/">MQTT</a> support (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>New <a href="/components/rollershutter/">rollershutter component</a> including <a href="/components/rollershutter.mqtt/">MQTT</a> support (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>New <a href="/components/influxdb/">InfluxDB component</a> to store data in InfluxDB (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.ecobee/">Ecobee</a> now supported (<a href="https://github.com/nkgilley">@nkgilley</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.homematic/">Homematic</a> now supported (<a href="https://github.com/goir">@goir</a>)</li>
+  <li>Support for <a href="/components/mqtt/#processing-json">parsing JSON values</a> received over MQTT (<a href="https://github.com/mcdeck">@mcdeck</a>)</li>
+  <li>Bunch of bug fixes and optimizations</li>
 </ul>
 
-<p><strong>More reasonable errors</strong><br /><br />
-Home Assistant should now throw better errors and offer solutions if you do not have the right version of Python 3, forgot to clone the git submodules or install the dependencies.</p>
+<p>To update, run <code>pip3 install --update homeassistant</code>.</p>
 
-<p><strong>Streamlined first launch</strong><br /><br />
-Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
+<p class="img">
+<img src="/images/screenshots/lock-and-rollershutter-card.png" />
+</p>
 </article>
 
 
@@ -170,15 +166,15 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/2015/01/24/release-notes/"
-     data-counturl="https://home-assistant.io/blog/2015/01/24/release-notes/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/"
+     data-counturl="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/01/24/release-notes/"
+         data-href="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/"
          data-layout="button_count">
     </div>
   
@@ -209,10 +205,6 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
   <h1 class="title delta">Other Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/">0.9: Rollershutters, locks, binary sensors and InfluxDB</a>
-        </li>
       
     
       
@@ -278,8 +270,8 @@ Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> 
   
     
     // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/01/24/release-notes/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/01/24/release-notes/';
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/';
     var disqus_script = 'embed.js';
   
   (function () {

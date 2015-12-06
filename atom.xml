@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-06T01:07:27-08:00</updated>
+  <updated>2015-12-06T13:32:36-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,35 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.9: Rollershutters, locks, binary sensors and InfluxDB]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/"/>
+    <updated>2015-12-06T11:29:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support</id>
+    <content type="html"><![CDATA[<p>It’s been a few weeks but we managed to polish a nice new release of Home Assistant for y’all!</p>
+
+<p><img src="https://home-assistant.io/images/supported_brands/homematic.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="https://home-assistant.io/images/supported_brands/ecobee.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="https://home-assistant.io/images/supported_brands/influxdb.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /></p>
+
+<ul>
+  <li>New <a href="https://home-assistant.io/components/lock/">lock component</a> including <a href="https://home-assistant.io/components/lock.wink/">Wink</a> support (<a href="https://github.com/miniconfig">@miniconfig</a>)</li>
+  <li>New <a href="https://home-assistant.io/components/binary_sensor/">binary sensor component</a> including <a href="https://home-assistant.io/components/binary_sensor.arest/">aRest</a> and <a href="https://home-assistant.io/components/binary_sensor.mqtt/">MQTT</a> support (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>New <a href="https://home-assistant.io/components/rollershutter/">rollershutter component</a> including <a href="https://home-assistant.io/components/rollershutter.mqtt/">MQTT</a> support (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>New <a href="https://home-assistant.io/components/influxdb/">InfluxDB component</a> to store data in InfluxDB (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Thermostat: <a href="https://home-assistant.io/components/thermostat.ecobee/">Ecobee</a> now supported (<a href="https://github.com/nkgilley">@nkgilley</a>)</li>
+  <li>Thermostat: <a href="https://home-assistant.io/components/thermostat.homematic/">Homematic</a> now supported (<a href="https://github.com/goir">@goir</a>)</li>
+  <li>Support for <a href="https://home-assistant.io/components/mqtt/#processing-json/">parsing JSON values</a> received over MQTT (<a href="https://github.com/mcdeck">@mcdeck</a>)</li>
+  <li>Bunch of bug fixes and optimizations</li>
+</ul>
+
+<p>To update, run <code>pip3 install --update homeassistant</code>.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/screenshots/lock-and-rollershutter-card.png" />
+</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Community Highlights]]></title>
@@ -2204,109 +2233,6 @@ Before diving into the newly supported devices and services, I want to highlight
   <li>the sun attributes for rising and setting are now in UTC. The methods <code>sun.next_rising(hass)</code> and <code>sun.next_setting(hass)</code> are backwards compatible, just be careful if you used to read the raw attributes.</li>
   <li>the API sends all times in UTC. If you use anything else besides the frontend to talk to HA, make sure it handles it differently.</li>
 </ul>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for April 25, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/04/25/release-notes/"/>
-    <updated>2015-04-25T06:57:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/04/25/release-notes</id>
-    <content type="html"><![CDATA[<p>It’s been a month since the latest update and a lot has happened again. Here a quick overview of the new things.</p>
-
-<p><strong>Line Charts</strong><br />
-<a href="https://github.com/jamespcole">James</a> has upgraded the history in the frontend to support line graphs. Line graphs will be shown for any entity that has a unit of measurement. The line graphs will also be shown in the more info card of an entity. <a href="https://home-assistant.io/demo/">See the demo for a live example.</a></p>
-
-<p class="img">
-<img src="https://home-assistant.io/images/screenshots/history-line-graphs.png" />
-</p>
-
-<p><strong>ISY994 hub support</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/universal_devices.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/rmkraus">Ryan</a> has contributed support to integrate the ISY994 hub by Universal Devices. This allows you to integrate your X10/Insteon sensors, switches and lights.</p>
-
-<p>He has created an extensive getting started guide which can be found on <a href="https://home-assistant.io/components/isy994/">the ISY994 component page</a>.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">isy994</span>:
-</pre></div>
-</div>
-</div>
-
-<p><strong>Logbook</strong><br />
-<img src="https://home-assistant.io/images/screenshots/logbook.png" style="margin-left:10px; float: right;" height="100" /> I (Paulus) have added a logbook component. The logbook component provides a different perspective on the history of your house by showing all the changes that happened to your house in chronological order. <a href="https://home-assistant.io/demo/">See the demo for a live example.</a><br />
-<span class="clearfix"></span></p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">logbook</span>:
-</pre></div>
-</div>
-</div>
-
-<!--more-->
-
-<p><strong>Transmission support</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/transmission.png" style="border:none; box-shadow: none; float: right;" height="50" /> James has also contributed support for integrating Transmission into Home Assistant.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">transmission</span></span>
-  <span class="key">name</span>: <span class="string"><span class="content">Transmission</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">192.168.1.26</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">9091</span></span>
-  <span class="key">username</span>: <span class="string"><span class="content">YOUR_USERNAME</span></span>
-  <span class="key">password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
-  <span class="key">monitored_variables</span>:
-    - <span class="string"><span class="content">type: 'current_status'</span></span>
-    - <span class="string"><span class="content">type: 'download_speed'</span></span>
-    - <span class="string"><span class="content">type: 'upload_speed'</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Modbus support</strong><br />
-<a href="https://github.com/kixam">Kixam</a> has contributed support for modbus, a serial communication protocol to control PLCs. It currently supports sensors and switches which can be controlled over serial, TCP and UDP connections.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">modbus</span>:
-  <span class="key">type</span>: <span class="string"><span class="content">serial</span></span>
-  <span class="key">method</span>: <span class="string"><span class="content">rtu</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">/dev/ttyUSB0</span></span>
-  <span class="key">baudrate</span>: <span class="string"><span class="content">9600</span></span>
-  <span class="key">stopbits</span>: <span class="string"><span class="content">1</span></span>
-  <span class="key">bytesize</span>: <span class="string"><span class="content">8</span></span>
-  <span class="key">parity</span>: <span class="string"><span class="content">N</span></span>
-
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">modbus</span></span>
-  <span class="key">slave</span>: <span class="string"><span class="content">1</span></span>
-  <span class="key">registers</span>:
-    <span class="key">16</span>:
-      <span class="key">name</span>: <span class="string"><span class="content">My integer sensor</span><span class="content">
-        unit: C</span></span>
-    <span class="key">24</span>:
-      <span class="key">bits</span>:
-        <span class="key">0</span>:
-          <span class="key">name</span>: <span class="string"><span class="content">My boolean sensor</span></span>
-        <span class="key">2</span>:
-          <span class="key">name</span>: <span class="string"><span class="content">My other boolean sensor</span></span>
-
-<span class="key">switch</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">modbus</span></span>
-  <span class="key">slave</span>: <span class="string"><span class="content">1</span></span>
-  <span class="key">registers</span>:
-    <span class="key">24</span>:
-      <span class="key">bits</span>:
-        <span class="key">0</span>:
-          <span class="key">name</span>: <span class="string"><span class="content">My switch</span></span>
-        <span class="key">2</span>:
-          <span class="key">name</span>: <span class="string"><span class="content">My other switch</span></span>
-</pre></div>
-</div>
-</div>
 ]]></content>
   </entry>
   

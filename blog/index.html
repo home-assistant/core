@@ -27,7 +27,7 @@
     
   
   
-    Community Highlights
+    0.9: Rollershutters, locks, binary sensors and InfluxDB
   
   
 
@@ -40,10 +40,7 @@
     
     
     
-      
-        community
-      
-    ...">
+ ...">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -115,6 +112,67 @@
         
 
             
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/">0.9: Rollershutters, locks, binary sensors and InfluxDB</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-12-06T11:29:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 6, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> less than one minute reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>It’s been a few weeks but we managed to polish a nice new release of Home Assistant for y’all!</p>
+
+<p><img src="/images/supported_brands/homematic.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="/images/supported_brands/ecobee.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /><img src="/images/supported_brands/influxdb.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="238" /></p>
+
+<ul>
+  <li>New <a href="/components/lock/">lock component</a> including <a href="/components/lock.wink/">Wink</a> support (<a href="https://github.com/miniconfig">@miniconfig</a>)</li>
+  <li>New <a href="/components/binary_sensor/">binary sensor component</a> including <a href="/components/binary_sensor.arest/">aRest</a> and <a href="/components/binary_sensor.mqtt/">MQTT</a> support (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>New <a href="/components/rollershutter/">rollershutter component</a> including <a href="/components/rollershutter.mqtt/">MQTT</a> support (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>New <a href="/components/influxdb/">InfluxDB component</a> to store data in InfluxDB (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.ecobee/">Ecobee</a> now supported (<a href="https://github.com/nkgilley">@nkgilley</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.homematic/">Homematic</a> now supported (<a href="https://github.com/goir">@goir</a>)</li>
+  <li>Support for <a href="/components/mqtt/#processing-json">parsing JSON values</a> received over MQTT (<a href="https://github.com/mcdeck">@mcdeck</a>)</li>
+  <li>Bunch of bug fixes and optimizations</li>
+</ul>
+
+<p>To update, run <code>pip3 install --update homeassistant</code>.</p>
+
+<p class="img">
+<img src="/images/screenshots/lock-and-rollershutter-card.png" />
+</p>
+
+
+    
+  </div>
+  </article>
+  <hr>
   
   <article class="listing">
     <header>
@@ -656,60 +714,6 @@ Inspried by a <a href="https://github.com/balloob/home-assistant/issues/310">fea
 
     
       <a class="btn pull-right" href="/blog/2015/09/18/monitoring-with-glances-and-home-assistant/#read-more">Read on &rarr;</a>
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/09/13/home-assistant-meets-ifttt/">Home Assistant meets IFTTT</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-09-13T09:28:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> September 13, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> two minutes reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/how-to/'>how-to</a></li>
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/09/13/home-assistant-meets-ifttt/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a webservice that integrates with almost every possible webservice out there. Adding Home Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
-
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet if your smoke alarm goes off.</p>
-
-<p class="img">
-  <img src="/images/blog/2015-09-ifttt/splash.png" />
-</p>
-
-<p>Head over to the <a href="/components/ifttt/">setup instructions</a> to get started with IFTTT. Click the read more button for some example recipes.</p>
-
-
-    
-      <a class="btn pull-right" href="/blog/2015/09/13/home-assistant-meets-ifttt/#read-more">Read on &rarr;</a>
     
   </div>
   </article>
