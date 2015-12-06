@@ -26,7 +26,7 @@ https://github.com/nkgilley/python-ecobee-api/archive/92a2f330cbaf601d0618456fdd
 # homeassistant.components.ifttt
 pyfttt==0.3
 
-# homeassistant.components.influx
+# homeassistant.components.influxdb
 influxdb==2.10.0
 
 # homeassistant.components.isy994
