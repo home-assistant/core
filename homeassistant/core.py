@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util as util
-import homeassistant.util.dt as date_util
+import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
 import homeassistant.helpers.temperature as temp_helper
 from homeassistant.config import get_default_config_dir
@@ -196,8 +196,8 @@ class Event(object):
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
-        self.time_fired = date_util.strip_microseconds(
-            time_fired or date_util.utcnow())
+        self.time_fired = dt_util.strip_microseconds(
+            time_fired or dt_util.utcnow())
 
     def as_dict(self):
         """ Returns a dict representation of this Event. """
@@ -205,7 +205,7 @@ class Event(object):
             'event_type': self.event_type,
             'data': dict(self.data),
             'origin': str(self.origin),
-            'time_fired': date_util.datetime_to_str(self.time_fired),
+            'time_fired': dt_util.datetime_to_str(self.time_fired),
         }
 
     def __repr__(self):
@@ -351,14 +351,14 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = state
         self.attributes = attributes or {}
-        self.last_updated = date_util.strip_microseconds(
-            last_updated or date_util.utcnow())
+        self.last_updated = dt_util.strip_microseconds(
+            last_updated or dt_util.utcnow())
 
         # Strip microsecond from last_changed else we cannot guarantee
         # state == State.from_dict(state.as_dict())
         # This behavior occurs because to_dict uses datetime_to_str
         # which does not preserve microseconds
-        self.last_changed = date_util.strip_microseconds(
+        self.last_changed = dt_util.strip_microseconds(
             last_changed or self.last_updated)
 
     @property
@@ -381,7 +381,8 @@ class State(object):
     def copy(self):
         """ Creates a copy of itself. """
         return State(self.entity_id, self.state,
-                     dict(self.attributes), self.last_changed)
+                     dict(self.attributes), self.last_changed,
+                     self.last_updated)
 
     def as_dict(self):
         """ Converts State to a dict to be used within JSON.
@@ -390,8 +391,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': self.attributes,
-                'last_changed': date_util.datetime_to_str(self.last_changed),
-                'last_updated': date_util.datetime_to_str(self.last_updated)}
+                'last_changed': dt_util.datetime_to_str(self.last_changed),
+                'last_updated': dt_util.datetime_to_str(self.last_updated)}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -406,12 +407,12 @@ class State(object):
         last_changed = json_dict.get('last_changed')
 
         if last_changed:
-            last_changed = date_util.str_to_datetime(last_changed)
+            last_changed = dt_util.str_to_datetime(last_changed)
 
         last_updated = json_dict.get('last_updated')
 
         if last_updated:
-            last_updated = date_util.str_to_datetime(last_updated)
+            last_updated = dt_util.str_to_datetime(last_updated)
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated)
@@ -428,7 +429,7 @@ class State(object):
 
         return "<state {}={}{} @ {}>".format(
             self.entity_id, self.state, attr,
-            date_util.datetime_to_local_str(self.last_changed))
+            dt_util.datetime_to_local_str(self.last_changed))
 
 
 class StateMachine(object):
@@ -732,7 +733,7 @@ class Config(object):
 
     def as_dict(self):
         """ Converts config to a dictionary. """
-        time_zone = self.time_zone or date_util.UTC
+        time_zone = self.time_zone or dt_util.UTC
 
         return {
             'latitude': self.latitude,
@@ -766,7 +767,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
 
         last_fired_on_second = -1
 
-        calc_now = date_util.utcnow
+        calc_now = dt_util.utcnow
 
         while not stop_event.isSet():
             now = calc_now()
@@ -832,6 +833,6 @@ def create_worker_pool(worker_count=None):
 
         for start, job in current_jobs:
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
-                            date_util.datetime_to_local_str(start), job)
+                            dt_util.datetime_to_local_str(start), job)
 
     return util.ThreadPool(job_handler, worker_count, busy_callback)

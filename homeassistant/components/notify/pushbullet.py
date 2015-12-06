@@ -47,21 +47,23 @@ class PushBulletNotificationService(BaseNotificationService):
         self.refresh()
 
     def refresh(self):
-        '''
-        Refresh devices, contacts, channels, etc
+        """
+        Refresh devices, contacts, etc
 
         pbtargets stores all targets available from this pushbullet instance
         into a dict. These are PB objects!. It sacrifices a bit of memory
-        for faster processing at send_message
-        '''
+        for faster processing at send_message.
+
+        As of sept 2015, contacts were replaced by chats. This is not
+        implemented in the module yet.
+        """
         self.pushbullet.refresh()
         self.pbtargets = {
-            'device':
-                {tgt.nickname: tgt for tgt in self.pushbullet.devices},
-            'contact':
-                {tgt.email: tgt for tgt in self.pushbullet.contacts},
-            'channel':
-                {tgt.channel_tag: tgt for tgt in self.pushbullet.channels},
+            'device': {
+                tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
+            'channel': {
+                tgt.channel_tag.lower(): tgt for
+                tgt in self.pushbullet.channels},
         }
 
     def send_message(self, message=None, **kwargs):
@@ -69,6 +71,8 @@ class PushBulletNotificationService(BaseNotificationService):
         Send a message to a specified target.
         If no target specified, a 'normal' push will be sent to all devices
         linked to the PB account.
+        Email is special, these are assumed to always exist. We use a special
+        call which doesn't require a push object.
         """
         targets = kwargs.get(ATTR_TARGET)
         title = kwargs.get(ATTR_TITLE)
@@ -86,17 +90,17 @@ class PushBulletNotificationService(BaseNotificationService):
 
         # Main loop, Process all targets specified
         for target in targets:
-
-            # Allow for untargeted push, combined with other types
-            if target in ['device', 'device/']:
-                self.pushbullet.push_note(title, message)
-                _LOGGER.info('Sent notification to self')
-                continue
-
             try:
                 ttype, tname = target.split('/', 1)
             except ValueError:
                 _LOGGER.error('Invalid target syntax: %s', target)
+                continue
+
+            # Target is email, send directly, don't use a target object
+            # This also seems works to send to all devices in own account
+            if ttype == 'email':
+                self.pushbullet.push_note(title, message, email=tname)
+                _LOGGER.info('Sent notification to email %s', tname)
                 continue
 
             # Refresh if name not found. While awaiting periodic refresh
@@ -104,6 +108,9 @@ class PushBulletNotificationService(BaseNotificationService):
             if ttype not in self.pbtargets:
                 _LOGGER.error('Invalid target syntax: %s', target)
                 continue
+
+            tname = tname.lower()
+
             if tname not in self.pbtargets[ttype] and not refreshed:
                 self.refresh()
                 refreshed = True
@@ -112,10 +119,10 @@ class PushBulletNotificationService(BaseNotificationService):
             # name. Dict pbtargets has all *actual* targets.
             try:
                 self.pbtargets[ttype][tname].push_note(title, message)
+                _LOGGER.info('Sent notification to %s/%s', ttype, tname)
             except KeyError:
-                _LOGGER.error('No such target: %s.%s', ttype, tname)
+                _LOGGER.error('No such target: %s/%s', ttype, tname)
                 continue
             except self.pushbullet.errors.PushError:
-                _LOGGER.error('Notify failed to: %s.%s', ttype, tname)
+                _LOGGER.error('Notify failed to: %s/%s', ttype, tname)
                 continue
-            _LOGGER.info('Sent notification to %s.%s', ttype, tname)

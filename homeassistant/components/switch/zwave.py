@@ -4,10 +4,8 @@ homeassistant.components.switch.zwave
 
 Zwave platform that handles simple binary switches.
 """
+# Because we do not compile openzwave on CI
 # pylint: disable=import-error
-from openzwave.network import ZWaveNetwork
-from pydispatch import dispatcher
-
 import homeassistant.components.zwave as zwave
 
 from homeassistant.components.switch import SwitchDevice
@@ -36,11 +34,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ZwaveSwitch(SwitchDevice):
     """ Provides a zwave switch. """
     def __init__(self, value):
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
+
         self._value = value
         self._node = value.node
 
         self._state = value.data
-
         dispatcher.connect(
             self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 

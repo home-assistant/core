@@ -17,8 +17,19 @@ DOMAIN = "demo"
 DEPENDENCIES = ['conversation', 'introduction', 'zone']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    'device_tracker', 'light', 'media_player', 'notify', 'switch', 'sensor',
-    'thermostat']
+    'alarm_control_panel',
+    'binary_sensor',
+    'camera',
+    'device_tracker',
+    'light',
+    'lock',
+    'media_player',
+    'notify',
+    'rollershutter',
+    'sensor',
+    'switch',
+    'thermostat',
+]
 
 
 def setup(hass, config):
@@ -42,9 +53,10 @@ def setup(hass, config):
     bootstrap.setup_component(hass, 'sun')
 
     # Setup demo platforms
+    demo_config = config.copy()
     for component in COMPONENTS_WITH_DEMO_PLATFORM:
-        bootstrap.setup_component(
-            hass, component, {component: {CONF_PLATFORM: 'demo'}})
+        demo_config[component] = {CONF_PLATFORM: 'demo'}
+        bootstrap.setup_component(hass, component, demo_config)
 
     # Setup room groups
     lights = sorted(hass.states.entity_ids('light'))
@@ -54,23 +66,6 @@ def setup(hass, config):
                                             media_players[1]])
     group.setup_group(hass, 'bedroom', [lights[0], switches[1],
                                         media_players[0]])
-
-    # Setup IP Camera
-    bootstrap.setup_component(
-        hass, 'camera',
-        {'camera': {
-            'platform': 'generic',
-            'name': 'IP Camera',
-            'still_image_url': 'http://home-assistant.io/demo/webcam.jpg',
-        }})
-
-    # Setup alarm_control_panel
-    bootstrap.setup_component(
-        hass, 'alarm_control_panel',
-        {'alarm_control_panel': {
-            'platform': 'manual',
-            'name': 'Test Alarm',
-        }})
 
     # Setup scripts
     bootstrap.setup_component(
