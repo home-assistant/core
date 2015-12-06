@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: community | Home Assistant]]></title>
+  <link href="https://home-assistant.io/blog/categories/community/atom.xml" rel="self"/>
+  <link href="https://home-assistant.io/"/>
+  <updated>2015-12-06T01:00:53-08:00</updated>
+  <id>https://home-assistant.io/</id>
+  <author>
+    <name><![CDATA[Paulus Schoutsen]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Community Highlights]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/05/community-highlights/"/>
+    <updated>2015-12-05T23:39:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/05/community-highlights</id>
+    <content type="html"><![CDATA[<p>From time to time we come along things that are worth sharing with fellow Home Assisters. Here a list of some cool stuff from last week:</p>
+
+<p>First is the public beta of <a href="https://letsencrypt.org/">Let’s Encrypt</a>. Let’s Encrypt is a new certificate authority that is free, automated and open. This means that it will now be very easy to secure your connection to Home Assistant while you are away from home. W1ll1am23 has written up <a href="https://automic.us/forum/viewtopic.php?f=4&amp;t=29">a guide how to get started</a>.</p>
+
+<p>The next thing is a show-off of some of the cool stuff people do with Home Assistant. This is miniconfig talking to Home Assistant using the Amazon Echo!</p>
+
+<div style="width: 560px; margin: 0 auto 16px;">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/9QQjklnSQKY" frameborder="0" allowfullscreen=""></iframe>
+</div>
+
+<p>And last but not least, Midwestern Mac did a <a href="http://www.midwesternmac.com/blogs/jeff-geerling/raspberry-pi-microsd-card">microSD card performance comparison</a> for the Raspberry Pi. If you’re using a Pi, make sure to check it out!</p>
+]]></content>
+  </entry>
+  
+</feed>

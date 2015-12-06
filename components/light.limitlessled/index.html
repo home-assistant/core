@@ -8,20 +8,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>LimitlessLED - Home Assistant</title>
+    <title>LimitlessLED support - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Instructions how to setup LimitlessLED within Home Assistant.">
+    <meta name="description" content="Instructions on how to setup LimitlessLED within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io/components/light.limitlessled/">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="LimitlessLED">
+    <meta property="og:title" content="LimitlessLED support">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/light.limitlessled/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to setup LimitlessLED within Home Assistant.">
+    <meta property="og:description" content="Instructions on how to setup LimitlessLED within Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -93,93 +93,113 @@
         
 
           <article class="page">
+
+  
   <header>
     <h1 class="title indent">
-      LimitlessLED
+      LimitlessLED Support
     </h1>
   </header>
   <hr class="divider">
+  
 
-  <p>The limitlessled platform can control your <a href="http://www.limitlessled.com/">LimitlessLED</a> lights from within Home Assistant. The lights are also known as EasyBulb, AppLight, AppLamp, MiLight, LEDme, dekolight or iLight.</p>
+  <p><code>limitlessled</code> can control your <a href="http://www.limitlessled.com/">LimitlessLED</a> lights from within Home Assistant. The lights are also known as EasyBulb, AppLight, AppLamp, MiLight, LEDme, dekolight or iLight.</p>
 
-<p>To add limitlessled to your installation, add the following to your <code>configuration.yaml</code> file:</p>
+<h3>Setup</h3>
+
+<p>Before configuring Home Assistant, make sure you can control your bulbs with the Milight mobile application. Discover your bridge(s) IP. You can do this via your router, or a mobile application like Fing (<a href="https://play.google.com/store/apps/details?id=com.overlook.android.fing&amp;hl=en">android</a>, <a href="https://itunes.apple.com/us/app/fing-network-scanner/id430921107?mt=8">itunes</a>). Keep in mind that LimitlessLED bulbs are controlled via groups. You cannot control an individual bulb via the bridge, unless it is in a group by itself. Note that you can assign an <code>rgbw</code> and <code>white</code> group to the same group number, effectively allowing 8 groups (4 <code>rgbw</code> and 4 <code>white</code>) per bridge.</p>
+
+<p>To add <code>limitlessled</code> to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">light</span>:
+  <div class="code"><pre><span class="key">light</span>:
   <span class="key">platform</span>: <span class="string"><span class="content">limitlessled</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">IP_ADDRESS</span></span>
-  <span class="key">group_1_name</span>: <span class="string"><span class="content">Living Room</span></span>
-  <span class="key">group_2_name</span>: <span class="string"><span class="content">Bedroom</span></span>
-  <span class="key">group_3_name</span>: <span class="string"><span class="content">Office</span></span>
-  <span class="key">group_4_name</span>: <span class="string"><span class="content">Kitchen</span></span>
+  <span class="key">bridges</span>:
 </pre></div>
 </div>
 </div>
 
-<p>Configuration variables:</p>
+<p>Next, list your bridges and groups. Here’s an example. See the next section for a full explanaton of each configuration variable.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">light</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">limitlessled</span></span>
+  <span class="key">bridges</span>:
+    - <span class="string"><span class="content">host: 192.168.1.10</span></span>
+      <span class="key">version</span>: <span class="string"><span class="content">5</span></span>
+      <span class="key">port</span>: <span class="string"><span class="content">8899</span></span>
+      <span class="key">groups</span>:
+      - <span class="string"><span class="content">number: 1</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">rgbw</span></span>
+        <span class="key">name</span>: <span class="string"><span class="content">Bedroom</span></span>
+      - <span class="string"><span class="content">number: 2</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">white</span></span>
+        <span class="key">name</span>: <span class="string"><span class="content">Craft Room</span></span>
+      - <span class="string"><span class="content">number: 2</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">rgbw</span></span>
+        <span class="key">name</span>: <span class="string"><span class="content">Bathroom</span></span>
+    - <span class="string"><span class="content">host: 192.168.1.11</span></span>
+      <span class="key">groups</span>:
+      - <span class="string"><span class="content">number: 1</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">rgbw</span></span>
+        <span class="key">name</span>: <span class="string"><span class="content">Living Room &amp; Hall</span></span>
+</pre></div>
+</div>
+</div>
+
+<h3>Configuration variables</h3>
 
 <ul>
-  <li><strong>host</strong> (<em>Required</em>): IP address of the device, eg. 192.168.1.32</li>
-  <li><strong>group_X_name</strong> (<em>Required</em>): Name of the group. Multiple entries with a consecutive number.</li>
+  <li><strong>bridges</strong> (<em>Required</em>): (list)
+    <ul>
+      <li><strong>host</strong> (<em>Required</em>): IP address of the device, eg. <code>192.168.1.32</code></li>
+      <li><strong>version</strong>: Bridge version (default is <code>5</code>). Don’t use if you aren’t sure.</li>
+      <li><strong>port</strong>: Bridge port (default is <code>8899</code>). Normally not necessary to specify.</li>
+      <li><strong>groups</strong> (<em>Required</em>): (list)
+        <ul>
+          <li><strong>number</strong> (<em>Required</em>): Group number (<code>1</code>-<code>4</code>). Corresponds to the group number on the remote.</li>
+          <li><strong>name</strong> (<em>Required</em>): Any name you’d like. Must be unique among all configured groups.</li>
+          <li><strong>type</strong>: Type of group. Choose either <code>rgbw</code> or <code>white</code>. <code>rgbw</code> is the default if you don’t specify.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
 </ul>
+
+<h3>Properties</h3>
+<p>Refer to the <a href="/components/light">light</a> documentation for general property usage, but keep in mind the following notes specific to LimitlessLED.</p>
+
+<ul>
+  <li><strong>RGBW</strong>
+    <ul>
+      <li><em>Color</em>: There are 256 color possibilities along the LimitlessLED color spectrum. Color properties like saturation and lightness can’t be used - only hue. The only exception is white (which may be warm or cold depending on the type of RGBW bulb). If you select a color with saturation or lightness, Home Assistant will calculate the nearest valid LimitlessLED color.</li>
+      <li><em>Brightness</em>: There are 25 brightness steps.</li>
+    </ul>
+  </li>
+  <li><strong>White</strong>
+    <ul>
+      <li>As you can observe on the Milight mobile application, you cannot select a specific brightness or temperature - you can only step each property up or down. There is no indication of which step you are on. This restriction, combined with the unreliable nature of LimitlessLED transmissions, means that setting white bulb properties is done on a best-effort basis. The only very reliable settings are the minimum and maximum of each property.</li>
+      <li><em>Temperature</em>: There are 10 temperature steps.</li>
+      <li><em>Brightness</em>: There are 10 brightness steps.</li>
+    </ul>
+  </li>
+  <li><strong>Transitions</strong>
+    <ul>
+      <li>If a transition time is set, the group will transition between the current settings and the target settings for the duration specified. Transitions from or to white are not possible -  the color will change immediately.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Initialization &amp; Synchronization</h3>
+
+<p>When starting Home Assistant, your LimitlessLED bulbs will be set to known default values. This ensures a consistent user interface and uninterrupted turning on/off. If you control your LimitlessLED lights via the Milight mobile application or other means while Home Assistant is running, Home Assistant can not track those changes and you may observe unexpected behavior. This is due to a LimitlessLED limitation.</p>
+
 
 </article>
 
 
         </div>
 
-        
-        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
-          <div class="grid">
-  
-  
-    <section class="aside-module grid__item one-whole lap-one-half">
-  <div class='brand-logo-container section'>
-  </div>
-    <div class='section'>
-      This is a platform for
-      <a href='/components/light/'>the Lights component</a>.
-    </div>
-    <div class='section'>
-    <h1 class="title delta">Category Light</h1>
-    <ul class='divided'>
-        <li>
-            <a href='/components/light.blinksticklight/'>Blinkstick</a>
-        </li>
-        <li>
-            <a href='/components/light.hyperion/'>Hyperion</a>
-        </li>
-        <li>
-            LimitlessLED
-        </li>
-        <li>
-            <a href='/components/light.mqtt/'>MQTT light</a>
-        </li>
-        <li>
-            <a href='/components/light.hue/'>Philips Hue</a>
-        </li>
-        <li>
-            <a href='/components/light.rfxtrx/'>RFXtrx light</a>
-        </li>
-        <li>
-            <a href='/components/light.tellstick/'>TellStick light</a>
-        </li>
-        <li>
-            <a href='/components/light.vera/'>Vera light</a>
-        </li>
-        <li>
-            <a href='/components/light.wink/'>Wink light</a>
-        </li>
-        <li>
-            <a href='/components/light.zwave/'>Z-Wave light</a>
-        </li>
-    </ul>
-    </div>
-</section>
-  
-</div>
-        </aside>
         
       </div>
     </div>

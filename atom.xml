@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-11-27T20:10:47-08:00</updated>
+  <updated>2015-12-06T01:00:53-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,25 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Community Highlights]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/05/community-highlights/"/>
+    <updated>2015-12-05T23:39:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/05/community-highlights</id>
+    <content type="html"><![CDATA[<p>From time to time we come along things that are worth sharing with fellow Home Assisters. Here a list of some cool stuff from last week:</p>
+
+<p>First is the public beta of <a href="https://letsencrypt.org/">Let’s Encrypt</a>. Let’s Encrypt is a new certificate authority that is free, automated and open. This means that it will now be very easy to secure your connection to Home Assistant while you are away from home. W1ll1am23 has written up <a href="https://automic.us/forum/viewtopic.php?f=4&amp;t=29">a guide how to get started</a>.</p>
+
+<p>The next thing is a show-off of some of the cool stuff people do with Home Assistant. This is miniconfig talking to Home Assistant using the Amazon Echo!</p>
+
+<div style="width: 560px; margin: 0 auto 16px;">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/9QQjklnSQKY" frameborder="0" allowfullscreen=""></iframe>
+</div>
+
+<p>And last but not least, Midwestern Mac did a <a href="http://www.midwesternmac.com/blogs/jeff-geerling/raspberry-pi-microsd-card">microSD card performance comparison</a> for the Raspberry Pi. If you’re using a Pi, make sure to check it out!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Survey November 2015]]></title>
@@ -2285,98 +2304,6 @@ Before diving into the newly supported devices and services, I want to highlight
           <span class="key">name</span>: <span class="string"><span class="content">My switch</span></span>
         <span class="key">2</span>:
           <span class="key">name</span>: <span class="string"><span class="content">My other switch</span></span>
-</pre></div>
-</div>
-</div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for March 22, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/03/22/release-notes/"/>
-    <updated>2015-03-22T01:21:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/03/22/release-notes</id>
-    <content type="html"><![CDATA[<p>A new version of Home Assistant has just been pushed out. It contains bugfixes contributed by <a href="https://github.com/jamespcole">jamespcole</a>, <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/trainman419">trainman419</a> and <a href="https://github.com/balloob">me</a>. It also adds a bunch of great new features:</p>
-
-<p><strong>Script</strong><br />
-Andythigpen has contributed a script component. This allows users to create a sequence of service calls and delays. Scripts can be started using the service <code>script/turn_on</code> and interrupted using the service <code>script/turn_off</code>. A separate page has been added to the frontend to see the status of your scripts.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">script</span>:
-  <span class="comment"># Turns on the bedroom lights and then the living room lights 1 minute later</span>
-  <span class="key">wakeup</span>:
-    <span class="key">alias</span>: <span class="string"><span class="content">Wake Up</span></span>
-    <span class="key">sequence</span>:
-      - <span class="string"><span class="content">alias: Bedroom lights on</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_on</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">entity_id</span>: <span class="string"><span class="content">group.bedroom</span></span>
-      - <span class="string"><span class="content">delay:</span><span class="content">
-          # supports seconds, milliseconds, minutes, hours, etc.
-          minutes: 1</span></span>
-      - <span class="string"><span class="content">alias: Living room lights on</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_on</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
-</pre></div>
-</div>
-</div>
-
-<!--more-->
-
-<p><strong>Scene</strong><br />
-I (Paulus) have contributed a scene component. A user can create scenes that capture the states you want certain entities to be. For example a scene can contain that light A should be turned on and light B should be bright red. Deactivating a scene will restore the previous state from before the scene was activated. Just like scripts, scenes have their own separate page to see which scenes are on.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">scene</span>:
-  - <span class="string"><span class="content">name: Romantic</span></span>
-    <span class="key">entities</span>:
-      <span class="key">light.tv_back_light</span>: <span class="string"><span class="content">on</span></span>
-      <span class="key">light.ceiling</span>:
-        <span class="key">state</span>: <span class="string"><span class="content">on</span></span>
-        <span class="key">color</span>: <span class="string"><span class="content">[0.33, 0.66]</span></span>
-        <span class="key">brightness</span>: <span class="string"><span class="content">200</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><a name="sabnzbd"></a><br />
-<strong>SABnzbd</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/sabnzbd.png" style="border:none; box-shadow: none; float: right;" height="50" /> James Cole has contributed support to integrate SABnzbd. This will allow you to monitor your downloads from within Home Assistant and setup automation based on the information.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  - <span class="string"><span class="content">platform: sabnzbd</span></span>
-    <span class="key">name</span>: <span class="string"><span class="content">SAB</span></span>
-    <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_API_KEY</span></span>
-    <span class="comment"># Example: http://192.168.1.32:8124/</span>
-    <span class="key">base_url</span>: <span class="string"><span class="content">YOUR_SABNZBD_BASE_URL</span></span>
-    <span class="key">monitored_variables</span>:
-        - <span class="string"><span class="content">type: 'current_status'</span></span>
-        - <span class="string"><span class="content">type: 'speed'</span></span>
-        - <span class="string"><span class="content">type: 'queue_size'</span></span>
-        - <span class="string"><span class="content">type: 'queue_remaining'</span></span>
-        - <span class="string"><span class="content">type: 'disk_size'</span></span>
-        - <span class="string"><span class="content">type: 'disk_free'</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><a name="pushover"></a><br />
-<strong>PushOver</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/pushover.png" style="border:none; box-shadow: none; float: right;" height="50" /> James Cole has also contributed support for <a href="https://pushover.net/">the PushOver service</a> as a platform for the notify component. This allows components to send messages to the user using PushOver.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">notify</span>:
-    <span class="key">platform</span>: <span class="string"><span class="content">pushover</span></span>
-    <span class="comment"># Get this by registering a new application on https://pushover.net</span>
-    <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-    <span class="comment"># Get this by logging into your account on https://pushover.net</span>
-    <span class="key">user_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
 </pre></div>
 </div>
 </div>

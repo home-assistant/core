@@ -119,6 +119,7 @@
   <span class="key">payload_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ON</span><span class="delimiter">&quot;</span></span>
   <span class="key">payload_off</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">OFF</span><span class="delimiter">&quot;</span></span>
   <span class="key">optimistic</span>: <span class="string"><span class="content">false</span></span>
+  <span class="key">state_format</span>: 
 </pre></div>
 </div>
 </div>
@@ -133,6 +134,7 @@
   <li><strong>payload_on</strong> (<em>Optional</em>): The payload that represents enabled state. Default is “ON”.</li>
   <li><strong>payload_off</strong> (<em>Optional</em>): The payload that represents disabled state. Default is “OFF”.</li>
   <li><strong>optimistic</strong> (<em>Optional</em>): Flag that defines if switch works in optimistic mode. Default is true if no state topic defined, else false.</li>
+  <li><strong>state_format</strong> (<em>Optional</em>): Value to parse.</li>
 </ul>
 
 <p class="note warning">
@@ -165,6 +167,9 @@
         </a></li>
         <li><a href='/components/alarm_control_panel.mqtt/'>
           MQTT Alarm Control Panel
+        </a></li>
+        <li><a href='/components/motor.mqtt/'>
+          MQTT Motor
         </a></li>
         <li><a href='/components/binary_sensor.mqtt/'>
           MQTT binary sensor
