@@ -201,7 +201,7 @@ class Script(ToggleEntity):
                      self._last_action)
         domain, service = split_entity_id(conf_service)
         data = action.get(CONF_SERVICE_DATA, {})
-        self.hass.services.call(domain, service, data)
+        self.hass.services.call(domain, service, data, True)
 
     def _fire_event(self, action):
         """ Fires an event. """
