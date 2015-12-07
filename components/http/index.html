@@ -8,20 +8,20 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Introduction - Home Assistant</title>
+    <title>HTTP - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Details about the introduction within Home Assistant.">
+    <meta name="description" content="Offers a web framework to serve files.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/introduction/">
+    <link rel="canonical" href="https://home-assistant.io/components/http/">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Introduction">
+    <meta property="og:title" content="HTTP">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/introduction/">
+    <meta property="og:url" content="https://home-assistant.io/components/http/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Details about the introduction within Home Assistant.">
+    <meta property="og:description" content="Offers a web framework to serve files.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -95,23 +95,26 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      Introduction
+      HTTP
     </h1>
   </header>
   <hr class="divider">
 
-  <p>The introduction component will show a card in the UI with steps on how to get started. It will also print the same message to the console when starting up.</p>
-
-<p>The introduction component is loaded by default on a new Home Assistant instance.</p>
+  <p>The HTTP component serves all files and data required for the Home Assistant frontend. You only need to add this to your configuration file if you want to change any of the default settings.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">introduction</span>:
+<span class="key">http</span>:
+  <span class="comment"># Optional, protect Home Assistant with a password</span>
+  <span class="key">api_password</span>: <span class="string"><span class="content">XXX</span></span>
+  <span class="comment"># Optional, disable caching and load unvulcanized assets</span>
+  <span class="key">development</span>: <span class="string"><span class="content">1</span></span>
+  <span class="comment"># Optional, serve Home Assistant over a secure connection</span>
+  <span class="key">ssl_certificate</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/fullchain.pem</span></span>
+  <span class="key">ssl_key</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/privkey.pem</span></span>
 </pre></div>
 </div>
 </div>
-
-<p>To disable this component, remove the <code>introduction:</code> entry from your <code>configuration.yaml</code> file.</p>
 
 </article>
 
@@ -145,10 +148,10 @@
             <a href='/components/downloader/'>Downloader</a>
         </li>
         <li>
-            <a href='/components/http/'>HTTP</a>
+            HTTP
         </li>
         <li>
-            Introduction
+            <a href='/components/introduction/'>Introduction</a>
         </li>
         <li>
             <a href='/components/logger/'>Logger</a>
