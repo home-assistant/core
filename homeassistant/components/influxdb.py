@@ -1,19 +1,10 @@
 """
-homeassistant.components.influx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.influxdb
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 InfluxDB component which allows you to send data to an Influx database.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/influx/
-
-Configuration:
-
-influx:
-  host: localhost
-  port: 8086
-  dbname: home_assistant
-  dbuser: DB_USER
-  dbuser_password: DB_USER_PASSWORD
+https://home-assistant.io/components/influxdb/
 """
 import logging
 
@@ -43,7 +34,7 @@ CONF_PASSWORD = 'password'
 
 
 def setup(hass, config):
-    """ Setup the Influx component. """
+    """ Setup the InfluxDB component. """
 
     from influxdb import InfluxDBClient, exceptions
 
