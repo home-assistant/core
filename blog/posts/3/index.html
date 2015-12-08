@@ -27,13 +27,13 @@
     
   
   
-    Release notes for April 25, 2015
+    UTC & Time zone awareness
   
   
 
   
   
-     April 25, 2015
+     May 9, 2015
      Paulus Schoutsen
      two minutes reading time
     
@@ -41,8 +41,13 @@
     
     
       
-        release-notes
-      ...">
+        core
+      
+    
+    
+  
+    
+...">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -114,6 +119,76 @@
         
 
             
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/05/09/utc-time-zone-awareness/">UTC & Time zone awareness</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-05-09T23:08:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> May 9, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/core/'>core</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/05/09/utc-time-zone-awareness/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>I have recently merged code to refactor Home Assistant to use only UTC times internally. A much needed refactor. I’ve added some extra test coverage to time sensitive parts to ensure stability. The code has been live in the dev branch for the last 9 days and will be soon released to the master branch.</p>
+
+<p>From now on all internal communication will be done in UTC: time changed events, datetime attributes of states, etc. To get the current time in UTC you can call <code>homeassistant.util.dt.utcnow()</code>. This is a timezone aware UTC datetime object. <a href="https://github.com/balloob/home-assistant/blob/dev/homeassistant/util/dt.py"><code>homeassistant.util.dt</code></a> is a new util package with date helpers.</p>
+
+<p>There is also such a thing as local time. Local time is based on the time zone that you have setup in your <code>configuration.yaml</code>. Local times should only be used for user facing information: logs, frontend and automation settings in <code>configuration.yaml</code>.</p>
+
+<h3>Setting up your time zone</h3>
+<p>Setting up a time zone happens in <code>configuration.yaml</code>. If you have no time zone setup, it will be auto detected using the existing detection code using <a href="https://freegeoip.net">freegeoip.net</a>. You can find a list of compatible time zones on <a href="http://en.wikipedia.org/wiki/List_of_tz_database_time_zones">Wikipedia</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">homeassistant</span>:
+  <span class="key">time_zone</span>: <span class="string"><span class="content">America/Los_Angeles</span></span>
+</pre></div>
+</div>
+</div>
+
+<h3>Compatibility</h3>
+<p>The changes to the code are mostly backwards compatible. The old <code>hass.track_time_change</code> and <code>hass.track_point_in_time</code> use now internally two new methods: <code>hass.track_utc_time_change</code> and <code>hass.track_point_in_utc_time</code>. The usage of the old methods have not changed and should be backwards compatible.</p>
+
+<p>This refactor adds a new migration for the database adding a <code>utc_offset</code> column to events and states. This information is currently not used but can prove useful in the future when we start analyzing the historical data.</p>
+
+<h3><a class="title-link" name="backwards-incompatible-stuff" href="#backwards-incompatible-stuff"></a> Backwards incompatible stuff</h3>
+
+<p>All built-in components have been upgraded. The following list is only for people that run custom components:</p>
+
+<ul>
+  <li><code>hass.track_time_change</code> and <code>hass.track_point_in_time</code> will now return a time zone aware datetime object. Python does not allow comparing a naive with an aware datetime object.</li>
+  <li>the sun attributes for rising and setting are now in UTC. The methods <code>sun.next_rising(hass)</code> and <code>sun.next_setting(hass)</code> are backwards compatible, just be careful if you used to read the raw attributes.</li>
+  <li>the API sends all times in UTC. If you use anything else besides the frontend to talk to HA, make sure it handles it differently.</li>
+</ul>
+
+    
+  </div>
+  </article>
+  <hr>
   
   <article class="listing">
     <header>
@@ -671,61 +746,6 @@ password=YOUR_PASSWORD
 </pre></div>
 </div>
 </div>
-
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/">Bootstrapping your setup with Discovery</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-01-11T21:49:08-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 11, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> less than one minute reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/component/'>component</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/01/11/bootstrapping-your-setup-with-discovery/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>Most people do not like configuring things. Things just have to work, out of the box. Reaching this scenario is the goal of what we are about to introduce: our new discovery component.</p>
-
-<p>The discovery component will scan the WiFi network from time to time for connected zeroconf/mDNS and uPnP devices. The intial introduction is mainly focussed on getting the right architecture in place and discovers Belkin WeMo switches and Google Chromecasts connected to your network. When found, it will load and notify the appropritate component and it will be ready to use within seconds.</p>
-
-<p>Most devices still require some sort of interaction from the user after being discovered - be it a button being pressed or some sort of authentication. This is a challenge that will be solved in the future.</p>
-
-<p>To enable the discovery component, add the following to your <code>home-assistant.conf</code>:</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>[discovery]
-</pre></div>
-</div>
-</div>
-
-<p>A new <a href="/developers/add_new_platform/#discovery">discovery section</a> has been added to the Adding a new platform page with instructions how to make your platform discoverable.</p>
 
     
   </div>

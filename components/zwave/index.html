@@ -123,6 +123,7 @@ $ pip3 install &quot;cython&lt;0.23&quot;
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">zwave</span>:
   <span class="key">usb_path</span>: <span class="string"><span class="content">/dev/ttyUSB0</span></span>
+  <span class="key">config_path</span>: <span class="string"><span class="content">/usr/local/share/python-openzwave/config</span></span>
 </pre></div>
 </div>
 </div>
@@ -131,6 +132,7 @@ $ pip3 install &quot;cython&lt;0.23&quot;
 
 <ul>
   <li><strong>usb_path</strong> (<em>Required</em>): The port where your device is connected to your Home Assistant host.</li>
+  <li><strong>config_path</strong> (<em>Optional</em>): The path to the Python Open Z-Wave configuration files.</li>
 </ul>
 
 <p>To find the path of your Z-Wave stick, run:</p>
