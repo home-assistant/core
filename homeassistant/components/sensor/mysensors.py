@@ -62,14 +62,14 @@ class MySensorsSensor(Entity):
         port (str): Gateway port.
         node_id (str): Id of node.
         child_id (str): Id of child.
-        name (str): Sketch name.
+        name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
 
         Attributes:
         port (str): Gateway port.
         node_id (str): Id of node.
         child_id (str): Id of child.
-        _name (str): Sketch name.
+        _name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
         battery_level (int): Node battery level.
         _values (dict): Child values. Non state values set as state attributes.
@@ -83,7 +83,7 @@ class MySensorsSensor(Entity):
         self._values = {}
 
     def as_dict(self):
-        """Return a dict representation of this Entity."""
+        """Return a dict representation of this entity."""
         return {
             'port': self.port,
             'name': self._name,
@@ -101,7 +101,7 @@ class MySensorsSensor(Entity):
 
     @property
     def name(self):
-        """The name of this sensor."""
+        """The name of this entity."""
         return self._name
 
     @property
