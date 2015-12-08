@@ -22,8 +22,7 @@ DEPENDENCIES = ['mysensors']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the mysensors platform for sensors. """
-
+    """Setup the mysensors platform for sensors."""
     # Define the V_TYPES that the platform should handle as states.
     v_types = []
     for _, member in mysensors.CONST.SetReq.__members__.items():
@@ -39,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return (v_types, MySensorsSensor, add_devices)
 
     def sensor_update(event):
-        """ Callback for sensor updates from the MySensors component. """
+        """Callback for sensor updates from the MySensors component."""
         _LOGGER.info(
             'update %s: node %s', event.data[mysensors.ATTR_UPDATE_TYPE],
             event.data[mysensors.ATTR_NODE_ID])
@@ -52,21 +51,39 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MySensorsSensor(Entity):
+    """Represent the value of a MySensors child node."""
 
-    """ Represents the value of a MySensors child node. """
     # pylint: disable=too-many-arguments, too-many-instance-attributes
 
     def __init__(self, port, node_id, child_id, name, value_type):
+        """Setup class attributes on instantiation.
+
+        Args:
+        port (str): Gateway port.
+        node_id (str): Id of node.
+        child_id (str): Id of child.
+        name (str): Sketch name.
+        value_type (str): Value type of child. Value is entity state.
+
+        Attributes:
+        port (str): Gateway port.
+        node_id (str): Id of node.
+        child_id (str): Id of child.
+        _name (str): Sketch name.
+        value_type (str): Value type of child. Value is entity state.
+        battery_level (int): Node battery level.
+        _values (dict): Child values. Non state values set as state attributes.
+        """
         self.port = port
-        self._name = name
         self.node_id = node_id
         self.child_id = child_id
-        self.battery_level = 0
+        self._name = name
         self.value_type = value_type
+        self.battery_level = 0
         self._values = {}
 
     def as_dict(self):
-        """ Returns a dict representation of this Entity. """
+        """Return a dict representation of this Entity."""
         return {
             'port': self.port,
             'name': self._name,
@@ -79,24 +96,24 @@ class MySensorsSensor(Entity):
 
     @property
     def should_poll(self):
-        """ MySensor gateway pushes its state to HA.  """
+        """MySensor gateway pushes its state to HA."""
         return False
 
     @property
     def name(self):
-        """ The name of this sensor. """
+        """The name of this sensor."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         if not self._values:
             return ''
         return self._values[self.value_type]
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity. """
+        """Unit of measurement of this entity."""
         # pylint:disable=too-many-return-statements
         if self.value_type == mysensors.CONST.SetReq.V_TEMP:
             return TEMP_CELCIUS if mysensors.IS_METRIC else TEMP_FAHRENHEIT
@@ -121,15 +138,14 @@ class MySensorsSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """ Returns device specific state attributes. """
+        """Return device specific state attributes."""
         device_attr = dict(self._values)
         device_attr.pop(self.value_type, None)
         return device_attr
 
     @property
     def state_attributes(self):
-        """ Returns the state attributes. """
-
+        """Return the state attributes."""
         data = {
             mysensors.ATTR_NODE_ID: self.node_id,
             mysensors.ATTR_CHILD_ID: self.child_id,
@@ -144,7 +160,7 @@ class MySensorsSensor(Entity):
         return data
 
     def update_sensor(self, values, battery_level):
-        """ Update the controller with the latest values from a sensor. """
+        """Update the controller with the latest values from a sensor."""
         for value_type, value in values.items():
             _LOGGER.info(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
