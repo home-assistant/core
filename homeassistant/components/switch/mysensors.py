@@ -12,7 +12,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT,
     STATE_ON, STATE_OFF)
 
 import homeassistant.components.mysensors as mysensors
@@ -62,14 +61,14 @@ class MySensorsSwitch(SwitchDevice):
         port (str): Gateway port.
         node_id (str): Id of node.
         child_id (str): Id of child.
-        name (str): Sketch name.
+        name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
 
         Attributes:
         port (str): Gateway port.
         node_id (str): Id of node.
         child_id (str): Id of child.
-        _name (str): Sketch name.
+        _name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
         battery_level (int): Node battery level.
         _values (dict): Child values. Non state values set as state attributes.
@@ -83,7 +82,7 @@ class MySensorsSwitch(SwitchDevice):
         self._values = {}
 
     def as_dict(self):
-        """Return a dict representation of this Entity."""
+        """Return a dict representation of this entity."""
         return {
             'port': self.port,
             'name': self._name,
@@ -101,33 +100,8 @@ class MySensorsSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of this sensor."""
+        """The name of this entity."""
         return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
-        # pylint:disable=too-many-return-statements
-        if self.value_type == mysensors.CONST.SetReq.V_TEMP:
-            return TEMP_CELCIUS if mysensors.IS_METRIC else TEMP_FAHRENHEIT
-        elif self.value_type == mysensors.CONST.SetReq.V_HUM or \
-                self.value_type == mysensors.CONST.SetReq.V_DIMMER or \
-                self.value_type == mysensors.CONST.SetReq.V_PERCENTAGE or \
-                self.value_type == mysensors.CONST.SetReq.V_LIGHT_LEVEL:
-            return '%'
-        elif self.value_type == mysensors.CONST.SetReq.V_WATT:
-            return 'W'
-        elif self.value_type == mysensors.CONST.SetReq.V_KWH:
-            return 'kWh'
-        elif self.value_type == mysensors.CONST.SetReq.V_VOLTAGE:
-            return 'V'
-        elif self.value_type == mysensors.CONST.SetReq.V_CURRENT:
-            return 'A'
-        elif self.value_type == mysensors.CONST.SetReq.V_IMPEDANCE:
-            return 'ohm'
-        elif mysensors.CONST.SetReq.V_UNIT_PREFIX in self._values:
-            return self._values[mysensors.CONST.SetReq.V_UNIT_PREFIX]
-        return None
 
     @property
     def device_state_attributes(self):
@@ -167,7 +141,7 @@ class MySensorsSwitch(SwitchDevice):
         self.update_ha_state()
 
     def turn_off(self):
-        """Turn the pin to low/off."""
+        """Turn the switch off."""
         mysensors.GATEWAYS[self.port].set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
         self._values[self.value_type] = STATE_OFF
