@@ -7,6 +7,7 @@ npm run frontend_prod
 
 cp bower_components/webcomponentsjs/webcomponents-lite.min.js ..
 cp build/frontend.html ..
+cp build/service_worker.js ..
 
 # Generate the MD5 hash of the new frontend
 cd ../..
