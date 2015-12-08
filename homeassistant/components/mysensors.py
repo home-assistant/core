@@ -68,11 +68,9 @@ def setup(hass, config):  # noqa
     IS_METRIC = (hass.config.temperature_unit == TEMP_CELCIUS)
 
     def callback_generator(port, devices):
-        """
-        Generator of callback, should be run once per gateway setup.
-        """
+        """Return a new callback function. Run once per gateway setup."""
         def node_update(update_type, nid):
-            """ Callback for node updates from the MySensors gateway. """
+            """Callback for node updates from the MySensors gateway."""
             _LOGGER.info('update %s: node %s', update_type, nid)
 
             hass.bus.fire(EVENT_MYSENSORS_NODE_UPDATE, {
@@ -85,11 +83,7 @@ def setup(hass, config):  # noqa
         return node_update
 
     def setup_gateway(port, persistence, persistence_file):
-        """
-        Instantiate gateway, set gateway attributes and start gateway.
-        If persistence is true, update all nodes.
-        Listen for stop of home-assistant, then stop gateway.
-        """
+        """Return gateway after setup of the gateway."""
         devices = {}    # keep track of devices added to HA
         gateway = mysensors.SerialGateway(port,
                                           persistence=persistence,
@@ -137,10 +131,7 @@ def setup(hass, config):  # noqa
 
 
 def mysensors_update(platform_type):
-    """
-    Decorator for callback function for sensor updates from the MySensors
-    component.
-    """
+    """Decorator for callback function for mysensor updates."""
     def wrapper(gateway, port, devices, nid):
         """Wrapper function in the decorator."""
         sensor = gateway.sensors[nid]
