@@ -29,6 +29,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     'sensor',
     'switch',
     'thermostat',
+    'weather',
 ]
 
 
