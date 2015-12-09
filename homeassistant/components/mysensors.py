@@ -12,6 +12,7 @@ import logging
 from homeassistant.helpers import (validate_config)
 
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELCIUS)
 
@@ -94,9 +95,15 @@ def setup(hass, config):  # noqa
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
         gateway.start()
 
+        def persistence_update(event):
+            """Callback to trigger update from persistence file."""
+            for _ in range(2):
+                for nid in gateway.sensors:
+                    gateway.event_callback('persistence', nid)
+
         if persistence:
-            for nid in gateway.sensors:
-                gateway.event_callback('node_update', nid)
+            hass.bus.listen_once(
+                EVENT_HOMEASSISTANT_START, persistence_update)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                              lambda event: gateway.stop())
@@ -134,33 +141,52 @@ def mysensors_update(platform_type):
     """Decorator for callback function for mysensor updates."""
     def wrapper(gateway, port, devices, nid):
         """Wrapper function in the decorator."""
-        sensor = gateway.sensors[nid]
-        if sensor.sketch_name is None:
+        if gateway.sensors[nid].sketch_name is None:
             _LOGGER.info('No sketch_name: node %s', nid)
             return
         if nid not in devices:
             devices[nid] = {}
         node = devices[nid]
         new_devices = []
-        # Get platform specific V_TYPES, class and add_devices function.
-        platform_v_types, platform_class, add_devices = platform_type(
-            gateway, port, devices, nid)
-        for child_id, child in sensor.children.items():
+        # Get platform specific S_TYPES, V_TYPES, class and add_devices.
+        (platform_s_types,
+         platform_v_types,
+         platform_class,
+         add_devices) = platform_type(gateway, port, devices, nid)
+        for child_id, child in gateway.sensors[nid].children.items():
             if child_id not in node:
                 node[child_id] = {}
             for value_type, _ in child.values.items():
-                if ((value_type not in node[child_id]) and
-                        (value_type in platform_v_types)):
+                if (value_type not in node[child_id] and
+                        child.type in platform_s_types and
+                        value_type in platform_v_types):
                     name = '{} {}.{}'.format(
-                        sensor.sketch_name, nid, child.id)
+                        gateway.sensors[nid].sketch_name, nid, child.id)
                     node[child_id][value_type] = platform_class(
                         port, nid, child_id, name, value_type)
                     new_devices.append(node[child_id][value_type])
-                elif value_type in platform_v_types:
+                elif (child.type in platform_s_types and
+                      value_type in platform_v_types):
                     node[child_id][value_type].update_sensor(
-                        child.values, sensor.battery_level)
+                        child.values, gateway.sensors[nid].battery_level)
         if new_devices:
             _LOGGER.info('adding new devices: %s', new_devices)
             add_devices(new_devices)
+        return
+    return wrapper
+
+
+def event_update(update):
+    """Decorator for callback function for mysensor event updates."""
+    def wrapper(event):
+        """Wrapper function in the decorator."""
+        _LOGGER.info(
+            'update %s: node %s', event.data[ATTR_UPDATE_TYPE],
+            event.data[ATTR_NODE_ID])
+        sensor_update = update(event)
+        sensor_update(GATEWAYS[event.data[ATTR_PORT]],
+                      event.data[ATTR_PORT],
+                      event.data[ATTR_DEVICES],
+                      event.data[ATTR_NODE_ID])
         return
     return wrapper
