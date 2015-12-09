@@ -22,31 +22,38 @@ DEPENDENCIES = ['mysensors']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for switches."""
-    # Define the V_TYPES that the platform should handle as states.
-    v_types = []
-    for _, member in mysensors.CONST.SetReq.__members__.items():
-        if (member.value == mysensors.CONST.SetReq.V_ARMED or
-                member.value == mysensors.CONST.SetReq.V_STATUS or
-                member.value == mysensors.CONST.SetReq.V_LIGHT or
-                member.value == mysensors.CONST.SetReq.V_LOCK_STATUS):
-            v_types.append(member)
+    # Define the S_TYPES and V_TYPES that the platform should handle as states.
+    s_types = [
+        mysensors.CONST.Presentation.S_DOOR,
+        mysensors.CONST.Presentation.S_MOTION,
+        mysensors.CONST.Presentation.S_SMOKE,
+        mysensors.CONST.Presentation.S_LIGHT,
+        mysensors.CONST.Presentation.S_BINARY,
+        mysensors.CONST.Presentation.S_LOCK,
+        mysensors.CONST.Presentation.S_SPRINKLER,
+        mysensors.CONST.Presentation.S_WATER_LEAK,
+        mysensors.CONST.Presentation.S_SOUND,
+        mysensors.CONST.Presentation.S_VIBRATION,
+        mysensors.CONST.Presentation.S_MOISTURE,
+    ]
+    v_types = [
+        mysensors.CONST.SetReq.V_ARMED,
+        mysensors.CONST.SetReq.V_STATUS,
+        mysensors.CONST.SetReq.V_LIGHT,
+        mysensors.CONST.SetReq.V_LOCK_STATUS,
+    ]
 
     @mysensors.mysensors_update
     def _sensor_update(gateway, port, devices, nid):
         """Internal callback for sensor updates."""
-        return (v_types, MySensorsSwitch, add_devices)
+        return (s_types, v_types, MySensorsSwitch, add_devices)
 
-    def sensor_update(event):
-        """Callback for sensor updates from the MySensors component."""
-        _LOGGER.info(
-            'update %s: node %s', event.data[mysensors.ATTR_UPDATE_TYPE],
-            event.data[mysensors.ATTR_NODE_ID])
-        _sensor_update(mysensors.GATEWAYS[event.data[mysensors.ATTR_PORT]],
-                       event.data[mysensors.ATTR_PORT],
-                       event.data[mysensors.ATTR_DEVICES],
-                       event.data[mysensors.ATTR_NODE_ID])
+    @mysensors.event_update
+    def event_update(event):
+        """Callback for event updates from the MySensors component."""
+        return _sensor_update
 
-    hass.bus.listen(mysensors.EVENT_MYSENSORS_NODE_UPDATE, sensor_update)
+    hass.bus.listen(mysensors.EVENT_MYSENSORS_NODE_UPDATE, event_update)
 
 
 class MySensorsSwitch(SwitchDevice):
