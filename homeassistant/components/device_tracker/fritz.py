@@ -114,12 +114,11 @@ class FritzBoxScanner(object):
             self.password = config[CONF_PASSWORD]
 
         # Establish a connection to the fritzbox
-        # noinspection PyBroadException
         try:
             self.fritz_box = fc.FritzHosts(address=self.host,
                                            user=self.username,
                                            password=self.password)
-        except Exception:
+        except (ValueError, TypeError):
             self.fritz_box = None
 
         # At this point it is difficult to tell if a connection is established.
@@ -128,12 +127,12 @@ class FritzBoxScanner(object):
             self.success_init = False
 
         if self.success_init:
-            _LOGGER.info("Successfully connected to {0}"
-                         .format(self.fritz_box.modelname))
+            _LOGGER.info("Successfully connected to %s",
+                         self.fritz_box.modelname)
             self._update_info()
         else:
             _LOGGER.error("Failed to establish connection to FritzBox "
-                          "with IP: {0}".format(self.host))
+                          "with IP: %s", self.host)
 
     def scan_devices(self):
         """ Scan for new devices and return a list of found device ids. """
