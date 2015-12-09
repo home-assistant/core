@@ -132,6 +132,8 @@ class ArestSensor(Entity):
                 value = float(value) * float(self._corr_factor)
             if self._decimal_places is not None:
                 value = round(value, self._decimal_places)
+            if self._decimal_places == 0:
+                value = int(value)
             return value
         else:
             return values.get(self._variable, 'n/a')
