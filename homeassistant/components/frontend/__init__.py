@@ -79,6 +79,7 @@ def _handle_get_root(handler, path_match, data):
 
 
 def _handle_get_service_worker(handler, path_match, data):
+    """ Returns service worker for the frontend. """
     if handler.server.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
     else:
