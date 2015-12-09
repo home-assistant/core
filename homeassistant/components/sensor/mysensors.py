@@ -23,31 +23,49 @@ DEPENDENCIES = ['mysensors']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for sensors."""
-    # Define the V_TYPES that the platform should handle as states.
+    # Define the S_TYPES and V_TYPES that the platform should handle as states.
+    s_types = [
+        mysensors.CONST.Presentation.S_TEMP,
+        mysensors.CONST.Presentation.S_HUM,
+        mysensors.CONST.Presentation.S_BARO,
+        mysensors.CONST.Presentation.S_WIND,
+        mysensors.CONST.Presentation.S_RAIN,
+        mysensors.CONST.Presentation.S_UV,
+        mysensors.CONST.Presentation.S_WEIGHT,
+        mysensors.CONST.Presentation.S_POWER,
+        mysensors.CONST.Presentation.S_DISTANCE,
+        mysensors.CONST.Presentation.S_LIGHT_LEVEL,
+        mysensors.CONST.Presentation.S_IR,
+        mysensors.CONST.Presentation.S_WATER,
+        mysensors.CONST.Presentation.S_AIR_QUALITY,
+        mysensors.CONST.Presentation.S_CUSTOM,
+        mysensors.CONST.Presentation.S_DUST,
+        mysensors.CONST.Presentation.S_SCENE_CONTROLLER,
+        mysensors.CONST.Presentation.S_COLOR_SENSOR,
+        mysensors.CONST.Presentation.S_MULTIMETER,
+    ]
+    not_v_types = [
+        mysensors.CONST.SetReq.V_ARMED,
+        mysensors.CONST.SetReq.V_STATUS,
+        mysensors.CONST.SetReq.V_LIGHT,
+        mysensors.CONST.SetReq.V_LOCK_STATUS,
+    ]
     v_types = []
     for _, member in mysensors.CONST.SetReq.__members__.items():
-        if (member.value != mysensors.CONST.SetReq.V_ARMED and
-                member.value != mysensors.CONST.SetReq.V_STATUS and
-                member.value != mysensors.CONST.SetReq.V_LIGHT and
-                member.value != mysensors.CONST.SetReq.V_LOCK_STATUS):
+        if all(test != member.value for test in not_v_types):
             v_types.append(member)
 
     @mysensors.mysensors_update
     def _sensor_update(gateway, port, devices, nid):
         """Internal callback for sensor updates."""
-        return (v_types, MySensorsSensor, add_devices)
+        return (s_types, v_types, MySensorsSensor, add_devices)
 
-    def sensor_update(event):
-        """Callback for sensor updates from the MySensors component."""
-        _LOGGER.info(
-            'update %s: node %s', event.data[mysensors.ATTR_UPDATE_TYPE],
-            event.data[mysensors.ATTR_NODE_ID])
-        _sensor_update(mysensors.GATEWAYS[event.data[mysensors.ATTR_PORT]],
-                       event.data[mysensors.ATTR_PORT],
-                       event.data[mysensors.ATTR_DEVICES],
-                       event.data[mysensors.ATTR_NODE_ID])
+    @mysensors.event_update
+    def event_update(event):
+        """Callback for event updates from the MySensors component."""
+        return _sensor_update
 
-    hass.bus.listen(mysensors.EVENT_MYSENSORS_NODE_UPDATE, sensor_update)
+    hass.bus.listen(mysensors.EVENT_MYSENSORS_NODE_UPDATE, event_update)
 
 
 class MySensorsSensor(Entity):
