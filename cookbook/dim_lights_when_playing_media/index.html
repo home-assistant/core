@@ -105,13 +105,10 @@
 
   <p>Like it how the lights dim up/down at the movies? Do it at home as well!</p>
 
-<p>This example uses the media player, Philips Hue (transitions) and the sun component.<br />
-We’ll use actions to detect media player state changes and scenes to control multiple<br />
-lights, color settings and transition between scenes.</p>
+<p>This example uses the media player, Philips Hue (transitions) and the sun component. We’ll use actions to detect media player state changes and scenes to control multiple lights, color settings and transition between scenes.</p>
 
-<h4>Scenes</h4>
-<p>One scene for normal light, one for when movies are on.<br />
-A 2 second transition gives a nice ‘feel’ to the switch.</p>
+<h4><a class="title-link" name="scenes" href="#scenes"></a> Scenes</h4>
+<p>One scene for normal light, one for when movies are on. A 2 second transition gives a nice ‘feel’ to the switch.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">scene</span>:
@@ -143,9 +140,8 @@ A 2 second transition gives a nice ‘feel’ to the switch.</p>
 </div>
 </div>
 
-<h4>Automation</h4>
-<p>The paused/stopped state is best matched using “from: ‘playing’”.<br />
-Adding in the sun condition as we only want this when it’s dark.</p>
+<h4><a class="title-link" name="automation" href="#automation"></a> Automation</h4>
+<p>The paused/stopped state is best matched using “from: ‘playing’”. Adding in the sun condition as we only want this when it’s dark.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">automation</span>:

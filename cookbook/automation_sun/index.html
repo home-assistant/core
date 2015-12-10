@@ -103,7 +103,7 @@
   <hr class="divider">
   
 
-  <h4>Turn on the living room lights 45 minutes before sunset if anyone home</h4>
+  <h4><a class="title-link" name="turn-on-the-living-room-lights-45-minutes-before-sunset-if-anyone-home" href="#turn-on-the-living-room-lights-45-minutes-before-sunset-if-anyone-home"></a> Turn on the living room lights 45 minutes before sunset if anyone home</h4>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">automation</span>:
@@ -122,7 +122,7 @@
 </div>
 </div>
 
-<h4>Natural wake up light</h4>
+<h4><a class="title-link" name="natural-wake-up-light" href="#natural-wake-up-light"></a> Natural wake up light</h4>
 
 <p><em>Note, Philips Hue is currently the only light platform that support transitions.</em></p>
 
@@ -137,6 +137,34 @@
     <span class="key">data</span>:
       <span class="comment"># 900 seconds = 15 minutes</span>
       <span class="key">transition</span>: <span class="string"><span class="content">900</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="send-sun-risesun-set-notifications" href="#send-sun-risesun-set-notifications"></a> Send sun rise/sun set notifications</h4>
+
+<p>Notifications send through <a href="components/notify.pushbullet/">PushBullet</a> when the sun state is changed.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  - <span class="string"><span class="content">alias: 'Send notification when sun rises'</span></span>
+    <span class="key">trigger</span>:
+      <span class="key">platform</span>: <span class="string"><span class="content">sun</span></span>
+      <span class="key">event</span>: <span class="string"><span class="content">sunrise</span></span>
+      <span class="key">offset</span>: <span class="string"><span class="content">'+00:00:00'</span></span>
+    <span class="key">action</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">notify.pushbullet</span></span>
+      <span class="key">data</span>:
+        <span class="key">message</span>: <span class="string"><span class="content">'The sun is up.'</span></span>
+  - <span class="string"><span class="content">alias: 'Send notification when sun sets'</span></span>
+    <span class="key">trigger</span>:
+      <span class="key">platform</span>: <span class="string"><span class="content">sun</span></span>
+      <span class="key">event</span>: <span class="string"><span class="content">sunset</span></span>
+      <span class="key">offset</span>: <span class="string"><span class="content">'+00:00:00'</span></span>
+    <span class="key">action</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">notify.pushbullet</span></span>
+      <span class="key">data</span>:
+        <span class="key">message</span>: <span class="string"><span class="content">'The sun is down.'</span></span>
 </pre></div>
 </div>
 </div>

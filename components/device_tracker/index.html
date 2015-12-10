@@ -102,7 +102,7 @@
 
   <p>Home Assistant can get information from your wireless router to track which devices are connected. Please check the sidebar for a list of  brands of supported wireless routers.</p>
 
-<p>There are also trackers available which uses different technologies like <a href="/components/mqtt/">MQTT</a> or <a href="/components/device_tracker.nmap_scanner/">nmap</a> to scan the network for devices</p>
+<p>There are also trackers available which uses different technologies like <a href="/components/mqtt/">MQTT</a> or <a href="/components/device_tracker.nmap_scanner/">Nmap</a> to scan the network for devices.</p>
 
 <p>To get started add the following lines to your <code>configuration.yaml</code> (example for Netgear):</p>
 
@@ -128,6 +128,8 @@
 </div>
 
 <p>Once tracking, a file will be created in your config dir called <code>known_devices.yaml</code>. Edit this file to adjust which devices have to be tracked. Here you can also setup a url for each device to be used as the entity picture and set whether the device will be show in the UI when in away state.</p>
+
+<p>Multiple device trackers can be used in parallel, such as <a href="/components/device_tracker.owntracks/">Owntracks</a> and <a href="/components/device_tracker.nmap_scanner/">Nmap</a>. The state of the device will be determined by the source that reported last.</p>
 
 </article>
 
