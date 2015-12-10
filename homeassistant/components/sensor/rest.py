@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.MissingSchema:
-        _LOGGER.error("Missing resource or schema in configuration. ",
+        _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
