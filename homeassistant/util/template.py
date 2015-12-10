@@ -10,16 +10,25 @@ from jinja2.sandbox import SandboxedEnvironment
 ENV = SandboxedEnvironment()
 
 
-def forgiving_round(value, precision):
+def forgiving_round(value, precision=0):
     """ Rounding method that accepts strings. """
     try:
-        return round(float(value), precision)
+        return int(value) if precision == 0 else round(float(value), precision)
     except ValueError:
         # If value can't be converted to float
         return value
 
 
+def multiply(value, amount):
+    """ Converts to float and multiplies value. """
+    try:
+        return float(value) * amount
+    except ValueError:
+        # If value can't be converted to float
+        return value
+
 ENV.filters['round'] = forgiving_round
+ENV.filters['multiply'] = multiply
 
 
 def render(hass, template):
