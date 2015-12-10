@@ -326,6 +326,20 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(1, len(test_value))
 
+    def test_api_template(self):
+        """ Test template API. """
+        hass.states.set('sensor.temperature', 10)
+
+        req = requests.post(
+            _url(const.URL_API_TEMPLATE),
+            data=json.dumps({"template":
+                            '{{ states.sensor.temperature.state }}'}),
+            headers=HA_HEADERS)
+
+        hass.pool.block_till_done()
+
+        self.assertEqual('10', req.text)
+
     def test_api_event_forward(self):
         """ Test setting up event forwarding. """
 
