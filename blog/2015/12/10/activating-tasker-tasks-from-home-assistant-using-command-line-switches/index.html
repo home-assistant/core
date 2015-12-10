@@ -8,21 +8,38 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Alarms, Sonos and iTunes now supported - Home Assistant</title>
+    <title>Activating Tasker tasks from Home Assistant using command line switches - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     
-    <meta name="description" content="Home Assistant 0.7.3 has been released with support for Sonos, iTunes and improved .">
+    <meta name="description" content="Home Assistant is an open-source home automation platform running on Python 3.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/">
+    <link rel="canonical" href="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/">
     
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Alarms, Sonos and iTunes now supported">
+    <meta property="og:title" content="Activating Tasker tasks from Home Assistant using command line switches">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Home Assistant 0.7.3 has been released with support for Sonos, iTunes and improved .">
-    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    <meta property="og:description" content="
+  
+  
+  
+  Activating Tasker tasks from Home Assistant using command line switches
+  
+
+  
+  
+     December 10, 2015
+     Rowan Hine
+     three minutes reading time
+    
+    
+    
+    
+      
+     ...">
+    <meta property="og:image" content="https://home-assistant.io/images/blog/2015-12-tasker/screenshot-2.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
     <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
@@ -96,20 +113,20 @@
   
   <header>
   
-  <h1 class="title indent">Alarms, Sonos and iTunes now supported</h1>
+  <h1 class="title indent">Activating Tasker tasks from Home Assistant using command line switches</h1>
   
 
   
   <div class="meta clearfix">
-    <time datetime="2015-09-19T21:47:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> September 19, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> two minutes reading time</span>
+    <time datetime="2015-12-10T02:39:41-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 10, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Rowan Hine</span>
+    <span><i class='icon-time'></i> three minutes reading time</span>
     <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
       
-        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+        <li><a class='category' href='/blog/categories/how-to/'>how-to</a></li>
       
     
     </ul>
@@ -124,61 +141,67 @@
 </header>
 
 
-  <p>It’s like someone opened a can of rock solid developers and emptied it above our <a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
+  <p><img src="/images/blog/2015-12-tasker/tasker-logo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><br />
+In this tutorial I will explain how you can activate Tasker tasks from Home Assistant command line switches. We are going to set up a switch that when toggled will make your Android device say either “On” or “Off”.</p>
 
-<p>See <a href="https://github.com/balloob/home-assistant/releases/tag/0.7.3">GitHub</a> for more detailed release notes.</p>
-
-<p><em>Migration note: the <code>scheduler</code> component has been removed in favor of the <code>automation</code> component.</em></p>
-
-<p><strong>Sonos</strong><br />
-<img src="/images/supported_brands/sonos.png" style="border:none; box-shadow: none; float: right;" height="50" /> Sonos support has been added by <a href="https://github.com/rhooper">@rhooper</a> and <a href="https://github.com/SEJeff">@SEJeff</a>. Home Assistant is now able to automatically detect Sonos devices in your network and set them up for you. It will allow you to control music playing on your Sonos and change the volume.</p>
-
-<p><strong>iTunes and airplay speakers</strong><br />
-<img src="/images/supported_brands/itunes.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/maddox">@maddox</a> has contributed support for controlling iTunes and airplay speakers. For this to work you will have to run <a href="https://github.com/maddox/itunes-api">itunes-api</a> on your Mac as middleware.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">media_player</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">itunes</span></span>
-  <span class="key">name</span>: <span class="string"><span class="content">iTunes</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">http://192.168.1.50</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">8181</span></span>
-</pre></div>
-</div>
-</div>
+<p>You could also do this with the automation component instead so whenever you put your house to sleep mode for example your Android device will open up Google Play Books or the Kindle app ready for you to read as well as dimming your lights, but this tutorial is all about the switches.</p>
 
 <a name="read-more"></a>
 
-<p><strong>Automation</strong><br />
-Automation has gotten a lot of love. It now supports conditions, multiple triggers and new types of triggers. The best to get started with it is to head over to the new <a href="/getting-started/automation/">getting started with automation</a> page.</p>
+<h3>AutoRemote URL</h3>
+
+<p>First things first you should install <a href="https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm">Tasker</a> and <a href="https://play.google.com/store/apps/details?id=com.joaomgcd.autoremote">AutoRemote</a> onto your Android device and launch AutoRemote. You should see a URL above the QR code, visit it in your browser and it should bring up a page a bit like this.</p>
+
+<p class="img">
+<img src="/images/blog/2015-12-tasker/screenshot-1.png" />
+</p>
+
+<p>Now type in <code>SayOn</code> in the <code>Message</code> box and you should see a box appear on the right with a URL in it, this is what we will be using in the Python script later on so save that for later. Do the same thing again but this time replace <code>SayOn</code> with <code>SayOff</code>. Now just click the <code>Send message now!</code> button to test that your commands will get sent to your Android device, if they do you will see a toast message at the bottom of your screen like this one.</p>
+
+<p class="img">
+<img src="/images/blog/2015-12-tasker/screenshot-2.png" height="450" />
+</p>
+
+<h3>Tasker Setup</h3>
+
+<p>Open up Tasker and make sure you’re in the <code>PROFILES</code> tab, then select the plus icon to create a new profile. Select <code>Event</code> -&gt; <code>Plugin</code> -&gt; <code>AutoRemote</code> -&gt; <code>AutoRemote</code> and then the pencil icon to configure the AutoRemote event. Select <code>Message Filter</code> and enter in <code>SayOn</code> then go back until it asks you for a task. Select <code>New task</code> then just leave the next field blank and select the tick icon. <br />
+This is where we’ll configure our task, so select the plus icon to select an action. Select <code>Alert</code> -&gt; <code>Say</code> to add a Say action. Enter <code>On</code> in the text field and go back to test your task, make sure your media volume is up then select the play icon, you should hear your device say “On”.</p>
+
+<p class="img">
+<img src="/images/blog/2015-12-tasker/screenshot-3.png" height="450" />
+</p>
+
+<p>Now you can go back to the main Tasker screen and create another profile but this time replace <code>SayOn</code> with <code>SayOff</code> and <code>On</code> with <code>Off</code>. After you’ve done that go to the main screen again and select the menu button at the top then <code>Exit</code> and <code>Save first</code> to make sure everything is saved properly.</p>
+
+<h3>Python Script</h3>
+
+<p>Now it’s time to set it up the script, so create a new Python script and name it <code>On.py</code> then enter this code:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example of entry in configuration.yaml</span>
-<span class="key">automation</span>:
-  <span class="key">alias</span>: <span class="string"><span class="content">Light on in the evening</span></span>
-  <span class="key">trigger</span>:
-    - <span class="string"><span class="content">platform: sun</span></span>
-      <span class="key">event</span>: <span class="string"><span class="content">sunset</span></span>
-      <span class="key">offset</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">-01:00:00</span><span class="delimiter">&quot;</span></span>
-    - <span class="string"><span class="content">platform: state</span></span>
-      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
-      <span class="key">state</span>: <span class="string"><span class="content">home</span></span>
-  <span class="key">condition</span>:
-    - <span class="string"><span class="content">platform: state</span></span>
-      <span class="key">entity_id</span>: <span class="string"><span class="content">group.all_devices</span></span>
-      <span class="key">state</span>: <span class="string"><span class="content">home</span></span>
-    - <span class="string"><span class="content">platform: time</span></span>
-      <span class="key">after</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">16:00:00</span><span class="delimiter">&quot;</span></span>
-      <span class="key">before</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">23:00:00</span><span class="delimiter">&quot;</span></span>
-  <span class="key">action</span>:
-    <span class="key">service</span>: <span class="string"><span class="content">homeassistant.turn_on</span></span>
-    <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
+  <div class="code"><pre><span class="keyword">import</span> <span class="include">requests</span>
+requests.get(<span class="string"><span class="delimiter">'</span><span class="content">[URL]</span><span class="delimiter">'</span></span>)
 </pre></div>
 </div>
 </div>
 
-<p><strong>Verisure Alarms</strong><br />
-<img src="/images/supported_brands/verisure.png" style="border:none; box-shadow: none; float: right;" height="50" /> We now support arming and disarming your verisure alarm from within Home Assistant thanks to added support by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+<p>Enter in your “On” URL then save it. Create another script but this time call it <code>Off.py</code> and enter your “off” URL instead.</p>
+
+<h3>Home Assistant Configuration</h3>
+
+<p>Add a command line switch to your Home Assistant configuration:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_switch</span></span>
+  <span class="key">switches</span>:
+    <span class="key">tasker_say</span>:
+      <span class="key">oncmd</span>: <span class="string"><span class="content">python &quot;[LocationOfOnScript]&quot;</span></span>
+      <span class="key">offcmd</span>: <span class="string"><span class="content">python &quot;[LocationOfOffScript]&quot;</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Now load up Home Assistant and whenever you toggle the switch you created your Android device will respond with either “On” or “Off”. :-)</p>
 </article>
 
 
@@ -201,15 +224,15 @@ Automation has gotten a lot of love. It now supports conditions, multiple trigge
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
-     data-url="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"
-     data-counturl="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/"
+     data-counturl="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"
+         data-href="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/"
          data-layout="button_count">
     </div>
   
@@ -240,10 +263,6 @@ Automation has gotten a lot of love. It now supports conditions, multiple trigge
   <h1 class="title delta">Other Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/">Activating Tasker tasks from Home Assistant using command line switches</a>
-        </li>
       
     
       
@@ -309,8 +328,8 @@ Automation has gotten a lot of love. It now supports conditions, multiple trigge
   
     
     // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/';
+    var disqus_identifier = 'https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/';
+    var disqus_url = 'https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/';
     var disqus_script = 'embed.js';
   
   (function () {

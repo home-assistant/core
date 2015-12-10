@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-10T09:03:15-08:00</updated>
+  <updated>2015-12-10T09:18:54-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,75 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Activating Tasker tasks from Home Assistant using command line switches]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/"/>
+    <updated>2015-12-10T02:39:41-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches</id>
+    <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/blog/2015-12-tasker/tasker-logo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><br />
+In this tutorial I will explain how you can activate Tasker tasks from Home Assistant command line switches. We are going to set up a switch that when toggled will make your Android device say either “On” or “Off”.</p>
+
+<p>You could also do this with the automation component instead so whenever you put your house to sleep mode for example your Android device will open up Google Play Books or the Kindle app ready for you to read as well as dimming your lights, but this tutorial is all about the switches.</p>
+
+<!--more-->
+
+<h3>AutoRemote URL</h3>
+
+<p>First things first you should install <a href="https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm">Tasker</a> and <a href="https://play.google.com/store/apps/details?id=com.joaomgcd.autoremote">AutoRemote</a> onto your Android device and launch AutoRemote. You should see a URL above the QR code, visit it in your browser and it should bring up a page a bit like this.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-tasker/screenshot-1.png" />
+</p>
+
+<p>Now type in <code>SayOn</code> in the <code>Message</code> box and you should see a box appear on the right with a URL in it, this is what we will be using in the Python script later on so save that for later. Do the same thing again but this time replace <code>SayOn</code> with <code>SayOff</code>. Now just click the <code>Send message now!</code> button to test that your commands will get sent to your Android device, if they do you will see a toast message at the bottom of your screen like this one.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-tasker/screenshot-2.png" height="450" />
+</p>
+
+<h3>Tasker Setup</h3>
+
+<p>Open up Tasker and make sure you’re in the <code>PROFILES</code> tab, then select the plus icon to create a new profile. Select <code>Event</code> -&gt; <code>Plugin</code> -&gt; <code>AutoRemote</code> -&gt; <code>AutoRemote</code> and then the pencil icon to configure the AutoRemote event. Select <code>Message Filter</code> and enter in <code>SayOn</code> then go back until it asks you for a task. Select <code>New task</code> then just leave the next field blank and select the tick icon. <br />
+This is where we’ll configure our task, so select the plus icon to select an action. Select <code>Alert</code> -&gt; <code>Say</code> to add a Say action. Enter <code>On</code> in the text field and go back to test your task, make sure your media volume is up then select the play icon, you should hear your device say “On”.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-tasker/screenshot-3.png" height="450" />
+</p>
+
+<p>Now you can go back to the main Tasker screen and create another profile but this time replace <code>SayOn</code> with <code>SayOff</code> and <code>On</code> with <code>Off</code>. After you’ve done that go to the main screen again and select the menu button at the top then <code>Exit</code> and <code>Save first</code> to make sure everything is saved properly.</p>
+
+<h3>Python Script</h3>
+
+<p>Now it’s time to set it up the script, so create a new Python script and name it <code>On.py</code> then enter this code:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="keyword">import</span> <span class="include">requests</span>
+requests.get(<span class="string"><span class="delimiter">'</span><span class="content">[URL]</span><span class="delimiter">'</span></span>)
+</pre></div>
+</div>
+</div>
+
+<p>Enter in your “On” URL then save it. Create another script but this time call it <code>Off.py</code> and enter your “off” URL instead.</p>
+
+<h3>Home Assistant Configuration</h3>
+
+<p>Add a command line switch to your Home Assistant configuration:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_switch</span></span>
+  <span class="key">switches</span>:
+    <span class="key">tasker_say</span>:
+      <span class="key">oncmd</span>: <span class="string"><span class="content">python &quot;[LocationOfOnScript]&quot;</span></span>
+      <span class="key">offcmd</span>: <span class="string"><span class="content">python &quot;[LocationOfOffScript]&quot;</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Now load up Home Assistant and whenever you toggle the switch you created your Android device will respond with either “On” or “Off”. :-)</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[InfluxDB and Grafana]]></title>
@@ -2182,136 +2251,6 @@ This switch platform allows you to control your motion detection setting on your
     <span class="key">host</span>: <span class="string"><span class="content">192.168.1.26</span></span>
     <span class="key">username</span>: <span class="string"><span class="content">YOUR_USERNAME</span></span>
     <span class="key">password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
-</pre></div>
-</div>
-</div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Release notes for May 14, 2015]]></title>
-    <link href="https://home-assistant.io/blog/2015/05/14/release-notes/"/>
-    <updated>2015-05-14T22:25:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/05/14/release-notes</id>
-    <content type="html"><![CDATA[<p>Almost three busy weeks have past since the last release. We used this time to finally make the overhaul to use UTC as the internal date time format. We added a bunch of test coverage in the process to make sure the transition went smoothly. Pleas see <a href="https://home-assistant.io/blog/2015/05/09/utc-time-zone-awareness/#backwards-incompatible-stuff/">the blog post about the UTC refactor</a> for backwards incompatible changes.</p>
-
-<p>This release includes a significant startup boost for the frontend and a fix for Wemo discovery after their latest firmware upgrade.</p>
-
-<p>I would like to give a big shout out to our newest contributor <a href="https://github.com/fabaff">fabaff</a> for taking the time to improve the documentation.</p>
-
-<p class="note">
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href="https://github.com/balloob/home-assistant/issues">GitHub</a>.
-</p>
-
-<!--more-->
-
-<p><strong>Overwriting Entity Attributes</strong><br />
-Before diving into the newly supported devices and services, I want to highlight an awesome configuration enhancement by <a href="https://github.com/rmkraus">rmkraus</a>: overwriting entity attributes.</p>
-
-<p>These new configuration settings allow you to overwrite entity state attributes. The main usage for this is being able to overwrite attributes that influence how an entity is shown in the interface.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">homeassistant</span>:
-  <span class="key">customize</span>:
-    <span class="key">light.bowl</span>:
-      <span class="comment"># hides this entity from the interface</span>
-      <span class="key">hidden</span>: <span class="string"><span class="content">true</span></span>
-    <span class="key">light.ceiling</span>:
-      <span class="comment"># Replaces the state badge with given picture</span>
-      <span class="key">entity_picture</span>: <span class="string"><span class="content">http://graph.facebook.com/schoutsen/picture</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>MySensors</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/mysensors.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/andythigpen">Andythigpen</a> and <a href="https://github.com/theolind">Theolind</a> have added support for the <a href="http://www.mysensors.org">MySensors platform</a> to Home Assistant.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">mysensors</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">/dev/ttyACM0</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>OpenWeatherMap</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/openweathermap.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://openweathermap.org">OpenWeatherMap</a>. This will allow you to integrate local meteorological data into Home Assistant.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">openweathermap</span></span>
-  <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_API_KEY</span></span>
-  <span class="key">monitored_variables</span>:
-    - <span class="string"><span class="content">type: 'weather'</span></span>
-    - <span class="string"><span class="content">type: 'temperature'</span></span>
-    - <span class="string"><span class="content">type: 'wind_speed'</span></span>
-    - <span class="string"><span class="content">type: 'humidity'</span></span>
-    - <span class="string"><span class="content">type: 'pressure'</span></span>
-    - <span class="string"><span class="content">type: 'clouds'</span></span>
-    - <span class="string"><span class="content">type: 'rain'</span></span>
-    - <span class="string"><span class="content">type: 'snow'</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>InstaPush</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/instapush.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="https://instapush.im">InstaPush</a>. This will allow you send messages from Home Assistant to your iOS and Android devices.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">notify</span>:
-    <span class="key">platform</span>: <span class="string"><span class="content">instapush</span></span>
-    <span class="comment"># Get those by creating a new application, event, and tracker on https://instapush.im</span>
-    <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-    <span class="key">app_secret</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-    <span class="key">event</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-    <span class="key">tracker</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>XMPP</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/xmpp.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for Jabber/XMPP. This will allow you send messages from Home Assistant to anyone on Jabber/XMPP.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">notify</span>:
-    <span class="key">platform</span>: <span class="string"><span class="content">xmpp</span></span>
-    <span class="key">sender</span>: <span class="string"><span class="content">YOUR_JID</span></span>
-    <span class="key">password</span>: <span class="string"><span class="content">YOUR_JABBER_ACCOUNT_PASSWORD</span></span>
-    <span class="key">recipient</span>: <span class="string"><span class="content">YOUR_RECIPIENT</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Notify My Android</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/nma.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/fabaff">Fabaff</a> has contributed support for <a href="http://www.notifymyandroid.com/">Notify My Android</a>. This will allow you to send messages from Home Assistant to your Android device.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">notify</span>:
-    <span class="key">platform</span>: <span class="string"><span class="content">nma</span></span>
-    <span class="comment"># Get this by registering a new application on http://www.notifymyandroid.com/</span>
-    <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Time &amp; Date sensor</strong><br />
-<a href="https://github.com/fabaff">Fabaff</a> has contributed a time &amp; date sensor. This will allow you to show the current time/date on the dashboard.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">time_date</span></span>
-  <span class="key">monitored_variables</span>:
-    - <span class="string"><span class="content">type: 'time'</span></span>
-    - <span class="string"><span class="content">type: 'date'</span></span>
-    - <span class="string"><span class="content">type: 'date_time'</span></span>
-    - <span class="string"><span class="content">type: 'time_date'</span></span>
 </pre></div>
 </div>
 </div>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-10T09:03:15-08:00</updated>
+  <updated>2015-12-10T09:18:54-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,75 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Activating Tasker tasks from Home Assistant using command line switches]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/"/>
+    <updated>2015-12-10T02:39:41-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches</id>
+    <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/blog/2015-12-tasker/tasker-logo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><br />
+In this tutorial I will explain how you can activate Tasker tasks from Home Assistant command line switches. We are going to set up a switch that when toggled will make your Android device say either “On” or “Off”.</p>
+
+<p>You could also do this with the automation component instead so whenever you put your house to sleep mode for example your Android device will open up Google Play Books or the Kindle app ready for you to read as well as dimming your lights, but this tutorial is all about the switches.</p>
+
+<!--more-->
+
+<h3>AutoRemote URL</h3>
+
+<p>First things first you should install <a href="https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm">Tasker</a> and <a href="https://play.google.com/store/apps/details?id=com.joaomgcd.autoremote">AutoRemote</a> onto your Android device and launch AutoRemote. You should see a URL above the QR code, visit it in your browser and it should bring up a page a bit like this.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-tasker/screenshot-1.png" />
+</p>
+
+<p>Now type in <code>SayOn</code> in the <code>Message</code> box and you should see a box appear on the right with a URL in it, this is what we will be using in the Python script later on so save that for later. Do the same thing again but this time replace <code>SayOn</code> with <code>SayOff</code>. Now just click the <code>Send message now!</code> button to test that your commands will get sent to your Android device, if they do you will see a toast message at the bottom of your screen like this one.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-tasker/screenshot-2.png" height="450" />
+</p>
+
+<h3>Tasker Setup</h3>
+
+<p>Open up Tasker and make sure you’re in the <code>PROFILES</code> tab, then select the plus icon to create a new profile. Select <code>Event</code> -&gt; <code>Plugin</code> -&gt; <code>AutoRemote</code> -&gt; <code>AutoRemote</code> and then the pencil icon to configure the AutoRemote event. Select <code>Message Filter</code> and enter in <code>SayOn</code> then go back until it asks you for a task. Select <code>New task</code> then just leave the next field blank and select the tick icon. <br />
+This is where we’ll configure our task, so select the plus icon to select an action. Select <code>Alert</code> -&gt; <code>Say</code> to add a Say action. Enter <code>On</code> in the text field and go back to test your task, make sure your media volume is up then select the play icon, you should hear your device say “On”.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-tasker/screenshot-3.png" height="450" />
+</p>
+
+<p>Now you can go back to the main Tasker screen and create another profile but this time replace <code>SayOn</code> with <code>SayOff</code> and <code>On</code> with <code>Off</code>. After you’ve done that go to the main screen again and select the menu button at the top then <code>Exit</code> and <code>Save first</code> to make sure everything is saved properly.</p>
+
+<h3>Python Script</h3>
+
+<p>Now it’s time to set it up the script, so create a new Python script and name it <code>On.py</code> then enter this code:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="keyword">import</span> <span class="include">requests</span>
+requests.get(<span class="string"><span class="delimiter">'</span><span class="content">[URL]</span><span class="delimiter">'</span></span>)
+</pre></div>
+</div>
+</div>
+
+<p>Enter in your “On” URL then save it. Create another script but this time call it <code>Off.py</code> and enter your “off” URL instead.</p>
+
+<h3>Home Assistant Configuration</h3>
+
+<p>Add a command line switch to your Home Assistant configuration:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_switch</span></span>
+  <span class="key">switches</span>:
+    <span class="key">tasker_say</span>:
+      <span class="key">oncmd</span>: <span class="string"><span class="content">python &quot;[LocationOfOnScript]&quot;</span></span>
+      <span class="key">offcmd</span>: <span class="string"><span class="content">python &quot;[LocationOfOffScript]&quot;</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Now load up Home Assistant and whenever you toggle the switch you created your Android device will respond with either “On” or “Off”. :-)</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[InfluxDB and Grafana]]></title>
@@ -761,328 +830,6 @@ Glances web server started on http://0.0.0.0:61208/
     </tr>
   </tbody>
 </table>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Using MQTT with Home Assistant]]></title>
-    <link href="https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant/"/>
-    <updated>2015-09-11T02:19:38-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant</id>
-    <content type="html"><![CDATA[
-<p><img src="https://home-assistant.io/images/supported_brands/mqtt.png" style="border:none; box-shadow: none; float: right;" height="80" /> <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn’t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn’t matter if the data is coming from a human, a web service, or a device.</p>
-
-<p>A great example is shown in a <a href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/">Laundry Automation</a> post in this blog.</p>
-
-<p>This post will give you a small overview of some other possibilities on how to use MQTT with Home Assistant.</p>
-
-<!--more-->
-
-<h3><a class='title-link' name='manual-usage' href='#manual-usage'></a> Manual usage </h3>
-
-<p>The simplest but not the coolest way as a human to interact with a Home Assistant sensor is launching a command manually. Let’s create a “Mood” sensor. For simplicity Home Assistant and the MQTT broker are both running on the same host. The needed configuration snipplets to add to the <code>configuration.yaml</code> file consists of two parts: one for the broker and one for the sensor.</p>
-
-<div class="highlighter-coderay"><table class="CodeRay"><tr>
-  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
-<a href="#n2" name="n2">2</a>
-<a href="#n3" name="n3">3</a>
-<a href="#n4" name="n4">4</a>
-<a href="#n5" name="n5">5</a>
-<a href="#n6" name="n6">6</a>
-<a href="#n7" name="n7">7</a>
-</pre></td>
-  <td class="code"><pre><span class="key">mqtt</span>:
-  <span class="key">broker</span>: <span class="string"><span class="content">127.0.0.1</span></span>
-
-<span class="key">sensor</span>:
-  - <span class="string"><span class="content">platform: mqtt</span></span>
-    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Fabian's Mood</span><span class="delimiter">&quot;</span></span>
-    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/fabian/mood</span><span class="delimiter">&quot;</span></span>
-</pre></td>
-</tr></table>
-</div>
-
-<p>After a restart of Home Assistant the “Mood” sensor will show up in the frontend. For more details about the configuration of MQTT itself and the sensor, please refer to the <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> or the <a href="https://home-assistant.io/components/sensor.mqtt/">MQTT sensor</a> documentation.</p>
-
-<p>Now we can set the mood. The commandline tool (<code>mosquitto_pub</code>) which is shipped with <code>mosquitto</code> is used to send an MQTT message.</p>
-
-<div class="highlighter-coderay"><table class="CodeRay"><tr>
-  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
-</pre></td>
-  <td class="code"><pre>$ mosquitto_pub  -h 127.0.0.1 -t &quot;home-assistant/fabian/mood&quot; -m &quot;bad&quot;
-</pre></td>
-</tr></table>
-</div>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/mood.png" />
-  The Mood sensor
-</p>
-
-<p>This is a really bad example. Don’t do this in the real world because you won’t be able to create diagrams of historical data. Better use a numerical value.</p>
-
-<h3><a class='title-link' name='python-mqtt-bindings' href='#python-mqtt-bindings'></a> Python MQTT bindings </h3>
-
-<p>The last section was pretty boring, I know. Nobody wants to send MQTT messages by hand if there is a computer on the desk. If you are playing the lottery this section is for you. If not, read it anyway because the lottery is just an example :-).</p>
-
-<p>This example is using the <a href="https://eclipse.org/paho/clients/python/">Paho MQTT Python binding</a> because those binding should be available on the host where Home Assistant is running. If you want to use this example on another machine, please make sure that the bindings are installed (<code>pip3 install paho-mqtt</code>).</p>
-
-<p>The first step is to add an additional MQTT sensor to the <code>configuration.yaml</code> file. The sensor will be called “Lottery” and the unit of measurement will be “No.”.</p>
-
-<div class="highlighter-coderay"><table class="CodeRay"><tr>
-  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
-<a href="#n2" name="n2">2</a>
-<a href="#n3" name="n3">3</a>
-<a href="#n4" name="n4">4</a>
-</pre></td>
-  <td class="code"><pre>  - <span class="string"><span class="content">platform: mqtt</span></span>
-    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Lottery</span><span class="delimiter">&quot;</span></span>
-    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/lottery/number</span><span class="delimiter">&quot;</span></span>
-    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">No.</span><span class="delimiter">&quot;</span></span>
-</pre></td>
-</tr></table>
-</div>
-
-<p>Don’t forget to restart Home Assistant to make the configuration active.</p>
-
-<p>To play, we need numbers from 1 to 49 which can be marked on the ticket. Those numbers should be random and displayed in the Home Assistant frontend. The Python script below is another simple example on how to send MQTT messages from the commandline; this time in a loop. For further information and examples please check the <a href="https://eclipse.org/paho/clients/python/docs/">Paho MQTT</a> documentation.</p>
-
-<div class="highlighter-coderay"><table class="CodeRay"><tr>
-  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
-<a href="#n2" name="n2">2</a>
-<a href="#n3" name="n3">3</a>
-<a href="#n4" name="n4">4</a>
-<a href="#n5" name="n5">5</a>
-<a href="#n6" name="n6">6</a>
-<a href="#n7" name="n7">7</a>
-<a href="#n8" name="n8">8</a>
-<a href="#n9" name="n9">9</a>
-<strong><a href="#n10" name="n10">10</a></strong>
-<a href="#n11" name="n11">11</a>
-<a href="#n12" name="n12">12</a>
-<a href="#n13" name="n13">13</a>
-<a href="#n14" name="n14">14</a>
-<a href="#n15" name="n15">15</a>
-<a href="#n16" name="n16">16</a>
-<a href="#n17" name="n17">17</a>
-<a href="#n18" name="n18">18</a>
-<a href="#n19" name="n19">19</a>
-<strong><a href="#n20" name="n20">20</a></strong>
-<a href="#n21" name="n21">21</a>
-<a href="#n22" name="n22">22</a>
-</pre></td>
-  <td class="code"><pre><span class="comment">#!/usr/bin/python3</span>
-<span class="comment">#</span>
-<span class="keyword">import</span> <span class="include">time</span>
-<span class="keyword">import</span> <span class="include">random</span>
-<span class="keyword">import</span> <span class="include">paho.mqtt.client</span> <span class="keyword">as</span> mqtt
-<span class="keyword">import</span> <span class="include">paho.mqtt.publish</span> <span class="keyword">as</span> publish
-
-broker = <span class="string"><span class="delimiter">'</span><span class="content">127.0.0.1</span><span class="delimiter">'</span></span>
-state_topic = <span class="string"><span class="delimiter">'</span><span class="content">home-assistant/lottery/number</span><span class="delimiter">'</span></span>
-delay = <span class="integer">5</span>
-
-<span class="comment"># Send a single message to set the mood</span>
-publish.single(<span class="string"><span class="delimiter">'</span><span class="content">home-assistant/fabian/mood</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">good</span><span class="delimiter">'</span></span>, hostname=broker)
-
-<span class="comment"># Send messages in a loop</span>
-client = mqtt.Client(<span class="string"><span class="delimiter">&quot;</span><span class="content">ha-client</span><span class="delimiter">&quot;</span></span>)
-client.connect(broker)
-client.loop_start()
-
-<span class="keyword">while</span> <span class="predefined-constant">True</span>:
-    client.publish(state_topic, random.randrange(<span class="integer">0</span>, <span class="integer">50</span>, <span class="integer">1</span>))
-    time.sleep(delay)
-</pre></td>
-</tr></table>
-</div>
-
-<p>Every 5 seconds a message with a new number is sent to the broker and picked up by Home Assistant. By the way, my mood is much better now.</p>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/lottery.png" />
-  The Lottery sensor
-</p>
-
-<p>With only a few lines of Python and an MQTT broker you can create your own “smartdevice” or send information to Home Assistant which you haven’t think of. Of course this is not limited to Python. If there is an MQTT library available, the device can be used with Home Assistant now.</p>
-
-<h3><a class='title-link' name='arduino' href='#arduino'></a> Arduino </h3>
-
-<p>To get started with real hardware that is capable to send MQTT messages, the Arduino platform is an inexpensive way to do it. In this section an Arduino UNO with an Ethernet shield and a photo resistor is used. The photo resistor is connected to analog pin 0 (A0) and has an output from 0 to 1024.</p>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/arduino-shield.png" />
-  The Arduino UNO with Ethernet shield and photo resistor
-</p>
-
-<p>The <a href="http://knolleary.github.io/pubsubclient/">MQTT client</a> for the Arduino needs to be available in your Arduino IDE. Below you will find a sketch which could act as a starting point. Please modify the IP addresses, the MAC address, and the pin as needed and upload the sketch to your Arduino.</p>
-
-<div class="highlighter-coderay"><table class="CodeRay"><tr>
-  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
-<a href="#n2" name="n2">2</a>
-<a href="#n3" name="n3">3</a>
-<a href="#n4" name="n4">4</a>
-<a href="#n5" name="n5">5</a>
-<a href="#n6" name="n6">6</a>
-<a href="#n7" name="n7">7</a>
-<a href="#n8" name="n8">8</a>
-<a href="#n9" name="n9">9</a>
-<strong><a href="#n10" name="n10">10</a></strong>
-<a href="#n11" name="n11">11</a>
-<a href="#n12" name="n12">12</a>
-<a href="#n13" name="n13">13</a>
-<a href="#n14" name="n14">14</a>
-<a href="#n15" name="n15">15</a>
-<a href="#n16" name="n16">16</a>
-<a href="#n17" name="n17">17</a>
-<a href="#n18" name="n18">18</a>
-<a href="#n19" name="n19">19</a>
-<strong><a href="#n20" name="n20">20</a></strong>
-<a href="#n21" name="n21">21</a>
-<a href="#n22" name="n22">22</a>
-<a href="#n23" name="n23">23</a>
-<a href="#n24" name="n24">24</a>
-<a href="#n25" name="n25">25</a>
-<a href="#n26" name="n26">26</a>
-<a href="#n27" name="n27">27</a>
-<a href="#n28" name="n28">28</a>
-<a href="#n29" name="n29">29</a>
-<strong><a href="#n30" name="n30">30</a></strong>
-<a href="#n31" name="n31">31</a>
-<a href="#n32" name="n32">32</a>
-<a href="#n33" name="n33">33</a>
-<a href="#n34" name="n34">34</a>
-<a href="#n35" name="n35">35</a>
-<a href="#n36" name="n36">36</a>
-<a href="#n37" name="n37">37</a>
-<a href="#n38" name="n38">38</a>
-<a href="#n39" name="n39">39</a>
-<strong><a href="#n40" name="n40">40</a></strong>
-<a href="#n41" name="n41">41</a>
-<a href="#n42" name="n42">42</a>
-<a href="#n43" name="n43">43</a>
-<a href="#n44" name="n44">44</a>
-<a href="#n45" name="n45">45</a>
-<a href="#n46" name="n46">46</a>
-<a href="#n47" name="n47">47</a>
-<a href="#n48" name="n48">48</a>
-<a href="#n49" name="n49">49</a>
-<strong><a href="#n50" name="n50">50</a></strong>
-<a href="#n51" name="n51">51</a>
-<a href="#n52" name="n52">52</a>
-<a href="#n53" name="n53">53</a>
-<a href="#n54" name="n54">54</a>
-<a href="#n55" name="n55">55</a>
-<a href="#n56" name="n56">56</a>
-<a href="#n57" name="n57">57</a>
-<a href="#n58" name="n58">58</a>
-<a href="#n59" name="n59">59</a>
-<strong><a href="#n60" name="n60">60</a></strong>
-<a href="#n61" name="n61">61</a>
-<a href="#n62" name="n62">62</a>
-<a href="#n63" name="n63">63</a>
-<a href="#n64" name="n64">64</a>
-<a href="#n65" name="n65">65</a>
-<a href="#n66" name="n66">66</a>
-<a href="#n67" name="n67">67</a>
-<a href="#n68" name="n68">68</a>
-</pre></td>
-  <td class="code"><pre><span class="comment">/*
-  This sketch is based on the basic MQTT example by
-  http://knolleary.github.io/pubsubclient/
-*/</span>
-
-<span class="preprocessor">#include</span> <span class="include">&lt;SPI.h&gt;</span>
-<span class="preprocessor">#include</span> <span class="include">&lt;Ethernet.h&gt;</span>
-<span class="preprocessor">#include</span> <span class="include">&lt;PubSubClient.h&gt;</span>
-
-<span class="preprocessor">#define</span> DEBUG <span class="integer">1</span> <span class="comment">// Debug output to serial console</span>
-
-<span class="comment">// Device settings</span>
-IPAddress deviceIp(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">0</span>, <span class="integer">43</span>);
-byte deviceMac[] = { <span class="hex">0xAB</span>, <span class="hex">0xCD</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span>, <span class="hex">0xFE</span> };
-<span class="predefined-type">char</span>* deviceId  = <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor01</span><span class="delimiter">&quot;</span></span>; <span class="comment">// Name of the sensor</span>
-<span class="predefined-type">char</span>* stateTopic = <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/sensor01/brightness</span><span class="delimiter">&quot;</span></span>; <span class="comment">// MQTT topic where values are published</span>
-<span class="predefined-type">int</span> sensorPin = A0; <span class="comment">// Pin to which the sensor is connected to</span>
-<span class="predefined-type">char</span> buf[<span class="integer">4</span>]; <span class="comment">// Buffer to store the sensor value</span>
-<span class="predefined-type">int</span> updateInterval = <span class="integer">1000</span>; <span class="comment">// Interval in miliseconds</span>
-
-<span class="comment">// MQTT server settings</span>
-IPAddress mqttServer(<span class="integer">192</span>, <span class="integer">168</span>, <span class="integer">0</span>, <span class="integer">12</span>);
-<span class="predefined-type">int</span> mqttPort = <span class="integer">1883</span>;
-
-EthernetClient ethClient;
-PubSubClient client(ethClient);
-
-<span class="directive">void</span> reconnect() {
-  <span class="keyword">while</span> (!client.connected()) {
-<span class="preprocessor">#if</span> DEBUG
-    Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Attempting MQTT connection...</span><span class="delimiter">&quot;</span></span>);
-<span class="preprocessor">#endif</span>
-    <span class="keyword">if</span> (client.connect(deviceId)) {
-<span class="preprocessor">#if</span> DEBUG
-      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">connected</span><span class="delimiter">&quot;</span></span>);
-<span class="preprocessor">#endif</span>
-    } <span class="keyword">else</span> {
-<span class="preprocessor">#if</span> DEBUG
-      Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">failed, rc=</span><span class="delimiter">&quot;</span></span>);
-      Serial.print(client.state());
-      Serial.println(<span class="string"><span class="delimiter">&quot;</span><span class="content"> try again in 5 seconds</span><span class="delimiter">&quot;</span></span>);
-<span class="preprocessor">#endif</span>
-      delay(<span class="integer">5000</span>);
-    }
-  }
-}
-
-<span class="directive">void</span> setup() {
-  Serial.begin(<span class="integer">57600</span>);
-  client.setServer(mqttServer, mqttPort);
-  Ethernet.begin(deviceMac, deviceIp);
-  delay(<span class="integer">1500</span>);
-}
-
-<span class="directive">void</span> loop() {
-  <span class="keyword">if</span> (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
-
-  <span class="predefined-type">int</span> sensorValue = analogRead(sensorPin);
-<span class="preprocessor">#if</span> DEBUG
-  Serial.print(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sensor value: </span><span class="delimiter">&quot;</span></span>);
-  Serial.println(sensorValue);
-<span class="preprocessor">#endif</span>
-  client.publish(stateTopic, itoa(sensorValue, buf, <span class="integer">10</span>));
-  delay(updateInterval);
-}
-</pre></td>
-</tr></table>
-</div>
-
-<p>The Arduino will send the value of the sensor every second. To use the data in Home Assistant, add an additional MQTT sensor to the <code>configuration.yaml</code> file.</p>
-
-<div class="highlighter-coderay"><table class="CodeRay"><tr>
-  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
-<a href="#n2" name="n2">2</a>
-<a href="#n3" name="n3">3</a>
-<a href="#n4" name="n4">4</a>
-</pre></td>
-  <td class="code"><pre>  - <span class="string"><span class="content">platform: mqtt</span></span>
-    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Brightness</span><span class="delimiter">&quot;</span></span>
-    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home-assistant/sensor01/brightness</span><span class="delimiter">&quot;</span></span>
-    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">cd</span><span class="delimiter">&quot;</span></span>
-</pre></td>
-</tr></table>
-</div>
-
-<p>After a restart of Home Assistant the values of your Arduino will be available.</p>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-mqtt/arduino.png" />
-  The Brightness sensor
-</p>
-
-<p>I hope that this post could give you some ideas about the usage Home Assistant and MQTT. If you are working on a cool project that includes Home Assistant, please let us now.</p>
 ]]></content>
   </entry>
   

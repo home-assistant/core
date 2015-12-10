@@ -27,13 +27,13 @@
     
   
   
-    Bootstrapping your setup with Discovery
+    Nest in the house!
   
   
 
   
   
-     January 11, 2015
+     January 13, 2015
      Paulus Schoutsen
      less than one minute reading time
     
@@ -41,7 +41,10 @@
     
     
       
-        co...">
+        component
+      
+    
+ ...">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -113,6 +116,64 @@
         
 
             
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/01/13/nest-in-da-house/">Nest in the house!</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-01-13T08:29:04-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 13, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> less than one minute reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/component/'>component</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/01/13/nest-in-da-house/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>For thet majority of its existence, Home Assistant primary focus was on presence detection, lights and switches. But not anymore as we’re expanding the supported devices. Today, we’re proud to introduce Nest Thermostat integration for Home Assistant contributed by <a href="https://github.com/sfiorini">Stefano Fiorini</a>!</p>
+
+<p class="img">
+  <img src="/images/screenshots/nest-thermostat-card.png" />
+</p>
+
+<p>The new integration exists out of two parts: a generic thermostat component and a Nest platform implementation. The initial version implements provides a read-only card and services to control it. The plan is in the future to add temperature and away mode controls from the thermostat card and more info dialog. Internally, we are using the Python package <a href="https://github.com/jkoelker/python-nest">python-nest by jkoelker</a> to talk to the Nest.</p>
+
+<p>If you own a Nest thermostat, add the following lines to your <code>home-assistant.conf</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>[thermostat]
+platform=nest
+username=YOUR_USERNAME
+password=YOUR_PASSWORD
+</pre></div>
+</div>
+</div>
+
+    
+  </div>
+  </article>
+  <hr>
   
   <article class="listing">
     <header>
