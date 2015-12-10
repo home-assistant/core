@@ -107,6 +107,16 @@ def get_random_string(length=10):
     return ''.join(generator.choice(source_chars) for _ in range(length))
 
 
+def extract_value_json(json, variable):
+    """ Extracts a value from JSON using a key name or a path. """
+    if isinstance(variable, list):
+        for variable_item in variable:
+            json = json[variable_item]
+        return json
+    else:
+        return json[variable]
+
+
 class OrderedEnum(enum.Enum):
     """ Taken from Python 3.4.0 docs. """
     # pylint: disable=no-init, too-few-public-methods
