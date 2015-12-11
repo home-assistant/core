@@ -13,6 +13,7 @@ import os
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_per_platform
+from homeassistant.util import template
 
 from homeassistant.const import CONF_NAME
 
@@ -33,9 +34,16 @@ SERVICE_NOTIFY = "notify"
 _LOGGER = logging.getLogger(__name__)
 
 
-def send_message(hass, message):
+def send_message(hass, message, title=None):
     """ Send a notification message. """
-    hass.services.call(DOMAIN, SERVICE_NOTIFY, {ATTR_MESSAGE: message})
+    data = {
+        ATTR_MESSAGE: message
+    }
+
+    if title is not None:
+        data[ATTR_TITLE] = title
+
+    hass.services.call(DOMAIN, SERVICE_NOTIFY, data)
 
 
 def setup(hass, config):
@@ -70,8 +78,10 @@ def setup(hass, config):
             if message is None:
                 return
 
-            title = call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+            title = template.render(
+                hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
             target = call.data.get(ATTR_TARGET)
+            message = template.render(hass, message)
 
             notify_service.send_message(message, title=title, target=target)
 
