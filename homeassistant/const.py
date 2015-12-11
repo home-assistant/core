@@ -25,6 +25,8 @@ CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
 
+CONF_VALUE_TEMPLATE = "value_template"
+
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
@@ -165,6 +167,7 @@ URL_API_COMPONENTS = "/api/components"
 URL_API_BOOTSTRAP = "/api/bootstrap"
 URL_API_ERROR_LOG = "/api/error_log"
 URL_API_LOG_OUT = "/api/log_out"
+URL_API_TEMPLATE = "/api/template"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
