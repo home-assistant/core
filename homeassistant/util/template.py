@@ -5,7 +5,22 @@ homeassistant.util.template
 Template utility methods for rendering strings with HA data.
 """
 # pylint: disable=too-few-public-methods
+import json
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+
+
+def render_with_possible_json_value(hass, template, value):
+    """ Renders template with value exposed.
+        If valid JSON will expose value_json too. """
+    variables = {
+        'value': value
+    }
+    try:
+        variables['value_json'] = json.loads(value)
+    except ValueError:
+        pass
+
+    return render(hass, template, variables)
 
 
 def render(hass, template, variables=None, **kwargs):
