@@ -5,37 +5,17 @@ homeassistant.util.template
 Template utility methods for rendering strings with HA data.
 """
 # pylint: disable=too-few-public-methods
-from jinja2.sandbox import SandboxedEnvironment
-
-ENV = SandboxedEnvironment()
+from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 
-def forgiving_round(value, precision=0):
-    """ Rounding method that accepts strings. """
-    try:
-        return int(float(value)) if precision == 0 else round(float(value),
-                                                              precision)
-    except ValueError:
-        # If value can't be converted to float
-        return value
-
-
-def multiply(value, amount):
-    """ Converts to float and multiplies value. """
-    try:
-        return float(value) * amount
-    except ValueError:
-        # If value can't be converted to float
-        return value
-
-ENV.filters['round'] = forgiving_round
-ENV.filters['multiply'] = multiply
-
-
-def render(hass, template):
+def render(hass, template, variables=None, **kwargs):
     """ Render given template. """
-    return ENV.from_string(template).render(
-        states=AllStates(hass))
+    if variables is not None:
+        kwargs.update(variables)
+
+    return ENV.from_string(template, {
+        'states': AllStates(hass)
+    }).render(kwargs)
 
 
 class AllStates(object):
@@ -66,3 +46,26 @@ class DomainStates(object):
             (state for state in self._hass.states.all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
+
+
+def forgiving_round(value, precision=0):
+    """ Rounding method that accepts strings. """
+    try:
+        return int(float(value)) if precision == 0 else round(float(value),
+                                                              precision)
+    except ValueError:
+        # If value can't be converted to float
+        return value
+
+
+def multiply(value, amount):
+    """ Converts to float and multiplies value. """
+    try:
+        return float(value) * amount
+    except ValueError:
+        # If value can't be converted to float
+        return value
+
+ENV = ImmutableSandboxedEnvironment()
+ENV.filters['round'] = forgiving_round
+ENV.filters['multiply'] = multiply

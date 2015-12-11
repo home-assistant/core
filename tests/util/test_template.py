@@ -64,3 +64,11 @@ class TestUtilTemplate(unittest.TestCase):
             template.render(
                 self.hass,
                 '{{ states.sensor.temperature.state | multiply(10) | round }}'))
+
+    def test_passing_vars_as_keywords(self):
+        self.assertEqual(
+            '127', template.render(self.hass, '{{ hello }}', hello=127))
+
+    def test_passing_vars_as_vars(self):
+        self.assertEqual(
+            '127', template.render(self.hass, '{{ hello }}', {'hello': 127}))
