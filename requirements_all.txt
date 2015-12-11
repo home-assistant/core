@@ -174,3 +174,6 @@ https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
+
+# homeassistant.components.heatmiser
+heatmiserV3==0.9.1
