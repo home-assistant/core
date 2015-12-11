@@ -1,11 +1,9 @@
 sudo: false
 language: python
-cache:
-  directories:
-    - $HOME/virtualenv/python$TRAVIS_PYTHON_VERSION/
+cache: pip
 python:
-  - 3.4.2
-  - 3.5.0
+  - 3.4
+  - 3.5
 install:
   - script/bootstrap_server
 script:
