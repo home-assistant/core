@@ -14,6 +14,8 @@ import requests
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import STATE_UNKNOWN
+import homeassistant.util as util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,27 +50,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             response = requests.post(resource, data=payload, timeout=10,
                                      verify=verify_ssl)
         if not response.ok:
-            _LOGGER.error('Response status is "%s"', response.status_code)
+            _LOGGER.error("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.MissingSchema:
-        _LOGGER.error('Missing resource or schema in configuration. '
-                      'Add http:// to your URL.')
+        _LOGGER.error("Missing resource or schema in configuration. "
+                      "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error('No route to resource/endpoint. '
-                      'Please check the URL in the configuration file.')
+        _LOGGER.error("No route to resource/endpoint: '%s'. "
+                      "Check the resource entry in the configuration file",
+                      resource)
         return False
 
     try:
         data = loads(response.text)
     except ValueError:
-        _LOGGER.error('No valid JSON in the response in: %s', data)
+        _LOGGER.error("No valid JSON in the response in: %s", data)
         return False
 
     try:
-        RestSensor.extract_value(data, config.get('variable'))
+        util.extract_value_json(data, config.get('variable'))
     except KeyError:
-        _LOGGER.error('Variable "%s" not found in response: "%s"',
+        _LOGGER.error("Variable '%s' not found in response: '%s'",
                       config.get('variable'), data)
         return False
 
@@ -94,21 +97,11 @@ class RestSensor(Entity):
         self.rest = rest
         self._name = name
         self._variable = variable
-        self._state = 'n/a'
+        self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._corr_factor = corr_factor
         self._decimal_places = decimal_places
         self.update()
-
-    @classmethod
-    def extract_value(cls, data, variable):
-        """ Extracts the value using a key name or a path. """
-        if isinstance(variable, list):
-            for variable_item in variable:
-                data = data[variable_item]
-            return data
-        else:
-            return data[variable]
 
     @property
     def name(self):
@@ -135,7 +128,7 @@ class RestSensor(Entity):
         else:
             try:
                 if value is not None:
-                    value = RestSensor.extract_value(value, self._variable)
+                    value = util.extract_value_json(value, self._variable)
                     if self._corr_factor is not None:
                         value = float(value) * float(self._corr_factor)
                     if self._decimal_places is not None:
@@ -144,7 +137,7 @@ class RestSensor(Entity):
                         value = int(value)
                     self._state = value
             except ValueError:
-                self._state = RestSensor.extract_value(value, self._variable)
+                self._state = util.extract_value_json(value, self._variable)
 
 
 # pylint: disable=too-few-public-methods
@@ -166,8 +159,9 @@ class RestDataGet(object):
                 del self.data['error']
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s",
+                          self._resource)
+            self.data['error'] = STATE_UNKNOWN
 
 
 # pylint: disable=too-few-public-methods
@@ -190,5 +184,5 @@ class RestDataPost(object):
                 del self.data['error']
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
+            self.data['error'] = STATE_UNKNOWN
