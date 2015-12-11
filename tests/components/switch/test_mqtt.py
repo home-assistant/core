@@ -90,7 +90,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'command_topic': 'command-topic',
                 'payload_on': 'beer on',
                 'payload_off': 'beer off',
-                'state_format': 'json:val'
+                'value_template': '{{ value_json.val }}'
             }
         }))
 
