@@ -25,6 +25,8 @@ CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
 
+CONF_VALUE_TEMPLATE = "value_template"
+
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"

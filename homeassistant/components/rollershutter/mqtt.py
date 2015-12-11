@@ -8,7 +8,10 @@ https://home-assistant.io/components/rollershutter.mqtt/
 """
 import logging
 import homeassistant.components.mqtt as mqtt
+from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.components.rollershutter import RollershutterDevice
+from homeassistant.util import template
+
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
@@ -36,14 +39,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('payload_up', DEFAULT_PAYLOAD_UP),
         config.get('payload_down', DEFAULT_PAYLOAD_DOWN),
         config.get('payload_stop', DEFAULT_PAYLOAD_STOP),
-        config.get('state_format'))])
+        config.get(CONF_VALUE_TEMPLATE))])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttRollershutter(RollershutterDevice):
     """ Represents a rollershutter that can be controlled using MQTT. """
     def __init__(self, hass, name, state_topic, command_topic, qos,
-                 payload_up, payload_down, payload_stop, state_format):
+                 payload_up, payload_down, payload_stop, value_template):
         self._state = None
         self._hass = hass
         self._name = name
@@ -53,16 +56,17 @@ class MqttRollershutter(RollershutterDevice):
         self._payload_up = payload_up
         self._payload_down = payload_down
         self._payload_stop = payload_stop
-        self._parse = mqtt.FmtParser(state_format)
 
         if self._state_topic is None:
             return
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
-            value = self._parse(payload)
-            if value.isnumeric() and 0 <= int(value) <= 100:
-                self._state = int(value)
+            if value_template is not None:
+                payload = template.render_with_possible_json_value(
+                    hass, value_template, payload)
+            if payload.isnumeric() and 0 <= int(payload) <= 100:
+                self._state = int(payload)
                 self.update_ha_state()
             else:
                 _LOGGER.warning(
