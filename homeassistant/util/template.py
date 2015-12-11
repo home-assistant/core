@@ -13,7 +13,8 @@ ENV = SandboxedEnvironment()
 def forgiving_round(value, precision=0):
     """ Rounding method that accepts strings. """
     try:
-        return int(value) if precision == 0 else round(float(value), precision)
+        return int(float(value)) if precision == 0 else round(float(value),
+                                                              precision)
     except ValueError:
         # If value can't be converted to float
         return value
