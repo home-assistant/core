@@ -72,3 +72,15 @@ class TestUtilTemplate(unittest.TestCase):
     def test_passing_vars_as_vars(self):
         self.assertEqual(
             '127', template.render(self.hass, '{{ hello }}', {'hello': 127}))
+
+    def test_render_with_possible_json_value_with_valid_json(self):
+        self.assertEqual(
+            'world',
+            template.render_with_possible_json_value(
+                self.hass, '{{ value_json.hello }}', '{"hello": "world"}'))
+
+    def test_render_with_possible_json_value_with_invalid_json(self):
+        self.assertEqual(
+            '',
+            template.render_with_possible_json_value(
+                self.hass, '{{ value_json }}', '{ I AM NOT JSON }'))
