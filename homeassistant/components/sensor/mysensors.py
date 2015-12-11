@@ -76,7 +76,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     persistence = config.get(CONF_PERSISTENCE, True)
-    persistence_file = config.get(CONF_PERSISTENCE_FILE, 'mysensors.pickle')
+    persistence_file = config.get(CONF_PERSISTENCE_FILE,
+                                  hass.config.path('mysensors.pickle'))
     version = config.get(CONF_VERSION, '1.4')
 
     gateway = mysensors.SerialGateway(port, sensor_update,
