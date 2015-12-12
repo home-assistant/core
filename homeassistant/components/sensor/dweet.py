@@ -1,18 +1,19 @@
 """
 homeassistant.components.sensor.dweet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Displays values from Dweet.io..
+Displays values from Dweet.io.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dweet/
 """
 from datetime import timedelta
 import logging
+import json
 
-import homeassistant.util as util
 from homeassistant.util import Throttle
+from homeassistant.util import template
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import (STATE_UNKNOWN, CONF_VALUE_TEMPLATE)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['dweepy==0.2.0']
@@ -24,47 +25,51 @@ CONF_DEVICE = 'device'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
-# pylint: disable=unused-variable
+# pylint: disable=unused-variable, too-many-function-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the Dweet sensor. """
-
     import dweepy
 
     device = config.get('device')
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    if device is None:
+    if None in (device, value_template):
         _LOGGER.error('Not all required config keys present: %s',
-                      ', '.join(CONF_DEVICE))
+                      ', '.join(CONF_DEVICE, CONF_VALUE_TEMPLATE))
         return False
 
     try:
-        dweepy.get_latest_dweet_for(device)
+        content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
     except dweepy.DweepyError:
         _LOGGER.error("Device/thing '%s' could not be found", device)
         return False
 
+    if template.render_with_possible_json_value(hass,
+                                                value_template,
+                                                content) is '':
+        _LOGGER.error("'%s' was not found", value_template)
+        return False
+
     dweet = DweetData(device)
 
-    add_devices([DweetSensor(dweet,
+    add_devices([DweetSensor(hass,
+                             dweet,
                              config.get('name', DEFAULT_NAME),
-                             config.get('variable'),
-                             config.get('unit_of_measurement'),
-                             config.get('correction_factor', None),
-                             config.get('decimal_places', None))])
+                             value_template,
+                             config.get('unit_of_measurement'))])
 
 
+# pylint: disable=too-many-arguments
 class DweetSensor(Entity):
     """ Implements a Dweet sensor. """
 
-    def __init__(self, dweet, name, variable, unit_of_measurement, corr_factor,
-                 decimal_places):
+    def __init__(self, hass, dweet, name, value_template, unit_of_measurement):
+        self.hass = hass
         self.dweet = dweet
         self._name = name
-        self._variable = variable
+        self._value_template = value_template
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
-        self._corr_factor = corr_factor
-        self._decimal_places = decimal_places
         self.update()
 
     @property
@@ -80,17 +85,10 @@ class DweetSensor(Entity):
     @property
     def state(self):
         """ Returns the state. """
-        values = self.dweet.data
-
+        values = json.dumps(self.dweet.data[0]['content'])
         if values is not None:
-            value = util.extract_value_json(values[0]['content'],
-                                            self._variable)
-            if self._corr_factor is not None:
-                value = float(value) * float(self._corr_factor)
-            if self._decimal_places is not None:
-                value = round(value, self._decimal_places)
-            if self._decimal_places == 0:
-                value = int(value)
+            value = template.render_with_possible_json_value(
+                self.hass, self._value_template, values)
             return value
         else:
             return STATE_UNKNOWN
