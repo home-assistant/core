@@ -57,10 +57,10 @@ class TestUtilTemplate(unittest.TestCase):
                 '{{ states.sensor.temperature.state | round(1) }}'))
 
     def test_rounding_value2(self):
-        self.hass.states.set('sensor.temperature', 12.72)
+        self.hass.states.set('sensor.temperature', 12.78)
 
         self.assertEqual(
-            '127',
+            '128',
             template.render(
                 self.hass,
                 '{{ states.sensor.temperature.state | multiply(10) | round }}'))
