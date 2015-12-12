@@ -12,9 +12,11 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from homeassistant.exceptions import TemplateError
 
 _LOGGER = logging.getLogger(__name__)
+_SENTINEL = object()
 
 
-def render_with_possible_json_value(hass, template, value):
+def render_with_possible_json_value(hass, template, value,
+                                    error_value=_SENTINEL):
     """ Renders template with value exposed.
         If valid JSON will expose value_json too. """
     variables = {
@@ -29,7 +31,7 @@ def render_with_possible_json_value(hass, template, value):
         return render(hass, template, variables)
     except TemplateError:
         _LOGGER.exception('Error parsing value')
-        return value
+        return value if error_value is _SENTINEL else error_value
 
 
 def render(hass, template, variables=None, **kwargs):
